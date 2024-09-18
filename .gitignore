@@ -1,0 +1,32 @@
+# Python bytecode
+__pycache__/
+*.py[cod]
+
+# Virtual environment
+venv/
+ENV/
+env/
+.env
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+
+# Logs
+*.log
+
+# IDE specific files
+.vscode/
+.idea/
+.DS_Store
