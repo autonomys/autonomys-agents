@@ -134,6 +134,7 @@ def generate_article(topic):
         return (
             "Error: No article generated",
             "No fact-check performed due to article generation error.",
+            "",  # Empty string for final_article_content
         )
 
     logging.info("Article generated successfully")
@@ -188,9 +189,49 @@ def generate_article(topic):
 
         if not fact_check_report:
             logging.error("No fact-check report generated")
-            return article_content, "Error: No fact-check report generated"
+            return (
+                article_content,
+                "Error: No fact-check report generated",
+                article_content,
+            )
 
         logging.info("Fact-check report generated successfully")
+
+        # Revise the article based on the fact-check report
+        logging.info("Revising article based on fact-check report")
+        revision_prompt = f"""
+        Please revise the following article based on the fact-check report to correct any inaccuracies:
+
+        Original Article:
+        {article_content}
+
+        Fact-Check Report:
+        {fact_check_report}
+
+        Provide a revised version of the article that incorporates the fact-check findings and corrects any inaccuracies.
+        Ensure the revised article maintains its original structure and flow while improving its accuracy.
+        """
+
+        # Manager requests the revised article from ArticleGenerator
+        revised_article_result = manager_agent.initiate_chat(
+            recipient=article_agent,
+            message=revision_prompt,
+        )
+
+        # Extract the revised article content
+        final_article_content = (
+            revised_article_result.chat_history[-1]["content"]
+            if revised_article_result.chat_history
+            else str(revised_article_result)
+        )
+
+        if final_article_content.startswith("Error"):
+            logging.error("Failed to generate revised article")
+            final_article_content = "Error: Unable to generate revised article."
+
+        logging.info("Revised article generated successfully")
+
+        return article_content, fact_check_report, final_article_content
 
     except Exception as e:
         logging.error(f"Error during fact-checking: {str(e)}")
@@ -198,23 +239,43 @@ def generate_article(topic):
             f"Unable to generate fact-check report due to an error: {str(e)}"
         )
 
-    return article_content, fact_check_report
+    # Create final article content incorporating fact-check results
+    final_article_content = f"""
+# {topic}
+
+{article_content}
+
+---
+
+## Fact-Check Results
+
+{fact_check_report}
+"""
+
+    return article_content, fact_check_report, final_article_content
 
 
-def save_article(topic, article_content, fact_check_report):
-    # Create the articles directory if it doesn't exist
-    os.makedirs("articles", exist_ok=True)
+def save_article(topic, article_content, fact_check_report, final_article_content):
+    # Ensure the articles directory is within auto-content-creator
+    articles_dir = "articles"
+    os.makedirs(articles_dir, exist_ok=True)
 
     # Create file names based on the topic
-    article_file_name = f"articles/{topic.replace(' ', '_').lower()}_article.md"
-    fact_check_file_name = f"articles/{topic.replace(' ', '_').lower()}_fact_check.md"
+    safe_topic = topic.replace(" ", "_").lower()
+    article_file_name = os.path.join(articles_dir, f"{safe_topic}_draft.md")
+    fact_check_file_name = os.path.join(articles_dir, f"{safe_topic}_fact_check.md")
+    final_article_file_name = os.path.join(articles_dir, f"{safe_topic}_final.md")
 
-    # Write the article content to a file
+    # Write the article draft to a file
     with open(article_file_name, "w") as f:
-        f.write(article_content or "Error: No article content generated")
+        f.write(article_content or "Error: No article draft generated")
 
     # Write the fact-check report to a separate file
     with open(fact_check_file_name, "w") as f:
         f.write(fact_check_report or "Error: No fact-check report generated")
 
-    return article_file_name, fact_check_file_name
+    # Write the final article to a file
+    with open(final_article_file_name, "w") as f:
+        f.write(final_article_content or "Error: No final article generated")
+
+    return article_file_name, fact_check_file_name, final_article_file_name
