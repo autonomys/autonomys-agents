@@ -17,9 +17,9 @@ def main():
             args.topic
         )
 
-        if article_content.startswith("Error"):
-            logging.error(f"Failed to generate article: {article_content}")
-            print(f"Failed to generate article: {article_content}")
+        if article_content[0].startswith("Error"):
+            logging.error(f"Failed to generate article: {article_content[0]}")
+            print(f"Failed to generate article: {article_content[0]}")
             sys.exit(1)
 
         article_file, fact_check_file, final_article_file = save_article(
