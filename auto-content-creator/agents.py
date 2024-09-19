@@ -53,3 +53,38 @@ def create_fact_checker_agent():
             "function_call": "auto",
         },
     )
+
+
+def create_research_agent():
+    return AssistantAgent(
+        name="ResearchAgent",
+        system_message=(
+            "You are an AI assistant specialized in researching web3 topics. "
+            "Your task is to gather relevant information from the web and existing knowledge bases "
+            "to assist in creating comprehensive and accurate articles. "
+            "Always use the 'web_search' function to collect information. "
+            "When using the web_search function, you MUST provide a specific query string. "
+            "After gathering sufficient information, provide a summary of your findings. "
+            "End your research with 'Research complete.' when you've finished the process."
+        ),
+        llm_config={
+            **llm_config_4o,
+            "functions": [
+                {
+                    "name": "web_search",
+                    "description": "Search the web for information.",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "query": {
+                                "type": "string",
+                                "description": "The search query. This must be a non-empty string.",
+                            }
+                        },
+                        "required": ["query"],
+                    },
+                }
+            ],
+            "function_call": "auto",
+        },
+    )

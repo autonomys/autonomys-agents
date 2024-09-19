@@ -13,33 +13,31 @@ def main():
 
     try:
         logging.info(f"Generating article on topic: {args.topic}")
-        article_content, fact_check_report, final_article_content = generate_article(
-            args.topic
+        # Unpack four returned values
+        article_content, fact_check_report, research_info, final_article_content = (
+            generate_article(args.topic)
         )
 
-        if article_content[0].startswith("Error"):
-            logging.error(f"Failed to generate article: {article_content[0]}")
-            print(f"Failed to generate article: {article_content[0]}")
-            sys.exit(1)
+        # Check for research errors
+        if research_info.startswith("Error"):
+            logging.error(f"Research failed: {research_info}")
+            print(f"Research failed: {research_info}")
+            sys.exit(1)  # Exiting as research is crucial for article generation
 
-        article_file, fact_check_file, final_article_file = save_article(
-            args.topic, article_content, fact_check_report, final_article_content
+        # Save all reports including the research report
+        article_file, fact_check_file, research_file, final_article_file = save_article(
+            args.topic,
+            article_content,
+            fact_check_report,
+            final_article_content,
+            research_info,
         )
 
         print(f"Generated article draft on topic: {args.topic}")
         print(f"Draft saved to: {article_file}")
         print(f"Fact-check report saved to: {fact_check_file}")
+        print(f"Research report saved to: {research_file}")
         print(f"Final article saved to: {final_article_file}")
-
-        if fact_check_report.startswith("Error"):
-            logging.warning(f"Fact-check report contains an error: {fact_check_report}")
-            print(
-                f"Warning: Fact-check report contains an error. Please check {fact_check_file}"
-            )
-
-        if final_article_content.startswith("Error"):
-            logging.error(f"Failed to generate final article: {final_article_content}")
-            print(f"Failed to generate final article: {final_article_content}")
 
     except Exception as e:
         logging.error(f"An error occurred: {str(e)}")
