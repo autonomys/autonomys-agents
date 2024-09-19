@@ -1,7 +1,7 @@
 import argparse
 import sys
 import logging
-from article_generator import generate_article, save_article
+from content_creation.article_generator import generate_article, save_article
 
 logging.basicConfig(level=logging.INFO)
 

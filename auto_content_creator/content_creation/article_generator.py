@@ -2,12 +2,12 @@ import os
 import logging
 import json
 from autogen.agentchat import ConversableAgent
-from agents import (
+from .agents import (
     create_article_generator_agent,
     create_fact_checker_agent,
     create_research_agent,
 )
-from web_search import web_search
+from .web_search import web_search
 
 logging.basicConfig(level=logging.INFO)
 

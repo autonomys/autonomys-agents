@@ -1,6 +1,6 @@
 import requests
 import logging
-from config import SERPAPI_API_KEY
+from .config import SERPAPI_API_KEY
 
 
 def web_search(query):

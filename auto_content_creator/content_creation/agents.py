@@ -1,5 +1,5 @@
 from autogen.agentchat import AssistantAgent
-from config import llm_config_4o
+from .config import llm_config_4o
 
 
 def create_article_generator_agent():
