@@ -19,13 +19,15 @@ async def get_db_pool():
 
 
 async def generate_article_service(topic: str, pool):
-    article_content, fact_check_report, research_info, final_article_content = (
+    title, article_content, fact_check_report, research_info, final_article_content = (
         generate_article(topic)
     )
 
     article_id = str(uuid.uuid4())
+    title_str = str(title) if title else ""
     article_file, fact_check_file, research_file, final_article_file = save_article(
         topic,
+        title_str,
         article_content,
         fact_check_report,
         final_article_content,
@@ -35,11 +37,12 @@ async def generate_article_service(topic: str, pool):
     async with pool.acquire() as conn:
         await conn.execute(
             """
-            INSERT INTO articles (id, topic, content, fact_check_report, research_info, final_content, article_file, fact_check_file, research_file, final_article_file)
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+            INSERT INTO articles (id, topic, title, content, fact_check_report, research_info, final_content, article_file, fact_check_file, research_file, final_article_file)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
         """,
             article_id,
             topic,
+            title,
             article_content,
             fact_check_report,
             research_info,
@@ -52,6 +55,7 @@ async def generate_article_service(topic: str, pool):
 
     return {
         "article_id": article_id,
+        "title": title,
         "article_content": article_content,
         "fact_check_report": fact_check_report,
         "research_info": research_info,
@@ -87,3 +91,33 @@ async def get_article_service(article_id: str, pool):
             },
         }
     return None  # Article not found
+
+
+async def init_db(pool):
+    async with pool.acquire() as conn:
+        await conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS articles (
+                id UUID PRIMARY KEY,
+                topic TEXT NOT NULL,
+                title TEXT NOT NULL,
+                content TEXT NOT NULL,
+                fact_check_report TEXT,
+                research_info TEXT,
+                final_content TEXT,
+                article_file TEXT,
+                fact_check_file TEXT,
+                research_file TEXT,
+                final_article_file TEXT,
+                created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+            )
+        """
+        )
+
+
+# # Add this to your startup event in app.py
+# @app.on_event("startup")
+# async def startup_event():
+#     app.state.pool = await get_db_pool()
+#     await init_db(app.state.pool)
+#     app.state.article_results = {}

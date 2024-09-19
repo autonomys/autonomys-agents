@@ -234,7 +234,7 @@ def revise_article(article_content, fact_check_report, manager_agent, article_ag
     return final_article_content
 
 
-def generate_article(topic):
+def generate_article(topic: str):
     manager_agent = ConversableAgent(
         name="Manager",
         human_input_mode="NEVER",
@@ -249,7 +249,7 @@ def generate_article(topic):
 
     if research_info.startswith("Error"):
         logging.error(f"Research failed: {research_info}")
-        return research_info, "", "", ""  # Return early if research fails
+        return research_info, "", "", "", ""  # Return early if research fails
 
     # Generate the article draft using the research information
     article_content = generate_draft(topic, manager_agent, article_agent, research_info)
@@ -257,11 +257,20 @@ def generate_article(topic):
     if article_content.startswith("Error"):
         logging.error(f"Draft generation failed: {article_content}")
         return (
+            "",
             article_content,
             "No fact-check performed due to draft generation error.",
             research_info,
             "",
         )
+
+    # Generate a title for the article
+    title_prompt = (
+        f"Generate a concise and engaging title for an article about {topic}."
+    )
+    title = article_agent.generate_reply(
+        messages=[{"role": "user", "content": title_prompt}]
+    )
 
     # Proceed with fact-checking and revision
     fact_check_report = fact_check_article(article_content, fact_checker_agent)
@@ -270,6 +279,7 @@ def generate_article(topic):
     )
 
     return (
+        title,
         article_content,
         fact_check_report,
         research_info,
@@ -278,7 +288,12 @@ def generate_article(topic):
 
 
 def save_article(
-    topic, article_content, fact_check_report, final_article_content, research_info
+    topic: str,
+    title: str,
+    article_content: str,
+    fact_check_report: str,
+    final_article_content: str,
+    research_info: str,
 ):
     articles_dir = "articles"
     os.makedirs(articles_dir, exist_ok=True)

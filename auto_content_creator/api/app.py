@@ -1,19 +1,25 @@
-from fastapi import FastAPI, BackgroundTasks, Request
+from fastapi import FastAPI, BackgroundTasks, Request, Query
 from fastapi.middleware.cors import CORSMiddleware
 from sse_starlette.sse import EventSourceResponse  # type: ignore
 from pydantic import BaseModel
-from .services import generate_article_service, get_article_service
+from .services import (
+    generate_article_service,
+    get_article_service,
+    get_db_pool,
+    init_db,
+)
 import asyncio
 import uuid
 import json
 from fastapi.encoders import jsonable_encoder
+from typing import List
+from datetime import datetime
 
 app = FastAPI()
 
-# Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=["http://localhost:3000"],  # Add any other origins you need
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -75,4 +81,48 @@ async def article_status(request: Request, article_id: str):
 # Initialize article_results in app.state
 @app.on_event("startup")
 async def startup_event():
+    app.state.pool = await get_db_pool()
+    await init_db(app.state.pool)
     app.state.article_results = {}
+
+
+class ArticleSummary(BaseModel):
+    id: uuid.UUID  # Change this to uuid.UUID
+    title: str
+    created_at: datetime
+
+
+@app.get("/articles", response_model=dict)  # Change response_model to dict
+async def get_articles(
+    page: int = Query(1, ge=1), page_size: int = Query(10, ge=1, le=100)
+):
+    offset = (page - 1) * page_size
+    async with app.state.pool.acquire() as conn:
+        articles = await conn.fetch(
+            """
+            SELECT id, title, created_at
+            FROM articles
+            ORDER BY created_at DESC
+            LIMIT $1 OFFSET $2
+            """,
+            page_size,
+            offset,
+        )
+        total_count = await conn.fetchval("SELECT COUNT(*) FROM articles")
+
+    return {
+        "articles": [
+            {
+                "id": str(row["id"]),  # Convert UUID to string
+                "title": row["title"],
+                "created_at": row[
+                    "created_at"
+                ].isoformat(),  # Convert datetime to ISO format string
+            }
+            for row in articles
+        ],
+        "total": total_count,
+        "page": page,
+        "page_size": page_size,
+        "total_pages": -(-total_count // page_size),  # Ceiling division
+    }
