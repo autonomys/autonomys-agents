@@ -23,10 +23,16 @@ def web_search(query):
             logging.warning("No results found in the API response")
             return "No results found"
 
-        search_results = "\n".join([f"{r['title']}: {r['snippet']}" for r in results])
-        logging.info(
-            f"Web search results: {search_results[:500]}..."  # Log first 500 characters
-        )
+        search_results = []
+        for r in results:
+            result = {
+                "title": r.get("title", ""),
+                "snippet": r.get("snippet", ""),
+                "link": r.get("link", ""),
+            }
+            search_results.append(result)
+
+        logging.info(f"Web search results: {search_results[:2]}")  # Log first 2 results
         return search_results
     except requests.RequestException as e:
         error_msg = f"Error: Unable to perform web search. {str(e)}"

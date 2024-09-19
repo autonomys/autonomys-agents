@@ -63,6 +63,7 @@ def generate_draft(topic, manager_agent, article_agent, research_info):
 def execute_agent_with_function_calling(agent, initial_message, max_iterations=5):
     chat_messages = [{"role": "user", "content": initial_message}]
     result_content = ""
+    sources = []
 
     for _ in range(max_iterations):
         response = agent.generate_reply(messages=chat_messages)
@@ -93,16 +94,26 @@ def execute_agent_with_function_calling(agent, initial_message, max_iterations=5
                 query = arguments.get("query") if isinstance(arguments, dict) else None
                 if query:
                     logging.info(f"Executing web_search for query: {query}")
-                    search_result = web_search(query)
+                    search_results = web_search(query)
+                    if isinstance(search_results, list):
+                        search_content = "\n".join(
+                            [
+                                f"Title: {r['title']}\nSnippet: {r['snippet']}\nSource: {r['link']}"
+                                for r in search_results
+                            ]
+                        )
+                        sources.extend([r["link"] for r in search_results])
+                    else:
+                        search_content = search_results
                     logging.info(
-                        f"Web search result: {search_result[:100]}..."
+                        f"Web search result: {search_content[:100]}..."
                     )  # Log first 100 chars
 
                     chat_messages.append(
                         {
                             "role": "function",
                             "name": "web_search",
-                            "content": search_result or "No results found.",
+                            "content": search_content or "No results found.",
                         }
                     )
                 else:
@@ -128,7 +139,7 @@ def execute_agent_with_function_calling(agent, initial_message, max_iterations=5
         else:
             logging.warning("Assistant's response has no content or function call.")
 
-    return result_content.strip()
+    return result_content.strip(), sources
 
 
 def conduct_research(topic, research_agent):
@@ -137,16 +148,22 @@ def conduct_research(topic, research_agent):
     Gather relevant information from credible sources about this topic using 'web_search'.
     Provide a summary of your findings, including key points, current trends, and any controversies or debates surrounding the topic.
     After gathering information, please provide a final summary of your research.
+    Include the sources used in your research at the end of your report.
     To use the web_search function, you must provide a query string.
     End your research with 'Research complete.' when you've finished the process.
     """
     logging.info(f"Conducting research on the topic: {topic}")
 
-    research_content = execute_agent_with_function_calling(research_agent, prompt)
+    research_content, sources = execute_agent_with_function_calling(
+        research_agent, prompt
+    )
 
     if not research_content:
         logging.error("No research content generated")
         return "Error: No research information gathered"
+
+    # Append sources to the research content
+    research_content += "\n\nSources:\n" + "\n".join(sources)
 
     logging.info("Research information gathered successfully")
     return research_content
@@ -154,13 +171,25 @@ def conduct_research(topic, research_agent):
 
 def fact_check_article(article_content, fact_checker_agent):
     logging.info("Sending article to FactChecker for verification")
-    prompt = f"Please fact-check the following article:\n\n{article_content}"
+    prompt = f"""
+    Please fact-check the following article:
 
-    fact_check_report = execute_agent_with_function_calling(fact_checker_agent, prompt)
+    {article_content}
+
+    Provide a summary of your findings, including any discrepancies or inaccuracies found.
+    Include the sources used in your fact-checking at the end of your report.
+    """
+
+    fact_check_report, sources = execute_agent_with_function_calling(
+        fact_checker_agent, prompt
+    )
 
     if not fact_check_report:
         logging.error("No fact-check report generated")
         return "Error: No fact-check report generated"
+
+    # Append sources to the fact-check report
+    fact_check_report += "\n\nSources:\n" + "\n".join(sources)
 
     logging.info("Fact-check report generated successfully")
     return fact_check_report
@@ -230,7 +259,7 @@ def generate_article(topic):
         return (
             article_content,
             "No fact-check performed due to draft generation error.",
-            "",
+            research_info,
             "",
         )
 
@@ -258,9 +287,7 @@ def save_article(
     safe_topic = topic.replace(" ", "_").lower()
     article_file_name = os.path.join(articles_dir, f"{safe_topic}_draft.md")
     fact_check_file_name = os.path.join(articles_dir, f"{safe_topic}_fact_check.md")
-    research_file_name = os.path.join(
-        articles_dir, f"{safe_topic}_research.md"
-    )  # New file
+    research_file_name = os.path.join(articles_dir, f"{safe_topic}_research.md")
     final_article_file_name = os.path.join(articles_dir, f"{safe_topic}_final.md")
 
     # Write the article draft to a file
