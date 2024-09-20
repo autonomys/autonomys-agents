@@ -5,8 +5,8 @@ import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import uvicorn
-from auto_content_creator.api.app import app
-from auto_content_creator.api.services import get_db_pool
+from api.app import app
+from api.services import get_db_pool
 
 
 async def init_db(pool):
@@ -41,6 +41,4 @@ async def shutdown():
 if __name__ == "__main__":
     app.add_event_handler("startup", startup)
     app.add_event_handler("shutdown", shutdown)
-    config = uvicorn.Config(app, host="0.0.0.0", port=8000)
-    server = uvicorn.Server(config)
-    server.run()
+    uvicorn.run(app, host="0.0.0.0", port=8000)

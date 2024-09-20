@@ -1,7 +1,4 @@
-from auto_content_creator.content_creation.article_generator import (
-    generate_article,
-    save_article,
-)
+from content_creation.article_generator import generate_article, save_article
 import uuid
 import asyncpg
 import os
