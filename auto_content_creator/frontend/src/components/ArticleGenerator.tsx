@@ -1,5 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import axios from 'axios';
+import styled from 'styled-components';
+import { useNavigate } from 'react-router-dom';
+import ReactMarkdown from 'react-markdown';
 
 interface ArticleGeneratorProps {
   onArticleGenerated: (articleId: string) => void;
@@ -7,23 +10,63 @@ interface ArticleGeneratorProps {
 
 interface ArticleData {
   article_id: string;
-  article_content: string;
-  fact_check_report: string;
-  research_info: string;
-  final_article_content: string;
-  files: {
-    article: string;
-    fact_check: string;
-    research: string;
-    final_article: string;
-  };
+  title: string;
+  snippet: string;
 }
+
+const GeneratorContainer = styled.div`
+  background-color: #f5f5f5;
+  border-radius: 8px;
+  padding: 20px;
+`;
+
+const LoadingSpinner = styled.div`
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #3498db;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  animation: spin 1s linear infinite;
+  margin: 20px auto;
+
+  @keyframes spin {
+    0% {
+      transform: rotate(0deg);
+    }
+    100% {
+      transform: rotate(360deg);
+    }
+  }
+`;
+
+const ArticlePreview = styled.div`
+  background-color: #ffffff;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  padding: 15px;
+  margin-top: 20px;
+`;
+
+const ViewDetailButton = styled.button`
+  background-color: #4caf50;
+  border: none;
+  color: white;
+  padding: 10px 20px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 16px;
+  margin: 4px 2px;
+  cursor: pointer;
+  border-radius: 4px;
+`;
 
 const ArticleGenerator: React.FC<ArticleGeneratorProps> = ({ onArticleGenerated }) => {
   const [topic, setTopic] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [status, setStatus] = useState('');
   const [articleData, setArticleData] = useState<ArticleData | null>(null);
+  const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,7 +84,6 @@ const ArticleGenerator: React.FC<ArticleGeneratorProps> = ({ onArticleGenerated 
           },
         }
       );
-      console.log('Response from server:', response.data);
       const articleId = response.data.article_id;
       onArticleGenerated(articleId);
       listenForUpdates(articleId);
@@ -56,27 +98,22 @@ const ArticleGenerator: React.FC<ArticleGeneratorProps> = ({ onArticleGenerated 
     const eventSource = new EventSource(`http://localhost:8000/article-status/${articleId}`);
 
     eventSource.onmessage = event => {
-      console.log('Received message:', event.data);
       setStatus(event.data);
     };
 
     eventSource.addEventListener('article_ready', event => {
-      console.log('Article ready event received. Raw data:', event.data);
       try {
         if (event.data && event.data.trim() !== '') {
           const parsedData: ArticleData = JSON.parse(event.data);
-          console.log('Parsed article data:', parsedData);
           setArticleData(parsedData);
           setStatus('Article generated successfully!');
         } else {
-          console.warn('Received empty data for article_ready event');
           setStatus('Article ready, but no data received');
         }
         setIsLoading(false);
         eventSource.close();
       } catch (error: any) {
         console.error('Error parsing article data:', error);
-        console.error('Raw data causing the error:', event.data);
         setStatus(`Error processing article data: ${error.message}`);
         setIsLoading(false);
         eventSource.close();
@@ -92,7 +129,7 @@ const ArticleGenerator: React.FC<ArticleGeneratorProps> = ({ onArticleGenerated 
   };
 
   return (
-    <div>
+    <GeneratorContainer>
       <h2>Generate Article</h2>
       <form onSubmit={handleSubmit}>
         <input
@@ -107,26 +144,17 @@ const ArticleGenerator: React.FC<ArticleGeneratorProps> = ({ onArticleGenerated 
         </button>
       </form>
       {status && <p>{status}</p>}
+      {isLoading && <LoadingSpinner />}
       {articleData && (
-        <div>
-          <h3>Generated Article</h3>
-          <h4>Final Article Content:</h4>
-          <pre>{articleData.final_article_content}</pre>
-          <h4>Fact Check Report:</h4>
-          <pre>{articleData.fact_check_report}</pre>
-          <h4>Research Info:</h4>
-          <pre>{articleData.research_info}</pre>
-          <h4>File Locations:</h4>
-          <ul>
-            {Object.entries(articleData.files).map(([key, value]) => (
-              <li key={key}>
-                {key}: {value}
-              </li>
-            ))}
-          </ul>
-        </div>
+        <ArticlePreview>
+          <h3>{articleData.title}</h3>
+          <ReactMarkdown>{articleData.snippet}</ReactMarkdown>
+          <ViewDetailButton onClick={() => navigate(`/article/${articleData.article_id}`)}>
+            View Full Article
+          </ViewDetailButton>
+        </ArticlePreview>
       )}
-    </div>
+    </GeneratorContainer>
   );
 };
 

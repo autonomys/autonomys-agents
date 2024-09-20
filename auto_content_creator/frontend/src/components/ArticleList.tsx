@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import styled from 'styled-components';
+import { Link } from 'react-router-dom';
 
 interface ArticleSummary {
   id: string;
@@ -10,6 +12,73 @@ interface ArticleSummary {
 interface ArticleListProps {
   onArticleSelect: (id: string) => void;
 }
+
+const ListContainer = styled.div`
+  background-color: #f5f5f5; // Muted background color
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+`;
+
+const ListTitle = styled.h2`
+  color: #4a4a4a; // Muted text color
+  margin-bottom: 20px;
+`;
+
+const ArticleItem = styled(Link)`
+  display: block;
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+  padding: 10px;
+  border-bottom: 1px solid #eee;
+  transition: background-color 0.2s;
+
+  &:hover {
+    background-color: #f0f0f0;
+  }
+`;
+
+const ArticleTitle = styled.span`
+  font-weight: bold;
+  color: #444;
+`;
+
+const ArticleDate = styled.span`
+  font-size: 0.9em;
+  color: #666;
+  margin-left: 10px;
+`;
+
+const PaginationContainer = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 20px;
+`;
+
+const PaginationButton = styled.button`
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+
+  &:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+  }
+
+  &:hover:not(:disabled) {
+    background-color: #0056b3;
+  }
+`;
+
+const PageInfo = styled.span`
+  color: #666;
+`;
 
 const ArticleList: React.FC<ArticleListProps> = ({ onArticleSelect }) => {
   const [articles, setArticles] = useState<ArticleSummary[]>([]);
@@ -34,34 +103,34 @@ const ArticleList: React.FC<ArticleListProps> = ({ onArticleSelect }) => {
   };
 
   return (
-    <div>
-      <h2>Existing Articles</h2>
+    <ListContainer>
+      <ListTitle>Existing Articles</ListTitle>
       {isLoading ? (
         <p>Loading...</p>
       ) : (
         <>
           <ul>
             {articles.map(article => (
-              <li key={article.id} onClick={() => onArticleSelect(article.id)}>
-                {article.title} - Created on: {new Date(article.created_at).toLocaleString()}
-              </li>
+              <ArticleItem key={article.id} to={`/article/${article.id}`}>
+                <ArticleTitle>{article.title}</ArticleTitle>
+                <ArticleDate>Created on: {new Date(article.created_at).toLocaleString()}</ArticleDate>
+              </ArticleItem>
             ))}
           </ul>
-          <div>
-            <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}>
+          <PaginationContainer>
+            <PaginationButton onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}>
               Previous
-            </button>
-            <span>
-              {' '}
-              Page {page} of {totalPages}{' '}
-            </span>
-            <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages}>
+            </PaginationButton>
+            <PageInfo>
+              Page {page} of {totalPages}
+            </PageInfo>
+            <PaginationButton onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages}>
               Next
-            </button>
-          </div>
+            </PaginationButton>
+          </PaginationContainer>
         </>
       )}
-    </div>
+    </ListContainer>
   );
 };
 

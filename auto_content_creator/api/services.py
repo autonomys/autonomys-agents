@@ -72,17 +72,19 @@ async def generate_article_service(topic: str, pool):
 async def get_article_service(article_id: str, pool):
     async with pool.acquire() as conn:
         article = await conn.fetchrow(
-            "SELECT * FROM articles WHERE id = $1", article_id
+            "SELECT * FROM articles WHERE id = $1", uuid.UUID(article_id)
         )
 
     if article:
         return {
-            "article_id": article["id"],
+            "article_id": str(article["id"]),  # Convert UUID to string
             "topic": article["topic"],
-            "article_content": article["content"],
+            "title": article["title"],  # Add this line
+            "content": article["content"],
             "fact_check_report": article["fact_check_report"],
             "research_info": article["research_info"],
             "final_article_content": article["final_content"],
+            "created_at": article["created_at"].isoformat(),  # Add this line
             "files": {
                 "article": article["article_file"],
                 "fact_check": article["fact_check_file"],

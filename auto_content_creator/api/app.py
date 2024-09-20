@@ -1,4 +1,4 @@
-from fastapi import FastAPI, BackgroundTasks, Request, Query
+from fastapi import FastAPI, BackgroundTasks, Request, Query, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from sse_starlette.sse import EventSourceResponse  # type: ignore
 from pydantic import BaseModel
@@ -42,7 +42,7 @@ async def get_article(article_id: str):
     article = await get_article_service(article_id, app.state.pool)
     if article:
         return article
-    return {"error": "Article not found"}
+    raise HTTPException(status_code=404, detail="Article not found")
 
 
 async def process_article_generation(topic: str, article_id: str):
