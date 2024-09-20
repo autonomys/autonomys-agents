@@ -17,7 +17,53 @@ interface ArticleData {
 const GeneratorContainer = styled.div`
   background-color: #f5f5f5;
   border-radius: 8px;
-  padding: 20px;
+  padding: 30px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+`;
+
+const GeneratorTitle = styled.h2`
+  color: #333;
+  margin-bottom: 20px;
+  font-size: 24px;
+`;
+
+const GeneratorForm = styled.form`
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+`;
+
+const TopicInput = styled.input`
+  padding: 12px 15px;
+  font-size: 16px;
+  border: 2px solid #ddd;
+  border-radius: 6px;
+  transition: border-color 0.3s ease;
+
+  &:focus {
+    outline: none;
+    border-color: #007bff;
+  }
+`;
+
+const GenerateButton = styled.button`
+  padding: 12px 20px;
+  font-size: 18px;
+  color: white;
+  background-color: #007bff;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+
+  &:hover {
+    background-color: #0056b3;
+  }
+
+  &:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+  }
 `;
 
 const LoadingSpinner = styled.div`
@@ -39,26 +85,34 @@ const LoadingSpinner = styled.div`
   }
 `;
 
+const StatusMessage = styled.p`
+  color: #666;
+  font-style: italic;
+  margin-top: 15px;
+`;
+
 const ArticlePreview = styled.div`
   background-color: #ffffff;
   border: 1px solid #e0e0e0;
-  border-radius: 4px;
-  padding: 15px;
-  margin-top: 20px;
+  border-radius: 6px;
+  padding: 20px;
+  margin-top: 30px;
 `;
 
 const ViewDetailButton = styled.button`
-  background-color: #4caf50;
-  border: none;
+  background-color: #28a745;
   color: white;
+  border: none;
   padding: 10px 20px;
-  text-align: center;
-  text-decoration: none;
-  display: inline-block;
   font-size: 16px;
-  margin: 4px 2px;
-  cursor: pointer;
   border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  margin-top: 15px;
+
+  &:hover {
+    background-color: #218838;
+  }
 `;
 
 const ArticleGenerator: React.FC<ArticleGeneratorProps> = ({ onArticleGenerated }) => {
@@ -130,20 +184,20 @@ const ArticleGenerator: React.FC<ArticleGeneratorProps> = ({ onArticleGenerated 
 
   return (
     <GeneratorContainer>
-      <h2>Generate Article</h2>
-      <form onSubmit={handleSubmit}>
-        <input
+      <GeneratorTitle>Generate Article</GeneratorTitle>
+      <GeneratorForm onSubmit={handleSubmit}>
+        <TopicInput
           type='text'
           value={topic}
           onChange={e => setTopic(e.target.value)}
           placeholder='Enter article topic'
           required
         />
-        <button type='submit' disabled={isLoading}>
+        <GenerateButton type='submit' disabled={isLoading}>
           {isLoading ? 'Generating...' : 'Generate Article'}
-        </button>
-      </form>
-      {status && <p>{status}</p>}
+        </GenerateButton>
+      </GeneratorForm>
+      {status && <StatusMessage>{status}</StatusMessage>}
       {isLoading && <LoadingSpinner />}
       {articleData && (
         <ArticlePreview>

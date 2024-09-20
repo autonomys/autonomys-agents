@@ -3,20 +3,21 @@ import styled from 'styled-components';
 import ArticleGenerator from './components/ArticleGenerator';
 import ArticleList from './components/ArticleList';
 import ArticleView from './components/ArticleView';
-import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Link, useLocation } from 'react-router-dom';
 
 const AppContainer = styled.div`
   max-width: 1200px;
   margin: 0 auto;
   padding: 20px;
   font-family: Arial, sans-serif;
-  background-color: #fafafa; // Muted background color
+  background-color: #fafafa;
 `;
 
 const Title = styled.h1`
-  color: #4a4a4a; // Muted text color
+  color: #333;
   text-align: center;
   margin-bottom: 30px;
+  font-size: 2.5em;
 `;
 
 const MainContent = styled.div`
@@ -29,27 +30,40 @@ const HomeContainer = styled.div`
   color: #4a4a4a;
 `;
 
-// Define NavBar component
 const NavBar = styled.nav`
   display: flex;
   justify-content: center;
-  background-color: #e6e6e6;
-  padding: 10px;
-  margin-bottom: 20px;
+  background-color: #fff;
+  padding: 15px;
+  margin-bottom: 30px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
 `;
 
-// Define NavLink component
-const NavLink = styled(Link)`
+const NavLink = styled(Link)<{ $isActive: boolean }>`
   margin: 0 15px;
   text-decoration: none;
-  color: #4a4a4a;
-  padding: 8px 12px;
+  color: ${props => (props.$isActive ? '#007bff' : '#4a4a4a')};
+  padding: 10px 15px;
   border-radius: 4px;
+  transition: all 0.3s ease;
+  font-weight: ${props => (props.$isActive ? 'bold' : 'normal')};
 
   &:hover {
-    background-color: #d4d4d4;
+    background-color: #f0f0f0;
+    color: #007bff;
   }
 `;
+
+function NavLinkWithActive({ to, children }: { to: string; children: React.ReactNode }) {
+  const location = useLocation();
+  const isActive = location.pathname === to;
+  return (
+    <NavLink to={to} $isActive={isActive}>
+      {children}
+    </NavLink>
+  );
+}
 
 function App() {
   return (
@@ -57,9 +71,9 @@ function App() {
       <AppContainer>
         <Title>Auto Content Creator</Title>
         <NavBar>
-          <NavLink to='/'>Home</NavLink>
-          <NavLink to='/generate'>Generate Article</NavLink>
-          <NavLink to='/articles'>Existing Articles</NavLink>
+          <NavLinkWithActive to='/'>Home</NavLinkWithActive>
+          <NavLinkWithActive to='/generate'>Generate Article</NavLinkWithActive>
+          <NavLinkWithActive to='/articles'>Existing Articles</NavLinkWithActive>
         </NavBar>
         <MainContent>
           <Routes>
