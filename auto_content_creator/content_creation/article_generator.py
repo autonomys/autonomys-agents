@@ -12,9 +12,11 @@ from .web_search import web_search
 logging.basicConfig(level=logging.INFO)
 
 
-def generate_draft(topic, manager_agent, article_agent, research_info):
+def generate_draft(
+    category: str, topic: str, manager_agent, article_agent, research_info
+):
     prompt = f"""
-    Write a comprehensive article draft on the following web3 topic: {topic}
+    Write a comprehensive article draft on the following {category} topic: {topic}
     
     Include the following sections:
      1. Introduction
@@ -24,7 +26,7 @@ def generate_draft(topic, manager_agent, article_agent, research_info):
      5. Challenges and Considerations
      6. Conclusion
     
-    Ensure the content is informative, well-structured, and engaging for a web3-savvy audience.
+    Ensure the content is informative, well-structured, and engaging for a {category}-savvy audience.
     
     Utilize the following research information to enhance the article:
 
@@ -234,25 +236,27 @@ def revise_article(article_content, fact_check_report, manager_agent, article_ag
     return final_article_content
 
 
-def generate_article(topic: str):
+def generate_article(category: str, topic: str):
     manager_agent = ConversableAgent(
         name="Manager",
         human_input_mode="NEVER",
         max_consecutive_auto_reply=0,  # Prevent auto-replies from the manager
     )
-    article_agent = create_article_generator_agent()
-    fact_checker_agent = create_fact_checker_agent()
-    research_agent = create_research_agent()
+    article_agent = create_article_generator_agent(category)
+    fact_checker_agent = create_fact_checker_agent(category)
+    research_agent = create_research_agent(category)
 
     # Get research information
-    research_info = conduct_research(topic, research_agent)
+    research_info = conduct_research(f"{category}: {topic}", research_agent)
 
     if research_info.startswith("Error"):
         logging.error(f"Research failed: {research_info}")
         return research_info, "", "", "", ""  # Return early if research fails
 
     # Generate the article draft using the research information
-    article_content = generate_draft(topic, manager_agent, article_agent, research_info)
+    article_content = generate_draft(
+        category, topic, manager_agent, article_agent, research_info
+    )
 
     if article_content.startswith("Error"):
         logging.error(f"Draft generation failed: {article_content}")
@@ -288,6 +292,7 @@ def generate_article(topic: str):
 
 
 def save_article(
+    category: str,
     topic: str,
     title: str,
     article_content: str,
@@ -295,15 +300,15 @@ def save_article(
     final_article_content: str,
     research_info: str,
 ):
-    articles_dir = "articles"
-    os.makedirs(articles_dir, exist_ok=True)
+    base_dir = os.path.join("articles", category.replace(" ", "_").lower())
+    os.makedirs(base_dir, exist_ok=True)
 
     # Create file names based on the topic
     safe_topic = topic.replace(" ", "_").lower()
-    article_file_name = os.path.join(articles_dir, f"{safe_topic}_draft.md")
-    fact_check_file_name = os.path.join(articles_dir, f"{safe_topic}_fact_check.md")
-    research_file_name = os.path.join(articles_dir, f"{safe_topic}_research.md")
-    final_article_file_name = os.path.join(articles_dir, f"{safe_topic}_final.md")
+    article_file_name = os.path.join(base_dir, f"{safe_topic}_draft.md")
+    fact_check_file_name = os.path.join(base_dir, f"{safe_topic}_fact_check.md")
+    research_file_name = os.path.join(base_dir, f"{safe_topic}_research.md")
+    final_article_file_name = os.path.join(base_dir, f"{safe_topic}_final.md")
 
     # Write the article draft to a file
     with open(article_file_name, "w") as f:

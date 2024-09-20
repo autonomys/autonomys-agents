@@ -33,7 +33,7 @@ const GeneratorForm = styled.form`
   gap: 15px;
 `;
 
-const TopicInput = styled.input`
+const Input = styled.input`
   padding: 12px 15px;
   font-size: 16px;
   border: 2px solid #ddd;
@@ -116,6 +116,7 @@ const ViewDetailButton = styled.button`
 `;
 
 const ArticleGenerator: React.FC<ArticleGeneratorProps> = ({ onArticleGenerated }) => {
+  const [category, setCategory] = useState('');
   const [topic, setTopic] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [status, setStatus] = useState('');
@@ -131,7 +132,7 @@ const ArticleGenerator: React.FC<ArticleGeneratorProps> = ({ onArticleGenerated 
     try {
       const response = await axios.post(
         'http://localhost:8000/generate-article',
-        { topic },
+        { category, topic },
         {
           headers: {
             'Content-Type': 'application/json',
@@ -186,7 +187,14 @@ const ArticleGenerator: React.FC<ArticleGeneratorProps> = ({ onArticleGenerated 
     <GeneratorContainer>
       <GeneratorTitle>Generate Article</GeneratorTitle>
       <GeneratorForm onSubmit={handleSubmit}>
-        <TopicInput
+        <Input
+          type='text'
+          value={category}
+          onChange={e => setCategory(e.target.value)}
+          placeholder='Enter article category'
+          required
+        />
+        <Input
           type='text'
           value={topic}
           onChange={e => setTopic(e.target.value)}

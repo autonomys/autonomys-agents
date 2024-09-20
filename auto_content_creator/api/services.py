@@ -15,14 +15,15 @@ async def get_db_pool():
     return await asyncpg.create_pool(DATABASE_URL)
 
 
-async def generate_article_service(topic: str, pool):
+async def generate_article_service(category: str, topic: str, pool):
     title, article_content, fact_check_report, research_info, final_article_content = (
-        generate_article(topic)
+        generate_article(category, topic)
     )
 
     article_id = str(uuid.uuid4())
     title_str = str(title) if title else ""
     article_file, fact_check_file, research_file, final_article_file = save_article(
+        category,
         topic,
         title_str,
         article_content,
@@ -34,10 +35,11 @@ async def generate_article_service(topic: str, pool):
     async with pool.acquire() as conn:
         await conn.execute(
             """
-            INSERT INTO articles (id, topic, title, content, fact_check_report, research_info, final_content, article_file, fact_check_file, research_file, final_article_file)
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+            INSERT INTO articles (id, category, topic, title, content, fact_check_report, research_info, final_content, article_file, fact_check_file, research_file, final_article_file)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
         """,
             article_id,
+            category,
             topic,
             title,
             article_content,
@@ -52,6 +54,8 @@ async def generate_article_service(topic: str, pool):
 
     return {
         "article_id": article_id,
+        "category": category,
+        "topic": topic,
         "title": title,
         "article_content": article_content,
         "fact_check_report": fact_check_report,
@@ -98,6 +102,7 @@ async def init_db(pool):
             """
             CREATE TABLE IF NOT EXISTS articles (
                 id UUID PRIMARY KEY,
+                category TEXT NOT NULL,
                 topic TEXT NOT NULL,
                 title TEXT NOT NULL,
                 content TEXT NOT NULL,

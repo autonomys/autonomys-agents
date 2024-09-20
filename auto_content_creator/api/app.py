@@ -26,14 +26,22 @@ app.add_middleware(
 )
 
 
-class Topic(BaseModel):
+class ArticleRequest(BaseModel):
+    category: str
     topic: str
 
 
 @app.post("/generate-article")
-async def generate_article(topic: Topic, background_tasks: BackgroundTasks):
+async def generate_article(
+    article_request: ArticleRequest, background_tasks: BackgroundTasks
+):
     article_id = str(uuid.uuid4())
-    background_tasks.add_task(process_article_generation, topic.topic, article_id)
+    background_tasks.add_task(
+        process_article_generation,
+        article_request.category,
+        article_request.topic,
+        article_id,
+    )
     return {"article_id": article_id}
 
 
@@ -45,8 +53,8 @@ async def get_article(article_id: str):
     raise HTTPException(status_code=404, detail="Article not found")
 
 
-async def process_article_generation(topic: str, article_id: str):
-    result = await generate_article_service(topic, app.state.pool)
+async def process_article_generation(category: str, topic: str, article_id: str):
+    result = await generate_article_service(category, topic, app.state.pool)
     # Store the result in a way that can be accessed by the SSE endpoint
     # For simplicity, we'll use a global variable here, but in a real application,
     # you might want to use a proper caching solution or database

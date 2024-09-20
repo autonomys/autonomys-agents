@@ -2,12 +2,12 @@ from autogen.agentchat import AssistantAgent
 from .config import llm_config
 
 
-def create_article_generator_agent():
+def create_article_generator_agent(category: str):
     return AssistantAgent(
         name="ArticleGenerator",
         system_message=(
-            "You are an expert in web3 technologies and content creation. "
-            "Your task is to generate informative and engaging article drafts on trending web3 topics."
+            f"You are an expert in {category} and content creation. "
+            "Your task is to generate informative and engaging article drafts on trending {category} topics."
         ),
         llm_config=llm_config,
         human_input_mode="NEVER",
@@ -15,11 +15,11 @@ def create_article_generator_agent():
     )
 
 
-def create_fact_checker_agent():
+def create_fact_checker_agent(category: str):
     return AssistantAgent(
         name="FactChecker",
         system_message=(
-            "You are an AI assistant specialized in fact-checking and verification. "
+            f"You are an AI assistant specialized in fact-checking and verification in the field of {category}. "
             "Your task is to analyze the provided article content, verify the factual accuracy "
             "using web search, and highlight any discrepancies or confirm correctness. "
             "Always use the 'web_search' function to verify information. "
@@ -55,13 +55,13 @@ def create_fact_checker_agent():
     )
 
 
-def create_research_agent():
+def create_research_agent(category: str):
     return AssistantAgent(
         name="ResearchAgent",
         system_message=(
-            "You are an AI assistant specialized in researching web3 topics. "
+            "You are an AI assistant specialized in researching various given topics. "
             "Your task is to gather relevant information from the web and existing knowledge bases "
-            "to assist in creating comprehensive and accurate articles. "
+            f"to assist in creating comprehensive and accurate articles in the field of {category}. "
             "Always use the 'web_search' function to collect information. "
             "When using the web_search function, you MUST provide a specific query string. "
             "After gathering sufficient information, provide a summary of your findings. "
