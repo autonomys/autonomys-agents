@@ -1,5 +1,5 @@
 from autogen.agentchat import AssistantAgent
-from .config import llm_config_4o
+from .config import llm_config
 
 
 def create_article_generator_agent():
@@ -9,7 +9,7 @@ def create_article_generator_agent():
             "You are an expert in web3 technologies and content creation. "
             "Your task is to generate informative and engaging article drafts on trending web3 topics."
         ),
-        llm_config=llm_config_4o,
+        llm_config=llm_config,
         human_input_mode="NEVER",
         max_consecutive_auto_reply=1,
     )
@@ -33,7 +33,7 @@ def create_fact_checker_agent():
             "6. End your report with 'Fact-checking complete.' when you've finished the process."
         ),
         llm_config={
-            **llm_config_4o,
+            **llm_config,
             "functions": [
                 {
                     "name": "web_search",
@@ -68,7 +68,7 @@ def create_research_agent():
             "End your research with 'Research complete.' when you've finished the process."
         ),
         llm_config={
-            **llm_config_4o,
+            **llm_config,
             "functions": [
                 {
                     "name": "web_search",

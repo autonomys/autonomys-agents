@@ -4,18 +4,12 @@ from dotenv import load_dotenv
 load_dotenv()
 
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-SERPAPI_API_KEY = os.getenv("SERPAPI_API_KEY")  # Add this line
+SERPAPI_API_KEY = os.getenv("SERPAPI_API_KEY")
+OPENAI_MODEL = os.getenv("OPENAI_MODEL")
 
-llm_config_4o = {
-    "model": "gpt-4o",  # "chatgpt-4o-latest",  # "gpt-4o-mini",
+llm_config = {
+    "model": OPENAI_MODEL,
     "temperature": 0.7,
-    "max_tokens": 4096,
-    "api_key": OPENAI_API_KEY,
-}
-
-llm_config_o1 = {
-    "model": "o1-preview",
-    "temperature": 0.7,
-    "max_tokens": 4096,
+    "max_tokens": 10000,
     "api_key": OPENAI_API_KEY,
 }

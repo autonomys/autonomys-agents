@@ -27,6 +27,7 @@ Auto Content Creator is a web application that generates articles on specified w
 
    ```
    OPENAI_API_KEY=your_openai_api_key
+   OPENAI_MODEL=gpt-4o (or whatever model you want to use)
    SERPAPI_API_KEY=your_serpapi_api_key
    POSTGRES_DB=auto_content_creator
    POSTGRES_USER=your_db_user
