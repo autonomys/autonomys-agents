@@ -136,14 +136,15 @@ async def get_article_service(article_id: str, pool):
 
     if article:
         return {
-            "article_id": str(article["id"]),  # Convert UUID to string
+            "article_id": str(article["id"]),
+            "category": article["category"],
             "topic": article["topic"],
-            "title": article["title"],  # Add this line
+            "title": article["title"],
             "content": article["content"],
             "fact_check_report": article["fact_check_report"],
             "research_info": article["research_info"],
             "final_article_content": article["final_content"],
-            "created_at": article["created_at"].isoformat(),  # Add this line
+            "created_at": article["created_at"].isoformat(),
             "files": {
                 "article": article["article_file"],
                 "fact_check": article["fact_check_file"],

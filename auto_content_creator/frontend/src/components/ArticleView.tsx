@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import axios from 'axios';
 import styled from 'styled-components';
 import ReactMarkdown from 'react-markdown';
+import FeedbackForm from './FeedbackForm';
 
 const ArticleContainer = styled.div`
   background-color: #f9f7f7;
@@ -30,6 +31,11 @@ const ContentSection = styled.div`
   margin-bottom: 20px;
 `;
 
+const DraftSelector = styled.select`
+  margin-bottom: 20px;
+  padding: 5px;
+`;
+
 interface ArticleData {
   id: string;
   title: string;
@@ -39,27 +45,67 @@ interface ArticleData {
   created_at: string;
 }
 
+interface DraftData {
+  draft_number: number;
+  content: string;
+  feedback: string;
+  created_at: string;
+}
+
 function ArticleView() {
   const { id } = useParams<{ id: string }>();
   const [article, setArticle] = useState<ArticleData | null>(null);
+  const [drafts, setDrafts] = useState<DraftData[]>([]);
+  const [selectedDraft, setSelectedDraft] = useState<number>(0);
 
   useEffect(() => {
-    axios
-      .get(`http://localhost:8000/article/${id}`)
-      .then(response => setArticle(response.data))
-      .catch(error => console.error('Error fetching article:', error));
+    fetchArticle();
+    fetchDrafts();
   }, [id]);
 
+  const fetchArticle = async () => {
+    try {
+      const response = await axios.get(`http://localhost:8000/article/${id}`);
+      setArticle(response.data);
+    } catch (error) {
+      console.error('Error fetching article:', error);
+    }
+  };
+
+  const fetchDrafts = async () => {
+    try {
+      const response = await axios.get(`http://localhost:8000/article-drafts/${id}`);
+      setDrafts(response.data);
+      setSelectedDraft(response.data.length - 1); // Select the latest draft
+    } catch (error) {
+      console.error('Error fetching drafts:', error);
+    }
+  };
+
+  const handleDraftChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    setSelectedDraft(Number(event.target.value));
+  };
+
   if (!article) return <p>Loading...</p>;
+
+  const currentDraft = drafts[selectedDraft] || { content: article.content };
 
   return (
     <ArticleContainer>
       <ArticleTitle>{article.title}</ArticleTitle>
       <p>Created on: {new Date(article.created_at).toLocaleString()}</p>
 
+      <DraftSelector value={selectedDraft} onChange={handleDraftChange}>
+        {drafts.map((draft, index) => (
+          <option key={index} value={index}>
+            Draft {draft.draft_number}
+          </option>
+        ))}
+      </DraftSelector>
+
       <SectionTitle>Article Content</SectionTitle>
       <ContentSection>
-        <ReactMarkdown>{article.content}</ReactMarkdown>
+        <ReactMarkdown>{currentDraft.content}</ReactMarkdown>
       </ContentSection>
 
       <SectionTitle>Fact Check Report</SectionTitle>
@@ -71,6 +117,8 @@ function ArticleView() {
       <ContentSection>
         <ReactMarkdown>{article.research_info}</ReactMarkdown>
       </ContentSection>
+
+      <FeedbackForm articleId={id!} onFeedbackSubmitted={fetchDrafts} />
     </ArticleContainer>
   );
 }

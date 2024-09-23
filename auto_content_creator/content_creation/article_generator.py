@@ -276,7 +276,23 @@ def revise_article_with_feedback(
         final_article_content = "Error: Unable to generate revised article."
 
     logging.info("Revised article generated successfully")
-    return final_article_content
+
+    # Generate a new title
+    title_prompt = (
+        f"Generate a concise and engaging title for the revised article about {topic}."
+    )
+    title = article_agent.generate_reply(
+        messages=[{"role": "user", "content": title_prompt}]
+    )
+
+    # Return the same number of values as generate_article
+    return (
+        title,
+        article_content,  # Original content
+        "",  # No new fact check report
+        "",  # No new research info
+        final_article_content,
+    )
 
 
 def generate_article(category: str, topic: str):
