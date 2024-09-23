@@ -86,6 +86,11 @@ function ArticleView() {
     setSelectedDraft(Number(event.target.value));
   };
 
+  const handleFeedbackSubmitted = () => {
+    // Fetch the updated drafts after feedback submission
+    fetchDrafts();
+  };
+
   if (!article) return <p>Loading...</p>;
 
   const currentDraft = drafts[selectedDraft] || { content: article.content };
@@ -118,7 +123,7 @@ function ArticleView() {
         <ReactMarkdown>{article.research_info}</ReactMarkdown>
       </ContentSection>
 
-      <FeedbackForm articleId={id!} onFeedbackSubmitted={fetchDrafts} />
+      <FeedbackForm articleId={id!} onFeedbackSubmitted={handleFeedbackSubmitted} />
     </ArticleContainer>
   );
 }

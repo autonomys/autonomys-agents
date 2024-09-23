@@ -210,4 +210,4 @@ async def get_article_drafts_service(article_id: str, pool):
             }
             for draft in drafts
         ]
-    return None
+    return []
