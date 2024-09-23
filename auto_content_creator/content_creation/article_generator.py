@@ -16,21 +16,35 @@ def generate_draft(
     category: str, topic: str, manager_agent, article_agent, research_info
 ):
     prompt = f"""
-    Write a comprehensive article draft on the following {category} topic: {topic}
-    
-    Include the following sections:
-     1. Introduction
-     2. Background
-     3. Current Developments
-     4. Potential Impact
-     5. Challenges and Considerations
-     6. Conclusion
-    
-    Ensure the content is informative, well-structured, and engaging for a {category}-savvy audience.
-    
-    Utilize the following research information to enhance the article:
+    Create an engaging and informative article on the following {category} topic: {topic}
+
+    Use the research information provided to enrich your content:
 
     {research_info}
+
+    First, analyze the topic and choose the most appropriate writing style from the following options:
+    1. Standard Article: A well-structured piece with clear sections and a logical flow.
+    2. Narrative Style: A story-driven approach that weaves facts into a compelling narrative.
+    3. Problem-Solution: An article that presents a challenge and explores potential solutions.
+    4. Debate Style: A balanced presentation of different viewpoints on a controversial topic.
+    5. How-To Guide: A step-by-step instructional piece on a process or technique.
+    6. List Article: A curated list of items, facts, or tips related to the topic.
+    7. Interview Format: A Q&A style article presenting expert opinions or experiences.
+    8. Case Study: An in-depth analysis of a specific example or scenario related to the topic.
+
+    Once you've selected the most fitting style, craft your article accordingly. Regardless of the chosen style, ensure your article:
+    - Begins with a captivating hook or opening that draws the reader in.
+    - Provides necessary background information to set the context.
+    - Explores current developments, trends, or key aspects of the topic.
+    - Discusses potential impacts, implications, or future scenarios related to the subject.
+    - Addresses any relevant challenges, controversies, or differing perspectives.
+    - Concludes with thought-provoking insights or a call-to-action that resonates with the reader.
+
+    Feel free to use subheadings, bullet points, or other formatting elements to enhance readability and engagement.
+
+    Tailor your writing style and depth to a {category}-savvy audience, ensuring the content is both informative and compelling.
+
+    Before you begin writing, state the chosen writing style and briefly explain why it's the most appropriate for this topic.
     """
 
     # Manager requests the article from ArticleGenerator
@@ -210,7 +224,8 @@ def revise_article(article_content, fact_check_report, manager_agent, article_ag
     {fact_check_report}
 
     Provide a revised version of the article that incorporates the fact-check findings and corrects any inaccuracies.
-    Ensure the revised article maintains its original structure and flow while improving its accuracy.
+    Ensure the revised article maintains its original structure, flow, and chosen writing style while improving its accuracy.
+    If the original article stated a specific writing style, make sure to preserve that style in your revision.
     """
 
     # Manager requests the revised article from ArticleGenerator
