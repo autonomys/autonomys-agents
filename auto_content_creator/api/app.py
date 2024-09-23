@@ -7,6 +7,7 @@ from .services import (
     get_article_service,
     get_db_pool,
     init_db,
+    get_article_drafts_service,
 )
 import asyncio
 import uuid
@@ -14,6 +15,7 @@ import json
 from fastapi.encoders import jsonable_encoder
 from typing import List
 from datetime import datetime
+from typing import Optional
 
 app = FastAPI()
 
@@ -53,11 +55,12 @@ async def get_article(article_id: str):
     raise HTTPException(status_code=404, detail="Article not found")
 
 
-async def process_article_generation(category: str, topic: str, article_id: str):
-    result = await generate_article_service(category, topic, app.state.pool)
-    # Store the result in a way that can be accessed by the SSE endpoint
-    # For simplicity, we'll use a global variable here, but in a real application,
-    # you might want to use a proper caching solution or database
+async def process_article_generation(
+    category: str, topic: str, article_id: str, feedback: Optional[str] = None
+):
+    result = await generate_article_service(
+        category, topic, app.state.pool, feedback, article_id
+    )
     app.state.article_results[article_id] = result
 
 
@@ -134,3 +137,34 @@ async def get_articles(
         "page_size": page_size,
         "total_pages": -(-total_count // page_size),  # Ceiling division
     }
+
+
+class FeedbackRequest(BaseModel):
+    article_id: str
+    feedback: str
+
+
+@app.post("/submit-feedback")
+async def submit_feedback(
+    feedback_request: FeedbackRequest, background_tasks: BackgroundTasks
+):
+    article = await get_article_service(feedback_request.article_id, app.state.pool)
+    if not article:
+        raise HTTPException(status_code=404, detail="Article not found")
+
+    background_tasks.add_task(
+        process_article_generation,
+        article["category"],
+        article["topic"],
+        feedback_request.article_id,
+        feedback_request.feedback,
+    )
+    return {"message": "Feedback submitted successfully"}
+
+
+@app.get("/article-drafts/{article_id}")
+async def get_article_drafts(article_id: str):
+    drafts = await get_article_drafts_service(article_id, app.state.pool)
+    if drafts:
+        return drafts
+    raise HTTPException(status_code=404, detail="Drafts not found")

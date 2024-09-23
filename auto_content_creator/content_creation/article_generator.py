@@ -236,6 +236,49 @@ def revise_article(article_content, fact_check_report, manager_agent, article_ag
     return final_article_content
 
 
+def revise_article_with_feedback(
+    category: str, topic: str, article_content: str, feedback: str
+):
+    manager_agent = ConversableAgent(
+        name="Manager",
+        human_input_mode="NEVER",
+        max_consecutive_auto_reply=0,
+    )
+    article_agent = create_article_generator_agent(category)
+
+    revision_prompt = f"""
+    Please revise the following article based on the feedback provided:
+
+    Feedback:
+    {feedback}
+
+    Original Article:
+    {article_content}
+
+    Provide a revised version of the article that incorporates the feedback.
+    """
+
+    revised_article_result = manager_agent.initiate_chat(
+        recipient=article_agent,
+        message=revision_prompt,
+    )
+
+    if (
+        revised_article_result.chat_history
+        and "content" in revised_article_result.chat_history[-1]
+    ):
+        final_article_content = revised_article_result.chat_history[-1]["content"]
+    else:
+        final_article_content = str(revised_article_result)
+
+    if final_article_content.startswith("Error"):
+        logging.error("Failed to generate revised article")
+        final_article_content = "Error: Unable to generate revised article."
+
+    logging.info("Revised article generated successfully")
+    return final_article_content
+
+
 def generate_article(category: str, topic: str):
     manager_agent = ConversableAgent(
         name="Manager",
