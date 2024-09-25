@@ -2,6 +2,10 @@ import { END, MemorySaver, StateGraph, START, Annotation } from '@langchain/lang
 import { AIMessage, BaseMessage, HumanMessage } from '@langchain/core/messages';
 import { ChatOpenAI } from '@langchain/openai';
 import { ChatPromptTemplate, MessagesPlaceholder } from '@langchain/core/prompts';
+import dotenv from 'dotenv';
+
+// Load environment variables
+dotenv.config();
 
 const prompt = ChatPromptTemplate.fromMessages([
   [
@@ -14,11 +18,10 @@ If the user provides critique, respond with a revised version of your previous a
 ]);
 
 const llm = new ChatOpenAI({
+  openAIApiKey: process.env.OPENAI_API_KEY,
   model: 'gpt-4o-mini',
   temperature: 1,
-  modelKwargs: {
-    max_tokens: 32768,
-  },
+  maxTokens: 16384,
 });
 const essayGenerationChain = prompt.pipe(llm);
 
@@ -95,7 +98,7 @@ const workflow = new StateGraph(State)
 
 const shouldContinue = (state: typeof State.State) => {
   const { messages } = state;
-  if (messages.length > 6) {
+  if (messages.length > 4) {
     // End state after 3 iterations
     return END;
   }
@@ -105,3 +108,30 @@ const shouldContinue = (state: typeof State.State) => {
 workflow.addConditionalEdges('generate', shouldContinue).addEdge('reflect', 'generate');
 
 const app = workflow.compile({ checkpointer: new MemorySaver() });
+
+export const writerAgent = async (instructions: string) => {
+  const checkpointConfig = { configurable: { thread_id: 'my-thread' } };
+
+  const stream = await app.stream(
+    {
+      messages: [
+        new HumanMessage({
+          content: instructions,
+        }),
+      ],
+    },
+    checkpointConfig
+  );
+
+  for await (const event of stream) {
+    for (const [key, _value] of Object.entries(event)) {
+      console.log(`Event: ${key}`);
+      // Uncomment to see the result of each step.
+      // console.log(value.map((msg) => msg.content).join("\n"));
+      console.log('\n------\n');
+    }
+  }
+  const snapshot = await app.getState(checkpointConfig);
+  const essay = snapshot.values.messages.map((msg: BaseMessage) => msg.content).join('\n\n\n------------------\n\n\n');
+  return essay;
+};
