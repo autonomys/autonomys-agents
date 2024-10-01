@@ -3,90 +3,100 @@ import { AIMessage, BaseMessage, HumanMessage } from '@langchain/core/messages';
 import { ChatOpenAI } from '@langchain/openai';
 import { ChatPromptTemplate, MessagesPlaceholder } from '@langchain/core/prompts';
 import dotenv from 'dotenv';
+import { WriterAgentParams } from './types';
+import { z } from 'zod';
 
 // Load environment variables
 dotenv.config();
 
-const prompt = ChatPromptTemplate.fromMessages([
+const MODEL = 'gpt-4o-mini';
+
+// Define the content generation prompt
+const generationPrompt = ChatPromptTemplate.fromMessages([
   [
     'system',
-    `You are an essay assistant tasked with writing excellent 5-paragraph essays.
-Generate the best essay possible for the user's request.  
-If the user provides critique, respond with a revised version of your previous attempts.`,
+    `You are a versatile content creator capable of producing various types of content.
+Generate high-quality content based on the user's request, considering the specified category, topic, and content type.
+Adapt your writing style, length, and structure to suit the requested content type (e.g., essay, article, tweet thread, blog post).
+If provided with critique or feedback, incorporate it to improve your next iteration.`,
   ],
   new MessagesPlaceholder('messages'),
 ]);
 
-const llm = new ChatOpenAI({
+// Configure the content generation LLM
+const generationLlm = new ChatOpenAI({
   openAIApiKey: process.env.OPENAI_API_KEY,
-  model: 'gpt-4o-mini',
-  temperature: 1,
-  maxTokens: 16384,
+  model: MODEL,
+  temperature: 0.7,
+  maxTokens: 2000,
 });
-const essayGenerationChain = prompt.pipe(llm);
 
-const generateEssay = async (request: any) => {
-  let essay = '';
-  for await (const chunk of await essayGenerationChain.stream({
-    messages: [request],
-  })) {
-    console.log(chunk.content);
-    essay += chunk.content;
-  }
-  return essay;
-};
+// Create the content generation chain
+const contentGenerationChain = generationPrompt.pipe(generationLlm);
 
-// Usage example:
-// const essay = await generateEssay(someRequest);
+// Define the reflection schema using Zod
+const reflectionSchema = z.object({
+  critique: z.string().describe('Detailed critique and recommendations for the content.'),
+  score: z.number().min(1).max(10).describe('Reflection score between 1 and 10.'),
+});
 
+// Configure the reflection model with structured output
+const reflectLlm = new ChatOpenAI({
+  openAIApiKey: process.env.OPENAI_API_KEY,
+  model: MODEL,
+  temperature: 0.2,
+  maxTokens: 1000,
+}).withStructuredOutput(reflectionSchema, { name: 'reflection' });
+
+// Create the reflection prompt
 const reflectionPrompt = ChatPromptTemplate.fromMessages([
   [
     'system',
-    `You are a teacher grading an essay submission.
-  Generate critique and recommendations for the user's submission.
-  Provide detailed recommendations, including requests for length, depth, style, etc.`,
+    `You are an expert content reviewer tasked with evaluating and improving various types of content.
+Analyze the given content considering its category, topic, and intended format (e.g., essay, article, tweet thread).
+Provide a detailed critique and actionable recommendations to enhance the content's quality, relevance, and effectiveness.
+Consider aspects such as structure, style, depth, clarity, and engagement appropriate for the content type.`,
   ],
   new MessagesPlaceholder('messages'),
 ]);
-const reflect = reflectionPrompt.pipe(llm);
 
-const generateReflection = async (request: any) => {
-  let reflection = '';
-  for await (const chunk of await reflect.stream({
-    messages: [request],
-  })) {
-    console.log(chunk.content);
-    reflection += chunk.content;
-  }
-};
+// Create the reflection chain using the reflection prompt and the structured model
+const reflect = reflectionPrompt.pipe(reflectLlm);
 
 // Define the top-level State interface
 const State = Annotation.Root({
   messages: Annotation<BaseMessage[]>({
     reducer: (x, y) => x.concat(y),
   }),
+  reflectionScore: Annotation<number>(),
 });
 
 const generationNode = async (state: typeof State.State) => {
   const { messages } = state;
+  console.log('Generation Node - Input:', messages);
+  const response = await contentGenerationChain.invoke({ messages });
+  console.log('Generation Node - Output:', response);
   return {
-    messages: [await essayGenerationChain.invoke({ messages })],
+    messages: [response],
   };
 };
 
 const reflectionNode = async (state: typeof State.State) => {
   const { messages } = state;
-  // Other messages we need to adjust
+  console.log('Reflection Node - Input:', messages);
   const clsMap: { [key: string]: new (content: string) => BaseMessage } = {
     ai: HumanMessage,
     human: AIMessage,
   };
-  // First message is the original user request. We hold it the same for all nodes
   const translated = [messages[0], ...messages.slice(1).map(msg => new clsMap[msg._getType()](msg.content.toString()))];
   const res = await reflect.invoke({ messages: translated });
-  // We treat the output of this as human feedback for the generator
+  console.log('Reflection Node - Output:', res);
+
+  const { score, critique } = res;
+
   return {
-    messages: [new HumanMessage({ content: res.content })],
+    messages: [new HumanMessage({ content: critique })],
+    reflectionScore: score,
   };
 };
 
@@ -97,9 +107,8 @@ const workflow = new StateGraph(State)
   .addEdge(START, 'generate');
 
 const shouldContinue = (state: typeof State.State) => {
-  const { messages } = state;
-  if (messages.length > 4) {
-    // End state after 3 iterations
+  const { reflectionScore } = state;
+  if (reflectionScore > 7 || state.messages.length > 10) {
     return END;
   }
   return 'reflect';
@@ -109,29 +118,44 @@ workflow.addConditionalEdges('generate', shouldContinue).addEdge('reflect', 'gen
 
 const app = workflow.compile({ checkpointer: new MemorySaver() });
 
-export const writerAgent = async (instructions: string) => {
+export const writerAgent = async ({ category, topic, contentType, otherInstructions }: WriterAgentParams) => {
+  console.log('WriterAgent - Starting with params:', { category, topic, contentType, otherInstructions });
+  const instructions = `Create ${contentType} content. Category: ${category}. Topic: ${topic}. ${otherInstructions}`;
+
   const checkpointConfig = { configurable: { thread_id: 'my-thread' } };
 
-  const stream = await app.stream(
-    {
-      messages: [
-        new HumanMessage({
-          content: instructions,
-        }),
-      ],
-    },
-    checkpointConfig
-  );
+  const initialState = {
+    messages: [
+      new HumanMessage({
+        content: instructions,
+      }),
+    ],
+    reflectionScore: 0,
+  };
 
+  console.log('WriterAgent - Initial state:', initialState);
+
+  const stream = await app.stream(initialState, checkpointConfig);
+
+  let finalContent = '';
+  let iterationCount = 0;
   for await (const event of stream) {
-    for (const [key, _value] of Object.entries(event)) {
-      console.log(`Event: ${key}`);
-      // Uncomment to see the result of each step.
-      // console.log(value.map((msg) => msg.content).join("\n"));
-      console.log('\n------\n');
+    console.log(`WriterAgent - Iteration ${iterationCount}:`, event);
+    iterationCount++;
+    if (event.generate) {
+      const aiMessages = event.generate.messages.filter((msg: BaseMessage) => msg._getType() === 'ai');
+      if (aiMessages.length > 0) {
+        finalContent = aiMessages[aiMessages.length - 1].content;
+      }
     }
   }
-  const snapshot = await app.getState(checkpointConfig);
-  const essay = snapshot.values.messages.map((msg: BaseMessage) => msg.content).join('\n\n\n------------------\n\n\n');
-  return essay;
+
+  console.log('WriterAgent - Final content:', finalContent);
+
+  if (!finalContent) {
+    console.error('WriterAgent - No content was generated');
+    throw new Error('Failed to generate content');
+  }
+
+  return finalContent;
 };

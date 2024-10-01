@@ -13,16 +13,23 @@ const port: number = 3000;
 app.post('/writer', async (req: Request, res: Response) => {
   console.log('Received request body:', req.body);
   try {
-    const { instructions } = req.body;
+    const { category, topic, contentType, otherInstructions } = req.body;
 
-    if (!instructions) {
-      console.log('Instructions missing from request body');
-      return res.status(400).json({ error: 'Instructions are required' });
+    if (!category || !topic || !contentType) {
+      console.log('Category, topic, and contentType are required');
+      return res.status(400).json({ error: 'Category, topic, and contentType are required' });
     }
 
-    console.log('Calling writerAgent with instructions:', instructions);
-    const result = await writerAgent(instructions);
+    console.log('Calling writerAgent with parameters:', { category, topic, contentType, otherInstructions });
+    const result = await writerAgent({ category, topic, contentType, otherInstructions });
     console.log('writerAgent result:', result);
+
+    if (!result || result.trim() === '') {
+      console.log('WriterAgent returned empty result');
+      return res.status(500).json({ error: 'Failed to generate content' });
+    }
+
+    console.log('Sending response with generated content');
     res.json({ result });
   } catch (error) {
     console.error('Error in /writer endpoint:', error);
