@@ -11,6 +11,12 @@ dotenv.config();
 
 const MODEL = 'gpt-4o-mini';
 
+// Define the content generation schema using Zod
+const generationSchema = z.object({
+  content: z.string().describe('The main content generated based on the given instructions.'),
+  other: z.string().optional().describe('Any additional commentary or metadata about the generated content.'),
+});
+
 // Define the content generation prompt
 const generationPrompt = ChatPromptTemplate.fromMessages([
   [
@@ -18,18 +24,19 @@ const generationPrompt = ChatPromptTemplate.fromMessages([
     `You are a versatile content creator capable of producing various types of content.
 Generate high-quality content based on the user's request, considering the specified category, topic, and content type.
 Adapt your writing style, length, and structure to suit the requested content type (e.g., essay, article, tweet thread, blog post).
-If provided with critique or feedback, incorporate it to improve your next iteration.`,
+If provided with critique or feedback, incorporate it to improve your next iteration.
+Provide the main content in the 'content' field and any additional commentary or metadata in the 'other' field.`,
   ],
   new MessagesPlaceholder('messages'),
 ]);
 
-// Configure the content generation LLM
+// Configure the content generation LLM with structured output
 const generationLlm = new ChatOpenAI({
   openAIApiKey: process.env.OPENAI_API_KEY,
   model: MODEL,
   temperature: 0.7,
   maxTokens: 2000,
-});
+}).withStructuredOutput(generationSchema, { name: 'generation' });
 
 // Create the content generation chain
 const contentGenerationChain = generationPrompt.pipe(generationLlm);
@@ -77,7 +84,7 @@ const generationNode = async (state: typeof State.State) => {
   const response = await contentGenerationChain.invoke({ messages });
   console.log('Generation Node - Output:', response);
   return {
-    messages: [response],
+    messages: [new AIMessage({ content: JSON.stringify(response) })],
   };
 };
 
@@ -145,7 +152,11 @@ export const writerAgent = async ({ category, topic, contentType, otherInstructi
     if (event.generate) {
       const aiMessages = event.generate.messages.filter((msg: BaseMessage) => msg._getType() === 'ai');
       if (aiMessages.length > 0) {
-        finalContent = aiMessages[aiMessages.length - 1].content;
+        const parsedContent = JSON.parse(aiMessages[aiMessages.length - 1].content);
+        finalContent = parsedContent.content;
+        if (parsedContent.other) {
+          console.log('Additional information:', parsedContent.other);
+        }
       }
     }
   }
