@@ -1,37 +1,17 @@
 import { END, MemorySaver, StateGraph, START, Annotation } from '@langchain/langgraph';
 import { AIMessage, BaseMessage, HumanMessage } from '@langchain/core/messages';
 import { ChatOpenAI } from '@langchain/openai';
-import { ChatPromptTemplate, MessagesPlaceholder } from '@langchain/core/prompts';
 import dotenv from 'dotenv';
 import { WriterAgentParams } from './types';
-import { z } from 'zod';
-import { tool } from '@langchain/core/tools';
 import { ToolNode } from '@langchain/langgraph/prebuilt';
-import fetch from 'node-fetch';
+import { webSearchTool } from './tools';
+import { generationSchema, reflectionSchema, researchDecisionSchema } from './schemas';
+import { generationPrompt, reflectionPrompt, researchDecisionPrompt } from './prompts';
 
 // Load environment variables
 dotenv.config();
 
 const MODEL = 'gpt-4o-mini';
-
-// Define the content generation schema using Zod
-const generationSchema = z.object({
-  content: z.string().describe('The main content generated based on the given instructions.'),
-  other: z.string().optional().describe('Any additional commentary or metadata about the generated content.'),
-});
-
-// Define the content generation prompt
-const generationPrompt = ChatPromptTemplate.fromMessages([
-  [
-    'system',
-    `You are a versatile content creator capable of producing various types of content.
-Generate high-quality content based on the user's request, considering the specified category, topic, and content type.
-Adapt your writing style, length, and structure to suit the requested content type (e.g., essay, article, tweet thread, blog post).
-If provided with critique or feedback, incorporate it to improve your next iteration.
-Provide the main content in the 'content' field and any additional commentary or metadata in the 'other' field.`,
-  ],
-  new MessagesPlaceholder('messages'),
-]);
 
 // Configure the content generation LLM with structured output
 const generationLlm = new ChatOpenAI({
@@ -44,12 +24,6 @@ const generationLlm = new ChatOpenAI({
 // Create the content generation chain
 const contentGenerationChain = generationPrompt.pipe(generationLlm);
 
-// Define the reflection schema using Zod
-const reflectionSchema = z.object({
-  critique: z.string().describe('Detailed critique and recommendations for the content.'),
-  score: z.number().min(1).max(10).describe('Reflection score between 1 and 10.'),
-});
-
 // Configure the reflection model with structured output
 const reflectLlm = new ChatOpenAI({
   openAIApiKey: process.env.OPENAI_API_KEY,
@@ -58,79 +32,13 @@ const reflectLlm = new ChatOpenAI({
   maxTokens: 1000,
 }).withStructuredOutput(reflectionSchema, { name: 'reflection' });
 
-// Create the reflection prompt
-const reflectionPrompt = ChatPromptTemplate.fromMessages([
-  [
-    'system',
-    `You are an expert content reviewer tasked with evaluating and improving various types of content.
-Analyze the given content considering its category, topic, and intended format (e.g., essay, article, tweet thread).
-Provide a detailed critique and actionable recommendations to enhance the content's quality, relevance, and effectiveness.
-Consider aspects such as structure, style, depth, clarity, and engagement appropriate for the content type.`,
-  ],
-  new MessagesPlaceholder('messages'),
-]);
-
 // Create the reflection chain using the reflection prompt and the structured model
 const reflect = reflectionPrompt.pipe(reflectLlm);
-
-// Define the web search tool
-const webSearchTool = tool(
-  async input => {
-    const API_KEY = process.env.SERPAPI_API_KEY;
-    if (!API_KEY) {
-      console.error('SERPAPI_API_KEY is not set.');
-      return 'Error: SERPAPI_API_KEY is not set.';
-    }
-    const query = input.query;
-    const params = new URLSearchParams({
-      api_key: API_KEY,
-      engine: 'google',
-      q: query,
-      num: '3',
-    });
-
-    const url = `https://serpapi.com/search?${params.toString()}`;
-
-    try {
-      const response = await fetch(url);
-      const data = await response.json();
-      const results = data.organic_results || [];
-
-      if (!results.length) {
-        return 'No results found.';
-      }
-
-      const snippets = results
-        .map((result: any) => {
-          return `${result.title}\n${result.snippet}\n${result.link}`;
-        })
-        .join('\n\n');
-
-      return snippets;
-    } catch (error) {
-      console.error('Error performing web search:', error);
-      return 'Error performing web search.';
-    }
-  },
-  {
-    name: 'web_search',
-    description: 'Perform a web search for up-to-date information.',
-    schema: z.object({
-      query: z.string().describe('The search query string.'),
-    }),
-  }
-);
 
 // Create a list of tools
 const tools = [webSearchTool];
 // Create the ToolNode with the tools
 const toolNode = new ToolNode(tools);
-
-// Define the research decision schema
-const researchDecisionSchema = z.object({
-  decision: z.enum(['yes', 'no']).describe('Whether to perform research or not.'),
-  reason: z.string().describe('Reason for the decision.'),
-});
 
 // Configure the research decision model
 const researchDecisionLlm = new ChatOpenAI({
@@ -138,17 +46,6 @@ const researchDecisionLlm = new ChatOpenAI({
   model: MODEL,
   temperature: 0.2,
 }).withStructuredOutput(researchDecisionSchema);
-
-// Create the research decision prompt
-const researchDecisionPrompt = ChatPromptTemplate.fromMessages([
-  [
-    'system',
-    `You are an assistant that decides if a topic would benefit from web-based research.
-If the topic is about recent events, data, or factual information that might have changed recently, it would benefit from research.
-Respond with a decision (yes/no) and a brief reason for your decision.`,
-  ],
-  new MessagesPlaceholder('messages'),
-]);
 
 // Create the research decision chain
 const researchDecisionChain = researchDecisionPrompt.pipe(researchDecisionLlm);
