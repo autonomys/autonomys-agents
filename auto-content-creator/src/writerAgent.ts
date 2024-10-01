@@ -5,6 +5,9 @@ import { ChatPromptTemplate, MessagesPlaceholder } from '@langchain/core/prompts
 import dotenv from 'dotenv';
 import { WriterAgentParams } from './types';
 import { z } from 'zod';
+import { tool } from '@langchain/core/tools';
+import { ToolNode } from '@langchain/langgraph/prebuilt';
+import fetch from 'node-fetch';
 
 // Load environment variables
 dotenv.config();
@@ -70,13 +73,133 @@ Consider aspects such as structure, style, depth, clarity, and engagement approp
 // Create the reflection chain using the reflection prompt and the structured model
 const reflect = reflectionPrompt.pipe(reflectLlm);
 
-// Define the top-level State interface
+// Define the web search tool
+const webSearchTool = tool(
+  async input => {
+    const API_KEY = process.env.SERPAPI_API_KEY;
+    if (!API_KEY) {
+      console.error('SERPAPI_API_KEY is not set.');
+      return 'Error: SERPAPI_API_KEY is not set.';
+    }
+    const query = input.query;
+    const params = new URLSearchParams({
+      api_key: API_KEY,
+      engine: 'google',
+      q: query,
+      num: '3',
+    });
+
+    const url = `https://serpapi.com/search?${params.toString()}`;
+
+    try {
+      const response = await fetch(url);
+      const data = await response.json();
+      const results = data.organic_results || [];
+
+      if (!results.length) {
+        return 'No results found.';
+      }
+
+      const snippets = results
+        .map((result: any) => {
+          return `${result.title}\n${result.snippet}\n${result.link}`;
+        })
+        .join('\n\n');
+
+      return snippets;
+    } catch (error) {
+      console.error('Error performing web search:', error);
+      return 'Error performing web search.';
+    }
+  },
+  {
+    name: 'web_search',
+    description: 'Perform a web search for up-to-date information.',
+    schema: z.object({
+      query: z.string().describe('The search query string.'),
+    }),
+  }
+);
+
+// Create a list of tools
+const tools = [webSearchTool];
+// Create the ToolNode with the tools
+const toolNode = new ToolNode(tools);
+
+// Define the research decision schema
+const researchDecisionSchema = z.object({
+  decision: z.enum(['yes', 'no']).describe('Whether to perform research or not.'),
+  reason: z.string().describe('Reason for the decision.'),
+});
+
+// Configure the research decision model
+const researchDecisionLlm = new ChatOpenAI({
+  openAIApiKey: process.env.OPENAI_API_KEY,
+  model: MODEL,
+  temperature: 0.2,
+}).withStructuredOutput(researchDecisionSchema);
+
+// Create the research decision prompt
+const researchDecisionPrompt = ChatPromptTemplate.fromMessages([
+  [
+    'system',
+    `You are an assistant that decides if a topic would benefit from web-based research.
+If the topic is about recent events, data, or factual information that might have changed recently, it would benefit from research.
+Respond with a decision (yes/no) and a brief reason for your decision.`,
+  ],
+  new MessagesPlaceholder('messages'),
+]);
+
+// Create the research decision chain
+const researchDecisionChain = researchDecisionPrompt.pipe(researchDecisionLlm);
+
+// Update the State interface
 const State = Annotation.Root({
   messages: Annotation<BaseMessage[]>({
     reducer: (x, y) => x.concat(y),
   }),
   reflectionScore: Annotation<number>(),
+  researchPerformed: Annotation<boolean>(),
 });
+
+const researchNode = async (state: typeof State.State) => {
+  const { messages } = state;
+  console.log('Research Node - Input:', messages);
+
+  const decisionResponse = await researchDecisionChain.invoke({ messages });
+  console.log('Research Decision:', decisionResponse);
+
+  if (decisionResponse.decision === 'yes') {
+    const topicMessage = messages.find(msg => msg._getType() === 'human');
+    const query = topicMessage?.content || '';
+
+    const toolResponse = await toolNode.invoke({
+      messages: [
+        new AIMessage({
+          content: '',
+          tool_calls: [
+            {
+              name: 'web_search',
+              args: { query },
+              id: 'tool_call_id',
+              type: 'tool_call',
+            },
+          ],
+        }),
+      ],
+    });
+
+    console.log('Research Node - Tool Response:', toolResponse);
+
+    return {
+      messages: [new HumanMessage({ content: `Research findings:\n${toolResponse.messages[0].content}` })],
+      researchPerformed: true,
+    };
+  } else {
+    console.log('Research Node - No research needed');
+    return { researchPerformed: false };
+  }
+};
 
 const generationNode = async (state: typeof State.State) => {
   const { messages } = state;
@@ -107,12 +230,6 @@ const reflectionNode = async (state: typeof State.State) => {
   };
 };
 
-// Define the graph
-const workflow = new StateGraph(State)
-  .addNode('generate', generationNode)
-  .addNode('reflect', reflectionNode)
-  .addEdge(START, 'generate');
-
 const shouldContinue = (state: typeof State.State) => {
   const { reflectionScore } = state;
   if (reflectionScore > 7 || state.messages.length > 10) {
@@ -121,7 +238,15 @@ const shouldContinue = (state: typeof State.State) => {
   return 'reflect';
 };
 
-workflow.addConditionalEdges('generate', shouldContinue).addEdge('reflect', 'generate');
+// Update the workflow
+const workflow = new StateGraph(State)
+  .addNode('research', researchNode)
+  .addNode('generate', generationNode)
+  .addNode('reflect', reflectionNode)
+  .addEdge(START, 'research')
+  .addConditionalEdges('research', state => (state.researchPerformed ? 'generate' : END))
+  .addConditionalEdges('generate', shouldContinue)
+  .addEdge('reflect', 'generate');
 
 const app = workflow.compile({ checkpointer: new MemorySaver() });
 
@@ -138,6 +263,7 @@ export const writerAgent = async ({ category, topic, contentType, otherInstructi
       }),
     ],
     reflectionScore: 0,
+    researchPerformed: false,
   };
 
   console.log('WriterAgent - Initial state:', initialState);
