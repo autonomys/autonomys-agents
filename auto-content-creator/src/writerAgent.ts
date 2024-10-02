@@ -57,6 +57,13 @@ const State = Annotation.Root({
   }),
   reflectionScore: Annotation<number>(),
   researchPerformed: Annotation<boolean>(),
+  research: Annotation<string>(),
+  reflections: Annotation<{ critique: string; score: number }[]>({
+    reducer: (x, y) => x.concat(y),
+  }),
+  drafts: Annotation<string[]>({
+    reducer: (x, y) => x.concat(y),
+  }),
 });
 
 const researchNode = async (state: typeof State.State) => {
@@ -91,10 +98,11 @@ const researchNode = async (state: typeof State.State) => {
     return {
       messages: [new HumanMessage({ content: `Research findings:\n${toolResponse.messages[0].content}` })],
       researchPerformed: true,
+      research: toolResponse.messages[0].content,
     };
   } else {
     console.log('Research Node - No research needed');
-    return { researchPerformed: false };
+    return { researchPerformed: false, research: '' };
   }
 };
 
@@ -105,6 +113,7 @@ const generationNode = async (state: typeof State.State) => {
   console.log('Generation Node - Output:', response);
   return {
     messages: [new AIMessage({ content: JSON.stringify(response) })],
+    drafts: [response.generatedContent],
   };
 };
 
@@ -124,6 +133,7 @@ const reflectionNode = async (state: typeof State.State) => {
   return {
     messages: [new HumanMessage({ content: critique })],
     reflectionScore: score,
+    reflections: [{ critique, score }],
   };
 };
 
@@ -137,11 +147,11 @@ const shouldContinue = (state: typeof State.State) => {
 
 // Update the workflow
 const workflow = new StateGraph(State)
-  .addNode('research', researchNode)
+  .addNode('researchNode', researchNode)
   .addNode('generate', generationNode)
   .addNode('reflect', reflectionNode)
-  .addEdge(START, 'research')
-  .addConditionalEdges('research', state => (state.researchPerformed ? 'generate' : END))
+  .addEdge(START, 'researchNode')
+  .addConditionalEdges('researchNode', state => (state.researchPerformed ? 'generate' : END))
   .addConditionalEdges('generate', shouldContinue)
   .addEdge('reflect', 'generate');
 
@@ -161,6 +171,9 @@ export const writerAgent = async ({ category, topic, contentType, otherInstructi
     ],
     reflectionScore: 0,
     researchPerformed: false,
+    research: '',
+    reflections: [],
+    drafts: [],
   };
 
   console.log('WriterAgent - Initial state:', initialState);
@@ -169,29 +182,38 @@ export const writerAgent = async ({ category, topic, contentType, otherInstructi
 
   let finalContent = '';
   let iterationCount = 0;
+  let research = '';
+  let reflections: { critique: string; score: number }[] = [];
+  let drafts: string[] = [];
+
   for await (const event of stream) {
     console.log(`WriterAgent - Iteration ${iterationCount}:`, JSON.stringify(event, null, 2));
     iterationCount++;
+
+    if (event.researchNode) {
+      research = event.researchNode.research || '';
+    }
+
     if (event.generate) {
       const aiMessages = event.generate.messages.filter((msg: BaseMessage) => msg._getType() === 'ai');
-      console.log('WriterAgent - AI Messages:', JSON.stringify(aiMessages, null, 2));
       if (aiMessages.length > 0) {
         try {
           const parsedContent = JSON.parse(aiMessages[aiMessages.length - 1].content);
-          console.log('WriterAgent - Parsed Content:', JSON.stringify(parsedContent, null, 2));
           if (parsedContent.generatedContent) {
             finalContent = parsedContent.generatedContent;
-            console.log('WriterAgent - Updated Final Content:', finalContent);
-          } else {
-            console.warn('WriterAgent - generatedContent not found in parsed content');
-          }
-          if (parsedContent.other) {
-            console.log('Additional information:', parsedContent.other);
+            drafts.push(finalContent);
           }
         } catch (error) {
           console.error('WriterAgent - Error parsing AI message content:', error);
         }
       }
+    }
+
+    if (event.reflect) {
+      reflections.push({
+        critique: event.reflect.messages[0].content,
+        score: event.reflect.reflectionScore,
+      });
     }
   }
 
@@ -202,5 +224,10 @@ export const writerAgent = async ({ category, topic, contentType, otherInstructi
     throw new Error('Failed to generate content');
   }
 
-  return finalContent;
+  return {
+    finalContent,
+    research,
+    reflections,
+    drafts,
+  };
 };

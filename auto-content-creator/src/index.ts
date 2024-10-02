@@ -24,13 +24,18 @@ app.post('/writer', async (req: Request, res: Response) => {
     const result = await writerAgent({ category, topic, contentType, otherInstructions });
     console.log('writerAgent result:', result);
 
-    if (!result || result.trim() === '') {
+    if (!result.finalContent || result.finalContent.trim() === '') {
       console.log('WriterAgent returned empty result');
       return res.status(500).json({ error: 'Failed to generate content' });
     }
 
-    console.log('Sending response with generated content');
-    res.json({ result });
+    console.log('Sending response with generated content and additional information');
+    res.json({
+      finalContent: result.finalContent,
+      research: result.research,
+      reflections: result.reflections,
+      drafts: result.drafts,
+    });
   } catch (error) {
     console.error('Error in /writer endpoint:', error);
     res.status(500).json({
