@@ -1,5 +1,5 @@
 import { END, MemorySaver, StateGraph, START, Annotation } from '@langchain/langgraph';
-import { AIMessage, BaseMessage, HumanMessage } from '@langchain/core/messages';
+import { AIMessage, BaseMessage, HumanMessage, MessageContent } from '@langchain/core/messages';
 import { ChatOpenAI } from '@langchain/openai';
 import dotenv from 'dotenv';
 import { WriterAgentParams } from './types';
@@ -7,6 +7,7 @@ import { ToolNode } from '@langchain/langgraph/prebuilt';
 import { webSearchTool } from './tools';
 import { generationSchema, reflectionSchema, researchDecisionSchema } from './schemas';
 import { generationPrompt, reflectionPrompt, researchDecisionPrompt } from './prompts';
+import { ChatPromptTemplate } from '@langchain/core/prompts';
 
 // Load environment variables
 dotenv.config();
@@ -95,16 +96,52 @@ const researchNode = async (state: typeof State.State) => {
 
     console.log('Research Node - Tool Response:', toolResponse);
 
+    // Create a robust research report
+    const researchReport = await createResearchReport(toolResponse.messages[0].content);
+
     return {
-      messages: [new HumanMessage({ content: `Research findings:\n${toolResponse.messages[0].content}` })],
+      messages: [new HumanMessage({ content: `Research findings:\n${researchReport}` })],
       researchPerformed: true,
-      research: toolResponse.messages[0].content,
+      research: researchReport,
     };
   } else {
     console.log('Research Node - No research needed');
     return { researchPerformed: false, research: '' };
   }
 };
+
+async function createResearchReport(searchResults: string): Promise<MessageContent> {
+  const reportPrompt = ChatPromptTemplate.fromMessages([
+    [
+      'system',
+      `You are a research assistant tasked with creating a comprehensive research report based on web search results. 
+    Analyze the provided search results and create a well-structured report that includes:
+    1. An executive summary
+    2. Key findings
+    3. Detailed analysis of each relevant source
+    4. Potential biases or limitations in the research
+    5. Conclusions and recommendations for further research
+    
+    Ensure the report is objective, well-organized, and provides valuable insights on the topic.`,
+    ],
+    [
+      'human',
+      `Here are the search results:\n\n{searchResults}\n\nPlease create a research report based on these results.`,
+    ],
+  ]);
+
+  const reportChain = reportPrompt.pipe(
+    new ChatOpenAI({
+      openAIApiKey: process.env.OPENAI_API_KEY,
+      model: MODEL,
+      temperature: 0.2,
+      maxTokens: 2000,
+    })
+  );
+
+  const response = await reportChain.invoke({ searchResults });
+  return response.content;
+}
 
 const generationNode = async (state: typeof State.State) => {
   const { messages } = state;
