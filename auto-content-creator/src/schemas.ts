@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 export const generationSchema = z.object({
-  content: z.string().describe('The main content generated based on the given instructions.'),
+  generatedContent: z.string().describe('The main content generated based on the given instructions.'),
   other: z.string().optional().describe('Any additional commentary or metadata about the generated content.'),
 });
 

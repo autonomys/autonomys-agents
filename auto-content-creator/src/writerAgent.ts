@@ -170,15 +170,26 @@ export const writerAgent = async ({ category, topic, contentType, otherInstructi
   let finalContent = '';
   let iterationCount = 0;
   for await (const event of stream) {
-    console.log(`WriterAgent - Iteration ${iterationCount}:`, event);
+    console.log(`WriterAgent - Iteration ${iterationCount}:`, JSON.stringify(event, null, 2));
     iterationCount++;
     if (event.generate) {
       const aiMessages = event.generate.messages.filter((msg: BaseMessage) => msg._getType() === 'ai');
+      console.log('WriterAgent - AI Messages:', JSON.stringify(aiMessages, null, 2));
       if (aiMessages.length > 0) {
-        const parsedContent = JSON.parse(aiMessages[aiMessages.length - 1].content);
-        finalContent = parsedContent.content;
-        if (parsedContent.other) {
-          console.log('Additional information:', parsedContent.other);
+        try {
+          const parsedContent = JSON.parse(aiMessages[aiMessages.length - 1].content);
+          console.log('WriterAgent - Parsed Content:', JSON.stringify(parsedContent, null, 2));
+          if (parsedContent.generatedContent) {
+            finalContent = parsedContent.generatedContent;
+            console.log('WriterAgent - Updated Final Content:', finalContent);
+          } else {
+            console.warn('WriterAgent - generatedContent not found in parsed content');
+          }
+          if (parsedContent.other) {
+            console.log('Additional information:', parsedContent.other);
+          }
+        } catch (error) {
+          console.error('WriterAgent - Error parsing AI message content:', error);
         }
       }
     }
