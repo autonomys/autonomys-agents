@@ -1,0 +1,26 @@
+{
+  "name": "auto-content-creator-backend",
+  "version": "1.0.0",
+  "main": "src/index.ts",
+  "scripts": {
+    "start": "ts-node src/index.ts",
+    "dev": "nodemon",
+    "build": "tsc"
+  },
+  "dependencies": {
+    "axios": "^1.7.7",
+    "better-sqlite3": "11.3.0",
+    "dotenv": "^16.4.1",
+    "express": "5.0.0",
+    "sqlite": "5.1.1",
+    "sqlite3": "^5.1.6"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.4",
+    "@types/express": "5.0.0",
+    "@types/node": "22.7.4",
+    "nodemon": "^3.0.1",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.3.3"
+  }
+}
