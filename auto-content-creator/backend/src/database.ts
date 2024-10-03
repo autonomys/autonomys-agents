@@ -44,7 +44,18 @@ export const getContentById = (id: number): any => {
   return stmt.get(id);
 };
 
-export const getAllContent = (): any[] => {
-  const stmt = db.prepare('SELECT * FROM content ORDER BY createdAt DESC');
-  return stmt.all();
+export const getAllContent = (page: number, limit: number): { contents: any[]; total: number } => {
+  const offset = (page - 1) * limit;
+
+  const countStmt = db.prepare('SELECT COUNT(*) as total FROM content');
+  const { total } = countStmt.get() as { total: number };
+
+  const stmt = db.prepare(`
+    SELECT * FROM content
+    ORDER BY createdAt DESC
+    LIMIT ? OFFSET ?
+  `);
+  const contents = stmt.all(limit, offset);
+
+  return { contents, total };
 };
