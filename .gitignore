@@ -32,3 +32,4 @@ share/python-wheels/
 .DS_Store
 
 .cache/
+node_modules/
