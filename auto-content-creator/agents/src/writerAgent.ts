@@ -8,6 +8,7 @@ import { webSearchTool } from './tools';
 import { generationSchema, reflectionSchema, researchDecisionSchema } from './schemas';
 import { generationPrompt, reflectionPrompt, researchDecisionPrompt } from './prompts';
 import { ChatPromptTemplate } from '@langchain/core/prompts';
+import logger from './logger';
 
 // Load environment variables
 dotenv.config();
@@ -69,10 +70,10 @@ const State = Annotation.Root({
 
 const researchNode = async (state: typeof State.State) => {
   const { messages } = state;
-  console.log('Research Node - Input:', messages);
+  logger.info('Research Node - Input:', messages);
 
   const decisionResponse = await researchDecisionChain.invoke({ messages });
-  console.log('Research Decision:', decisionResponse);
+  logger.info('Research Decision:', decisionResponse);
 
   if (decisionResponse.decision === 'yes') {
     const topicMessage = messages.find(msg => msg._getType() === 'human');
@@ -94,7 +95,7 @@ const researchNode = async (state: typeof State.State) => {
       ],
     });
 
-    console.log('Research Node - Tool Response:', toolResponse);
+    logger.info('Research Node - Tool Response:', toolResponse);
 
     // Create a robust research report
     const researchReport = await createResearchReport(toolResponse.messages[0].content);
@@ -105,7 +106,7 @@ const researchNode = async (state: typeof State.State) => {
       research: researchReport,
     };
   } else {
-    console.log('Research Node - No research needed');
+    logger.info('Research Node - No research needed');
     return { researchPerformed: false, research: '' };
   }
 };
@@ -145,9 +146,9 @@ async function createResearchReport(searchResults: string): Promise<MessageConte
 
 const generationNode = async (state: typeof State.State) => {
   const { messages } = state;
-  console.log('Generation Node - Input:', messages);
+  logger.info('Generation Node - Input:', messages);
   const response = await contentGenerationChain.invoke({ messages });
-  console.log('Generation Node - Output:', response);
+  logger.info('Generation Node - Output:', response);
   return {
     messages: [new AIMessage({ content: JSON.stringify(response) })],
     drafts: [response.generatedContent],
@@ -156,14 +157,14 @@ const generationNode = async (state: typeof State.State) => {
 
 const reflectionNode = async (state: typeof State.State) => {
   const { messages } = state;
-  console.log('Reflection Node - Input:', messages);
+  logger.info('Reflection Node - Input:', messages);
   const clsMap: { [key: string]: new (content: string) => BaseMessage } = {
     ai: HumanMessage,
     human: AIMessage,
   };
   const translated = [messages[0], ...messages.slice(1).map(msg => new clsMap[msg._getType()](msg.content.toString()))];
   const res = await reflect.invoke({ messages: translated });
-  console.log('Reflection Node - Output:', res);
+  logger.info('Reflection Node - Output:', res);
 
   const { score, critique } = res;
 
@@ -195,7 +196,7 @@ const workflow = new StateGraph(State)
 const app = workflow.compile({ checkpointer: new MemorySaver() });
 
 export const writerAgent = async ({ category, topic, contentType, otherInstructions }: WriterAgentParams) => {
-  console.log('WriterAgent - Starting with params:', { category, topic, contentType, otherInstructions });
+  logger.info('WriterAgent - Starting with params:', { category, topic, contentType, otherInstructions });
   const instructions = `Create ${contentType} content. Category: ${category}. Topic: ${topic}. ${otherInstructions}`;
 
   // Generate a unique thread_id for each request
@@ -216,7 +217,7 @@ export const writerAgent = async ({ category, topic, contentType, otherInstructi
     drafts: [],
   };
 
-  console.log('WriterAgent - Initial state:', initialState);
+  logger.info('WriterAgent - Initial state:', initialState);
 
   // Use the checkpointConfig with the unique thread_id
   const stream = await app.stream(initialState, checkpointConfig);
@@ -228,7 +229,7 @@ export const writerAgent = async ({ category, topic, contentType, otherInstructi
   let drafts: string[] = [];
 
   for await (const event of stream) {
-    console.log(`WriterAgent - Iteration ${iterationCount}:`, JSON.stringify(event, null, 2));
+    logger.info(`WriterAgent - Iteration ${iterationCount}:`, event);
     iterationCount++;
 
     if (event.researchNode) {
@@ -245,7 +246,7 @@ export const writerAgent = async ({ category, topic, contentType, otherInstructi
             drafts.push(finalContent);
           }
         } catch (error) {
-          console.error('WriterAgent - Error parsing AI message content:', error);
+          logger.error('WriterAgent - Error parsing AI message content:', error);
         }
       }
     }
@@ -258,10 +259,10 @@ export const writerAgent = async ({ category, topic, contentType, otherInstructi
     }
   }
 
-  console.log('WriterAgent - Final content:', finalContent);
+  logger.info('WriterAgent - Final content:', finalContent);
 
   if (!finalContent) {
-    console.error('WriterAgent - No content was generated');
+    logger.error('WriterAgent - No content was generated');
     throw new Error('Failed to generate content');
   }
 
