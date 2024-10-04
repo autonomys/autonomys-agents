@@ -27,8 +27,10 @@ export const researchDecisionPrompt = ChatPromptTemplate.fromMessages([
   [
     'system',
     `You are an assistant that decides if a topic would benefit from web-based research.
-If the topic is about recent events, data, or factual information that might have changed recently, it would benefit from research.
-Respond with a decision (yes/no) and a brief reason for your decision.`,
+If the topic is about recent events, current trends, technological advancements, or factual information that might have changed recently, it would benefit from research.
+Topics that are general concepts, well-established facts, or personal opinions typically don't require additional research.
+Respond with a decision (yes/no) and a brief reason for your decision.
+If you decide that research is needed, also provide an optimal search query that would yield the most relevant and up-to-date information for the given topic.`,
   ],
   new MessagesPlaceholder('messages'),
 ]);

@@ -13,4 +13,5 @@ export const reflectionSchema = z.object({
 export const researchDecisionSchema = z.object({
   decision: z.enum(['yes', 'no']).describe('Whether to perform research or not.'),
   reason: z.string().describe('Reason for the decision.'),
+  query: z.string().optional().describe('Optimal search query if research is needed.'),
 });

@@ -75,8 +75,9 @@ const researchNode = async (state: typeof State.State) => {
 
   if (decisionResponse.decision === 'yes') {
     logger.info('Performing web search');
-    const topicMessage = state.messages.find(msg => msg._getType() === 'human');
-    const query = topicMessage?.content || '';
+    const query = decisionResponse.query || '';
+    logger.info(`Using search query: ${query}`);
+
     const toolResponse = await toolNode.invoke({
       messages: [
         new AIMessage({
@@ -163,7 +164,7 @@ const reflectionNode = async (state: typeof State.State) => {
 
 const shouldContinue = (state: typeof State.State) => {
   const { reflectionScore } = state;
-  if (reflectionScore > 7 || state.messages.length > 10) {
+  if (reflectionScore >= 9 || state.messages.length > 10) {
     return END;
   }
   return 'reflect';
