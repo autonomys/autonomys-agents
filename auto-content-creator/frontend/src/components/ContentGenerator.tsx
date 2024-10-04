@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
-import styled from 'styled-components';
+import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import styled, { keyframes } from 'styled-components';
 import { generateContent } from '../api/contentApi';
 
 interface StatusMessageProps {
@@ -47,6 +48,11 @@ const Button = styled.button`
   &:hover {
     background-color: #0056b3;
   }
+
+  &:disabled {
+    background-color: #6c757d;
+    cursor: not-allowed;
+  }
 `;
 
 const Container = styled.div`
@@ -60,6 +66,41 @@ const Title = styled.h2`
   margin-bottom: 20px;
 `;
 
+const rotate = keyframes`
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+`;
+
+const LoadingIndicator = styled.div`
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border: 2px solid #f3f3f3;
+  border-top: 2px solid #3498db;
+  border-radius: 50%;
+  animation: ${rotate} 1s linear infinite;
+  margin-right: 10px;
+`;
+
+const GeneratedContentLink = styled(Link)`
+  display: inline-block;
+  margin-top: 20px;
+  padding: 10px 20px;
+  background-color: #28a745;
+  color: white;
+  text-decoration: none;
+  border-radius: 4px;
+  transition: background-color 0.3s;
+
+  &:hover {
+    background-color: #218838;
+  }
+`;
+
 const ContentGenerator: React.FC = () => {
   const [category, setCategory] = useState('');
   const [topic, setTopic] = useState('');
@@ -67,19 +108,49 @@ const ContentGenerator: React.FC = () => {
   const [otherInstructions, setOtherInstructions] = useState('');
   const [status, setStatus] = useState('');
   const [error, setError] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [generatedContentId, setGeneratedContentId] = useState<number | null>(null);
+
+  const generationMessages = [
+    'Brewing a pot of creative ideas...',
+    'Channeling the muses for inspiration...',
+    'Crafting words into digital art...',
+    'Weaving a tapestry of engaging content...',
+    'Polishing phrases to perfection...',
+    'Sprinkling magic dust on your content...',
+    'Assembling a masterpiece just for you...',
+    'Putting the finishing touches on your creation...',
+  ];
+
+  const [currentMessageIndex, setCurrentMessageIndex] = useState(0);
+
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (isGenerating) {
+      interval = setInterval(() => {
+        setCurrentMessageIndex(prevIndex => (prevIndex + 1) % generationMessages.length);
+      }, 10000);
+    }
+    return () => clearInterval(interval);
+  }, [isGenerating]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setStatus('Generating content...');
+    setStatus('');
     setError(false);
+    setIsGenerating(true);
+    setGeneratedContentId(null);
 
     try {
       const result = await generateContent({ category, topic, contentType, otherInstructions });
-      setStatus(`Content generated successfully! ID: ${result.id}`);
+      setGeneratedContentId(result.id);
+      setStatus('Content generated successfully!');
     } catch (error) {
       setStatus('Error generating content');
       setError(true);
       console.error('Error:', error);
+    } finally {
+      setIsGenerating(false);
     }
   };
 
@@ -107,9 +178,22 @@ const ContentGenerator: React.FC = () => {
           onChange={e => setOtherInstructions(e.target.value)}
           placeholder='Enter other instructions (optional)'
         />
-        <Button type='submit'>Generate Content</Button>
+        <Button type='submit' disabled={isGenerating}>
+          {isGenerating ? 'Generating...' : 'Generate Content'}
+        </Button>
       </Form>
+      {isGenerating && (
+        <StatusMessage>
+          <LoadingIndicator />
+          {generationMessages[currentMessageIndex]}
+        </StatusMessage>
+      )}
       {status && <StatusMessage error={error}>{status}</StatusMessage>}
+      {generatedContentId && (
+        <GeneratedContentLink to={`/content/${generatedContentId}`}>
+          View Your Freshly Generated Content!
+        </GeneratedContentLink>
+      )}
     </Container>
   );
 };
