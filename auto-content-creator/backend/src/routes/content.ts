@@ -34,7 +34,11 @@ router.get('/:id', (req, res) => {
   const content: ContentItem | undefined = getContentById(id);
   if (content) {
     console.log(`Content found for ID: ${id}`);
-    res.json(content);
+    res.json({
+      ...content,
+      reflections: JSON.stringify(content.reflections),
+      drafts: JSON.stringify(content.drafts),
+    });
   } else {
     console.log(`Content not found for ID: ${id}`);
     res.status(404).json({ error: 'Content not found' });

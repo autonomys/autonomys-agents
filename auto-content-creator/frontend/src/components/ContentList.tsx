@@ -5,19 +5,30 @@ import { getContentList } from '../api/contentApi';
 
 const ContentItem = styled.div`
   margin-bottom: 20px;
-  padding: 10px;
+  padding: 15px;
   border: 1px solid #ddd;
   border-radius: 4px;
+  transition: box-shadow 0.3s;
+
+  &:hover {
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  }
 `;
 
 const ContentLink = styled(Link)`
   text-decoration: none;
   color: #007bff;
   font-weight: bold;
+  font-size: 18px;
 
   &:hover {
     text-decoration: underline;
   }
+`;
+
+const ContentInfo = styled.p`
+  margin: 5px 0;
+  color: #666;
 `;
 
 const PaginationControls = styled.div`
@@ -28,9 +39,30 @@ const PaginationControls = styled.div`
   gap: 10px;
 `;
 
+const PaginationButton = styled.button`
+  padding: 5px 10px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+
+  &:hover:not(:disabled) {
+    background-color: #0056b3;
+  }
+
+  &:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+  }
+`;
+
 interface Content {
-  id: string;
+  id: number;
+  category: string;
   topic: string;
+  contentType: string;
   createdAt: string;
 }
 
@@ -84,25 +116,27 @@ const ContentList: React.FC = () => {
           {contents.map(content => (
             <ContentItem key={content.id}>
               <ContentLink to={`/content/${content.id}`}>{content.topic}</ContentLink>
-              <p>Created at: {new Date(content.createdAt).toLocaleString()}</p>
+              <ContentInfo>Category: {content.category}</ContentInfo>
+              <ContentInfo>Type: {content.contentType}</ContentInfo>
+              <ContentInfo>Created: {new Date(content.createdAt).toLocaleString()}</ContentInfo>
             </ContentItem>
           ))}
           <PaginationControls>
-            <button
+            <PaginationButton
               onClick={() => handlePageChange(paginationInfo.currentPage - 1)}
               disabled={paginationInfo.currentPage === 1}
             >
               Previous
-            </button>
+            </PaginationButton>
             <span>
               Page {paginationInfo.currentPage} of {paginationInfo.totalPages}
             </span>
-            <button
+            <PaginationButton
               onClick={() => handlePageChange(paginationInfo.currentPage + 1)}
               disabled={paginationInfo.currentPage === paginationInfo.totalPages}
             >
               Next
-            </button>
+            </PaginationButton>
           </PaginationControls>
         </>
       )}
