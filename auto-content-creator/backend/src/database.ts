@@ -36,8 +36,8 @@ export const insertContent = (
 ): number => {
   console.log(`Inserting new content. Category: ${category}, Topic: ${topic}`);
   const stmt = db.prepare(`
-    INSERT INTO content (category, topic, contentType, finalContent, research, reflections, drafts)
-    VALUES (?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO content (category, topic, contentType, finalContent, research, reflections, drafts, createdAt)
+    VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now'))
   `);
   const result = stmt.run(category, topic, contentType, finalContent, research, reflections, drafts);
   console.log(`Content inserted with ID: ${result.lastInsertRowid}`);
@@ -46,7 +46,7 @@ export const insertContent = (
 
 export const getContentById = (id: number): any => {
   console.log(`Fetching content with ID: ${id}`);
-  const stmt = db.prepare('SELECT * FROM content WHERE id = ?');
+  const stmt = db.prepare('SELECT *, datetime(createdAt) as createdAt FROM content WHERE id = ?');
   const result = stmt.get(id);
   console.log(result ? `Content found for ID: ${id}` : `No content found for ID: ${id}`);
   return result;
@@ -60,7 +60,7 @@ export const getAllContent = (page: number, limit: number): { contents: any[]; t
   const { total } = countStmt.get() as { total: number };
 
   const stmt = db.prepare(`
-    SELECT * FROM content
+    SELECT *, datetime(createdAt) as createdAt FROM content
     ORDER BY createdAt DESC
     LIMIT ? OFFSET ?
   `);
