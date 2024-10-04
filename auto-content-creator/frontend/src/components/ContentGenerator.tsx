@@ -49,6 +49,17 @@ const Button = styled.button`
   }
 `;
 
+const Container = styled.div`
+  max-width: 500px;
+  margin: 0 auto;
+  padding: 20px;
+`;
+
+const Title = styled.h2`
+  text-align: left;
+  margin-bottom: 20px;
+`;
+
 const ContentGenerator: React.FC = () => {
   const [category, setCategory] = useState('');
   const [topic, setTopic] = useState('');
@@ -73,8 +84,8 @@ const ContentGenerator: React.FC = () => {
   };
 
   return (
-    <div>
-      <h2>Generate New Content</h2>
+    <Container>
+      <Title>Generate New Content</Title>
       <Form onSubmit={handleSubmit}>
         <Input
           type='text'
@@ -99,7 +110,7 @@ const ContentGenerator: React.FC = () => {
         <Button type='submit'>Generate Content</Button>
       </Form>
       {status && <StatusMessage error={error}>{status}</StatusMessage>}
-    </div>
+    </Container>
   );
 };
 
