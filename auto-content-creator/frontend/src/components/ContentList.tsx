@@ -30,8 +30,8 @@ const PaginationControls = styled.div`
 
 interface Content {
   id: string;
-  title: string;
-  created_at: string;
+  topic: string;
+  createdAt: string;
 }
 
 interface PaginationInfo {
