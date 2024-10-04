@@ -12,6 +12,7 @@ export const webSearchTool = tool(
       return 'Error: SERPAPI_API_KEY is not set.';
     }
     const query = input.query;
+    logger.info(`Performing web search for query: ${query}`);
     const params = new URLSearchParams({
       api_key: API_KEY,
       engine: 'google',
@@ -22,7 +23,6 @@ export const webSearchTool = tool(
     const url = `https://serpapi.com/search?${params.toString()}`;
 
     try {
-      logger.info(`Performing web search for query: ${query}`);
       const response = await axios.get(url);
       const data = response.data;
       const results = data.organic_results || [];
@@ -32,45 +32,39 @@ export const webSearchTool = tool(
         return 'No results found.';
       }
 
+      logger.info(`Found ${results.length} search results. Processing...`);
       const detailedResults = await Promise.all(
-        results.map(async (result: any) => {
-          let fullContent = '';
+        results.map(async (result: any, index: number) => {
+          logger.info(`Processing result ${index + 1} of ${results.length}`);
           try {
             logger.info(`Fetching full content for ${result.link}`);
             const pageResponse = await axios.get(result.link, { timeout: 10000 });
             const $ = load(pageResponse.data);
-
-            // Remove script and style elements
             $('script, style').remove();
-
-            // Get text
-            fullContent = $('body').text();
-
-            // Clean up the text
-            fullContent = fullContent
-              .replace(/\s+/g, ' ')
-              .trim()
-              .split('\n')
-              .map(line => line.trim())
-              .filter(line => line)
-              .join('\n');
-          } catch (error) {
-            logger.error(`Error fetching full content for ${result.link}:`, error);
+            const fullContent = $('body').text().replace(/\s+/g, ' ').trim();
+            logger.info(`Successfully fetched and processed content for result ${index + 1}`);
+            return {
+              title: result.title,
+              snippet: result.snippet,
+              link: result.link,
+              fullContent: fullContent.substring(0, 1000), // Limiting to first 1000 characters
+            };
+          } catch (error: any) {
+            logger.error(`Error processing result ${index + 1}: ${error.message}`);
+            return {
+              title: result.title,
+              snippet: result.snippet,
+              link: result.link,
+              fullContent: 'Error fetching content',
+            };
           }
-
-          return {
-            title: result.title,
-            snippet: result.snippet,
-            link: result.link,
-            fullContent,
-          };
         })
       );
 
-      logger.info(`Web search completed. Found ${detailedResults.length} results.`);
+      logger.info(`Web search completed. Processed ${detailedResults.length} results.`);
       return JSON.stringify(detailedResults, null, 2);
-    } catch (error) {
-      logger.error('Error performing web search:', error);
+    } catch (error: any) {
+      logger.error(`Error performing web search: ${error.message}`);
       return 'Error performing web search.';
     }
   },

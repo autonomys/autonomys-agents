@@ -69,44 +69,32 @@ const State = Annotation.Root({
 });
 
 const researchNode = async (state: typeof State.State) => {
-  const { messages } = state;
-  logger.info('Research Node - Input:', messages);
-
-  const decisionResponse = await researchDecisionChain.invoke({ messages });
-  logger.info('Research Decision:', decisionResponse);
+  logger.info('Research Node - Starting research decision process');
+  const decisionResponse = await researchDecisionChain.invoke({ messages: state.messages });
+  logger.info(`Research Decision: ${decisionResponse.decision}`);
 
   if (decisionResponse.decision === 'yes') {
-    const topicMessage = messages.find(msg => msg._getType() === 'human');
+    logger.info('Performing web search');
+    const topicMessage = state.messages.find(msg => msg._getType() === 'human');
     const query = topicMessage?.content || '';
-
     const toolResponse = await toolNode.invoke({
       messages: [
         new AIMessage({
           content: '',
-          tool_calls: [
-            {
-              name: 'web_search',
-              args: { query },
-              id: 'tool_call_id',
-              type: 'tool_call',
-            },
-          ],
+          tool_calls: [{ name: 'web_search', args: { query }, id: 'tool_call_id', type: 'tool_call' }],
         }),
       ],
     });
-
-    logger.info('Research Node - Tool Response:', toolResponse);
-
-    // Create a robust research report
+    logger.info('Web search completed');
     const researchReport = await createResearchReport(toolResponse.messages[0].content);
-
+    logger.info('Research report generated');
     return {
       messages: [new HumanMessage({ content: `Research findings:\n${researchReport}` })],
       researchPerformed: true,
       research: researchReport,
     };
   } else {
-    logger.info('Research Node - No research needed');
+    logger.info('No research needed');
     return { researchPerformed: false, research: '' };
   }
 };
@@ -145,10 +133,9 @@ async function createResearchReport(searchResults: string): Promise<MessageConte
 }
 
 const generationNode = async (state: typeof State.State) => {
-  const { messages } = state;
-  logger.info('Generation Node - Input:', messages);
-  const response = await contentGenerationChain.invoke({ messages });
-  logger.info('Generation Node - Output:', response);
+  logger.info('Generation Node - Starting content generation');
+  const response = await contentGenerationChain.invoke({ messages: state.messages });
+  logger.info('Content generation completed');
   return {
     messages: [new AIMessage({ content: JSON.stringify(response) })],
     drafts: [response.generatedContent],
@@ -156,22 +143,21 @@ const generationNode = async (state: typeof State.State) => {
 };
 
 const reflectionNode = async (state: typeof State.State) => {
-  const { messages } = state;
-  logger.info('Reflection Node - Input:', messages);
+  logger.info('Reflection Node - Starting content reflection');
   const clsMap: { [key: string]: new (content: string) => BaseMessage } = {
     ai: HumanMessage,
     human: AIMessage,
   };
-  const translated = [messages[0], ...messages.slice(1).map(msg => new clsMap[msg._getType()](msg.content.toString()))];
+  const translated = [
+    state.messages[0],
+    ...state.messages.slice(1).map(msg => new clsMap[msg._getType()](msg.content.toString())),
+  ];
   const res = await reflect.invoke({ messages: translated });
-  logger.info('Reflection Node - Output:', res);
-
-  const { score, critique } = res;
-
+  logger.info(`Reflection completed. Score: ${res.score}`);
   return {
-    messages: [new HumanMessage({ content: critique })],
-    reflectionScore: score,
-    reflections: [{ critique, score }],
+    messages: [new HumanMessage({ content: res.critique })],
+    reflectionScore: res.score,
+    reflections: [{ critique: res.critique, score: res.score }],
   };
 };
 
@@ -196,32 +182,20 @@ const workflow = new StateGraph(State)
 const app = workflow.compile({ checkpointer: new MemorySaver() });
 
 export const writerAgent = async ({ category, topic, contentType, otherInstructions }: WriterAgentParams) => {
-  logger.info('WriterAgent - Starting with params:', { category, topic, contentType, otherInstructions });
+  logger.info('WriterAgent - Starting content creation process', { category, topic, contentType });
   const instructions = `Create ${contentType} content. Category: ${category}. Topic: ${topic}. ${otherInstructions}`;
-
-  // Generate a unique thread_id for each request
   const thread_id = `thread_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
-
   const checkpointConfig = { configurable: { thread_id } };
-
   const initialState = {
-    messages: [
-      new HumanMessage({
-        content: instructions,
-      }),
-    ],
+    messages: [new HumanMessage({ content: instructions })],
     reflectionScore: 0,
     researchPerformed: false,
     research: '',
     reflections: [],
     drafts: [],
   };
-
-  logger.info('WriterAgent - Initial state:', initialState);
-
-  // Use the checkpointConfig with the unique thread_id
+  logger.info('WriterAgent - Initial state prepared');
   const stream = await app.stream(initialState, checkpointConfig);
-
   let finalContent = '';
   let iterationCount = 0;
   let research = '';
@@ -229,13 +203,12 @@ export const writerAgent = async ({ category, topic, contentType, otherInstructi
   let drafts: string[] = [];
 
   for await (const event of stream) {
-    logger.info(`WriterAgent - Iteration ${iterationCount}:`, event);
+    logger.info(`WriterAgent - Iteration ${iterationCount} completed`);
     iterationCount++;
-
     if (event.researchNode) {
       research = event.researchNode.research || '';
+      logger.info('Research step completed');
     }
-
     if (event.generate) {
       const aiMessages = event.generate.messages.filter((msg: BaseMessage) => msg._getType() === 'ai');
       if (aiMessages.length > 0) {
@@ -244,32 +217,26 @@ export const writerAgent = async ({ category, topic, contentType, otherInstructi
           if (parsedContent.generatedContent) {
             finalContent = parsedContent.generatedContent;
             drafts.push(finalContent);
+            logger.info('New content draft generated');
           }
         } catch (error) {
           logger.error('WriterAgent - Error parsing AI message content:', error);
         }
       }
     }
-
     if (event.reflect) {
       reflections.push({
         critique: event.reflect.messages[0].content,
         score: event.reflect.reflectionScore,
       });
+      logger.info(`Reflection added. Score: ${event.reflect.reflectionScore}`);
     }
   }
 
-  logger.info('WriterAgent - Final content:', finalContent);
-
+  logger.info('WriterAgent - Content generation process completed');
   if (!finalContent) {
     logger.error('WriterAgent - No content was generated');
     throw new Error('Failed to generate content');
   }
-
-  return {
-    finalContent,
-    research,
-    reflections,
-    drafts,
-  };
+  return { finalContent, research, reflections, drafts };
 };
