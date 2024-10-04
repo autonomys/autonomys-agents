@@ -15,7 +15,7 @@ export const webSearchTool = tool(
       api_key: API_KEY,
       engine: 'google',
       q: query,
-      num: '5', // Increased from 3 to 5 results
+      num: '10',
     });
 
     const url = `https://serpapi.com/search?${params.toString()}`;
@@ -33,23 +33,37 @@ export const webSearchTool = tool(
         results.map(async (result: any) => {
           let fullContent = '';
           try {
-            const pageResponse = await axios.get(result.link);
+            const pageResponse = await axios.get(result.link, { timeout: 10000 });
             const $ = load(pageResponse.data);
-            fullContent = $('body').text().replace(/\s+/g, ' ').trim().slice(0, 1000); // Get first 1000 characters
+
+            // Remove script and style elements
+            $('script, style').remove();
+
+            // Get text
+            fullContent = $('body').text();
+
+            // Clean up the text
+            fullContent = fullContent
+              .replace(/\s+/g, ' ')
+              .trim()
+              .split('\n')
+              .map(line => line.trim())
+              .filter(line => line)
+              .join('\n');
           } catch (error) {
             console.error(`Error fetching full content for ${result.link}:`, error);
           }
 
-          return `
-Title: ${result.title}
-Snippet: ${result.snippet}
-Link: ${result.link}
-Full Content Preview: ${fullContent}
-        `.trim();
+          return {
+            title: result.title,
+            snippet: result.snippet,
+            link: result.link,
+            fullContent,
+          };
         })
       );
 
-      return detailedResults.join('\n\n');
+      return JSON.stringify(detailedResults, null, 2);
     } catch (error) {
       console.error('Error performing web search:', error);
       return 'Error performing web search.';
