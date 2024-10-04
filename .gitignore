@@ -33,3 +33,8 @@ share/python-wheels/
 
 .cache/
 node_modules/
+
+# SQLite database files
+*.sqlite
+*.sqlite3
+*.db
