@@ -19,6 +19,36 @@ Our goal is to investigate and develop innovative approaches to:
 - Smart contract interactions through autonomous agents
 - Privacy and security considerations in AI-web3 integrations
 
+## Auto Content Creator Approaches
+
+This project explores two different approaches to creating an autonomous content creation agent:
+
+### 1. auto_content_creator
+
+- Primary Language: Python
+- Agent Framework: AutoGen
+
+This approach utilizes [AutoGen](https://github.com/microsoft/autogen), a framework for building Large Language Model (LLM) applications using multiple agents. AutoGen enables the creation of customizable, conversable agents that can work together to accomplish tasks.
+
+Key features:
+
+- Multi-agent system for research, content generation, and fact-checking
+- Customizable agent behaviors and interactions
+- Integration with various LLM models
+
+### 2. auto-content-creator
+
+- Primary Language: TypeScript
+- Agent Framework: LangChain.js with LangGraph
+
+This approach leverages [LangChain.js](https://js.langchain.com/) and [LangGraph](https://github.com/langchain-ai/langgraphjs), which provide a powerful framework for building applications with LLMs. LangGraph, in particular, allows for the creation of complex, stateful workflows.
+
+Key features:
+
+- Structured workflow using LangGraph for content creation process
+- Modular design with separate nodes for research, generation, and reflection
+- Type-safe schemas using Zod for better data validation
+
 ## Project Status
 
 This project is in its early experimental stages. We are actively exploring concepts, testing ideas, and iterating on designs. As such, the codebase and documentation may change rapidly and significantly.
