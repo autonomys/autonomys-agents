@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import styled from 'styled-components';
+import ReactMarkdown from 'react-markdown';
 import { getContentById } from '../api/contentApi';
 
 interface ScoreProps {
@@ -94,9 +95,103 @@ function ensureArray<T>(data: T | T[] | string | null | undefined): T[] {
   return [data];
 }
 
+const MarkdownContent = styled(ReactMarkdown)`
+  font-size: 0.9em;
+  line-height: 1.2;
+  white-space: pre-wrap;
+  background-color: #f9f9f9;
+  padding: 10px;
+  border-radius: 4px;
+  border: 1px solid #e0e0e0;
+  color: #333;
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    margin-top: 0.5em;
+    margin-bottom: 0.2em;
+    line-height: 1.1;
+  }
+
+  h1 {
+    font-size: 1.1em;
+  }
+
+  h2 {
+    font-size: 1.05em;
+  }
+
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-size: 1em;
+  }
+
+  p {
+    margin-top: 0.2em;
+    margin-bottom: 0.3em;
+  }
+
+  ul,
+  ol {
+    margin-top: 0.2em;
+    margin-bottom: 0.3em;
+    padding-left: 1.2em;
+  }
+
+  li {
+    margin-bottom: 0.1em;
+  }
+
+  code {
+    background-color: #f0f0f0;
+    padding: 0.1em 0.2em;
+    border-radius: 2px;
+    font-size: 0.9em;
+  }
+
+  pre {
+    background-color: #f0f0f0;
+    padding: 0.4em;
+    border-radius: 2px;
+    overflow-x: auto;
+    font-size: 0.9em;
+    margin: 0.3em 0;
+  }
+`;
+
+const CollapsibleSection = styled.div`
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  margin-bottom: 10px;
+`;
+
+const CollapsibleHeader = styled.div`
+  background-color: #f0f0f0;
+  padding: 10px;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+`;
+
+const CollapsibleContent = styled.div<{ isOpen: boolean }>`
+  padding: 10px;
+  display: ${props => (props.isOpen ? 'block' : 'none')};
+`;
+
+const ToggleButton = styled.span`
+  font-size: 1.2em;
+`;
+
 const ContentView: React.FC = () => {
   const [content, setContent] = useState<Content | null>(null);
   const [selectedDraft, setSelectedDraft] = useState<number>(0);
+  const [isResearchOpen, setIsResearchOpen] = useState(false);
   const { id } = useParams<{ id: string }>();
 
   useEffect(() => {
@@ -140,10 +235,15 @@ const ContentView: React.FC = () => {
         <ContentText>{content.finalContent}</ContentText>
       </ContentSection>
 
-      <ContentSection>
-        <SectionTitle>Research</SectionTitle>
-        <ContentText>{content.research}</ContentText>
-      </ContentSection>
+      <CollapsibleSection>
+        <CollapsibleHeader onClick={() => setIsResearchOpen(!isResearchOpen)}>
+          <SectionTitle>Research</SectionTitle>
+          <ToggleButton>{isResearchOpen ? '▲' : '▼'}</ToggleButton>
+        </CollapsibleHeader>
+        <CollapsibleContent isOpen={isResearchOpen}>
+          <MarkdownContent>{content.research}</MarkdownContent>
+        </CollapsibleContent>
+      </CollapsibleSection>
 
       <ContentSection>
         <SectionTitle>Reflections</SectionTitle>
