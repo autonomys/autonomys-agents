@@ -1,27 +1,27 @@
 import express from 'express';
 import { generateContent } from '../services/contentService';
 import { insertContent, getContentById, getAllContent } from '../database';
+import { ContentGenerationParams, ContentGenerationOutput, ContentItem, ContentListResponse } from '../types';
 
 const router = express.Router();
 
 router.post('/generate', async (req, res) => {
   console.log('Received request to generate content:', req.body);
   try {
-    const { category, topic, contentType, otherInstructions } = req.body;
-    const result = await generateContent({ category, topic, contentType, otherInstructions });
+    const params: ContentGenerationParams = req.body;
+    const result: ContentGenerationOutput = await generateContent(params);
 
     const id = insertContent(
-      category,
-      topic,
-      contentType,
+      params.category,
+      params.topic,
+      params.contentType,
       result.finalContent,
       result.research,
       JSON.stringify(result.reflections),
       JSON.stringify(result.drafts)
     );
-
     console.log(`Content generated successfully with ID: ${id}`);
-    res.json({ id, ...result });
+    res.json({ id, result });
   } catch (error) {
     console.error('Error generating content:', error);
     res.status(500).json({ error: 'Failed to generate content' });
@@ -31,7 +31,7 @@ router.post('/generate', async (req, res) => {
 router.get('/:id', (req, res) => {
   const id = parseInt(req.params.id);
   console.log(`Received request to get content with ID: ${id}`);
-  const content = getContentById(id);
+  const content: ContentItem | undefined = getContentById(id);
   if (content) {
     console.log(`Content found for ID: ${id}`);
     res.json(content);
@@ -51,12 +51,13 @@ router.get('/', (req, res) => {
     const totalPages = Math.ceil(total / limit);
 
     console.log(`Returning ${contents.length} contents. Total items: ${total}`);
-    res.json({
+    const response: ContentListResponse = {
       contents,
       currentPage: page,
       totalPages,
       totalItems: total,
-    });
+    };
+    res.json(response);
   } catch (error) {
     console.error('Error fetching contents:', error);
     res.status(500).json({ error: 'Failed to fetch contents' });

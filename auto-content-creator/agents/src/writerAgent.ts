@@ -2,7 +2,7 @@ import { END, MemorySaver, StateGraph, START, Annotation } from '@langchain/lang
 import { AIMessage, BaseMessage, HumanMessage, MessageContent } from '@langchain/core/messages';
 import { ChatOpenAI } from '@langchain/openai';
 import dotenv from 'dotenv';
-import { WriterAgentParams } from './types';
+import { WriterAgentParams, WriterAgentOutput } from './types';
 import { ToolNode } from '@langchain/langgraph/prebuilt';
 import { webSearchTool } from './tools';
 import { generationSchema, reflectionSchema, researchDecisionSchema } from './schemas';
@@ -181,7 +181,12 @@ const workflow = new StateGraph(State)
 
 const app = workflow.compile({ checkpointer: new MemorySaver() });
 
-export const writerAgent = async ({ category, topic, contentType, otherInstructions }: WriterAgentParams) => {
+export const writerAgent = async ({
+  category,
+  topic,
+  contentType,
+  otherInstructions,
+}: WriterAgentParams): Promise<WriterAgentOutput> => {
   logger.info('WriterAgent - Starting content creation process', { category, topic, contentType });
   const instructions = `Create ${contentType} content. Category: ${category}. Topic: ${topic}. ${otherInstructions}`;
   const thread_id = `thread_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
