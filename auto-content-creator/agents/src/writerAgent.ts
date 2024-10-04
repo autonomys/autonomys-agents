@@ -188,7 +188,7 @@ const workflow = new StateGraph(State)
   .addNode('generate', generationNode)
   .addNode('reflect', reflectionNode)
   .addEdge(START, 'researchNode')
-  .addConditionalEdges('researchNode', state => (state.researchPerformed ? 'generate' : END))
+  .addEdge('researchNode', 'generate')
   .addConditionalEdges('generate', shouldContinue)
   .addEdge('reflect', 'generate');
 
@@ -198,7 +198,10 @@ export const writerAgent = async ({ category, topic, contentType, otherInstructi
   console.log('WriterAgent - Starting with params:', { category, topic, contentType, otherInstructions });
   const instructions = `Create ${contentType} content. Category: ${category}. Topic: ${topic}. ${otherInstructions}`;
 
-  const checkpointConfig = { configurable: { thread_id: 'my-thread' } };
+  // Generate a unique thread_id for each request
+  const thread_id = `thread_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
+
+  const checkpointConfig = { configurable: { thread_id } };
 
   const initialState = {
     messages: [
@@ -215,6 +218,7 @@ export const writerAgent = async ({ category, topic, contentType, otherInstructi
 
   console.log('WriterAgent - Initial state:', initialState);
 
+  // Use the checkpointConfig with the unique thread_id
   const stream = await app.stream(initialState, checkpointConfig);
 
   let finalContent = '';
