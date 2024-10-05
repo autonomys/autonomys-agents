@@ -34,6 +34,9 @@ const ContentSection = styled.div`
 
 const SectionTitle = styled.h3`
   color: #007bff;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 `;
 
 const ContentText = styled.div`
@@ -56,10 +59,16 @@ const ReflectionItem = styled.div`
   margin-bottom: 10px;
 `;
 
-const DraftSelector = styled.select`
-  width: 100%;
-  padding: 5px;
+const DraftContainer = styled.div`
+  display: flex;
+  align-items: center;
   margin-bottom: 10px;
+`;
+
+const DraftSelector = styled.select`
+  flex: 1;
+  padding: 5px;
+  margin-right: 10px;
 `;
 
 interface Content {
@@ -188,6 +197,20 @@ const ToggleButton = styled.span`
   font-size: 1.2em;
 `;
 
+const CopyButton = styled.button`
+  padding: 5px 10px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9em;
+
+  &:hover {
+    background-color: #0056b3;
+  }
+`;
+
 const ContentView: React.FC = () => {
   const [content, setContent] = useState<Content | null>(null);
   const [selectedDraft, setSelectedDraft] = useState<number>(0);
@@ -222,6 +245,17 @@ const ContentView: React.FC = () => {
 
   console.log('Content reflections:', content.reflections);
 
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text).then(
+      () => {
+        console.log('Copying to clipboard was successful!');
+      },
+      (err) => {
+        console.error('Could not copy text: ', err);
+      }
+    );
+  };
+
   return (
     <ContentContainer>
       <ContentHeader>{content.topic}</ContentHeader>
@@ -231,7 +265,10 @@ const ContentView: React.FC = () => {
       <MetaInfo>Created at: {new Date(content.createdAt).toLocaleString()}</MetaInfo>
 
       <ContentSection>
-        <SectionTitle>Final Content</SectionTitle>
+        <SectionTitle>
+          Final Content
+          <CopyButton onClick={() => copyToClipboard(content.finalContent)}>Copy</CopyButton>
+        </SectionTitle>
         <ContentText>{content.finalContent}</ContentText>
       </ContentSection>
 
@@ -267,13 +304,18 @@ const ContentView: React.FC = () => {
         <SectionTitle>Drafts</SectionTitle>
         {content.drafts.length > 0 ? (
           <>
-            <DraftSelector value={selectedDraft} onChange={e => setSelectedDraft(Number(e.target.value))}>
-              {content.drafts.map((_, index) => (
-                <option key={index} value={index}>
-                  Draft {index + 1}
-                </option>
-              ))}
-            </DraftSelector>
+            <DraftContainer>
+              <DraftSelector value={selectedDraft} onChange={e => setSelectedDraft(Number(e.target.value))}>
+                {content.drafts.map((_, index) => (
+                  <option key={index} value={index}>
+                    Draft {index + 1}
+                  </option>
+                ))}
+              </DraftSelector>
+              <CopyButton onClick={() => copyToClipboard(content.drafts[selectedDraft])}>
+                Copy
+              </CopyButton>
+            </DraftContainer>
             <ContentText>{content.drafts[selectedDraft]}</ContentText>
           </>
         ) : (
