@@ -89,16 +89,22 @@ const LoadingIndicator = styled.div`
 const GeneratedContentLink = styled(Link)`
   display: inline-block;
   margin-top: 20px;
+  width: 90%;
   padding: 10px 20px;
   background-color: #28a745;
   color: white;
   text-decoration: none;
   border-radius: 4px;
   transition: background-color 0.3s;
+  text-align: center; // Center the text
 
   &:hover {
     background-color: #218838;
   }
+`;
+
+const CheckboxContainer = styled.div`
+  margin-top: 10px;
 `;
 
 const ContentGenerator: React.FC = () => {
@@ -110,6 +116,14 @@ const ContentGenerator: React.FC = () => {
   const [error, setError] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedContentId, setGeneratedContentId] = useState<number | null>(null);
+  const [autoRedirect, setAutoRedirect] = useState(() => {
+    const saved = localStorage.getItem('autoRedirect');
+    return saved ? JSON.parse(saved) : false;
+  });
+
+  useEffect(() => {
+    localStorage.setItem('autoRedirect', JSON.stringify(autoRedirect));
+  }, [autoRedirect]);
 
   const generationMessages = [
     'Brewing a pot of creative ideas...',
@@ -145,6 +159,9 @@ const ContentGenerator: React.FC = () => {
       const result = await generateContent({ category, topic, contentType, otherInstructions });
       setGeneratedContentId(result.id);
       setStatus('Content generated successfully!');
+      if (autoRedirect) {
+        window.location.href = `/content/${result.id}`;
+      }
     } catch (error) {
       setStatus('Error generating content');
       setError(true);
@@ -189,11 +206,21 @@ const ContentGenerator: React.FC = () => {
         </StatusMessage>
       )}
       {status && <StatusMessage error={error}>{status}</StatusMessage>}
-      {generatedContentId && (
+      {generatedContentId && !autoRedirect && (
         <GeneratedContentLink to={`/content/${generatedContentId}`}>
           View Your Freshly Generated Content!
         </GeneratedContentLink>
       )}
+      <CheckboxContainer>
+        <label>
+          <input
+            type="checkbox"
+            checked={autoRedirect}
+            onChange={() => setAutoRedirect(!autoRedirect)}
+          />
+          Automatically redirect to generated content
+        </label>
+      </CheckboxContainer>
     </Container>
   );
 };
