@@ -59,10 +59,16 @@ const ReflectionItem = styled.div`
   margin-bottom: 10px;
 `;
 
-const DraftSelector = styled.select`
-  width: 100%;
-  padding: 5px;
+const DraftContainer = styled.div`
+  display: flex;
+  align-items: center;
   margin-bottom: 10px;
+`;
+
+const DraftSelector = styled.select`
+  flex: 1;
+  padding: 5px;
+  margin-right: 10px;
 `;
 
 interface Content {
@@ -298,13 +304,18 @@ const ContentView: React.FC = () => {
         <SectionTitle>Drafts</SectionTitle>
         {content.drafts.length > 0 ? (
           <>
-            <DraftSelector value={selectedDraft} onChange={e => setSelectedDraft(Number(e.target.value))}>
-              {content.drafts.map((_, index) => (
-                <option key={index} value={index}>
-                  Draft {index + 1}
-                </option>
-              ))}
-            </DraftSelector>
+            <DraftContainer>
+              <DraftSelector value={selectedDraft} onChange={e => setSelectedDraft(Number(e.target.value))}>
+                {content.drafts.map((_, index) => (
+                  <option key={index} value={index}>
+                    Draft {index + 1}
+                  </option>
+                ))}
+              </DraftSelector>
+              <CopyButton onClick={() => copyToClipboard(content.drafts[selectedDraft])}>
+                Copy
+              </CopyButton>
+            </DraftContainer>
             <ContentText>{content.drafts[selectedDraft]}</ContentText>
           </>
         ) : (
