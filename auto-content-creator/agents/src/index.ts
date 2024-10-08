@@ -1,5 +1,8 @@
 import express, { Request, Response, NextFunction } from 'express';
 import { writerAgent } from './writerAgent';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 // Create an Express application
 const app = express();
@@ -8,7 +11,7 @@ const app = express();
 app.use(express.json());
 
 // Specify the port number for the server
-const port: number = 3000;
+const port: number = process.env.AGENTS_PORT ? parseInt(process.env.AGENTS_PORT) : 3000;
 
 app.post('/writer', (req: Request, res: Response, next: NextFunction) => {
   console.log('Received request body:', req.body);
@@ -51,6 +54,12 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
     error: 'An error occurred while processing your request',
     details: err.message,
   });
+});
+
+// Add a simple route for testing
+app.get('/', (req, res) => {
+  console.log('Received request on root route');
+  res.send('Auto Content Creator Backend is running!');
 });
 
 // Start the server and listen on the specified port

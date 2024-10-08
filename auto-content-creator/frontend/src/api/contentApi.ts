@@ -3,6 +3,7 @@
 import axios from 'axios';
 
 const API_BASE_URL = import.meta.env.VITE_BACKEND_SERVICE_URL || 'http://localhost:4000';
+console.log(`VITE_BACKEND_SERVICE_URL: ${API_BASE_URL}`);
 
 const api = axios.create({
   baseURL: API_BASE_URL,
