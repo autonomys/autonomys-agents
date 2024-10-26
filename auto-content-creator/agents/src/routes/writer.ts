@@ -65,4 +65,29 @@ router.post('/:threadId/feedback', (req, res, next) => {
     })();
 });
 
+// Add new endpoint to check thread state
+router.get('/:threadId/state', (req, res, next) => {
+    logger.info('Received request to get thread state:', req.params.threadId);
+    (async () => {
+        try {
+            const threadId = req.params.threadId;
+            const threadState = await writerAgent.getThreadState(threadId);
+
+            if (!threadState) {
+                return res.status(404).json({
+                    error: 'Thread not found'
+                });
+            }
+
+            res.json({
+                threadId,
+                lastOutput: threadState.lastOutput,
+            });
+        } catch (error) {
+            logger.error('Error getting thread state:', error);
+            next(error);
+        }
+    })();
+});
+
 export const writerRouter = router;

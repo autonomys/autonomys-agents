@@ -9,6 +9,7 @@ import { generationSchema, reflectionSchema, researchDecisionSchema, humanFeedba
 import { generationPrompt, reflectionPrompt, researchDecisionPrompt, humanFeedbackPrompt } from '../prompts';
 import logger from '../logger';
 import { ChatPromptTemplate } from '@langchain/core/prompts';
+import { createThreadStorage } from './threadStorage';
 
 // Create a list of tools and ToolNode instance
 const tools = [webSearchTool];
@@ -223,16 +224,34 @@ const workflow = new StateGraph(State)
     .addEdge('reflect', 'generate')
     .addEdge('processFeedback', 'generate');
 
-const app = workflow.compile({ checkpointer: new MemorySaver() });
+// Create a persistent memory store
+const memoryStore = new MemorySaver();
 
-// Add these interfaces
+// Update the workflow compilation to use the memory store
+const app = workflow.compile({
+    checkpointer: memoryStore
+});
+
+// Add a type for thread state management
 interface ThreadState {
     state: typeof State.State;
-    stream: any;
+    lastOutput?: WriterAgentOutput;
 }
 
-// Add a map to store thread states
-const threadStates = new Map<string, ThreadState>();
+// Initialize thread storage as a singleton
+const threadStorage = createThreadStorage();
+
+// Ensure thread storage is initialized before starting the server
+export const initializeStorage = async () => {
+    try {
+        // Just check if we can connect to the database
+        const threads = await threadStorage.getAllThreads();
+        logger.info('Thread storage initialized successfully', { threadCount: threads.length });
+    } catch (error) {
+        logger.error('Failed to initialize thread storage:', error);
+        throw error;
+    }
+};
 
 // Split the writerAgent into two exported functions
 export const writerAgent = {
@@ -256,15 +275,21 @@ export const writerAgent = {
             feedbackHistory: [],
         };
 
-        const stream = await app.stream(initialState, { configurable: { thread_id: threadId } });
+        const config = {
+            configurable: {
+                thread_id: threadId
+            }
+        };
 
-        // Store the state and stream for later use
-        threadStates.set(threadId, {
+        const stream = await app.stream(initialState, config);
+        const result = await processStream(stream);
+
+        // Store thread state in persistent storage
+        await threadStorage.saveThread(threadId, {
             state: initialState,
-            stream,
+            lastOutput: result
         });
 
-        const result = await processStream(stream);
         return { ...result, threadId };
     },
 
@@ -275,32 +300,46 @@ export const writerAgent = {
         threadId: string;
         feedback: string;
     }): Promise<WriterAgentOutput> {
-        const threadState = threadStates.get(threadId);
+        // Load thread state from storage
+        const threadState = await threadStorage.loadThread(threadId);
         if (!threadState) {
-            throw new Error('Thread not found');
+            logger.error('Thread not found', { threadId });
+            throw new Error(`Thread ${threadId} not found`);
         }
 
         logger.info('WriterAgent - Continuing draft with feedback', { threadId });
 
-        // Add feedback to the existing state
         const newMessage = new HumanMessage({ content: `FEEDBACK: ${feedback}` });
-        threadState.state.messages.push(newMessage);
+        const updatedState = {
+            ...threadState.state,
+            messages: [...threadState.state.messages, newMessage]
+        };
 
-        // Continue the stream with the updated state
-        const stream = await app.stream(threadState.state, { configurable: { thread_id: threadId } });
+        const config = {
+            configurable: {
+                thread_id: threadId
+            }
+        };
 
-        // Update the stored state
-        threadStates.set(threadId, {
-            state: threadState.state,
-            stream,
+        const stream = await app.stream(updatedState, config);
+        const result = await processStream(stream);
+
+        // Update thread state in storage
+        await threadStorage.saveThread(threadId, {
+            state: updatedState,
+            lastOutput: result
         });
 
-        return await processStream(stream);
+        return result;
+    },
+
+    async getThreadState(threadId: string): Promise<ThreadState | null> {
+        return await threadStorage.loadThread(threadId);
     }
 };
 
 // Helper function to process the stream
-async function processStream(stream: any): Promise<WriterAgentOutput> {
+const processStream = async (stream: any): Promise<WriterAgentOutput> => {
     let finalContent = '';
     let research = '';
     let reflections: { critique: string; score: number }[] = [];

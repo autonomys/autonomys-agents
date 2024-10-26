@@ -2,6 +2,7 @@ import express, { Request, Response, NextFunction } from 'express';
 import { writerRouter } from './routes/writer';
 import logger from './logger';
 import { config } from './config';
+import { initializeStorage } from './services/writerAgent';
 
 // Create an Express application
 const app = express();
@@ -28,7 +29,17 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
   });
 });
 
-// Start server
-app.listen(port, () => {
-  logger.info(`Agents service is running on http://localhost:${port}`);
-});
+// Initialize storage before starting the server
+const startServer = async () => {
+  try {
+    await initializeStorage();
+    app.listen(port, () => {
+      logger.info(`Agents service is running on http://localhost:${port}`);
+    });
+  } catch (error) {
+    logger.error('Failed to start server:', error);
+    process.exit(1);
+  }
+};
+
+startServer();
