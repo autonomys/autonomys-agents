@@ -12,7 +12,7 @@ services:
     environment:
       - AGENTS_PORT=${AGENTS_PORT:-3000}
       - OPENAI_API_KEY=${OPENAI_API_KEY}
-  
+      - SERPAPI_API_KEY=${SERPAPI_API_KEY}
   backend:
     build:
       context: .
