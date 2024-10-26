@@ -38,3 +38,7 @@ node_modules/
 *.sqlite
 *.sqlite3
 *.db
+
+# SQLite database
+*.sqlite
+*.sqlite-journal
