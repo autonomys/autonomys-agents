@@ -15,3 +15,8 @@ export const researchDecisionSchema = z.object({
   reason: z.string().describe('Reason for the decision.'),
   query: z.string().optional().describe('Optimal search query if research is needed.'),
 });
+
+export const humanFeedbackSchema = z.object({
+  improvedContent: z.string().describe('The content improved based on human feedback'),
+  changes: z.string().describe('Description of changes made based on feedback'),
+});

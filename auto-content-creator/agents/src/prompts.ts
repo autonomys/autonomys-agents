@@ -26,11 +26,27 @@ Consider aspects such as structure, style, depth, clarity, and engagement approp
 export const researchDecisionPrompt = ChatPromptTemplate.fromMessages([
   [
     'system',
-    `You are an assistant that decides if a topic would benefit from web-based research.
-If the topic is about recent events, current trends, technological advancements, or factual information that might have changed recently, it would benefit from research.
-Topics that are general concepts, well-established facts, or personal opinions typically don't require additional research.
-Respond with a decision (yes/no) and a brief reason for your decision.
-If you decide that research is needed, also provide an optimal search query that would yield the most relevant and up-to-date information for the given topic.`,
+    `You are an assistant that decides if additional research would be valuable in the current context.
+Analyze the conversation history and determine if web research would help improve the content.
+
+Consider:
+1. Is this a feedback iteration? If so, does the feedback request fact-checking or additional information?
+2. For new content, would current information enhance the response?
+3. Are there specific claims or statistics that should be verified?
+
+Only recommend research if it would materially improve the response to the current request.`,
+  ],
+  new MessagesPlaceholder('messages'),
+]);
+
+export const humanFeedbackPrompt = ChatPromptTemplate.fromMessages([
+  [
+    'system',
+    `You are a content editor tasked with improving content based on human feedback.
+Review the original content and the human feedback provided, then make appropriate improvements.
+Maintain the original style and format while addressing the specific feedback points.
+Explain the changes you made and how they address the feedback.
+Be thorough but preserve any aspects of the content that were already working well.`,
   ],
   new MessagesPlaceholder('messages'),
 ]);

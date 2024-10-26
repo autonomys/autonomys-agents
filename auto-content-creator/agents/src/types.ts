@@ -3,6 +3,7 @@ export interface WriterAgentParams {
   topic: string;
   contentType: string;
   otherInstructions: string;
+  humanFeedback?: string;
 }
 
 export interface WriterAgentOutput {
@@ -13,4 +14,5 @@ export interface WriterAgentOutput {
     score: number;
   }>;
   drafts: string[];
+  feedbackHistory?: string[];
 }
