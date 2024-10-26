@@ -1,11 +1,13 @@
 {
-  "name": "auto-content-creator",
+  "name": "@auto-content/agents",
   "version": "1.0.0",
-  "description": "Auto Content Creator using LangGraph.js",
-  "main": "src/index.ts",
+  "private": true,
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "scripts": {
-    "start": "ts-node src/index.ts",
-    "dev": "nodemon"
+    "build": "tsc",
+    "dev": "nodemon",
+    "start": "node dist/index.js"
   },
   "dependencies": {
     "@langchain/anthropic": "^0.3.2",

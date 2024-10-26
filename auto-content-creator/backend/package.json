@@ -1,11 +1,13 @@
 {
-  "name": "auto-content-creator-backend",
+  "name": "@auto-content/backend",
   "version": "1.0.0",
-  "main": "src/index.ts",
+  "private": true,
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "scripts": {
-    "start": "ts-node src/index.ts",
+    "build": "tsc",
     "dev": "nodemon",
-    "build": "tsc"
+    "start": "node dist/index.js"
   },
   "dependencies": {
     "axios": "^1.7.7",
