@@ -34,3 +34,16 @@ If you decide that research is needed, also provide an optimal search query that
   ],
   new MessagesPlaceholder('messages'),
 ]);
+
+// Add this new prompt
+export const humanFeedbackPrompt = ChatPromptTemplate.fromMessages([
+  [
+    'system',
+    `You are a content editor tasked with improving content based on human feedback.
+Review the original content and the human feedback provided, then make appropriate improvements.
+Maintain the original style and format while addressing the specific feedback points.
+Explain the changes you made and how they address the feedback.
+Be thorough but preserve any aspects of the content that were already working well.`,
+  ],
+  new MessagesPlaceholder('messages'),
+]);

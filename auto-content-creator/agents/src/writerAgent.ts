@@ -9,11 +9,14 @@ import { generationSchema, reflectionSchema, researchDecisionSchema } from './sc
 import { generationPrompt, reflectionPrompt, researchDecisionPrompt } from './prompts';
 import { ChatPromptTemplate } from '@langchain/core/prompts';
 import logger from './logger';
+import { humanFeedbackPrompt } from './prompts';
+import { humanFeedbackSchema } from './schemas';
 
 // Load environment variables
 dotenv.config();
 
 const MODEL = 'gpt-4o-mini';
+const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
 // Configure the content generation LLM with structured output
 const generationLlm = new ChatOpenAI({
@@ -52,6 +55,16 @@ const researchDecisionLlm = new ChatOpenAI({
 // Create the research decision chain
 const researchDecisionChain = researchDecisionPrompt.pipe(researchDecisionLlm);
 
+// Configure the human feedback model
+const humanFeedbackLlm = new ChatOpenAI({
+  openAIApiKey: process.env.OPENAI_API_KEY,
+  model: MODEL,
+  temperature: 0.4,
+}).withStructuredOutput(humanFeedbackSchema);
+
+// Create the human feedback chain
+const humanFeedbackChain = humanFeedbackPrompt.pipe(humanFeedbackLlm);
+
 // Update the State interface
 const State = Annotation.Root({
   messages: Annotation<BaseMessage[]>({
@@ -64,6 +77,9 @@ const State = Annotation.Root({
     reducer: (x, y) => x.concat(y),
   }),
   drafts: Annotation<string[]>({
+    reducer: (x, y) => x.concat(y),
+  }),
+  feedbackHistory: Annotation<string[]>({
     reducer: (x, y) => x.concat(y),
   }),
 });
@@ -162,8 +178,39 @@ const reflectionNode = async (state: typeof State.State) => {
   };
 };
 
+const humanFeedbackNode = async (state: typeof State.State) => {
+  logger.info('Human Feedback Node - Processing feedback');
+  const lastDraft = state.drafts[state.drafts.length - 1];
+  const feedback = state.messages[state.messages.length - 1].content;
+
+  const response = await humanFeedbackChain.invoke({
+    messages: [
+      new HumanMessage({
+        content: `Original content:\n${lastDraft}\n\nHuman feedback:\n${feedback}`,
+      }),
+    ],
+  });
+
+  logger.info('Content updated based on human feedback');
+  return {
+    messages: [new AIMessage({ content: JSON.stringify(response) })],
+    drafts: [response.improvedContent],
+    feedbackHistory: [feedback],
+  };
+};
+
 const shouldContinue = (state: typeof State.State) => {
   const { reflectionScore } = state;
+  const lastMessage = state.messages[state.messages.length - 1];
+
+  // If there's human feedback, process it
+  if (lastMessage._getType() === 'human' &&
+    typeof lastMessage.content === 'string' &&
+    lastMessage.content.includes('FEEDBACK:')) {
+    return 'processFeedback';
+  }
+
+  // Original logic
   if (reflectionScore >= 9 || state.messages.length > 10) {
     return END;
   }
@@ -175,38 +222,97 @@ const workflow = new StateGraph(State)
   .addNode('researchNode', researchNode)
   .addNode('generate', generationNode)
   .addNode('reflect', reflectionNode)
+  .addNode('processFeedback', humanFeedbackNode)
   .addEdge(START, 'researchNode')
   .addEdge('researchNode', 'generate')
   .addConditionalEdges('generate', shouldContinue)
-  .addEdge('reflect', 'generate');
+  .addEdge('reflect', 'generate')
+  .addEdge('processFeedback', 'generate');
 
 const app = workflow.compile({ checkpointer: new MemorySaver() });
 
-export const writerAgent = async ({
-  category,
-  topic,
-  contentType,
-  otherInstructions,
-}: WriterAgentParams): Promise<WriterAgentOutput> => {
-  logger.info('WriterAgent - Starting content creation process', { category, topic, contentType });
-  const instructions = `Create ${contentType} content. Category: ${category}. Topic: ${topic}. ${otherInstructions}`;
-  const thread_id = `thread_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
-  const checkpointConfig = { configurable: { thread_id } };
-  const initialState = {
-    messages: [new HumanMessage({ content: instructions })],
-    reflectionScore: 0,
-    researchPerformed: false,
-    research: '',
-    reflections: [],
-    drafts: [],
-  };
-  logger.info('WriterAgent - Initial state prepared');
-  const stream = await app.stream(initialState, checkpointConfig);
+// Add these interfaces
+interface ThreadState {
+  state: typeof State.State;
+  stream: any;
+}
+
+// Add a map to store thread states
+const threadStates = new Map<string, ThreadState>();
+
+// Split the writerAgent into two exported functions
+export const writerAgent = {
+  async startDraft({
+    category,
+    topic,
+    contentType,
+    otherInstructions,
+  }: Omit<WriterAgentParams, 'humanFeedback'>): Promise<WriterAgentOutput & { threadId: string }> {
+    const threadId = `thread_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
+    logger.info('WriterAgent - Starting new draft', { threadId });
+
+    const instructions = `Create ${contentType} content. Category: ${category}. Topic: ${topic}. ${otherInstructions}`;
+    const initialState = {
+      messages: [new HumanMessage({ content: instructions })],
+      reflectionScore: 0,
+      researchPerformed: false,
+      research: '',
+      reflections: [],
+      drafts: [],
+      feedbackHistory: [],
+    };
+
+    const stream = await app.stream(initialState, { configurable: { thread_id: threadId } });
+
+    // Store the state and stream for later use
+    threadStates.set(threadId, {
+      state: initialState,
+      stream,
+    });
+
+    const result = await processStream(stream);
+    return { ...result, threadId };
+  },
+
+  async continueDraft({
+    threadId,
+    feedback,
+  }: {
+    threadId: string;
+    feedback: string;
+  }): Promise<WriterAgentOutput> {
+    const threadState = threadStates.get(threadId);
+    if (!threadState) {
+      throw new Error('Thread not found');
+    }
+
+    logger.info('WriterAgent - Continuing draft with feedback', { threadId });
+
+    // Add feedback to the existing state
+    const newMessage = new HumanMessage({ content: `FEEDBACK: ${feedback}` });
+    threadState.state.messages.push(newMessage);
+
+    // Continue the stream with the updated state
+    const stream = await app.stream(threadState.state, { configurable: { thread_id: threadId } });
+
+    // Update the stored state
+    threadStates.set(threadId, {
+      state: threadState.state,
+      stream,
+    });
+
+    return await processStream(stream);
+  }
+};
+
+// Helper function to process the stream
+async function processStream(stream: any): Promise<WriterAgentOutput> {
   let finalContent = '';
-  let iterationCount = 0;
   let research = '';
   let reflections: { critique: string; score: number }[] = [];
   let drafts: string[] = [];
+  let feedbackHistory: string[] = [];
+  let iterationCount = 0;
 
   for await (const event of stream) {
     logger.info(`WriterAgent - Iteration ${iterationCount} completed`);
@@ -237,6 +343,10 @@ export const writerAgent = async ({
       });
       logger.info(`Reflection added. Score: ${event.reflect.reflectionScore}`);
     }
+    if (event.processFeedback) {
+      feedbackHistory.push(event.processFeedback.feedbackHistory[0]);
+      logger.info(`Feedback added. History: ${event.processFeedback.feedbackHistory}`);
+    }
   }
 
   logger.info('WriterAgent - Content generation process completed');
@@ -244,5 +354,12 @@ export const writerAgent = async ({
     logger.error('WriterAgent - No content was generated');
     throw new Error('Failed to generate content');
   }
-  return { finalContent, research, reflections, drafts };
-};
+
+  return {
+    finalContent,
+    research,
+    reflections,
+    drafts,
+    feedbackHistory,
+  };
+}
