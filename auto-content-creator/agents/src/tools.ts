@@ -3,10 +3,11 @@ import { z } from 'zod';
 import axios from 'axios';
 import { load } from 'cheerio';
 import logger from './logger';
+import { config } from './config';
 
 export const webSearchTool = tool(
   async input => {
-    const API_KEY = process.env.SERPAPI_API_KEY;
+    const API_KEY = config.serpapiApiKey;
     if (!API_KEY) {
       logger.error('SERPAPI_API_KEY is not set.');
       return 'Error: SERPAPI_API_KEY is not set.';
