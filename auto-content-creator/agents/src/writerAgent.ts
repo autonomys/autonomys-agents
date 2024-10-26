@@ -210,7 +210,6 @@ const shouldContinue = (state: typeof State.State) => {
     return 'processFeedback';
   }
 
-  // Original logic
   if (reflectionScore >= 9 || state.messages.length > 10) {
     return END;
   }
