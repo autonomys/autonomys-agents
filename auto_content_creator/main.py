@@ -14,8 +14,8 @@ def main():
     try:
         logging.info(f"Generating article on topic: {args.topic}")
         # Unpack four returned values
-        article_content, fact_check_report, research_info, final_article_content = (
-            generate_article(args.topic)
+        title, article_content, fact_check_report, research_info, final_article_content = (
+            generate_article(args.category, args.topic)
         )
 
         # Check for research errors
@@ -26,7 +26,9 @@ def main():
 
         # Save all reports including the research report
         article_file, fact_check_file, research_file, final_article_file = save_article(
+            args.category,
             args.topic,
+            str(title),  # Convert title to string to satisfy type hint
             article_content,
             fact_check_report,
             final_article_content,
@@ -43,7 +45,6 @@ def main():
         logging.error(f"An error occurred: {str(e)}")
         print(f"An error occurred: {str(e)}")
         sys.exit(1)
-
 
 if __name__ == "__main__":
     main()
