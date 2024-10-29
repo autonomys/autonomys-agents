@@ -10,18 +10,21 @@
         "start": "node dist/index.js"
     },
     "dependencies": {
-        "@langchain/anthropic": "^0.3.2",
-        "@langchain/community": "0.3.2",
+        "@autonomys/auto-consensus": "0.7.3",
+        "@autonomys/auto-drive": "0.7.3",
+        "@autonomys/auto-utils": "0.7.3",
+        "@langchain/anthropic": "0.3.7",
+        "@langchain/community": "0.3.11",
         "@langchain/core": "0.3.3",
         "@langchain/langgraph": "0.2.8",
         "@langchain/openai": "0.3.1",
         "axios": "^1.7.7",
         "dotenv": "^16.4.1",
         "express": "5.0.0",
-        "winston": "^3.14.2",
-        "zod": "^3.23.8",
+        "sqlite": "^5.1.1",
         "sqlite3": "^5.1.7",
-        "sqlite": "^5.1.1"
+        "winston": "^3.14.2",
+        "zod": "^3.23.8"
     },
     "devDependencies": {
         "@types/express": "5.0.0",
