@@ -8,6 +8,16 @@ const formatTokenValue = (tokenValue: bigint, decimals: number = 18) => {
     return Number(tokenValue) / 10 ** decimals;
 };
 
+const toShannons = (amount: string): string => {
+    // Remove 'ai3' or any other unit suffix and convert to number
+    const numericAmount = parseFloat(amount.replace(/\s*ai3\s*/i, ''));
+    // Convert to smallest unit (18 decimals)
+    return (BigInt(Math.floor(numericAmount * 10 ** 18)).toString());
+};
+
+// For development/testing, use a test wallet
+const TEST_MNEMONIC = process.env.TEST_MNEMONIC || '//Alice'; // Default to //Alice for development
+
 export const getBalanceTool = tool(
     async (input: { address: string }) => {
         try {
@@ -29,7 +39,7 @@ export const getBalanceTool = tool(
     },
     {
         name: "get_balance",
-        description: "Get the balance details of a blockchain address. Returns an object containing the address and balance information (free and reserved balances).",
+        description: "Get the balance details of a blockchain address",
         schema: z.object({
             address: z.string().describe("The blockchain address to check balance for")
         })
@@ -37,29 +47,37 @@ export const getBalanceTool = tool(
 );
 
 export const sendTransactionTool = tool(
-    async (input: { to: string; amount: string; mnemonic: string }) => {
+    async (input: { to: string; amount: string }) => {
         try {
             logger.info(`Sending ${input.amount} to ${input.to}`);
 
-            // Activate wallet with provided mnemonic
+            // Convert amount to proper format
+            const formattedAmount = toShannons(input.amount);
+            logger.info(`Formatted amount: ${formattedAmount}`);
+
+            // Use test wallet
             const { api, accounts } = await activateWallet({
-                mnemonic: input.mnemonic,
+                uri: TEST_MNEMONIC,  // Use test mnemonic or Alice for development
                 networkId: 'taurus'
             });
 
             const sender = accounts[0];
+            logger.info(`Sending from test wallet address: ${sender.address} to ${input.to} amount ${formattedAmount}`);
 
             // Create transfer transaction
-            const tx = await transfer(api, input.to, input.amount);
+            const tx = transfer(api, input.to, formattedAmount);
 
-            // Sign and send the transaction
-            return new Promise((resolve, reject) => {
+            const txHash: { status: string, hash: string, block: string, from: string, to: string, amount: string } = await new Promise((resolve, reject) => {
                 tx.signAndSend(sender, ({ status, txHash }) => {
                     if (status.isInBlock) {
-                        resolve(`Transaction included in block. Hash: ${txHash}`);
-                        api.disconnect();
-                    } else if (status.isFinalized) {
-                        resolve(`Transaction finalized. Hash: ${txHash}`);
+                        resolve({
+                            status: 'in_block',
+                            hash: txHash.toString(),
+                            block: status.asInBlock.toString(),
+                            from: sender.address,
+                            to: input.to,
+                            amount: input.amount
+                        });
                         api.disconnect();
                     }
                 }).catch((error) => {
@@ -67,6 +85,16 @@ export const sendTransactionTool = tool(
                     reject(error);
                 });
             });
+
+            return {
+                status: 'success',
+                hash: txHash.hash,
+                block: txHash.block,
+                from: sender.address,
+                to: input.to,
+                amount: input.amount,
+                formattedAmount
+            };
         } catch (error) {
             logger.error('Error sending transaction:', error);
             throw error;
@@ -74,11 +102,10 @@ export const sendTransactionTool = tool(
     },
     {
         name: "send_transaction",
-        description: "Send a transaction on the blockchain",
+        description: "Send a transaction on the blockchain using a test wallet. Amount should be specified in AI3 units (e.g., '1 ai3')",
         schema: z.object({
             to: z.string().describe("The recipient's blockchain address"),
-            amount: z.string().describe("The amount to send"),
-            mnemonic: z.string().describe("The sender's mnemonic phrase")
+            amount: z.string().describe("The amount to send in AI3 units (e.g., '1 ai3')")
         })
     }
 );
