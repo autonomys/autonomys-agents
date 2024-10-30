@@ -42,3 +42,5 @@ node_modules/
 # SQLite database
 *.sqlite
 *.sqlite-journal
+
+resources/
