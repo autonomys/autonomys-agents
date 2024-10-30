@@ -1,9 +1,9 @@
 import { ChatAnthropic } from "@langchain/anthropic";
-import { StateGraph, Annotation, MemorySaver } from "@langchain/langgraph";
+import { StateGraph, Annotation, MemorySaver, START } from "@langchain/langgraph";
 import { HumanMessage, AIMessage, BaseMessage } from "@langchain/core/messages";
 import { ToolNode } from "@langchain/langgraph/prebuilt";
 import { blockchainTools } from './tools';
-import { config } from "../config";
+import { config } from "../config/index";
 import logger from "../logger";
 import { createThreadStorage } from "./threadStorage";
 
@@ -26,7 +26,7 @@ const StateAnnotation = Annotation.Root({
 
 // Initialize core components
 const model = new ChatAnthropic({
-    modelName: "claude-3-sonnet-20240229",
+    modelName: "claude-3-5-sonnet-latest",
     anthropicApiKey: config.anthropicApiKey,
 }).bindTools(blockchainTools);
 
@@ -49,6 +49,7 @@ const createBlockchainGraph = async () => {
         const graph = new StateGraph(StateAnnotation)
             .addNode("agent", agentNode)
             .addNode("tools", toolNode)
+            .addEdge(START, "agent")
             .addEdge("agent", "tools");
 
         return graph.compile({ checkpointer });
