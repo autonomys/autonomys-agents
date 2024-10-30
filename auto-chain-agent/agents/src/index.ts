@@ -1,25 +1,24 @@
-import express, { Request, Response, NextFunction } from 'express';
+import express from 'express';
+import { chainRouter } from './routes/chainAgentRoutes';
 import logger from './logger';
 import { config } from './config';
-import { chainRouter } from './routes/chainAgentRoutes';
 
-// Create Express application
 const app = express();
-const port = config.port;
+const port = config.port || 3000;
 
 app.use(express.json());
+
+// Routes
+app.use('/chainagent', chainRouter);
 
 // Health check route
 app.get('/', (req, res) => {
   logger.info('Health check request received');
-  res.send('Auto Chain Agents Service is running!');
+  res.send('Blockchain Agent Service is running!');
 });
 
-// Add blockchain agent routes
-app.use('/blockchain-agent', chainRouter);
-
 // Error handling middleware
-app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
+app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {
   logger.error('Unhandled error:', err);
   res.status(500).json({
     error: 'An error occurred while processing your request',
@@ -27,7 +26,6 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
   });
 });
 
-// Start the server
 app.listen(port, () => {
-  logger.info(`Agents service is running on http://localhost:${port}`);
+  logger.info(`Blockchain agent service is running on http://localhost:${port}`);
 }); 
