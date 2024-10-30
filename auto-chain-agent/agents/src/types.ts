@@ -18,5 +18,6 @@ export interface ThreadState {
             id: string;
             type: string;
         }>;
+        toolResults: string[];
     };
 }
