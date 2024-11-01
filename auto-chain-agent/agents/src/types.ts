@@ -8,7 +8,8 @@ export interface ThreadState {
             args: Record<string, any>;
             id: string;
             type: string;
-        }>;
+        }>,
+        toolResults: string[];
     };
     lastOutput?: {
         response: string;

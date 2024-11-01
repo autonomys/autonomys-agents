@@ -1,11 +1,12 @@
 import { ChatOpenAI } from "@langchain/openai";
 import { StateGraph, Annotation, MemorySaver, START, END } from "@langchain/langgraph";
-import { HumanMessage, AIMessage, BaseMessage } from "@langchain/core/messages";
+import { HumanMessage, BaseMessage, SystemMessage } from "@langchain/core/messages";
 import { ToolNode } from "@langchain/langgraph/prebuilt";
 import { blockchainTools } from './tools';
 import { config } from "../config/index";
 import logger from "../logger";
 import { createThreadStorage } from "./threadStorage";
+import { ThreadState } from "../types";
 
 // Define state schema for the graph
 const StateAnnotation = Annotation.Root({
@@ -44,14 +45,26 @@ const toolNode = new ToolNode(blockchainTools);
 // Define node functions
 const agentNode = async (state: typeof StateAnnotation.State) => {
     try {
-        // If we have tool results, add them to the context
+        // Construct the context from tool results
         const toolContext = state.toolResults.length > 0
-            ? `\nTool Results: ${state.toolResults.join('\n')}`
+            ? `\nPrevious tool results:\n${state.toolResults.join('\n')}`
             : '';
 
+        // System message to guide the agent's behavior
+        const systemMessage = new SystemMessage({
+            content: `You are a helpful blockchain assistant that can check balances and perform transactions. 
+            When using tools, wait for their results before making conclusions.
+            Always provide clear responses about transaction status and balances.`
+        });
+
         const response = await model.invoke([
+            systemMessage,
             ...state.messages,
-            new HumanMessage({ content: `Please process the following information and respond naturally.${toolContext}` })
+            new HumanMessage({
+                content: toolContext
+                    ? `Please process this information and respond: ${toolContext}`
+                    : state.messages[state.messages.length - 1].content
+            })
         ]);
 
         return { messages: [response] };
@@ -64,6 +77,14 @@ const agentNode = async (state: typeof StateAnnotation.State) => {
 const toolExecutionNode = async (state: typeof StateAnnotation.State) => {
     try {
         logger.info('Tool execution node - Starting tool execution');
+
+        const lastMessage = state.messages[state.messages.length - 1];
+        const toolCalls = lastMessage.additional_kwargs?.tool_calls || [];
+
+        if (!toolCalls.length) {
+            logger.info('No tool calls found');
+            return { messages: [], toolResults: [] };
+        }
 
         const toolResponse = await toolNode.invoke({
             messages: state.messages
@@ -91,22 +112,28 @@ const shouldContinue = (state: typeof StateAnnotation.State) => {
     // Get the last message
     const lastMessage = state.messages[state.messages.length - 1];
 
-    // If the last message is from the agent (AI) and doesn't contain tool calls,
-    // we can end the conversation
-    if (lastMessage._getType() === 'ai' &&
-        (!lastMessage.additional_kwargs?.tool_calls ||
-            lastMessage.additional_kwargs.tool_calls.length === 0)) {
-        return END;
+    // If the last message is from the agent (AI)
+    if (lastMessage._getType() === 'ai') {
+        // Check if there are tool calls that need to be executed
+        const toolCalls = lastMessage.additional_kwargs?.tool_calls || [];
+        if (toolCalls.length > 0) {
+            return 'tools'; // Continue to tools if we have tool calls
+        }
+
+        // If no tool calls and we have tool results, we're done
+        if (state.toolResults.length > 0) {
+            return END;
+        }
     }
 
-    // If we've gone through too many iterations, end to prevent infinite loops
-    if (state.messages.length > 3) {
+    // If we've gone through too many iterations (prevent infinite loops)
+    if (state.messages.length > 10) {
         logger.info('Reached maximum iterations, ending conversation');
         return END;
     }
 
-    // Continue to tools if we have more work to do
-    return 'tools';
+    // Continue to tools by default if we have an AI message
+    return lastMessage._getType() === 'ai' ? 'tools' : 'agent';
 };
 
 // Create and initialize the graph
@@ -139,28 +166,36 @@ let agentGraph: Awaited<ReturnType<typeof createBlockchainGraph>>;
 
 // Export the agent interface
 export const blockchainAgent = {
-    async handleMessage({ message }: { message: string }) {
+    async handleMessage({ message, threadId }: { message: string; threadId?: string }) {
         try {
             if (!agentGraph) {
                 throw new Error("Blockchain agent not initialized");
             }
 
-            const threadId = `blockchain_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
-            logger.info('BlockchainAgent - Starting new interaction', { threadId });
+            // Use existing threadId or generate new one
+            const currentThreadId = threadId || `blockchain_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
+            logger.info('BlockchainAgent - Processing message', { currentThreadId });
+
+            // Load existing thread state if threadId is provided
+            const previousState = threadId ? await threadStorage.loadThread(threadId) : null;
+
 
             const initialState = {
-                messages: [
+                messages: previousState ? [
+                    ...previousState.state.messages,
+                    new HumanMessage({ content: message })
+                ] : [
                     new HumanMessage({
                         content: `You are a helpful blockchain assistant that can check balances and perform transactions. 
                         User Query: ${message}`
                     })
                 ],
-                toolCalls: [],
-                toolResults: []
-            };
+                toolCalls: previousState?.state.toolCalls || [],
+                toolResults: previousState?.state.toolResults || []
+            } as typeof StateAnnotation.State;
 
             const config = {
-                configurable: { thread_id: threadId }
+                configurable: { thread_id: currentThreadId }
             };
 
             const result = await agentGraph.invoke(initialState, config);
@@ -171,7 +206,7 @@ export const blockchainAgent = {
                 ? JSON.stringify(lastMessage.content, null, 2)
                 : lastMessage.content;
 
-            await threadStorage.saveThread(threadId, {
+            await threadStorage.saveThread(currentThreadId, {
                 state: result,
                 lastOutput: {
                     response,
@@ -181,7 +216,7 @@ export const blockchainAgent = {
             });
 
             return {
-                threadId,
+                threadId: currentThreadId,
                 response,
                 toolCalls: result.toolCalls || []
             };

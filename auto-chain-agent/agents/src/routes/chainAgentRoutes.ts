@@ -8,7 +8,7 @@ router.post('/', (req, res, next) => {
   logger.info('Received blockchain request:', req.body);
   (async () => {
     try {
-      const { message } = req.body;
+      const { message, threadId } = req.body;
 
       if (!message) {
         logger.warn('Missing message field');
@@ -16,14 +16,11 @@ router.post('/', (req, res, next) => {
       }
 
       const result = await blockchainAgent.handleMessage({
-        message
+        message,
+        threadId
       });
 
-      res.json({
-        threadId: result.threadId,
-        response: result.response,
-        toolCalls: result.toolCalls
-      });
+      res.json(result);
     } catch (error) {
       logger.error('Error in blockchain endpoint:', error);
       next(error);
@@ -32,7 +29,7 @@ router.post('/', (req, res, next) => {
 });
 
 router.get('/:threadId/state', (req, res, next) => {
-  logger.info('Received request to get blockchain thread state:', req.params.threadId);
+  logger.info('Received request to get thread state:', req.params.threadId);
   (async () => {
     try {
       const threadId = req.params.threadId;
@@ -46,11 +43,12 @@ router.get('/:threadId/state', (req, res, next) => {
 
       res.json({
         threadId,
-        state: {
-          messages: threadState.state.messages,
-          toolCalls: threadState.state.toolCalls,
-          lastOutput: threadState.lastOutput
-        }
+        messages: threadState.state.messages.map(msg => ({
+          role: msg._getType(),
+          content: msg.content
+        })),
+        toolCalls: threadState.state.toolCalls,
+        lastOutput: threadState.lastOutput
       });
     } catch (error) {
       logger.error('Error getting thread state:', error);
@@ -59,4 +57,4 @@ router.get('/:threadId/state', (req, res, next) => {
   })();
 });
 
-export const chainRouter = router; 
+export const chainRouter = router;

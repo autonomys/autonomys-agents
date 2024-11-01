@@ -81,7 +81,8 @@ const parseThreadState = (row: DbRow): ThreadState | null => {
     return {
         state: {
             messages: parsedState.messages.map(deserializeMessage),
-            toolCalls: parsedState.toolCalls ?? []
+            toolCalls: parsedState.toolCalls ?? [],
+            toolResults: parsedState.toolResults ?? []
         },
         lastOutput
     };
