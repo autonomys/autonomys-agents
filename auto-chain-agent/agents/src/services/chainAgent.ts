@@ -52,20 +52,19 @@ const agentNode = async (state: typeof StateAnnotation.State) => {
 
         // System message to guide the agent's behavior
         const systemMessage = new SystemMessage({
-            content: `You are a helpful blockchain assistant that can check balances and perform transactions. 
-            When using tools, wait for their results before making conclusions.
-            Always provide clear responses about transaction status and balances.`
+            content: `You are a friendly and helpful AI assistant. 
+            - Engage naturally in conversation and remember details users share about themselves
+            - When blockchain operations are needed, you can check balances and perform transactions`
         });
 
-        const response = await model.invoke([
+        // Only include tool context if it exists
+        const messages = [
             systemMessage,
             ...state.messages,
-            new HumanMessage({
-                content: toolContext
-                    ? `Please process this information and respond: ${toolContext}`
-                    : state.messages[state.messages.length - 1].content
-            })
-        ]);
+            ...(toolContext ? [new HumanMessage({ content: toolContext })] : [])
+        ];
+
+        const response = await model.invoke(messages);
 
         return { messages: [response] };
     } catch (error) {
@@ -109,7 +108,6 @@ const toolExecutionNode = async (state: typeof StateAnnotation.State) => {
 
 // Add shouldContinue function
 const shouldContinue = (state: typeof StateAnnotation.State) => {
-    // Get the last message
     const lastMessage = state.messages[state.messages.length - 1];
 
     // If the last message is from the agent (AI)
@@ -120,20 +118,12 @@ const shouldContinue = (state: typeof StateAnnotation.State) => {
             return 'tools'; // Continue to tools if we have tool calls
         }
 
-        // If no tool calls and we have tool results, we're done
-        if (state.toolResults.length > 0) {
-            return END;
-        }
-    }
-
-    // If we've gone through too many iterations (prevent infinite loops)
-    if (state.messages.length > 10) {
-        logger.info('Reached maximum iterations, ending conversation');
+        // If no tool calls, end the conversation
         return END;
     }
 
-    // Continue to tools by default if we have an AI message
-    return lastMessage._getType() === 'ai' ? 'tools' : 'agent';
+    // If the message is from human, continue to agent
+    return 'agent';
 };
 
 // Create and initialize the graph
@@ -172,23 +162,23 @@ export const blockchainAgent = {
                 throw new Error("Blockchain agent not initialized");
             }
 
-            // Use existing threadId or generate new one
             const currentThreadId = threadId || `blockchain_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
-            logger.info('BlockchainAgent - Processing message', { currentThreadId });
+            logger.info('BlockchainAgent - Processing message', {
+                currentThreadId,
+                hasExistingThread: !!threadId
+            });
 
-            // Load existing thread state if threadId is provided
             const previousState = threadId ? await threadStorage.loadThread(threadId) : null;
-
 
             const initialState = {
                 messages: previousState ? [
                     ...previousState.state.messages,
                     new HumanMessage({ content: message })
                 ] : [
-                    new HumanMessage({
-                        content: `You are a helpful blockchain assistant that can check balances and perform transactions. 
-                        User Query: ${message}`
-                    })
+                    new SystemMessage({
+                        content: `You are a helpful AI assistant. You can engage in general conversation and also help with blockchain operations like checking balances and performing transactions.`
+                    }),
+                    new HumanMessage({ content: message })
                 ],
                 toolCalls: previousState?.state.toolCalls || [],
                 toolResults: previousState?.state.toolResults || []
