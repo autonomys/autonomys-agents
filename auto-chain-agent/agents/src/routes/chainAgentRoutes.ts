@@ -43,12 +43,11 @@ router.get('/:threadId/state', (req, res, next) => {
 
       res.json({
         threadId,
-        messages: threadState.state.messages.map(msg => ({
+        messages: threadState.messages.map(msg => ({
           role: msg._getType(),
           content: msg.content
         })),
-        toolCalls: threadState.state.toolCalls,
-        lastOutput: threadState.lastOutput
+        toolCalls: threadState.toolCalls,
       });
     } catch (error) {
       logger.error('Error getting thread state:', error);

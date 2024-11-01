@@ -1,9 +1,21 @@
 import sqlite3 from 'sqlite3';
 import { open } from 'sqlite';
 import logger from '../logger';
-import { HumanMessage, AIMessage } from '@langchain/core/messages';
+import { HumanMessage, AIMessage, BaseMessage } from '@langchain/core/messages';
 import path from 'path';
-import { ThreadState } from '../types';
+
+export interface ThreadState {
+    messages: BaseMessage[];
+    toolCalls: Array<{
+        id: string;
+        type: string;
+        function: {
+            name: string;
+            arguments: string;
+        };
+        result?: string;
+    }>;
+}
 
 const initializeDb = async (dbPath: string) => {
     logger.info('Initializing SQLite database at:', dbPath);
@@ -13,13 +25,12 @@ const initializeDb = async (dbPath: string) => {
         driver: sqlite3.Database
     });
 
-    // Drop existing table and create new one
     await db.exec(`
         DROP TABLE IF EXISTS threads;
         CREATE TABLE threads (
             thread_id TEXT PRIMARY KEY,
-            state TEXT NOT NULL,
-            last_output TEXT,
+            messages TEXT NOT NULL,
+            tool_calls TEXT,
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
             updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
         )
@@ -31,7 +42,7 @@ const initializeDb = async (dbPath: string) => {
 const createMessage = (type: 'human' | 'ai', content: string) =>
     type === 'human' ? new HumanMessage({ content }) : new AIMessage({ content });
 
-const serializeMessage = (msg: any) => ({
+const serializeMessage = (msg: BaseMessage) => ({
     _type: msg._getType(),
     content: msg.content,
     additional_kwargs: msg.additional_kwargs
@@ -45,20 +56,6 @@ const deserializeMessage = (msg: any) => {
     );
 };
 
-const parseThreadState = (row: any): ThreadState | null => {
-    const parsedState = JSON.parse(row.state);
-    const lastOutput = row.last_output ? JSON.parse(row.last_output) : undefined;
-
-    return {
-        state: {
-            messages: parsedState.messages.map(deserializeMessage),
-            toolCalls: parsedState.toolCalls ?? [],
-            toolResults: parsedState.toolResults ?? []
-        },
-        lastOutput
-    };
-};
-
 export const createThreadStorage = () => {
     const dbPath = path.join(process.cwd(), 'thread-storage.sqlite');
     const dbPromise = initializeDb(dbPath);
@@ -66,30 +63,23 @@ export const createThreadStorage = () => {
     return {
         async saveThread(threadId: string, state: ThreadState) {
             const db = await dbPromise;
-            const stateToSave = {
-                ...state.state,
-                messages: state.state.messages.map(serializeMessage)
-            };
-
             await db.run(
-                `INSERT OR REPLACE INTO threads (thread_id, state, last_output, updated_at)
+                `INSERT OR REPLACE INTO threads (thread_id, messages, tool_calls, updated_at)
                  VALUES (?, ?, ?, CURRENT_TIMESTAMP)`,
                 [
                     threadId,
-                    JSON.stringify(stateToSave),
-                    state.lastOutput ? JSON.stringify(state.lastOutput) : null
+                    JSON.stringify(state.messages.map(serializeMessage)),
+                    JSON.stringify(state.toolCalls)
                 ]
             );
 
-            logger.info(`Thread saved: ${threadId}`, {
-                messageCount: state.state.messages.length
-            });
+            logger.info(`Thread saved: ${threadId}`);
         },
 
         async loadThread(threadId: string): Promise<ThreadState | null> {
             const db = await dbPromise;
             const row = await db.get(
-                'SELECT state, last_output FROM threads WHERE thread_id = ?',
+                'SELECT messages, tool_calls FROM threads WHERE thread_id = ?',
                 threadId
             );
 
@@ -98,7 +88,10 @@ export const createThreadStorage = () => {
                 return null;
             }
 
-            return parseThreadState(row);
+            return {
+                messages: JSON.parse(row.messages).map(deserializeMessage),
+                toolCalls: JSON.parse(row.tool_calls || '[]')
+            };
         },
 
         async getAllThreads() {
