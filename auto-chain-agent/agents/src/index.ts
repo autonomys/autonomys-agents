@@ -2,11 +2,13 @@ import express from 'express';
 import { chainRouter } from './routes/chainAgentRoutes';
 import logger from './logger';
 import { config } from './config';
+import cors from 'cors';
 
 const app = express();
 const port = config.port || 3000;
 
 app.use(express.json());
+app.use(cors());
 
 // Routes
 app.use('/chainagent', chainRouter);
