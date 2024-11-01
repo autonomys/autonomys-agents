@@ -6,7 +6,6 @@ import { blockchainTools } from './tools';
 import { config } from "../config/index";
 import logger from "../logger";
 import { createThreadStorage } from "./threadStorage";
-import { ThreadState } from "../types";
 
 // Define state schema for the graph
 const StateAnnotation = Annotation.Root({
@@ -19,12 +18,25 @@ const StateAnnotation = Annotation.Root({
         args: Record<string, any>;
         id: string;
         type: string;
+        result?: string;
     }>>({
         reducer: (curr, next) => [...curr, ...next],
         default: () => [],
     }),
     toolResults: Annotation<string[]>({
         reducer: (curr, next) => [...curr, ...next],
+        default: () => [],
+    }),
+    currentToolCalls: Annotation<Array<{
+        id: string;
+        type: string;
+        function: {
+            name: string;
+            arguments: string;
+        };
+        result?: string;
+    }>>({
+        reducer: (_, next) => next, // Only keep current interaction's tool calls
         default: () => [],
     })
 });
@@ -82,7 +94,7 @@ const toolExecutionNode = async (state: typeof StateAnnotation.State) => {
 
         if (!toolCalls.length) {
             logger.info('No tool calls found');
-            return { messages: [], toolResults: [] };
+            return { messages: [], toolResults: [], currentToolCalls: [] };
         }
 
         const toolResponse = await toolNode.invoke({
@@ -91,18 +103,30 @@ const toolExecutionNode = async (state: typeof StateAnnotation.State) => {
 
         if (!toolResponse?.messages?.length) {
             logger.info('No tool response messages');
-            return { messages: [], toolResults: [] };
+            return { messages: [], toolResults: [], currentToolCalls: [] };
         }
 
         logger.info('Tool execution completed');
 
+        // Format tool calls with their results
+        const currentToolCalls = toolCalls.map((call: any, index: number) => ({
+            id: call.id,
+            type: call.type,
+            function: {
+                name: call.function.name,
+                arguments: call.function.arguments
+            },
+            result: toolResponse.messages[index]?.content?.toString()
+        }));
+
         return {
             messages: toolResponse.messages,
-            toolResults: toolResponse.messages.map((m: any) => m.content.toString())
+            toolResults: toolResponse.messages.map((m: any) => m.content.toString()),
+            currentToolCalls
         };
     } catch (error) {
         logger.error("Error in tool execution:", error);
-        return { messages: [], toolResults: [] };
+        return { messages: [], toolResults: [], currentToolCalls: [] };
     }
 };
 
@@ -190,7 +214,6 @@ export const blockchainAgent = {
 
             const result = await agentGraph.invoke(initialState, config);
 
-            // Get the last message
             const lastMessage = result.messages[result.messages.length - 1];
             const response = typeof lastMessage.content === 'object'
                 ? JSON.stringify(lastMessage.content, null, 2)
@@ -200,7 +223,7 @@ export const blockchainAgent = {
                 state: result,
                 lastOutput: {
                     response,
-                    toolCalls: result.toolCalls || [],
+                    toolCalls: result.currentToolCalls || [],
                     toolResults: result.toolResults || []
                 }
             });
@@ -208,7 +231,7 @@ export const blockchainAgent = {
             return {
                 threadId: currentThreadId,
                 response,
-                toolCalls: result.toolCalls || []
+                toolCalls: result.currentToolCalls || []
             };
         } catch (error) {
             logger.error("Error handling message:", error);
