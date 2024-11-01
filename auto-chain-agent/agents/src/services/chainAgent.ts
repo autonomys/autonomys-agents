@@ -1,6 +1,6 @@
 import { ChatOpenAI } from "@langchain/openai";
 import { StateGraph, Annotation, MemorySaver, START, END } from "@langchain/langgraph";
-import { HumanMessage, AIMessage, BaseMessage } from "@langchain/core/messages";
+import { HumanMessage, BaseMessage, SystemMessage } from "@langchain/core/messages";
 import { ToolNode } from "@langchain/langgraph/prebuilt";
 import { blockchainTools } from './tools';
 import { config } from "../config/index";
@@ -14,16 +14,15 @@ const StateAnnotation = Annotation.Root({
         default: () => [],
     }),
     toolCalls: Annotation<Array<{
-        name: string;
-        args: Record<string, any>;
         id: string;
         type: string;
+        function: {
+            name: string;
+            arguments: string;
+        };
+        result?: string;
     }>>({
-        reducer: (curr, next) => [...curr, ...next],
-        default: () => [],
-    }),
-    toolResults: Annotation<string[]>({
-        reducer: (curr, next) => [...curr, ...next],
+        reducer: (_, next) => next, // Only keep current interaction's tool calls
         default: () => [],
     })
 });
@@ -37,22 +36,19 @@ const model = new ChatOpenAI({
 
 const threadStorage = createThreadStorage();
 const checkpointer = new MemorySaver();
-
-// Create ToolNode instance
 const toolNode = new ToolNode(blockchainTools);
 
 // Define node functions
 const agentNode = async (state: typeof StateAnnotation.State) => {
     try {
-        // If we have tool results, add them to the context
-        const toolContext = state.toolResults.length > 0
-            ? `\nTool Results: ${state.toolResults.join('\n')}`
-            : '';
+        const systemMessage = new SystemMessage({
+            content: `You are a friendly and helpful AI assistant. 
+            - Engage naturally in conversation and remember details users share about themselves
+            - When blockchain operations are needed, you can check balances and perform transactions`
+        });
 
-        const response = await model.invoke([
-            ...state.messages,
-            new HumanMessage({ content: `Please process the following information and respond naturally.${toolContext}` })
-        ]);
+        const messages = [systemMessage, ...state.messages];
+        const response = await model.invoke(messages);
 
         return { messages: [response] };
     } catch (error) {
@@ -65,61 +61,63 @@ const toolExecutionNode = async (state: typeof StateAnnotation.State) => {
     try {
         logger.info('Tool execution node - Starting tool execution');
 
+        const lastMessage = state.messages[state.messages.length - 1];
+        const toolCalls = lastMessage.additional_kwargs?.tool_calls || [];
+
+        if (!toolCalls.length) {
+            logger.info('No tool calls found');
+            return { messages: [], toolCalls: [] };
+        }
+
         const toolResponse = await toolNode.invoke({
             messages: state.messages
         });
 
         if (!toolResponse?.messages?.length) {
             logger.info('No tool response messages');
-            return { messages: [], toolResults: [] };
+            return { messages: [], toolCalls: [] };
         }
 
-        logger.info('Tool execution completed');
+        // Format tool calls with their results
+        const formattedToolCalls = toolCalls.map((call: any, index: number) => ({
+            id: call.id,
+            type: call.type,
+            function: {
+                name: call.function.name,
+                arguments: call.function.arguments
+            },
+            result: toolResponse.messages[index]?.content?.toString()
+        }));
 
         return {
             messages: toolResponse.messages,
-            toolResults: toolResponse.messages.map((m: any) => m.content.toString())
+            toolCalls: formattedToolCalls
         };
     } catch (error) {
         logger.error("Error in tool execution:", error);
-        return { messages: [], toolResults: [] };
+        return { messages: [], toolCalls: [] };
     }
 };
 
-// Add shouldContinue function
 const shouldContinue = (state: typeof StateAnnotation.State) => {
-    // Get the last message
     const lastMessage = state.messages[state.messages.length - 1];
-
-    // If the last message is from the agent (AI) and doesn't contain tool calls,
-    // we can end the conversation
-    if (lastMessage._getType() === 'ai' &&
-        (!lastMessage.additional_kwargs?.tool_calls ||
-            lastMessage.additional_kwargs.tool_calls.length === 0)) {
-        return END;
+    if (lastMessage._getType() === 'ai') {
+        const toolCalls = lastMessage.additional_kwargs?.tool_calls || [];
+        return toolCalls.length > 0 ? 'tools' : END;
     }
-
-    // If we've gone through too many iterations, end to prevent infinite loops
-    if (state.messages.length > 3) {
-        logger.info('Reached maximum iterations, ending conversation');
-        return END;
-    }
-
-    // Continue to tools if we have more work to do
-    return 'tools';
+    return 'agent';
 };
 
 // Create and initialize the graph
 const createBlockchainGraph = async () => {
     try {
-        const graph = new StateGraph(StateAnnotation)
+        return new StateGraph(StateAnnotation)
             .addNode("agent", agentNode)
             .addNode("tools", toolExecutionNode)
             .addEdge(START, "agent")
             .addConditionalEdges("agent", shouldContinue)
-            .addEdge("tools", "agent");
-
-        return graph.compile({ checkpointer });
+            .addEdge("tools", "agent")
+            .compile({ checkpointer });
     } catch (error) {
         logger.error("Failed to create blockchain graph:", error);
         throw error;
@@ -139,49 +137,43 @@ let agentGraph: Awaited<ReturnType<typeof createBlockchainGraph>>;
 
 // Export the agent interface
 export const blockchainAgent = {
-    async handleMessage({ message }: { message: string }) {
+    async handleMessage({ message, threadId }: { message: string; threadId?: string }) {
         try {
             if (!agentGraph) {
                 throw new Error("Blockchain agent not initialized");
             }
 
-            const threadId = `blockchain_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
-            logger.info('BlockchainAgent - Starting new interaction', { threadId });
+            const currentThreadId = threadId || `blockchain_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
+            const previousState = threadId ? await threadStorage.loadThread(threadId) : null;
 
             const initialState = {
-                messages: [
-                    new HumanMessage({
-                        content: `You are a helpful blockchain assistant that can check balances and perform transactions. 
-                        User Query: ${message}`
-                    })
-                ],
-                toolCalls: [],
-                toolResults: []
-            };
+                messages: previousState ? [
+                    ...previousState.messages,
+                    new HumanMessage({ content: message })
+                ] : [
+                    new SystemMessage({
+                        content: `You are a helpful AI assistant. You can engage in general conversation and also help with blockchain operations like checking balances and performing transactions.`
+                    }),
+                    new HumanMessage({ content: message })
+                ]
+            } as typeof StateAnnotation.State;
 
-            const config = {
-                configurable: { thread_id: threadId }
-            };
+            const result = await agentGraph.invoke(initialState, {
+                configurable: { thread_id: currentThreadId }
+            });
 
-            const result = await agentGraph.invoke(initialState, config);
-
-            // Get the last message
             const lastMessage = result.messages[result.messages.length - 1];
             const response = typeof lastMessage.content === 'object'
                 ? JSON.stringify(lastMessage.content, null, 2)
                 : lastMessage.content;
 
-            await threadStorage.saveThread(threadId, {
-                state: result,
-                lastOutput: {
-                    response,
-                    toolCalls: result.toolCalls || [],
-                    toolResults: result.toolResults || []
-                }
+            await threadStorage.saveThread(currentThreadId, {
+                messages: result.messages,
+                toolCalls: result.toolCalls || []
             });
 
             return {
-                threadId,
+                threadId: currentThreadId,
                 response,
                 toolCalls: result.toolCalls || []
             };
