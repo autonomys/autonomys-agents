@@ -19,6 +19,7 @@
         "@langchain/langgraph": "0.2.8",
         "@langchain/openai": "0.3.1",
         "axios": "^1.7.7",
+        "cors": "^2.8.5",
         "dotenv": "^16.4.1",
         "express": "5.0.0",
         "sqlite": "^5.1.1",
@@ -27,6 +28,7 @@
         "zod": "^3.23.8"
     },
     "devDependencies": {
+        "@types/cors": "^2.8.17",
         "@types/express": "5.0.0",
         "@types/node": "22.6.1",
         "nodemon": "^3.0.1",

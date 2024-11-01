@@ -44,3 +44,4 @@ node_modules/
 *.sqlite-journal
 
 resources/
+threads.json
