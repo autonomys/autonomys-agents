@@ -7,6 +7,7 @@ export const config = {
     anthropicApiKey: process.env.ANTHROPIC_API_KEY,
     openaiApiKey: process.env.OPENAI_API_KEY,
     environment: process.env.NODE_ENV || 'development',
+    dsnApiKey: process.env.DSN_API_KEY,
     autoConsensus: {
         apiKey: process.env.AUTO_CONSENSUS_API_KEY,
     },

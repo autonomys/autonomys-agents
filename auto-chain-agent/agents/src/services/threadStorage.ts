@@ -6,6 +6,7 @@ import path from 'path';
 import { ChatOpenAI } from "@langchain/openai";
 import fs from 'fs';
 import { MessageContent } from '@langchain/core/messages';
+import { uploadFile } from './utils';
 
 export interface ThreadState {
     messages: BaseMessage[];
@@ -33,8 +34,10 @@ interface SummaryState {
     differences: SummaryDifference[];
 }
 
+const SUMMARY_DIR = path.join(process.cwd(), 'diffs');
 const SUMMARY_FILE_PATH = path.join(process.cwd(), 'summary-differences.json');
-const CHECK_INTERVAL = 20 * 1000;
+const DIFF_FILE_PREFIX = 'summary-diff';
+const CHECK_INTERVAL = 20 * 1000; // 20 seconds
 
 
 const initializeDb = async (dbPath: string) => {
@@ -45,7 +48,7 @@ const initializeDb = async (dbPath: string) => {
         driver: sqlite3.Database
     });
 
-    // Only create table if it doesn't exist
+    // Create tables if they don't exist
     await db.exec(`
         CREATE TABLE IF NOT EXISTS threads (
             thread_id TEXT PRIMARY KEY,
@@ -53,7 +56,13 @@ const initializeDb = async (dbPath: string) => {
             tool_calls TEXT,
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
             updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-        )
+        );
+
+        CREATE TABLE IF NOT EXISTS summary_uploads (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            upload_id TEXT NOT NULL,
+            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+        );
     `);
 
     return db;
@@ -233,11 +242,38 @@ const loadSummaryState = async (): Promise<SummaryState> => {
 
 const saveSummaryState = async (state: SummaryState) => {
     try {
+        let existingState: SummaryState | null = null;
+        if (fs.existsSync(SUMMARY_FILE_PATH)) {
+            const existingData = await fs.promises.readFile(SUMMARY_FILE_PATH, 'utf8');
+            existingState = JSON.parse(existingData);
+        }
+
+        // Save main summary file
         await fs.promises.writeFile(
             SUMMARY_FILE_PATH,
             JSON.stringify(state, null, 2),
             'utf8'
         );
+
+        // Only create and upload diff file if there are actual changes
+        if (!existingState || 
+            JSON.stringify(existingState.differences) !== JSON.stringify(state.differences)) {
+            
+            // Get new differences since last state
+            const newDifferences = existingState 
+                ? state.differences.filter(diff => 
+                    !existingState.differences.some(
+                        existingDiff => existingDiff.timestamp === diff.timestamp
+                    )
+                )
+                : state.differences;
+
+            if (newDifferences.length > 0) {
+                await saveDiffFile(newDifferences);
+            }
+        } else {
+            logger.info('No changes detected in summary differences, skipping diff file creation');
+        }
     } catch (error) {
         logger.error('Error saving summary state:', error);
         throw error;
@@ -250,9 +286,12 @@ export const checkAndUpdateSummaries = async () => {
     const summaryState = await loadSummaryState();
     const lastCheckDate = new Date(summaryState.lastCheck);
     
-    // Check for any threads modified since last check
+    // Get only the most recent thread modified since last check
     const modifiedThreads = await threadStorage.getAllThreads().then(threads => 
-        threads.filter(thread => new Date(thread.updated_at) > lastCheckDate)
+        threads
+            .filter(thread => new Date(thread.updated_at) > lastCheckDate)
+            .sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime())
+            .slice(0, 1) 
     );
 
     if (modifiedThreads.length === 0) {
@@ -297,7 +336,6 @@ export const checkAndUpdateSummaries = async () => {
                 Compare the previous summary with the current conversation and highlight only the new or changed information. Summarize the important information if it is the initial summary.
                 If there are no meaningful changes, explicitly state "NO_CHANGES".
                 Format as a brief diff summary.
-                Provide your reason why you made the changes or if there are no changes.
                 `
             }),
             new HumanMessage({
@@ -400,5 +438,51 @@ export const startSummarySystem = async () => {
     setInterval(checkAndUpdateSummaries, CHECK_INTERVAL);
     logger.info('Summary system started');
 };
+
+
+export const getSummaryUploads = async () => {
+    const db = await initializeDb(path.join(process.cwd(), 'thread-storage.sqlite'));
+    return db.all(
+        'SELECT * FROM summary_uploads ORDER BY timestamp DESC'
+    );
+};
+
+const saveDiffFile = async (differences: SummaryDifference[]) => {
+    try {
+        // Create diffs directory if it doesn't exist
+        if (!fs.existsSync(SUMMARY_DIR)) {
+            fs.mkdirSync(SUMMARY_DIR, { recursive: true });
+        }
+
+        // Generate unique filename based on timestamp
+        const timestamp = new Date().getTime();
+        const diffFileName = `${DIFF_FILE_PREFIX}${timestamp}.json`;
+        const diffFilePath = path.join(SUMMARY_DIR, diffFileName);
+
+        // Save the differences to the new file
+        await fs.promises.writeFile(
+            diffFilePath,
+            JSON.stringify(differences, null, 2),
+            'utf8'
+        );
+
+        // Upload the diff file
+        const fileBuffer = await fs.promises.readFile(diffFilePath);
+        const uploadResult = await uploadFile(fileBuffer);
+
+        const db = await initializeDb(path.join(process.cwd(), 'thread-storage.sqlite'));
+        await db.run(
+            'INSERT INTO summary_uploads (upload_id) VALUES (?)',
+            [uploadResult.upload_id]
+        );
+
+        logger.info(`Diff file uploaded successfully with ID: ${uploadResult.upload_id}`);
+        return diffFileName;
+    } catch (error) {
+        logger.error('Error saving diff file:', error);
+        throw error;
+    }
+};
+
 
 export type ThreadStorage = ReturnType<typeof createThreadStorage>;
