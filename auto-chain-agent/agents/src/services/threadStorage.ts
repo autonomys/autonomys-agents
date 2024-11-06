@@ -61,6 +61,7 @@ const initializeDb = async (dbPath: string) => {
         CREATE TABLE IF NOT EXISTS summary_uploads (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             upload_id TEXT NOT NULL,
+            CID TEXT NULL,
             timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
         );
     `);
@@ -328,21 +329,23 @@ export const checkAndUpdateSummaries = async () => {
         const summaryResponse = await model.invoke([
             new SystemMessage({
                 content: `IMPORTANT CHANGES:
-                - New transactions or blockchain operations
+                - New transactions or blockchain operations like checking balances or performing transactions
+                - Remember user wallet address
                 - Changes in wallet addresses or balances
-                - User Wallet address
                 - New user interactions or requests
                 - Changes in decisions or outcomes
-                Compare the previous summary with the current conversation and highlight only the new or changed information. Summarize the important information if it is the initial summary.
+                Compare the previous summary (IF THERE IS ANY)with the current conversation and highlight only the new or changed information. 
+                Summarize the important information if it is the initial summary like user's wallet address, name and etc.
                 If there are no meaningful changes, explicitly state "NO_CHANGES".
                 Format as a brief diff summary.
+                Provide your reasoning for the summary.
                 `
             }),
             new HumanMessage({
                 content: `Previous summary: ${String(previousSummary)}\n\nCurrent conversation: ${currentContent}`
             })
         ]);
-
+        logger.info(`Summary response: ${summaryResponse.content}`);
         const summaryContent = String(summaryResponse.content);
 
         const hasNoChanges = 
