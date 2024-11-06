@@ -34,7 +34,7 @@ interface SummaryState {
 }
 
 const SUMMARY_FILE_PATH = path.join(process.cwd(), 'summary-differences.json');
-const CHECK_INTERVAL = 1 * 10 * 1000; // 1 minute
+const CHECK_INTERVAL = 20 * 1000;
 
 
 const initializeDb = async (dbPath: string) => {
@@ -250,29 +250,31 @@ export const checkAndUpdateSummaries = async () => {
     const summaryState = await loadSummaryState();
     const lastCheckDate = new Date(summaryState.lastCheck);
     
-    // Use the existing threadStorage connection instead of creating a new one
-    const recentThreads = await threadStorage.getAllThreads().then(threads => 
-        threads.filter(thread => 
-            new Date(thread.updated_at) > lastCheckDate
-        )
+    // Check for any threads modified since last check
+    const modifiedThreads = await threadStorage.getAllThreads().then(threads => 
+        threads.filter(thread => new Date(thread.updated_at) > lastCheckDate)
     );
 
-    logger.info(`Found ${recentThreads.length} threads updated since last check`);
-
-    if (recentThreads.length === 0) {
+    if (modifiedThreads.length === 0) {
+        logger.info('No thread modifications found since last check');
+        summaryState.lastCheck = new Date().toISOString();
+        await saveSummaryState(summaryState);
         return;
     }
+
+    logger.info(`Found ${modifiedThreads.length} modified threads since last check`);
 
     const model = new ChatOpenAI({
         modelName: "gpt-4-turbo-preview",
         temperature: 0.3
     });
 
-    for (const thread of recentThreads) {
+    for (const thread of modifiedThreads) {
+        logger.info(`Checking thread ${thread.thread_id}`);
         const state = await threadStorage.loadThread(thread.thread_id);
         if (!state?.messages.length) continue;
 
-        const lastMessages = state.messages.slice(-3);
+        const lastMessages = state.messages.slice(-5);
         const currentContent = lastMessages
             .map(msg => `${msg._getType()}: ${String(msg.content)}`)
             .join('\n');
@@ -280,21 +282,23 @@ export const checkAndUpdateSummaries = async () => {
         // Find previous summary for this thread
         const previousSummary = summaryState.differences
             .filter(diff => diff.threadId === thread.thread_id)
-            .pop()?.currentSummary || '';
+            .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+            .shift()?.currentSummary || '';
 
         // Generate new summary
         const summaryResponse = await model.invoke([
             new SystemMessage({
-                content: `Compare the previous summary with the current conversation and highlight only the new or changed information. Focus on:
+                content: `IMPORTANT CHANGES:
                 - New transactions or blockchain operations
-                - User wallet address
-                - User's wallets balances
-                - User's friend/contact addresses
-                - User's name
-                - Changes in decisions or outcomes
+                - Changes in wallet addresses or balances
+                - User Wallet address
                 - New user interactions or requests
-                
-                Format as a brief diff summary.`
+                - Changes in decisions or outcomes
+                Compare the previous summary with the current conversation and highlight only the new or changed information. Summarize the important information if it is the initial summary.
+                If there are no meaningful changes, explicitly state "NO_CHANGES".
+                Format as a brief diff summary.
+                Provide your reason why you made the changes or if there are no changes.
+                `
             }),
             new HumanMessage({
                 content: `Previous summary: ${String(previousSummary)}\n\nCurrent conversation: ${currentContent}`
@@ -302,21 +306,16 @@ export const checkAndUpdateSummaries = async () => {
         ]);
 
         const summaryContent = String(summaryResponse.content);
-        
-        // Skip storing if the summary indicates no changes
-        const noChangeIndicators = [
-            'no new',
-            'no changes',
-            'provides the same information',
-            'reiterates the previous',
-            'no additional'
-        ];
-        
-        const hasNoChanges = noChangeIndicators.some(indicator => 
-            summaryContent.toLowerCase().includes(indicator.toLowerCase())
-        );
-        logger.info('changes', hasNoChanges);
+
+        const hasNoChanges = 
+            summaryContent.includes('NO_CHANGES') ||
+            (typeof summaryContent === 'string' && typeof previousSummary === 'string' && summaryContent.trim() === previousSummary.trim()) ||
+            (typeof summaryContent === 'string' && summaryContent.toLowerCase().includes('no new')) ||
+            (typeof summaryContent === 'string' && summaryContent.toLowerCase().includes('no changes')) ||
+            summaryContent.toLowerCase().includes('same as before');
+
         if (!hasNoChanges) {
+            logger.info(`Adding new summary for thread ${thread.thread_id} - Found changes`);
             summaryState.differences.push({
                 timestamp: new Date().toISOString(),
                 threadId: thread.thread_id,
@@ -324,15 +323,13 @@ export const checkAndUpdateSummaries = async () => {
                 currentSummary: summaryContent,
                 difference: summaryContent
             });
-            logger.info(`Added new summary difference for thread ${thread.thread_id}`);
         } else {
-            logger.info(`Skipped storing no-change summary for thread ${thread.thread_id}`);
+            logger.info(`Skipping summary for thread ${thread.thread_id} - No meaningful changes`);
         }
     }
 
     summaryState.lastCheck = new Date().toISOString();
     await saveSummaryState(summaryState);
-    logger.info(`Updated summary differences for ${recentThreads.length} threads`);
 };
 
 export const initializeSummaries = async () => {
@@ -345,7 +342,6 @@ export const initializeSummaries = async () => {
         return;
     }
 
-    // Create initial state
     const initialState: SummaryState = {
         lastCheck: new Date().toISOString(),
         differences: []
@@ -372,7 +368,6 @@ export const initializeSummaries = async () => {
             .map(msg => `${msg._getType()}: ${String(msg.content)}`)
             .join('\n');
 
-        // Generate initial summary
         const summaryResponse = await model.invoke([
             new SystemMessage({
                 content: `Provide a brief summary of this conversation. Focus on:
@@ -396,12 +391,10 @@ export const initializeSummaries = async () => {
         logger.info(`Created initial summary for thread ${thread.thread_id}`);
     }
 
-    // Save initial state
     await saveSummaryState(initialState);
     logger.info('Summary system initialized successfully');
 };
 
-// Add this to your startup code:
 export const startSummarySystem = async () => {
     await initializeSummaries();
     setInterval(checkAndUpdateSummaries, CHECK_INTERVAL);

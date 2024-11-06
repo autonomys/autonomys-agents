@@ -23,7 +23,7 @@ const StateAnnotation = Annotation.Root({
         };
         result?: string;
     }>>({
-        reducer: (_, next) => next, // Only keep current interaction's tool calls
+        reducer: (_, next) => next,
         default: () => [],
     })
 });
