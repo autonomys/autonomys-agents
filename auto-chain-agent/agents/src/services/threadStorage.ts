@@ -1,8 +1,9 @@
 import sqlite3 from 'sqlite3';
 import { open } from 'sqlite';
 import logger from '../logger';
-import { HumanMessage, AIMessage, BaseMessage } from '@langchain/core/messages';
+import { HumanMessage, AIMessage, BaseMessage, SystemMessage } from '@langchain/core/messages';
 import path from 'path';
+import { ChatOpenAI } from "@langchain/openai";
 
 export interface ThreadState {
     messages: BaseMessage[];
@@ -57,9 +58,6 @@ const deserializeMessage = (msg: any) => {
 };
 
 export const createThreadStorage = () => {
-    // Create a db if it doesn't exist
-    // Initialize SQLite database in the current working directory
-    // This creates a new database if one doesn't exist, or opens an existing one
     const dbPath = path.join(process.cwd(), 'thread-storage.sqlite');
     const dbPromise = initializeDb(dbPath);
 
@@ -164,13 +162,65 @@ export const createThreadStorage = () => {
 export const loadThreadSummary = async () => {
     const threadStorage = createThreadStorage();
     const threads = await threadStorage.getAllThreads();
-    const messages = await Promise.all(threads.map(async (thread) => {
-        const state = await threadStorage.loadThread(thread.thread_id);
-        return state?.messages.map(msg => msg.content).join('\n');
-    }));
-    let result =  messages.filter((msg): msg is string => typeof msg === 'string');
-    // logger.info(`Thread summary: ${result}`);
-    return result;
-}
+    
+    // Process threads in batches to avoid memory issues
+    const BATCH_SIZE = 5;
+    const summaries = [];
+    
+    for (let i = 0; i < threads.length; i += BATCH_SIZE) {
+        const batch = threads.slice(i, i + BATCH_SIZE);
+        const batchMessages = await Promise.all(batch.map(async (thread) => {
+            const state = await threadStorage.loadThread(thread.thread_id);
+            if (!state?.messages.length) return null;
+            
+            // Get last few messages for context
+            const lastMessages = state.messages.slice(-3);
+            return lastMessages.map(msg => ({
+                role: msg._getType(),
+                content: msg.content
+            }));
+        }));
+
+        // Filter out null results and format for summarization
+        const validMessages = batchMessages.filter((msg): msg is NonNullable<typeof msg> => msg !== null);
+        if (validMessages.length === 0) continue;
+
+        // Format messages for better context
+        const formattedMessages = validMessages.map(thread => 
+            thread.map(msg => `${msg.role}: ${msg.content}`).join('\n')
+        ).join('\n---\n');
+
+        // Use the existing model to summarize
+        const model = new ChatOpenAI({
+            modelName: "gpt-4-turbo-preview",
+            temperature: 0.3
+        });
+
+        const summary = await model.invoke([
+            new SystemMessage({
+                content: `You are a precise thread summarizer. For each conversation thread:
+                1. Extract key information:
+                   - User names and identifiers
+                   - Blockchain addresses mentioned
+                   - Transaction details and amounts
+                   - Important decisions or actions taken
+                
+                2. Format the summary as:
+                   - Context: [Brief background]
+                   - Key Points: [Bullet points of main details]
+                   - Outcome: [Final result or status]
+                
+                Keep each thread summary concise (2-3 sentences max) and focus on actionable/important information.
+                Exclude general chitchat or non-essential details.`
+            }),
+            new HumanMessage({ content: formattedMessages })
+        ]);
+
+        summaries.push(summary.content);
+    }
+
+    logger.info(`Generated ${summaries.length} thread summaries`);
+    return summaries;
+};
 
 export type ThreadStorage = ReturnType<typeof createThreadStorage>;
