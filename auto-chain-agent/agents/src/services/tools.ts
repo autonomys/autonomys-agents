@@ -1,7 +1,7 @@
 import { tool } from '@langchain/core/tools';
 import { z } from 'zod';
 import logger from '../logger';
-import { activate, activateWallet } from '@autonomys/auto-utils';
+import { activate, activateWallet, generateWallet } from '@autonomys/auto-utils';
 import { balance, transfer, account } from '@autonomys/auto-consensus';
 
 const formatTokenValue = (tokenValue: bigint, decimals: number = 18) => {
@@ -143,9 +143,32 @@ export const getTransactionHistoryTool = tool(
     }
 );
 
+export const createWalletTool = tool(
+    async () => {
+        try {
+            const wallet = await generateWallet();
+            
+            return {
+                address: wallet.keyringPair?.address,
+                publicKey: wallet.keyringPair?.publicKey.toString(),
+                mnemonic: wallet.mnemonic
+            };
+        } catch (error) {
+            logger.error('Error creating wallet:', error);
+            throw error;
+        }
+    },
+    {
+        name: "create_wallet",
+        description: "Create a new wallet",
+        schema: z.object({})  // Remove input parameters since we don't need any
+    }
+);
+
 // Export all tools as an array for convenience
 export const blockchainTools = [
     getBalanceTool,
     sendTransactionTool,
-    getTransactionHistoryTool
+    getTransactionHistoryTool,
+    createWalletTool
 ];
