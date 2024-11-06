@@ -25,9 +25,9 @@ const initializeDb = async (dbPath: string) => {
         driver: sqlite3.Database
     });
 
+    // Only create table if it doesn't exist
     await db.exec(`
-        DROP TABLE IF EXISTS threads;
-        CREATE TABLE threads (
+        CREATE TABLE IF NOT EXISTS threads (
             thread_id TEXT PRIMARY KEY,
             messages TEXT NOT NULL,
             tool_calls TEXT,
@@ -57,23 +57,64 @@ const deserializeMessage = (msg: any) => {
 };
 
 export const createThreadStorage = () => {
+    // Create a db if it doesn't exist
+    // Initialize SQLite database in the current working directory
+    // This creates a new database if one doesn't exist, or opens an existing one
     const dbPath = path.join(process.cwd(), 'thread-storage.sqlite');
     const dbPromise = initializeDb(dbPath);
 
     return {
         async saveThread(threadId: string, state: ThreadState) {
-            const db = await dbPromise;
-            await db.run(
-                `INSERT OR REPLACE INTO threads (thread_id, messages, tool_calls, updated_at)
-                 VALUES (?, ?, ?, CURRENT_TIMESTAMP)`,
-                [
+            try {
+                const db = await dbPromise;
+                const threadData = {
                     threadId,
-                    JSON.stringify(state.messages.map(serializeMessage)),
-                    JSON.stringify(state.toolCalls)
-                ]
-            );
+                    messageCount: state.messages.length,
+                    toolCallCount: state.toolCalls.length
+                };
+                logger.info(`Preparing to save thread data: ${JSON.stringify(threadData)}`);
 
-            logger.info(`Thread saved: ${threadId}`);
+                const serializedMessages = JSON.stringify(state.messages.map(serializeMessage));
+                const serializedToolCalls = JSON.stringify(state.toolCalls);
+                
+                const serializedInfo = {
+                    messagesLength: serializedMessages.length,
+                    toolCallsLength: serializedToolCalls.length
+                };
+                logger.info(`Serialized data: ${JSON.stringify(serializedInfo)}`);
+
+                const result = await db.run(
+                    `INSERT OR REPLACE INTO threads (thread_id, messages, tool_calls, updated_at)
+                     VALUES (?, ?, ?, CURRENT_TIMESTAMP)`,
+                    [
+                        threadId,
+                        serializedMessages,
+                        serializedToolCalls
+                    ]
+                );
+
+                logger.info(`Database operation result: ${JSON.stringify(result)}`);
+
+                // Verify the save immediately
+                const verification = await db.get(
+                    'SELECT thread_id, length(messages) as msg_len FROM threads WHERE thread_id = ?',
+                    threadId
+                );
+                
+                logger.info(`Verification result: ${JSON.stringify(verification)}`);
+
+                if (!verification) {
+                    throw new Error('Failed to verify saved data');
+                }
+            } catch (error) {
+                logger.error('Error in saveThread:', error);
+                logger.error('Full error details:', {
+                    name: (error as Error).name,
+                    message: error instanceof Error ? error.message : String(error),
+                    stack: error instanceof Error ? error.stack : undefined
+                });
+                throw error;
+            }
         },
 
         async loadThread(threadId: string): Promise<ThreadState | null> {
@@ -119,5 +160,17 @@ export const createThreadStorage = () => {
         }
     };
 };
+
+export const loadThreadSummary = async () => {
+    const threadStorage = createThreadStorage();
+    const threads = await threadStorage.getAllThreads();
+    const messages = await Promise.all(threads.map(async (thread) => {
+        const state = await threadStorage.loadThread(thread.thread_id);
+        return state?.messages.map(msg => msg.content).join('\n');
+    }));
+    let result =  messages.filter((msg): msg is string => typeof msg === 'string');
+    // logger.info(`Thread summary: ${result}`);
+    return result;
+}
 
 export type ThreadStorage = ReturnType<typeof createThreadStorage>;

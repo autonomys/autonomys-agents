@@ -5,7 +5,7 @@ import { ToolNode } from "@langchain/langgraph/prebuilt";
 import { blockchainTools } from './tools';
 import { config } from "../config/index";
 import logger from "../logger";
-import { createThreadStorage } from "./threadStorage";
+import { createThreadStorage, loadThreadSummary } from "./threadStorage";
 
 // Define state schema for the graph
 const StateAnnotation = Annotation.Root({
@@ -37,6 +37,7 @@ const model = new ChatOpenAI({
 const threadStorage = createThreadStorage();
 const checkpointer = new MemorySaver();
 const toolNode = new ToolNode(blockchainTools);
+let flag = true;
 
 // Define node functions
 const agentNode = async (state: typeof StateAnnotation.State) => {
@@ -46,7 +47,13 @@ const agentNode = async (state: typeof StateAnnotation.State) => {
             - Engage naturally in conversation and remember details users share about themselves
             - When blockchain operations are needed, you can check balances and perform transactions`
         });
-
+        if (flag) {
+            const prevMessages = (await loadThreadSummary())
+                .map(content => new HumanMessage({ content }));
+            logger.info(`Previous messages: ${prevMessages}`);
+            state.messages = [...state.messages, ...prevMessages];
+            flag = false;
+        }
         const messages = [systemMessage, ...state.messages];
         const response = await model.invoke(messages);
 
@@ -145,7 +152,6 @@ export const blockchainAgent = {
 
             const currentThreadId = threadId || `blockchain_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
             const previousState = threadId ? await threadStorage.loadThread(threadId) : null;
-
             const initialState = {
                 messages: previousState ? [
                     ...previousState.messages,
