@@ -5,7 +5,8 @@ import { ToolNode } from "@langchain/langgraph/prebuilt";
 import { blockchainTools } from './tools';
 import { config } from "../config/index";
 import logger from "../logger";
-import { createThreadStorage, loadThreadSummary } from "./threadStorage";
+import { createThreadStorage, loadThreadSummary, startSummarySystem } from "./threadStorage";
+
 
 // Define state schema for the graph
 const StateAnnotation = Annotation.Root({
@@ -131,12 +132,13 @@ const createBlockchainGraph = async () => {
     }
 };
 
-// Initialize graph
+// Initialize graph and summary system
 let agentGraph: Awaited<ReturnType<typeof createBlockchainGraph>>;
 (async () => {
     try {
         agentGraph = await createBlockchainGraph();
-        logger.info('Blockchain agent initialized successfully');
+        await startSummarySystem();
+        logger.info('Blockchain agent and summary system initialized successfully');
     } catch (error) {
         logger.error('Failed to initialize blockchain agent:', error);
     }
