@@ -6,6 +6,7 @@ import { blockchainTools } from './tools';
 import { config } from "../config/index";
 import logger from "../logger";
 import { createThreadStorage, loadThreadSummary, startSummarySystem } from "./threadStorage";
+import { startWithHistory } from "./utils";
 
 
 // Define state schema for the graph
@@ -39,6 +40,7 @@ const threadStorage = createThreadStorage();
 const checkpointer = new MemorySaver();
 const toolNode = new ToolNode(blockchainTools);
 let flag = true;
+let startWithHistoryFlag = false;
 
 // Define node functions
 const agentNode = async (state: typeof StateAnnotation.State) => {
@@ -48,6 +50,16 @@ const agentNode = async (state: typeof StateAnnotation.State) => {
             - Engage naturally in conversation and remember details users share about themselves
             - When blockchain operations are needed, you can check balances and perform transactions`
         });
+        if (startWithHistoryFlag) {
+            await startWithHistory().then(async () => {
+                const prevMessages = (await loadThreadSummary())
+                .map((content: string) => new HumanMessage({ content }));
+                logger.info(`Previous messages: ${prevMessages}`);
+                state.messages = [...state.messages, ...prevMessages];
+                flag = false;
+            });
+            startWithHistoryFlag = false;
+        }
         if (flag) {
             const prevMessages = (await loadThreadSummary())
                 .map(content => new HumanMessage({ content }));

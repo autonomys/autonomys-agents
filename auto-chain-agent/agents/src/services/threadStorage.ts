@@ -468,7 +468,7 @@ const saveDiffFile = async (differences: SummaryDifference[]) => {
 
         // Upload the diff file
         const fileBuffer = await fs.promises.readFile(diffFilePath);
-        const uploadResult = await uploadFile(fileBuffer);
+        const uploadResult = await uploadFile(fileBuffer, diffFileName);
 
         const db = await initializeDb(path.join(process.cwd(), 'thread-storage.sqlite'));
         await db.run(
