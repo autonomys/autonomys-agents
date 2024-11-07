@@ -6,7 +6,7 @@ import path from 'path';
 import { ChatOpenAI } from "@langchain/openai";
 import fs from 'fs';
 import { MessageContent } from '@langchain/core/messages';
-import { uploadFile } from './utils';
+import { uploadFile, fetchAllCIDs } from './utils';
 
 export interface ThreadState {
     messages: BaseMessage[];
@@ -42,13 +42,11 @@ const CHECK_INTERVAL = 20 * 1000; // 20 seconds
 
 const initializeDb = async (dbPath: string) => {
     logger.info('Initializing SQLite database at:', dbPath);
-
     const db = await open({
         filename: dbPath,
         driver: sqlite3.Database
     });
 
-    // Create tables if they don't exist
     await db.exec(`
         CREATE TABLE IF NOT EXISTS threads (
             thread_id TEXT PRIMARY KEY,

@@ -41,7 +41,6 @@ export const uploadFile = async (fileBuffer: Buffer, filename: string): Promise<
   const { data: uploadData } = await axios.post(`${baseUrl}/uploads/file`, createData, { headers });
   const uploadId = uploadData.id;
 
-  // Upload chunk
   const formData = new FormData();
   formData.append('file', fileBuffer, {
     filename: filename,
@@ -53,7 +52,6 @@ export const uploadFile = async (fileBuffer: Buffer, filename: string): Promise<
     headers: { ...headers, ...formData.getHeaders() },
   });
 
-  // Complete upload
   const { data: completionData } = await axios.post(`${baseUrl}/uploads/${uploadId}/complete`, null, { headers });
 
   return {
@@ -157,13 +155,11 @@ export const fetchAllCIDs = async (): Promise<string[]> => {
       driver: sqlite3.Database
     });
 
-    // Fetch all upload_ids from summary_uploads table
     const records = await db.all(
-      'SELECT upload_id FROM summary_uploads ORDER BY timestamp DESC'
+      'SELECT upload_id, CID FROM summary_uploads ORDER BY timestamp DESC'
     );
 
-    // TODO: WE MUST FETCH CIDs FROM THE DATABASE
-    const uploadIds = records.map(record => record.upload_id);
+    const uploadIds = records.map(record => record.CID);
     logger.info(`Successfully fetched ${uploadIds.length} upload IDs from database`);
     
     return uploadIds;
