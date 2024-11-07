@@ -475,8 +475,8 @@ const saveDiffFile = async (differences: SummaryDifference[]) => {
 
         const db = await initializeDb(path.join(process.cwd(), 'thread-storage.sqlite'));
         await db.run(
-            'INSERT INTO summary_uploads (upload_id) VALUES (?)',
-            [uploadResult.upload_id]
+            'INSERT INTO summary_uploads (upload_id, CID) VALUES (?, ?)',
+            [uploadResult.upload_id, uploadResult.completion.cid]
         );
 
         logger.info(`Diff file uploaded successfully with ID: ${uploadResult.upload_id}`);

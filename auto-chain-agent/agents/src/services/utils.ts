@@ -6,6 +6,7 @@ import path from 'path';
 import logger from '../logger';
 import sqlite3 from 'sqlite3';
 import { open } from 'sqlite';
+// import { uploadFile as uploadFileDSN, createAutoDriveApi } from '@autonomys/auto-drive'
 
 interface UploadResponse {
   upload_id: string;
@@ -17,6 +18,11 @@ interface RetrieveResponse {
   filename: string;
   filepath: string;
 }
+
+// export const uploadFile = async (filePath: string) => {
+//     const api = createAutoDriveApi({ apiKey: config.dsnApiKey as string });
+//     return uploadFileDSN(api, filePath, { compression: false, password: null });
+// }
 
 export const uploadFile = async (fileBuffer: Buffer, filename: string): Promise<UploadResponse> => {
   const baseUrl = 'https://demo.auto-drive.autonomys.xyz';
