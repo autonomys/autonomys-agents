@@ -6,7 +6,7 @@ import path from 'path';
 import { ChatOpenAI } from "@langchain/openai";
 import fs from 'fs';
 import { MessageContent } from '@langchain/core/messages';
-import { uploadFile, fetchAllCIDs } from './utils';
+import { uploadFile } from './utils';
 
 export interface ThreadState {
     messages: BaseMessage[];
@@ -27,6 +27,7 @@ interface SummaryDifference {
     previousSummary: string | MessageContent;
     currentSummary: string | MessageContent;
     difference: string | MessageContent;
+    previousCID?: string;
 }
 
 interface SummaryState {
@@ -360,7 +361,8 @@ export const checkAndUpdateSummaries = async () => {
                 threadId: thread.thread_id,
                 previousSummary: String(previousSummary),
                 currentSummary: summaryContent,
-                difference: summaryContent
+                difference: summaryContent,
+                previousCID: undefined
             });
         } else {
             logger.info(`Skipping summary for thread ${thread.thread_id} - No meaningful changes`);
@@ -424,7 +426,8 @@ export const initializeSummaries = async () => {
             threadId: thread.thread_id,
             previousSummary: '',
             currentSummary: String(summaryResponse.content),
-            difference: String(summaryResponse.content)
+            difference: String(summaryResponse.content),
+            previousCID: undefined
         });
 
         logger.info(`Created initial summary for thread ${thread.thread_id}`);
@@ -455,15 +458,24 @@ const saveDiffFile = async (differences: SummaryDifference[]) => {
             fs.mkdirSync(SUMMARY_DIR, { recursive: true });
         }
 
+        const db = await initializeDb(path.join(process.cwd(), 'thread-storage.sqlite'));
+        const lastUpload = await db.get(
+            'SELECT CID FROM summary_uploads ORDER BY timestamp DESC LIMIT 1'
+        );
+
+        const differencesWithPrevCID = differences.map(diff => ({
+            ...diff,
+            previousCID: lastUpload?.CID || null
+        }));
+
         // Generate unique filename based on timestamp
         const timestamp = new Date().getTime();
         const diffFileName = `${DIFF_FILE_PREFIX}${timestamp}.json`;
         const diffFilePath = path.join(SUMMARY_DIR, diffFileName);
 
-        // Save the differences to the new file
         await fs.promises.writeFile(
             diffFilePath,
-            JSON.stringify(differences, null, 2),
+            JSON.stringify(differencesWithPrevCID, null, 2),
             'utf8'
         );
 
@@ -471,7 +483,6 @@ const saveDiffFile = async (differences: SummaryDifference[]) => {
         const fileBuffer = await fs.promises.readFile(diffFilePath);
         const uploadResult = await uploadFile(fileBuffer, diffFileName);
 
-        const db = await initializeDb(path.join(process.cwd(), 'thread-storage.sqlite'));
         await db.run(
             'INSERT INTO summary_uploads (upload_id, CID) VALUES (?, ?)',
             [uploadResult.upload_id, uploadResult.completion.cid]
