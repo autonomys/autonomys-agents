@@ -166,11 +166,28 @@ export const blockchainAgent = {
 
             const currentThreadId = threadId || `blockchain_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
             const previousState = threadId ? await threadStorage.loadThread(threadId) : null;
+            
+            let relevantContext: BaseMessage[] = [];
+            if (!previousState || previousState.messages.length <= 2) {
+                const summaries = await loadThreadSummary();
+                if (summaries.length > 0) {
+                    relevantContext = [new SystemMessage({
+                        content: `Previous conversations context: ${
+                            summaries
+                                .slice(0, 100)
+                                .map(summary => summary.trim())
+                                .join(' | ')
+                        }`
+                    })];
+                }
+            }
+            logger.info(`Relevant context: ${relevantContext}`);
             const initialState = {
                 messages: previousState ? [
                     ...previousState.messages,
                     new HumanMessage({ content: message })
                 ] : [
+                    ...relevantContext,
                     new SystemMessage({
                         content: `You are a helpful AI assistant. You can engage in general conversation and also help with blockchain operations like checking balances and performing transactions.`
                     }),
