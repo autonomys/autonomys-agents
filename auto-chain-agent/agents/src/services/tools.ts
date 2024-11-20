@@ -3,20 +3,9 @@ import { z } from 'zod';
 import logger from '../logger';
 import { activate, activateWallet, generateWallet } from '@autonomys/auto-utils';
 import { balance, transfer, account } from '@autonomys/auto-consensus';
+import { formatTokenValue, toShannons } from './utils';
+import { config } from '../config';
 
-const formatTokenValue = (tokenValue: bigint, decimals: number = 18) => {
-    return Number(tokenValue) / 10 ** decimals;
-};
-
-const toShannons = (amount: string): string => {
-    // Remove 'ai3' or any other unit suffix and convert to number
-    const numericAmount = parseFloat(amount.replace(/\s*ai3\s*/i, ''));
-    // Convert to smallest unit (18 decimals)
-    return (BigInt(Math.floor(numericAmount * 10 ** 18)).toString());
-};
-
-// For development/testing, use a test wallet
-const TEST_MNEMONIC = process.env.TEST_MNEMONIC || '//Alice'; // Default to //Alice for development
 
 export const getBalanceTool = tool(
     async (input: { address: string }) => {
@@ -57,8 +46,8 @@ export const sendTransactionTool = tool(
 
             // Use test wallet
             const { api, accounts } = await activateWallet({
-                uri: TEST_MNEMONIC,  // Use test mnemonic or Alice for development
-                networkId: 'taurus'
+                uri: config.MNEMONIC,
+                networkId: config.NETWORK
             });
 
             const sender = accounts[0];
@@ -67,7 +56,14 @@ export const sendTransactionTool = tool(
             // Create transfer transaction
             const tx = transfer(api, input.to, formattedAmount);
 
-            const txHash: { status: string, hash: string, block: string, from: string, to: string, amount: string } = await new Promise((resolve, reject) => {
+            const txHash: { 
+                status: string, 
+                hash: string, 
+                block: string, 
+                from: string, 
+                to: string, 
+                amount: string 
+            } = await new Promise((resolve, reject) => {
                 tx.signAndSend(sender, ({ status, txHash }) => {
                     if (status.isInBlock) {
                         resolve({
@@ -116,7 +112,7 @@ export const getTransactionHistoryTool = tool(
             logger.info(`Getting transaction history for: ${input.address}`);
 
             // Activate the API connection
-            const api = await activate({ networkId: 'gemini-3h' });
+            const api = await activate({ networkId: config.NETWORK });
 
             // Get account information including nonce (transaction count)
             const accountInfo = await account(api, input.address);
@@ -147,7 +143,7 @@ export const createWalletTool = tool(
     async () => {
         try {
             const wallet = await generateWallet();
-            
+
             return {
                 address: wallet.keyringPair?.address,
                 publicKey: wallet.keyringPair?.publicKey.toString(),
@@ -161,11 +157,10 @@ export const createWalletTool = tool(
     {
         name: "create_wallet",
         description: "Create a new wallet",
-        schema: z.object({})  // Remove input parameters since we don't need any
+        schema: z.object({})
     }
 );
 
-// Export all tools as an array for convenience
 export const blockchainTools = [
     getBalanceTool,
     sendTransactionTool,

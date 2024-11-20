@@ -19,10 +19,17 @@ interface RetrieveResponse {
   filepath: string;
 }
 
-// export const uploadFile = async (filePath: string) => {
-//     const api = createAutoDriveApi({ apiKey: config.dsnApiKey as string });
-//     return uploadFileDSN(api, filePath, { compression: false, password: null });
-// }
+export const formatTokenValue = (tokenValue: bigint, decimals: number = 18) => {
+  return Number(tokenValue) / 10 ** decimals;
+};
+
+export const toShannons = (amount: string): string => {
+  // Remove 'ai3' or any other unit suffix and convert to number
+  const numericAmount = parseFloat(amount.replace(/\s*ai3\s*/i, ''));
+  // Convert to smallest unit (18 decimals)
+  return (BigInt(Math.floor(numericAmount * 10 ** 18)).toString());
+};
+
 
 export const uploadFile = async (fileBuffer: Buffer, filename: string): Promise<UploadResponse> => {
   const baseUrl = 'https://demo.auto-drive.autonomys.xyz';

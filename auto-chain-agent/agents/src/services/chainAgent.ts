@@ -5,11 +5,10 @@ import { ToolNode } from "@langchain/langgraph/prebuilt";
 import { blockchainTools } from './tools';
 import { config } from "../config/index";
 import logger from "../logger";
-import { createThreadStorage, loadThreadSummary, startSummarySystem } from "./threadStorage";
 import { startWithHistory } from "./utils";
+import { loadThreadSummary, startSummarySystem } from './thread/summarySystem';
+import { createThreadStorage } from './thread/threadStorage';
 
-
-// Define state schema for the graph
 const StateAnnotation = Annotation.Root({
     messages: Annotation<BaseMessage[]>({
         reducer: (curr, prev) => [...curr, ...prev],
@@ -29,11 +28,10 @@ const StateAnnotation = Annotation.Root({
     })
 });
 
-// Initialize core components
 const model = new ChatOpenAI({
     openAIApiKey: config.openaiApiKey,
-    modelName: "gpt-4o-mini",
-    temperature: 0.7,
+    modelName: config.LLM_MODEL,
+    temperature: config.TEMPERATURE,
 }).bindTools(blockchainTools);
 
 const threadStorage = createThreadStorage();
@@ -42,7 +40,6 @@ const toolNode = new ToolNode(blockchainTools);
 let flag = true;
 let startWithHistoryFlag = false;
 
-// Define node functions
 const agentNode = async (state: typeof StateAnnotation.State) => {
     try {
         const systemMessage = new SystemMessage({
@@ -128,7 +125,6 @@ const shouldContinue = (state: typeof StateAnnotation.State) => {
     return 'agent';
 };
 
-// Create and initialize the graph
 const createBlockchainGraph = async () => {
     try {
         return new StateGraph(StateAnnotation)
@@ -144,7 +140,6 @@ const createBlockchainGraph = async () => {
     }
 };
 
-// Initialize graph and summary system
 let agentGraph: Awaited<ReturnType<typeof createBlockchainGraph>>;
 (async () => {
     try {
@@ -156,7 +151,6 @@ let agentGraph: Awaited<ReturnType<typeof createBlockchainGraph>>;
     }
 })();
 
-// Export the agent interface
 export const blockchainAgent = {
     async handleMessage({ message, threadId }: { message: string; threadId?: string }) {
         try {
@@ -189,7 +183,9 @@ export const blockchainAgent = {
                 ] : [
                     ...relevantContext,
                     new SystemMessage({
-                        content: `You are a helpful AI assistant. You can engage in general conversation and also help with blockchain operations like checking balances and performing transactions.`
+                        content: `
+                        You are a helpful AI assistant.
+                        You can engage in general conversation and also help with blockchain operations like checking balances and performing transactions.`
                     }),
                     new HumanMessage({ content: message })
                 ]
