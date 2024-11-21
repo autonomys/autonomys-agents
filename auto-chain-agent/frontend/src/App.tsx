@@ -4,6 +4,9 @@ import ChatInput from './components/ChatInput';
 import MessageList from './components/MessageList';
 import { Message } from './types';
 import { sendMessage } from './api';
+import { styles } from './styles/App.styles';
+import logo from './assets/logo.png';
+import { TbBrain } from 'react-icons/tb';
 
 function App() {
     const [messages, setMessages] = useState<Message[]>([]);
@@ -56,28 +59,34 @@ function App() {
     };
 
     return (
-        <Box minH="100vh" bg="gray.50">
-            <Box bg="white" py={4} shadow="sm">
+        <Box {...styles.mainContainer}>
+            <Box {...styles.backgroundDots} />
+
+            <Box {...styles.header}>
                 <Container maxW="container.xl">
-                    <Heading size="lg" color="gray.700">Autonomys Network - Chain Agent</Heading>
+                    <Heading {...styles.headerTitle}>
+                        <Box as="img" src={logo} h="40px" />
+                        Autonomys Network - Chain Agent
+                        <Box {...styles.aiPoweredBadge}>
+                          <Box display="flex" alignItems="center" gap={2}>
+                            <TbBrain style={{ width: '30px', height: '30px' }} /> 
+                            Memory Enabled ⚡ 
+                          </Box>
+                        </Box>
+                    </Heading>
                 </Container>
             </Box>
 
-            <Container maxW="container.xl" py={8}>
-                <Box
-                    bg="white"
-                    borderRadius="lg"
-                    shadow="base"
-                    height="calc(100vh - 180px)"
-                    overflow="hidden"
-                >
+            <Container maxW="container.xl" py={8} position="relative" zIndex={1}>
+                <Box {...styles.chatContainer}>
+                    <Box {...styles.chatContainerBefore} />
                     <VStack h="full" spacing={0}>
-                        <Box flex="1" w="full" overflowY="auto" p={4}>
+                        <Box {...styles.messageArea}>
                             <MessageList messages={messages} />
                             <div ref={messagesEndRef} />
                         </Box>
 
-                        <Box w="full" p={4} borderTop="1px" borderColor="gray.100">
+                        <Box {...styles.inputBox}>
                             <ChatInput
                                 onSendMessage={handleSendMessage}
                                 disabled={loading}
