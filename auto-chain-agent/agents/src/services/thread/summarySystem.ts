@@ -94,6 +94,7 @@ export const checkAndUpdateSummaries = async () => {
                 Compare the previous summary (IF THERE IS ANY) with the current conversation and highlight only the new or changed information. 
                 Summarize the important information if it is the initial summary like user's wallet address, name and etc.
                 If there are no meaningful changes, explicitly state "NO_CHANGES".
+                DON'T ADD MNEMONICS IN THE SUMMARY AT ALL.
                 Format as a brief diff summary.
                 Provide your reasoning for the summary.
                 `
