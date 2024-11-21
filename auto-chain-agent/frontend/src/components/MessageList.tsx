@@ -24,6 +24,7 @@ function MessageList({ messages }: MessageListProps) {
         <VStack spacing={4} align="stretch">
             {messages.map((message, index) => {
                 const isAI3 = message.role === 'assistant' && message.content.includes('AI3');
+                const isUser = message.role === 'user';
                 
                 return (
                     <motion.div
@@ -34,16 +35,19 @@ function MessageList({ messages }: MessageListProps) {
                     >
                         <Box
                             {...messageContainerStyle}
-                            alignItems={message.role === 'user' ? 'flex-end' : 'flex-start'}
+                            alignItems={isUser ? 'flex-end' : 'flex-start'}
                         >
-                            <HStack {...messageHeaderStyle}>
-                                {message.role !== 'user' && (
+                            <HStack 
+                                {...messageHeaderStyle}
+                                justifyContent={isUser ? 'flex-end' : 'flex-start'}
+                            >
+                                {!isUser && (
                                     <Box {...aiIconStyle(isAI3)}>
                                         🤖
                                     </Box>
                                 )}
                                 <Text color={colors.text.light.primary} fontSize="sm">
-                                    {message.role === 'user' ? 'You' : 'Agent'}
+                                    {isUser ? 'You' : 'Agent'}
                                 </Text>
                                 <Text color="whiteAlpha.500">•</Text>
                                 <Text color="whiteAlpha.700">
@@ -51,7 +55,7 @@ function MessageList({ messages }: MessageListProps) {
                                 </Text>
                             </HStack>
 
-                            <Box {...messageBoxStyle(message.role === 'user', isAI3)}>
+                            <Box {...messageBoxStyle(isUser, isAI3)}>
                                 <ReactMarkdown>{message.content}</ReactMarkdown>
                             </Box>
                         </Box>

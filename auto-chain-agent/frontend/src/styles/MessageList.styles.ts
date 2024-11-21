@@ -11,7 +11,6 @@ export const messageHeaderStyle = {
     px: 4,
     fontSize: 'xs',
     width: '100%',
-    pl: 3,
 } as const;
 
 export const aiIconStyle = (isAI3: boolean) => ({
