@@ -33,6 +33,8 @@ Thumbs.db
 # Database
 *.sqlite
 *.sqlite3
-
+summary-differences.json
+summary-*.json
+diffs/
 # Test coverage
 coverage 

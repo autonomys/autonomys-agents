@@ -3,8 +3,9 @@ import {
     Button,
     Textarea,
     HStack,
-    useColorModeValue
 } from '@chakra-ui/react';
+import { FiSend } from 'react-icons/fi';
+import { styles } from '../styles/ChatInput.styles';
 
 interface ChatInputProps {
     onSendMessage: (message: string) => void;
@@ -28,37 +29,26 @@ function ChatInput({ onSendMessage, disabled }: ChatInputProps) {
         }
     };
 
-    const buttonBg = useColorModeValue('blue.500', 'blue.300');
-    const buttonHoverBg = useColorModeValue('blue.600', 'blue.400');
-
     return (
-        <HStack spacing={4} align="end">
+        <HStack spacing={3} px={4} py={3}>
             <Textarea
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
-                onKeyPress={handleKeyPress}
+                onKeyUp={handleKeyPress}
                 placeholder="Type your message..."
                 disabled={disabled}
                 resize="none"
-                rows={3}
-                focusBorderColor="blue.500"
+                rows={1}
+                minH="50px"
+                maxH="120px"
+                {...styles.textarea}
             />
             <Button
                 onClick={handleSubmit}
                 isDisabled={disabled || !message.trim()}
-                bg={buttonBg}
-                color="white"
-                px={8}
-                h={12}
-                _hover={{
-                    bg: buttonHoverBg
-                }}
-                _disabled={{
-                    bg: 'gray.300',
-                    cursor: 'not-allowed'
-                }}
+                {...styles.sendButton}
             >
-                Send
+                <FiSend size={20} />
             </Button>
         </HStack>
     );

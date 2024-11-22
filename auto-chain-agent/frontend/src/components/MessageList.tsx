@@ -5,66 +5,63 @@ import {
     VStack,
     Box,
     Text,
-    useColorModeValue
+    HStack,
 } from '@chakra-ui/react';
-
+import { motion } from 'framer-motion';
+import {
+    messageContainerStyle,
+    messageHeaderStyle,
+    aiIconStyle,
+    messageBoxStyle,
+} from '../styles/MessageList.styles';
+import {colors} from "../theme/colors"
 interface MessageListProps {
     messages: Message[];
 }
 
 function MessageList({ messages }: MessageListProps) {
-    const userBg = useColorModeValue('blue.500', 'blue.400');
-    const assistantBg = useColorModeValue('gray.100', 'gray.700');
-    const errorBg = useColorModeValue('red.100', 'red.900');
-
     return (
         <VStack spacing={4} align="stretch">
-            {messages.map((message, index) => (
-                <Box
-                    key={index}
-                    display="flex"
-                    flexDirection="column"
-                    alignItems={message.role === 'user' ? 'flex-end' : 'flex-start'}
-                >
-                    <Box
-                        maxW="80%"
-                        p={4}
-                        borderRadius="lg"
-                        bg={
-                            message.role === 'user'
-                                ? userBg
-                                : message.role === 'error'
-                                    ? errorBg
-                                    : assistantBg
-                        }
-                        color={message.role === 'user' ? 'white' : 'inherit'}
+            {messages.map((message, index) => {
+                const isAI3 = message.role === 'assistant' && message.content.includes('AI3');
+                const isUser = message.role === 'user';
+                
+                return (
+                    <motion.div
+                        key={index}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.3 }}
                     >
                         <Box
-                            className="markdown-content"
-                            sx={{
-                                '& ul': {
-                                    listStylePosition: 'inside',
-                                    paddingLeft: '0',
-                                    marginY: '0.5em'
-                                },
-                                '& li': {
-                                    marginY: '0.25em'
-                                },
-                                '& p': {
-                                    marginY: '0.5em'
-                                }
-                            }}
+                            {...messageContainerStyle}
+                            alignItems={isUser ? 'flex-end' : 'flex-start'}
                         >
-                            <ReactMarkdown>
-                                {message.content}
-                            </ReactMarkdown>
+                            <HStack 
+                                {...messageHeaderStyle}
+                                justifyContent={isUser ? 'flex-end' : 'flex-start'}
+                            >
+                                {!isUser && (
+                                    <Box {...aiIconStyle(isAI3)}>
+                                        🤖
+                                    </Box>
+                                )}
+                                <Text color={colors.text.light.primary} fontSize="sm">
+                                    {isUser ? 'You' : 'Agent'}
+                                </Text>
+                                <Text color="whiteAlpha.500">•</Text>
+                                <Text color="whiteAlpha.700">
+                                    {format(message.timestamp, 'HH:mm')}
+                                </Text>
+                            </HStack>
+
+                            <Box {...messageBoxStyle(isUser, isAI3)}>
+                                <ReactMarkdown>{message.content}</ReactMarkdown>
+                            </Box>
                         </Box>
-                    </Box>
-                    <Text fontSize="xs" color="gray.500" mt={1}>
-                        {format(message.timestamp, 'HH:mm')}
-                    </Text>
-                </Box>
-            ))}
+                    </motion.div>
+                );
+            })}
         </VStack>
     );
 }

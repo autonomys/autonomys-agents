@@ -5,9 +5,10 @@ import { ToolNode } from "@langchain/langgraph/prebuilt";
 import { blockchainTools } from './tools';
 import { config } from "../config/index";
 import logger from "../logger";
-import { createThreadStorage } from "./threadStorage";
-
-// Define state schema for the graph
+import { startWithHistory } from "./utils";
+import { loadThreadSummary, startSummarySystem } from './thread/summarySystem';
+import { createThreadStorage } from './thread/threadStorage';
+import { ConversationState } from './thread/interface';
 const StateAnnotation = Annotation.Root({
     messages: Annotation<BaseMessage[]>({
         reducer: (curr, prev) => [...curr, ...prev],
@@ -22,23 +23,26 @@ const StateAnnotation = Annotation.Root({
         };
         result?: string;
     }>>({
-        reducer: (_, next) => next, // Only keep current interaction's tool calls
+        reducer: (_, next) => next,
         default: () => [],
     })
 });
 
-// Initialize core components
 const model = new ChatOpenAI({
     openAIApiKey: config.openaiApiKey,
-    modelName: "gpt-4o-mini",
-    temperature: 0.7,
+    modelName: config.LLM_MODEL,
+    temperature: config.TEMPERATURE,
 }).bindTools(blockchainTools);
 
 const threadStorage = createThreadStorage();
 const checkpointer = new MemorySaver();
 const toolNode = new ToolNode(blockchainTools);
 
-// Define node functions
+const conversationState: ConversationState = {
+    isInitialLoad: true,
+    needsHistoryRebuild: false
+};
+
 const agentNode = async (state: typeof StateAnnotation.State) => {
     try {
         const systemMessage = new SystemMessage({
@@ -46,6 +50,23 @@ const agentNode = async (state: typeof StateAnnotation.State) => {
             - Engage naturally in conversation and remember details users share about themselves
             - When blockchain operations are needed, you can check balances and perform transactions`
         });
+
+        if (conversationState.needsHistoryRebuild) {
+            await startWithHistory().then(async () => {
+                const prevMessages = (await loadThreadSummary())
+                    .map((content: string) => new HumanMessage({ content }));
+                state.messages = [...state.messages, ...prevMessages];
+                conversationState.isInitialLoad = false;
+            });
+            conversationState.needsHistoryRebuild = false;
+        }
+
+        if (conversationState.isInitialLoad) {
+            const prevMessages = (await loadThreadSummary())
+                .map(content => new HumanMessage({ content }));
+            state.messages = [...state.messages, ...prevMessages];
+            conversationState.isInitialLoad = false;
+        }
 
         const messages = [systemMessage, ...state.messages];
         const response = await model.invoke(messages);
@@ -108,7 +129,6 @@ const shouldContinue = (state: typeof StateAnnotation.State) => {
     return 'agent';
 };
 
-// Create and initialize the graph
 const createBlockchainGraph = async () => {
     try {
         return new StateGraph(StateAnnotation)
@@ -124,18 +144,17 @@ const createBlockchainGraph = async () => {
     }
 };
 
-// Initialize graph
 let agentGraph: Awaited<ReturnType<typeof createBlockchainGraph>>;
 (async () => {
     try {
         agentGraph = await createBlockchainGraph();
-        logger.info('Blockchain agent initialized successfully');
+        await startSummarySystem();
+        logger.info('Blockchain agent and summary system initialized successfully');
     } catch (error) {
         logger.error('Failed to initialize blockchain agent:', error);
     }
 })();
 
-// Export the agent interface
 export const blockchainAgent = {
     async handleMessage({ message, threadId }: { message: string; threadId?: string }) {
         try {
@@ -145,14 +164,32 @@ export const blockchainAgent = {
 
             const currentThreadId = threadId || `blockchain_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
             const previousState = threadId ? await threadStorage.loadThread(threadId) : null;
-
+            
+            let relevantContext: BaseMessage[] = [];
+            if (!previousState || previousState.messages.length <= 2) {
+                const summaries = await loadThreadSummary();
+                if (summaries.length > 0) {
+                    relevantContext = [new SystemMessage({
+                        content: `Previous conversations context: ${
+                            summaries
+                                .slice(0, 100)
+                                .map(summary => summary.trim())
+                                .join(' | ')
+                        }`
+                    })];
+                }
+            }
+            logger.info(`Relevant context: ${relevantContext}`);
             const initialState = {
                 messages: previousState ? [
                     ...previousState.messages,
                     new HumanMessage({ content: message })
                 ] : [
+                    ...relevantContext,
                     new SystemMessage({
-                        content: `You are a helpful AI assistant. You can engage in general conversation and also help with blockchain operations like checking balances and performing transactions.`
+                        content: `
+                        You are a helpful AI assistant.
+                        You can engage in general conversation and also help with blockchain operations like checking balances and performing transactions.`
                     }),
                     new HumanMessage({ content: message })
                 ]
