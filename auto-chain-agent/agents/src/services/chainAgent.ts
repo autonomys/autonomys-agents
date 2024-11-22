@@ -8,7 +8,7 @@ import logger from "../logger";
 import { startWithHistory } from "./utils";
 import { loadThreadSummary, startSummarySystem } from './thread/summarySystem';
 import { createThreadStorage } from './thread/threadStorage';
-
+import { ConversationState } from './thread/interface';
 const StateAnnotation = Annotation.Root({
     messages: Annotation<BaseMessage[]>({
         reducer: (curr, prev) => [...curr, ...prev],
@@ -37,8 +37,11 @@ const model = new ChatOpenAI({
 const threadStorage = createThreadStorage();
 const checkpointer = new MemorySaver();
 const toolNode = new ToolNode(blockchainTools);
-let flag = true;
-let startWithHistoryFlag = false;
+
+const conversationState: ConversationState = {
+    isInitialLoad: true,
+    needsHistoryRebuild: false
+};
 
 const agentNode = async (state: typeof StateAnnotation.State) => {
     try {
@@ -47,23 +50,24 @@ const agentNode = async (state: typeof StateAnnotation.State) => {
             - Engage naturally in conversation and remember details users share about themselves
             - When blockchain operations are needed, you can check balances and perform transactions`
         });
-        if (startWithHistoryFlag) {
+
+        if (conversationState.needsHistoryRebuild) {
             await startWithHistory().then(async () => {
                 const prevMessages = (await loadThreadSummary())
-                .map((content: string) => new HumanMessage({ content }));
-                logger.info(`Previous messages: ${prevMessages}`);
+                    .map((content: string) => new HumanMessage({ content }));
                 state.messages = [...state.messages, ...prevMessages];
-                flag = false;
+                conversationState.isInitialLoad = false;
             });
-            startWithHistoryFlag = false;
+            conversationState.needsHistoryRebuild = false;
         }
-        if (flag) {
+
+        if (conversationState.isInitialLoad) {
             const prevMessages = (await loadThreadSummary())
                 .map(content => new HumanMessage({ content }));
-            logger.info(`Previous messages: ${prevMessages}`);
             state.messages = [...state.messages, ...prevMessages];
-            flag = false;
+            conversationState.isInitialLoad = false;
         }
+
         const messages = [systemMessage, ...state.messages];
         const response = await model.invoke(messages);
 

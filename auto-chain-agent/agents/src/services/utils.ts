@@ -6,6 +6,9 @@ import path from 'path';
 import logger from '../logger';
 import sqlite3 from 'sqlite3';
 import { open } from 'sqlite';
+
+
+// TODO - Solve ESM-only conflict with CommonJS - auto-drive
 // import { uploadFile as uploadFileDSN, createAutoDriveApi } from '@autonomys/auto-drive'
 
 interface UploadResponse {

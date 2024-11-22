@@ -96,7 +96,6 @@ export const checkAndUpdateSummaries = async () => {
                 If there are no meaningful changes, explicitly state "NO_CHANGES".
                 DON'T ADD MNEMONICS IN THE SUMMARY AT ALL.
                 Format as a brief diff summary.
-                Provide your reasoning for the summary.
                 `
             }),
             new HumanMessage({

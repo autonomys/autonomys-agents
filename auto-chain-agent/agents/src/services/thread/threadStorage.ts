@@ -5,10 +5,12 @@ import logger from '../../logger';
 import { initializeDb } from './db';
 import { ThreadState } from './interface';
 import { serializeMessage, deserializeMessage } from './utils';
+import { config } from '../../config';
 
 
 
 export const createThreadStorage = () => {
+    
     // Initialize if database doesn't exist
     const dbPath = path.join(process.cwd(), 'thread-storage.sqlite');
     const dbExists = fs.existsSync(dbPath);
@@ -18,6 +20,11 @@ export const createThreadStorage = () => {
     }
     
     const dbPromise = initializeDb(dbPath);
+    
+    // Create diff folder if it doesn't exist
+    if (!fs.existsSync(config.SUMMARY_DIR)) {
+        fs.mkdirSync(config.SUMMARY_DIR, { recursive: true });
+    }   
 
     return {
         async saveThread(threadId: string, state: ThreadState) {

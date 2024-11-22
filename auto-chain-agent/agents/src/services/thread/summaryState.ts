@@ -25,11 +25,13 @@ export const loadSummaryState = async (): Promise<SummaryState> => {
 
 export const saveSummaryState = async (state: SummaryState) => {
     try {
-        let existingState: SummaryState | null = null;
-        if (fs.existsSync(config.SUMMARY_FILE_PATH)) {
-            const existingData = await fs.promises.readFile(config.SUMMARY_FILE_PATH, 'utf8');
-            existingState = JSON.parse(existingData);
-        }
+        const existingState = await (async (): Promise<SummaryState | null> => {
+            if (fs.existsSync(config.SUMMARY_FILE_PATH)) {
+                const existingData = await fs.promises.readFile(config.SUMMARY_FILE_PATH, 'utf8');
+                return JSON.parse(existingData);
+            }
+            return null;
+        })();
 
         // Save main summary file
         await fs.promises.writeFile(

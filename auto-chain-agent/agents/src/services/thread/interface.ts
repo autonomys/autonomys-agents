@@ -12,6 +12,10 @@ export interface ThreadState {
         result?: string;
     }>;
 }
+export interface ConversationState {
+    isInitialLoad: boolean;
+    needsHistoryRebuild: boolean;
+}
 
 export interface SummaryDifference {
     timestamp: string;
@@ -26,3 +30,4 @@ export interface SummaryState {
     lastCheck: string;
     differences: SummaryDifference[];
 }
+

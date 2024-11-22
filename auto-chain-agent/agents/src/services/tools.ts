@@ -46,7 +46,7 @@ export const sendTransactionTool = tool(
 
             // Use test wallet
             const { api, accounts } = await activateWallet({
-                uri: config.MNEMONIC,
+                uri: config.AGENT_KEY,
                 networkId: config.NETWORK
             });
 
@@ -116,12 +116,12 @@ export const getTransactionHistoryTool = tool(
 
             // Get account information including nonce (transaction count)
             const accountInfo = await account(api, input.address);
-
+            
             // Format the response
             const response = `Account ${input.address}:
                 Nonce (Transaction Count): ${accountInfo.nonce}
-                Free Balance: ${accountInfo.data.free}
-                Reserved Balance: ${accountInfo.data.reserved}`;
+                Free Balance: ${formatTokenValue(accountInfo.data.free)}
+                Reserved Balance: ${formatTokenValue(accountInfo.data.reserved)}`;
 
             await api.disconnect();
             return response;
