@@ -7,14 +7,6 @@
         "backend",
         "frontend"
     ],
-    "resolutions": {
-        "@polkadot/types": "14.3.1",
-        "@polkadot/types-create": "14.3.1",
-        "@polkadot/types-codec": "14.3.1",
-        "@polkadot/api": "14.3.1",
-        "@polkadot/api-derive": "14.3.1",
-        "@polkadot/rpc-core": "14.3.1"
-    },
     "scripts": {
         "build": "yarn workspaces run build",
         "dev": "yarn workspaces run dev",

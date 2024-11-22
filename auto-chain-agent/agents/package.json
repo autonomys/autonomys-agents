@@ -10,9 +10,9 @@
         "start": "node dist/index.js"
     },
     "dependencies": {
-        "@autonomys/auto-consensus": "0.7.3",
-        "@autonomys/auto-drive": "0.7.3",
-        "@autonomys/auto-utils": "0.7.3",
+        "@autonomys/auto-consensus": "1.0.9",
+        "@autonomys/auto-drive": "1.0.9",
+        "@autonomys/auto-utils": "1.0.9",
         "@langchain/anthropic": "0.3.7",
         "@langchain/community": "0.3.11",
         "@langchain/core": "0.3.3",
