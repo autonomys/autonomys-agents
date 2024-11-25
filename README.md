@@ -19,32 +19,51 @@ Our goal is to investigate and develop innovative approaches to:
 - Smart contract interactions through autonomous agents
 - Privacy and security considerations in AI-web3 integrations
 
-## Auto Content Creator Approaches
+## Projects
 
-This project explores two different approaches to creating an autonomous content creation agent:
+### Auto Chain Agent
 
-### 1. auto_content_creator
+A blockchain interaction service that provides natural language processing capabilities for blockchain operations on the Autonomys Network.
 
+Key features:
+- Natural language processing for blockchain interactions
+- Memory-enabled conversations with permanent context retention on the [Autonomys Network's Distributed Storage Network](https://academy.autonomys.xyz/subspace-protocol/network-architecture/distributed-storage-network) (DSN)
+- Balance checking and transaction management
+- Wallet management
+- Transaction history summary
+
+Technologies:
+- Agent Framework: LangGraph + LangChain.js
+- Database: SQLite + Autonomys Network DSN
+
+Available Tools:
+- Balance checking
+- Token transfers (AI3)
+- Transaction history summary
+- Wallet creation
+
+### Auto Content Creator Approaches
+
+We explore two different approaches to creating autonomous content creation agents:
+
+#### 1. Python Implementation (auto_content_creator)
 - Primary Language: Python
 - Agent Framework: AutoGen
 
 This approach utilizes [AutoGen](https://github.com/microsoft/autogen), a framework for building Large Language Model (LLM) applications using multiple agents. AutoGen enables the creation of customizable, conversable agents that can work together to accomplish tasks.
 
 Key features:
-
 - Multi-agent system for research, content generation, and fact-checking
 - Customizable agent behaviors and interactions
 - Integration with various LLM models
 
-### 2. auto-content-creator
-
+#### 2. TypeScript Implementation (auto-content-creator)
 - Primary Language: TypeScript
 - Agent Framework: LangChain.js with LangGraph
 
 This approach leverages [LangChain.js](https://js.langchain.com/) and [LangGraph](https://github.com/langchain-ai/langgraphjs), which provide a powerful framework for building applications with LLMs. LangGraph, in particular, allows for the creation of complex, stateful workflows.
 
 Key features:
-
 - Structured workflow using LangGraph for content creation process
 - Modular design with separate nodes for research, generation, and reflection
 - Type-safe schemas using Zod for better data validation
