@@ -5,12 +5,10 @@ export type Tweet = {
     readonly createdAt: string;
 }
 
-export type TwitterCredentials = {
-    readonly appKey: string;
-    readonly appSecret: string;
-    readonly accessToken: string;
-    readonly accessSecret: string;
-}
+export type TwitterCredentials = Readonly<{
+    appKey: string;
+    appSecret: string;
+}>;
 
 export type StreamRule = {
     readonly value: string;

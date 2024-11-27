@@ -1,42 +1,68 @@
-import { TwitterApi } from 'twitter-api-v2';
-import { TwitterCredentials, StreamRule } from '../../types/twitter';
+import { TwitterApi, TweetV2, TwitterApiReadWrite } from 'twitter-api-v2';
+import { TwitterCredentials, Tweet } from '../../types/twitter';
 import { createLogger } from '../../utils/logger';
 
 const logger = createLogger('twitter-api');
 
-export const createTwitterClient = (credentials: TwitterCredentials): TwitterApi =>
-    new TwitterApi(credentials);
-
-export const clearStreamRules = async (client: TwitterApi): Promise<void> => {
-    const rules = await client.v2.streamRules();
-    if (rules.data?.length) {
-        await client.v2.updateStreamRules({
-            delete: { ids: rules.data.map(rule => rule.id) }
+export const createTwitterClient = async (credentials: TwitterCredentials): Promise<TwitterApiReadWrite> => {
+    try {
+        // Create client with app credentials
+        const appOnlyClient = new TwitterApi({
+            appKey: credentials.appKey,
+            appSecret: credentials.appSecret
         });
+
+        // Get bearer token
+        const bearerClient = await appOnlyClient.appLogin();
+
+        logger.info('Successfully authenticated with Twitter API');
+        return bearerClient;
+    } catch (error) {
+        logger.error('Failed to create Twitter client:', error);
+        throw error;
     }
 };
 
-export const addStreamRules = async (
-    client: TwitterApi,
-    accounts: readonly string[]
-): Promise<void> => {
-    const rules: StreamRule[] = accounts.map(account => ({
-        value: `from:${account}`
-    }));
+export const searchTweets = async (
+    client: TwitterApiReadWrite,
+    accounts: readonly string[],
+    sinceId?: string
+): Promise<Tweet[]> => {
+    try {
+        // Build query to search for tweets from specified accounts
+        const query = accounts.map(account => `from:${account}`).join(' OR ');
 
-    await client.v2.updateStreamRules({ add: rules });
-    logger.info(`Monitoring accounts: ${accounts.join(', ')}`);
+        const tweets = await client.v2.search(query, {
+            'tweet.fields': ['author_id', 'created_at'],
+            since_id: sinceId,
+            max_results: 10 // Adjust as needed
+        });
+
+        return tweets.tweets
+            .filter((tweet): tweet is TweetV2 & { author_id: string; created_at: string } =>
+                tweet.author_id !== undefined && tweet.created_at !== undefined)
+            .map((tweet) => ({
+                id: tweet.id,
+                text: tweet.text,
+                authorId: tweet.author_id,
+                createdAt: tweet.created_at
+            }));
+    } catch (error) {
+        logger.error('Error searching tweets:', error);
+        throw error;
+    }
 };
 
-export const setupTwitterStream = async (
-    client: TwitterApi,
-    accounts: readonly string[]
+export const replyToTweet = async (
+    client: TwitterApiReadWrite,
+    tweetId: string,
+    content: string
 ): Promise<void> => {
     try {
-        await clearStreamRules(client);
-        await addStreamRules(client, accounts);
+        await client.v2.reply(content, tweetId);
+        logger.info(`Successfully replied to tweet: ${tweetId}`);
     } catch (error) {
-        logger.error('Error setting up Twitter stream:', error);
+        logger.error('Error replying to tweet:', error);
         throw error;
     }
 }; 

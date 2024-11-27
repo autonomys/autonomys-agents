@@ -1,50 +1,67 @@
 import express from 'express';
+import { TwitterApiReadWrite } from 'twitter-api-v2';
 import { config } from './config';
-import { createTwitterClient, setupTwitterStream } from './services/twitter/api';
+import { createTwitterClient, searchTweets, replyToTweet } from './services/twitter/api';
 import { handleTweet } from './services/agents/agent';
 import { createLogger } from './utils/logger';
+import { addToQueue, getAllPendingResponses, updateResponseStatus } from './services/queue';
+import { ApprovalAction } from './types/queue';
+import { v4 as uuidv4 } from 'uuid';
 
 const logger = createLogger('app');
 const app = express();
 
-const startTwitterStream = async () => {
+let lastProcessedTweetId: string | undefined;
+
+const pollTweets = async (client: TwitterApiReadWrite) => {
     try {
-        const client = createTwitterClient({
-            appKey: config.TWITTER_API_KEY!,
-            appSecret: config.TWITTER_API_SECRET!,
-            accessToken: config.TWITTER_ACCESS_TOKEN!,
-            accessSecret: config.TWITTER_ACCESS_SECRET!
-        });
+        const tweets = await searchTweets(client, config.TARGET_ACCOUNTS, lastProcessedTweetId);
 
-        await setupTwitterStream(client, config.TARGET_ACCOUNTS);
-
-        const stream = await client.v2.searchStream({
-            'tweet.fields': ['author_id', 'created_at']
-        });
-
-        stream.on('data', async tweet => {
+        for (const tweet of tweets) {
             try {
-                const response = await handleTweet({
-                    id: tweet.data.id,
-                    text: tweet.data.text,
-                    authorId: tweet.data.author_id,
-                    createdAt: tweet.data.created_at
+                const response = await handleTweet(tweet);
+
+                addToQueue({
+                    id: uuidv4(),
+                    tweet,
+                    response,
+                    status: 'pending',
+                    createdAt: new Date(),
+                    updatedAt: new Date()
                 });
 
-                logger.info('Generated response:', {
-                    tweetId: tweet.data.id,
-                    response
-                });
+                logger.info('Response queued for approval');
+
+                // Update last processed tweet ID
+                if (!lastProcessedTweetId || tweet.id > lastProcessedTweetId) {
+                    lastProcessedTweetId = tweet.id;
+                }
             } catch (error) {
                 logger.error('Error handling tweet:', error);
             }
+        }
+    } catch (error) {
+        logger.error('Error polling tweets:', error);
+    }
+};
+
+const startPolling = async () => {
+    try {
+        const client = await createTwitterClient({
+            appKey: config.TWITTER_API_KEY!,
+            appSecret: config.TWITTER_API_SECRET!
         });
 
-        stream.on('error', error => {
-            logger.error('Stream error:', error);
-        });
+        // Initial poll
+        await pollTweets(client);
+
+        // Set up polling interval
+        setInterval(() => pollTweets(client), config.CHECK_INTERVAL);
+
+        logger.info('Tweet polling started successfully');
+        return client;
     } catch (error) {
-        logger.error('Failed to start Twitter stream:', error);
+        logger.error('Failed to start tweet polling:', error);
         throw error;
     }
 };
@@ -52,8 +69,49 @@ const startTwitterStream = async () => {
 const startServer = () => {
     app.use(express.json());
 
+    // Health check endpoint
     app.get('/health', (_, res) => {
         res.json({ status: 'ok' });
+    });
+
+    // Get all pending responses
+    app.get('/responses/pending', (_, res) => {
+        const pendingResponses = getAllPendingResponses();
+        res.json(pendingResponses);
+    });
+
+    // Approve/reject a response
+    app.post('/responses/approve', (req, res) => {
+        (async () => {
+            try {
+                const action = req.body;
+                const updatedResponse = updateResponseStatus(action);
+
+                if (!updatedResponse) {
+                    return res.status(404).json({ error: 'Response not found' });
+                }
+
+                if (updatedResponse.status === 'approved') {
+                    const client = await createTwitterClient({
+                        appKey: config.TWITTER_API_KEY!,
+                        appSecret: config.TWITTER_API_SECRET!
+                    });
+
+                    await replyToTweet(
+                        client,
+                        updatedResponse.tweet.id,
+                        updatedResponse.response.content
+                    );
+
+                    logger.info(`Approved response sent for tweet: ${updatedResponse.tweet.id}`);
+                }
+
+                res.json(updatedResponse);
+            } catch (error) {
+                logger.error('Error handling approval:', error);
+                res.status(500).json({ error: 'Failed to process approval' });
+            }
+        })();
     });
 
     app.listen(config.PORT, () => {
@@ -63,7 +121,7 @@ const startServer = () => {
 
 const main = async () => {
     try {
-        await startTwitterStream();
+        await startPolling();
         startServer();
         logger.info('Application started successfully');
     } catch (error) {
