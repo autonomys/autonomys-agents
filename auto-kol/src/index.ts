@@ -5,7 +5,6 @@ import { createTwitterClient, searchTweets, replyToTweet } from './services/twit
 import { handleTweet } from './services/agents/agent';
 import { createLogger } from './utils/logger';
 import { addToQueue, getAllPendingResponses, updateResponseStatus } from './services/queue';
-import { ApprovalAction } from './types/queue';
 import { v4 as uuidv4 } from 'uuid';
 
 const logger = createLogger('app');
