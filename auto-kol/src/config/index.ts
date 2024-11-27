@@ -15,7 +15,7 @@ export const config = {
     TEMPERATURE: 0.7,
 
     // Agent Configuration
-    CHECK_INTERVAL: 30 * 1000, // 30 seconds
+    CHECK_INTERVAL: 60 * 1000 * 15, // 15 minutes
     MEMORY_DIR: path.join(__dirname, '../../data/memory'),
 
     // Blockchain Configuration
