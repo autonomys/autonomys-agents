@@ -1,285 +1,409 @@
 import { END, MemorySaver, StateGraph, START, Annotation } from '@langchain/langgraph';
-import { AIMessage, BaseMessage, HumanMessage } from '@langchain/core/messages';
+import { AIMessage, BaseMessage, HumanMessage, SystemMessage } from '@langchain/core/messages';
 import { ChatOpenAI } from '@langchain/openai';
-import { ChatPromptTemplate } from '@langchain/core/prompts';
+import { ChatPromptTemplate, PromptTemplate } from '@langchain/core/prompts';
+import { MessageContent } from '@langchain/core/messages';
 import { config } from '../../config';
 import { createLogger } from '../../utils/logger';
-import { Tweet } from '../../types/twitter';
+import { createTools } from '../../tools';
+import { createTwitterClient } from '../twitter/api';
 import {
-    EngagementDecision,
-    ToneAnalysis,
-    ResponseAlternative,
-    ResponseSelection,
-    WorkflowState
-} from '../../types/workflow';
+    engagementSchema,
+    tweetSearchSchema,
+    toneSchema,
+    responseSchema
+} from '../../schemas/workflow';
+import { ToolNode } from '@langchain/langgraph/prebuilt';
+import { TwitterApiReadWrite } from 'twitter-api-v2';
+import { StructuredOutputParser } from 'langchain/output_parsers';
+import { z } from 'zod';
 
 const logger = createLogger('agent-workflow');
 
-// State management
+const parseMessageContent = (content: MessageContent): any => {
+    if (typeof content === 'string') {
+        return JSON.parse(content);
+    }
+    if (Array.isArray(content)) {
+        return JSON.parse(JSON.stringify(content));
+    }
+    return content;
+};
+
+// State management with processed tweets tracking
 const State = Annotation.Root({
-    tweet: Annotation<Tweet>(),
-    messages: Annotation<BaseMessage[]>({
+    messages: Annotation<readonly BaseMessage[]>({
         reducer: (curr, prev) => [...curr, ...prev],
         default: () => [],
     }),
-    engagementDecision: Annotation<EngagementDecision | undefined>(),
-    toneAnalysis: Annotation<ToneAnalysis | undefined>(),
-    alternatives: Annotation<ResponseAlternative[]>({
-        reducer: (curr, prev) => [...curr, ...prev],
-        default: () => [],
+    processedTweets: Annotation<ReadonlySet<string>>({
+        default: () => new Set(),
+        reducer: (curr, prev) => new Set([...curr, ...prev]),
     }),
-    selectedResponse: Annotation<ResponseSelection | undefined>(),
-    previousInteractions: Annotation<readonly string[]>({
-        reducer: (curr, prev) => [...curr, ...prev],
-        default: () => [],
-    }),
+    lastProcessedId: Annotation<string | undefined>(),
 });
 
-// LLM instances
-const decisionLLM = new ChatOpenAI({
-    modelName: config.LLM_MODEL,
-    temperature: 0.2,
-});
+// Workflow configuration type
+type WorkflowConfig = Readonly<{
+    client: TwitterApiReadWrite;
+    toolNode: ToolNode;
+    llms: Readonly<{
+        decision: ChatOpenAI;
+        tone: ChatOpenAI;
+        response: ChatOpenAI;
+    }>;
+}>;
 
-const creativeLLM = new ChatOpenAI({
-    modelName: config.LLM_MODEL,
-    temperature: 0.8,
-});
+// Create workflow configuration
+const createWorkflowConfig = async (): Promise<WorkflowConfig> => {
+    const client = await createTwitterClient({
+        appKey: config.TWITTER_API_KEY!,
+        appSecret: config.TWITTER_API_SECRET!
+    });
 
-const analyticLLM = new ChatOpenAI({
-    modelName: config.LLM_MODEL,
-    temperature: 0.3,
-});
+    const { tools } = createTools(client);
 
-// Engagement Decision Node
-const engagementPrompt = ChatPromptTemplate.fromMessages([
-    ["system", `You are a strategic social media engagement advisor. 
-    Evaluate tweets and decide whether they warrant a response based on:
-    1. Relevance to AI, blockchain, or tech innovation
-    2. Potential for meaningful discussion
-    3. Author's influence and engagement level
-    4. Tweet's recency and context
-    5. Our recent interaction history with the author
-    
-    Provide a structured decision with reasoning and priority level (1-10).`],
-    ["human", `Tweet: {tweet}\nPrevious interactions: {previousInteractions}\n\nShould we engage with this tweet?`]
-]);
+    return {
+        client,
+        toolNode: new ToolNode(tools),
+        llms: {
+            decision: new ChatOpenAI({
+                modelName: config.LLM_MODEL,
+                temperature: 0.2,
+            }) as unknown as ChatOpenAI,
 
-const engagementNode = async (state: typeof State.State) => {
-    logger.info('Engagement Node - Evaluating tweet engagement');
-    try {
-        const response = await engagementPrompt
-            .pipe(decisionLLM)
-            .invoke({
-                tweet: state.tweet.text,
-                previousInteractions: state.previousInteractions.join('\n')
-            });
-        const content = response.content as string;
-        const decision: EngagementDecision = {
-            shouldEngage: content.toLowerCase().includes('yes'),
-            reason: content,
-            priority: parseInt(content.match(/priority.*?(\d+)/i)?.[1] || '5')
-        };
+            tone: new ChatOpenAI({
+                modelName: config.LLM_MODEL,
+                temperature: 0.3,
+            }) as unknown as ChatOpenAI,
 
-        return {
-            messages: [response],
-            engagementDecision: decision
-        };
-    } catch (error) {
-        logger.error('Error in engagement decision:', error);
-        throw error;
-    }
-};
-
-// Tone Analysis Node
-const tonePrompt = ChatPromptTemplate.fromMessages([
-    ["system", `Analyze the tone and context of the tweet to determine:
-    1. The dominant tone of the original tweet
-    2. The most appropriate tone for our response
-    3. Detailed reasoning for the suggested tone
-    
-    Consider the author's status, tweet context, and topic sensitivity.`],
-    ["human", `Tweet: {tweet}\nEngagement Decision: {decision}\n\nAnalyze the tone and suggest response approach:`]
-]);
-
-const toneAnalysisNode = async (state: typeof State.State) => {
-    logger.info('Tone Analysis Node - Analyzing tweet tone');
-    try {
-        const response = await tonePrompt
-            .pipe(analyticLLM)
-            .invoke({
-                tweet: state.tweet.text,
-                decision: state.engagementDecision?.reason
-            });
-        const content = response.content as string;
-        const analysis: ToneAnalysis = {
-            dominantTone: content.match(/dominant tone:.*?([a-z]+)/i)?.[1] || 'neutral',
-            suggestedTone: content.match(/suggested tone:.*?([a-z]+)/i)?.[1] || 'neutral',
-            reasoning: content
-        };
-
-        return {
-            messages: [response],
-            toneAnalysis: analysis
-        };
-    } catch (error) {
-        logger.error('Error in tone analysis:', error);
-        throw error;
-    }
-};
-
-// Response Generation Node
-const responsePrompt = ChatPromptTemplate.fromMessages([
-    ["system", `Generate three distinct response alternatives that:
-    1. Match the suggested tone
-    2. Are thought-provoking and engaging
-    3. Stay within Twitter's character limit
-    4. Include relevant hashtags when appropriate
-    
-    For each alternative, provide the response, tone used, strategy employed, and estimated impact (1-10).`],
-    ["human", `Tweet: {tweet}\nTone Analysis: {toneAnalysis}\n\nGenerate response alternatives:`]
-]);
-
-const responseGenerationNode = async (state: typeof State.State) => {
-    logger.info('Response Generation Node - Creating alternatives');
-    try {
-        const response = await responsePrompt
-            .pipe(creativeLLM)
-            .invoke({
-                tweet: state.tweet.text,
-                toneAnalysis: state.toneAnalysis?.reasoning
-            });
-        const content = response.content as string;
-
-        // Parse alternatives from the response
-        const alternatives: ResponseAlternative[] = content
-            .split(/Alternative \d+:/g)
-            .filter(Boolean)
-            .map(alt => ({
-                content: alt.match(/Content: (.*?)(?=\n|$)/)?.[1] || '',
-                tone: alt.match(/Tone: (.*?)(?=\n|$)/)?.[1] || '',
-                strategy: alt.match(/Strategy: (.*?)(?=\n|$)/)?.[1] || '',
-                estimatedImpact: parseInt(alt.match(/Impact: (\d+)/)?.[1] || '5')
-            }));
-
-        return {
-            messages: [response],
-            alternatives
-        };
-    } catch (error) {
-        logger.error('Error generating responses:', error);
-        throw error;
-    }
-};
-
-// Response Selection Node
-const selectionPrompt = ChatPromptTemplate.fromMessages([
-    ["system", `Select the most appropriate response alternative based on:
-    1. Alignment with our engagement goals
-    2. Appropriateness of tone and content
-    3. Potential for positive engagement
-    4. Risk assessment
-    
-    Provide detailed reasoning for the selection and confidence level (0-1).`],
-    ["human", `Tweet: {tweet}\nAlternatives: {alternatives}\n\nSelect the best response:`]
-]);
-
-const responseSelectionNode = async (state: typeof State.State) => {
-    logger.info('Response Selection Node - Choosing best response');
-    try {
-        const response = await selectionPrompt
-            .pipe(analyticLLM)
-            .invoke({
-                tweet: state.tweet.text,
-                alternatives: JSON.stringify(state.alternatives)
-            });
-        const content = response.content as string;
-        const selection: ResponseSelection = {
-            selectedResponse: state.alternatives?.[0]?.content || '',  // Default to first if parsing fails
-            reasoning: content,
-            confidence: parseFloat(content.match(/confidence:?\s*(0\.\d+)/i)?.[1] || '0.5')
-        };
-
-        return {
-            messages: [response],
-            selectedResponse: selection
-        };
-    } catch (error) {
-        logger.error('Error selecting response:', error);
-        throw error;
-    }
-};
-
-// Workflow Control
-const shouldContinue = (state: typeof State.State) => {
-    if (!state.engagementDecision?.shouldEngage) {
-        logger.info('Ending workflow - Decided not to engage');
-        return END;
-    }
-
-    if (!state.toneAnalysis) {
-        return 'analyzeNode';
-    }
-
-    if (!state.alternatives?.length) {
-        return 'generateNode';
-    }
-
-    if (!state.selectedResponse) {
-        return 'selectNode';
-    }
-
-    return END;
-};
-
-// Create and export the workflow
-const workflow = new StateGraph(State)
-    .addNode('engagementNode', engagementNode)
-    .addNode('analyzeNode', toneAnalysisNode)
-    .addNode('generateNode', responseGenerationNode)
-    .addNode('selectNode', responseSelectionNode)
-    .addEdge(START, 'engagementNode')
-    .addConditionalEdges('engagementNode', shouldContinue)
-    .addEdge('analyzeNode', 'generateNode')
-    .addEdge('generateNode', 'selectNode')
-    .addConditionalEdges('selectNode', shouldContinue);
-
-const memoryStore = new MemorySaver();
-export const app = workflow.compile({ checkpointer: memoryStore });
-
-export const runWorkflow = async (
-    tweet: Tweet,
-    previousInteractions: string[] = []
-): Promise<WorkflowState> => {
-    const threadId = `tweet_${tweet.id}_${Date.now()}`;
-    logger.info('Starting tweet response workflow', { threadId, tweetId: tweet.id });
-
-    const initialState = {
-        tweet,
-        messages: [],
-        previousInteractions
+            response: new ChatOpenAI({
+                modelName: config.LLM_MODEL,
+                temperature: 0.8,
+            }) as unknown as ChatOpenAI
+        }
     };
+};
 
-    // Add configurable with thread_id
-    const config = {
-        configurable: {
-            thread_id: threadId
+// Node factory functions
+const createNodes = async (config: WorkflowConfig) => {
+    const searchNode = async (state: typeof State.State) => {
+        logger.info('Search Node - Fetching recent tweets');
+        try {
+            logger.debug('Current lastProcessedId:', state.lastProcessedId);
+            logger.info('Last processed id:', state.lastProcessedId);
+
+            // Log the tool call before making it
+            logger.info('Calling search_recent_tweets tool with:', {
+                lastProcessedId: state.lastProcessedId || undefined
+            });
+
+            const toolResponse = await config.toolNode.invoke({
+                messages: [
+                    new AIMessage({
+                        content: '',
+                        tool_calls: [{
+                            name: 'search_recent_tweets',
+                            args: {
+                                lastProcessedId: state.lastProcessedId || undefined
+                            },
+                            id: 'tool_call_id',
+                            type: 'tool_call'
+                        }],
+                    }),
+                ],
+            });
+
+            // Log the tool response
+            logger.info('Tool response received:', {
+                messageCount: toolResponse.messages.length,
+                lastMessageContent: toolResponse.messages[toolResponse.messages.length - 1].content
+            });
+
+            // The tool response will be in the last message's content
+            const lastMessage = toolResponse.messages[toolResponse.messages.length - 1];
+
+            // Handle different types of content
+            let searchResult;
+            if (typeof lastMessage.content === 'string') {
+                try {
+                    searchResult = JSON.parse(lastMessage.content);
+                    logger.info('Parsed search result:', searchResult);
+                } catch (error) {
+                    logger.error('Failed to parse search result:', error);
+                    searchResult = { tweets: [], lastProcessedId: null };
+                }
+            } else {
+                searchResult = lastMessage.content;
+                logger.info('Non-string search result:', searchResult);
+            }
+
+            // Validate the search result
+            const validatedResult = tweetSearchSchema.parse(searchResult);
+
+            logger.info(`Found ${validatedResult.tweets.length} tweets`, {
+                result: validatedResult
+            });
+
+            return {
+                messages: [new AIMessage({ content: JSON.stringify(validatedResult) })],
+                lastProcessedId: validatedResult.lastProcessedId || undefined
+            };
+        } catch (error) {
+            logger.error('Error in search node:', error);
+            // Return a valid empty result
+            const emptyResult = {
+                tweets: [],
+                lastProcessedId: null
+            };
+            return {
+                messages: [new AIMessage({ content: JSON.stringify(emptyResult) })],
+                lastProcessedId: undefined
+            };
         }
     };
 
-    const stream = await app.stream(initialState, config);  // Pass config here
-    let finalState: WorkflowState = initialState;
+    const engagementParser = StructuredOutputParser.fromZodSchema(engagementSchema);
+    const toneParser = StructuredOutputParser.fromZodSchema(toneSchema);
+    const responseParser = StructuredOutputParser.fromZodSchema(responseSchema);
 
-    for await (const state of stream) {
-        finalState = state;
-    }
-
-    logger.info('Workflow completed', {
-        threadId,
-        tweetId: tweet.id,
-        shouldEngage: finalState.engagementDecision?.shouldEngage,
-        selectedResponse: finalState.selectedResponse?.selectedResponse
+    const engagementSystemPrompt = await PromptTemplate.fromTemplate(
+        "You are a strategic social media engagement advisor. Your task is to evaluate tweets and decide whether they warrant a response.\n\n" +
+        "Evaluate each tweet based on:\n" +
+        "1. Relevance to AI, blockchain, or tech innovation\n" +
+        "2. Potential for meaningful discussion\n" +
+        "3. Author's influence and engagement level\n" +
+        "4. Tweet's recency and context\n\n" +
+        "{format_instructions}"
+    ).format({
+        format_instructions: engagementParser.getFormatInstructions()
     });
 
-    return finalState;
+    const toneSystemPrompt = await PromptTemplate.fromTemplate(
+        "You are an expert in social media tone analysis. Your task is to analyze the tone of tweets and suggest the best tone for responses.\n\n" +
+        "Consider:\n" +
+        "1. The original tweet's tone and context\n" +
+        "2. The author's typical communication style\n" +
+        "3. The topic and its sensitivity\n" +
+        "4. The platform's culture\n\n" +
+        "{format_instructions}"
+    ).format({
+        format_instructions: toneParser.getFormatInstructions()
+    });
+
+    const responseSystemPrompt = await PromptTemplate.fromTemplate(
+        "You are an expert in crafting engaging social media responses. Your task is to generate response strategies for tweets.\n\n" +
+        "Consider:\n" +
+        "1. The original tweet's content and tone\n" +
+        "2. The suggested response tone\n" +
+        "3. The engagement goals\n" +
+        "4. Platform best practices\n\n" +
+        "{format_instructions}"
+    ).format({
+        format_instructions: responseParser.getFormatInstructions()
+    });
+
+    const engagementPrompt = ChatPromptTemplate.fromMessages([
+        new SystemMessage(engagementSystemPrompt),
+        ["human", "Evaluate this tweet and provide your structured decision: {tweet}"]
+    ]);
+
+    const tonePrompt = ChatPromptTemplate.fromMessages([
+        new SystemMessage(toneSystemPrompt),
+        ["human", "Analyze the tone for this tweet and suggest a response tone: {tweet}"]
+    ]);
+
+    const responsePrompt = ChatPromptTemplate.fromMessages([
+        new SystemMessage(responseSystemPrompt),
+        ["human", "Generate a response strategy for this tweet using the suggested tone: {tweet} {tone}"]
+    ]);
+
+    const engagementNode = async (state: typeof State.State) => {
+        logger.info('Engagement Node - Evaluating tweet engagement');
+        try {
+            const lastMessage = state.messages[state.messages.length - 1];
+            const parsedContent = parseMessageContent(lastMessage.content);
+
+            if (!parsedContent.tweets || parsedContent.tweets.length === 0) {
+                logger.info('No tweets to process');
+                return { messages: [] };
+            }
+
+            const tweet = parsedContent.tweets[0];
+
+            if (state.processedTweets.has(tweet.id)) {
+                logger.info(`Tweet ${tweet.id} already processed, skipping`);
+                return { messages: [] };
+            }
+
+            const decision = await engagementPrompt
+                .pipe(config.llms.decision)
+                .pipe(engagementParser)
+                .invoke({ tweet: tweet.text });
+
+            logger.info('LLM decision:', { decision });
+
+            if (!decision.shouldEngage) {
+                await config.toolNode.invoke({
+                    messages: [new AIMessage({
+                        content: '',
+                        tool_calls: [{
+                            name: 'queue_skipped',
+                            args: {
+                                tweet,
+                                reason: decision.reason,
+                                priority: decision.priority,
+                                workflowState: { decision }
+                            },
+                            id: 'skip_call',
+                            type: 'tool_call'
+                        }]
+                    })]
+                });
+
+                return {
+                    messages: [new AIMessage({ content: JSON.stringify(decision) })],
+                    processedTweets: new Set([tweet.id])
+                };
+            }
+
+            return {
+                messages: [new AIMessage({ content: JSON.stringify({ tweet, decision }) })]
+            };
+        } catch (error) {
+            logger.error('Error in engagement node:', error);
+            return { messages: [] };
+        }
+    };
+
+    const toneAnalysisNode = async (state: typeof State.State) => {
+        logger.info('Tone Analysis Node - Analyzing tweet tone');
+        try {
+            const lastMessage = state.messages[state.messages.length - 1];
+            const parsedContent = parseMessageContent(lastMessage.content);
+            const { tweet } = parsedContent;
+
+            const toneAnalysis = await tonePrompt
+                .pipe(config.llms.tone)
+                .pipe(toneParser)
+                .invoke({ tweet: tweet.text });
+
+            logger.info('Tone analysis:', { toneAnalysis });
+
+            return {
+                messages: [new AIMessage({ content: JSON.stringify({ tweet, toneAnalysis }) })]
+            };
+        } catch (error) {
+            logger.error('Error in tone analysis node:', error);
+            return { messages: [] };
+        }
+    };
+
+    const responseGenerationNode = async (state: typeof State.State) => {
+        logger.info('Response Generation Node - Creating response strategy');
+        try {
+            const lastMessage = state.messages[state.messages.length - 1];
+            const parsedContent = parseMessageContent(lastMessage.content);
+            const { tweet, toneAnalysis } = parsedContent;
+
+            const responseStrategy = await responsePrompt
+                .pipe(config.llms.response)
+                .pipe(responseParser)
+                .invoke({
+                    tweet: tweet.text,
+                    tone: toneAnalysis.suggestedTone
+                });
+
+            logger.info('Response strategy:', { responseStrategy });
+
+            return {
+                messages: [new AIMessage({ content: JSON.stringify({ tweet, toneAnalysis, responseStrategy }) })]
+            };
+        } catch (error) {
+            logger.error('Error in response generation node:', error);
+            return { messages: [] };
+        }
+    };
+
+    return {
+        searchNode,
+        engagementNode,
+        toneAnalysisNode,
+        responseGenerationNode
+    };
+};
+
+const shouldContinue = (state: typeof State.State) => {
+    const lastMessage = state.messages[state.messages.length - 1];
+    const content = parseMessageContent(lastMessage.content);
+    return content.shouldEngage ? 'analyzeNode' : END;
+};
+
+// Workflow creation function
+const createWorkflow = async (nodes: Awaited<ReturnType<typeof createNodes>>) => {
+    return new StateGraph(State)
+        .addNode('searchNode', nodes.searchNode)
+        .addNode('engagementNode', nodes.engagementNode)
+        .addNode('analyzeNode', nodes.toneAnalysisNode)
+        .addNode('generateNode', nodes.responseGenerationNode)
+        .addEdge(START, 'searchNode')
+        .addEdge('searchNode', 'engagementNode')
+        .addConditionalEdges('engagementNode', shouldContinue)
+        .addConditionalEdges('analyzeNode', shouldContinue)
+        .addConditionalEdges('generateNode', shouldContinue);
+};
+
+// Workflow runner type
+type WorkflowRunner = Readonly<{
+    runWorkflow: () => Promise<unknown>;
+}>;
+
+// Create workflow runner
+const createWorkflowRunner = async (): Promise<WorkflowRunner> => {
+    const workflowConfig = await createWorkflowConfig();
+    const nodes = await createNodes(workflowConfig);
+    const workflow = await createWorkflow(nodes);
+    const memoryStore = new MemorySaver();
+    const app = workflow.compile({ checkpointer: memoryStore });
+
+    return {
+        runWorkflow: async () => {
+            const threadId = `workflow_${Date.now()}`;
+            logger.info('Starting tweet response workflow', { threadId });
+
+            const config = {
+                configurable: {
+                    thread_id: threadId
+                }
+            };
+
+            const stream = await app.stream({}, config);
+            let finalState = {};
+
+            for await (const state of stream) {
+                finalState = state;
+            }
+
+            logger.info('Workflow completed', { threadId });
+            return finalState;
+        }
+    };
+};
+
+// Export a single async function to get the workflow runner
+export const getWorkflowRunner = (() => {
+    let runnerPromise: Promise<WorkflowRunner> | null = null;
+
+    return () => {
+        if (!runnerPromise) {
+            runnerPromise = createWorkflowRunner();
+        }
+        return runnerPromise;
+    };
+})();
+
+// Export the run function for external use
+export const runWorkflow = async () => {
+    const runner = await getWorkflowRunner();
+    return runner.runWorkflow();
 };

@@ -64,23 +64,87 @@ export const searchTweets = async (
     sinceId?: string
 ): Promise<Tweet[]> => {
     return withRateLimitRetry(async () => {
-        const query = accounts.map(account => `from:${account}`).join(' OR ');
+        try {
+            if (!accounts || accounts.length === 0) {
+                logger.error('No accounts provided for search');
+                return [];
+            }
 
-        const tweets = await client.v2.search(query, {
-            'tweet.fields': ['author_id', 'created_at'],
-            since_id: sinceId,
-            max_results: 10
-        });
+            // Build query with proper Twitter syntax
+            const query = accounts.map(account => `from:${account}`).join(' OR ');
+            const startTime = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
 
-        return tweets.tweets
-            .filter((tweet): tweet is TweetV2 & { author_id: string; created_at: string } =>
-                tweet.author_id !== undefined && tweet.created_at !== undefined)
-            .map((tweet) => ({
-                id: tweet.id,
-                text: tweet.text,
-                authorId: tweet.author_id,
-                createdAt: tweet.created_at
-            }));
+            // Enhanced debug logging
+            logger.info('Twitter API search parameters:', {
+                query,
+                sinceId,
+                startTime,
+                accountsCount: accounts.length,
+                accounts: accounts,
+                searchConfig: {
+                    'tweet.fields': ['author_id', 'created_at'],
+                    since_id: sinceId,
+                    max_results: 10,
+                    start_time: startTime
+                }
+            });
+
+            logger.info('Making Twitter API search request...');
+            const tweets = await client.v2.search(query, {
+                'tweet.fields': ['author_id', 'created_at'],
+                since_id: sinceId,
+                max_results: 10,
+                start_time: startTime
+            });
+
+            // Log raw response
+            logger.info('Twitter API raw response:', {
+                meta: tweets.meta,
+                includes: tweets.includes,
+                errors: tweets.errors,
+                tweetCount: tweets.tweets?.length || 0,
+                accountDistribution: tweets.tweets?.reduce((acc, t) => {
+                    acc[t.author_id!] = (acc[t.author_id!] || 0) + 1;
+                    return acc;
+                }, {} as Record<string, number>),
+                rawTweets: tweets.tweets?.map(t => ({
+                    id: t.id,
+                    text: t.text?.substring(0, 50) + '...',
+                    author_id: t.author_id
+                }))
+            });
+
+            const mappedTweets = tweets.tweets
+                .filter((tweet): tweet is TweetV2 & { author_id: string; created_at: string } =>
+                    tweet.author_id !== undefined && tweet.created_at !== undefined)
+                .map((tweet) => ({
+                    id: tweet.id,
+                    text: tweet.text,
+                    authorId: tweet.author_id,
+                    createdAt: tweet.created_at
+                }));
+
+            logger.info('Tweet processing complete:', {
+                totalTweets: tweets.tweets.length,
+                validTweets: mappedTweets.length,
+                accountDistribution: mappedTweets.reduce((acc, t) => {
+                    acc[t.authorId] = (acc[t.authorId] || 0) + 1;
+                    return acc;
+                }, {} as Record<string, number>),
+                firstTweetText: mappedTweets[0]?.text?.substring(0, 50) + '...' || 'No tweets'
+            });
+
+            return mappedTweets;
+        } catch (error: any) {
+            logger.error('Error in searchTweets:', {
+                errorMessage: error?.message || 'Unknown error',
+                errorData: error?.data || {},
+                errorType: error?.constructor?.name || 'Unknown',
+                accounts,
+                sinceId
+            });
+            throw error;
+        }
     });
 };
 

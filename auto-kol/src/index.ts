@@ -1,103 +1,33 @@
 import express from 'express';
-import { TwitterApiReadWrite } from 'twitter-api-v2';
 import { config } from './config';
-import { createTwitterClient, searchTweets, replyToTweet } from './services/twitter/api';
 import { createLogger } from './utils/logger';
-import { addToQueue, getAllPendingResponses, updateResponseStatus, getAllSkippedTweets, getSkippedTweet, moveToQueue, addToSkipped } from './services/queue';
+import { getAllPendingResponses, updateResponseStatus, getAllSkippedTweets, getSkippedTweet, moveToQueue } from './services/queue';
 import { runWorkflow } from './services/agents/workflow';
-import { v4 as uuidv4 } from 'uuid';
+import { createTwitterClient, replyToTweet } from './services/twitter/api';
 
 const logger = createLogger('app');
 const app = express();
 
-let lastProcessedTweetId: string | undefined;
-
-const pollTweets = async (client: TwitterApiReadWrite) => {
+// Initialize Twitter client
+const initializeTwitterClient = async () => {
     try {
-        const tweets = await searchTweets(client, config.TARGET_ACCOUNTS, lastProcessedTweetId);
-
-        for (const tweet of tweets) {
-            try {
-                const workflowResult = await runWorkflow(tweet);
-
-                if (workflowResult.engagementDecision?.shouldEngage && workflowResult.selectedResponse) {
-                    const sentiment = (() => {
-                        const tone = workflowResult.toneAnalysis?.suggestedTone.toLowerCase() || '';
-                        if (tone.includes('agree') || tone.includes('support')) return 'agree';
-                        if (tone.includes('disagree') || tone.includes('counter')) return 'disagree';
-                        return 'neutral';
-                    })() as 'agree' | 'disagree' | 'neutral';
-
-                    const queuedResponse = {
-                        id: uuidv4(),
-                        tweet,
-                        response: {
-                            content: workflowResult.selectedResponse.selectedResponse,
-                            confidence: workflowResult.selectedResponse.confidence,
-                            sentiment,
-                            references: workflowResult.alternatives?.map(alt => alt.strategy) || []
-                        },
-                        status: 'pending' as const,
-                        createdAt: new Date(),
-                        updatedAt: new Date(),
-                        workflowState: workflowResult
-                    };
-
-                    addToQueue(queuedResponse);
-                    logger.info('Response queued for approval', {
-                        tweetId: tweet.id,
-                        queuedId: queuedResponse.id,
-                        priority: workflowResult.engagementDecision.priority,
-                        sentiment
-                    });
-                } else {
-                    const skippedTweet = {
-                        id: uuidv4(),
-                        tweet,
-                        reason: workflowResult.engagementDecision?.reason || 'No reason provided',
-                        priority: workflowResult.engagementDecision?.priority || 0,
-                        createdAt: new Date(),
-                        workflowState: workflowResult
-                    };
-
-                    addToSkipped(skippedTweet);
-                    logger.info('Tweet skipped', {
-                        tweetId: tweet.id,
-                        skippedId: skippedTweet.id,
-                        reason: skippedTweet.reason
-                    });
-                }
-
-                if (!lastProcessedTweetId || tweet.id > lastProcessedTweetId) {
-                    lastProcessedTweetId = tweet.id;
-                }
-            } catch (error) {
-                logger.error('Error processing tweet:', error);
-            }
-        }
-    } catch (error) {
-        logger.error('Error polling tweets:', error);
-    }
-};
-
-const startPolling = async () => {
-    try {
-        const client = await createTwitterClient({
+        return await createTwitterClient({
             appKey: config.TWITTER_API_KEY!,
             appSecret: config.TWITTER_API_SECRET!
         });
-
-        // Initial poll
-        await pollTweets(client);
-
-        // Set up polling interval
-        setInterval(() => pollTweets(client), config.CHECK_INTERVAL);
-
-        logger.info('Tweet polling started successfully');
-        return client;
     } catch (error) {
-        logger.error('Failed to start tweet polling:', error);
+        logger.error('Failed to initialize Twitter client:', error);
         throw error;
+    }
+};
+
+// Run workflow periodically
+const startWorkflowPolling = async () => {
+    try {
+        await runWorkflow();
+        logger.info('Workflow execution completed successfully');
+    } catch (error) {
+        logger.error('Error running workflow:', error);
     }
 };
 
@@ -116,42 +46,42 @@ const startServer = () => {
     });
 
     // Approve/reject a response
-    app.post('/responses/approve', (req, res) => {
-        (async () => {
-            try {
-                const action = req.body;
-                const updatedResponse = updateResponseStatus(action);
+    app.post('/responses/:id/approve', async (req, res) => {
+        try {
+            const { approved, feedback } = req.body;
+            const action = {
+                id: req.params.id,
+                approved,
+                feedback
+            };
 
-                if (!updatedResponse) {
-                    return res.status(404).json({ error: 'Response not found' });
-                }
-
-                if (updatedResponse.status === 'approved') {
-                    const client = await createTwitterClient({
-                        appKey: config.TWITTER_API_KEY!,
-                        appSecret: config.TWITTER_API_SECRET!
-                    });
-
-                    await replyToTweet(
-                        client,
-                        updatedResponse.tweet.id,
-                        updatedResponse.response.content
-                    );
-
-                    logger.info('Approved response sent', {
-                        tweetId: updatedResponse.tweet.id,
-                        workflowState: updatedResponse.workflowState
-                    });
-                }
-
-                res.json(updatedResponse);
-            } catch (error) {
-                logger.error('Error handling approval:', error);
-                res.status(500).json({ error: 'Failed to process approval' });
+            const updatedResponse = updateResponseStatus(action);
+            if (!updatedResponse) {
+                return res.status(404).json({ error: 'Response not found' });
             }
-        })();
+
+            if (updatedResponse.status === 'approved') {
+                const client = await initializeTwitterClient();
+                await replyToTweet(
+                    client,
+                    updatedResponse.tweet.id,
+                    updatedResponse.response.content
+                );
+
+                logger.info('Response sent successfully', {
+                    tweetId: updatedResponse.tweet.id,
+                    responseId: updatedResponse.id
+                });
+            }
+
+            res.json(updatedResponse);
+        } catch (error) {
+            logger.error('Error handling response approval:', error);
+            res.status(500).json({ error: 'Failed to process approval' });
+        }
     });
 
+    // Get workflow state for a response
     app.get('/responses/:id/workflow', (req, res) => {
         const response = getAllPendingResponses().find(r => r.id === req.params.id);
         if (!response) {
@@ -175,7 +105,7 @@ const startServer = () => {
         res.json(skipped);
     });
 
-    // Move skipped tweet to queue with new response
+    // Move skipped tweet to response queue
     app.post('/tweets/skipped/:id/queue', async (req, res) => {
         try {
             const skipped = getSkippedTweet(req.params.id);
@@ -183,17 +113,26 @@ const startServer = () => {
                 return res.status(404).json({ error: 'Skipped tweet not found' });
             }
 
-            const queuedResponse = {
-                id: uuidv4(),
+            const { response } = req.body;
+            if (!response) {
+                return res.status(400).json({ error: 'Response is required' });
+            }
+
+            const queuedResponse = await moveToQueue(skipped.id, {
+                id: skipped.id,
                 tweet: skipped.tweet,
-                response: req.body.response,
-                status: 'pending' as const,
+                response: {
+                    content: response.content,
+                    sentiment: response.sentiment,
+                    confidence: response.confidence,
+                    references: response.references
+                },
+                workflowState: skipped.workflowState,
                 createdAt: new Date(),
                 updatedAt: new Date(),
-                workflowState: skipped.workflowState
-            };
+                status: 'pending'
+            });
 
-            await moveToQueue(skipped.id, queuedResponse);
             res.json(queuedResponse);
         } catch (error) {
             logger.error('Error moving skipped tweet to queue:', error);
@@ -201,20 +140,31 @@ const startServer = () => {
         }
     });
 
+    // Start server
     app.listen(config.PORT, () => {
         logger.info(`Server running on port ${config.PORT}`);
     });
 };
 
+// Main application startup
 const main = async () => {
     try {
+        // Initialize server
         startServer();
-        await startPolling();
-        logger.info('Application started successfully');
+
+        // Start periodic workflow execution
+        await startWorkflowPolling();
+        setInterval(startWorkflowPolling, config.CHECK_INTERVAL);
+
+        logger.info('Application started successfully', {
+            checkInterval: config.CHECK_INTERVAL,
+            port: config.PORT
+        });
     } catch (error) {
         logger.error('Failed to start application:', error);
         process.exit(1);
     }
 };
 
+// Start the application
 main(); 

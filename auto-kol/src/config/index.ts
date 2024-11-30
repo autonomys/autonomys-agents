@@ -28,5 +28,5 @@ export const config = {
     NODE_ENV: process.env.NODE_ENV || 'development',
 
     // Target Accounts to Monitor
-    TARGET_ACCOUNTS: (process.env.TARGET_ACCOUNTS || '').split(','),
+    TARGET_ACCOUNTS: (process.env.TARGET_ACCOUNTS || '').split(',').map(account => account.trim()),
 }; 
