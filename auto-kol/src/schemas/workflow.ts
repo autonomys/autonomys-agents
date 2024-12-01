@@ -33,9 +33,13 @@ export const responseSchema = z.object({
 });
 
 export const queueActionSchema = z.object({
-    tweet: z.any(),
-    response: z.string(),
-    workflowState: z.any(),
+    tweet: z.object({
+        id: z.string(),
+        text: z.string(),
+        authorId: z.string(),
+        createdAt: z.string()
+    }),
     reason: z.string().optional(),
-    priority: z.number().optional()
+    priority: z.number().optional(),
+    workflowState: z.record(z.any()).optional()
 }); 

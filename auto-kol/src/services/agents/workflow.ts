@@ -137,7 +137,13 @@ const createNodes = async (config: WorkflowConfig) => {
             logger.info(`Found ${validatedResult.tweets.length} tweets`);
 
             return {
-                messages: [new AIMessage({ content: JSON.stringify(validatedResult) })],
+                messages: [new AIMessage({
+                    content: JSON.stringify({
+                        tweets: validatedResult.tweets,
+                        currentTweetIndex: 0,
+                        lastProcessedId: validatedResult.lastProcessedId
+                    })
+                })],
                 lastProcessedId: validatedResult.lastProcessedId || undefined
             };
         } catch (error) {
@@ -215,16 +221,25 @@ const createNodes = async (config: WorkflowConfig) => {
             const lastMessage = state.messages[state.messages.length - 1];
             const parsedContent = parseMessageContent(lastMessage.content);
 
-            if (!parsedContent.tweets || parsedContent.tweets.length === 0) {
-                logger.info('No tweets to process');
+            if (!parsedContent.tweets ||
+                parsedContent.currentTweetIndex >= parsedContent.tweets.length) {
+                logger.info('No more tweets to process');
                 return { messages: [] };
             }
 
-            const tweet = parsedContent.tweets[0];
+            const tweet = parsedContent.tweets[parsedContent.currentTweetIndex];
 
             if (state.processedTweets.has(tweet.id)) {
-                logger.info(`Tweet ${tweet.id} already processed, skipping`);
-                return { messages: [] };
+                logger.info(`Tweet ${tweet.id} already processed, moving to next`);
+                return {
+                    messages: [new AIMessage({
+                        content: JSON.stringify({
+                            tweets: parsedContent.tweets,
+                            currentTweetIndex: parsedContent.currentTweetIndex + 1,
+                            lastProcessedId: parsedContent.lastProcessedId
+                        })
+                    })]
+                };
             }
 
             const decision = await engagementPrompt
@@ -235,15 +250,25 @@ const createNodes = async (config: WorkflowConfig) => {
             logger.info('LLM decision:', { decision });
 
             if (!decision.shouldEngage) {
-                await config.toolNode.invoke({
+                logger.info('Queueing skipped tweet to review queue:', { tweetId: tweet.id });
+
+                // Ensure tweet object matches schema
+                const tweetData = {
+                    id: tweet.id,
+                    text: tweet.text,
+                    authorId: tweet.authorId,
+                    createdAt: typeof tweet.createdAt === 'string' ? tweet.createdAt : tweet.createdAt.toISOString()
+                };
+
+                const toolResult = await config.toolNode.invoke({
                     messages: [new AIMessage({
                         content: '',
                         tool_calls: [{
                             name: 'queue_skipped',
                             args: {
-                                tweet,
+                                tweet: tweetData,  // Use the properly formatted tweet data
                                 reason: decision.reason,
-                                priority: decision.priority,
+                                priority: decision.priority || 0,  // Ensure priority is a number
                                 workflowState: { decision }
                             },
                             id: 'skip_call',
@@ -252,14 +277,29 @@ const createNodes = async (config: WorkflowConfig) => {
                     })]
                 });
 
+                logger.info('Queue skipped result:', toolResult);
+
                 return {
-                    messages: [new AIMessage({ content: JSON.stringify(decision) })],
+                    messages: [new AIMessage({
+                        content: JSON.stringify({
+                            tweets: parsedContent.tweets,
+                            currentTweetIndex: parsedContent.currentTweetIndex + 1,
+                            lastProcessedId: parsedContent.lastProcessedId
+                        })
+                    })],
                     processedTweets: new Set([tweet.id])
                 };
             }
 
             return {
-                messages: [new AIMessage({ content: JSON.stringify({ tweet, decision }) })]
+                messages: [new AIMessage({
+                    content: JSON.stringify({
+                        tweets: parsedContent.tweets,
+                        currentTweetIndex: parsedContent.currentTweetIndex,
+                        tweet,
+                        decision
+                    })
+                })]
             };
         } catch (error) {
             logger.error('Error in engagement node:', error);
@@ -272,7 +312,7 @@ const createNodes = async (config: WorkflowConfig) => {
         try {
             const lastMessage = state.messages[state.messages.length - 1];
             const parsedContent = parseMessageContent(lastMessage.content);
-            const { tweet } = parsedContent;
+            const { tweet, tweets, currentTweetIndex } = parsedContent;
 
             const toneAnalysis = await tonePrompt
                 .pipe(config.llms.tone)
@@ -282,7 +322,14 @@ const createNodes = async (config: WorkflowConfig) => {
             logger.info('Tone analysis:', { toneAnalysis });
 
             return {
-                messages: [new AIMessage({ content: JSON.stringify({ tweet, toneAnalysis }) })]
+                messages: [new AIMessage({
+                    content: JSON.stringify({
+                        tweets,
+                        currentTweetIndex,
+                        tweet,
+                        toneAnalysis
+                    })
+                })]
             };
         } catch (error) {
             logger.error('Error in tone analysis node:', error);
@@ -295,7 +342,7 @@ const createNodes = async (config: WorkflowConfig) => {
         try {
             const lastMessage = state.messages[state.messages.length - 1];
             const parsedContent = parseMessageContent(lastMessage.content);
-            const { tweet, toneAnalysis } = parsedContent;
+            const { tweet, toneAnalysis, tweets, currentTweetIndex } = parsedContent;
 
             const responseStrategy = await responsePrompt
                 .pipe(config.llms.response)
@@ -327,9 +374,16 @@ const createNodes = async (config: WorkflowConfig) => {
                 })]
             });
 
-            // Add tweet to processed set and return state update
+            // Move to next tweet and add current to processed set
             return {
-                messages: [new AIMessage({ content: JSON.stringify({ tweet, toneAnalysis, responseStrategy }) })],
+                messages: [new AIMessage({
+                    content: JSON.stringify({
+                        tweets,
+                        currentTweetIndex: currentTweetIndex + 1,
+                        lastProcessedId: tweet.id,
+                        responseStrategy
+                    })
+                })],
                 processedTweets: new Set([tweet.id])
             };
         } catch (error) {
@@ -350,14 +404,16 @@ const shouldContinue = (state: typeof State.State) => {
     const lastMessage = state.messages[state.messages.length - 1];
     const content = parseMessageContent(lastMessage.content);
 
-    // If we have a responseStrategy, we've completed the workflow for this tweet
-    if (content.responseStrategy) {
+    // If we have no tweets or finished processing all tweets, end workflow
+    if (!content.tweets || content.currentTweetIndex >= content.tweets.length) {
         return END;
     }
 
-    // If engagement decision is false, end the workflow
-    if (content.decision && !content.decision.shouldEngage) {
-        return END;
+    // If this is a completed tweet (has responseStrategy or was skipped), 
+    // go back to engagement node for next tweet
+    if (content.responseStrategy ||
+        (content.decision && !content.decision.shouldEngage)) {
+        return 'engagementNode';
     }
 
     // If we have toneAnalysis, move to generate response
@@ -370,7 +426,7 @@ const shouldContinue = (state: typeof State.State) => {
         return 'analyzeNode';
     }
 
-    return END;
+    return 'engagementNode';
 };
 
 // Workflow creation function
@@ -384,7 +440,7 @@ const createWorkflow = async (nodes: Awaited<ReturnType<typeof createNodes>>) =>
         .addEdge('searchNode', 'engagementNode')
         .addConditionalEdges('engagementNode', shouldContinue)
         .addConditionalEdges('analyzeNode', shouldContinue)
-        .addConditionalEdges('generateNode', () => END);
+        .addConditionalEdges('generateNode', shouldContinue);  // Allow generate node to continue the cycle
 };
 
 // Workflow runner type

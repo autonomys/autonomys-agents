@@ -126,7 +126,17 @@ export const createTools = (client: TwitterApiReadWrite) => {
                     workflowState: input.workflowState
                 };
 
+                logger.info('Queueing skipped tweet:', {
+                    id,
+                    tweetId: input.tweet.id,
+                    reason: input.reason,
+                    priority: input.priority
+                });
+
                 addToSkipped(skippedTweet);
+
+                logger.info('Successfully queued skipped tweet:', { id });
+
                 return {
                     success: true,
                     id,
