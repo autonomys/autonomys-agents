@@ -307,8 +307,30 @@ const createNodes = async (config: WorkflowConfig) => {
 
             logger.info('Response strategy:', { responseStrategy });
 
+            // Queue the response
+            await config.toolNode.invoke({
+                messages: [new AIMessage({
+                    content: '',
+                    tool_calls: [{
+                        name: 'queue_response',
+                        args: {
+                            tweet,
+                            response: responseStrategy.content,
+                            workflowState: {
+                                toneAnalysis,
+                                responseStrategy
+                            }
+                        },
+                        id: 'queue_response_call',
+                        type: 'tool_call'
+                    }]
+                })]
+            });
+
+            // Add tweet to processed set and return state update
             return {
-                messages: [new AIMessage({ content: JSON.stringify({ tweet, toneAnalysis, responseStrategy }) })]
+                messages: [new AIMessage({ content: JSON.stringify({ tweet, toneAnalysis, responseStrategy }) })],
+                processedTweets: new Set([tweet.id])
             };
         } catch (error) {
             logger.error('Error in response generation node:', error);
@@ -327,7 +349,28 @@ const createNodes = async (config: WorkflowConfig) => {
 const shouldContinue = (state: typeof State.State) => {
     const lastMessage = state.messages[state.messages.length - 1];
     const content = parseMessageContent(lastMessage.content);
-    return content.shouldEngage ? 'analyzeNode' : END;
+
+    // If we have a responseStrategy, we've completed the workflow for this tweet
+    if (content.responseStrategy) {
+        return END;
+    }
+
+    // If engagement decision is false, end the workflow
+    if (content.decision && !content.decision.shouldEngage) {
+        return END;
+    }
+
+    // If we have toneAnalysis, move to generate response
+    if (content.toneAnalysis) {
+        return 'generateNode';
+    }
+
+    // If we have an engagement decision and should engage, move to tone analysis
+    if (content.decision && content.decision.shouldEngage) {
+        return 'analyzeNode';
+    }
+
+    return END;
 };
 
 // Workflow creation function
@@ -341,7 +384,7 @@ const createWorkflow = async (nodes: Awaited<ReturnType<typeof createNodes>>) =>
         .addEdge('searchNode', 'engagementNode')
         .addConditionalEdges('engagementNode', shouldContinue)
         .addConditionalEdges('analyzeNode', shouldContinue)
-        .addConditionalEdges('generateNode', shouldContinue);
+        .addConditionalEdges('generateNode', () => END);
 };
 
 // Workflow runner type
