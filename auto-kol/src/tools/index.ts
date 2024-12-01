@@ -7,6 +7,7 @@ import { createLogger } from '../utils/logger';
 import { v4 as uuidv4 } from 'uuid';
 import { config } from '../config';
 import { z } from 'zod';
+import { WorkflowState } from '../types/workflow';
 
 const logger = createLogger('workflow-tools');
 
@@ -86,14 +87,14 @@ export const createTools = (client: TwitterApiReadWrite) => {
                     id,
                     tweet: input.tweet,
                     response: {
-                        content: input.response,
+                        content: input.tweet.text,
                         sentiment: 'neutral' as const,
                         confidence: 1
                     },
                     status: 'pending' as const,
                     createdAt: new Date(),
                     updatedAt: new Date(),
-                    workflowState: input.workflowState
+                    workflowState: input.workflowState as WorkflowState
                 };
 
                 addToQueue(queuedResponse);
@@ -123,7 +124,7 @@ export const createTools = (client: TwitterApiReadWrite) => {
                     reason: input.reason || 'No reason provided',
                     priority: input.priority || 0,
                     createdAt: new Date(),
-                    workflowState: input.workflowState
+                    workflowState: input.workflowState as WorkflowState
                 };
 
                 logger.info('Queueing skipped tweet:', {
