@@ -16,7 +16,6 @@ import {
 import { ToolNode } from '@langchain/langgraph/prebuilt';
 import { TwitterApiReadWrite } from 'twitter-api-v2';
 import { StructuredOutputParser } from 'langchain/output_parsers';
-import { z } from 'zod';
 
 const logger = createLogger('agent-workflow');
 
@@ -90,13 +89,7 @@ const createNodes = async (config: WorkflowConfig) => {
     const searchNode = async (state: typeof State.State) => {
         logger.info('Search Node - Fetching recent tweets');
         try {
-            logger.debug('Current lastProcessedId:', state.lastProcessedId);
             logger.info('Last processed id:', state.lastProcessedId);
-
-            // Log the tool call before making it
-            logger.info('Calling search_recent_tweets tool with:', {
-                lastProcessedId: state.lastProcessedId || undefined
-            });
 
             const toolResponse = await config.toolNode.invoke({
                 messages: [
@@ -141,9 +134,7 @@ const createNodes = async (config: WorkflowConfig) => {
             // Validate the search result
             const validatedResult = tweetSearchSchema.parse(searchResult);
 
-            logger.info(`Found ${validatedResult.tweets.length} tweets`, {
-                result: validatedResult
-            });
+            logger.info(`Found ${validatedResult.tweets.length} tweets`);
 
             return {
                 messages: [new AIMessage({ content: JSON.stringify(validatedResult) })],

@@ -74,7 +74,6 @@ export const searchTweets = async (
             const query = accounts.map(account => `from:${account}`).join(' OR ');
             const startTime = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
 
-            // Enhanced debug logging
             logger.info('Twitter API search parameters:', {
                 query,
                 sinceId,
@@ -97,21 +96,9 @@ export const searchTweets = async (
                 start_time: startTime
             });
 
-            // Log raw response
-            logger.info('Twitter API raw response:', {
-                meta: tweets.meta,
-                includes: tweets.includes,
-                errors: tweets.errors,
+            logger.info('Twitter API response:', {
                 tweetCount: tweets.tweets?.length || 0,
-                accountDistribution: tweets.tweets?.reduce((acc, t) => {
-                    acc[t.author_id!] = (acc[t.author_id!] || 0) + 1;
-                    return acc;
-                }, {} as Record<string, number>),
-                rawTweets: tweets.tweets?.map(t => ({
-                    id: t.id,
-                    text: t.text?.substring(0, 50) + '...',
-                    author_id: t.author_id
-                }))
+                hasErrors: tweets.errors?.length > 0
             });
 
             const mappedTweets = tweets.tweets
@@ -127,10 +114,6 @@ export const searchTweets = async (
             logger.info('Tweet processing complete:', {
                 totalTweets: tweets.tweets.length,
                 validTweets: mappedTweets.length,
-                accountDistribution: mappedTweets.reduce((acc, t) => {
-                    acc[t.authorId] = (acc[t.authorId] || 0) + 1;
-                    return acc;
-                }, {} as Record<string, number>),
                 firstTweetText: mappedTweets[0]?.text?.substring(0, 50) + '...' || 'No tweets'
             });
 

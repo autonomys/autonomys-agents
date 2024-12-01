@@ -2,16 +2,14 @@ import { DynamicStructuredTool } from '@langchain/core/tools';
 import { TwitterApiReadWrite } from 'twitter-api-v2';
 import { searchTweets } from '../services/twitter/api';
 import { addToQueue, addToSkipped } from '../services/queue';
-import { tweetSearchSchema, queueActionSchema } from '../schemas/workflow';
+import { queueActionSchema } from '../schemas/workflow';
 import { createLogger } from '../utils/logger';
 import { v4 as uuidv4 } from 'uuid';
 import { config } from '../config';
-import { Tweet } from '../types/twitter';
 import { z } from 'zod';
 
 const logger = createLogger('workflow-tools');
 
-// Tool factory to create tools with Twitter client
 export const createTools = (client: TwitterApiReadWrite) => {
     const tweetSearchTool = new DynamicStructuredTool({
         name: 'search_recent_tweets',

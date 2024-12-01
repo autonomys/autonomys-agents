@@ -1,10 +1,35 @@
 import winston from 'winston';
 import { config } from '../config';
+import util from 'util';
+
+const formatMeta = (meta: any) => {
+    const cleanMeta = Object.entries(meta)
+        .filter(([key]) => !key.startsWith('Symbol(') && key !== 'splat')
+        .reduce((acc, [key, value]) => ({ ...acc, [key]: value }), {});
+
+    if (Object.keys(cleanMeta).length === 0) return '';
+
+    if (meta[Symbol.for('splat')]?.[0]) {
+        Object.assign(cleanMeta, meta[Symbol.for('splat')][0]);
+    }
+
+    return Object.keys(cleanMeta).length
+        ? '\n' + util.inspect(cleanMeta, {
+            colors: true,
+            depth: 4,
+            compact: false,
+            breakLength: 80
+        })
+        : '';
+};
 
 const createFormat = () =>
     winston.format.combine(
         winston.format.timestamp(),
-        winston.format.json()
+        winston.format.printf(({ level, message, context, timestamp, ...meta }) => {
+            const metaStr = formatMeta(meta);
+            return `${timestamp} [${context}] ${level}: ${message}${metaStr}`;
+        })
     );
 
 const createTransports = () => [
@@ -22,8 +47,11 @@ const addConsoleTransport = (logger: winston.Logger): winston.Logger => {
         logger.add(
             new winston.transports.Console({
                 format: winston.format.combine(
-                    winston.format.colorize(),
-                    winston.format.simple()
+                    winston.format.colorize({ level: true }),
+                    winston.format.printf(({ level, message, context, timestamp, ...meta }) => {
+                        const metaStr = formatMeta(meta);
+                        return `\x1b[32m${timestamp} [${context}]\x1b[0m ${level}: ${message}${metaStr}`;
+                    })
                 )
             })
         );
