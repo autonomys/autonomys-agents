@@ -1,5 +1,5 @@
 import { END, MemorySaver, StateGraph, START, Annotation } from '@langchain/langgraph';
-import { AIMessage, BaseMessage, HumanMessage, SystemMessage } from '@langchain/core/messages';
+import { AIMessage, BaseMessage, SystemMessage } from '@langchain/core/messages';
 import { ChatOpenAI } from '@langchain/openai';
 import { ChatPromptTemplate, PromptTemplate } from '@langchain/core/prompts';
 import { MessageContent } from '@langchain/core/messages';
@@ -168,7 +168,7 @@ const createNodes = async (config: WorkflowConfig) => {
         "You are a strategic social media engagement advisor. Your task is to evaluate tweets and decide whether they warrant a response.\n\n" +
         "Evaluate each tweet based on:\n" +
         "1. Relevance to AI, blockchain, or tech innovation\n" +
-        "2. Potential for meaningful discussion\n" +
+        "2. Potential for meaningful discussion and argumentation\n" +
         "3. Author's influence and engagement level\n" +
         "4. Tweet's recency and context\n\n" +
         "{format_instructions}"
@@ -178,7 +178,7 @@ const createNodes = async (config: WorkflowConfig) => {
 
     const toneSystemPrompt = await PromptTemplate.fromTemplate(
         "You are an expert in social media tone analysis. Your task is to analyze the tone of tweets and suggest the best tone for responses.\n\n" +
-        "Consider:\n" +
+        "Feel free to be argumentative. Consider:\n" +
         "1. The original tweet's tone and context\n" +
         "2. The author's typical communication style\n" +
         "3. The topic and its sensitivity\n" +
@@ -189,7 +189,8 @@ const createNodes = async (config: WorkflowConfig) => {
     });
 
     const responseSystemPrompt = await PromptTemplate.fromTemplate(
-        "You are an expert in crafting engaging social media responses. Your task is to generate response strategies for tweets.\n\n" +
+        "As a crypto x AI KOL, you are an expert in crafting engaging social media responses. You are known to be an autonomous agent that can be quite argumentative.\n\n" +
+        "Your task is to generate response strategies for tweets, being argumentative and somewhat cold.\n\n" +
         "Consider:\n" +
         "1. The original tweet's content and tone\n" +
         "2. The suggested response tone\n" +
@@ -416,14 +417,13 @@ const shouldContinue = (state: typeof State.State) => {
         return 'engagementNode';
     }
 
-    // If we have toneAnalysis, move to generate response
-    if (content.toneAnalysis) {
-        return 'generateNode';
-    }
-
     // If we have an engagement decision and should engage, move to tone analysis
     if (content.decision && content.decision.shouldEngage) {
         return 'analyzeNode';
+    }
+    // If we have toneAnalysis, move to generate response
+    if (content.toneAnalysis) {
+        return 'generateNode';
     }
 
     return 'engagementNode';
@@ -440,7 +440,7 @@ const createWorkflow = async (nodes: Awaited<ReturnType<typeof createNodes>>) =>
         .addEdge('searchNode', 'engagementNode')
         .addConditionalEdges('engagementNode', shouldContinue)
         .addConditionalEdges('analyzeNode', shouldContinue)
-        .addConditionalEdges('generateNode', shouldContinue);  // Allow generate node to continue the cycle
+        .addConditionalEdges('generateNode', shouldContinue);
 };
 
 // Workflow runner type
