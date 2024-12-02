@@ -1,4 +1,4 @@
-import { TwitterApi, TweetV2, TwitterApiReadWrite } from 'twitter-api-v2';
+import { TwitterApi, TweetV2, TwitterApiReadWrite, UserV2 } from 'twitter-api-v2';
 import { TwitterCredentials, Tweet } from '../../types/twitter';
 import { createLogger } from '../../utils/logger';
 
@@ -74,48 +74,51 @@ export const searchTweets = async (
             const query = accounts.map(account => `from:${account}`).join(' OR ');
             const startTime = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
 
-            logger.info('Twitter API search parameters:', {
-                query,
-                sinceId,
-                startTime,
-                accountsCount: accounts.length,
-                accounts: accounts,
-                searchConfig: {
-                    'tweet.fields': ['author_id', 'created_at'],
-                    since_id: sinceId,
-                    max_results: 10,
-                    start_time: startTime
-                }
-            });
-
             logger.info('Making Twitter API search request...');
             const tweets = await client.v2.search(query, {
                 'tweet.fields': ['author_id', 'created_at'],
+                'user.fields': ['username', 'name'],
+                'expansions': ['author_id'],
                 since_id: sinceId,
                 max_results: 10,
                 start_time: startTime
             });
 
-            logger.info('Twitter API response:', {
-                tweetCount: tweets.tweets?.length || 0,
-                hasErrors: tweets.errors?.length > 0
+            // Extract users from the includes
+            const users = tweets.includes?.users || [];
+            const userMap = new Map<string, UserV2>();
+            users.forEach(user => {
+                if (user.id) {
+                    userMap.set(user.id, user);
+                }
             });
+            logger.info('User map:', { userMap });
 
             const mappedTweets = tweets.tweets
-                .filter((tweet): tweet is TweetV2 & { author_id: string; created_at: string } =>
-                    tweet.author_id !== undefined && tweet.created_at !== undefined)
-                .map((tweet) => ({
-                    id: tweet.id,
-                    text: tweet.text,
-                    authorId: tweet.author_id,
-                    createdAt: tweet.created_at
-                }));
+                .filter((tweet): tweet is TweetV2 & { author_id: string; created_at: string } => {
+                    const isValid = tweet.author_id !== undefined && tweet.created_at !== undefined;
+                    if (!isValid) {
+                        logger.warn('Invalid tweet data:', { tweet });
+                    }
+                    return isValid;
+                })
+                .map((tweet) => {
+                    const user = userMap.get(tweet.author_id);
+                    if (!user) {
+                        logger.warn('No user found for tweet:', {
+                            tweetId: tweet.id,
+                            authorId: tweet.author_id
+                        });
+                    }
 
-            logger.info('Tweet processing complete:', {
-                totalTweets: tweets.tweets.length,
-                validTweets: mappedTweets.length,
-                firstTweetText: mappedTweets[0]?.text?.substring(0, 50) + '...' || 'No tweets'
-            });
+                    return {
+                        id: tweet.id,
+                        text: tweet.text,
+                        authorId: tweet.author_id,
+                        authorUsername: user?.username || "unknown",
+                        createdAt: tweet.created_at
+                    };
+                });
 
             return mappedTweets;
         } catch (error: any) {

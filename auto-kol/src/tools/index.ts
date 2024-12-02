@@ -60,6 +60,7 @@ export const createTools = (client: TwitterApiReadWrite) => {
                         id: tweet.id,
                         text: tweet.text,
                         authorId: tweet.authorId,
+                        authorUsername: tweet.authorUsername,
                         createdAt: tweet.createdAt
                     })),
                     lastProcessedId: tweets[tweets.length - 1]?.id || null

@@ -5,6 +5,7 @@ export const tweetSearchSchema = z.object({
         id: z.string(),
         text: z.string(),
         authorId: z.string(),
+        authorUsername: z.string(),
         createdAt: z.string()
     })),
     lastProcessedId: z.string().nullable().optional()
@@ -37,6 +38,7 @@ export const queueActionSchema = z.object({
         id: z.string(),
         text: z.string(),
         authorId: z.string(),
+        authorUsername: z.string(),
         createdAt: z.string()
     }),
     reason: z.string().optional(),

@@ -258,6 +258,7 @@ const createNodes = async (config: WorkflowConfig) => {
                     id: tweet.id,
                     text: tweet.text,
                     authorId: tweet.authorId,
+                    authorUsername: tweet.authorUsername || 'unknown', // Ensure we have a fallback
                     createdAt: typeof tweet.createdAt === 'string' ? tweet.createdAt : tweet.createdAt.toISOString()
                 };
 
@@ -267,9 +268,9 @@ const createNodes = async (config: WorkflowConfig) => {
                         tool_calls: [{
                             name: 'queue_skipped',
                             args: {
-                                tweet: tweetData,  // Use the properly formatted tweet data
+                                tweet: tweetData,
                                 reason: decision.reason,
-                                priority: decision.priority || 0,  // Ensure priority is a number
+                                priority: decision.priority || 0,
                                 workflowState: { decision }
                             },
                             id: 'skip_call',
