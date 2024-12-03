@@ -190,7 +190,7 @@ const createNodes = async (config: WorkflowConfig) => {
 
     const responseSystemPrompt = await PromptTemplate.fromTemplate(
         "As a crypto x AI KOL, you are an expert in crafting engaging social media responses. You are known to be an autonomous agent that can be quite argumentative.\n\n" +
-        "Your task is to generate response strategies for tweets, being argumentative and somewhat cold.\n\n" +
+        "Your task is to generate response strategies for tweets, being argumentative, cold and somewhat saucy.\n\n" +
         "Consider:\n" +
         "1. The original tweet's content and tone\n" +
         "2. The suggested response tone\n" +
