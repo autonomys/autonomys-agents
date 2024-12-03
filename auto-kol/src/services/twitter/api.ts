@@ -77,14 +77,14 @@ export const searchTweets = async (
                 logger.info(`Searching tweets for account: ${account}`);
 
                 const query = `from:${account}`;
-                const startTime = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+                const startTime = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
 
                 const tweets = await client.v2.search(query, {
-                    'tweet.fields': ['author_id', 'created_at'],
+                    'tweet.fields': ['author_id', 'created_at', 'text', 'referenced_tweets'],
                     'user.fields': ['username', 'name'],
-                    'expansions': ['author_id'],
+                    'expansions': ['author_id', 'referenced_tweets.id'],
                     since_id: sinceId,
-                    max_results: 10,
+                    max_results: 20,
                     start_time: startTime
                 });
 
@@ -109,16 +109,14 @@ export const searchTweets = async (
                     })
                     .map((tweet) => {
                         const user = userMap.get(tweet.author_id);
-                        if (!user) {
-                            logger.warn('No user found for tweet:', {
-                                tweetId: tweet.id,
-                                authorId: tweet.author_id
-                            });
-                        }
+                        const referencedTweet = tweet.referenced_tweets?.[0];
+                        const fullText = referencedTweet?.type === 'retweeted' ?
+                            tweets.includes?.tweets?.find(t => t.id === referencedTweet.id)?.text || tweet.text :
+                            tweet.text;
 
                         return {
                             id: tweet.id,
-                            text: tweet.text,
+                            text: fullText,
                             authorId: tweet.author_id,
                             authorUsername: user?.username || "unknown",
                             createdAt: tweet.created_at
