@@ -88,9 +88,7 @@ export const createTools = (client: TwitterApiReadWrite) => {
                     id,
                     tweet: input.tweet,
                     response: {
-                        content: input.tweet.text,
-                        sentiment: 'neutral' as const,
-                        confidence: 1
+                        content: input.workflowState?.responseStrategy?.content,
                     },
                     status: 'pending' as const,
                     createdAt: new Date(),

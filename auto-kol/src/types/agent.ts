@@ -2,8 +2,6 @@ import { Tweet } from "./twitter";
 
 export type AgentResponse = Readonly<{
     content: string;
-    sentiment: 'agree' | 'disagree' | 'neutral';
-    confidence: number;
     references?: readonly string[];
 }>
 
