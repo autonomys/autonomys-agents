@@ -13,7 +13,9 @@ const initializeTwitterClient = async () => {
     try {
         return await createTwitterClient({
             appKey: config.TWITTER_API_KEY!,
-            appSecret: config.TWITTER_API_SECRET!
+            appSecret: config.TWITTER_API_SECRET!,
+            accessToken: config.TWITTER_ACCESS_TOKEN!,
+            accessSecret: config.TWITTER_ACCESS_SECRET!
         });
     } catch (error) {
         logger.error('Failed to initialize Twitter client:', error);
@@ -61,7 +63,14 @@ const startServer = () => {
             }
 
             if (updatedResponse.status === 'approved') {
+                logger.info('Creating Twitter client for approved response');
                 const client = await initializeTwitterClient();
+
+                logger.info('Sending reply:', {
+                    tweetId: updatedResponse.tweet.id,
+                    content: updatedResponse.response.content
+                });
+
                 await replyToTweet(
                     client,
                     updatedResponse.tweet.id,
@@ -123,8 +132,6 @@ const startServer = () => {
                 tweet: skipped.tweet,
                 response: {
                     content: response.content,
-                    sentiment: response.sentiment,
-                    confidence: response.confidence,
                     references: response.references
                 },
                 workflowState: skipped.workflowState,

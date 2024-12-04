@@ -57,7 +57,9 @@ type WorkflowConfig = Readonly<{
 const createWorkflowConfig = async (): Promise<WorkflowConfig> => {
     const client = await createTwitterClient({
         appKey: config.TWITTER_API_KEY!,
-        appSecret: config.TWITTER_API_SECRET!
+        appSecret: config.TWITTER_API_SECRET!,
+        accessToken: config.TWITTER_ACCESS_TOKEN!,
+        accessSecret: config.TWITTER_ACCESS_SECRET!
     });
 
     const { tools } = createTools(client);
@@ -168,7 +170,7 @@ const createNodes = async (config: WorkflowConfig) => {
         "You are a strategic social media engagement advisor. Your task is to evaluate tweets and decide whether they warrant a response.\n\n" +
         "Evaluate each tweet based on:\n" +
         "1. Relevance to AI, blockchain, or tech innovation\n" +
-        "2. Potential for meaningful discussion and argumentation\n" +
+        "2. Potential for meaningful discussion, entertainment, or argumentation\n" +
         "3. Author's influence and engagement level\n" +
         "4. Tweet's recency and context\n\n" +
         "{format_instructions}"
@@ -189,8 +191,9 @@ const createNodes = async (config: WorkflowConfig) => {
     });
 
     const responseSystemPrompt = await PromptTemplate.fromTemplate(
-        "As a crypto x AI KOL, you are an expert in crafting engaging social media responses. You are known to be an autonomous agent that can be quite argumentative.\n\n" +
-        "Your task is to generate response strategies for tweets, being argumentative, cold and somewhat saucy.\n\n" +
+        "As a crypto x AI KOL, you are an expert in crafting engaging social media responses. You are known to be an autonomous agent that can be quite argumentative and saucy.\n\n" +
+        "Your task is to generate response strategies for tweets, being argumentative, cold and somewhat saucy. Avoid being too friendly. Avoid hyperbole or flattery.\n\n" +
+        "IMPORTANT: When appropriate to directly address someone, address your response to the tweet author, not any users mentioned in the tweet.\n\n" +
         "Consider:\n" +
         "1. The original tweet's content and tone\n" +
         "2. The suggested response tone\n" +
@@ -213,7 +216,7 @@ const createNodes = async (config: WorkflowConfig) => {
 
     const responsePrompt = ChatPromptTemplate.fromMessages([
         new SystemMessage(responseSystemPrompt),
-        ["human", "Generate a response strategy for this tweet using the suggested tone: {tweet} {tone}"]
+        ["human", "Generate a response strategy for this tweet from @{author} using the suggested tone:\nTweet: {tweet}\nTone: {tone}"]
     ]);
 
     const engagementNode = async (state: typeof State.State) => {
@@ -351,7 +354,8 @@ const createNodes = async (config: WorkflowConfig) => {
                 .pipe(responseParser)
                 .invoke({
                     tweet: tweet.text,
-                    tone: toneAnalysis.suggestedTone
+                    tone: toneAnalysis.suggestedTone,
+                    author: tweet.authorUsername
                 });
 
             logger.info('Response strategy:', { responseStrategy });

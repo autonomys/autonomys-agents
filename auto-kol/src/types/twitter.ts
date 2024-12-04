@@ -6,7 +6,9 @@ export type Tweet = {
     readonly createdAt: string;
 }
 
-export type TwitterCredentials = Readonly<{
+export type TwitterCredentials = {
     appKey: string;
     appSecret: string;
-}>;
+    accessToken: string;
+    accessSecret: string;
+};

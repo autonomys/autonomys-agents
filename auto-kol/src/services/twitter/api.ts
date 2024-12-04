@@ -44,14 +44,16 @@ const withRateLimitRetry = async <T>(
 
 export const createTwitterClient = async (credentials: TwitterCredentials): Promise<TwitterApiReadWrite> => {
     try {
-        const appOnlyClient = new TwitterApi({
+        // Create client with user authentication
+        const client = new TwitterApi({
             appKey: credentials.appKey,
-            appSecret: credentials.appSecret
+            appSecret: credentials.appSecret,
+            accessToken: credentials.accessToken,
+            accessSecret: credentials.accessSecret,
         });
 
-        const bearerClient = await appOnlyClient.appLogin();
-        logger.info('Successfully authenticated with Twitter API');
-        return bearerClient;
+        logger.info('Creating Twitter client with user auth');
+        return client.readWrite;
     } catch (error) {
         logger.error('Failed to create Twitter client:', error);
         throw error;
@@ -77,14 +79,14 @@ export const searchTweets = async (
                 logger.info(`Searching tweets for account: ${account}`);
 
                 const query = `from:${account}`;
-                const startTime = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+                const startTime = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString();
 
                 const tweets = await client.v2.search(query, {
                     'tweet.fields': ['author_id', 'created_at', 'text', 'referenced_tweets'],
                     'user.fields': ['username', 'name'],
                     'expansions': ['author_id', 'referenced_tweets.id'],
                     since_id: sinceId,
-                    max_results: 20,
+                    max_results: 10,
                     start_time: startTime
                 });
 
@@ -154,7 +156,32 @@ export const replyToTweet = async (
     content: string
 ): Promise<void> => {
     return withRateLimitRetry(async () => {
-        await client.v2.reply(content, tweetId);
-        logger.info(`Successfully replied to tweet: ${tweetId}`);
+        try {
+            logger.info('Attempting to reply to tweet:', {
+                tweetId,
+                content,
+                hasClient: !!client,
+            });
+
+            // Try using createTweet instead of reply
+            const result = await client.v2.tweet({
+                text: content,
+                reply: {
+                    in_reply_to_tweet_id: tweetId
+                }
+            });
+
+            logger.info(`Successfully replied to tweet: ${tweetId}`, { result });
+        } catch (error: any) {
+            logger.error('Failed to reply to tweet:', {
+                tweetId,
+                content,
+                error: error.data || error,
+                status: error.status,
+                code: error.code,
+                headers: error.headers
+            });
+            throw error;
+        }
     });
 }; 
