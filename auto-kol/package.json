@@ -9,10 +9,11 @@
         "dev": "ts-node-dev --respawn src/index.ts"
     },
     "dependencies": {
-        "@langchain/core": "0.3.19",
-        "@langchain/openai": "0.3.14",
-        "@langchain/langgraph": "0.2.23",
         "@langchain/community": "0.3.16",
+        "@langchain/core": "0.3.19",
+        "@langchain/langgraph": "0.2.23",
+        "@langchain/openai": "0.3.14",
+        "agent-twitter-client": "^0.0.16",
         "dotenv": "^16.3.1",
         "express": "4.21.1",
         "twitter-api-v2": "^1.15.1",
