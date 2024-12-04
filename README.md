@@ -68,6 +68,22 @@ Key features:
 - Modular design with separate nodes for research, generation, and reflection
 - Type-safe schemas using Zod for better data validation
 
+### Auto KOL (Key Opinion Leader)
+
+An intelligent agent framework designed to engage with thought leaders on Twitter through automated, context-aware interactions.
+
+Key features:
+- Automated tweet monitoring and response generation
+- Multi-step workflow with engagement decision making
+- Tone analysis and adaptive response strategies
+- Human-in-the-loop approval system
+- Rate limit handling and queue management
+
+Technologies:
+- Agent Framework: LangChain.js with LangGraph
+- Twitter API integration
+- Express.js backend
+
 ## Project Status
 
 This project is in its early experimental stages. We are actively exploring concepts, testing ideas, and iterating on designs. As such, the codebase and documentation may change rapidly and significantly.
