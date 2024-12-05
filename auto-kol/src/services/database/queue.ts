@@ -36,16 +36,15 @@ export async function addToQueue(response: QueuedResponse): Promise<void> {
                 throw error;
             }
         }
-
-        // Then add the pending response
+       
         await addPendingResponse({
             id: response.id,
             tweetId: response.tweet.id,
             content: response.response.content,
             tone: response.workflowState.toneAnalysis?.suggestedTone || 'neutral',
-            strategy: response.workflowState.engagementDecision?.reason || 'direct',
-            estimatedImpact: response.workflowState.engagementDecision?.priority || 5,
-            confidence: response.workflowState.selectedResponse?.confidence || 0.5
+            strategy: response.workflowState.responseStrategy?.strategy || 'direct',
+            estimatedImpact: response.workflowState.responseStrategy?.estimatedImpact || 5,
+            confidence: response.workflowState.responseStrategy?.confidence || 0.5
         });
 
         logger.info(`Added response to queue: ${response.id}`);

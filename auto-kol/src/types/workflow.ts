@@ -26,6 +26,14 @@ export type ResponseSelection = Readonly<{
     confidence: number;
 }>;
 
+export type ResponseStrategy = Readonly<{
+    confidence: number;
+    content: string;
+    tone: string;
+    strategy: string;
+    estimatedImpact: number;
+}>;
+
 // State management for the workflow
 export type WorkflowState = Readonly<{
     tweet: Tweet;
@@ -34,5 +42,6 @@ export type WorkflowState = Readonly<{
     toneAnalysis?: ToneAnalysis;
     alternatives?: ResponseAlternative[];
     selectedResponse?: ResponseSelection;
+    responseStrategy?: ResponseStrategy;
     previousInteractions: readonly string[];
 }>; 
