@@ -4,7 +4,7 @@ import { createLogger } from './utils/logger';
 import { getAllPendingResponses, updateResponseStatus, getAllSkippedTweets, getSkippedTweet, moveToQueue } from './services/queue';
 import { runWorkflow } from './services/agents/workflow';
 import { createTwitterClient, replyToTweet } from './services/twitter/api';
-import { initializeDatabase, initializeSchema } from './database';
+import { initializeSchema, initializeDefaultKOLs } from './database';
 
 const logger = createLogger('app');
 const app = express();
@@ -158,7 +158,7 @@ const startServer = () => {
 const main = async () => {
     try {
         await initializeSchema();
-
+        await initializeDefaultKOLs();
         // Initialize server
         startServer();
 
@@ -176,5 +176,4 @@ const main = async () => {
     }
 };
 
-// Start the application
 main(); 

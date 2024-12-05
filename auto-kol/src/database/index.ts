@@ -5,7 +5,8 @@ import fs from 'fs/promises';
 import path from 'path';
 import { v4 as generateId } from 'uuid';
 import { createLogger } from '../utils/logger';
-import { sleepSecs } from 'twitter-api-v2/dist/esm/v1/media-helpers.v1';
+import { KOL } from '../types/kol';
+import { config } from '../config';
 
 const logger = createLogger('database');
 
@@ -54,11 +55,74 @@ export async function closeDatabase() {
 export async function addKOL(kol: {
     id: string;
     username: string;
-}) {
+}): Promise<void> {
     const db = await initializeDatabase();
-    return db.run(`
-        INSERT INTO kol_accounts (id, username) VALUES (?, ?)
-    `, [kol.id, kol.username]);
+    
+    try {
+        await db.run(`
+            INSERT INTO kol_accounts (
+                id, 
+                username, 
+                created_at, 
+                updated_at
+            ) VALUES (?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+        `, [kol.id, kol.username]);
+        
+        logger.info(`Added KOL account: ${kol.username}`);
+    } catch (error: any) {
+        if (error?.code === 'SQLITE_CONSTRAINT' && error?.message?.includes('UNIQUE')) {
+            logger.warn(`KOL account already exists: ${kol.username}`);
+            return;
+        }
+        logger.error(`Failed to add KOL account: ${kol.username}`, error);
+        throw new Error(`Failed to add KOL account: ${error.message}`);
+    }
+}
+
+export async function getKOLAccounts(): Promise<KOL[]> {
+    const db = await initializeDatabase();
+    try {
+        const accounts = await db.all(`
+            SELECT id, username, created_at, updated_at
+            FROM kol_accounts
+            ORDER BY created_at DESC
+        `);
+        
+        return accounts.map(account => ({
+            id: account.id,
+            username: account.username,
+            createdAt: new Date(account.created_at),
+            updatedAt: new Date(account.updated_at)
+        }));
+    } catch (error) {
+        logger.error('Failed to get KOL accounts:', error);
+        throw error;
+    }
+}
+
+export async function initializeDefaultKOLs(): Promise<void> {
+    const logger = createLogger('database');
+    const { TARGET_ACCOUNTS } = config;
+    
+    if (!TARGET_ACCOUNTS.length) {
+        logger.warn('No target accounts configured in environment variables');
+        return;
+    }
+
+    logger.info(`Initializing ${TARGET_ACCOUNTS.length} default KOL accounts`);
+    
+    for (const username of TARGET_ACCOUNTS) {
+        if (!username) continue;
+        
+        try {
+            await addKOL({
+                id: generateId(),
+                username: username.replace('@', '')
+            });
+        } catch (error) {
+            continue;
+        }
+    }
 }
 
 export async function addPendingResponse(response: PendingResponse) {
