@@ -60,9 +60,9 @@ export async function addToSkipped(skipped: SkippedTweet): Promise<void> {
         try {
             await addTweet({
                 id: skipped.tweet.id,
-            authorId: skipped.tweet.authorId,
-            authorUsername: skipped.tweet.authorUsername,
-            content: skipped.tweet.text,
+                authorId: skipped.tweet.authorId,
+                authorUsername: skipped.tweet.authorUsername,
+                content: skipped.tweet.text,
                 createdAt: skipped.tweet.createdAt
             });
         } catch (error) {
@@ -78,7 +78,7 @@ export async function addToSkipped(skipped: SkippedTweet): Promise<void> {
             id: skipped.id,
             tweetId: skipped.tweet.id,
             reason: skipped.reason,
-            confidence: skipped.workflowState.engagementDecision?.priority || 0.5
+            confidence: skipped.workflowState.responseStrategy?.confidence || 0.5
         });
 
         // Update tweet status
