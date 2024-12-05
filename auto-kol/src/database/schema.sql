@@ -1,9 +1,9 @@
-CREATE TABLE kor_accounts (
+CREATE TABLE IF NOT EXISTS kor_accounts (
     id TEXT PRIMARY KEY,
     username TEXT NOT NULL
 );
 
-CREATE TABLE tweets (
+CREATE TABLE IF NOT EXISTS tweets (
     id TEXT PRIMARY KEY,
     author_id TEXT NOT NULL,
     author_username TEXT NOT NULL,
@@ -13,7 +13,7 @@ CREATE TABLE tweets (
     engagement_status TEXT CHECK(engagement_status IN ('pending', 'engaged', 'skipped')) NOT NULL
 );
 
-CREATE TABLE pending_responses (
+CREATE TABLE IF NOT EXISTS pending_responses (
     id TEXT PRIMARY KEY,
     tweet_id TEXT NOT NULL,
     content TEXT NOT NULL,
@@ -27,7 +27,7 @@ CREATE TABLE pending_responses (
     FOREIGN KEY (tweet_id) REFERENCES tweets(id)
 );
 
-CREATE TABLE skipped_tweets (
+CREATE TABLE IF NOT EXISTS skipped_tweets (
     id TEXT PRIMARY KEY,
     tweet_id TEXT NOT NULL,
     reason TEXT NOT NULL,
@@ -36,7 +36,7 @@ CREATE TABLE skipped_tweets (
     FOREIGN KEY (tweet_id) REFERENCES tweets(id)
 );
 
-CREATE TABLE sent_responses (
+CREATE TABLE IF NOT EXISTS sent_responses (
     id TEXT PRIMARY KEY,
     tweet_id TEXT NOT NULL,
     response_id TEXT NOT NULL,
@@ -46,7 +46,7 @@ CREATE TABLE sent_responses (
     FOREIGN KEY (response_id) REFERENCES pending_responses(id)
 );
 
-CREATE TABLE feedback (
+CREATE TABLE IF NOT EXISTS feedback (
     id TEXT PRIMARY KEY,
     response_id TEXT NOT NULL,
     feedback_type TEXT CHECK(feedback_type IN ('approve', 'reject', 'improve')) NOT NULL,

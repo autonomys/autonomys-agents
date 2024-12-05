@@ -4,6 +4,9 @@ import { Database } from 'sqlite/build/Database';
 import fs from 'fs/promises';
 import path from 'path';
 import { v4 as generateId } from 'uuid';
+import { createLogger } from '../utils/logger';
+
+const logger = createLogger('database');
 
 export interface PendingResponse {
     id: string;
@@ -204,22 +207,61 @@ export async function updateTweetEngagementStatus(
 
 export async function initializeSchema() {
     const db = await initializeDatabase();
-    const schemaPath = path.join(__dirname, 'schema.sql');
-    const schema = await fs.readFile(schemaPath, 'utf-8');
     
-    await db.run('BEGIN TRANSACTION');
     try {
+        await db.run('BEGIN TRANSACTION');
+
+        // Check if tables exist first
+        const tables = await db.all(`
+            SELECT name 
+            FROM sqlite_master 
+            WHERE type='table' AND name IN (
+                'tweets', 
+                'pending_responses', 
+                'skipped_tweets', 
+                'sent_responses', 
+                'feedback',
+                'kor_accounts'
+            )
+        `);
+
+        const existingTables = new Set(tables.map(t => t.name));
+
+        const schemaPath = path.join(__dirname, 'schema.sql');
+        const schema = await fs.readFile(schemaPath, 'utf-8');
+
         const statements = schema
             .split(';')
             .map(s => s.trim())
             .filter(s => s.length > 0);
 
         for (const statement of statements) {
-            await db.run(statement);
+            const tableName = statement.match(/CREATE TABLE (?:IF NOT EXISTS )?([^\s(]+)/i)?.[1];
+            if (tableName && !existingTables.has(tableName)) {
+                await db.run(statement);
+                logger.info(`Created table: ${tableName}`);
+            }
         }
+
         await db.run('COMMIT');
+        logger.info('Schema initialization completed successfully');
     } catch (error) {
         await db.run('ROLLBACK');
+        logger.error('Failed to initialize schema:', error);
         throw new Error(`Failed to initialize schema: ${error}`);
     }
 } 
+
+
+// HELPER FUNCTIONS
+export async function getLatestTweetTimestampByAuthor(authorUsername: string): Promise<string | null> {
+    const db = await initializeDatabase();
+    const result = await db.get(`
+        SELECT created_at 
+        FROM tweets 
+        WHERE author_username = ?
+        ORDER BY created_at DESC 
+        LIMIT 1
+    `, [authorUsername]);
+    return result?.created_at || null;
+}
