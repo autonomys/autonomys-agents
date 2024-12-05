@@ -5,6 +5,7 @@ import { getAllPendingResponses, updateResponseStatus, getAllSkippedTweets, getS
 import { runWorkflow } from './services/agents/workflow';
 import { createTwitterClient, replyToTweet } from './services/twitter/api';
 import { initializeSchema, initializeDefaultKOLs } from './database';
+import { ChromaService } from './services/vectorstore/chroma';
 
 const logger = createLogger('app');
 const app = express();
@@ -50,6 +51,7 @@ const startServer = () => {
 
     // Approve/reject a response
     app.post('/responses/:id/approve', async (req, res) => {
+        // UPON APPROVAL IT SHOULD ALSO GOES ONCHAIN
         try {
             const { approved, feedback } = req.body;
             const action = {
@@ -157,6 +159,11 @@ const startServer = () => {
 // Main application startup
 const main = async () => {
     try {
+        const chromaService = await ChromaService.getInstance();
+        // TODO: Remove this after testing
+        await chromaService.addSampleTweet();
+        logger.info('ChromaDB initialized successfully');
+
         await initializeSchema();
         await initializeDefaultKOLs();
         // Initialize server

@@ -30,7 +30,12 @@ export const responseSchema = z.object({
     tone: z.string(),
     strategy: z.string(),
     estimatedImpact: z.number().min(1).max(10),
-    confidence: z.number().min(0).max(1)
+    confidence: z.number().min(0).max(1),
+    referencedTweets: z.array(z.object({
+        text: z.string(),
+        reason: z.string(),
+        similarity_score: z.number()
+    })).optional()
 });
 
 export const queueActionSchema = z.object({

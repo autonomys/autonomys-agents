@@ -84,7 +84,15 @@ Key configuration options in `.env`:
 - `LLM_MODEL`: Language model selection
 - `NODE_ENV`: Environment setting
 
+## ChromaDB
+
+ChromaDB is used as a vector database to store tweet embeddings. First, pull the docker image:
+`docker pull chroma/chroma:latest`
+
+Then, run the docker container:
+`docker run -d -p 8000:8000 chroma/chroma:latest`
 
 ## License
+
 
 MIT

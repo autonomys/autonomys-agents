@@ -12,6 +12,7 @@ export const config = {
 
     // LLM Configuration
     LLM_MODEL: process.env.LLM_MODEL || "gpt-4",
+    OPENAI_API_KEY: process.env.OPENAI_API_KEY,
     TEMPERATURE: 0.7,
 
     // Agent Configuration
@@ -29,4 +30,8 @@ export const config = {
 
     // Target Accounts to Monitor
     TARGET_ACCOUNTS: (process.env.TARGET_ACCOUNTS || '').split(',').map(account => account.trim()),
+
+    // Chroma Configuration
+    CHROMA_DIR: path.join(__dirname, '../../data/chroma'),
+    CHROMA_URL: process.env.CHROMA_URL || 'http://localhost:8000',
 }; 

@@ -8,6 +8,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { config } from '../config';
 import { z } from 'zod';
 import { WorkflowState } from '../types/workflow';
+import { ChromaService } from '../services/vectorstore/chroma';
 
 const logger = createLogger('workflow-tools');
 
@@ -20,6 +21,7 @@ export const createTools = (client: TwitterApiReadWrite) => {
         }),
         func: async ({ lastProcessedId }) => {
             try {
+                logger.info('Called search_recent_tweets');
                 if (!Array.isArray(config.TARGET_ACCOUNTS) || config.TARGET_ACCOUNTS.length === 0) {
                     logger.error('No target accounts configured');
                     return {
@@ -150,10 +152,37 @@ export const createTools = (client: TwitterApiReadWrite) => {
         }
     });
 
+    const searchSimilarTweetsTool = new DynamicStructuredTool({
+        name: 'search_similar_tweets',
+        description: 'Search for similar tweets in the vector store',
+        schema: z.object({
+            query: z.string(),
+            k: z.number().optional().default(5)
+        }),
+        func: async ({ query, k }) => {
+            try {
+                const chromaService = await ChromaService.getInstance();
+                const results = await chromaService.searchSimilarTweetsWithScore(query, k);
+                logger.info('Similar tweets search results:', results);
+                return {
+                    similar_tweets: results.map(([doc, score]) => ({
+                        text: doc.pageContent,
+                        metadata: doc.metadata,
+                        similarity_score: score
+                    }))
+                };
+            } catch (error) {
+                logger.error('Error searching similar tweets:', error);
+                return { similar_tweets: [] };
+            }
+        }
+    });
+
     return {
         tweetSearchTool,
         queueResponseTool,
         queueSkippedTool,
-        tools: [tweetSearchTool, queueResponseTool, queueSkippedTool]
+        searchSimilarTweetsTool,
+        tools: [tweetSearchTool, queueResponseTool, queueSkippedTool, searchSimilarTweetsTool]
     };
 };

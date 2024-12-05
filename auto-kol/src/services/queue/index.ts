@@ -1,6 +1,7 @@
 import { QueuedResponse, ApprovalAction, SkippedTweet } from '../../types/queue';
 import { createLogger } from '../../utils/logger';
 import * as db from '../database/queue';
+import { ChromaService } from '../vectorstore/chroma';
 
 const logger = createLogger('response-queue');
 
@@ -56,6 +57,13 @@ export const updateResponseStatus = async (
 
         responseQueue.set(action.id, updatedResponse);
         await db.updateResponseApproval(action);
+
+        // If rejected, remove from vector store
+        if (!action.approved) {
+            const chromaService = await ChromaService.getInstance();
+            await chromaService.deleteTweet(response.tweet.id);
+        }
+
         return updatedResponse;
     } catch (error) {
         logger.error('Failed to update response status:', error);

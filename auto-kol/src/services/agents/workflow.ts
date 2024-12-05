@@ -16,6 +16,7 @@ import {
 import { ToolNode } from '@langchain/langgraph/prebuilt';
 import { TwitterApiReadWrite } from 'twitter-api-v2';
 import { StructuredOutputParser } from 'langchain/output_parsers';
+import { ChromaService } from '../vectorstore/chroma';
 
 const logger = createLogger('agent-workflow');
 
@@ -136,6 +137,13 @@ const createNodes = async (config: WorkflowConfig) => {
             // Validate the search result
             const validatedResult = tweetSearchSchema.parse(searchResult);
 
+            if (validatedResult.tweets.length > 0) {
+                const chromaService = await ChromaService.getInstance();
+                for (const tweet of validatedResult.tweets) {
+                    await chromaService.addTweet(tweet);
+                }
+            }
+
             logger.info(`Found ${validatedResult.tweets.length} tweets`);
 
             return {
@@ -198,7 +206,14 @@ const createNodes = async (config: WorkflowConfig) => {
         "1. The original tweet's content and tone\n" +
         "2. The suggested response tone\n" +
         "3. The engagement goals\n" +
-        "4. Platform best practices\n\n" +
+        "4. Platform best practices\n" +
+        "5. Historical context from previous interactions with the same author\n\n" +
+        "Tools available:\n" +
+        "- search_similar_tweets: Use this to find similar past tweets and their responses, especially from the same author\n\n" +
+        "Process:\n" +
+        "1. First, search for similar tweets by the same author to understand past interactions\n" +
+        "2. Use the context of these interactions to inform your response strategy\n" +
+        "3. Craft a response that aligns with both the current tweet and historical context\n\n" +
         "{format_instructions}"
     ).format({
         format_instructions: responseParser.getFormatInstructions()
@@ -216,7 +231,17 @@ const createNodes = async (config: WorkflowConfig) => {
 
     const responsePrompt = ChatPromptTemplate.fromMessages([
         new SystemMessage(responseSystemPrompt),
-        ["human", "Generate a response strategy for this tweet from @{author} using the suggested tone:\nTweet: {tweet}\nTone: {tone}"]
+        ["human", `Generate a response strategy for this tweet by considering similar tweets from @{author} using the suggested tone:
+        Tweet: {tweet}
+        Tone: {tone}
+        Similar Tweets: {similarTweets}
+
+        Instructions:
+        1. Review the similar tweets to identify any inconsistencies or changes in the author's stance
+        2. If you find contradictions, incorporate them into your response
+        3. Use phrases like "Interesting shift from your previous stance where..." or "This seems to contradict your earlier view that..."
+        4. Be specific when referencing past statements
+        `]
     ]);
 
     const engagementNode = async (state: typeof State.State) => {
@@ -349,13 +374,36 @@ const createNodes = async (config: WorkflowConfig) => {
             const parsedContent = parseMessageContent(lastMessage.content);
             const { tweet, toneAnalysis, tweets, currentTweetIndex } = parsedContent;
 
+            // Search for similar tweets by this author
+            const similarTweetsResponse = await config.toolNode.invoke({
+                messages: [new AIMessage({
+                    content: '',
+                    tool_calls: [{
+                        name: 'search_similar_tweets',
+                        args: {
+                            query: `author:${tweet.authorUsername} ${tweet.text}`,
+                            k: 5
+                        },
+                        id: 'similar_tweets_call',
+                        type: 'tool_call'
+                    }],
+                })],
+            });
+
+            // Parse similar tweets response
+            const similarTweets = parseMessageContent(
+                similarTweetsResponse.messages[similarTweetsResponse.messages.length - 1].content
+            );
+
+            // Include similar tweets in the response prompt context
             const responseStrategy = await responsePrompt
                 .pipe(config.llms.response)
                 .pipe(responseParser)
                 .invoke({
                     tweet: tweet.text,
                     tone: toneAnalysis.suggestedTone,
-                    author: tweet.authorUsername
+                    author: tweet.authorUsername,
+                    similarTweets: JSON.stringify(similarTweets.similar_tweets)
                 });
 
             logger.info('Response strategy:', { responseStrategy });
