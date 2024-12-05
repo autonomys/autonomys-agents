@@ -1,7 +1,7 @@
 import { TwitterApi, TweetV2, TwitterApiReadWrite, UserV2 } from 'twitter-api-v2';
 import { TwitterCredentials, Tweet } from '../../types/twitter';
 import { createLogger } from '../../utils/logger';
-
+import { getLatestTweetTimestampByAuthor } from '../../database';
 const logger = createLogger('twitter-api');
 
 // Rate limit handling
@@ -63,7 +63,6 @@ export const createTwitterClient = async (credentials: TwitterCredentials): Prom
 export const searchTweets = async (
     client: TwitterApiReadWrite,
     accounts: readonly string[],
-    sinceId?: string
 ): Promise<Tweet[]> => {
     return withRateLimitRetry(async () => {
         try {
@@ -76,16 +75,18 @@ export const searchTweets = async (
             const allTweets: Tweet[] = [];
 
             for (const account of accounts) {
-                logger.info(`Searching tweets for account: ${account}`);
-
+                const latestTimestamp = (await getLatestTweetTimestampByAuthor(account));
+                // add 1 second buffer
+                const adjustedTimestamp = latestTimestamp ? new Date(new Date(latestTimestamp).getTime() + 1000).toISOString() : null;
+                logger.info(`Searching tweets for account: ${account}, since ${adjustedTimestamp || 'default 3 days'}`);
+                
                 const query = `from:${account}`;
-                const startTime = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString();
+                const startTime = adjustedTimestamp || new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString();
 
                 const tweets = await client.v2.search(query, {
                     'tweet.fields': ['author_id', 'created_at', 'text', 'referenced_tweets'],
                     'user.fields': ['username', 'name'],
                     'expansions': ['author_id', 'referenced_tweets.id'],
-                    since_id: sinceId,
                     max_results: 10,
                     start_time: startTime
                 });
@@ -143,7 +144,6 @@ export const searchTweets = async (
                 errorData: error?.data || {},
                 errorType: error?.constructor?.name || 'Unknown',
                 accounts,
-                sinceId
             });
             throw error;
         }

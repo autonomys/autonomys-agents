@@ -48,7 +48,7 @@ export const createTools = (client: TwitterApiReadWrite) => {
                 });
 
                 const processedId = !lastProcessedId ? undefined : lastProcessedId;
-                const tweets = await searchTweets(client, cleanAccounts, processedId);
+                const tweets = await searchTweets(client, cleanAccounts);
 
                 logger.info('Tweet search completed:', {
                     foundTweets: tweets.length,

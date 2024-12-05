@@ -5,6 +5,7 @@ import fs from 'fs/promises';
 import path from 'path';
 import { v4 as generateId } from 'uuid';
 import { createLogger } from '../utils/logger';
+import { sleepSecs } from 'twitter-api-v2/dist/esm/v1/media-helpers.v1';
 
 const logger = createLogger('database');
 
@@ -256,12 +257,24 @@ export async function initializeSchema() {
 // HELPER FUNCTIONS
 export async function getLatestTweetTimestampByAuthor(authorUsername: string): Promise<string | null> {
     const db = await initializeDatabase();
-    const result = await db.get(`
-        SELECT created_at 
-        FROM tweets 
-        WHERE author_username = ?
-        ORDER BY created_at DESC 
-        LIMIT 1
-    `, [authorUsername]);
-    return result?.created_at || null;
+    try {
+        const result = await db.get(`
+            SELECT created_at 
+            FROM tweets 
+            WHERE LOWER(author_username) = LOWER(?)
+            ORDER BY created_at DESC 
+            LIMIT 1
+        `, [authorUsername]);
+
+        if (result?.created_at) {
+            logger.info(`Found latest tweet timestamp for ${authorUsername}: ${result.created_at}`);
+            return result.created_at;
+        } else {
+            logger.info(`No previous tweets found for ${authorUsername}, using default timeframe`);
+            return null;
+        }
+    } catch (error) {
+        logger.error(`Error getting latest tweet timestamp for ${authorUsername}:`, error);
+        throw error;
+    }
 }

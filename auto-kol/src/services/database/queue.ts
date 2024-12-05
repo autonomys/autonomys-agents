@@ -21,13 +21,21 @@ const isUniqueConstraintError = (error: any): boolean => {
 export async function addToQueue(response: QueuedResponse): Promise<void> {
     try {
         // First add the tweet
-        await addTweet({
-            id: response.tweet.id,
-            authorId: response.tweet.authorId,
-            authorUsername: response.tweet.authorUsername,
-            content: response.tweet.text,
-            createdAt: response.tweet.createdAt
-        });
+        try {
+            await addTweet({
+                id: response.tweet.id,
+                authorId: response.tweet.authorId,
+                authorUsername: response.tweet.authorUsername,
+                content: response.tweet.text,
+                createdAt: response.tweet.createdAt
+            });
+        } catch (error) {
+            if (isUniqueConstraintError(error)) {
+                logger.warn(`Tweet already exists: ${response.tweet.id}`);
+            } else {
+                throw error;
+            }
+        }
 
         // Then add the pending response
         await addPendingResponse({
@@ -50,13 +58,21 @@ export async function addToQueue(response: QueuedResponse): Promise<void> {
 export async function addToSkipped(skipped: SkippedTweet): Promise<void> {
     try {
         // First add the tweet
-        await addTweet({
-            id: skipped.tweet.id,
+        try {
+            await addTweet({
+                id: skipped.tweet.id,
             authorId: skipped.tweet.authorId,
             authorUsername: skipped.tweet.authorUsername,
             content: skipped.tweet.text,
-            createdAt: skipped.tweet.createdAt
-        });
+                createdAt: skipped.tweet.createdAt
+            });
+        } catch (error) {
+            if (isUniqueConstraintError(error)) {
+                logger.warn(`Tweet already exists: ${skipped.tweet.id}`);
+            } else {
+                throw error;
+            }
+        }
 
         // Then add the skipped record
         await addSkippedTweet({
