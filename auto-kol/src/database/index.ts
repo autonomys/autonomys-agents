@@ -222,7 +222,8 @@ export async function initializeSchema() {
                 'skipped_tweets', 
                 'sent_responses', 
                 'feedback',
-                'kor_accounts'
+                'kor_accounts',
+                'dsn'
             )
         `);
 

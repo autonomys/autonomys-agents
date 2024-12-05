@@ -54,6 +54,14 @@ CREATE TABLE IF NOT EXISTS feedback (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (response_id) REFERENCES pending_responses(id)
 );
+ 
+CREATE TABLE IF NOT EXISTS dsn (
+    id TEXT PRIMARY KEY,
+    cid TEXT NOT NULL,
+    response_id TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (response_id) REFERENCES sent_responses(id)
+);
 
 CREATE INDEX idx_kor_accounts_username ON kor_accounts(username);
 CREATE INDEX idx_tweets_created_at ON tweets(created_at);

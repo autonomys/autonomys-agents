@@ -157,9 +157,6 @@ const startServer = () => {
 // Main application startup
 const main = async () => {
     try {
-        // Initialize database
-        await initializeDatabase();
-        // Initialize schema
         await initializeSchema();
 
         // Initialize server
