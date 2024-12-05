@@ -51,6 +51,16 @@ export async function closeDatabase() {
     }
 }
 
+export async function addKOL(kol: {
+    id: string;
+    username: string;
+}) {
+    const db = await initializeDatabase();
+    return db.run(`
+        INSERT INTO kol_accounts (id, username) VALUES (?, ?)
+    `, [kol.id, kol.username]);
+}
+
 export async function addPendingResponse(response: PendingResponse) {
     const db = await initializeDatabase();
     return db.run(`
@@ -206,6 +216,17 @@ export async function updateTweetEngagementStatus(
     `, [status, tweetId]);
 }
 
+export async function addDsn(dsn: {
+    id: string;
+    cid: string;
+    responseId: string;
+}) {
+    const db = await initializeDatabase();
+    return db.run(`
+        INSERT INTO dsn (id, cid, response_id) VALUES (?, ?, ?)
+    `, [dsn.id, dsn.cid, dsn.responseId]);
+}
+
 export async function initializeSchema() {
     const db = await initializeDatabase();
     
@@ -217,12 +238,12 @@ export async function initializeSchema() {
             SELECT name 
             FROM sqlite_master 
             WHERE type='table' AND name IN (
+                'kol_accounts',
                 'tweets', 
                 'pending_responses', 
                 'skipped_tweets', 
                 'sent_responses', 
                 'feedback',
-                'kor_accounts',
                 'dsn'
             )
         `);

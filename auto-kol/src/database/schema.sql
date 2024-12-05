@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS kor_accounts (
+CREATE TABLE IF NOT EXISTS kol_accounts (
     id TEXT PRIMARY KEY,
     username TEXT NOT NULL
 );
