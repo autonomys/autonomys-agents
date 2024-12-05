@@ -34,4 +34,7 @@ export const config = {
     // Chroma Configuration
     CHROMA_DIR: path.join(__dirname, '../../data/chroma'),
     CHROMA_URL: process.env.CHROMA_URL || 'http://localhost:8000',
+
+    // AutoDrive Configuration
+    DSN_API_KEY: process.env.DSN_API_KEY,
 }; 

@@ -6,8 +6,11 @@ import { runWorkflow } from './services/agents/workflow';
 import { createTwitterClient, replyToTweet } from './services/twitter/api';
 import { initializeSchema, initializeDefaultKOLs } from './database';
 import { ChromaService } from './services/vectorstore/chroma';
+import { uploadFileFromFilepath, createAutoDriveApi } from '@autonomys/auto-drive'
 
 const logger = createLogger('app');
+const dsnAPI = createAutoDriveApi({ apiKey: config.DSN_API_KEY! })
+
 const app = express();
 
 // Initialize Twitter client
