@@ -4,6 +4,7 @@ import { createLogger } from './utils/logger';
 import { getAllPendingResponses, updateResponseStatus, getAllSkippedTweets, getSkippedTweet, moveToQueue } from './services/queue';
 import { runWorkflow } from './services/agents/workflow';
 import { createTwitterClient, replyToTweet } from './services/twitter/api';
+import { initializeDatabase, initializeSchema } from './database';
 
 const logger = createLogger('app');
 const app = express();
@@ -57,7 +58,7 @@ const startServer = () => {
                 feedback
             };
 
-            const updatedResponse = updateResponseStatus(action);
+            const updatedResponse = await updateResponseStatus(action);
             if (!updatedResponse) {
                 return res.status(404).json({ error: 'Response not found' });
             }
@@ -156,6 +157,11 @@ const startServer = () => {
 // Main application startup
 const main = async () => {
     try {
+        // Initialize database
+        await initializeDatabase();
+        // Initialize schema
+        await initializeSchema();
+
         // Initialize server
         startServer();
 
