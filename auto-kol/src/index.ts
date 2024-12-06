@@ -256,19 +256,11 @@ const startServer = () => {
 // Main application startup
 const main = async () => {
     try {
-       
-        const scraper = await twitterClientScraper()
-        const tweets = await scraper.getTweets('elonmusk', 10)
-        for await (const tweet of tweets) {
-            console.log(tweet)
-        }
-
-
-        const chromaService = await ChromaService.getInstance();
-        // TODO: Remove this after testing
-        await chromaService.addSampleTweet();
-        logger.info('ChromaDB initialized successfully');
-
+        // const scraper = await twitterClientScraper();
+        // const tweets = await scraper.fetchHomeTimeline(1, []);
+        // for await (const tweet of tweets) {
+        //     console.log(tweet)
+        // }
         await initializeSchema();
         await initializeDefaultKOLs();
         // Initialize server

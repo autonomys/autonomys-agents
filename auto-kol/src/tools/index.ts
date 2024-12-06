@@ -14,6 +14,61 @@ import { twitterClientScraper } from '../services/twitter/apiv2.js';
 const logger = createLogger('workflow-tools');
 
 export const createTools = (client: TwitterApiReadWrite) => {
+
+    // ‌TODO TOOLS
+    /*
+    - fetch timeline
+    - google search
+    */
+
+    // TIMELINE TOOL DOESN'T WORK NOW, BECAUSE THE LIBRARY DOESN'T SUPPORT IT PROPERLY
+    const fetchTimelineTool = new DynamicStructuredTool({
+        name: 'fetch_timeline',
+        description: 'Fetch the timeline regularly to get new tweets',
+        schema: z.object({}),
+        func: async () => {
+            try {
+                const scraper = await twitterClientScraper();
+                const tweets = await scraper.fetchHomeTimeline(1, []);
+                const allTweets = [];
+                
+                for await (const tweet of tweets) {
+                    logger.info('Fetched tweet:', {
+                        id: tweet.id,
+                        text: tweet.text
+                    });
+                    if (tweet.id && tweet.text) {  // Only add tweets with valid required fields
+                        allTweets.push({
+                            id: tweet.id,
+                            text: tweet.text,
+                            authorId: tweet.userId || '',
+                            authorUsername: tweet.username || '',
+                            createdAt: tweet.timeParsed?.toISOString() || new Date().toISOString()
+                        });
+                    }
+                }
+
+                // Sort tweets by creation date (newest first)
+                allTweets.sort((a, b) => 
+                    new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+                );
+
+                // Return in the format expected by tweetSearchSchema
+                return {
+                    tweets: allTweets,
+                    lastProcessedId: allTweets[allTweets.length - 1]?.id || null
+                };
+            } catch (error) {
+                logger.error('Error in fetchTimelineTool:', error);
+                return {
+                    tweets: [],
+                    lastProcessedId: null
+                };
+            }
+        }
+    });
+
+
     const tweetSearchTool = new DynamicStructuredTool({
         name: 'search_recent_tweets',
         description: 'Search for recent tweets from specified accounts',
@@ -53,7 +108,7 @@ export const createTools = (client: TwitterApiReadWrite) => {
                 const allTweets = [];
 
                 for (const account of cleanAccounts) {
-                    const tweetIterator = scraper.getTweets(account, 1);
+                    const tweetIterator = scraper.getTweets(account, 10);
                     for await (const tweet of tweetIterator) {
                         if (lastProcessedId && tweet.id && tweet.id <= lastProcessedId) {
                             break;
@@ -192,7 +247,7 @@ export const createTools = (client: TwitterApiReadWrite) => {
         tweetSearchTool,
         queueResponseTool,
         queueSkippedTool,
-        searchSimilarTweetsTool,
+        searchSimilarTweetsTool,    
         tools: [tweetSearchTool, queueResponseTool, queueSkippedTool, searchSimilarTweetsTool]
     };
 };

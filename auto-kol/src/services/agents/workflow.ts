@@ -56,6 +56,7 @@ type WorkflowConfig = Readonly<{
 
 // Create workflow configuration
 const createWorkflowConfig = async (): Promise<WorkflowConfig> => {
+    // SHOULD BE REPLACED WITH SCRAPER AGENT
     const client = await createTwitterClient({
         appKey: config.TWITTER_API_KEY!,
         appSecret: config.TWITTER_API_SECRET!,
@@ -89,6 +90,51 @@ const createWorkflowConfig = async (): Promise<WorkflowConfig> => {
 
 // Node factory functions
 const createNodes = async (config: WorkflowConfig) => {
+
+    // Placeholder for now, because the timeline tool doesn't work
+    const timelineNode = async (state: typeof State.State) => {
+        logger.info('Timeline Node - Fetching recent tweets');
+        const toolResponse = await config.toolNode.invoke({
+            messages: [
+                new AIMessage({
+                    content: '',
+                    tool_calls: [{
+                        name: 'fetch_timeline',
+                        args: {},
+                        id: 'fetch_timeline_call',
+                        type: 'tool_call'
+                    }]
+                })
+            ]
+        });
+
+        // Log the tool response
+        logger.info('Tool response received:', {
+            messageCount: toolResponse.messages.length,
+            lastMessageContent: toolResponse.messages[toolResponse.messages.length - 1].content
+        });
+
+        // Parsing the ALL the tweets
+        const parsedTweets = tweetSearchSchema.parse(toolResponse.messages[toolResponse.messages.length - 1].content);
+
+        // TODO: Check if the tweets are new | doesn't exist in sqlite db
+
+        const chromaService = await ChromaService.getInstance();
+        for (const tweet of parsedTweets.tweets) {
+            await chromaService.addTweet(tweet);
+        }
+
+        logger.info(`Added ${parsedTweets.tweets.length} tweets to the vector db`);
+
+
+        return {
+            messages: [new AIMessage({
+                content: JSON.stringify(parsedTweets)
+            })],
+            lastProcessedId: parsedTweets.lastProcessedId || undefined
+        };
+    }
+
     const searchNode = async (state: typeof State.State) => {
         logger.info('Search Node - Fetching recent tweets');
         try {
@@ -137,6 +183,8 @@ const createNodes = async (config: WorkflowConfig) => {
             // Validate the search result
             const validatedResult = tweetSearchSchema.parse(searchResult);
 
+
+            // TODO: Check if the tweets are new | doesn't exist in sqlite db
             if (validatedResult.tweets.length > 0) {
                 const chromaService = await ChromaService.getInstance();
                 for (const tweet of validatedResult.tweets) {
@@ -447,6 +495,7 @@ const createNodes = async (config: WorkflowConfig) => {
     };
 
     return {
+        timelineNode,
         searchNode,
         engagementNode,
         toneAnalysisNode,
