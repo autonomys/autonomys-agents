@@ -8,6 +8,7 @@ import { KOL } from '../types/kol.js';
 import { config } from '../config/index.js';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
+import { Tweet } from '../types/twitter.js';
 
 const logger = createLogger('database');
 
@@ -160,6 +161,13 @@ export async function getPendingResponses() {
     `);
 }
 
+export async function getPendingResponsesByTweetId(tweetId: string) {
+    const db = await initializeDatabase();
+    return db.all(`
+        SELECT * FROM pending_responses WHERE tweet_id = ?
+    `, [tweetId]);
+}
+
 export async function updateResponseStatus(
     responseId: string, 
     status: 'approved' | 'rejected',
@@ -217,6 +225,11 @@ export async function addTweet(tweet: {
         tweet.createdAt,
         'pending'
     ]);
+}
+
+export async function getTweetById(tweetId: string): Promise<Tweet | undefined> {
+    const db = await initializeDatabase();
+    return db.get(`SELECT * FROM tweets WHERE id = ?`, [tweetId]);
 }
 
 export async function addSkippedTweet(skipped: {

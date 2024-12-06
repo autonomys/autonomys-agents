@@ -1,8 +1,8 @@
 import { QueuedResponse, ApprovalAction, SkippedTweet } from '../../types/queue.js';
 import { createLogger } from '../../utils/logger.js';
-import * as db from '../database/queue.js';
+import * as db from '../database/index.js';
 import { ChromaService } from '../vectorstore/chroma.js';
-
+import { getPendingResponsesByTweetId } from '../../database/index.js';
 const logger = createLogger('response-queue');
 
 // In-memory queues
@@ -52,28 +52,22 @@ export const getAllPendingResponses = async (): Promise<readonly QueuedResponse[
 export const getAllSkippedTweets = (): readonly SkippedTweet[] =>
     Array.from(skippedTweets.values());
 
+
+
 export const updateResponseStatus = async (
     action: ApprovalAction
 ): Promise<QueuedResponse | undefined> => {
     try {
-        const response = responseQueue.get(action.id);
+        const response = await getPendingResponsesByTweetId(action.tweetId);
         if (!response) return undefined;
 
-        const updatedResponse: QueuedResponse = {
-            ...response,
-            status: action.approved ? ('approved' as const) : ('rejected' as const),
-            updatedAt: new Date()
-        };
-
-        responseQueue.set(action.id, updatedResponse);
-        await db.updateResponseApproval(action, response.tweet.id, response.id);
+        await db.updateResponseApproval(action);
         // If rejected, remove from vector store
         if (!action.approved) {
             const chromaService = await ChromaService.getInstance();
-            await chromaService.deleteTweet(response.tweet.id);
+            await chromaService.deleteTweet(action.tweetId);
         }
 
-        return updatedResponse;
     } catch (error) {
         logger.error('Failed to update response status:', error);
         return undefined;

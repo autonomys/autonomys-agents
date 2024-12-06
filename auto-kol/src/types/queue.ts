@@ -22,7 +22,8 @@ export type SkippedTweet = Readonly<{
 }>;
 
 export type ApprovalAction = Readonly<{
-    id: string;
+    tweetId: string;
+    responseId: string;
     approved: boolean;
     feedback?: string;
 }>; 

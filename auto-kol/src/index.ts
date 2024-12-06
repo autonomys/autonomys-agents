@@ -11,6 +11,7 @@ import { uploadFileFromFilepath, createAutoDriveApi, uploadFile } from '@autonom
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import { v4 as generateId } from 'uuid';
+import { ApprovalAction } from './types/queue.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
@@ -25,19 +26,6 @@ const options = {
 const app = express();
 
 // Initialize Twitter client
-const initializeTwitterClient = async () => {
-    try {
-        return await createTwitterClient({
-            appKey: config.TWITTER_API_KEY!,
-            appSecret: config.TWITTER_API_SECRET!,
-            accessToken: config.TWITTER_ACCESS_TOKEN!,
-            accessSecret: config.TWITTER_ACCESS_SECRET!
-        });
-    } catch (error) {
-        logger.error('Failed to initialize Twitter client:', error);
-        throw error;
-    }
-};
 
 // Run workflow periodically
 const startWorkflowPolling = async () => {
@@ -67,8 +55,9 @@ const startServer = () => {
     app.post('/responses/:id/approve', async (req, res) => {
         try {
             const { approved, feedback } = req.body;
-            const action = {
-                id: req.params.id,
+            const action: ApprovalAction = {
+                tweetId: req.params.id,
+                responseId: req.params.id,
                 approved,
                 feedback
             };
@@ -84,7 +73,6 @@ const startServer = () => {
             });
             if (updatedResponse.status === 'approved') {
                 logger.info('Creating Twitter client for approved response');
-                const client = await initializeTwitterClient();
 
                 logger.info('Sending reply:', {
                     tweetId: updatedResponse.tweet.id,
@@ -256,11 +244,6 @@ const startServer = () => {
 // Main application startup
 const main = async () => {
     try {
-        // const scraper = await twitterClientScraper();
-        // const tweets = await scraper.fetchHomeTimeline(1, []);
-        // for await (const tweet of tweets) {
-        //     console.log(tweet)
-        // }
         await initializeSchema();
         await initializeDefaultKOLs();
         // Initialize server
