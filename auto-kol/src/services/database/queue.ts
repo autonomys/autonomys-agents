@@ -1,5 +1,5 @@
-import { QueuedResponse, ApprovalAction, SkippedTweet } from '../../types/queue';
-import { createLogger } from '../../utils/logger';
+import { QueuedResponse, ApprovalAction, SkippedTweet } from '../../types/queue.js';
+import { createLogger } from '../../utils/logger.js';
 import {
     addPendingResponse,
     getPendingResponses,
@@ -7,8 +7,9 @@ import {
     addSkippedTweet,
     getSkippedTweets,
     addTweet,
-    updateTweetEngagementStatus
-} from '../../database';
+    updateTweetEngagementStatus,
+    addSendResponse
+} from '../../database/index.js';
 import { v4 as generateId } from 'uuid';
 
 const logger = createLogger('database-queue');
@@ -126,7 +127,9 @@ export async function getAllPendingResponses(): Promise<QueuedResponse[]> {
 }
 
 export async function updateResponseApproval(
-    action: ApprovalAction
+    action: ApprovalAction,
+    tweetId: string,
+    responseId: string
 ): Promise<void> {
     try {
         await updateResponseStatus(
@@ -134,7 +137,11 @@ export async function updateResponseApproval(
             action.approved ? 'approved' : 'rejected',
             action.feedback
         );
-        
+        await addSendResponse({
+            id: action.id,
+            tweetId,
+            responseId
+        });
         logger.info(`Updated response status: ${action.id}`);
     } catch (error) {
         logger.error('Failed to update response status:', error);

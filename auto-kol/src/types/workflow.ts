@@ -1,4 +1,4 @@
-import { Tweet } from './twitter';
+import { Tweet } from './twitter.js';
 import { BaseMessage } from '@langchain/core/messages';
 
 export type EngagementDecision = Readonly<{

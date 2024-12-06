@@ -1,6 +1,6 @@
-import { Tweet } from './twitter';
-import { AgentResponse } from './agent';
-import { WorkflowState } from './workflow';
+import { Tweet } from './twitter.js';
+import { AgentResponse } from './agent.js';
+import { WorkflowState } from './workflow.js';
 
 export type QueuedResponse = Readonly<{
     id: string;

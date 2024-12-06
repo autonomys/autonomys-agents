@@ -151,6 +151,7 @@ export async function getPendingResponses() {
         SELECT 
             pr.*,
             t.author_username,
+            t.author_id,
             t.content as tweet_content
         FROM pending_responses pr
         JOIN tweets t ON pr.tweet_id = t.id
@@ -283,13 +284,15 @@ export async function updateTweetEngagementStatus(
 
 export async function addDsn(dsn: {
     id: string;
+    tweetId: string;
+    kolUsername: string;
     cid: string;
     responseId: string;
 }) {
     const db = await initializeDatabase();
     return db.run(`
-        INSERT INTO dsn (id, cid, response_id) VALUES (?, ?, ?)
-    `, [dsn.id, dsn.cid, dsn.responseId]);
+        INSERT INTO dsn (id, tweet_id, kol_username, cid, response_id) VALUES (?, ?, ?, ?, ?)
+    `, [dsn.id, dsn.tweetId, dsn.kolUsername, dsn.cid, dsn.responseId]);
 }
 
 export async function initializeSchema() {
@@ -342,6 +345,24 @@ export async function initializeSchema() {
     }
 } 
 
+export async function addSendResponse(send: {
+    id: string;
+    tweetId: string;
+    responseId: string;
+    engagementMetrics?: string;
+}) {
+    const db = await initializeDatabase();
+    return db.run(`
+        INSERT INTO sent_responses (
+            id, tweet_id, response_id, engagement_metrics
+        ) VALUES (?, ?, ?, ?)
+    `, [
+        send.id,
+        send.tweetId,
+        send.responseId,
+        send.engagementMetrics
+    ]);
+}
 
 // HELPER FUNCTIONS
 export async function getLatestTweetTimestampByAuthor(authorUsername: string): Promise<string | null> {
