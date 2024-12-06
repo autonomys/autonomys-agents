@@ -3,20 +3,20 @@ import { AIMessage, BaseMessage, SystemMessage } from '@langchain/core/messages'
 import { ChatOpenAI } from '@langchain/openai';
 import { ChatPromptTemplate, PromptTemplate } from '@langchain/core/prompts';
 import { MessageContent } from '@langchain/core/messages';
-import { config } from '../../config';
-import { createLogger } from '../../utils/logger';
-import { createTools } from '../../tools';
-import { createTwitterClient } from '../twitter/api';
+import { config } from '../../config/index.js';
+import { createLogger } from '../../utils/logger.js';
+import { createTools } from '../../tools/index.js';
+import { createTwitterClient } from '../twitter/api.js';
 import {
     engagementSchema,
     tweetSearchSchema,
     toneSchema,
     responseSchema
-} from '../../schemas/workflow';
+} from '../../schemas/workflow.js';
 import { ToolNode } from '@langchain/langgraph/prebuilt';
 import { TwitterApiReadWrite } from 'twitter-api-v2';
 import { StructuredOutputParser } from 'langchain/output_parsers';
-import { ChromaService } from '../vectorstore/chroma';
+import { ChromaService } from '../vectorstore/chroma.js';
 
 const logger = createLogger('agent-workflow');
 

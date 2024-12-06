@@ -1,15 +1,25 @@
 import express from 'express';
-import { config } from './config';
-import { createLogger } from './utils/logger';
-import { getAllPendingResponses, updateResponseStatus, getAllSkippedTweets, getSkippedTweet, moveToQueue } from './services/queue';
-import { runWorkflow } from './services/agents/workflow';
-import { createTwitterClient, replyToTweet } from './services/twitter/api';
-import { initializeSchema, initializeDefaultKOLs } from './database';
-import { ChromaService } from './services/vectorstore/chroma';
-import { uploadFileFromFilepath, createAutoDriveApi } from '@autonomys/auto-drive'
+import { config } from './config/index.js';
+import { createLogger } from './utils/logger.js';
+import { getAllPendingResponses, updateResponseStatus, getAllSkippedTweets, getSkippedTweet, moveToQueue } from './services/queue/index.js';
+import { runWorkflow } from './services/agents/workflow.js';
+import { createTwitterClient, replyToTweet } from './services/twitter/api.js';
+import { initializeSchema, initializeDefaultKOLs } from './database/index.js';
+import { ChromaService } from './services/vectorstore/chroma.js';
+import { uploadFileFromFilepath, createAutoDriveApi, uploadFile } from '@autonomys/auto-drive'
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 const logger = createLogger('app');
 const dsnAPI = createAutoDriveApi({ apiKey: config.DSN_API_KEY! })
+const options = {
+    password: '',
+    compression: true
+}
+// const filePath = join(__dirname, '../file.txt')
 
 const app = express();
 
@@ -162,6 +172,15 @@ const startServer = () => {
 // Main application startup
 const main = async () => {
     try {
+        // const uploadObservable = uploadFileFromFilepath(dsnAPI, filePath, options)
+        // uploadObservable.subscribe({
+        //     next: (status) => {
+        //         console.log('File upload progress:', status)
+        //     },
+        //     error: (error) => {
+        //         console.error('Error uploading file:', error)
+        //     }
+        //     })
         const chromaService = await ChromaService.getInstance();
         // TODO: Remove this after testing
         await chromaService.addSampleTweet();

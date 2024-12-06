@@ -1,7 +1,7 @@
-import { QueuedResponse, ApprovalAction, SkippedTweet } from '../../types/queue';
-import { createLogger } from '../../utils/logger';
-import * as db from '../database/queue';
-import { ChromaService } from '../vectorstore/chroma';
+import { QueuedResponse, ApprovalAction, SkippedTweet } from '../../types/queue.js';
+import { createLogger } from '../../utils/logger.js';
+import * as db from '../database/queue.js';
+import { ChromaService } from '../vectorstore/chroma.js';
 
 const logger = createLogger('response-queue');
 

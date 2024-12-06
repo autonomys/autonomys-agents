@@ -1,14 +1,14 @@
 import { DynamicStructuredTool } from '@langchain/core/tools';
 import { TwitterApiReadWrite } from 'twitter-api-v2';
-import { searchTweets } from '../services/twitter/api';
-import { addToQueue, addToSkipped } from '../services/queue';
-import { queueActionSchema } from '../schemas/workflow';
-import { createLogger } from '../utils/logger';
+import { searchTweets } from '../services/twitter/api.js';
+import { addToQueue, addToSkipped } from '../services/queue/index.js';
+import { queueActionSchema } from '../schemas/workflow.js';
+import { createLogger } from '../utils/logger.js';
 import { v4 as uuidv4 } from 'uuid';
-import { config } from '../config';
+import { config } from '../config/index.js';
 import { z } from 'zod';
-import { WorkflowState } from '../types/workflow';
-import { ChromaService } from '../services/vectorstore/chroma';
+import { WorkflowState } from '../types/workflow.js';
+import { ChromaService } from '../services/vectorstore/chroma.js';
 
 const logger = createLogger('workflow-tools');
 

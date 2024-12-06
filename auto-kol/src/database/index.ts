@@ -1,12 +1,13 @@
 import sqlite3 from 'sqlite3';
 import { open } from 'sqlite';
-import { Database } from 'sqlite/build/Database';
 import fs from 'fs/promises';
 import path from 'path';
 import { v4 as generateId } from 'uuid';
-import { createLogger } from '../utils/logger';
-import { KOL } from '../types/kol';
-import { config } from '../config';
+import { createLogger } from '../utils/logger.js';
+import { KOL } from '../types/kol.js';
+import { config } from '../config/index.js';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
 
 const logger = createLogger('database');
 
@@ -20,7 +21,7 @@ export interface PendingResponse {
     confidence: number;
 }
 
-let db: Database | null = null;
+let db: Awaited<ReturnType<typeof open>> | null = null;
 
 export async function initializeDatabase() {
     if (!db) {
@@ -314,7 +315,9 @@ export async function initializeSchema() {
 
         const existingTables = new Set(tables.map(t => t.name));
 
-        const schemaPath = path.join(__dirname, 'schema.sql');
+        const __filename = fileURLToPath(import.meta.url);
+        const __dirname = dirname(__filename);
+        const schemaPath = join(__dirname, 'schema.sql');
         const schema = await fs.readFile(schemaPath, 'utf-8');
 
         const statements = schema

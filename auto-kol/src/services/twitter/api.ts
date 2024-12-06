@@ -1,7 +1,7 @@
 import { TwitterApi, TweetV2, TwitterApiReadWrite, UserV2 } from 'twitter-api-v2';
-import { TwitterCredentials, Tweet } from '../../types/twitter';
-import { createLogger } from '../../utils/logger';
-import { getLatestTweetTimestampByAuthor } from '../../database';
+import { TwitterCredentials, Tweet } from '../../types/twitter.js';
+import { createLogger } from '../../utils/logger.js';
+import { getLatestTweetTimestampByAuthor } from '../../database/index.js';
 const logger = createLogger('twitter-api');
 
 // Rate limit handling

@@ -2,9 +2,9 @@ import { ChromaClient } from "chromadb";
 import { Document } from "langchain/document";
 import { Chroma } from "@langchain/community/vectorstores/chroma";
 import { OpenAIEmbeddings } from "@langchain/openai";
-import { createLogger } from "../../utils/logger";
-import { Tweet } from "../../types/twitter";
-import { config } from "../../config";
+import { createLogger } from "../../utils/logger.js";
+import { Tweet } from "../../types/twitter.js";
+import { config } from "../../config/index.js";
 import * as fs from 'fs';
 
 const logger = createLogger('chroma-service');
