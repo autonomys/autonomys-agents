@@ -1,7 +1,9 @@
 import { TwitterApi, TweetV2, TwitterApiReadWrite, UserV2 } from 'twitter-api-v2';
+import { Scraper } from 'agent-twitter-client';
 import { TwitterCredentials, Tweet } from '../../types/twitter.js';
 import { createLogger } from '../../utils/logger.js';
 import { getLatestTweetTimestampByAuthor } from '../../database/index.js';
+import { readFileSync, writeFileSync } from 'fs';
 const logger = createLogger('twitter-api');
 
 // Rate limit handling
@@ -183,5 +185,5 @@ export const replyToTweet = async (
             });
             throw error;
         }
-    });
-}; 
+    }); 
+};

@@ -15,6 +15,8 @@ export const config = {
     TWITTER_API_SECRET: process.env.TWITTER_API_SECRET,
     TWITTER_ACCESS_TOKEN: process.env.TWITTER_ACCESS_TOKEN,
     TWITTER_ACCESS_SECRET: process.env.TWITTER_ACCESS_SECRET,
+    TWITTER_USERNAME: process.env.TWITTER_USERNAME,
+    TWITTER_PASSWORD: process.env.TWITTER_PASSWORD,
 
     // LLM Configuration
     LLM_MODEL: process.env.LLM_MODEL || "gpt-4",

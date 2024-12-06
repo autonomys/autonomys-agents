@@ -9,6 +9,7 @@ import { config } from '../config/index.js';
 import { z } from 'zod';
 import { WorkflowState } from '../types/workflow.js';
 import { ChromaService } from '../services/vectorstore/chroma.js';
+import { twitterClientScraper } from '../services/twitter/apiv2.js';
 
 const logger = createLogger('workflow-tools');
 
@@ -30,7 +31,6 @@ export const createTools = (client: TwitterApiReadWrite) => {
                     };
                 }
 
-                // Clean up account names - remove spaces and @ symbols
                 const cleanAccounts = config.TARGET_ACCOUNTS
                     .filter(account => account && account.trim().length > 0)
                     .map(account => account.trim().replace('@', ''));
@@ -46,29 +46,39 @@ export const createTools = (client: TwitterApiReadWrite) => {
                 logger.info('Starting tweet search with:', {
                     rawAccounts: config.TARGET_ACCOUNTS,
                     cleanAccounts,
-                    lastProcessedId: lastProcessedId
+                    lastProcessedId
                 });
 
-                const processedId = !lastProcessedId ? undefined : lastProcessedId;
-                const tweets = await searchTweets(client, cleanAccounts);
+                const scraper = await twitterClientScraper();
+                const allTweets = [];
+
+                for (const account of cleanAccounts) {
+                    const tweetIterator = scraper.getTweets(account, 1);
+                    for await (const tweet of tweetIterator) {
+                        if (lastProcessedId && tweet.id && tweet.id <= lastProcessedId) {
+                            break;
+                        }
+                        allTweets.push({
+                            id: tweet.id || '',
+                            text: tweet.text || '',
+                            authorId: tweet.userId || '',
+                            authorUsername: tweet.username || '',
+                            createdAt: tweet.timeParsed || new Date()
+                        });
+                    }
+                }
+
+                allTweets.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
 
                 logger.info('Tweet search completed:', {
-                    foundTweets: tweets.length,
+                    foundTweets: allTweets.length,
                     accounts: cleanAccounts
                 });
 
-                const result = {
-                    tweets: tweets.map(tweet => ({
-                        id: tweet.id,
-                        text: tweet.text,
-                        authorId: tweet.authorId,
-                        authorUsername: tweet.authorUsername,
-                        createdAt: tweet.createdAt
-                    })),
-                    lastProcessedId: tweets[tweets.length - 1]?.id || null
+                return {
+                    tweets: allTweets,
+                    lastProcessedId: allTweets[allTweets.length - 1]?.id || null
                 };
-
-                return result;
             } catch (error) {
                 logger.error('Error searching tweets:', error);
                 return {

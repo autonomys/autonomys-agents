@@ -4,6 +4,7 @@ import { createLogger } from './utils/logger.js';
 import { getAllPendingResponses, updateResponseStatus, getAllSkippedTweets, getSkippedTweet, moveToQueue } from './services/queue/index.js';
 import { runWorkflow } from './services/agents/workflow.js';
 import { createTwitterClient, replyToTweet } from './services/twitter/api.js';
+import { twitterClientScraper } from './services/twitter/apiv2.js';   
 import { initializeSchema, initializeDefaultKOLs, initializeDatabase, addDsn } from './database/index.js';
 import { ChromaService } from './services/vectorstore/chroma.js';
 import { uploadFileFromFilepath, createAutoDriveApi, uploadFile } from '@autonomys/auto-drive'
@@ -255,15 +256,14 @@ const startServer = () => {
 // Main application startup
 const main = async () => {
     try {
-        // const uploadObservable = uploadFileFromFilepath(dsnAPI, filePath, options)
-        // uploadObservable.subscribe({
-        //     next: (status) => {
-        //         console.log('File upload progress:', status)
-        //     },
-        //     error: (error) => {
-        //         console.error('Error uploading file:', error)
-        //     }
-        //     })
+       
+        const scraper = await twitterClientScraper()
+        const tweets = await scraper.getTweets('elonmusk', 10)
+        for await (const tweet of tweets) {
+            console.log(tweet)
+        }
+
+
         const chromaService = await ChromaService.getInstance();
         // TODO: Remove this after testing
         await chromaService.addSampleTweet();
