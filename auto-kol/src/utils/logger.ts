@@ -1,5 +1,5 @@
 import winston from 'winston';
-import { config } from '../config';
+import { config } from '../config/index.js';
 import util from 'util';
 
 const formatMeta = (meta: any) => {

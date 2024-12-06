@@ -1,7 +1,7 @@
-import { QueuedResponse, ApprovalAction, SkippedTweet } from '../../types/queue';
-import { createLogger } from '../../utils/logger';
-import * as db from '../database/queue';
-import { ChromaService } from '../vectorstore/chroma';
+import { QueuedResponse, ApprovalAction, SkippedTweet } from '../../types/queue.js';
+import { createLogger } from '../../utils/logger.js';
+import * as db from '../database/queue.js';
+import { ChromaService } from '../vectorstore/chroma.js';
 
 const logger = createLogger('response-queue');
 
@@ -35,9 +35,19 @@ export const getQueuedResponse = (id: string): QueuedResponse | undefined =>
 export const getSkippedTweet = (id: string): SkippedTweet | undefined =>
     skippedTweets.get(id);
 
-export const getAllPendingResponses = (): readonly QueuedResponse[] =>
-    Array.from(responseQueue.values())
-        .filter(response => response.status === 'pending');
+export const getAllPendingResponses = async (): Promise<readonly QueuedResponse[]> => {
+    try {
+        const responses = await db.getAllPendingResponses();
+        // Update in-memory queue with database results
+        responses.forEach(response => {
+            responseQueue.set(response.id, response);
+        });
+        return responses;
+    } catch (error) {
+        logger.error('Failed to get pending responses:', error);
+        return [];
+    }
+};
 
 export const getAllSkippedTweets = (): readonly SkippedTweet[] =>
     Array.from(skippedTweets.values());
@@ -56,8 +66,7 @@ export const updateResponseStatus = async (
         };
 
         responseQueue.set(action.id, updatedResponse);
-        await db.updateResponseApproval(action);
-
+        await db.updateResponseApproval(action, response.tweet.id, response.id);
         // If rejected, remove from vector store
         if (!action.approved) {
             const chromaService = await ChromaService.getInstance();

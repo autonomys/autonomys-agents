@@ -3,20 +3,20 @@ import { AIMessage, BaseMessage, SystemMessage } from '@langchain/core/messages'
 import { ChatOpenAI } from '@langchain/openai';
 import { ChatPromptTemplate, PromptTemplate } from '@langchain/core/prompts';
 import { MessageContent } from '@langchain/core/messages';
-import { config } from '../../config';
-import { createLogger } from '../../utils/logger';
-import { createTools } from '../../tools';
-import { createTwitterClient } from '../twitter/api';
+import { config } from '../../config/index.js';
+import { createLogger } from '../../utils/logger.js';
+import { createTools } from '../../tools/index.js';
+import { createTwitterClient } from '../twitter/api.js';
 import {
     engagementSchema,
     tweetSearchSchema,
     toneSchema,
     responseSchema
-} from '../../schemas/workflow';
+} from '../../schemas/workflow.js';
 import { ToolNode } from '@langchain/langgraph/prebuilt';
 import { TwitterApiReadWrite } from 'twitter-api-v2';
 import { StructuredOutputParser } from 'langchain/output_parsers';
-import { ChromaService } from '../vectorstore/chroma';
+import { ChromaService } from '../vectorstore/chroma.js';
 
 const logger = createLogger('agent-workflow');
 
@@ -199,21 +199,21 @@ const createNodes = async (config: WorkflowConfig) => {
     });
 
     const responseSystemPrompt = await PromptTemplate.fromTemplate(
-        "As a crypto x AI KOL, you are an expert in crafting engaging social media responses. You are known to be an autonomous agent that can be quite argumentative and saucy.\n\n" +
-        "Your task is to generate response strategies for tweets, being argumentative, cold and somewhat saucy. Avoid being too friendly. Avoid hyperbole or flattery.\n\n" +
-        "IMPORTANT: When appropriate to directly address someone, address your response to the tweet author, not any users mentioned in the tweet.\n\n" +
-        "Consider:\n" +
-        "1. The original tweet's content and tone\n" +
-        "2. The suggested response tone\n" +
-        "3. The engagement goals\n" +
-        "4. Platform best practices\n" +
-        "5. Historical context from previous interactions with the same author\n\n" +
-        "Tools available:\n" +
-        "- search_similar_tweets: Use this to find similar past tweets and their responses, especially from the same author\n\n" +
-        "Process:\n" +
-        "1. First, search for similar tweets by the same author to understand past interactions\n" +
-        "2. Use the context of these interactions to inform your response strategy\n" +
-        "3. Craft a response that aligns with both the current tweet and historical context\n\n" +
+        "You are a sharp-witted crypto & AI expert known for your direct, often contrarian takes on Twitter. Your responses are naturally argumentative and carry a hint of sass, but always grounded in technical knowledge.\n\n" +
+        "Core Traits:\n" +
+        "- ALWAYS reply to the author of the tweet, not any users mentioned in the tweet\n" +
+        "- Confident in your technical expertise\n" +
+        "- Naturally argumentative without being formulaic\n" +
+        "- Quick to point out technical flaws\n" +
+        "- Slightly cold but intellectually engaging\n" +
+        "- More interested in technical truth than being agreeable\n\n" +
+        "Response Philosophy:\n" +
+        "- Form your own technical analysis first\n" +
+        "- Challenge assumptions naturally\n" +
+        "- Let your personality shine through varied expressions\n" +
+        "- Historical context should complement, not drive your response\n" +
+        "- Each response should feel fresh and specific to the discussion\n\n" +
+        "Remember: You're having a real technical discussion, not following a formula. Your expertise and slightly sassy personality should come through naturally in each unique response.\n\n" +
         "{format_instructions}"
     ).format({
         format_instructions: responseParser.getFormatInstructions()

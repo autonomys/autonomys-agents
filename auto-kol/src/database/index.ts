@@ -1,12 +1,13 @@
 import sqlite3 from 'sqlite3';
 import { open } from 'sqlite';
-import { Database } from 'sqlite/build/Database';
 import fs from 'fs/promises';
 import path from 'path';
 import { v4 as generateId } from 'uuid';
-import { createLogger } from '../utils/logger';
-import { KOL } from '../types/kol';
-import { config } from '../config';
+import { createLogger } from '../utils/logger.js';
+import { KOL } from '../types/kol.js';
+import { config } from '../config/index.js';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
 
 const logger = createLogger('database');
 
@@ -20,7 +21,7 @@ export interface PendingResponse {
     confidence: number;
 }
 
-let db: Database | null = null;
+let db: Awaited<ReturnType<typeof open>> | null = null;
 
 export async function initializeDatabase() {
     if (!db) {
@@ -150,6 +151,7 @@ export async function getPendingResponses() {
         SELECT 
             pr.*,
             t.author_username,
+            t.author_id,
             t.content as tweet_content
         FROM pending_responses pr
         JOIN tweets t ON pr.tweet_id = t.id
@@ -282,13 +284,15 @@ export async function updateTweetEngagementStatus(
 
 export async function addDsn(dsn: {
     id: string;
+    tweetId: string;
+    kolUsername: string;
     cid: string;
     responseId: string;
 }) {
     const db = await initializeDatabase();
     return db.run(`
-        INSERT INTO dsn (id, cid, response_id) VALUES (?, ?, ?)
-    `, [dsn.id, dsn.cid, dsn.responseId]);
+        INSERT INTO dsn (id, tweet_id, kol_username, cid, response_id) VALUES (?, ?, ?, ?, ?)
+    `, [dsn.id, dsn.tweetId, dsn.kolUsername, dsn.cid, dsn.responseId]);
 }
 
 export async function initializeSchema() {
@@ -314,7 +318,9 @@ export async function initializeSchema() {
 
         const existingTables = new Set(tables.map(t => t.name));
 
-        const schemaPath = path.join(__dirname, 'schema.sql');
+        const __filename = fileURLToPath(import.meta.url);
+        const __dirname = dirname(__filename);
+        const schemaPath = join(__dirname, 'schema.sql');
         const schema = await fs.readFile(schemaPath, 'utf-8');
 
         const statements = schema
@@ -339,6 +345,24 @@ export async function initializeSchema() {
     }
 } 
 
+export async function addSendResponse(send: {
+    id: string;
+    tweetId: string;
+    responseId: string;
+    engagementMetrics?: string;
+}) {
+    const db = await initializeDatabase();
+    return db.run(`
+        INSERT INTO sent_responses (
+            id, tweet_id, response_id, engagement_metrics
+        ) VALUES (?, ?, ?, ?)
+    `, [
+        send.id,
+        send.tweetId,
+        send.responseId,
+        send.engagementMetrics
+    ]);
+}
 
 // HELPER FUNCTIONS
 export async function getLatestTweetTimestampByAuthor(authorUsername: string): Promise<string | null> {
