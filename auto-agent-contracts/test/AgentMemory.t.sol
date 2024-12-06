@@ -6,70 +6,58 @@ import {AgentMemory} from "../src/AgentMemory.sol";
 
 contract AgentMemoryTest is Test {
     AgentMemory public memory_;
+    address public agent;
 
     function setUp() public {
         memory_ = new AgentMemory();
+        agent = address(this);
     }
 
-    function testSetAndGetHash() public {
+    function testSetAndGetLastMemoryHash() public {
         bytes32 testHash = bytes32(uint256(1));
-        memory_.setHash(testHash);
-        assertEq(memory_.contentHash(), testHash);
+        memory_.setLastMemoryHash(testHash);
+        assertEq(memory_.getLastMemoryHash(agent), testHash);
     }
 
-    function testCIDGeneration() public {
-        // This is a known Blake3 hash and its corresponding CID
-        // Example hash: 0x0000000000000000000000000000000000000000000000000000000000000001
-        // Should produce a CID starting with "bafkr" followed by base32 encoded hash
-        bytes32 testHash = bytes32(uint256(1));
-        memory_.setHash(testHash);
+    function testLastMemoryHashMapping() public {
+        bytes32 testHash1 = bytes32(uint256(1));
+        bytes32 testHash2 = bytes32(uint256(2));
+        address otherAgent = address(0x123);
 
-        string
-            memory expectedCID = "bafkreiaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
-        string memory generatedCID = memory_.getFullCID();
+        // Set hash for this contract
+        memory_.setLastMemoryHash(testHash1);
+        assertEq(memory_.getLastMemoryHash(agent), testHash1);
+        assertEq(memory_.lastMemoryHash(agent), testHash1);
 
-        assertEq(generatedCID, expectedCID, "CID generation failed");
-        assertTrue(memory_.verifyCID(expectedCID), "CID verification failed");
+        // Set hash as other agent
+        vm.prank(otherAgent);
+        memory_.setLastMemoryHash(testHash2);
+
+        // Verify each agent has their own hash
+        assertEq(memory_.getLastMemoryHash(agent), testHash1);
+        assertEq(memory_.getLastMemoryHash(otherAgent), testHash2);
     }
 
-    function testCIDVerification() public {
-        bytes32 testHash = bytes32(uint256(1));
-        memory_.setHash(testHash);
+    function testUpdateHash() public {
+        bytes32 firstHash = bytes32(uint256(1));
+        bytes32 secondHash = bytes32(uint256(2));
 
-        string memory correctCID = memory_.getFullCID();
-        string
-            memory wrongCID = "bafkreibbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb";
+        // Measure gas for first hash setting
+        uint256 gasBefore = gasleft();
+        memory_.setLastMemoryHash(firstHash);
+        uint256 firstSetGas = gasBefore - gasleft();
 
-        assertTrue(
-            memory_.verifyCID(correctCID),
-            "Correct CID verification failed"
-        );
-        assertFalse(
-            memory_.verifyCID(wrongCID),
-            "Wrong CID verification should fail"
-        );
-    }
+        assertEq(memory_.getLastMemoryHash(agent), firstHash);
 
-    function testRealisticBlake3Hash() public {
-        // This is a realistic Blake3 hash for the text "Hello, World!"
-        // Generated using the Blake3 algorithm
-        bytes32 realisticHash = 0x7436f3ce9501133f7f8b131e0cb6d866fd0aa7bdd9f3545adb531626415c5f81;
-        memory_.setHash(realisticHash);
+        // Measure gas for updating existing hash
+        gasBefore = gasleft();
+        memory_.setLastMemoryHash(secondHash);
+        uint256 updateGas = gasBefore - gasleft();
 
-        string memory generatedCID = memory_.getFullCID();
-        assertTrue(
-            memory_.verifyCID(generatedCID),
-            "Realistic hash CID verification failed"
-        );
-    }
+        assertEq(memory_.getLastMemoryHash(agent), secondHash);
 
-    function testCIDConstants() public {
-        assertEq(memory_.VERSION(), 1, "CID version should be 1");
-        assertEq(memory_.CODEC(), 0x71, "Codec should be raw (0x71)");
-        assertEq(
-            memory_.HASH_ALGO(),
-            0x1E,
-            "Hash algorithm should be Blake3-256 (0x1E)"
-        );
+        // Log gas usage for comparison
+        emit log_named_uint("Gas for first set", firstSetGas);
+        emit log_named_uint("Gas for update", updateGas);
     }
 }
