@@ -4,24 +4,35 @@ const theme = extendTheme({
     styles: {
         global: {
             body: {
-                bg: 'gray.50',
+                bg: '#000000',
+                color: '#00ff00',
+                fontFamily: 'Monaco, "Courier New", monospace',
             },
         },
     },
-    colors: {
-        brand: {
-            50: '#E6F6FF',
-            100: '#BAE3FF',
-            200: '#7CC4FA',
-            300: '#47A3F3',
-            400: '#2186EB',
-            500: '#0967D2',
-            600: '#0552B5',
-            700: '#03449E',
-            800: '#01337D',
-            900: '#002159',
+    components: {
+        Card: {
+            baseStyle: {
+                container: {
+                    border: '2px solid #00ff00',
+                    borderStyle: 'outset',
+                    bg: '#001100',
+                    boxShadow: '0 0 10px #00ff00',
+                    color: '#00ff00',
+                }
+            }
         },
-    },
+        Button: {
+            baseStyle: {
+                border: '2px outset #00ff00',
+                bg: '#001100',
+                color: '#00ff00',
+                _hover: {
+                    bg: '#002200',
+                }
+            }
+        }
+    }
 })
 
 export default theme 

@@ -13,18 +13,23 @@ const NavItem = ({ to, icon, children, isActive }: {
         to={to}
         px={4}
         py={2}
-        rounded="md"
-        bg={isActive ? 'brand.50' : 'transparent'}
-        color={isActive ? 'brand.600' : 'gray.600'}
+        border="2px solid #00ff00"
+        borderStyle={isActive ? 'inset' : 'outset'}
+        bg="#001100"
+        color="#00ff00"
         _hover={{
-            bg: isActive ? 'brand.50' : 'gray.100',
+            textDecoration: 'none',
+            bg: '#002200',
+            boxShadow: '0 0 10px #00ff00',
         }}
         display="flex"
         alignItems="center"
         gap={2}
     >
-        <Icon as={icon} />
-        <Text>{children}</Text>
+        <Icon as={icon} color="#00ff00" />
+        <Text fontFamily="Monaco, 'Courier New', monospace">
+            [{children}]
+        </Text>
     </Link>
 )
 
@@ -33,7 +38,7 @@ function Navbar() {
 
     return (
         <Box as="nav" bg="white" shadow="sm">
-            <Flex maxW="container.xl" mx="auto" px={4} py={4} gap={4}>
+            <Flex maxW="container.xl" mx="auto" px={4} py={4} gap={4} justify="center">
                 <NavItem
                     to="/"
                     icon={FiHome}
