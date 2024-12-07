@@ -4,10 +4,14 @@ import { createLogger } from './utils/logger.js';
 import { updateResponseStatus, getAllPendingResponses, moveSkippedToQueue } from './services/database/index.js';
 import { runWorkflow } from './services/agents/workflow.js';
 import { twitterClientScraper } from './services/twitter/apiv2.js';   
+
 import { initializeSchema, initializeDefaultKOLs, initializeDatabase, addDsn } from './database/index.js';
 import { createAutoDriveApi, uploadFile } from '@autonomys/auto-drive'
 import { v4 as generateId } from 'uuid';
 import { ApprovalAction } from './types/queue.js';
+
+import cors from 'cors'
+
 
 const logger = createLogger('app');
 const dsnAPI = createAutoDriveApi({ apiKey: config.DSN_API_KEY! })
@@ -15,6 +19,11 @@ const dsnAPI = createAutoDriveApi({ apiKey: config.DSN_API_KEY! })
 // const filePath = join(__dirname, '../file.txt')
 
 const app = express();
+
+app.use(cors({
+    origin: 'http://localhost:3000',
+    credentials: true
+}))
 
 // Initialize Twitter client
 
@@ -72,7 +81,7 @@ const startServer = () => {
 
                 // Upload to DSN
                 const db = await initializeDatabase();
-               
+
                 const previousDsn = await db.get(`
                     SELECT dsn.cid 
                     FROM dsn
@@ -81,7 +90,7 @@ const startServer = () => {
                     ORDER BY dsn.created_at DESC 
                     LIMIT 1
                 `, [updatedResponse.tweet.author_username]) || { cid: null };
-                
+
                 const dsnData = {
                     previousCid: previousDsn?.cid || null,
                     updatedResponse,
