@@ -60,13 +60,7 @@ function Navbar() {
                 >
                     Skipped
                 </NavItem>
-                <NavItem
-                    to="/settings"
-                    icon={FiSettings}
-                    isActive={location.pathname === '/settings'}
-                >
-                    Settings
-                </NavItem>
+
             </Flex>
         </Box>
     )
