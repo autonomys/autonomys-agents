@@ -1,15 +1,17 @@
 import { DynamicStructuredTool } from '@langchain/core/tools';
 import { TwitterApiReadWrite } from 'twitter-api-v2';
-import { searchTweets } from '../services/twitter/api.js';
-import { addToQueueMemory, addToSkippedMemory } from '../services/queue/index.js';
+import { addToQueue, addToSkipped } from '../services/database/index.js';
+import { QueuedResponseMemory } from '../types/queue.js';
+import { AgentResponse } from '../types/agent.js';
 import { queueActionSchema } from '../schemas/workflow.js';
 import { createLogger } from '../utils/logger.js';
-import { v4 as uuidv4 } from 'uuid';
+import { v4 as generateId } from 'uuid';
 import { config } from '../config/index.js';
 import { z } from 'zod';
 import { WorkflowState } from '../types/workflow.js';
 import { ChromaService } from '../services/vectorstore/chroma.js';
 import { twitterClientScraper } from '../services/twitter/apiv2.js';
+import { Tweet } from '../types/twitter.js';
 
 const logger = createLogger('workflow-tools');
 
@@ -150,20 +152,20 @@ export const createTools = (client: TwitterApiReadWrite) => {
         schema: queueActionSchema,
         func: async (input) => {
             try {
-                const id = uuidv4();
-                const queuedResponse = {
+                const id = generateId();
+                const response: QueuedResponseMemory = {
                     id,
-                    tweet: input.tweet,
-                    response: {
+                    tweet: <Tweet> input.tweet,
+                    response: <AgentResponse> {
                         content: input.workflowState?.responseStrategy?.content,
                     },
                     status: 'pending' as const,
                     created_at: new Date(),
                     updatedAt: new Date(),
-                    workflowState: input.workflowState as WorkflowState
+                    workflowState: <WorkflowState> input.workflowState
                 };
 
-                addToQueueMemory(queuedResponse);
+                addToQueue(response);
                 return {
                     success: true,
                     id,
@@ -183,7 +185,7 @@ export const createTools = (client: TwitterApiReadWrite) => {
         schema: queueActionSchema,
         func: async (input) => {
             try {
-                const id = uuidv4();
+                const id = generateId();
                 const skippedTweet = {
                     id,
                     tweet: input.tweet,
@@ -200,7 +202,7 @@ export const createTools = (client: TwitterApiReadWrite) => {
                     priority: input.priority
                 });
 
-                addToSkippedMemory(skippedTweet);
+                addToSkipped(skippedTweet);
 
                 logger.info('Successfully queued skipped tweet:', { id });
 

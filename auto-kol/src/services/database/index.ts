@@ -41,8 +41,6 @@ export async function addToQueue(response: QueuedResponseMemory): Promise<void> 
             estimatedImpact: response.workflowState.responseStrategy?.estimatedImpact || 5,
             confidence: response.workflowState.responseStrategy?.confidence || 0.5
         });
-
-        logger.info(`Added response to queue: ${response.id}`);
     } catch (error) {
         logger.error('Failed to add response to queue:', error);
         throw error;
@@ -93,11 +91,7 @@ export const updateResponseStatus = async (
         const pendingResponse = await getPendingResponsesByTweetId(action.id);
         const tweet = await getTweetById(pendingResponse.tweet_id);
         await updateResponseApproval(action, pendingResponse);
-        // If rejected, remove from vector store
-        if (!action.approved) {
-            const chromaService = await ChromaService.getInstance();
-            await chromaService.deleteTweet(action.id);
-        }
+       
         return {
             tweet: tweet as Tweet,
             status: action.approved ? 'approved' : 'rejected',
@@ -128,8 +122,6 @@ export async function updateResponseApproval(
 } 
 
 
-
-/// UTILITIES
 export async function isTweetExists(tweetId: string): Promise<boolean> {
     const tweet = await db.getTweetById(tweetId);
     return tweet !== undefined;
@@ -169,3 +161,31 @@ export async function getAllPendingResponses(): Promise<QueuedResponseMemory[]> 
         throw error;
     }
 }
+
+// Optional: Add ability to move skipped tweet to queue
+export const moveSkippedToQueue = async (
+    skippedId: string,
+    queuedResponse: Omit<QueuedResponseMemory, 'status'> & { status: 'pending' }
+): Promise<void> => {
+    try {
+
+        //// TODO
+        // Get skipped tweet from db by tweet id
+        // const skipped = await getSkippedTweetById(skippedId);
+        // if (!skipped) {
+        //     throw new Error('Skipped tweet not found');
+        // }
+
+        const typedResponse: QueuedResponseMemory = {
+            ...queuedResponse,
+            status: 'pending'
+        };
+
+        await addToQueue(typedResponse);
+        // Remove from skipped tweets table
+        // await db.deleteSkippedTweet(skippedId);
+        logger.info(`Moved skipped tweet ${skippedId} to response queue`);
+    } catch (error) {
+        logger.error('Failed to move skipped tweet to queue:', error);
+    }
+};
