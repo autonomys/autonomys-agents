@@ -1,15 +1,17 @@
 import { DynamicStructuredTool } from '@langchain/core/tools';
 import { TwitterApiReadWrite } from 'twitter-api-v2';
-import { searchTweets } from '../services/twitter/api.js';
-import { addToQueue, addToSkipped } from '../services/queue/index.js';
+import { addToQueue, addToSkipped } from '../services/database/index.js';
+import { QueuedResponseMemory } from '../types/queue.js';
+import { AgentResponse } from '../types/agent.js';
 import { queueActionSchema } from '../schemas/workflow.js';
 import { createLogger } from '../utils/logger.js';
-import { v4 as uuidv4 } from 'uuid';
+import { v4 as generateId } from 'uuid';
 import { config } from '../config/index.js';
 import { z } from 'zod';
 import { WorkflowState } from '../types/workflow.js';
 import { ChromaService } from '../services/vectorstore/chroma.js';
 import { twitterClientScraper } from '../services/twitter/apiv2.js';
+import { Tweet } from '../types/twitter.js';
 
 const logger = createLogger('workflow-tools');
 
@@ -41,16 +43,16 @@ export const createTools = (client: TwitterApiReadWrite) => {
                         allTweets.push({
                             id: tweet.id,
                             text: tweet.text,
-                            authorId: tweet.userId || '',
-                            authorUsername: tweet.username || '',
-                            createdAt: tweet.timeParsed?.toISOString() || new Date().toISOString()
+                            author_id: tweet.userId || '',
+                            author_username: tweet.username || '',
+                            created_at: tweet.timeParsed?.toISOString() || new Date().toISOString()
                         });
                     }
                 }
 
                 // Sort tweets by creation date (newest first)
                 allTweets.sort((a, b) => 
-                    new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+                    new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
                 );
 
                 // Return in the format expected by tweetSearchSchema
@@ -108,7 +110,7 @@ export const createTools = (client: TwitterApiReadWrite) => {
                 const allTweets = [];
 
                 for (const account of cleanAccounts) {
-                    const tweetIterator = scraper.getTweets(account, 10);
+                    const tweetIterator = scraper.getTweets(account, 2);
                     for await (const tweet of tweetIterator) {
                         if (lastProcessedId && tweet.id && tweet.id <= lastProcessedId) {
                             break;
@@ -116,14 +118,14 @@ export const createTools = (client: TwitterApiReadWrite) => {
                         allTweets.push({
                             id: tweet.id || '',
                             text: tweet.text || '',
-                            authorId: tweet.userId || '',
-                            authorUsername: tweet.username || '',
-                            createdAt: tweet.timeParsed || new Date()
+                            author_id: tweet.userId || '',
+                            author_username: tweet.username?.toLowerCase() || '',
+                            created_at: tweet.timeParsed || new Date()
                         });
                     }
                 }
 
-                allTweets.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+                allTweets.sort((a, b) => b.created_at.getTime() - a.created_at.getTime());
 
                 logger.info('Tweet search completed:', {
                     foundTweets: allTweets.length,
@@ -150,20 +152,20 @@ export const createTools = (client: TwitterApiReadWrite) => {
         schema: queueActionSchema,
         func: async (input) => {
             try {
-                const id = uuidv4();
-                const queuedResponse = {
+                const id = generateId();
+                const response: QueuedResponseMemory = {
                     id,
-                    tweet: input.tweet,
-                    response: {
+                    tweet: <Tweet> input.tweet,
+                    response: <AgentResponse> {
                         content: input.workflowState?.responseStrategy?.content,
                     },
                     status: 'pending' as const,
-                    createdAt: new Date(),
+                    created_at: new Date(),
                     updatedAt: new Date(),
-                    workflowState: input.workflowState as WorkflowState
+                    workflowState: <WorkflowState> input.workflowState
                 };
 
-                addToQueue(queuedResponse);
+                addToQueue(response);
                 return {
                     success: true,
                     id,
@@ -183,13 +185,13 @@ export const createTools = (client: TwitterApiReadWrite) => {
         schema: queueActionSchema,
         func: async (input) => {
             try {
-                const id = uuidv4();
+                const id = generateId();
                 const skippedTweet = {
                     id,
                     tweet: input.tweet,
                     reason: input.reason || 'No reason provided',
                     priority: input.priority || 0,
-                    createdAt: new Date(),
+                    created_at: new Date(),
                     workflowState: input.workflowState as WorkflowState
                 };
 

@@ -122,9 +122,9 @@ export const searchTweets = async (
                         return {
                             id: tweet.id,
                             text: fullText,
-                            authorId: tweet.author_id,
-                            authorUsername: user?.username || "unknown",
-                            createdAt: tweet.created_at
+                            author_id: tweet.author_id,
+                            author_username: user?.username || "unknown",
+                            created_at: tweet.created_at
                         };
                     });
 
@@ -132,7 +132,7 @@ export const searchTweets = async (
             }
 
             // Sort all tweets by creation date (newest first)
-            allTweets.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+            allTweets.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 
             logger.info('Combined tweet results:', {
                 totalTweets: allTweets.length,

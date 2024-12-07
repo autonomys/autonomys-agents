@@ -1,6 +1,6 @@
 export type KOL = Readonly<{
     id: string;
     username: string;
-    createdAt?: Date;
+    created_at?: Date;
     updatedAt?: Date;
 }>;

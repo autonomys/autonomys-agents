@@ -1,27 +1,21 @@
 import express from 'express';
 import { config } from './config/index.js';
 import { createLogger } from './utils/logger.js';
-import { getAllPendingResponses, updateResponseStatus, getAllSkippedTweets, getSkippedTweet, moveToQueue } from './services/queue/index.js';
+import { updateResponseStatus, getAllPendingResponses, moveSkippedToQueue } from './services/database/index.js';
 import { runWorkflow } from './services/agents/workflow.js';
-import { createTwitterClient, replyToTweet } from './services/twitter/api.js';
-import { twitterClientScraper } from './services/twitter/apiv2.js';
+import { twitterClientScraper } from './services/twitter/apiv2.js';   
+
 import { initializeSchema, initializeDefaultKOLs, initializeDatabase, addDsn } from './database/index.js';
-import { ChromaService } from './services/vectorstore/chroma.js';
-import { uploadFileFromFilepath, createAutoDriveApi, uploadFile } from '@autonomys/auto-drive'
-import { fileURLToPath } from 'url';
-import { dirname, join } from 'path';
+import { createAutoDriveApi, uploadFile } from '@autonomys/auto-drive'
 import { v4 as generateId } from 'uuid';
 import { ApprovalAction } from './types/queue.js';
+
 import cors from 'cors'
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+
 
 const logger = createLogger('app');
 const dsnAPI = createAutoDriveApi({ apiKey: config.DSN_API_KEY! })
-const options = {
-    password: '',
-    compression: true
-}
+
 // const filePath = join(__dirname, '../file.txt')
 
 const app = express();
@@ -62,29 +56,23 @@ const startServer = () => {
         try {
             const { approved, feedback } = req.body;
             const action: ApprovalAction = {
-                tweetId: req.params.id,
-                responseId: req.params.id,
+                id: req.params.id,
                 approved,
                 feedback
             };
-            // TODO: now, you have to fetch pending first then send approve/reject request
+            logger.info('Approving response:', {
+                id: action.id,
+                approved: action.approved,
+                feedback: action.feedback
+            });
 
             const updatedResponse = await updateResponseStatus(action);
             if (!updatedResponse) {
                 return res.status(404).json({ error: 'Response not found' });
             }
-            logger.info('Updated response status:', {
-                id: updatedResponse.id,
-                status: updatedResponse.status
-            });
+          
             if (updatedResponse.status === 'approved') {
-                logger.info('Creating Twitter client for approved response');
-
-                logger.info('Sending reply:', {
-                    tweetId: updatedResponse.tweet.id,
-                    content: updatedResponse.response.content
-                });
-
+             
                 // await replyToTweet(
                 //     client,
                 //     updatedResponse.tweet.id,
@@ -101,24 +89,11 @@ const startServer = () => {
                     WHERE kol_username = ?
                     ORDER BY dsn.created_at DESC 
                     LIMIT 1
-                `, [updatedResponse.tweet.authorUsername]) || { cid: null };
+                `, [updatedResponse.tweet.author_username]) || { cid: null };
 
                 const dsnData = {
                     previousCid: previousDsn?.cid || null,
-                    tweet: {
-                        id: updatedResponse.tweet.id,
-                        text: updatedResponse.tweet.text,
-                        authorUsername: updatedResponse.tweet.authorUsername,
-                        createdAt: updatedResponse.tweet.createdAt
-                    },
-                    response: {
-                        id: updatedResponse.id,
-                        content: updatedResponse.response.content,
-                        tone: updatedResponse.workflowState.toneAnalysis?.dominantTone,
-                        reasoning: updatedResponse.workflowState.selectedResponse?.reasoning,
-                        estimatedImpact: updatedResponse.workflowState.engagementDecision?.priority,
-                        confidence: updatedResponse.workflowState.selectedResponse?.confidence
-                    },
+                    updatedResponse,
                     feedback: feedback || null,
                     timestamp: new Date().toISOString()
                 };
@@ -130,10 +105,10 @@ const startServer = () => {
                         read: async function* () {
                             yield jsonBuffer;
                         },
-                        name: `${updatedResponse.id}.json`,
+                        name: `${updatedResponse.tweet.id}.json`,
                         mimeType: 'application/json',
                         size: jsonBuffer.length,
-                        path: updatedResponse.id
+                        path: updatedResponse.tweet.id
                     },
                     { compression: true }
                 );
@@ -149,24 +124,17 @@ const startServer = () => {
                 if (!finalCid) {
                     throw new Error('Failed to get CID from DSN upload');
                 }
-                // Add DSN record to database
-                logger.info('Adding DSN record to database', {
-                    tweetId: updatedResponse.tweet.id,
-                    kolUsername: updatedResponse.tweet.authorUsername,
-                    cid: finalCid,
-                    responseId: updatedResponse.id
-                });
                 await addDsn({
                     id: generateId(),
                     tweetId: updatedResponse.tweet.id,
-                    kolUsername: updatedResponse.tweet.authorUsername,
+                    kolUsername: updatedResponse.tweet.author_username,
                     cid: finalCid,
-                    responseId: updatedResponse.id
+                    responseId: updatedResponse.response.id
                 });
 
                 logger.info('Response uploaded to DSN successfully', {
                     tweetId: updatedResponse.tweet.id,
-                    responseId: updatedResponse.id,
+                    responseId: updatedResponse.response.id,
                     cid: finalCid
                 });
             }
@@ -194,52 +162,52 @@ const startServer = () => {
     });
 
     // Get all skipped tweets
-    app.get('/tweets/skipped', (_, res) => {
-        const skippedTweets = getAllSkippedTweets();
-        res.json(skippedTweets);
-    });
+    // app.get('/tweets/skipped', (_, res) => {
+    //     const skippedTweets = getAllSkippedTweetsMemory();
+    //     res.json(skippedTweets);
+    // });
 
     // Get specific skipped tweet
-    app.get('/tweets/skipped/:id', (req, res) => {
-        const skipped = getSkippedTweet(req.params.id);
-        if (!skipped) {
-            return res.status(404).json({ error: 'Skipped tweet not found' });
-        }
-        res.json(skipped);
-    });
+    // app.get('/tweets/skipped/:id', (req, res) => {
+    //     const skipped = getSkippedTweetMemory(req.params.id);
+    //     if (!skipped) {
+    //         return res.status(404).json({ error: 'Skipped tweet not found' });
+    //     }
+    //     res.json(skipped);
+    // });
 
-    // Move skipped tweet to response queue
-    app.post('/tweets/skipped/:id/queue', async (req, res) => {
-        try {
-            const skipped = getSkippedTweet(req.params.id);
-            if (!skipped) {
-                return res.status(404).json({ error: 'Skipped tweet not found' });
-            }
+    // // Move skipped tweet to response queue
+    // app.post('/tweets/skipped/:id/queue', async (req, res) => {
+    //     try {
+    //         const skipped = getSkippedTweetMemory(req.params.id);
+    //         if (!skipped) {
+    //             return res.status(404).json({ error: 'Skipped tweet not found' });
+    //         }
 
-            const { response } = req.body;
-            if (!response) {
-                return res.status(400).json({ error: 'Response is required' });
-            }
+    //         const { response } = req.body;
+    //         if (!response) {
+    //             return res.status(400).json({ error: 'Response is required' });
+    //         }
 
-            const queuedResponse = await moveToQueue(skipped.id, {
-                id: skipped.id,
-                tweet: skipped.tweet,
-                response: {
-                    content: response.content,
-                    references: response.references
-                },
-                workflowState: skipped.workflowState,
-                createdAt: new Date(),
-                updatedAt: new Date(),
-                status: 'pending'
-            });
+    //         const queuedResponse = await moveSkippedToQueue(skipped.id, {
+    //             id: skipped.id,
+    //             tweet: skipped.tweet,
+    //             response: {
+    //                 content: response.content,
+    //                 references: response.references
+    //             },
+    //             workflowState: skipped.workflowState,
+    //             created_at: new Date(),
+    //             updatedAt: new Date(),
+    //             status: 'pending'
+    //         });
 
-            res.json(queuedResponse);
-        } catch (error) {
-            logger.error('Error moving skipped tweet to queue:', error);
-            res.status(500).json({ error: 'Failed to move tweet to queue' });
-        }
-    });
+    //         res.json(queuedResponse);
+    //     } catch (error) {
+    //         logger.error('Error moving skipped tweet to queue:', error);
+    //         res.status(500).json({ error: 'Failed to move tweet to queue' });
+    //     }
+    // });
 
     // Start server
     app.listen(config.PORT, () => {

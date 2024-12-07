@@ -14,7 +14,7 @@ const logger = createLogger('database');
 
 export interface PendingResponse {
     id: string;
-    tweetId: string;
+    tweet_id: string;
     content: string;
     tone: string;
     strategy: string;
@@ -93,7 +93,7 @@ export async function getKOLAccounts(): Promise<KOL[]> {
         return accounts.map(account => ({
             id: account.id,
             username: account.username,
-            createdAt: new Date(account.created_at),
+            created_at: new Date(account.created_at),
             updatedAt: new Date(account.updated_at)
         }));
     } catch (error) {
@@ -127,16 +127,16 @@ export async function initializeDefaultKOLs(): Promise<void> {
     }
 }
 
-export async function addPendingResponse(response: PendingResponse) {
+export async function addResponse(response: PendingResponse) {
     const db = await initializeDatabase();
     return db.run(`
-        INSERT INTO pending_responses (
+        INSERT INTO responses (
             id, tweet_id, content, tone, strategy, 
             estimated_impact, confidence, status
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     `, [
         response.id,
-        response.tweetId,
+        response.tweet_id,
         response.content,
         response.tone,
         response.strategy,
@@ -154,22 +154,31 @@ export async function getPendingResponses() {
             t.author_username,
             t.author_id,
             t.content as tweet_content
-        FROM pending_responses pr
+        FROM responses pr
         JOIN tweets t ON pr.tweet_id = t.id
         WHERE pr.status = 'pending'
         ORDER BY pr.created_at DESC
     `);
 }
 
-export async function getPendingResponsesByTweetId(tweetId: string) {
+export async function getResponseByTweetId(tweet_id: string): Promise<PendingResponse> {
     const db = await initializeDatabase();
-    return db.all(`
-        SELECT * FROM pending_responses WHERE tweet_id = ?
-    `, [tweetId]);
+    const response = await db.all(`
+        SELECT * FROM responses WHERE tweet_id = ?
+    `, [tweet_id]);
+    return response[0] as PendingResponse;
+}
+
+export async function getPendingResponsesByTweetId(id: string): Promise<PendingResponse> {
+    const db = await initializeDatabase();
+    const pending_response = await db.all(`
+        SELECT * FROM responses WHERE id = ? AND status = 'pending'
+    `, [id]);
+    return pending_response[0] as PendingResponse;
 }
 
 export async function updateResponseStatus(
-    responseId: string, 
+    id: string, 
     status: 'approved' | 'rejected',
     feedback?: string
 ) {
@@ -179,25 +188,12 @@ export async function updateResponseStatus(
     
     try {
         await db.run(`
-            UPDATE pending_responses 
+            UPDATE responses 
             SET status = ?, updated_at = CURRENT_TIMESTAMP
             WHERE id = ?
-        `, [status, responseId]);
-
-        if (feedback) {
-            await db.run(`
-                INSERT INTO feedback (
-                    id, response_id, feedback_type, feedback_content
-                ) VALUES (?, ?, ?, ?)
-            `, [
-                generateId(),
-                responseId,
-                status === 'approved' ? 'approve' : 'reject',
-                feedback
-            ]);
-        }
-
+        `, [status, id]);
         await db.run('COMMIT');
+        logger.info(`Updated response status: ${id}`);
     } catch (error) {
         await db.run('ROLLBACK');
         throw error;
@@ -206,30 +202,30 @@ export async function updateResponseStatus(
 
 export async function addTweet(tweet: {
     id: string;
-    authorId: string;
-    authorUsername: string;
+    author_id: string;
+    author_username: string;
     content: string;
-    createdAt: string;
+    created_at: string;
 }) {
     const db = await initializeDatabase();
     return db.run(`
         INSERT INTO tweets (
             id, author_id, author_username, content, 
-            created_at, engagement_status
-        ) VALUES (?, ?, ?, ?, ?, ?)
+            created_at
+        ) VALUES (?, ?, ?, ?, ?)
     `, [
         tweet.id,
-        tweet.authorId,
-        tweet.authorUsername,
+        tweet.author_id,
+        tweet.author_username,
         tweet.content,
-        tweet.createdAt,
-        'pending'
+        tweet.created_at,
     ]);
 }
 
 export async function getTweetById(tweetId: string): Promise<Tweet | undefined> {
     const db = await initializeDatabase();
-    return db.get(`SELECT * FROM tweets WHERE id = ?`, [tweetId]);
+    const tweet = await db.get(`SELECT * FROM tweets WHERE id = ?`, [tweetId]);
+    return tweet as Tweet;
 }
 
 export async function addSkippedTweet(skipped: {
@@ -264,24 +260,6 @@ export async function getSkippedTweets() {
     `);
 }
 
-export async function addSentResponse(sent: {
-    id: string;
-    tweetId: string;
-    responseId: string;
-    engagementMetrics?: string;
-}) {
-    const db = await initializeDatabase();
-    return db.run(`
-        INSERT INTO sent_responses (
-            id, tweet_id, response_id, engagement_metrics
-        ) VALUES (?, ?, ?, ?)
-    `, [
-        sent.id,
-        sent.tweetId,
-        sent.responseId,
-        sent.engagementMetrics
-    ]);
-}
 
 export async function updateTweetEngagementStatus(
     tweetId: string,
@@ -303,6 +281,7 @@ export async function addDsn(dsn: {
     responseId: string;
 }) {
     const db = await initializeDatabase();
+    logger.info(`Adding DSN record to database: ${dsn.id}, ${dsn.tweetId}, ${dsn.kolUsername}, ${dsn.cid}, ${dsn.responseId}`);
     return db.run(`
         INSERT INTO dsn (id, tweet_id, kol_username, cid, response_id) VALUES (?, ?, ?, ?, ?)
     `, [dsn.id, dsn.tweetId, dsn.kolUsername, dsn.cid, dsn.responseId]);
@@ -321,10 +300,8 @@ export async function initializeSchema() {
             WHERE type='table' AND name IN (
                 'kol_accounts',
                 'tweets', 
-                'pending_responses', 
-                'skipped_tweets', 
-                'sent_responses', 
-                'feedback',
+                'responses', 
+                'skipped_tweets',  
                 'dsn'
             )
         `);
@@ -358,27 +335,9 @@ export async function initializeSchema() {
     }
 } 
 
-export async function addSendResponse(send: {
-    id: string;
-    tweetId: string;
-    responseId: string;
-    engagementMetrics?: string;
-}) {
-    const db = await initializeDatabase();
-    return db.run(`
-        INSERT INTO sent_responses (
-            id, tweet_id, response_id, engagement_metrics
-        ) VALUES (?, ?, ?, ?)
-    `, [
-        send.id,
-        send.tweetId,
-        send.responseId,
-        send.engagementMetrics
-    ]);
-}
 
 // HELPER FUNCTIONS
-export async function getLatestTweetTimestampByAuthor(authorUsername: string): Promise<string | null> {
+export async function getLatestTweetTimestampByAuthor(author_username: string): Promise<string | null> {
     const db = await initializeDatabase();
     try {
         const result = await db.get(`
@@ -387,17 +346,17 @@ export async function getLatestTweetTimestampByAuthor(authorUsername: string): P
             WHERE LOWER(author_username) = LOWER(?)
             ORDER BY created_at DESC 
             LIMIT 1
-        `, [authorUsername]);
+        `, [author_username]);
 
         if (result?.created_at) {
-            logger.info(`Found latest tweet timestamp for ${authorUsername}: ${result.created_at}`);
+            logger.info(`Found latest tweet timestamp for ${author_username}: ${result.created_at}`);
             return result.created_at;
         } else {
-            logger.info(`No previous tweets found for ${authorUsername}, using default timeframe`);
+            logger.info(`No previous tweets found for ${author_username}, using default timeframe`);
             return null;
         }
     } catch (error) {
-        logger.error(`Error getting latest tweet timestamp for ${authorUsername}:`, error);
+        logger.error(`Error getting latest tweet timestamp for ${author_username}:`, error);
         throw error;
     }
 }

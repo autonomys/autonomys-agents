@@ -75,9 +75,9 @@ export class ChromaService {
                 pageContent: tweet.text,
                 metadata: {
                     tweetId: tweet.id,
-                    authorId: tweet.authorId,
-                    authorUsername: tweet.authorUsername,
-                    createdAt: tweet.createdAt
+                    author_id: tweet.author_id,
+                    author_username: tweet.author_username,
+                    created_at: tweet.created_at
                 }
             });
 
@@ -129,9 +129,9 @@ export class ChromaService {
             const sampleTweet: Tweet = {
                 id: `sample_${Date.now()}`,
                 text: "This is a sample tweet about AI and blockchain technology. The future of decentralized systems looks promising! #AI #Blockchain",
-                authorId: "sample_author_123",
-                authorUsername: "techinfluencer",
-                createdAt: new Date().toISOString()
+                author_id: "sample_author_123",
+                author_username: "techinfluencer",
+                created_at: new Date().toISOString()
             };
 
             await this.addTweet(sampleTweet);
