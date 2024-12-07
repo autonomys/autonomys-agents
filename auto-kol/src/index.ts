@@ -56,29 +56,23 @@ const startServer = () => {
         try {
             const { approved, feedback } = req.body;
             const action: ApprovalAction = {
-                tweetId: req.params.id,
-                responseId: req.params.id,
+                id: req.params.id,
                 approved,
                 feedback
             };
-            // TODO: now, you have to fetch pending first then send approve/reject request
+            logger.info('Approving response:', {
+                id: action.id,
+                approved: action.approved,
+                feedback: action.feedback
+            });
 
             const updatedResponse = await updateResponseStatus(action);
             if (!updatedResponse) {
                 return res.status(404).json({ error: 'Response not found' });
             }
-            logger.info('Updated response status:', {
-                id: updatedResponse.id,
-                status: updatedResponse.status
-            });
+          
             if (updatedResponse.status === 'approved') {
-                logger.info('Creating Twitter client for approved response');
-
-                logger.info('Sending reply:', {
-                    tweetId: updatedResponse.tweet.id,
-                    content: updatedResponse.response.content
-                });
-
+             
                 // await replyToTweet(
                 //     client,
                 //     updatedResponse.tweet.id,
@@ -95,24 +89,11 @@ const startServer = () => {
                     WHERE kol_username = ?
                     ORDER BY dsn.created_at DESC 
                     LIMIT 1
-                `, [updatedResponse.tweet.authorUsername]) || { cid: null };
+                `, [updatedResponse.tweet.author_username.toLowerCase()]) || { cid: null };
                 
                 const dsnData = {
                     previousCid: previousDsn?.cid || null,
-                    tweet: {
-                        id: updatedResponse.tweet.id,
-                        text: updatedResponse.tweet.text,
-                        authorUsername: updatedResponse.tweet.authorUsername,
-                        createdAt: updatedResponse.tweet.createdAt
-                    },
-                    response: {
-                        id: updatedResponse.id,
-                        content: updatedResponse.response.content,
-                        tone: updatedResponse.workflowState.toneAnalysis?.dominantTone,
-                        reasoning: updatedResponse.workflowState.selectedResponse?.reasoning,
-                        estimatedImpact: updatedResponse.workflowState.engagementDecision?.priority,
-                        confidence: updatedResponse.workflowState.selectedResponse?.confidence
-                    },
+                    updatedResponse,
                     feedback: feedback || null,
                     timestamp: new Date().toISOString()
                 };
@@ -124,10 +105,10 @@ const startServer = () => {
                         read: async function* () {
                             yield jsonBuffer;
                         },
-                        name: `${updatedResponse.id}.json`,
+                        name: `${updatedResponse.tweet.id}.json`,
                         mimeType: 'application/json',
                         size: jsonBuffer.length,
-                        path: updatedResponse.id
+                        path: updatedResponse.tweet.id
                     },
                     { compression: true }
                 );
@@ -143,24 +124,17 @@ const startServer = () => {
                 if (!finalCid) {
                     throw new Error('Failed to get CID from DSN upload');
                 }
-                // Add DSN record to database
-                logger.info('Adding DSN record to database', {
-                    tweetId: updatedResponse.tweet.id,
-                    kolUsername: updatedResponse.tweet.authorUsername,
-                    cid: finalCid,
-                    responseId: updatedResponse.id
-                });
                 await addDsn({
                     id: generateId(),
                     tweetId: updatedResponse.tweet.id,
-                    kolUsername: updatedResponse.tweet.authorUsername,
+                    kolUsername: updatedResponse.tweet.author_username.toLowerCase(),
                     cid: finalCid,
-                    responseId: updatedResponse.id
+                    responseId: updatedResponse.sendResponseId
                 });
 
                 logger.info('Response uploaded to DSN successfully', {
                     tweetId: updatedResponse.tweet.id,
-                    responseId: updatedResponse.id,
+                    responseId: updatedResponse.response.id,
                     cid: finalCid
                 });
             }
@@ -223,7 +197,7 @@ const startServer = () => {
                     references: response.references
                 },
                 workflowState: skipped.workflowState,
-                createdAt: new Date(),
+                created_at: new Date(),
                 updatedAt: new Date(),
                 status: 'pending'
             });

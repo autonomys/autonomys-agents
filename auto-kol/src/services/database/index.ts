@@ -2,6 +2,7 @@ import { QueuedResponse, ApprovalAction, SkippedTweet } from '../../types/queue.
 import { createLogger } from '../../utils/logger.js';
 import * as db from '../../database/index.js';
 import { v4 as generateId } from 'uuid';
+import { Tweet } from '../../types/twitter.js';
 
 const logger = createLogger('database-queue');
 const isUniqueConstraintError = (error: any): boolean => {
@@ -15,10 +16,10 @@ export async function addToQueue(response: QueuedResponse): Promise<void> {
         try {
             await db.addTweet({
                 id: response.tweet.id,
-                authorId: response.tweet.authorId,
-                authorUsername: response.tweet.authorUsername,
+                author_id: response.tweet.author_id,
+                author_username: response.tweet.author_username,
                 content: response.tweet.text,
-                createdAt: response.tweet.createdAt
+                created_at: response.tweet.created_at
             });
         } catch (error) {
             if (isUniqueConstraintError(error)) {
@@ -30,7 +31,7 @@ export async function addToQueue(response: QueuedResponse): Promise<void> {
        
         await db.addPendingResponse({
             id: response.id,
-            tweetId: response.tweet.id,
+            tweet_id: response.tweet.id,
             content: response.response.content,
             tone: response.workflowState.toneAnalysis?.suggestedTone || 'neutral',
             strategy: response.workflowState.responseStrategy?.strategy || 'direct',
@@ -51,10 +52,10 @@ export async function addToSkipped(skipped: SkippedTweet): Promise<void> {
         try {
             await db.addTweet({
                 id: skipped.tweet.id,
-                authorId: skipped.tweet.authorId,
-                authorUsername: skipped.tweet.authorUsername,
+                author_id: skipped.tweet.author_id,
+                author_username: skipped.tweet.author_username,
                 content: skipped.tweet.text,
-                createdAt: skipped.tweet.createdAt
+                created_at: skipped.tweet.created_at
             });
         } catch (error) {
             if (isUniqueConstraintError(error)) {
@@ -89,16 +90,16 @@ export async function getAllPendingResponses(): Promise<QueuedResponse[]> {
             id: r.id,
             tweet: {
                 id: r.tweet_id,
-                authorUsername: r.author_username,
+                author_username: r.author_username,
                 text: r.tweet_content,
-                authorId: '', // Will need to be added to the query
-                createdAt: r.created_at
+                author_id: '', // Will need to be added to the query
+                created_at: r.created_at
             },
             response: {
                 content: r.content
             },
             status: r.status as 'pending' | 'approved' | 'rejected',
-            createdAt: new Date(r.created_at),
+            created_at: new Date(r.created_at),
             updatedAt: new Date(r.updated_at),
             workflowState: {
                 toneAnalysis: {
@@ -118,19 +119,21 @@ export async function getAllPendingResponses(): Promise<QueuedResponse[]> {
 
 export async function updateResponseApproval(
     action: ApprovalAction,
+    tweet: any,
+    sendResponseId: string
 ): Promise<void> {
     try {
         await db.updateResponseStatus(
-            action.responseId,
+            action.id,
             action.approved ? 'approved' : 'rejected',
             action.feedback
         );
         await db.addSendResponse({
-            id: action.tweetId,
-            tweetId: action.tweetId,
-            responseId: action.responseId
+            id: sendResponseId,
+            tweetId: tweet.tweet_id,
+            responseId: action.id
         });
-        logger.info(`Updated response status: ${action.tweetId}`);
+        logger.info(`Updated response status: ${action.id}`);
     } catch (error) {
         logger.error('Failed to update response status:', error);
         throw error;

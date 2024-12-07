@@ -41,16 +41,16 @@ export const createTools = (client: TwitterApiReadWrite) => {
                         allTweets.push({
                             id: tweet.id,
                             text: tweet.text,
-                            authorId: tweet.userId || '',
-                            authorUsername: tweet.username || '',
-                            createdAt: tweet.timeParsed?.toISOString() || new Date().toISOString()
+                            author_id: tweet.userId || '',
+                            author_username: tweet.username || '',
+                            created_at: tweet.timeParsed?.toISOString() || new Date().toISOString()
                         });
                     }
                 }
 
                 // Sort tweets by creation date (newest first)
                 allTweets.sort((a, b) => 
-                    new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+                    new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
                 );
 
                 // Return in the format expected by tweetSearchSchema
@@ -116,14 +116,14 @@ export const createTools = (client: TwitterApiReadWrite) => {
                         allTweets.push({
                             id: tweet.id || '',
                             text: tweet.text || '',
-                            authorId: tweet.userId || '',
-                            authorUsername: tweet.username || '',
-                            createdAt: tweet.timeParsed || new Date()
+                            author_id: tweet.userId || '',
+                            author_username: tweet.username || '',
+                            created_at: tweet.timeParsed || new Date()
                         });
                     }
                 }
 
-                allTweets.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+                allTweets.sort((a, b) => b.created_at.getTime() - a.created_at.getTime());
 
                 logger.info('Tweet search completed:', {
                     foundTweets: allTweets.length,
@@ -158,7 +158,7 @@ export const createTools = (client: TwitterApiReadWrite) => {
                         content: input.workflowState?.responseStrategy?.content,
                     },
                     status: 'pending' as const,
-                    createdAt: new Date(),
+                    created_at: new Date(),
                     updatedAt: new Date(),
                     workflowState: input.workflowState as WorkflowState
                 };
@@ -189,7 +189,7 @@ export const createTools = (client: TwitterApiReadWrite) => {
                     tweet: input.tweet,
                     reason: input.reason || 'No reason provided',
                     priority: input.priority || 0,
-                    createdAt: new Date(),
+                    created_at: new Date(),
                     workflowState: input.workflowState as WorkflowState
                 };
 

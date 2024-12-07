@@ -180,9 +180,9 @@ export const createNodes = async (config: WorkflowConfig) => {
                 const tweetData = {
                     id: tweet.id,
                     text: tweet.text,
-                    authorId: tweet.authorId,
-                    authorUsername: tweet.authorUsername || 'unknown', // Ensure we have a fallback
-                    createdAt: typeof tweet.createdAt === 'string' ? tweet.createdAt : tweet.createdAt.toISOString()
+                    author_id: tweet.author_id,
+                    author_username: tweet.author_username || 'unknown', // Ensure we have a fallback
+                    created_at: typeof tweet.created_at === 'string' ? tweet.created_at : tweet.created_at.toISOString()
                 };
 
                 const toolResult = await config.toolNode.invoke({
@@ -276,7 +276,7 @@ export const createNodes = async (config: WorkflowConfig) => {
                     tool_calls: [{
                         name: 'search_similar_tweets',
                         args: {
-                            query: `author:${tweet.authorUsername} ${tweet.text}`,
+                            query: `author:${tweet.author_username} ${tweet.text}`,
                             k: 5
                         },
                         id: 'similar_tweets_call',
@@ -297,7 +297,7 @@ export const createNodes = async (config: WorkflowConfig) => {
                 .invoke({
                     tweet: tweet.text,
                     tone: toneAnalysis.suggestedTone,
-                    author: tweet.authorUsername,
+                    author: tweet.author_username,
                     similarTweets: JSON.stringify(similarTweets.similar_tweets)
                 });
 

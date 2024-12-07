@@ -1,8 +1,10 @@
-import { QueuedResponse, ApprovalAction, SkippedTweet } from '../../types/queue.js';
+import { QueuedResponse, ApprovalAction, SkippedTweet, ActionResponse } from '../../types/queue.js';
 import { createLogger } from '../../utils/logger.js';
 import * as db from '../database/index.js';
 import { ChromaService } from '../vectorstore/chroma.js';
-import { getPendingResponsesByTweetId } from '../../database/index.js';
+import { getPendingResponsesByTweetId, getResponseByTweetId, getTweetById } from '../../database/index.js';
+import { Tweet } from '../../types/twitter.js';
+import { v4 as generateId } from 'uuid';
 const logger = createLogger('response-queue');
 
 // In-memory queues
@@ -56,18 +58,25 @@ export const getAllSkippedTweets = (): readonly SkippedTweet[] =>
 
 export const updateResponseStatus = async (
     action: ApprovalAction
-): Promise<QueuedResponse | undefined> => {
+): Promise<ActionResponse | undefined> => {
     try {
-        const response = await getPendingResponsesByTweetId(action.tweetId);
-        if (!response) return undefined;
-
-        await db.updateResponseApproval(action);
+        const pendingResponse = await getPendingResponsesByTweetId(action.id);
+        const tweet = await getTweetById(pendingResponse.tweet_id);
+        const sendResponseId = generateId();
+        await db.updateResponseApproval(action, pendingResponse, sendResponseId);
         // If rejected, remove from vector store
         if (!action.approved) {
             const chromaService = await ChromaService.getInstance();
-            await chromaService.deleteTweet(action.tweetId);
+            await chromaService.deleteTweet(action.id);
         }
-
+        logger.info('tweet is ---> ', tweet);
+        logger.info('pending response is ---> ', pendingResponse);
+        return {
+            tweet: tweet as Tweet,
+            status: action.approved ? 'approved' : 'rejected',
+            response: pendingResponse as unknown as ActionResponse['response'],
+            sendResponseId
+        }
     } catch (error) {
         logger.error('Failed to update response status:', error);
         return undefined;
