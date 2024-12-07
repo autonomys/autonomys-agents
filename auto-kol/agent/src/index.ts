@@ -74,7 +74,10 @@ const startServer = () => {
                     updatedResponse.response.content,
                     updatedResponse.tweet.id
                 );
-                const tweetId = twitterResponse.json().then(r => r.data?.create_tweet?.tweet_results?.result?.rest_id)
+                const responseData = await twitterResponse.json()
+
+                const tweetId = responseData.data?.create_tweet?.tweet_results?.result?.rest_id
+                logger.info('tweetId', tweetId)
                 // Upload to DSN
                 const db = await initializeDatabase();
                 // check if the tweet.author_username exists in KOL table

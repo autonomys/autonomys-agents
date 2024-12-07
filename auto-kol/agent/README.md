@@ -31,10 +31,9 @@ Auto-KOL is an intelligent agent framework designed to engage with thought leade
 
 Edit `.env` with your credentials:
 ```
-TWITTER_API_KEY=your_twitter_api_key
-TWITTER_API_SECRET=your_twitter_api_secret
-TWITTER_ACCESS_TOKEN=your_twitter_access_token
-TWITTER_ACCESS_SECRET=your_twitter_access_secret
+TWITTER_USERNAME=your_twitter_username
+TWITTER_PASSWORD=your_twitter_password
+AGENT_TWITTER_ID=your_agent_twitter_id
 OPENAI_API_KEY=your_openai_api_key
 ```
 

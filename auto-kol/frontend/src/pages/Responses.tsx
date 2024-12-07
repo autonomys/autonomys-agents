@@ -20,7 +20,7 @@ function Responses() {
                     <Card key={response.id}>
                         <CardBody>
                             <Text fontWeight="bold" mb={2}>
-                                @{response.tweet.authorUsername}
+                                @{response.tweet.author_username}
                             </Text>
                             <Text color="gray.600" mb={4}>
                                 {response.tweet.text}
