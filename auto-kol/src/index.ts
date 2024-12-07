@@ -9,7 +9,6 @@ import { initializeSchema, initializeDefaultKOLs, initializeDatabase, addDsn } f
 import { createAutoDriveApi, uploadFile } from '@autonomys/auto-drive'
 import { v4 as generateId } from 'uuid';
 import { ApprovalAction } from './types/queue.js';
-
 import cors from 'cors'
 
 

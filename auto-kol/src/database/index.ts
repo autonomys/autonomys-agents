@@ -261,18 +261,6 @@ export async function getSkippedTweets() {
 }
 
 
-export async function updateTweetEngagementStatus(
-    tweetId: string,
-    status: 'pending' | 'engaged' | 'skipped'
-) {
-    const db = await initializeDatabase();
-    return db.run(`
-        UPDATE tweets 
-        SET engagement_status = ?
-        WHERE id = ?
-    `, [status, tweetId]);
-}
-
 export async function addDsn(dsn: {
     id: string;
     tweetId: string;

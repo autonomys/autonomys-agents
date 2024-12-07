@@ -74,8 +74,6 @@ export async function addToSkipped(skipped: SkippedTweetMemory): Promise<void> {
             confidence: skipped.workflowState.responseStrategy?.confidence || 0.5
         });
 
-        // Update tweet status
-        await db.updateTweetEngagementStatus(skipped.tweet.id, 'skipped');
 
         logger.info(`Added tweet to skipped: ${skipped.id}`);
     } catch (error) {
