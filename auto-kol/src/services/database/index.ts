@@ -1,8 +1,11 @@
-import { QueuedResponse, ApprovalAction, SkippedTweet } from '../../types/queue.js';
+import { QueuedResponseMemory, ApprovalAction, SkippedTweetMemory, ActionResponse } from '../../types/queue.js';
 import { createLogger } from '../../utils/logger.js';
 import * as db from '../../database/index.js';
 import { v4 as generateId } from 'uuid';
 import { Tweet } from '../../types/twitter.js';
+import { getPendingResponsesByTweetId } from '../../database/index.js';
+import { getTweetById } from '../../database/index.js';
+import { ChromaService } from '../vectorstore/chroma.js';
 
 const logger = createLogger('database-queue');
 const isUniqueConstraintError = (error: any): boolean => {
@@ -10,7 +13,7 @@ const isUniqueConstraintError = (error: any): boolean => {
            error?.message?.includes('UNIQUE constraint failed');
 };
 
-export async function addToQueue(response: QueuedResponse): Promise<void> {
+export async function addToQueue(response: QueuedResponseMemory): Promise<void> {
     try {
         // First add the tweet
         try {
@@ -29,7 +32,7 @@ export async function addToQueue(response: QueuedResponse): Promise<void> {
             }
         }
        
-        await db.addPendingResponse({
+        await db.addResponse({
             id: response.id,
             tweet_id: response.tweet.id,
             content: response.response.content,
@@ -46,7 +49,7 @@ export async function addToQueue(response: QueuedResponse): Promise<void> {
     }
 }
 
-export async function addToSkipped(skipped: SkippedTweet): Promise<void> {
+export async function addToSkipped(skipped: SkippedTweetMemory): Promise<void> {
     try {
         // First add the tweet
         try {
@@ -83,7 +86,57 @@ export async function addToSkipped(skipped: SkippedTweet): Promise<void> {
     }
 }
 
-export async function getAllPendingResponses(): Promise<QueuedResponse[]> {
+export const updateResponseStatus = async (
+    action: ApprovalAction
+): Promise<ActionResponse | undefined> => {
+    try {
+        const pendingResponse = await getPendingResponsesByTweetId(action.id);
+        const tweet = await getTweetById(pendingResponse.tweet_id);
+        await updateResponseApproval(action, pendingResponse);
+        // If rejected, remove from vector store
+        if (!action.approved) {
+            const chromaService = await ChromaService.getInstance();
+            await chromaService.deleteTweet(action.id);
+        }
+        return {
+            tweet: tweet as Tweet,
+            status: action.approved ? 'approved' : 'rejected',
+            response: pendingResponse as unknown as ActionResponse['response'],
+        }
+    } catch (error) {
+        logger.error('Failed to update response status:', error);
+        return undefined;
+    }
+};
+
+
+export async function updateResponseApproval(
+    action: ApprovalAction,
+    tweet: any,
+): Promise<void> {
+    try {
+        await db.updateResponseStatus(
+            action.id,
+            action.approved ? 'approved' : 'rejected',
+            action.feedback
+        );
+        logger.info(`Updated response status: ${action.id}`);
+    } catch (error) {
+        logger.error('Failed to update response status:', error);
+        throw error;
+    }
+} 
+
+
+
+/// UTILITIES
+export async function isTweetExists(tweetId: string): Promise<boolean> {
+    const tweet = await db.getTweetById(tweetId);
+    return tweet !== undefined;
+}
+
+
+export async function getAllPendingResponses(): Promise<QueuedResponseMemory[]> {
     try {
         const responses = await db.getPendingResponses();
         return responses.map(r => ({
@@ -115,32 +168,4 @@ export async function getAllPendingResponses(): Promise<QueuedResponse[]> {
         logger.error('Failed to get pending responses:', error);
         throw error;
     }
-}
-
-export async function updateResponseApproval(
-    action: ApprovalAction,
-    tweet: any,
-    sendResponseId: string
-): Promise<void> {
-    try {
-        await db.updateResponseStatus(
-            action.id,
-            action.approved ? 'approved' : 'rejected',
-            action.feedback
-        );
-        await db.addSendResponse({
-            id: sendResponseId,
-            tweetId: tweet.tweet_id,
-            responseId: action.id
-        });
-        logger.info(`Updated response status: ${action.id}`);
-    } catch (error) {
-        logger.error('Failed to update response status:', error);
-        throw error;
-    }
-} 
-
-export async function isTweetExists(tweetId: string): Promise<boolean> {
-    const tweet = await db.getTweetById(tweetId);
-    return tweet !== undefined;
 }

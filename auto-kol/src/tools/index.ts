@@ -108,7 +108,7 @@ export const createTools = (client: TwitterApiReadWrite) => {
                 const allTweets = [];
 
                 for (const account of cleanAccounts) {
-                    const tweetIterator = scraper.getTweets(account, 10);
+                    const tweetIterator = scraper.getTweets(account, 2);
                     for await (const tweet of tweetIterator) {
                         if (lastProcessedId && tweet.id && tweet.id <= lastProcessedId) {
                             break;
@@ -117,7 +117,7 @@ export const createTools = (client: TwitterApiReadWrite) => {
                             id: tweet.id || '',
                             text: tweet.text || '',
                             author_id: tweet.userId || '',
-                            author_username: tweet.username || '',
+                            author_username: tweet.username?.toLowerCase() || '',
                             created_at: tweet.timeParsed || new Date()
                         });
                     }

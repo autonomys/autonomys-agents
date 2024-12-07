@@ -37,49 +37,9 @@ export const getQueuedResponseMemory = (id: string): QueuedResponseMemory | unde
 export const getSkippedTweetMemory = (id: string): SkippedTweetMemory | undefined =>
     skippedTweetsMemory.get(id);
 
-export const getAllPendingResponses = async (): Promise<readonly QueuedResponseMemory[]> => {
-    try {
-        const responses = await db.getAllPendingResponses();
-        // Update in-memory queue with database results
-        responses.forEach(response => {
-            responseQueueMemory.set(response.id, response);
-        });
-        return responses;
-    } catch (error) {
-        logger.error('Failed to get pending responses:', error);
-        return [];
-    }
-};
-
 export const getAllSkippedTweetsMemory = (): readonly SkippedTweetMemory[] =>
     Array.from(skippedTweetsMemory.values());
 
-
-
-export const updateResponseStatus = async (
-    action: ApprovalAction
-): Promise<ActionResponse | undefined> => {
-    try {
-        const pendingResponse = await getPendingResponsesByTweetId(action.id);
-        const tweet = await getTweetById(pendingResponse.tweet_id);
-        const sendResponseId = generateId();
-        await db.updateResponseApproval(action, pendingResponse, sendResponseId);
-        // If rejected, remove from vector store
-        if (!action.approved) {
-            const chromaService = await ChromaService.getInstance();
-            await chromaService.deleteTweet(action.id);
-        }
-        return {
-            tweet: tweet as Tweet,
-            status: action.approved ? 'approved' : 'rejected',
-            response: pendingResponse as unknown as ActionResponse['response'],
-            sendResponseId
-        }
-    } catch (error) {
-        logger.error('Failed to update response status:', error);
-        return undefined;
-    }
-};
 
 // Optional: Add ability to move skipped tweet to queue
 export const moveToQueueMemory = async (

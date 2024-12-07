@@ -1,7 +1,8 @@
 import express from 'express';
 import { config } from './config/index.js';
 import { createLogger } from './utils/logger.js';
-import { getAllPendingResponses, updateResponseStatus, getAllSkippedTweetsMemory, getSkippedTweetMemory, moveToQueueMemory } from './services/queue/index.js';
+import { getAllSkippedTweetsMemory, getSkippedTweetMemory, moveToQueueMemory } from './services/queue/index.js';
+import { updateResponseStatus, getAllPendingResponses } from './services/database/index.js';
 import { runWorkflow } from './services/agents/workflow.js';
 import { twitterClientScraper } from './services/twitter/apiv2.js';   
 import { initializeSchema, initializeDefaultKOLs, initializeDatabase, addDsn } from './database/index.js';
@@ -80,7 +81,7 @@ const startServer = () => {
                     WHERE kol_username = ?
                     ORDER BY dsn.created_at DESC 
                     LIMIT 1
-                `, [updatedResponse.tweet.author_username.toLowerCase()]) || { cid: null };
+                `, [updatedResponse.tweet.author_username]) || { cid: null };
                 
                 const dsnData = {
                     previousCid: previousDsn?.cid || null,
@@ -118,9 +119,9 @@ const startServer = () => {
                 await addDsn({
                     id: generateId(),
                     tweetId: updatedResponse.tweet.id,
-                    kolUsername: updatedResponse.tweet.author_username.toLowerCase(),
+                    kolUsername: updatedResponse.tweet.author_username,
                     cid: finalCid,
-                    responseId: updatedResponse.sendResponseId
+                    responseId: updatedResponse.response.id
                 });
 
                 logger.info('Response uploaded to DSN successfully', {

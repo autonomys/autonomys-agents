@@ -14,7 +14,6 @@ export type ActionResponse = Readonly<{
         estimatedImpact: number;
         confidenceScore: number;
     }
-    sendResponseId: string;
 }>
 
 export type QueuedResponseMemory = Readonly<{
