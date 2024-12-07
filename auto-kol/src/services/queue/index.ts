@@ -1,4 +1,4 @@
-import { QueuedResponse, ApprovalAction, SkippedTweet, ActionResponse } from '../../types/queue.js';
+import { QueuedResponseMemory, ApprovalAction, SkippedTweetMemory, ActionResponse } from '../../types/queue.js';
 import { createLogger } from '../../utils/logger.js';
 import * as db from '../database/index.js';
 import { ChromaService } from '../vectorstore/chroma.js';
@@ -8,12 +8,12 @@ import { v4 as generateId } from 'uuid';
 const logger = createLogger('response-queue');
 
 // In-memory queues
-const responseQueue = new Map<string, QueuedResponse>();
-const skippedTweets = new Map<string, SkippedTweet>();
+const responseQueueMemory = new Map<string, QueuedResponseMemory>();
+const skippedTweetsMemory = new Map<string, SkippedTweetMemory>();
 
-export const addToQueue = async (response: QueuedResponse): Promise<void> => {
+export const addToQueueMemory = async (response: QueuedResponseMemory): Promise<void> => {
     try {
-        responseQueue.set(response.id, response);
+        responseQueueMemory.set(response.id, response);
         await db.addToQueue(response);
         logger.info(`Added response to queue: ${response.id}`);
     } catch (error) {
@@ -21,9 +21,9 @@ export const addToQueue = async (response: QueuedResponse): Promise<void> => {
     }
 };
 
-export const addToSkipped = async (skipped: SkippedTweet): Promise<void> => {
+export const addToSkippedMemory = async (skipped: SkippedTweetMemory): Promise<void> => {
     try {
-        skippedTweets.set(skipped.id, skipped);
+        skippedTweetsMemory.set(skipped.id, skipped);
         await db.addToSkipped(skipped);
         logger.info(`Added tweet to skipped: ${skipped.id}`);
     } catch (error) {
@@ -31,18 +31,18 @@ export const addToSkipped = async (skipped: SkippedTweet): Promise<void> => {
     }
 };
 
-export const getQueuedResponse = (id: string): QueuedResponse | undefined =>
-    responseQueue.get(id);
+export const getQueuedResponseMemory = (id: string): QueuedResponseMemory | undefined =>
+    responseQueueMemory.get(id);
 
-export const getSkippedTweet = (id: string): SkippedTweet | undefined =>
-    skippedTweets.get(id);
+export const getSkippedTweetMemory = (id: string): SkippedTweetMemory | undefined =>
+    skippedTweetsMemory.get(id);
 
-export const getAllPendingResponses = async (): Promise<readonly QueuedResponse[]> => {
+export const getAllPendingResponses = async (): Promise<readonly QueuedResponseMemory[]> => {
     try {
         const responses = await db.getAllPendingResponses();
         // Update in-memory queue with database results
         responses.forEach(response => {
-            responseQueue.set(response.id, response);
+            responseQueueMemory.set(response.id, response);
         });
         return responses;
     } catch (error) {
@@ -51,8 +51,8 @@ export const getAllPendingResponses = async (): Promise<readonly QueuedResponse[
     }
 };
 
-export const getAllSkippedTweets = (): readonly SkippedTweet[] =>
-    Array.from(skippedTweets.values());
+export const getAllSkippedTweetsMemory = (): readonly SkippedTweetMemory[] =>
+    Array.from(skippedTweetsMemory.values());
 
 
 
@@ -69,8 +69,6 @@ export const updateResponseStatus = async (
             const chromaService = await ChromaService.getInstance();
             await chromaService.deleteTweet(action.id);
         }
-        logger.info('tweet is ---> ', tweet);
-        logger.info('pending response is ---> ', pendingResponse);
         return {
             tweet: tweet as Tweet,
             status: action.approved ? 'approved' : 'rejected',
@@ -84,23 +82,23 @@ export const updateResponseStatus = async (
 };
 
 // Optional: Add ability to move skipped tweet to queue
-export const moveToQueue = async (
+export const moveToQueueMemory = async (
     skippedId: string,
-    queuedResponse: Omit<QueuedResponse, 'status'> & { status: 'pending' }
+    queuedResponse: Omit<QueuedResponseMemory, 'status'> & { status: 'pending' }
 ): Promise<void> => {
     try {
-        const skipped = skippedTweets.get(skippedId);
+        const skipped = skippedTweetsMemory.get(skippedId);
         if (!skipped) {
             throw new Error('Skipped tweet not found');
         }
 
-        const typedResponse: QueuedResponse = {
+        const typedResponse: QueuedResponseMemory = {
             ...queuedResponse,
             status: 'pending'
         };
 
-        await addToQueue(typedResponse);
-        skippedTweets.delete(skippedId);
+        await addToQueueMemory(typedResponse);
+        skippedTweetsMemory.delete(skippedId);
         logger.info(`Moved skipped tweet ${skippedId} to response queue`);
     } catch (error) {
         logger.error('Failed to move skipped tweet to queue:', error);

@@ -17,7 +17,7 @@ export type ActionResponse = Readonly<{
     sendResponseId: string;
 }>
 
-export type QueuedResponse = Readonly<{
+export type QueuedResponseMemory = Readonly<{
     id: string;
     tweet: Tweet;
     response: AgentResponse;
@@ -27,7 +27,7 @@ export type QueuedResponse = Readonly<{
     workflowState: WorkflowState;
 }>;
 
-export type SkippedTweet = Readonly<{
+export type SkippedTweetMemory = Readonly<{
     id: string;
     tweet: Tweet;
     reason: string;

@@ -1,26 +1,17 @@
 import express from 'express';
 import { config } from './config/index.js';
 import { createLogger } from './utils/logger.js';
-import { getAllPendingResponses, updateResponseStatus, getAllSkippedTweets, getSkippedTweet, moveToQueue } from './services/queue/index.js';
+import { getAllPendingResponses, updateResponseStatus, getAllSkippedTweetsMemory, getSkippedTweetMemory, moveToQueueMemory } from './services/queue/index.js';
 import { runWorkflow } from './services/agents/workflow.js';
-import { createTwitterClient, replyToTweet } from './services/twitter/api.js';
 import { twitterClientScraper } from './services/twitter/apiv2.js';   
 import { initializeSchema, initializeDefaultKOLs, initializeDatabase, addDsn } from './database/index.js';
-import { ChromaService } from './services/vectorstore/chroma.js';
-import { uploadFileFromFilepath, createAutoDriveApi, uploadFile } from '@autonomys/auto-drive'
-import { fileURLToPath } from 'url';
-import { dirname, join } from 'path';
+import { createAutoDriveApi, uploadFile } from '@autonomys/auto-drive'
 import { v4 as generateId } from 'uuid';
 import { ApprovalAction } from './types/queue.js';
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
 
 const logger = createLogger('app');
 const dsnAPI = createAutoDriveApi({ apiKey: config.DSN_API_KEY! })
-const options = {
-    password: '',
-    compression: true
-}
+
 // const filePath = join(__dirname, '../file.txt')
 
 const app = express();
@@ -163,13 +154,13 @@ const startServer = () => {
 
     // Get all skipped tweets
     app.get('/tweets/skipped', (_, res) => {
-        const skippedTweets = getAllSkippedTweets();
+        const skippedTweets = getAllSkippedTweetsMemory();
         res.json(skippedTweets);
     });
 
     // Get specific skipped tweet
     app.get('/tweets/skipped/:id', (req, res) => {
-        const skipped = getSkippedTweet(req.params.id);
+        const skipped = getSkippedTweetMemory(req.params.id);
         if (!skipped) {
             return res.status(404).json({ error: 'Skipped tweet not found' });
         }
@@ -179,7 +170,7 @@ const startServer = () => {
     // Move skipped tweet to response queue
     app.post('/tweets/skipped/:id/queue', async (req, res) => {
         try {
-            const skipped = getSkippedTweet(req.params.id);
+            const skipped = getSkippedTweetMemory(req.params.id);
             if (!skipped) {
                 return res.status(404).json({ error: 'Skipped tweet not found' });
             }
@@ -189,7 +180,7 @@ const startServer = () => {
                 return res.status(400).json({ error: 'Response is required' });
             }
 
-            const queuedResponse = await moveToQueue(skipped.id, {
+            const queuedResponse = await moveToQueueMemory(skipped.id, {
                 id: skipped.id,
                 tweet: skipped.tweet,
                 response: {

@@ -1,7 +1,7 @@
 import { DynamicStructuredTool } from '@langchain/core/tools';
 import { TwitterApiReadWrite } from 'twitter-api-v2';
 import { searchTweets } from '../services/twitter/api.js';
-import { addToQueue, addToSkipped } from '../services/queue/index.js';
+import { addToQueueMemory, addToSkippedMemory } from '../services/queue/index.js';
 import { queueActionSchema } from '../schemas/workflow.js';
 import { createLogger } from '../utils/logger.js';
 import { v4 as uuidv4 } from 'uuid';
@@ -163,7 +163,7 @@ export const createTools = (client: TwitterApiReadWrite) => {
                     workflowState: input.workflowState as WorkflowState
                 };
 
-                addToQueue(queuedResponse);
+                addToQueueMemory(queuedResponse);
                 return {
                     success: true,
                     id,
@@ -200,7 +200,7 @@ export const createTools = (client: TwitterApiReadWrite) => {
                     priority: input.priority
                 });
 
-                addToSkipped(skippedTweet);
+                addToSkippedMemory(skippedTweet);
 
                 logger.info('Successfully queued skipped tweet:', { id });
 
