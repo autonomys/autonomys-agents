@@ -20,13 +20,13 @@ function SkippedTweets() {
                     <Card key={tweet.id}>
                         <CardBody>
                             <Text fontWeight="bold" mb={2}>
-                                @{tweet.tweet.authorUsername}
+                                @{tweet.author_username}
                             </Text>
-                            <Text color="gray.600" mb={4}>
-                                {tweet.tweet.text}
+                            <Text color="#00ff00" mb={4}>
+                                {tweet.tweet_content}
                             </Text>
                             <Badge colorScheme="yellow" mb={2}>
-                                Priority: {tweet.priority}
+                                Confidence: {tweet.confidence}
                             </Badge>
                             <Text fontSize="sm" color="gray.500">
                                 Reason: {tweet.reason}

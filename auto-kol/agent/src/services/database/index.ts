@@ -160,19 +160,28 @@ export async function getAllPendingResponses(): Promise<QueuedResponseMemory[]> 
     }
 }
 
+
+
 // Optional: Add ability to move skipped tweet to queue
+export async function getSkippedTweets(): Promise<SkippedTweetMemory[]> {
+    const skipped = await db.getSkippedTweets();
+    return skipped;
+}
+
+export async function getSkippedTweetById(skippedId: string): Promise<SkippedTweetMemory> {
+    const skipped = await db.getSkippedTweetById(skippedId);
+    return skipped;
+}
+
 export const moveSkippedToQueue = async (
     skippedId: string,
     queuedResponse: Omit<QueuedResponseMemory, 'status'> & { status: 'pending' }
 ): Promise<void> => {
     try {
-
-        //// TODO
-        // Get skipped tweet from db by tweet id
-        // const skipped = await getSkippedTweetById(skippedId);
-        // if (!skipped) {
-        //     throw new Error('Skipped tweet not found');
-        // }
+        const skipped = await getSkippedTweetById(skippedId);
+        if (!skipped) {
+            throw new Error('Skipped tweet not found');
+        }
 
         const typedResponse: QueuedResponseMemory = {
             ...queuedResponse,

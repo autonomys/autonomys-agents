@@ -1,14 +1,14 @@
 import express from 'express';
 import { config } from './config/index.js';
 import { createLogger } from './utils/logger.js';
-import { updateResponseStatus, getAllPendingResponses, moveSkippedToQueue } from './services/database/index.js';
+import { updateResponseStatus, getAllPendingResponses, moveSkippedToQueue , getSkippedTweets, getSkippedTweetById} from './services/database/index.js';
 import { runWorkflow } from './services/agents/workflow.js';
 import { twitterClientScraper } from './services/twitter/apiv2.js';   
 
 import { initializeSchema, initializeDefaultKOLs, initializeDatabase, addDsn } from './database/index.js';
 import { createAutoDriveApi, uploadFile } from '@autonomys/auto-drive'
 import { v4 as generateId } from 'uuid';
-import { ApprovalAction } from './types/queue.js';
+import { ApprovalAction, SkippedTweetMemory } from './types/queue.js';
 import cors from 'cors'
 
 
@@ -161,52 +161,52 @@ const startServer = () => {
     });
 
     // Get all skipped tweets
-    // app.get('/tweets/skipped', (_, res) => {
-    //     const skippedTweets = getAllSkippedTweetsMemory();
-    //     res.json(skippedTweets);
-    // });
+    app.get('/tweets/skipped', async (_, res) => {
+        const skippedTweets = await getSkippedTweets();
+        res.json(skippedTweets);
+    });
 
     // Get specific skipped tweet
-    // app.get('/tweets/skipped/:id', (req, res) => {
-    //     const skipped = getSkippedTweetMemory(req.params.id);
-    //     if (!skipped) {
-    //         return res.status(404).json({ error: 'Skipped tweet not found' });
-    //     }
-    //     res.json(skipped);
-    // });
+    app.get('/tweets/skipped/:id', async (req, res) => {
+        const skipped = await getSkippedTweetById(req.params.id);
+        if (!skipped) {
+            return res.status(404).json({ error: 'Skipped tweet not found' });
+        }
+        res.json(skipped);
+    });
 
-    // // Move skipped tweet to response queue
-    // app.post('/tweets/skipped/:id/queue', async (req, res) => {
-    //     try {
-    //         const skipped = getSkippedTweetMemory(req.params.id);
-    //         if (!skipped) {
-    //             return res.status(404).json({ error: 'Skipped tweet not found' });
-    //         }
+    // Move skipped tweet to response queue
+    app.post('/tweets/skipped/:id/queue', async (req, res) => {
+        try {
+            const skipped: SkippedTweetMemory = await getSkippedTweetById(req.params.id);
+            if (!skipped) {
+                return res.status(404).json({ error: 'Skipped tweet not found' });
+            }
 
-    //         const { response } = req.body;
-    //         if (!response) {
-    //             return res.status(400).json({ error: 'Response is required' });
-    //         }
+            const { response } = req.body;
+            if (!response) {
+                return res.status(400).json({ error: 'Response is required' });
+            }
+            
+            const queuedResponse = await moveSkippedToQueue(skipped.id, {
+                id: skipped.id,
+                tweet: skipped.tweet,
+                response: {
+                    content: response.content,
+                    references: response.references
+                },
+                workflowState: skipped.workflowState,
+                created_at: new Date(),
+                updatedAt: new Date(),
+                status: 'pending'
+            });
 
-    //         const queuedResponse = await moveSkippedToQueue(skipped.id, {
-    //             id: skipped.id,
-    //             tweet: skipped.tweet,
-    //             response: {
-    //                 content: response.content,
-    //                 references: response.references
-    //             },
-    //             workflowState: skipped.workflowState,
-    //             created_at: new Date(),
-    //             updatedAt: new Date(),
-    //             status: 'pending'
-    //         });
-
-    //         res.json(queuedResponse);
-    //     } catch (error) {
-    //         logger.error('Error moving skipped tweet to queue:', error);
-    //         res.status(500).json({ error: 'Failed to move tweet to queue' });
-    //     }
-    // });
+            res.json(queuedResponse);
+        } catch (error) {
+            logger.error('Error moving skipped tweet to queue:', error);
+            res.status(500).json({ error: 'Failed to move tweet to queue' });
+        }
+    });
 
     // Start server
     app.listen(config.PORT, () => {

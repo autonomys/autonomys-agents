@@ -260,6 +260,11 @@ export async function getSkippedTweets() {
     `);
 }
 
+export async function getSkippedTweetById(skippedId: string) {
+    const db = await initializeDatabase();
+    const skipped = await db.get(`SELECT * FROM skipped_tweets WHERE id = ?`, [skippedId]);
+    return skipped;
+}
 
 export async function addDsn(dsn: {
     id: string;

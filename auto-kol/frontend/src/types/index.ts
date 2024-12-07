@@ -1,9 +1,8 @@
 export interface Tweet {
-    id: string
-    text: string
-    authorId: string
-    authorUsername: string
-    createdAt: string
+    tweet_id: string
+    tweet_content: string
+    author_username: string
+    created_at: string
 }
 
 export interface PendingResponse {
@@ -20,9 +19,10 @@ export interface PendingResponse {
 
 export interface SkippedTweet {
     id: string
-    tweet: Tweet
+    tweet_id: string
+    tweet_content: string
+    author_username: string
     reason: string
-    priority: number
-    createdAt: string
-    workflowState: any
+    confidence: number
+    created_at: string
 } 
