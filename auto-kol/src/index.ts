@@ -4,7 +4,7 @@ import { createLogger } from './utils/logger.js';
 import { getAllPendingResponses, updateResponseStatus, getAllSkippedTweets, getSkippedTweet, moveToQueue } from './services/queue/index.js';
 import { runWorkflow } from './services/agents/workflow.js';
 import { createTwitterClient, replyToTweet } from './services/twitter/api.js';
-import { twitterClientScraper } from './services/twitter/apiv2.js';   
+import { twitterClientScraper } from './services/twitter/apiv2.js';
 import { initializeSchema, initializeDefaultKOLs, initializeDatabase, addDsn } from './database/index.js';
 import { ChromaService } from './services/vectorstore/chroma.js';
 import { uploadFileFromFilepath, createAutoDriveApi, uploadFile } from '@autonomys/auto-drive'
@@ -12,6 +12,7 @@ import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import { v4 as generateId } from 'uuid';
 import { ApprovalAction } from './types/queue.js';
+import cors from 'cors'
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
@@ -24,6 +25,11 @@ const options = {
 // const filePath = join(__dirname, '../file.txt')
 
 const app = express();
+
+app.use(cors({
+    origin: 'http://localhost:3000',
+    credentials: true
+}))
 
 // Initialize Twitter client
 
@@ -87,7 +93,7 @@ const startServer = () => {
 
                 // Upload to DSN
                 const db = await initializeDatabase();
-               
+
                 const previousDsn = await db.get(`
                     SELECT dsn.cid 
                     FROM dsn
@@ -96,7 +102,7 @@ const startServer = () => {
                     ORDER BY dsn.created_at DESC 
                     LIMIT 1
                 `, [updatedResponse.tweet.authorUsername]) || { cid: null };
-                
+
                 const dsnData = {
                     previousCid: previousDsn?.cid || null,
                     tweet: {
