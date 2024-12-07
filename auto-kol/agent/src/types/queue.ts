@@ -32,7 +32,7 @@ export type SkippedTweetMemory = Readonly<{
     reason: string;
     priority: number;
     created_at: Date;
-    workflowState: WorkflowState;
+    workflowState: any;
 }>;
 
 export type SkippedTweet = Readonly<{

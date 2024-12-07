@@ -167,14 +167,11 @@ export const createTools = (scraper: any) => {
                     reason: input.reason || 'No reason provided',
                     priority: input.priority || 0,
                     created_at: new Date(),
-                    workflowState: input.workflowState as WorkflowState
+                    workflowState: input.workflowState
                 };
 
                 logger.info('Queueing skipped tweet:', {
-                    id,
-                    tweetId: input.tweet.id,
-                    reason: input.reason,
-                    priority: input.priority
+                    skippedTweet
                 });
 
                 addToSkipped(skippedTweet);

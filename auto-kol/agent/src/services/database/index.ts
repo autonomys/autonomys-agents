@@ -66,13 +66,11 @@ export async function addToSkipped(skipped: SkippedTweetMemory): Promise<void> {
                 throw error;
             }
         }
-
-        // Then add the skipped record
         await db.addSkippedTweet({
             id: skipped.id,
             tweetId: skipped.tweet.id,
             reason: skipped.reason,
-            confidence: skipped.workflowState.responseStrategy?.confidence || 0.5
+            confidence: skipped.workflowState.decision?.confidence || 0
         });
 
 
