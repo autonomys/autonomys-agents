@@ -4,13 +4,12 @@ import { createLogger } from './utils/logger.js';
 import { runWorkflow } from './services/agents/workflow.js';
 import { updateResponseStatus, getAllPendingResponses, getSkippedTweets, getSkippedTweetById } from './services/database/index.js';
 import { createTwitterClientScraper } from './services/twitter/api.js';
-import { initializeSchema, initializeDefaultKOLs, initializeDatabase, addDsn, recheckSkippedTweet } from './database/index.js';
+import { initializeSchema, initializeDatabase, addDsn, recheckSkippedTweet, isKOLExists, addKOL } from './database/index.js';
 import { createAutoDriveApi, uploadFile } from '@autonomys/auto-drive'
 import { v4 as generateId } from 'uuid';
 import { ApprovalAction } from './types/queue.js';
 import cors from 'cors'
-import { SearchMode } from 'agent-twitter-client';
-import { updateKOLs } from './utils/twitter.js';
+import { getTimeLine, getTimeLineTweets, getUserProfile } from './utils/twitter.js';
 
 const logger = createLogger('app');
 const dsnAPI = createAutoDriveApi({ apiKey: config.DSN_API_KEY! })
@@ -79,9 +78,25 @@ const startServer = () => {
 
                 const tweetId = responseData.data?.create_tweet?.tweet_results?.result?.rest_id
                 logger.info('tweetId', tweetId)
-
                 // Upload to DSN
                 const db = await initializeDatabase();
+                // check if the tweet.author_username exists in KOL table
+                if(!(await isKOLExists(updatedResponse.tweet.author_username))) {
+                    logger.info('KOL not found, skipping DSN upload', {
+                        username: updatedResponse.tweet.author_username
+                    });
+                    //add to KOL table
+                    await addKOL(await getUserProfile(updatedResponse.tweet.author_username));
+                    logger.info('KOL added to table', {
+                        username: updatedResponse.tweet.author_username
+                    });
+
+                    // follow the KOL????? 
+                    await twitterScraper.followUser(updatedResponse.tweet.author_username);
+                    logger.info('Followed KOL', {
+                        username: updatedResponse.tweet.author_username
+                    });
+                }
 
                 const previousDsn = await db.get(`
                     SELECT dsn.cid 
@@ -208,8 +223,6 @@ const startServer = () => {
 const main = async () => {
     try {
         await initializeSchema();
-        // await initializeDefaultKOLs();
-        // Initialize server
         startServer();
 
         // Start periodic workflow execution

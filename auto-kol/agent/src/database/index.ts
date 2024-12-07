@@ -104,6 +104,12 @@ export async function getKOLAccounts(): Promise<KOL[]> {
     }
 }
 
+export async function isKOLExists(username: string): Promise<boolean> {
+    const db = await initializeDatabase();
+    const kol = await db.get(`SELECT * FROM kol_accounts WHERE username = ?`, [username]);
+    return kol !== undefined;
+}
+
 export async function initializeDefaultKOLs(): Promise<void> {
     const logger = createLogger('database');
     const { TARGET_ACCOUNTS } = config;

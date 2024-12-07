@@ -10,7 +10,7 @@ import { z } from 'zod';
 import { WorkflowState } from '../types/workflow.js';
 import { ChromaService } from '../services/vectorstore/chroma.js';
 import { Tweet } from '../types/twitter.js';
-import { getKOLsAccounts, updateKOLs } from '../utils/twitter.js';
+import { getKOLsAccounts, getTimeLine, getTimeLineTweets, updateKOLs } from '../utils/twitter.js';
 
 const logger = createLogger('workflow-tools');
 
@@ -21,42 +21,23 @@ export const createTools = (scraper: any) => {
     - fetch timeline
     - google search
     */
-
-    // TIMELINE TOOL DOESN'T WORK NOW, BECAUSE THE LIBRARY DOESN'T SUPPORT IT PROPERLY
     const fetchTimelineTool = new DynamicStructuredTool({
         name: 'fetch_timeline',
         description: 'Fetch the timeline regularly to get new tweets',
         schema: z.object({}),
         func: async () => {
             try {
-                const tweets = await scraper.fetchHomeTimeline(1, []);
-                const allTweets = [];
-                
-                for await (const tweet of tweets) {
-                    logger.info('Fetched tweet:', {
-                        id: tweet.id,
-                        text: tweet.text
-                    });
-                    if (tweet.id && tweet.text) {  // Only add tweets with valid required fields
-                        allTweets.push({
-                            id: tweet.id,
-                            text: tweet.text,
-                            author_id: tweet.userId || '',
-                            author_username: tweet.username || '',
-                            created_at: tweet.timeParsed?.toISOString() || new Date().toISOString()
-                        });
-                    }
-                }
+                await getTimeLine();
+                const tweets = await getTimeLineTweets();
+                logger.info(`Fetched timeline tweets, ${tweets.length}`);
 
-                // Sort tweets by creation date (newest first)
-                allTweets.sort((a, b) => 
+                tweets.sort((a, b) => 
                     new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
                 );
 
-                // Return in the format expected by tweetSearchSchema
                 return {
-                    tweets: allTweets,
-                    lastProcessedId: allTweets[allTweets.length - 1]?.id || null
+                    tweets: tweets,
+                    lastProcessedId: tweets[tweets.length - 1]?.id || null
                 };
             } catch (error) {
                 logger.error('Error in fetchTimelineTool:', error);
@@ -243,7 +224,8 @@ export const createTools = (scraper: any) => {
         tweetSearchTool,
         queueResponseTool,
         queueSkippedTool,
-        searchSimilarTweetsTool,    
-        tools: [tweetSearchTool, queueResponseTool, queueSkippedTool, searchSimilarTweetsTool]
+        searchSimilarTweetsTool,
+        fetchTimelineTool,
+        tools: [tweetSearchTool, queueResponseTool, queueSkippedTool, searchSimilarTweetsTool, fetchTimelineTool]
     };
 };
