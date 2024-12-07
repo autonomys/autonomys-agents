@@ -4,7 +4,7 @@ import { BaseMessage } from '@langchain/core/messages';
 export type EngagementDecision = Readonly<{
     shouldEngage: boolean;
     reason: string;
-    priority: number;  // 1-10 scale
+    priority: number;
 }>;
 
 export type ToneAnalysis = Readonly<{
@@ -17,7 +17,7 @@ export type ResponseAlternative = Readonly<{
     content: string;
     tone: string;
     strategy: string;
-    estimatedImpact: number;  // 1-10 scale
+    estimatedImpact: number; 
 }>;
 
 export type ResponseSelection = Readonly<{
@@ -34,7 +34,6 @@ export type ResponseStrategy = Readonly<{
     estimatedImpact: number;
 }>;
 
-// State management for the workflow
 export type WorkflowState = Readonly<{
     tweet: Tweet;
     messages: BaseMessage[];

@@ -9,22 +9,15 @@ import { config } from '../config/index.js';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import { Tweet } from '../types/twitter.js';
-import { SkippedTweet } from '../types/queue.js';
+import { SkippedTweet, PendingResponse } from '../types/queue.js';
 
 const logger = createLogger('database');
 
-export interface PendingResponse {
-    id: string;
-    tweet_id: string;
-    content: string;
-    tone: string;
-    strategy: string;
-    estimatedImpact: number;
-    confidence: number;
-}
 
 let db: Awaited<ReturnType<typeof open>> | null = null;
 
+
+///////////DATABASE///////////
 export async function initializeDatabase() {
     if (!db) {
         try {
@@ -55,6 +48,57 @@ export async function closeDatabase() {
     }
 }
 
+export async function initializeSchema() {
+    const db = await initializeDatabase();
+    
+    try {
+        await db.run('BEGIN TRANSACTION');
+
+        // Check if tables exist first
+        const tables = await db.all(`
+            SELECT name 
+            FROM sqlite_master 
+            WHERE type='table' AND name IN (
+                'kol_accounts',
+                'tweets', 
+                'responses', 
+                'skipped_tweets',  
+                'dsn'
+            )
+        `);
+
+        const existingTables = new Set(tables.map(t => t.name));
+
+        const __filename = fileURLToPath(import.meta.url);
+        const __dirname = dirname(__filename);
+        const schemaPath = join(__dirname, 'schema.sql');
+        const schema = await fs.readFile(schemaPath, 'utf-8');
+
+        const statements = schema
+            .split(';')
+            .map(s => s.trim())
+            .filter(s => s.length > 0);
+
+        for (const statement of statements) {
+            const tableName = statement.match(/CREATE TABLE (?:IF NOT EXISTS )?([^\s(]+)/i)?.[1];
+            if (tableName && !existingTables.has(tableName)) {
+                await db.run(statement);
+                logger.info(`Created table: ${tableName}`);
+            }
+        }
+
+        await db.run('COMMIT');
+        logger.info('Schema initialization completed successfully');
+    } catch (error) {
+        await db.run('ROLLBACK');
+        logger.error('Failed to initialize schema:', error);
+        throw new Error(`Failed to initialize schema: ${error}`);
+    }
+} 
+
+
+
+///////////KOL///////////
 export async function addKOL(kol: {
     id: string;
     username: string;
@@ -135,6 +179,8 @@ export async function initializeDefaultKOLs(): Promise<void> {
     }
 }
 
+
+///////////RESPONSE///////////
 export async function addResponse(response: PendingResponse) {
     const db = await initializeDatabase();
     return db.run(`
@@ -188,7 +234,6 @@ export async function getPendingResponsesByTweetId(id: string): Promise<PendingR
 export async function updateResponseStatus(
     id: string, 
     status: 'approved' | 'rejected',
-    feedback?: string
 ) {
     const db = await initializeDatabase();
     
@@ -208,6 +253,8 @@ export async function updateResponseStatus(
     }
 }
 
+
+///////////TWEET///////////
 export async function addTweet(tweet: {
     id: string;
     author_id: string;
@@ -236,6 +283,8 @@ export async function getTweetById(tweetId: string): Promise<Tweet | undefined> 
     return tweet as Tweet;
 }
 
+
+///////////SKIPPED TWEET///////////
 export async function addSkippedTweet(skipped: {
     id: string;
     tweetId: string;
@@ -292,6 +341,7 @@ export async function getAllSkippedTweetsToRecheck(): Promise<Tweet[]> {
     return recheckTweets;
 }
 
+///////////DSN///////////
 export async function addDsn(dsn: {
     id: string;
     tweetId: string;
@@ -304,78 +354,4 @@ export async function addDsn(dsn: {
     return db.run(`
         INSERT INTO dsn (id, tweet_id, kol_username, cid, response_id) VALUES (?, ?, ?, ?, ?)
     `, [dsn.id, dsn.tweetId, dsn.kolUsername, dsn.cid, dsn.responseId]);
-}
-
-export async function initializeSchema() {
-    const db = await initializeDatabase();
-    
-    try {
-        await db.run('BEGIN TRANSACTION');
-
-        // Check if tables exist first
-        const tables = await db.all(`
-            SELECT name 
-            FROM sqlite_master 
-            WHERE type='table' AND name IN (
-                'kol_accounts',
-                'tweets', 
-                'responses', 
-                'skipped_tweets',  
-                'dsn'
-            )
-        `);
-
-        const existingTables = new Set(tables.map(t => t.name));
-
-        const __filename = fileURLToPath(import.meta.url);
-        const __dirname = dirname(__filename);
-        const schemaPath = join(__dirname, 'schema.sql');
-        const schema = await fs.readFile(schemaPath, 'utf-8');
-
-        const statements = schema
-            .split(';')
-            .map(s => s.trim())
-            .filter(s => s.length > 0);
-
-        for (const statement of statements) {
-            const tableName = statement.match(/CREATE TABLE (?:IF NOT EXISTS )?([^\s(]+)/i)?.[1];
-            if (tableName && !existingTables.has(tableName)) {
-                await db.run(statement);
-                logger.info(`Created table: ${tableName}`);
-            }
-        }
-
-        await db.run('COMMIT');
-        logger.info('Schema initialization completed successfully');
-    } catch (error) {
-        await db.run('ROLLBACK');
-        logger.error('Failed to initialize schema:', error);
-        throw new Error(`Failed to initialize schema: ${error}`);
-    }
-} 
-
-
-// HELPER FUNCTIONS
-export async function getLatestTweetTimestampByAuthor(author_username: string): Promise<string | null> {
-    const db = await initializeDatabase();
-    try {
-        const result = await db.get(`
-            SELECT created_at 
-            FROM tweets 
-            WHERE LOWER(author_username) = LOWER(?)
-            ORDER BY created_at DESC 
-            LIMIT 1
-        `, [author_username]);
-
-        if (result?.created_at) {
-            logger.info(`Found latest tweet timestamp for ${author_username}: ${result.created_at}`);
-            return result.created_at;
-        } else {
-            logger.info(`No previous tweets found for ${author_username}, using default timeframe`);
-            return null;
-        }
-    } catch (error) {
-        logger.error(`Error getting latest tweet timestamp for ${author_username}:`, error);
-        throw error;
-    }
 }

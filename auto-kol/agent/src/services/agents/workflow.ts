@@ -21,7 +21,6 @@ export const parseMessageContent = (content: MessageContent): any => {
     return content;
 };
 
-// State management with processed tweets tracking
 export const State = Annotation.Root({
     messages: Annotation<readonly BaseMessage[]>({
         reducer: (curr, prev) => [...curr, ...prev],
@@ -34,7 +33,6 @@ export const State = Annotation.Root({
     lastProcessedId: Annotation<string | undefined>(),
 });
 
-// Workflow configuration type
 export type WorkflowConfig = Readonly<{
     client: any;
     toolNode: ToolNode;
@@ -45,7 +43,6 @@ export type WorkflowConfig = Readonly<{
     }>;
 }>;
 
-// Create workflow configuration
 const createWorkflowConfig = async (): Promise<WorkflowConfig> => {
     const client = await createTwitterClientScraper();
     const { tools } = createTools(client);
@@ -77,7 +74,6 @@ const shouldContinue = (state: typeof State.State) => {
     const lastMessage = state.messages[state.messages.length - 1];
     const content = parseMessageContent(lastMessage.content);
 
-    // If we have no tweets or finished processing all tweets, end workflow
     if (!content.tweets || content.currentTweetIndex >= content.tweets.length) {
         if (content.fromRecheckNode && content.messages?.length === 0) {
             return END;
@@ -160,7 +156,6 @@ const createWorkflowRunner = async (): Promise<WorkflowRunner> => {
     };
 };
 
-// Export a single async function to get the workflow runner
 export const getWorkflowRunner = (() => {
     let runnerPromise: Promise<WorkflowRunner> | null = null;
 
@@ -172,7 +167,6 @@ export const getWorkflowRunner = (() => {
     };
 })();
 
-// Export the run function for external use
 export const runWorkflow = async () => {
     const runner = await getWorkflowRunner();
     return runner.runWorkflow();

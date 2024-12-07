@@ -46,4 +46,7 @@ export const config = {
 
     // AutoDrive Configuration
     DSN_API_KEY: process.env.DSN_API_KEY,
+
+    // CORS Configuration
+    CORS_ORIGINS: process.env.CORS_ORIGINS,
 }; 

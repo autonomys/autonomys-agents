@@ -2,6 +2,15 @@ import { Tweet } from './twitter.js';
 import { AgentResponse } from './agent.js';
 import { WorkflowState } from './workflow.js';
 
+export interface PendingResponse {
+    id: string;
+    tweet_id: string;
+    content: string;
+    tone: string;
+    strategy: string;
+    estimatedImpact: number;
+    confidence: number;
+}
 
 export type ActionResponse = Readonly<{
     tweet: Tweet;

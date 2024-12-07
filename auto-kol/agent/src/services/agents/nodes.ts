@@ -6,10 +6,9 @@ import * as db from '../database/index.js';
 import { flagBackSkippedTweet, getAllSkippedTweetsToRecheck } from '../../database/index.js';
 import { tweetSearchSchema } from '../../schemas/workflow.js';
 
-// Node factory functions
 export const createNodes = async (config: WorkflowConfig) => {
 
-    // Placeholder for now, because the timeline tool doesn't work
+    ///////////TIMELINE///////////
     const timelineNode = async (state: typeof State.State) => {
         logger.info('Timeline Node - Fetching recent tweets');
         const toolResponse = await config.toolNode.invoke({
@@ -47,6 +46,7 @@ export const createNodes = async (config: WorkflowConfig) => {
         };
     }
 
+    ///////////SEARCH///////////
     const searchNode = async (state: typeof State.State) => {
         logger.info('Search Node - Fetching recent tweets');
         const existingTweets = state.messages.length > 0 ? 
@@ -231,6 +231,7 @@ export const createNodes = async (config: WorkflowConfig) => {
         }
     };
 
+    ///////////TONE ANALYSIS///////////
     const toneAnalysisNode = async (state: typeof State.State) => {
         logger.info('Tone Analysis Node - Analyzing tweet tone');
         try {
@@ -261,6 +262,7 @@ export const createNodes = async (config: WorkflowConfig) => {
         }
     };
 
+    ///////////RESPONSE GENERATION///////////
     const responseGenerationNode = async (state: typeof State.State) => {
         logger.info('Response Generation Node - Creating response strategy');
         try {
@@ -340,6 +342,7 @@ export const createNodes = async (config: WorkflowConfig) => {
         }
     };
 
+    ///////////RECHECK SKIPPED///////////
     const recheckSkippedNode = async (state: typeof State.State) => {
         logger.info('Recheck Skipped Node - Reviewing previously skipped tweets');
         try {
