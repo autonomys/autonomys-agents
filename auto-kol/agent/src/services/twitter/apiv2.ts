@@ -1,33 +1,34 @@
 import { Scraper } from 'agent-twitter-client';
 import { createLogger } from '../../utils/logger.js';
-import { readFileSync, writeFileSync } from 'fs';
+import { readFileSync, writeFileSync, existsSync } from 'fs';
 import { config } from '../../config/index.js';
-const logger = createLogger('twitter-api');
+const logger = createLogger('agent-twitter-api');
 
-export const createTwitterClientScraper = async (credentials: any) => {
+export const createTwitterClientScraper = async () => {
     try {
-        const scraper = new Scraper();        
-        try {
-            const cookies = readFileSync('cookies.json', 'utf8');
-            if (cookies) {
+        const username = config.TWITTER_USERNAME!;
+        const password = config.TWITTER_PASSWORD!;
+        const cookiesPath = 'cookies.json';
+
+        const scraper = new Scraper();
+        if (existsSync(cookiesPath)) {
+            logger.info('Loading existing cookies');
+            const cookies = readFileSync(cookiesPath, 'utf8');
+            try {
                 const parsedCookies = JSON.parse(cookies).map((cookie: any) =>
                     `${cookie.key}=${cookie.value}; Domain=${cookie.domain}; Path=${cookie.path}`
                 );
                 await scraper.setCookies(parsedCookies);
                 logger.info('Loaded existing cookies from file');
+            } catch (error) {
+                logger.error('Error loading cookies:', error);
             }
-        } catch (error) {
+        } else {
             logger.info('No existing cookies found, proceeding with login');
+            await scraper.login(username, password);
 
-            logger.info('Logging in with credentials:', {
-                username: credentials.username,
-                password: credentials.password
-            });
-            await scraper.login(credentials.username, credentials.password);
-
-            // Save new cookies
             const newCookies = await scraper.getCookies();
-            writeFileSync('cookies.json', JSON.stringify(newCookies, null, 2));
+            writeFileSync(cookiesPath, JSON.stringify(newCookies, null, 2));
             logger.info('New cookies saved to file');
         }
 
@@ -40,11 +41,6 @@ export const createTwitterClientScraper = async (credentials: any) => {
     }
 };
 
-export const twitterClientScraper = async (): Promise<Scraper> => {
-    return await createTwitterClientScraper({
-        username: config.TWITTER_USERNAME!,
-        password: config.TWITTER_PASSWORD!
-    });
-};
+
 
 
