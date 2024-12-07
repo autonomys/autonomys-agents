@@ -33,6 +33,7 @@ CREATE TABLE IF NOT EXISTS skipped_tweets (
     tweet_id TEXT NOT NULL,
     reason TEXT NOT NULL,
     confidence REAL CHECK(confidence BETWEEN 0 AND 1),
+    recheck BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (tweet_id) REFERENCES tweets(id)
 );

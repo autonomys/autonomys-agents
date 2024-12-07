@@ -6,6 +6,7 @@ import { Tweet } from '../../types/twitter.js';
 import { getPendingResponsesByTweetId } from '../../database/index.js';
 import { getTweetById } from '../../database/index.js';
 import { ChromaService } from '../vectorstore/chroma.js';
+import { WorkflowState } from '../../types/workflow.js';
 
 const logger = createLogger('database-queue');
 const isUniqueConstraintError = (error: any): boolean => {
@@ -31,7 +32,7 @@ export async function addToQueue(response: QueuedResponseMemory): Promise<void> 
                 throw error;
             }
         }
-       
+        logger.info(`Adding response to queue: ${JSON.stringify(response)}`);
         await db.addResponse({
             id: response.id,
             tweet_id: response.tweet.id,
@@ -170,29 +171,82 @@ export async function getSkippedTweets(): Promise<SkippedTweetMemory[]> {
 
 export async function getSkippedTweetById(skippedId: string): Promise<SkippedTweetMemory> {
     const skipped = await db.getSkippedTweetById(skippedId);
-    return skipped;
+    const tweet = await getTweetById(skipped.tweet_id);
+    
+    if (!skipped || !tweet) {
+        throw new Error('Skipped tweet or original tweet not found');
+    }
+    const result: SkippedTweetMemory = {
+        id: skipped.id,
+        tweet: {
+            id: tweet.id,
+            text: tweet.text,
+            author_id: tweet.author_id,
+            author_username: tweet.author_username,
+            created_at: tweet.created_at
+        },
+        reason: skipped.reason,
+        priority: skipped.priority,
+        created_at: new Date(),
+        workflowState: {
+            tweet: tweet,
+            messages: [],
+            previousInteractions: [],
+            engagementDecision: {
+                shouldEngage: false,
+                reason: skipped.reason,
+                priority: skipped.priority
+            }
+        }
+    };
+
+    return result;
 }
 
 export const moveSkippedToQueue = async (
     skippedId: string,
     queuedResponse: Omit<QueuedResponseMemory, 'status'> & { status: 'pending' }
-): Promise<void> => {
+): Promise<QueuedResponseMemory> => {
     try {
-        const skipped = await getSkippedTweetById(skippedId);
+        const skipped = await getSkippedTweetById(skippedId) as any;
+        logger.info(`Skipped tweet: ${JSON.stringify(skipped)}`);
+        
         if (!skipped) {
             throw new Error('Skipped tweet not found');
         }
+        const tweet = await db.getTweetById(skipped.tweet_id);
+        if (!tweet) {
+            throw new Error('Tweet not found');
+        }
+        logger.info(`Tweet: ${JSON.stringify(tweet)}`);
 
         const typedResponse: QueuedResponseMemory = {
-            ...queuedResponse,
-            status: 'pending'
+            id: queuedResponse.id,
+            tweet: {
+                id: tweet.id,
+                text: tweet.text,
+                author_id: tweet.author_id,
+                author_username: tweet.author_username,
+                created_at: tweet.created_at
+            },
+            response: queuedResponse.response,
+            status: 'pending',
+            created_at: new Date(),
+            updatedAt: new Date(),
+            workflowState: queuedResponse.workflowState
         };
 
+        logger.info(`Adding to queue: ${JSON.stringify(typedResponse)}`);
         await addToQueue(typedResponse);
+        
         // Remove from skipped tweets table
         // await db.deleteSkippedTweet(skippedId);
+        
         logger.info(`Moved skipped tweet ${skippedId} to response queue`);
+        
+        return typedResponse;
     } catch (error) {
         logger.error('Failed to move skipped tweet to queue:', error);
+        throw error;
     }
 };

@@ -3,6 +3,7 @@ import { State, logger, parseMessageContent, WorkflowConfig } from './workflow.j
 import * as prompts from './prompts.js';
 import { ChromaService } from '../vectorstore/chroma.js';
 import * as db from '../database/index.js';
+import { flagBackSkippedTweet, getAllSkippedTweetsToRecheck } from '../../database/index.js';
 import { tweetSearchSchema } from '../../schemas/workflow.js';
 
 // Node factory functions
@@ -341,11 +342,80 @@ export const createNodes = async (config: WorkflowConfig) => {
         }
     };
 
+    const recheckSkippedNode = async (state: typeof State.State) => {
+        logger.info('Recheck Skipped Node - Reviewing previously skipped tweets');
+        try {
+            // Get all skipped tweets marked for rechecking
+            const skippedTweets = await getAllSkippedTweetsToRecheck();
+            
+            if (!skippedTweets || skippedTweets.length === 0) {
+                logger.info('No skipped tweets to recheck');
+                return { 
+                    messages: [new AIMessage({
+                        content: JSON.stringify({
+                            fromRecheckNode: true,
+                            messages: []
+                        })
+                    })]
+                };
+            }
+
+            logger.info(`Found ${skippedTweets.length} skipped tweets to recheck`);
+
+            // Process each tweet through engagement decision
+            const processedTweets = [];
+            for (const tweet of skippedTweets) {
+                const decision = await prompts.engagementPrompt
+                    .pipe(config.llms.decision)
+                    .pipe(prompts.engagementParser)
+                    .invoke({ tweet: tweet.text });
+
+                logger.info('Recheck decision:', { tweetId: tweet.id, decision });
+
+                if (decision.shouldEngage) {
+                    processedTweets.push({
+                        tweet,
+                        decision
+                    });
+                } else {
+                    const flagged = await flagBackSkippedTweet(tweet.id, decision.reason);
+                    if (!flagged) {
+                        logger.info('Failed to flag back skipped tweet:', { tweetId: tweet.id });
+                    }
+                }
+            }
+
+            if (processedTweets.length === 0) {
+                logger.info('No skipped tweets passed recheck');
+                return { messages: [] };
+            }
+
+            // Return the first tweet that passed recheck
+            const { tweet, decision } = processedTweets[0];
+            
+            return {
+                messages: [new AIMessage({
+                    content: JSON.stringify({
+                        tweets: [tweet],
+                        currentTweetIndex: 0,
+                        tweet,
+                        decision
+                    })
+                })]
+            };
+        } catch (error) {
+            logger.error('Error in recheck skipped node:', error);
+            return { messages: [] };
+        }
+    };
+
+    // recheck skipped tweets node
     return {
         timelineNode,
         searchNode,
         engagementNode,
         toneAnalysisNode,
-        responseGenerationNode
+        responseGenerationNode,
+        recheckSkippedNode
     };
 };

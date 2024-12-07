@@ -35,6 +35,13 @@ export type SkippedTweetMemory = Readonly<{
     workflowState: WorkflowState;
 }>;
 
+export type SkippedTweet = Readonly<{
+    id: string;
+    tweet_id: string;
+    reason: string;
+    priority: number;
+}>;
+
 export type ApprovalAction = Readonly<{
     id: string;
     approved: boolean;

@@ -1,14 +1,13 @@
-import express from 'express';
+import express, { response } from 'express';
 import { config } from './config/index.js';
 import { createLogger } from './utils/logger.js';
-import { updateResponseStatus, getAllPendingResponses, moveSkippedToQueue , getSkippedTweets, getSkippedTweetById} from './services/database/index.js';
 import { runWorkflow } from './services/agents/workflow.js';
+import { updateResponseStatus, getAllPendingResponses , getSkippedTweets, getSkippedTweetById} from './services/database/index.js';
 import { twitterClientScraper } from './services/twitter/apiv2.js';   
-
-import { initializeSchema, initializeDefaultKOLs, initializeDatabase, addDsn } from './database/index.js';
+import { initializeSchema, initializeDefaultKOLs, initializeDatabase, addDsn, recheckSkippedTweet } from './database/index.js';
 import { createAutoDriveApi, uploadFile } from '@autonomys/auto-drive'
 import { v4 as generateId } from 'uuid';
-import { ApprovalAction, SkippedTweetMemory } from './types/queue.js';
+import { ApprovalAction } from './types/queue.js';
 import cors from 'cors'
 
 
@@ -175,33 +174,20 @@ const startServer = () => {
         res.json(skipped);
     });
 
-    // Move skipped tweet to response queue
     app.post('/tweets/skipped/:id/queue', async (req, res) => {
         try {
-            const skipped: SkippedTweetMemory = await getSkippedTweetById(req.params.id);
+            logger.info(`Received request to move skipped tweet to queue: ${req.params.id}`);
+            const skipped = await getSkippedTweetById(req.params.id);
             if (!skipped) {
                 return res.status(404).json({ error: 'Skipped tweet not found' });
             }
-
-            const { response } = req.body;
-            if (!response) {
-                return res.status(400).json({ error: 'Response is required' });
+            const recheck = await recheckSkippedTweet(req.params.id);
+            if (!recheck) {
+                return res.status(404).json({ error: 'Failed to recheck skipped tweet' });
             }
-            
-            const queuedResponse = await moveSkippedToQueue(skipped.id, {
-                id: skipped.id,
-                tweet: skipped.tweet,
-                response: {
-                    content: response.content,
-                    references: response.references
-                },
-                workflowState: skipped.workflowState,
-                created_at: new Date(),
-                updatedAt: new Date(),
-                status: 'pending'
+            res.json({
+                message: 'Skipped tweet rechecked and moved to queue - if will be processed in next workflow run'
             });
-
-            res.json(queuedResponse);
         } catch (error) {
             logger.error('Error moving skipped tweet to queue:', error);
             res.status(500).json({ error: 'Failed to move tweet to queue' });

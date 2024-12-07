@@ -86,7 +86,10 @@ const shouldContinue = (state: typeof State.State) => {
 
     // If we have no tweets or finished processing all tweets, end workflow
     if (!content.tweets || content.currentTweetIndex >= content.tweets.length) {
-        return END;
+        if (content.fromRecheckNode && content.messages?.length === 0) {
+            return END;
+        }
+        return `recheckNode`;
     }
 
     // If this is a completed tweet (has responseStrategy or was skipped), 
@@ -109,17 +112,19 @@ const shouldContinue = (state: typeof State.State) => {
 };
 
 // Workflow creation function
-const createWorkflow = async (nodes: Awaited<ReturnType<typeof createNodes>>) => {
+export const createWorkflow = async (nodes: Awaited<ReturnType<typeof createNodes>>) => {
     return new StateGraph(State)
         .addNode('searchNode', nodes.searchNode)
         .addNode('engagementNode', nodes.engagementNode)
         .addNode('analyzeNode', nodes.toneAnalysisNode)
         .addNode('generateNode', nodes.responseGenerationNode)
+        .addNode('recheckNode', nodes.recheckSkippedNode)
         .addEdge(START, 'searchNode')
         .addEdge('searchNode', 'engagementNode')
         .addConditionalEdges('engagementNode', shouldContinue)
         .addConditionalEdges('analyzeNode', shouldContinue)
-        .addConditionalEdges('generateNode', shouldContinue);
+        .addConditionalEdges('generateNode', shouldContinue)
+        .addConditionalEdges('recheckNode', shouldContinue);
 };
 
 // Workflow runner type

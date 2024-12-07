@@ -9,6 +9,7 @@ import { config } from '../config/index.js';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import { Tweet } from '../types/twitter.js';
+import { SkippedTweet } from '../types/queue.js';
 
 const logger = createLogger('database');
 
@@ -260,10 +261,28 @@ export async function getSkippedTweets() {
     `);
 }
 
-export async function getSkippedTweetById(skippedId: string) {
+export async function getSkippedTweetById(skippedId: string): Promise<SkippedTweet> {
     const db = await initializeDatabase();
     const skipped = await db.get(`SELECT * FROM skipped_tweets WHERE id = ?`, [skippedId]);
     return skipped;
+}
+
+export async function recheckSkippedTweet(skippedId: string): Promise<boolean> {
+    const db = await initializeDatabase();
+    const result = await db.run(`UPDATE skipped_tweets SET recheck = TRUE WHERE id = ?`, [skippedId]);
+    return result !== undefined;
+}
+
+export async function flagBackSkippedTweet(skippedId: string, reason: string): Promise<boolean> {
+    const db = await initializeDatabase();
+    const result = await db.run(`UPDATE skipped_tweets SET recheck = FALSE, reason = ? WHERE id = ?`, [reason, skippedId]);
+    return result !== undefined;
+}
+
+export async function getAllSkippedTweetsToRecheck(): Promise<Tweet[]> {
+    const db = await initializeDatabase();
+    const recheckTweets = await db.all(`SELECT * FROM skipped_tweets WHERE recheck = TRUE`);
+    return recheckTweets;
 }
 
 export async function addDsn(dsn: {
