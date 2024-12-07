@@ -58,6 +58,7 @@ export async function closeDatabase() {
 export async function addKOL(kol: {
     id: string;
     username: string;
+    created_at?: Date;
 }): Promise<void> {
     const db = await initializeDatabase();
     
@@ -68,8 +69,8 @@ export async function addKOL(kol: {
                 username, 
                 created_at, 
                 updated_at
-            ) VALUES (?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
-        `, [kol.id, kol.username]);
+            ) VALUES (?, ?, ?, CURRENT_TIMESTAMP)
+        `, [kol.id, kol.username, kol.created_at || new Date()]);
         
         logger.info(`Added KOL account: ${kol.username}`);
     } catch (error: any) {

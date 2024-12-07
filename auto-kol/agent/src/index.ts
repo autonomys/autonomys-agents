@@ -9,6 +9,8 @@ import { createAutoDriveApi, uploadFile } from '@autonomys/auto-drive'
 import { v4 as generateId } from 'uuid';
 import { ApprovalAction } from './types/queue.js';
 import cors from 'cors'
+import { SearchMode } from 'agent-twitter-client';
+import { updateKOLs } from './utils/twitter.js';
 
 const logger = createLogger('app');
 const dsnAPI = createAutoDriveApi({ apiKey: config.DSN_API_KEY! })
@@ -203,7 +205,7 @@ const startServer = () => {
 const main = async () => {
     try {
         await initializeSchema();
-        await initializeDefaultKOLs();
+        // await initializeDefaultKOLs();
         // Initialize server
         startServer();
 

@@ -2,6 +2,8 @@ import { Scraper } from 'agent-twitter-client';
 import { createLogger } from '../../utils/logger.js';
 import { readFileSync, writeFileSync, existsSync } from 'fs';
 import { config } from '../../config/index.js';
+
+
 const logger = createLogger('agent-twitter-api');
 
 export const createTwitterClientScraper = async () => {

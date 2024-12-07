@@ -10,6 +10,7 @@ import { z } from 'zod';
 import { WorkflowState } from '../types/workflow.js';
 import { ChromaService } from '../services/vectorstore/chroma.js';
 import { Tweet } from '../types/twitter.js';
+import { getKOLsAccounts, updateKOLs } from '../utils/twitter.js';
 
 const logger = createLogger('workflow-tools');
 
@@ -84,11 +85,9 @@ export const createTools = (scraper: any) => {
                         lastProcessedId: null
                     };
                 }
-
-                const cleanAccounts = config.TARGET_ACCOUNTS
-                    .filter(account => account && account.trim().length > 0)
-                    .map(account => account.trim().replace('@', ''));
-
+                await updateKOLs();
+                const cleanAccounts = await getKOLsAccounts()
+                logger.info('Fetching KOLs:', await getKOLsAccounts());
                 if (cleanAccounts.length === 0) {
                     logger.error('No valid accounts found after cleaning');
                     return {
