@@ -1,5 +1,4 @@
 import { DynamicStructuredTool } from '@langchain/core/tools';
-import { TwitterApiReadWrite } from 'twitter-api-v2';
 import { addToQueue, addToSkipped } from '../services/database/index.js';
 import { QueuedResponseMemory } from '../types/queue.js';
 import { AgentResponse } from '../types/agent.js';
@@ -10,12 +9,11 @@ import { config } from '../config/index.js';
 import { z } from 'zod';
 import { WorkflowState } from '../types/workflow.js';
 import { ChromaService } from '../services/vectorstore/chroma.js';
-import { twitterClientScraper } from '../services/twitter/apiv2.js';
 import { Tweet } from '../types/twitter.js';
 
 const logger = createLogger('workflow-tools');
 
-export const createTools = (client: TwitterApiReadWrite) => {
+export const createTools = (scraper: any) => {
 
     // ‌TODO TOOLS
     /*
@@ -30,7 +28,6 @@ export const createTools = (client: TwitterApiReadWrite) => {
         schema: z.object({}),
         func: async () => {
             try {
-                const scraper = await twitterClientScraper();
                 const tweets = await scraper.fetchHomeTimeline(1, []);
                 const allTweets = [];
                 
@@ -105,8 +102,6 @@ export const createTools = (client: TwitterApiReadWrite) => {
                     cleanAccounts,
                     lastProcessedId
                 });
-
-                const scraper = await twitterClientScraper();
                 const allTweets = [];
 
                 for (const account of cleanAccounts) {

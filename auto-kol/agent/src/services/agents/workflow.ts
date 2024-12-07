@@ -1,16 +1,16 @@
 import { END, MemorySaver, StateGraph, START, Annotation } from '@langchain/langgraph';
-import { AIMessage, BaseMessage } from '@langchain/core/messages';
+import { BaseMessage } from '@langchain/core/messages';
 import { ChatOpenAI } from '@langchain/openai';
 import { MessageContent } from '@langchain/core/messages';
 import { config } from '../../config/index.js';
 import { createLogger } from '../../utils/logger.js';
 import { createTools } from '../../tools/index.js';
-import { createTwitterClient } from '../twitter/api.js';
 import { ToolNode } from '@langchain/langgraph/prebuilt';
-import { TwitterApiReadWrite } from 'twitter-api-v2';
-import { StructuredOutputParser } from 'langchain/output_parsers';
+import { createTwitterClientScraper } from '../twitter/api.js';
 export  const logger = createLogger('agent-workflow');
 import { createNodes } from './nodes.js';
+
+
 export const parseMessageContent = (content: MessageContent): any => {
     if (typeof content === 'string') {
         return JSON.parse(content);
@@ -36,7 +36,7 @@ export const State = Annotation.Root({
 
 // Workflow configuration type
 export type WorkflowConfig = Readonly<{
-    client: TwitterApiReadWrite;
+    client: any;
     toolNode: ToolNode;
     llms: Readonly<{
         decision: ChatOpenAI;
@@ -47,14 +47,7 @@ export type WorkflowConfig = Readonly<{
 
 // Create workflow configuration
 const createWorkflowConfig = async (): Promise<WorkflowConfig> => {
-    // SHOULD BE REPLACED WITH SCRAPER AGENT
-    const client = await createTwitterClient({
-        appKey: config.TWITTER_API_KEY!,
-        appSecret: config.TWITTER_API_SECRET!,
-        accessToken: config.TWITTER_ACCESS_TOKEN!,
-        accessSecret: config.TWITTER_ACCESS_SECRET!
-    });
-
+    const client = await createTwitterClientScraper();
     const { tools } = createTools(client);
 
     return {

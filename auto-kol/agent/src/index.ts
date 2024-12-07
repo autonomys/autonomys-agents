@@ -3,7 +3,7 @@ import { config } from './config/index.js';
 import { createLogger } from './utils/logger.js';
 import { runWorkflow } from './services/agents/workflow.js';
 import { updateResponseStatus, getAllPendingResponses, getSkippedTweets, getSkippedTweetById } from './services/database/index.js';
-import { createTwitterClientScraper } from './services/twitter/apiv2.js';
+import { createTwitterClientScraper } from './services/twitter/api.js';
 import { initializeSchema, initializeDefaultKOLs, initializeDatabase, addDsn, recheckSkippedTweet } from './database/index.js';
 import { createAutoDriveApi, uploadFile } from '@autonomys/auto-drive'
 import { v4 as generateId } from 'uuid';
