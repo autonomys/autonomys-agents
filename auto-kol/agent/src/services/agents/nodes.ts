@@ -32,17 +32,11 @@ export const createNodes = async (config: WorkflowConfig) => {
             lastMessageContent: toolResponse.messages[toolResponse.messages.length - 1].content
         });
 
-        // Parsing the ALL the tweets
-        const parsedTweets = tweetSearchSchema.parse(toolResponse.messages[toolResponse.messages.length - 1].content);
+            // Parse the string content into an object first
+        const content = toolResponse.messages[toolResponse.messages.length - 1].content;
+        const parsedContent = typeof content === 'string' ? JSON.parse(content) : content;
 
-        // TODO: Check if the tweets are new | doesn't exist in sqlite db
-
-        const chromaService = await ChromaService.getInstance();
-        for (const tweet of parsedTweets.tweets) {
-            await chromaService.addTweet(tweet);
-        }
-
-        logger.info(`Added ${parsedTweets.tweets.length} tweets to the vector db`);
+        const parsedTweets = tweetSearchSchema.parse(parsedContent);
 
 
         return {
@@ -55,6 +49,10 @@ export const createNodes = async (config: WorkflowConfig) => {
 
     const searchNode = async (state: typeof State.State) => {
         logger.info('Search Node - Fetching recent tweets');
+        const existingTweets = state.messages.length > 0 ? 
+            parseMessageContent(state.messages[state.messages.length - 1].content).tweets : [];
+    
+        logger.info(`Existing tweets: ${existingTweets.length}`);
         try {
             logger.info('Last processed id:', state.lastProcessedId);
 
@@ -92,7 +90,7 @@ export const createNodes = async (config: WorkflowConfig) => {
                 logger.info('Non-string search result:', searchResult);
             }
 
-            const newTweets = [];
+            const newTweets = [...existingTweets];
             for (const tweet of searchResult.tweets) {
                 if (await db.isTweetExists(tweet.id)) {
                     continue;
@@ -409,7 +407,6 @@ export const createNodes = async (config: WorkflowConfig) => {
         }
     };
 
-    // recheck skipped tweets node
     return {
         timelineNode,
         searchNode,

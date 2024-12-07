@@ -47,3 +47,7 @@ export type ApprovalAction = Readonly<{
     approved: boolean;
     feedback?: string;
 }>; 
+
+export type TimeLineTweet = Readonly<{
+    id: string;
+}>;
