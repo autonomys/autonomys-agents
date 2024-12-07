@@ -134,7 +134,7 @@ export async function getAllPendingResponses(): Promise<QueuedResponseMemory[]> 
                 id: r.tweet_id,
                 author_username: r.author_username,
                 text: r.tweet_content,
-                author_id: '', // Will need to be added to the query
+                author_id: r.author_id, 
                 created_at: r.created_at
             },
             response: {

@@ -1,6 +1,7 @@
-import { Box, Heading, Stack, Card, CardBody, Text, Badge, Button, useToast } from '@chakra-ui/react'
+import { Box, Heading, Stack, Card, CardBody, Text, Badge, Button, useToast, Link } from '@chakra-ui/react'
 import { useSkippedTweets, moveToQueue } from '../api/client'
 import type { SkippedTweet } from '../types'
+import { ExternalLinkIcon } from '@chakra-ui/icons'
 
 function SkippedTweets() {
     const { data: skippedTweets, isLoading, error, refetch } = useSkippedTweets()
@@ -47,6 +48,18 @@ function SkippedTweets() {
                             <Text fontWeight="bold" mb={2}>
                                 @{tweet.author_username}
                             </Text>
+                            <Link
+                                href={`https://x.com/${tweet.author_username}/status/${tweet.tweet_id}`}
+                                isExternal
+                                color="blue.500"
+                                display="flex"
+                                alignItems="center"
+                                gap={2}
+                                mb={2}
+                                _hover={{ color: 'blue.600', textDecoration: 'none' }}
+                            >
+                                View tweet on X <ExternalLinkIcon mx="2px" />
+                            </Link>
                             <Text color="#00ff00" mb={4}>
                                 {tweet.tweet_content}
                             </Text>

@@ -1,6 +1,7 @@
-import { Box, Heading, Stack, Card, CardBody, Text, Button, ButtonGroup } from '@chakra-ui/react'
+import { Box, Heading, Stack, Card, CardBody, Text, Button, ButtonGroup, Link } from '@chakra-ui/react'
 import { usePendingResponses, approveResponse } from '../api/client'
 import type { PendingResponse } from '../types'
+import { ExternalLinkIcon } from '@chakra-ui/icons'
 
 function Responses() {
     const { data: responses, isLoading, error } = usePendingResponses()
@@ -22,6 +23,18 @@ function Responses() {
                             <Text fontWeight="bold" mb={2}>
                                 @{response.tweet.author_username}
                             </Text>
+                            <Link
+                                href={`https://x.com/${response.tweet.author_username}/status/${response.tweet.id}`}
+                                isExternal
+                                color="blue.500"
+                                display="flex"
+                                alignItems="center"
+                                gap={2}
+                                mb={2}
+                                _hover={{ color: 'blue.600', textDecoration: 'none' }}
+                            >
+                                View tweet on X <ExternalLinkIcon mx="2px" />
+                            </Link>
                             <Text color="gray.600" mb={4}>
                                 {response.tweet.text}
                             </Text>

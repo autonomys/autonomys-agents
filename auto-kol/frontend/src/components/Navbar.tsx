@@ -1,6 +1,6 @@
 import { Box, Flex, Link, Icon, Text } from '@chakra-ui/react'
 import { Link as RouterLink, useLocation } from 'react-router-dom'
-import { FiHome, FiMessageSquare, FiSkipForward, FiSettings } from 'react-icons/fi'
+import { FiHome, FiMessageSquare, FiSkipForward } from 'react-icons/fi'
 
 const NavItem = ({ to, icon, children, isActive }: {
     to: string;

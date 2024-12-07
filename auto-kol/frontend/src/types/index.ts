@@ -1,6 +1,6 @@
 export interface Tweet {
-    tweet_id: string
-    tweet_content: string
+    id: string
+    text: string
     author_username: string
     created_at: string
 }

@@ -18,7 +18,6 @@ export const createTools = (scraper: any) => {
 
     // ‌TODO TOOLS
     /*
-    - fetch timeline
     - google search
     */
     const fetchTimelineTool = new DynamicStructuredTool({
