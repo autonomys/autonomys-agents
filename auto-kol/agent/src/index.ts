@@ -2,19 +2,16 @@ import express, { response } from 'express';
 import { config } from './config/index.js';
 import { createLogger } from './utils/logger.js';
 import { runWorkflow } from './services/agents/workflow.js';
-import { updateResponseStatus, getAllPendingResponses , getSkippedTweets, getSkippedTweetById} from './services/database/index.js';
-import { twitterClientScraper } from './services/twitter/apiv2.js';   
+import { updateResponseStatus, getAllPendingResponses, getSkippedTweets, getSkippedTweetById } from './services/database/index.js';
+import { createTwitterClientScraper } from './services/twitter/apiv2.js';
 import { initializeSchema, initializeDefaultKOLs, initializeDatabase, addDsn, recheckSkippedTweet } from './database/index.js';
 import { createAutoDriveApi, uploadFile } from '@autonomys/auto-drive'
 import { v4 as generateId } from 'uuid';
 import { ApprovalAction } from './types/queue.js';
 import cors from 'cors'
 
-
 const logger = createLogger('app');
 const dsnAPI = createAutoDriveApi({ apiKey: config.DSN_API_KEY! })
-
-// const filePath = join(__dirname, '../file.txt')
 
 const app = express();
 
@@ -24,6 +21,7 @@ app.use(cors({
 }))
 
 // Initialize Twitter client
+const twitterScraper = await createTwitterClientScraper();
 
 // Run workflow periodically
 const startWorkflowPolling = async () => {
@@ -68,15 +66,15 @@ const startServer = () => {
             if (!updatedResponse) {
                 return res.status(404).json({ error: 'Response not found' });
             }
-          
-            if (updatedResponse.status === 'approved') {
-             
-                // await replyToTweet(
-                //     client,
-                //     updatedResponse.tweet.id,
-                //     updatedResponse.response.content
-                // );
 
+            if (updatedResponse.status === 'approved') {
+
+                const twitterResponse: Response = await twitterScraper.sendTweet(
+                    updatedResponse.response.content,
+                    updatedResponse.tweet.id
+                );
+                const tweetId = twitterResponse.json().then(r => r.data?.create_tweet?.tweet_results?.result?.rest_id)
+                console.log('tweetId', tweetId)
                 // Upload to DSN
                 const db = await initializeDatabase();
 
@@ -92,6 +90,7 @@ const startServer = () => {
                 const dsnData = {
                     previousCid: previousDsn?.cid || null,
                     updatedResponse,
+                    tweetId,
                     feedback: feedback || null,
                     timestamp: new Date().toISOString()
                 };
