@@ -24,6 +24,9 @@ export const config = {
     OPENAI_API_KEY: process.env.OPENAI_API_KEY,
     TEMPERATURE: 0.7,
 
+    // SerpAPI Configuration
+    SERPAPI_API_KEY: process.env.SERPAPI_API_KEY,
+
     // Agent Configuration
     CHECK_INTERVAL: 60 * 1000 * 45, // 45 minutes
     MEMORY_DIR: path.join(__dirname, '../../data/memory'),
