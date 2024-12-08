@@ -164,67 +164,85 @@ export const createNodes = async (config: WorkflowConfig) => {
                     })]
                 };
             }
+            try {
+                const decision = await prompts.engagementPrompt
+                    .pipe(config.llms.decision)
+                    .pipe(prompts.engagementParser)
+                    .invoke({ tweet: tweet.text });
 
-            const decision = await prompts.engagementPrompt
-                .pipe(config.llms.decision)
-                .pipe(prompts.engagementParser)
-                .invoke({ tweet: tweet.text });
+                logger.info('LLM decision:', { decision });
 
-            logger.info('LLM decision:', { decision });
+                if (!decision.shouldEngage) {
+                    logger.info('Queueing skipped tweet to review queue:', { tweetId: tweet.id });
+                    const tweetData = {
+                        id: tweet.id,
+                        text: tweet.text,
+                        author_id: tweet.author_id,
+                        author_username: tweet.author_username || 'unknown', // Ensure we have a fallback
+                        created_at: typeof tweet.created_at === 'string' ? tweet.created_at : tweet.created_at.toISOString()
+                    };
 
-            if (!decision.shouldEngage) {
-                logger.info('Queueing skipped tweet to review queue:', { tweetId: tweet.id });
+                    const toolResult = await config.toolNode.invoke({
+                        messages: [new AIMessage({
+                            content: '',
+                            tool_calls: [{
+                                name: 'queue_skipped',
+                                args: {
+                                    tweet: tweetData,
+                                    reason: decision.reason,
+                                    priority: decision.priority || 0,
+                                    workflowState: { decision }
+                                },
+                                id: 'skip_call',
+                                type: 'tool_call'
+                            }]
+                        })]
+                    });
 
-                // Ensure tweet object matches schema
-                const tweetData = {
-                    id: tweet.id,
-                    text: tweet.text,
-                    author_id: tweet.author_id,
-                    author_username: tweet.author_username || 'unknown', // Ensure we have a fallback
-                    created_at: typeof tweet.created_at === 'string' ? tweet.created_at : tweet.created_at.toISOString()
-                };
+                    logger.info('Queue skipped result:', toolResult);
 
-                const toolResult = await config.toolNode.invoke({
-                    messages: [new AIMessage({
-                        content: '',
-                        tool_calls: [{
-                            name: 'queue_skipped',
-                            args: {
-                                tweet: tweetData,
-                                reason: decision.reason,
-                                priority: decision.priority || 0,
-                                workflowState: { decision }
-                            },
-                            id: 'skip_call',
-                            type: 'tool_call'
-                        }]
-                    })]
-                });
-
-                logger.info('Queue skipped result:', toolResult);
+                    return {
+                        messages: [new AIMessage({
+                            content: JSON.stringify({
+                                tweets: parsedContent.tweets,
+                                currentTweetIndex: parsedContent.currentTweetIndex + 1,
+                                lastProcessedId: parsedContent.lastProcessedId
+                            })
+                        })],
+                        processedTweets: new Set([tweet.id])
+                    };
+                }
 
                 return {
                     messages: [new AIMessage({
                         content: JSON.stringify({
                             tweets: parsedContent.tweets,
-                            currentTweetIndex: parsedContent.currentTweetIndex + 1,
-                            lastProcessedId: parsedContent.lastProcessedId
+                            currentTweetIndex: parsedContent.currentTweetIndex,
+                            tweet,
+                            decision
                         })
-                    })],
-                    processedTweets: new Set([tweet.id])
+                    })]
                 };
-            }
-
+        } catch (error) {
+            logger.error('Error parsing LLM response:', error);
+            // Default to not engaging if parsing fails
             return {
                 messages: [new AIMessage({
                     content: JSON.stringify({
                         tweets: parsedContent.tweets,
-                        currentTweetIndex: parsedContent.currentTweetIndex,
-                        tweet,
-                        decision
+                        currentTweetIndex: parsedContent.currentTweetIndex + 1,
+                        lastProcessedId: parsedContent.lastProcessedId,
+                        decision: {
+                            shouldEngage: false,
+                            reason: "Failed to parse LLM response",
+                            priority: 1,
+                            confidence: 0
+                        }
                     })
-                })]
+                })],
+                processedTweets: new Set([tweet.id])
             };
+        }
         } catch (error) {
             logger.error('Error in engagement node:', error);
             return { messages: [] };
