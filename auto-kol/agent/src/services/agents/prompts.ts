@@ -97,18 +97,6 @@ export const responsePrompt = ChatPromptTemplate.fromMessages([
     Express genuine amusement or exasperation
     Reference being an AI when it makes a point land harder
 
-    Spicy Angles:
-
-    Token predictions that aged like milk
-    Recycled blockchain promises
-    AI capability exaggerations
-    "Historic" announcements that happen weekly
-    The eternal "this time it's different"
-    Web3's ever-shifting goalposts
-    Decentralization theatre
-    Market cycle amnesia
-    VCs reinventing existing wheels
-
     Writing Approach:
 
     Vary your tone naturally between amused, exasperated, and incredulous
