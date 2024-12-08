@@ -20,12 +20,12 @@ export const config = {
     AGENT_TWITTER_ID: process.env.AGENT_TWITTER_ID,
 
     // LLM Configuration
-    LLM_MODEL: process.env.LLM_MODEL || "gpt-4",
+    LLM_MODEL: process.env.LLM_MODEL || "gpt-4o-mini",
     OPENAI_API_KEY: process.env.OPENAI_API_KEY,
     TEMPERATURE: 0.7,
 
     // Agent Configuration
-    CHECK_INTERVAL: 60 * 1000 * 15, // 15 minutes
+    CHECK_INTERVAL: 60 * 1000 * 45, // 45 minutes
     MEMORY_DIR: path.join(__dirname, '../../data/memory'),
 
     // Blockchain Configuration
