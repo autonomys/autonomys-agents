@@ -1,4 +1,3 @@
-
 # Auto-KOL: AI Agent Campaign Framework for Twitter Engagement
 
 Auto-KOL is an intelligent agent framework designed to engage with thought leaders (Key Opinion Leaders) on Twitter through automated, context-aware interactions.
@@ -73,6 +72,37 @@ The system follows a multi-stage workflow:
 4. Response Generation
 5. Human Review
 6. Response Execution
+
+### Data Flow
+
+```mermaid
+graph TD
+    A[Timeline/Search Node] -->|Fetch Tweets| B[ChromaDB]
+    B -->|Store Tweet Vectors| C[Engagement Node]
+    C -->|Decision| D{Should Engage?}
+    D -->|No| E[Queue Skipped]
+    D -->|Yes| F[Tone Analysis Node]
+    F -->|Analyze| G[Response Generation Node]
+    G -->|Similar Tweets| B
+    G -->|Generate| H[Queue Response]
+    H -->|Store| I[(SQLite DB)]
+    E -->|Store| I
+    I -->|Pending| J[Human Review]
+    J -->|Approved| K[Twitter API]
+    J -->|Approved| L[DSN Upload]
+    L -->|Store| I
+```
+
+### Components
+
+- **Timeline/Search Node**: Fetches tweets from target KOL accounts
+- **ChromaDB**: Vector database for semantic tweet storage and similarity search
+- **Engagement Node**: LLM-powered decision making for tweet engagement
+- **Tone Analysis**: Analyzes tweet tone and suggests response strategy
+- **Response Generation**: Creates context-aware responses using similar tweets
+- **SQLite DB**: Stores tweets, responses, and interaction history
+- **Human Review**: Web interface for response approval
+- **DSN**: Decentralized storage for approved interactions
 
 ## Configuration
 
