@@ -49,4 +49,10 @@ export const queueActionSchema = z.object({
     reason: z.string().optional(),
     priority: z.number().optional(),
     workflowState: z.record(z.any()).optional()
+});
+
+export const webResearchSchema = z.object({
+    should_research: z.boolean().describe('Whether web research is needed for this response'),
+    research_query: z.string().optional().describe('The search query to use if research is needed'),
+    reasoning: z.string().describe('Explanation for the research decision')
 }); 

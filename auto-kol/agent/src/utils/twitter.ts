@@ -1,6 +1,6 @@
 import { config } from '../config/index.js';
 import { createLogger } from '../utils/logger.js';
-import {createTwitterClientScraper } from '../services/twitter/api.js';
+import { createTwitterClientScraper } from '../services/twitter/api.js';
 import * as db from '../database/index.js';
 import { KOL } from '../types/kol.js';
 import { TimeLineTweet } from '../types/queue.js';
@@ -44,7 +44,7 @@ export const getTimeLine = async () => {
             id: tweet.rest_id!,
         });
     }
-    logger.info(`Time line tweets size: ${timeLineTweets.length}`);
+    logger.info(`Timeline tweets size: ${timeLineTweets.length}`);
     return timeline;
 }
 

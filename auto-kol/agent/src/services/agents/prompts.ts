@@ -1,11 +1,12 @@
 import { StructuredOutputParser } from 'langchain/output_parsers';
-import { engagementSchema, toneSchema, responseSchema } from '../../schemas/workflow.js';
+import { engagementSchema, toneSchema, responseSchema, webResearchSchema } from '../../schemas/workflow.js';
 import { ChatPromptTemplate, PromptTemplate } from '@langchain/core/prompts';
 import { SystemMessage } from '@langchain/core/messages';
 
 export const engagementParser = StructuredOutputParser.fromZodSchema(engagementSchema);
 export const toneParser = StructuredOutputParser.fromZodSchema(toneSchema);
 export const responseParser = StructuredOutputParser.fromZodSchema(responseSchema);
+export const webResearchParser = StructuredOutputParser.fromZodSchema(webResearchSchema);
 
 export const engagementSystemPrompt = await PromptTemplate.fromTemplate(
     `You are a strategic social media engagement advisor. Your task is to evaluate tweets and decide whether they warrant a response.
@@ -59,6 +60,20 @@ export const responseSystemPrompt = await PromptTemplate.fromTemplate(
     format_instructions: responseParser.getFormatInstructions()
 });
 
+export const webResearchSystemPrompt = await PromptTemplate.fromTemplate(
+    `You are a research strategist for an AI social media agent. Your task is to determine if web research would enhance 
+    the response to a tweet. Consider:
+    1. If the tweet discusses current events or recent developments
+    2. If technical claims need verification
+    3. If additional context would strengthen the response
+    4. If the topic requires up-to-date information
+
+    Be selective - only recommend research when it would significantly improve the response quality.
+    {format_instructions}`
+).format({
+    format_instructions: webResearchParser.getFormatInstructions()
+});
+
 export const engagementPrompt = ChatPromptTemplate.fromMessages([
     new SystemMessage(engagementSystemPrompt),
     ["human", "Evaluate this tweet and provide your structured decision: {tweet}"]
@@ -69,12 +84,18 @@ export const tonePrompt = ChatPromptTemplate.fromMessages([
     ["human", "Analyze the tone for this tweet and suggest a response tone: {tweet}"]
 ]);
 
+export const webResearchPrompt = ChatPromptTemplate.fromMessages([
+    new SystemMessage(webResearchSystemPrompt),
+    ["human", "Decide if web research is needed for this tweet: {tweet}"]
+]);
+
 export const responsePrompt = ChatPromptTemplate.fromMessages([
     new SystemMessage(responseSystemPrompt),
     ["human", `Generate a response strategy for this tweet by considering similar tweets from @{author} using the suggested tone:
     Tweet: {tweet}
     Tone: {tone}
     Similar Tweets: {similarTweets}
+    Web Research: {webResearch}
 
     Core Personality:
     A confident, maybe a bit arrogant, AI

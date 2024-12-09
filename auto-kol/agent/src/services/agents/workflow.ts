@@ -7,7 +7,9 @@ import { createLogger } from '../../utils/logger.js';
 import { createTools } from '../../tools/index.js';
 import { ToolNode } from '@langchain/langgraph/prebuilt';
 import { createTwitterClientScraper } from '../twitter/api.js';
-export  const logger = createLogger('agent-workflow');
+import { createWebSearchTool } from '../../tools/tools/webSearchTool.js';
+import { webResearchPrompt } from './prompts.js';
+export const logger = createLogger('agent-workflow');
 import { createNodes } from './nodes.js';
 
 
@@ -74,30 +76,34 @@ const shouldContinue = (state: typeof State.State) => {
     const lastMessage = state.messages[state.messages.length - 1];
     const content = parseMessageContent(lastMessage.content);
 
-    if (!content.tweets || content.currentTweetIndex >= content.tweets.length) {
-        if (content.fromRecheckNode && content.messages?.length === 0) {
-            return END;
-        }
-        return `recheckNode`;
-    }
+    logger.info('State transition check:', {
+        nodeType: content.nodeType,
+        contentKeys: Object.keys(content),
+        currentTweetIndex: content.currentTweetIndex,
+        totalTweets: content.tweets?.length,
+        hasDecision: !!content.decision,
+        shouldEngage: content.decision?.shouldEngage
+    });
 
-    // If this is a completed tweet (has responseStrategy or was skipped), 
-    // go back to engagement node for next tweet
-    if (content.responseStrategy ||
-        (content.decision && !content.decision.shouldEngage)) {
-        return 'engagementNode';
+    switch (content.nodeType) {
+        case 'timeline_result':
+            return 'searchNode';         // Timeline -> Search (to store in ChromaDB)
+        case 'search_result':
+            return 'engagementNode';     // Search -> Engagement decision
+        case 'engagement_result':
+            return content.decision?.shouldEngage ? 'analyzeNode' : 'engagementNode';  // If positive engagement -> analyze, else next tweet
+        case 'tone_analysis_result':
+            return 'webResearchNode';    // After tone -> web research
+        case 'web_research_result':
+            return 'generateNode';       // After research -> generate response
+        case 'response_generation_result':
+            return 'engagementNode';     // After response -> back to next tweet
+        default:
+            if (!content.tweets || content.currentTweetIndex >= content.tweets.length) {
+                return content.fromRecheckNode && content.messages?.length === 0 ? END : 'recheckNode';
+            }
+            return 'engagementNode';
     }
-
-    // If we have an engagement decision and should engage, move to tone analysis
-    if (content.decision && content.decision.shouldEngage) {
-        return 'analyzeNode';
-    }
-    // If we have toneAnalysis, move to generate response
-    if (content.toneAnalysis) {
-        return 'generateNode';
-    }
-
-    return 'engagementNode';
 };
 
 // Workflow creation function
@@ -106,14 +112,16 @@ export const createWorkflow = async (nodes: Awaited<ReturnType<typeof createNode
         .addNode('searchNode', nodes.searchNode)
         .addNode('engagementNode', nodes.engagementNode)
         .addNode('analyzeNode', nodes.toneAnalysisNode)
+        .addNode('webResearchNode', nodes.webResearchNode)
         .addNode('generateNode', nodes.responseGenerationNode)
         .addNode('recheckNode', nodes.recheckSkippedNode)
         .addNode('timelineNode', nodes.timelineNode)
         .addEdge(START, 'timelineNode')
-        .addEdge('timelineNode', 'searchNode')
-        .addEdge('searchNode', 'engagementNode')
+        .addConditionalEdges('timelineNode', shouldContinue)
+        .addConditionalEdges('searchNode', shouldContinue)
         .addConditionalEdges('engagementNode', shouldContinue)
         .addConditionalEdges('analyzeNode', shouldContinue)
+        .addConditionalEdges('webResearchNode', shouldContinue)
         .addConditionalEdges('generateNode', shouldContinue)
         .addConditionalEdges('recheckNode', shouldContinue);
 };
@@ -137,7 +145,7 @@ const createWorkflowRunner = async (): Promise<WorkflowRunner> => {
             logger.info('Starting tweet response workflow', { threadId });
 
             const config = {
-                recursionLimit: 100,
+                recursionLimit: 200, // RODO: Research how this is calculated
                 configurable: {
                     thread_id: threadId
                 }

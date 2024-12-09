@@ -5,6 +5,7 @@ import { ChromaService } from '../vectorstore/chroma.js';
 import * as db from '../database/index.js';
 import { flagBackSkippedTweet, getAllSkippedTweetsToRecheck } from '../../database/index.js';
 import { tweetSearchSchema } from '../../schemas/workflow.js';
+import { createWebSearchTool } from '../../tools/tools/webSearchTool.js';
 
 export const createNodes = async (config: WorkflowConfig) => {
 
@@ -25,22 +26,23 @@ export const createNodes = async (config: WorkflowConfig) => {
             ]
         });
 
-        // Log the tool response
-        logger.info('Tool response received:', {
-            messageCount: toolResponse.messages.length,
-            lastMessageContent: toolResponse.messages[toolResponse.messages.length - 1].content
-        });
-
-            // Parse the string content into an object first
+        logger.info('Timeline Node - Processing response');
         const content = toolResponse.messages[toolResponse.messages.length - 1].content;
         const parsedContent = typeof content === 'string' ? JSON.parse(content) : content;
-
         const parsedTweets = tweetSearchSchema.parse(parsedContent);
 
+        logger.info('Timeline Node - Returning result', {
+            tweetCount: parsedTweets.tweets?.length,
+            lastProcessedId: parsedTweets.lastProcessedId
+        });
 
         return {
             messages: [new AIMessage({
-                content: JSON.stringify(parsedTweets)
+                content: JSON.stringify({
+                    ...parsedTweets,
+                    currentTweetIndex: 0,
+                    nodeType: 'timeline_result'
+                })
             })],
             lastProcessedId: parsedTweets.lastProcessedId || undefined
         };
@@ -49,9 +51,9 @@ export const createNodes = async (config: WorkflowConfig) => {
     ///////////SEARCH///////////
     const searchNode = async (state: typeof State.State) => {
         logger.info('Search Node - Fetching recent tweets');
-        const existingTweets = state.messages.length > 0 ? 
+        const existingTweets = state.messages.length > 0 ?
             parseMessageContent(state.messages[state.messages.length - 1].content).tweets : [];
-    
+
         logger.info(`Existing tweets: ${existingTweets.length}`);
         try {
             logger.info('Last processed id:', state.lastProcessedId);
@@ -119,7 +121,8 @@ export const createNodes = async (config: WorkflowConfig) => {
                     content: JSON.stringify({
                         tweets: validatedResult.tweets,
                         currentTweetIndex: 0,
-                        lastProcessedId: validatedResult.lastProcessedId
+                        lastProcessedId: validatedResult.lastProcessedId,
+                        nodeType: 'search_result'
                     })
                 })],
                 lastProcessedId: validatedResult.lastProcessedId || undefined
@@ -145,9 +148,26 @@ export const createNodes = async (config: WorkflowConfig) => {
             const parsedContent = parseMessageContent(lastMessage.content);
 
             if (!parsedContent.tweets ||
+                !Array.isArray(parsedContent.tweets) ||
+                parsedContent.tweets.length === 0 ||
+                typeof parsedContent.currentTweetIndex !== 'number' ||
                 parsedContent.currentTweetIndex >= parsedContent.tweets.length) {
-                logger.info('No more tweets to process');
-                return { messages: [] };
+
+                logger.error('Invalid state in engagement node:', {
+                    hasTweets: !!parsedContent.tweets,
+                    tweetsLength: parsedContent.tweets?.length,
+                    currentIndex: parsedContent.currentTweetIndex
+                });
+
+                return {
+                    messages: [new AIMessage({
+                        content: JSON.stringify({
+                            tweets: [],
+                            currentTweetIndex: 0,
+                            nodeType: 'engagement_error'
+                        })
+                    })]
+                };
             }
 
             const tweet = parsedContent.tweets[parsedContent.currentTweetIndex];
@@ -219,30 +239,32 @@ export const createNodes = async (config: WorkflowConfig) => {
                             tweets: parsedContent.tweets,
                             currentTweetIndex: parsedContent.currentTweetIndex,
                             tweet,
-                            decision
+                            decision,
+                            nodeType: 'engagement_result'
                         })
                     })]
                 };
-        } catch (error) {
-            logger.error('Error parsing LLM response:', error);
-            // Default to not engaging if parsing fails
-            return {
-                messages: [new AIMessage({
-                    content: JSON.stringify({
-                        tweets: parsedContent.tweets,
-                        currentTweetIndex: parsedContent.currentTweetIndex + 1,
-                        lastProcessedId: parsedContent.lastProcessedId,
-                        decision: {
-                            shouldEngage: false,
-                            reason: "Failed to parse LLM response",
-                            priority: 1,
-                            confidence: 0
-                        }
-                    })
-                })],
-                processedTweets: new Set([tweet.id])
-            };
-        }
+            } catch (error) {
+                logger.error('Error parsing LLM response:', error);
+                // Default to not engaging if parsing fails
+                return {
+                    messages: [new AIMessage({
+                        content: JSON.stringify({
+                            tweets: parsedContent.tweets,
+                            currentTweetIndex: parsedContent.currentTweetIndex + 1,
+                            lastProcessedId: parsedContent.lastProcessedId,
+                            decision: {
+                                shouldEngage: false,
+                                reason: "Failed to parse LLM response",
+                                priority: 1,
+                                confidence: 0
+                            },
+                            nodeType: 'response_generation_error'
+                        })
+                    })],
+                    processedTweets: new Set([tweet.id])
+                };
+            }
         } catch (error) {
             logger.error('Error in engagement node:', error);
             return { messages: [] };
@@ -256,37 +278,6 @@ export const createNodes = async (config: WorkflowConfig) => {
             const lastMessage = state.messages[state.messages.length - 1];
             const parsedContent = parseMessageContent(lastMessage.content);
             const { tweet, tweets, currentTweetIndex } = parsedContent;
-
-            const toneAnalysis = await prompts.tonePrompt
-                .pipe(config.llms.tone)
-                .pipe(prompts.toneParser)
-                .invoke({ tweet: tweet.text });
-
-            logger.info('Tone analysis:', { toneAnalysis });
-
-            return {
-                messages: [new AIMessage({
-                    content: JSON.stringify({
-                        tweets,
-                        currentTweetIndex,
-                        tweet,
-                        toneAnalysis
-                    })
-                })]
-            };
-        } catch (error) {
-            logger.error('Error in tone analysis node:', error);
-            return { messages: [] };
-        }
-    };
-
-    ///////////RESPONSE GENERATION///////////
-    const responseGenerationNode = async (state: typeof State.State) => {
-        logger.info('Response Generation Node - Creating response strategy');
-        try {
-            const lastMessage = state.messages[state.messages.length - 1];
-            const parsedContent = parseMessageContent(lastMessage.content);
-            const { tweet, toneAnalysis, tweets, currentTweetIndex } = parsedContent;
 
             // Search for similar tweets by this author
             const similarTweetsResponse = await config.toolNode.invoke({
@@ -309,7 +300,38 @@ export const createNodes = async (config: WorkflowConfig) => {
                 similarTweetsResponse.messages[similarTweetsResponse.messages.length - 1].content
             );
 
-            // Include similar tweets in the response prompt context
+            const toneAnalysis = await prompts.tonePrompt
+                .pipe(config.llms.tone)
+                .pipe(prompts.toneParser)
+                .invoke({ tweet: tweet.text });
+
+            logger.info('Tone analysis:', { toneAnalysis });
+
+            return {
+                messages: [new AIMessage({
+                    content: JSON.stringify({
+                        tweets,
+                        currentTweetIndex,
+                        tweet,
+                        toneAnalysis,
+                        similarTweets: similarTweets.similar_tweets,
+                        nodeType: 'tone_analysis_result'
+                    })
+                })]
+            };
+        } catch (error) {
+            logger.error('Error in tone analysis node:', error);
+            return { messages: [] };
+        }
+    };
+
+    ///////////RESPONSE GENERATION///////////
+    const responseGenerationNode = async (state: typeof State.State) => {
+        logger.info('Response Generation Node - Creating response strategy');
+        try {
+            const lastMessage = state.messages[state.messages.length - 1];
+            const { tweet, toneAnalysis, tweets, currentTweetIndex, webResearch = "No web research available.", similarTweets } = parseMessageContent(lastMessage.content);
+
             const responseStrategy = await prompts.responsePrompt
                 .pipe(config.llms.response)
                 .pipe(prompts.responseParser)
@@ -317,7 +339,8 @@ export const createNodes = async (config: WorkflowConfig) => {
                     tweet: tweet.text,
                     tone: toneAnalysis.suggestedTone,
                     author: tweet.author_username,
-                    similarTweets: JSON.stringify(similarTweets.similar_tweets)
+                    similarTweets: JSON.stringify(similarTweets),
+                    webResearch
                 });
 
             logger.info('Response strategy:', { responseStrategy });
@@ -349,13 +372,18 @@ export const createNodes = async (config: WorkflowConfig) => {
                         tweets,
                         currentTweetIndex: currentTweetIndex + 1,
                         lastProcessedId: tweet.id,
-                        responseStrategy
+                        responseStrategy,
+                        nodeType: 'response_generation_result'
                     })
                 })],
                 processedTweets: new Set([tweet.id])
             };
         } catch (error) {
-            logger.error('Error in response generation node:', error);
+            logger.error('Error in response generation node:', error, {
+                state: JSON.stringify(state.messages.map(m => ({
+                    contentKeys: Object.keys(parseMessageContent(m.content))
+                })))
+            });
             return { messages: [] };
         }
     };
@@ -366,10 +394,10 @@ export const createNodes = async (config: WorkflowConfig) => {
         try {
             // Get all skipped tweets marked for rechecking
             const skippedTweets = await getAllSkippedTweetsToRecheck();
-            
+
             if (!skippedTweets || skippedTweets.length === 0) {
                 logger.info('No skipped tweets to recheck');
-                return { 
+                return {
                     messages: [new AIMessage({
                         content: JSON.stringify({
                             fromRecheckNode: true,
@@ -411,7 +439,7 @@ export const createNodes = async (config: WorkflowConfig) => {
 
             // Return the first tweet that passed recheck
             const { tweet, decision } = processedTweets[0];
-            
+
             return {
                 messages: [new AIMessage({
                     content: JSON.stringify({
@@ -428,12 +456,73 @@ export const createNodes = async (config: WorkflowConfig) => {
         }
     };
 
+    const webResearchNode = async (state: typeof State.State) => {
+        logger.info('Web Research Node - Starting research evaluation');
+        const lastMessage = state.messages[state.messages.length - 1];
+        const content = parseMessageContent(lastMessage.content);
+        const currentTweet = content.tweets[content.currentTweetIndex];
+
+        logger.info('Evaluating research need for tweet:', {
+            tweetId: currentTweet.id,
+            text: currentTweet.text
+        });
+
+        const researchDecision = await config.llms.decision.invoke(
+            await prompts.webResearchPrompt.format({
+                tweet: currentTweet.text
+            })
+        );
+
+        // Clean and parse the response
+        const rawContent = researchDecision.content;
+        const cleanedContent = typeof rawContent === 'string'
+            ? rawContent.replace(/```json\n|\n```/g, '').trim()
+            : rawContent;
+        const parsedDecision = parseMessageContent(cleanedContent);
+
+        logger.info('Research decision:', { parsedDecision });
+        let webResearchResults = "No additional research needed.";
+
+        if (parsedDecision.should_research && parsedDecision.research_query) {
+            logger.info('Performing web research with query:', parsedDecision.research_query);
+            try {
+                const webSearchTool = createWebSearchTool();
+                const searchResults = await webSearchTool.call({
+                    query: parsedDecision.research_query
+                });
+
+                if (searchResults.results.length > 0) {
+                    webResearchResults = searchResults.results
+                        .slice(0, 3)
+                        .map((result: any) => `${result.title}: ${result.snippet}`)
+                        .join('\n');
+                    logger.info('Web research completed successfully');
+                }
+            } catch (error) {
+                logger.error('Error performing web research', { error });
+            }
+        }
+
+        logger.info('Web research node completed');
+        return {
+            messages: [new AIMessage({
+                content: JSON.stringify({
+                    ...content,
+                    webResearch: webResearchResults,
+                    researchDecision: parsedDecision,
+                    nodeType: 'web_research_result'
+                })
+            })]
+        };
+    };
+
     return {
         timelineNode,
         searchNode,
         engagementNode,
         toneAnalysisNode,
         responseGenerationNode,
-        recheckSkippedNode
+        recheckSkippedNode,
+        webResearchNode
     };
 };
