@@ -4,7 +4,7 @@ Smart contract components for autonomous blockchain agents.
 
 ## Overview
 
-This repository contains the core smart contracts that enable autonomous agent functionality on the blockchain, with a focus on memory management and state persistence.
+This repository contains smart contracts that enable autonomous agent functionality on the blockchain, with a focus on memory management. Hashes represent the Blake3 hash component of a CID stored in the Autonomys Distributed Storage Network (DSN).
 
 ## Contracts
 
@@ -44,9 +44,41 @@ Tests are written using Foundry's testing framework. Key test files:
 - `AgentMemory.t.sol`: Tests memory storage and retrieval functionality
 
 Run tests with verbosity:
-``shell
+```shell
 forge test -vvv
-``
+```
+
+### Deployment
+
+#### Local Development
+
+1. Start local EVM chain:
+   ```shell
+   anvil
+   ```
+
+2. Deploy contract:
+   ```shell
+   ./script/deploy.sh local
+   ```
+
+#### Network Deployment
+
+Deploy to Taurus network:
+```shell
+./script/deploy.sh taurus
+```
+
+Environment variables should be set in `.env`:
+```shell
+# Local testing
+ANVIL_PRIVATE_KEY=0xac0974...
+LOCAL_RPC_URL=http://localhost:8545
+
+# Autonomys Taurus EVM Network
+TAURUS_RPC_URL=your_taurus_rpc_url
+PRIVATE_KEY=your_private_key
+```
 
 ## License
 

@@ -1,19 +1,29 @@
-// SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.13;
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.28;
 
-import {Script, console} from "forge-std/Script.sol";
+import {Script} from "forge-std/Script.sol";
 import {AgentMemory} from "../src/AgentMemory.sol";
+import {console} from "forge-std/console.sol";
 
-contract AgentMemoryScript is Script {
-    AgentMemory public memory_;
-
+contract DeployScript is Script {
     function setUp() public {}
 
-    function run() public {
+    function run() public returns (AgentMemory) {
+        // Log deployment info
+        console.log("Deploying AgentMemory contract");
+        console.log("Deployer address:", msg.sender);
+        console.log("Chain ID:", block.chainid);
+
+        // Begin sending transactions
         vm.startBroadcast();
 
-        memory_ = new AgentMemory();
+        // Deploy AgentMemory contract
+        AgentMemory memory_ = new AgentMemory();
+        console.log("AgentMemory deployed to:", address(memory_));
 
+        // Stop sending transactions
         vm.stopBroadcast();
+
+        return memory_;
     }
 }
