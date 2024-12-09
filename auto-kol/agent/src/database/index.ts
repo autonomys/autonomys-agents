@@ -355,3 +355,34 @@ export async function addDsn(dsn: {
         INSERT INTO dsn (id, tweet_id, kol_username, cid, response_id) VALUES (?, ?, ?, ?, ?)
     `, [dsn.id, dsn.tweetId, dsn.kolUsername, dsn.cid, dsn.responseId]);
 }
+
+export async function getDsnByTweetId(tweetId: string) {
+    const db = await initializeDatabase();
+    return db.get(`
+        SELECT 
+            dsn.*,
+            t.author_username,
+            t.content as tweet_content,
+            r.content as response_content
+        FROM dsn
+        JOIN tweets t ON dsn.tweet_id = t.id
+        JOIN responses r ON dsn.response_id = r.id
+        WHERE dsn.tweet_id = ?
+    `, [tweetId]);
+}
+
+export async function getAllDsn() {
+    const db = await initializeDatabase();
+    return db.all(`
+        SELECT 
+            dsn.*,
+            t.author_username,
+            t.content as tweet_content,
+            r.content as response_content
+        FROM dsn
+        JOIN tweets t ON dsn.tweet_id = t.id
+        JOIN responses r ON dsn.response_id = r.id
+        ORDER BY dsn.created_at DESC
+    `);
+}
+
