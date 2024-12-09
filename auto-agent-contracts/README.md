@@ -1,66 +1,53 @@
-## Foundry
+# Auto Agent Contracts
 
-**Foundry is a blazing fast, portable and modular toolkit for Ethereum application development written in Rust.**
+Smart contract components for autonomous blockchain agents.
 
-Foundry consists of:
+## Overview
 
--   **Forge**: Ethereum testing framework (like Truffle, Hardhat and DappTools).
--   **Cast**: Swiss army knife for interacting with EVM smart contracts, sending transactions and getting chain data.
--   **Anvil**: Local Ethereum node, akin to Ganache, Hardhat Network.
--   **Chisel**: Fast, utilitarian, and verbose solidity REPL.
+This repository contains the core smart contracts that enable autonomous agent functionality on the blockchain, with a focus on memory management and state persistence.
 
-## Documentation
+## Contracts
 
-https://book.getfoundry.sh/
+- `AgentMemory.sol`: Manages persistent memory storage for autonomous agents
+  - Stores and retrieves memory hashes per agent address
+  - Provides memory state verification
 
-## Usage
+## Development
 
-### Build
+Built using the Foundry development framework.
 
-```shell
-$ forge build
-```
+### Prerequisites
 
-### Test
+- [Foundry](https://getfoundry.sh/)
 
-```shell
-$ forge test
-```
+### Setup
 
-### Format
+1. Install dependencies:
+   ```shell
+   forge install
+   ```
 
-```shell
-$ forge fmt
-```
+2. Run tests:
+   ```shell
+   forge test
+   ```
 
-### Gas Snapshots
+3. Build contracts:
+   ```shell
+   forge build
+   ```
 
-```shell
-$ forge snapshot
-```
+### Testing
 
-### Anvil
+Tests are written using Foundry's testing framework. Key test files:
 
-```shell
-$ anvil
-```
+- `AgentMemory.t.sol`: Tests memory storage and retrieval functionality
 
-### Deploy
+Run tests with verbosity:
+``shell
+forge test -vvv
+``
 
-```shell
-$ forge script script/Counter.s.sol:CounterScript --rpc-url <your_rpc_url> --private-key <your_private_key>
-```
+## License
 
-### Cast
-
-```shell
-$ cast <subcommand>
-```
-
-### Help
-
-```shell
-$ forge --help
-$ anvil --help
-$ cast --help
-```
+MIT
