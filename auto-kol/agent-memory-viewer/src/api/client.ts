@@ -1,6 +1,6 @@
 import axios from 'axios'
 import { useQuery } from 'react-query'
-import type { AgentMemory } from '../types'
+import type { AgentMemory, DSNData } from '../types'
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001'
 
@@ -37,4 +37,20 @@ export const useLatestMemory = (agentId: string) => {
             enabled: !!agentId,
         }
     )
-} 
+}
+
+export const useDSNData = () => {
+    return useQuery<DSNData[], Error>(
+        ['dsn'],
+        async () => {
+            const { data } = await api.get('/memories')
+            return data
+        },
+        {
+            retry: 3,
+            retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 30000),
+        }
+    )
+}
+
+

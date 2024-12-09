@@ -1,57 +1,61 @@
-import { Box, Button, Card, CardBody, Text, HStack, Link, Spinner } from '@chakra-ui/react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { Card, CardBody, Text, Spinner, VStack, Link, HStack } from '@chakra-ui/react'
+import { useParams, Link as RouterLink } from 'react-router-dom'
 import { ExternalLinkIcon } from '@chakra-ui/icons'
 import { useMemory } from '../api/client'
 
 function MemoryViewer() {
     const { cid } = useParams()
-    const navigate = useNavigate()
     const { data: memory, isLoading, error } = useMemory(cid || '')
-
+    console.log(memory)
     if (isLoading) return <Spinner color="#00ff00" />
-    if (error) return <Text color="red.500">Error loading memory: {(error as Error).message}</Text>
+    if (error) return <Text color="red.500">Error loading memory: {error.message}</Text>
     if (!memory) return <Text>No memory found</Text>
 
     return (
-        <Box>
-            <Card mb={4}>
+        <VStack spacing={4} align="stretch">
+            <Card>
                 <CardBody>
-                    <Text fontFamily="Monaco" fontSize="sm" color="#00ff00" mb={4}>
-                        CID: {memory.cid}
+                    <HStack justify="space-between" mb={4}>
+                        <Text fontSize="sm" color="#00ff00">
+                            Memory CID: {cid}
+                        </Text>
+                        {memory.previousCid && (
+                            <Link
+                                as={RouterLink}
+                                to={`/memory/${memory.previousCid}`}
+                                color="#00ff00"
+                                display="flex"
+                                alignItems="center"
+                                gap={2}
+                            >
+                                Previous CID <ExternalLinkIcon mx="2px" />
+                            </Link>
+                        )}
+                    </HStack>
+                    <Text fontSize="sm" color="#00ff00" mb={2}>
+                        Original Tweet by @{memory.updatedResponse.tweet.author_username}
                     </Text>
                     <Text whiteSpace="pre-wrap" mb={4}>
-                        {memory.content}
+                        {memory.updatedResponse.tweet.content}
                     </Text>
-                    <Link
-                        href={`https://explorer.autonomy.network/tx/${memory.transactionHash}`}
-                        isExternal
-                        color="#00ff00"
-                        display="flex"
-                        alignItems="center"
-                        gap={2}
-                        mb={4}
-                    >
-                        View transaction <ExternalLinkIcon mx="2px" />
-                    </Link>
-                    <HStack spacing={4}>
-                        {memory.previousCid && (
-                            <Button
-                                onClick={() => navigate(`/memory/${memory.previousCid}`)}
-                                variant="outline"
-                            >
-                                Previous Memory
-                            </Button>
-                        )}
-                        <Button
-                            onClick={() => navigate(`/agents/${memory.agentId}`)}
-                            variant="outline"
-                        >
-                            Agent Profile
-                        </Button>
-                    </HStack>
+                    <Text fontSize="sm" color="#00ff00" mb={2}>
+                        Response:
+                    </Text>
+                    <Text whiteSpace="pre-wrap" mb={4}>
+                        {memory.updatedResponse.response.content}
+                    </Text>
+                    <Text fontSize="sm" color="#00ff00">
+                        Strategy: {memory.updatedResponse.response.strategy}
+                    </Text>
+                    <Text fontSize="sm" color="#00ff00">
+                        Tone: {memory.updatedResponse.response.tone}
+                    </Text>
+                    <Text fontSize="sm" color="#00ff00">
+                        Status: {memory.updatedResponse.status}
+                    </Text>
                 </CardBody>
             </Card>
-        </Box>
+        </VStack>
     )
 }
 
