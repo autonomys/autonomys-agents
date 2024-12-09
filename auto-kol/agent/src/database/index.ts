@@ -356,7 +356,7 @@ export async function addDsn(dsn: {
     `, [dsn.id, dsn.tweetId, dsn.kolUsername, dsn.cid, dsn.responseId]);
 }
 
-export async function getDsnByTweetId(tweetId: string) {
+export async function getDsnByCID(cid: string) {
     const db = await initializeDatabase();
     return db.get(`
         SELECT 
@@ -367,8 +367,8 @@ export async function getDsnByTweetId(tweetId: string) {
         FROM dsn
         JOIN tweets t ON dsn.tweet_id = t.id
         JOIN responses r ON dsn.response_id = r.id
-        WHERE dsn.tweet_id = ?
-    `, [tweetId]);
+        WHERE dsn.cid = ?
+    `, [cid]);
 }
 
 export async function getAllDsn() {
