@@ -14,6 +14,7 @@ export async function uploadToDsn({ data, previousCid }: { data: any; previousCi
         const dsnData = {
             ...data,
             previousCid: previousCid,
+            signature: '',
             timestamp: timestamp
         };
 
@@ -46,8 +47,7 @@ export async function uploadToDsn({ data, previousCid }: { data: any; previousCi
         const blake3hash = blake3HashFromCid(stringToCid(finalCid));
 
         //TODO: Add the blake3hash to the smart contract
-        //TODO: Add txn hash to data before uploading to dsn
-        
+
         logger.info('Data uploaded to DSN successfully', {
             blake3hash,
             previousCid,

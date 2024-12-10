@@ -360,8 +360,21 @@ export async function getDsnByCID(cid: string) {
                 dsn.id,
                 dsn.tweet_id,
                 dsn.cid,
-                dsn.created_at
+                dsn.created_at,
+                t.author_username,
+                t.content as tweet_content,
+                r.content as response_content,
+                r.status as response_status,
+                st.reason as skip_reason,
+                CASE 
+                    WHEN r.id IS NOT NULL THEN 'response'
+                    WHEN st.id IS NOT NULL THEN 'skipped'
+                    ELSE NULL 
+                END as result_type
             FROM dsn
+            LEFT JOIN tweets t ON dsn.tweet_id = t.id
+            LEFT JOIN responses r ON t.id = r.tweet_id
+            LEFT JOIN skipped_tweets st ON t.id = st.tweet_id
             WHERE dsn.cid = ?
         `, [cid]);
     } catch (error) {
@@ -377,8 +390,21 @@ export async function getAllDsn() {
                 dsn.id,
                 dsn.tweet_id,
                 dsn.cid,
-                dsn.created_at
+                dsn.created_at,
+                t.author_username,
+                t.content as tweet_content,
+                r.content as response_content,
+                r.status as response_status,
+                st.reason as skip_reason,
+                CASE 
+                    WHEN r.id IS NOT NULL THEN 'response'
+                    WHEN st.id IS NOT NULL THEN 'skipped'
+                    ELSE NULL 
+                END as result_type
             FROM dsn
+            LEFT JOIN tweets t ON dsn.tweet_id = t.id
+            LEFT JOIN responses r ON t.id = r.tweet_id
+            LEFT JOIN skipped_tweets st ON t.id = st.tweet_id
             ORDER BY dsn.created_at DESC
         `);
     } catch (error) {
