@@ -4,6 +4,7 @@ import { stringToCid, blake3HashFromCid } from '@autonomys/auto-dag-data';
 import { addDsn } from '../database/index.js';
 import { v4 as generateId } from 'uuid';
 import { config } from '../config/index.js';
+import { signMessage } from './sc.js';
 
 const logger = createLogger('dsn-upload-tool');
 const dsnAPI = createAutoDriveApi({ apiKey: config.DSN_API_KEY! });
@@ -11,10 +12,16 @@ const dsnAPI = createAutoDriveApi({ apiKey: config.DSN_API_KEY! });
 export async function uploadToDsn({ data, previousCid }: { data: any; previousCid?: string }) {
     try {
         const timestamp = new Date().toISOString();
+        const signature = await signMessage({
+            data: data,
+            previousCid: previousCid,
+            timestamp: timestamp
+        });
+
         const dsnData = {
             ...data,
             previousCid: previousCid,
-            signature: '',
+            signature: signature,
             timestamp: timestamp
         };
 

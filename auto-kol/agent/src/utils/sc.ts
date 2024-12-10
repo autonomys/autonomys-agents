@@ -64,3 +64,12 @@ export function watchMemoryHashUpdates(
     })
 }
 
+export async function signMessage(data: object): Promise<`0x${string}`> {
+    const message = JSON.stringify(data)
+    const signature = await walletClient.signMessage({
+        account,
+        message
+    })
+
+    return signature
+}
