@@ -92,7 +92,18 @@ function MemoryViewer() {
                     <VStack align="stretch" mb={4} pl={4}>
                         <Text>
                             <Text as="span" color="gray.400">Previous CID:</Text>{' '}
-                            <Text as="span" color="white">{memory.previousCid || 'None'}</Text>
+                            {memory.previousCid ? (
+                                <Link
+                                    as={RouterLink}
+                                    to={`/memory/${memory.previousCid}`}
+                                    color="blue.400"
+                                    _hover={{ color: 'blue.300' }}
+                                >
+                                    {memory.previousCid}
+                                </Link>
+                            ) : (
+                                <Text as="span" color="white">None</Text>
+                            )}
                         </Text>
                         <Text>
                             <Text as="span" color="gray.400">Signature:</Text>{' '}

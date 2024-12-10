@@ -49,7 +49,6 @@ export async function uploadToDsn({ data, previousCid }: { data: any; previousCi
         //TODO: Add the blake3hash to the smart contract
 
         logger.info('Data uploaded to DSN successfully', {
-            blake3hash,
             previousCid,
             cid: finalCid
         });
