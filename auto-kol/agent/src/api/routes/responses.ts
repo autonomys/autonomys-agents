@@ -4,7 +4,6 @@ import { updateResponseStatus, getAllPendingResponses } from '../../services/dat
 import { createTwitterClientScraper } from '../../services/twitter/api.js';
 import { initializeDatabase, addDsn, isKOLExists, addKOL } from '../../database/index.js';
 import { createAutoDriveApi, uploadFile } from '@autonomys/auto-drive';
-import { v4 as generateId } from 'uuid';
 import { config } from '../../config/index.js';
 import { getUserProfile } from '../../utils/twitter.js';
 import { ApprovalAction } from '../../types/queue.js';
@@ -48,82 +47,9 @@ router.post('/responses/:id/approve', async (req, res) => {
 
             const tweetId = responseData.data?.create_tweet?.tweet_results?.result?.rest_id
             logger.info('tweetId', tweetId)
-            // Upload to DSN
-            const db = await initializeDatabase();
-            // check if the tweet.author_username exists in KOL table
-            if(!(await isKOLExists(updatedResponse.tweet.author_username))) {
-                logger.info('KOL not found, skipping DSN upload', {
-                    username: updatedResponse.tweet.author_username
-                });
-                //add to KOL table
-                await addKOL(await getUserProfile(updatedResponse.tweet.author_username));
-                logger.info('KOL added to table', {
-                    username: updatedResponse.tweet.author_username
-                });
 
-                // follow the KOL????? 
-                await twitterScraper.followUser(updatedResponse.tweet.author_username);
-                logger.info('Followed KOL', {
-                    username: updatedResponse.tweet.author_username
-                });
-            }
-
-            const previousDsn = await db.get(`
-                SELECT dsn.cid 
-                FROM dsn
-                JOIN tweets ON dsn.tweet_id = tweets.id
-                WHERE kol_username = ?
-                ORDER BY dsn.created_at DESC 
-                LIMIT 1
-            `, [updatedResponse.tweet.author_username]) || { cid: null };
-
-            const dsnData = {
-                previousCid: previousDsn?.cid || null,
-                updatedResponse,
-                tweetId,
-                feedback: feedback || null,
-                timestamp: new Date().toISOString()
-            };
-
-            const jsonBuffer = Buffer.from(JSON.stringify(dsnData, null, 2));
-            const uploadObservable = uploadFile(
-                dsnAPI,
-                {
-                    read: async function* () {
-                        yield jsonBuffer;
-                    },
-                    name: `${updatedResponse.tweet.id}.json`,
-                    mimeType: 'application/json',
-                    size: jsonBuffer.length,
-                    path: updatedResponse.tweet.id
-                },
-                { compression: true }
-            );
-
-            // Wait for upload to complete and get CID
-            let finalCid: string | undefined;
-            await uploadObservable.forEach(status => {
-                if (status.type === 'file' && status.cid) {
-                    finalCid = status.cid.toString();
-                }
-            });
-
-            if (!finalCid) {
-                throw new Error('Failed to get CID from DSN upload');
-            }
-            await addDsn({
-                id: generateId(),
-                tweetId: updatedResponse.tweet.id,
-                kolUsername: updatedResponse.tweet.author_username,
-                cid: finalCid,
-                responseId: updatedResponse.response.id
-            });
-
-            logger.info('Response uploaded to DSN successfully', {
-                tweetId: updatedResponse.tweet.id,
-                responseId: updatedResponse.response.id,
-                cid: finalCid
-            });
+            // TODO. Should the log here also be uploaded to dsn?
+            
         }
 
         res.json(updatedResponse);

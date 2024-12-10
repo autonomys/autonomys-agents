@@ -345,15 +345,14 @@ export async function getAllSkippedTweetsToRecheck(): Promise<Tweet[]> {
 export async function addDsn(dsn: {
     id: string;
     tweetId: string;
-    kolUsername: string;
     cid: string;
-    responseId: string;
 }) {
     const db = await initializeDatabase();
-    logger.info(`Adding DSN record to database: ${dsn.id}, ${dsn.tweetId}, ${dsn.kolUsername}, ${dsn.cid}, ${dsn.responseId}`);
+    logger.info(`Adding DSN record to database: ${dsn.id}, ${dsn.tweetId}, ${dsn.cid}`);
     return db.run(`
-        INSERT INTO dsn (id, tweet_id, kol_username, cid, response_id) VALUES (?, ?, ?, ?, ?)
-    `, [dsn.id, dsn.tweetId, dsn.kolUsername, dsn.cid, dsn.responseId]);
+        INSERT INTO dsn (id, tweet_id, cid) 
+        VALUES (?, ?, ?)
+    `, [dsn.id, dsn.tweetId, dsn.cid]);
 }
 
 export async function getDsnByCID(cid: string) {
@@ -366,7 +365,7 @@ export async function getDsnByCID(cid: string) {
             r.content as response_content
         FROM dsn
         JOIN tweets t ON dsn.tweet_id = t.id
-        JOIN responses r ON dsn.response_id = r.id
+        JOIN responses r ON t.id = r.tweet_id
         WHERE dsn.cid = ?
     `, [cid]);
 }
@@ -381,8 +380,12 @@ export async function getAllDsn() {
             r.content as response_content
         FROM dsn
         JOIN tweets t ON dsn.tweet_id = t.id
-        JOIN responses r ON dsn.response_id = r.id
+        JOIN responses r ON t.id = r.tweet_id
         ORDER BY dsn.created_at DESC
     `);
 }
 
+export async function getLastDsnCid(): Promise<string> {
+    const dsn = await db?.get(`SELECT cid FROM dsn ORDER BY created_at DESC LIMIT 1`);
+    return dsn?.cid || '';
+}

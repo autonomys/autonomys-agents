@@ -1,6 +1,8 @@
 import { createLogger } from '../utils/logger.js';
 import { createAutoDriveApi, uploadFile } from '@autonomys/auto-drive';
 import { stringToCid, blake3HashFromCid } from '@autonomys/auto-dag-data';
+import { addDsn } from '../database/index.js';
+import { v4 as generateId } from 'uuid';
 import { config } from '../config/index.js';
 
 const logger = createLogger('dsn-upload-tool');
@@ -42,11 +44,19 @@ export async function uploadToDsn({ data, previousCid }: { data: any; previousCi
         }
 
         const blake3hash = blake3HashFromCid(stringToCid(finalCid));
-        //TODO: Add the blake3hash to the smart contract
 
+        //TODO: Add the blake3hash to the smart contract
+        //TODO: Add txn hash to data before uploading to dsn
+        
         logger.info('Data uploaded to DSN successfully', {
             blake3hash,
             previousCid,
+            cid: finalCid
+        });
+
+        await addDsn({
+            id: generateId(),
+            tweetId: data.tweet.id,
             cid: finalCid
         });
 

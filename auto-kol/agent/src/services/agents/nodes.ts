@@ -3,7 +3,7 @@ import { State, logger, parseMessageContent, WorkflowConfig } from './workflow.j
 import * as prompts from './prompts.js';
 import { ChromaService } from '../vectorstore/chroma.js';
 import * as db from '../database/index.js';
-import { flagBackSkippedTweet, getAllSkippedTweetsToRecheck } from '../../database/index.js';
+import { flagBackSkippedTweet, getAllSkippedTweetsToRecheck, getLastDsnCid } from '../../database/index.js';
 import { tweetSearchSchema } from '../../schemas/workflow.js';
 import { uploadToDsn } from '../../utils/dsn.js';
 export const createNodes = async (config: WorkflowConfig) => {
@@ -171,14 +171,13 @@ export const createNodes = async (config: WorkflowConfig) => {
                     .invoke({ tweet: tweet.text });
 
                 logger.info('LLM decision:', { decision });
-
-                // TODO: Add the previous cid to the dsn upload
+                
                 await uploadToDsn({ 
                     data: {
                         decision,
                         tweet
                     }, 
-                    previousCid: '' 
+                    previousCid: await getLastDsnCid()
                 });
 
                 if (!decision.shouldEngage) {
