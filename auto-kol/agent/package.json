@@ -10,6 +10,7 @@
         "dev": "tsx watch src/index.ts"
     },
     "dependencies": {
+        "@autonomys/auto-dag-data": "^1.0.12",
         "@autonomys/auto-drive": "^1.0.12",
         "@langchain/community": "0.3.16",
         "@langchain/core": "0.3.19",

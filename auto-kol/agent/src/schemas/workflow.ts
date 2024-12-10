@@ -49,4 +49,9 @@ export const queueActionSchema = z.object({
     reason: z.string().optional(),
     priority: z.number().optional(),
     workflowState: z.record(z.any()).optional()
-}); 
+});
+
+export const dsnUploadSchema = z.object({
+    previousCid: z.string().optional(),
+    data: z.any(),
+});

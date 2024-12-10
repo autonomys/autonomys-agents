@@ -4,7 +4,7 @@
 
 "@autonomys/auto-dag-data@^1.0.12":
   version "1.0.12"
-  resolved "https://registry.npmjs.org/@autonomys/auto-dag-data/-/auto-dag-data-1.0.12.tgz"
+  resolved "https://registry.yarnpkg.com/@autonomys/auto-dag-data/-/auto-dag-data-1.0.12.tgz#281ad1ea28fba2071f17dbf1c3fabb39e7f21642"
   integrity sha512-KeIypZ9OWJxNpLbrmPiI3S3HR8xpHRID3L5FhquFa+pxcmtjTMJOgxqOUQ2IHQOoRcrU6DRfgGplv5gT6rO4Sw==
   dependencies:
     "@ipld/dag-pb" "^4.1.2"
