@@ -23,6 +23,16 @@ export interface Agent {
     profileUrl: string
 }
 
+export interface DSNResponse {
+    data: DSNData[];
+    pagination: {
+        total: number;
+        page: number;
+        limit: number;
+        totalPages: number;
+    }
+}
+
 export interface DSNData {
     id: string
     tweet_id: string

@@ -1,18 +1,33 @@
-import { Card, CardBody, Text, Spinner, VStack, Link } from '@chakra-ui/react'
-import { useDSNData } from '../api/client'
-import { ExternalLinkIcon } from '@chakra-ui/icons'
-import { Link as RouterLink } from 'react-router-dom'
+import { 
+    Card, 
+    CardBody, 
+    Text, 
+    Spinner, 
+    VStack, 
+    Link, 
+    Button, 
+    HStack, 
+    Select 
+} from '@chakra-ui/react';
+import { useState } from 'react';
+import { useDSNData } from '../api/client';
+import { ExternalLinkIcon } from '@chakra-ui/icons';
+import { Link as RouterLink } from 'react-router-dom';
 
 function DSNViewer() {
-    const { data: dsnData, isLoading, error } = useDSNData()
+    const [page, setPage] = useState(1);
+    const [limit, setLimit] = useState(10);
+    const { data, isLoading, error } = useDSNData(page, limit);
 
-    if (isLoading) return <Spinner color="#00ff00" />
-    if (error) return <Text color="red.500">Error loading DSN data: {(error as Error).message}</Text>
-    if (!dsnData || dsnData.length === 0) return <Text>No DSN data found</Text>
+    if (isLoading) return <Spinner color="#00ff00" />;
+    if (error) return <Text color="red.500">Error loading DSN data: {(error as Error).message}</Text>;
+    if (!data || !data.data || data.data.length === 0) return <Text>No DSN data found</Text>;
+
+    const { totalPages } = data.pagination;
 
     return (
         <VStack spacing={4} align="stretch">
-            {dsnData.map((item) => (
+            {data.data.map((item) => (
                 <Card key={item.id}>
                     <CardBody>
                         <Text fontSize="sm" color="#00ff00" mb={2}>
@@ -54,8 +69,42 @@ function DSNViewer() {
                     </CardBody>
                 </Card>
             ))}
+
+            <HStack justify="space-between" mt={4}>
+                <HStack spacing={4}>
+                    <Button 
+                        onClick={() => setPage(p => Math.max(1, p - 1))}
+                        isDisabled={page === 1}
+                    >
+                        Previous
+                    </Button>
+                    <Text>
+                        Page {page} of {totalPages}
+                    </Text>
+                    <Button 
+                        onClick={() => setPage(p => p + 1)}
+                        isDisabled={page >= totalPages}
+                    >
+                        Next
+                    </Button>
+                </HStack>
+                <Select 
+                    value={limit}
+                    onChange={(e) => {
+                        setLimit(Number(e.target.value));
+                        setPage(1);
+                    }}
+                    width="auto"
+                    color="#00ff00"
+                    borderColor="#00ff00"
+                >
+                    <option value={10}>10 per page</option>
+                    <option value={25}>25 per page</option>
+                    <option value={50}>50 per page</option>
+                </Select>
+            </HStack>
         </VStack>
-    )
+    );
 }
 
-export default DSNViewer 
+export default DSNViewer; 
