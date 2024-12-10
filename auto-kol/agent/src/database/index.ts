@@ -347,42 +347,44 @@ export async function addDsn(dsn: {
     tweetId: string;
     cid: string;
 }) {
-    const db = await initializeDatabase();
-    logger.info(`Adding DSN record to database: ${dsn.id}, ${dsn.tweetId}, ${dsn.cid}`);
-    return db.run(`
+    return db?.run(`
         INSERT INTO dsn (id, tweet_id, cid) 
         VALUES (?, ?, ?)
     `, [dsn.id, dsn.tweetId, dsn.cid]);
 }
 
 export async function getDsnByCID(cid: string) {
-    const db = await initializeDatabase();
-    return db.get(`
-        SELECT 
-            dsn.*,
-            t.author_username,
-            t.content as tweet_content,
-            r.content as response_content
-        FROM dsn
-        JOIN tweets t ON dsn.tweet_id = t.id
-        JOIN responses r ON t.id = r.tweet_id
-        WHERE dsn.cid = ?
-    `, [cid]);
+    try {
+        return await db?.get(`
+            SELECT 
+                dsn.id,
+                dsn.tweet_id,
+                dsn.cid,
+                dsn.created_at
+            FROM dsn
+            WHERE dsn.cid = ?
+        `, [cid]);
+    } catch (error) {
+        logger.error(`Failed to get DSN by CID: ${cid}`, error);
+        throw error;
+    }
 }
 
 export async function getAllDsn() {
-    const db = await initializeDatabase();
-    return db.all(`
-        SELECT 
-            dsn.*,
-            t.author_username,
-            t.content as tweet_content,
-            r.content as response_content
-        FROM dsn
-        JOIN tweets t ON dsn.tweet_id = t.id
-        JOIN responses r ON t.id = r.tweet_id
-        ORDER BY dsn.created_at DESC
-    `);
+    try {
+        return await db?.all(`
+            SELECT 
+                dsn.id,
+                dsn.tweet_id,
+                dsn.cid,
+                dsn.created_at
+            FROM dsn
+            ORDER BY dsn.created_at DESC
+        `);
+    } catch (error) {
+        logger.error('Failed to get all DSN records', error);
+        throw error;
+    }
 }
 
 export async function getLastDsnCid(): Promise<string> {
