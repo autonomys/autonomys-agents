@@ -21,22 +21,36 @@ function DSNViewer() {
                         <Text whiteSpace="pre-wrap" mb={4}>
                             {item.tweet_content}
                         </Text>
-                        <Text fontSize="sm" color="#00ff00" mb={2}>
-                            Response:
-                        </Text>
-                        <Text whiteSpace="pre-wrap" mb={4}>
-                            {item.response_content}
-                        </Text>
-                        <Link
-                            as={RouterLink}
-                            to={`/memory/${item.cid}`}
-                            color="#00ff00"
-                            display="flex"
-                            alignItems="center"
-                            gap={2}
-                        >
-                            View Memory <ExternalLinkIcon mx="2px" />
-                        </Link>
+                        
+                        {item.result_type === 'skipped' ? (
+                            <>
+                                <Text fontSize="sm" color="yellow.500" mb={2}>
+                                    Skipped: {item.skip_reason}
+                                </Text>
+                                <Link
+                                    as={RouterLink}
+                                    to={`/memory/${item.cid}`}
+                                    color="#00ff00"
+                                    display="flex"
+                                    alignItems="center"
+                                    gap={2}
+                                >
+                                    View Memory <ExternalLinkIcon mx="2px" />
+                                </Link>
+                            </>
+                        ) : (
+                            <>
+                                <Text fontSize="sm" color="#00ff00" mb={2}>
+                                    Response:
+                                </Text>
+                                <Text whiteSpace="pre-wrap" mb={4}>
+                                    {item.response_content}
+                                </Text>
+                                <Text fontSize="sm" color={item.response_status === 'pending' ? 'yellow.500' : '#00ff00'} mb={2}>
+                                    Status: {item.response_status}
+                                </Text>
+                            </>
+                        )}
                     </CardBody>
                 </Card>
             ))}

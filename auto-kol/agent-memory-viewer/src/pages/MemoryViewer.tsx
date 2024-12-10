@@ -6,7 +6,7 @@ import { useMemory } from '../api/client'
 function MemoryViewer() {
     const { cid } = useParams()
     const { data: memory, isLoading, error } = useMemory(cid || '')
-    console.log(memory)
+
     if (isLoading) return <Spinner color="#00ff00" />
     if (error) return <Text color="red.500">Error loading memory: {error.message}</Text>
     if (!memory) return <Text>No memory found</Text>
@@ -16,43 +16,93 @@ function MemoryViewer() {
             <Card>
                 <CardBody>
                     <HStack justify="space-between" mb={4}>
-                        <Text fontSize="sm" color="#00ff00">
-                            Memory CID: {cid}
+                        <Text fontSize="sm" color="gray.400">
+                            Memory CID: <Text as="span" color="green.400">{cid}</Text>
                         </Text>
-                        {memory.previousCid && (
+                        {memory.previousCid ? (
                             <Link
                                 as={RouterLink}
                                 to={`/memory/${memory.previousCid}`}
-                                color="#00ff00"
+                                color="blue.400"
                                 display="flex"
                                 alignItems="center"
                                 gap={2}
+                                _hover={{ color: 'blue.300' }}
                             >
                                 Previous CID <ExternalLinkIcon mx="2px" />
                             </Link>
+                        ) : (
+                            <Text color="gray.400">Genesis of Memory</Text>
                         )}
                     </HStack>
-                    <Text fontSize="sm" color="#00ff00" mb={2}>
-                        Original Tweet by @{memory.updatedResponse.tweet.author_username}
+
+                    <Text fontSize="md" fontWeight="bold" color="purple.400" mb={2}>
+                        Tweet Information
                     </Text>
-                    <Text whiteSpace="pre-wrap" mb={4}>
-                        {memory.updatedResponse.tweet.content}
+                    <VStack align="stretch" mb={4} pl={4}>
+                        <Text>
+                            <Text as="span" color="gray.400">ID:</Text>{' '}
+                            <Text as="span" color="white">{memory.tweet.id}</Text>
+                        </Text>
+                        <Text>
+                            <Text as="span" color="gray.400">Author ID:</Text>{' '}
+                            <Text as="span" color="white">{memory.tweet.author_id}</Text>
+                        </Text>
+                        <Text>
+                            <Text as="span" color="gray.400">Author:</Text>{' '}
+                            <Text as="span" color="blue.400">@{memory.tweet.author_username}</Text>
+                        </Text>
+                        <Text>
+                            <Text as="span" color="gray.400">Created At:</Text>{' '}
+                            <Text as="span" color="white">{new Date(memory.tweet.created_at).toLocaleString()}</Text>
+                        </Text>
+                        <Text>
+                            <Text as="span" color="gray.400">Content:</Text>{' '}
+                            <Text as="span" color="white">{memory.tweet.text}</Text>
+                        </Text>
+                    </VStack>
+
+                    <Text fontSize="md" fontWeight="bold" color="purple.400" mb={2}>
+                        Decision
                     </Text>
-                    <Text fontSize="sm" color="#00ff00" mb={2}>
-                        Response:
+                    <VStack align="stretch" mb={4} pl={4}>
+                        <Text>
+                            <Text as="span" color="gray.400">Should Engage:</Text>{' '}
+                            <Text as="span" color={memory.decision.shouldEngage ? "green.400" : "red.400"}>
+                                {memory.decision.shouldEngage ? 'Yes' : 'No'}
+                            </Text>
+                        </Text>
+                        <Text>
+                            <Text as="span" color="gray.400">Reason:</Text>{' '}
+                            <Text as="span" color="white">{memory.decision.reason}</Text>
+                        </Text>
+                        <Text>
+                            <Text as="span" color="gray.400">Priority:</Text>{' '}
+                            <Text as="span" color="orange.400">{memory.decision.priority}</Text>
+                        </Text>
+                        <Text>
+                            <Text as="span" color="gray.400">Confidence:</Text>{' '}
+                            <Text as="span" color="orange.400">{memory.decision.confidence}</Text>
+                        </Text>
+                    </VStack>
+
+                    <Text fontSize="md" fontWeight="bold" color="purple.400" mb={2}>
+                        Additional Information
                     </Text>
-                    <Text whiteSpace="pre-wrap" mb={4}>
-                        {memory.updatedResponse.response.content}
-                    </Text>
-                    <Text fontSize="sm" color="#00ff00">
-                        Strategy: {memory.updatedResponse.response.strategy}
-                    </Text>
-                    <Text fontSize="sm" color="#00ff00">
-                        Tone: {memory.updatedResponse.response.tone}
-                    </Text>
-                    <Text fontSize="sm" color="#00ff00">
-                        Status: {memory.updatedResponse.status}
-                    </Text>
+                    <VStack align="stretch" mb={4} pl={4}>
+                        <Text>
+                            <Text as="span" color="gray.400">Previous CID:</Text>{' '}
+                            <Text as="span" color="white">{memory.previousCid || 'None'}</Text>
+                        </Text>
+                        <Text>
+                            <Text as="span" color="gray.400">Signature:</Text>{' '}
+                            <Text as="span" color="white">{memory.signature || 'None'}</Text>
+                        </Text>
+                        <Text>
+                            <Text as="span" color="gray.400">Timestamp:</Text>{' '}
+                            <Text as="span" color="white">{new Date(memory.timestamp).toLocaleString()}</Text>
+                        </Text>
+                    </VStack>
                 </CardBody>
             </Card>
         </VStack>
