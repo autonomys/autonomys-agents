@@ -1,9 +1,13 @@
 import { createLogger } from '../utils/logger.js';
+import { hexlify } from 'ethers';
 import { createAutoDriveApi, uploadFile } from '@autonomys/auto-drive';
-import { stringToCid, blake3HashFromCid } from '@autonomys/auto-dag-data';
+import { stringToCid, blake3HashFromCid, cidFromBlakeHash } from '@autonomys/auto-dag-data';
 import { addDsn } from '../database/index.js';
 import { v4 as generateId } from 'uuid';
 import { config } from '../config/index.js';
+import { setLastMemoryHash } from './agentMemoryContract.js';
+import { signMessage } from './agentWallet.js';
+
 
 const logger = createLogger('dsn-upload-tool');
 const dsnAPI = createAutoDriveApi({ apiKey: config.DSN_API_KEY! });
@@ -11,10 +15,16 @@ const dsnAPI = createAutoDriveApi({ apiKey: config.DSN_API_KEY! });
 export async function uploadToDsn({ data, previousCid }: { data: any; previousCid?: string }) {
     try {
         const timestamp = new Date().toISOString();
+        const signature = await signMessage({
+            data: data,
+            previousCid: previousCid,
+            timestamp: timestamp
+        });
+
         const dsnData = {
             ...data,
             previousCid: previousCid,
-            signature: '',
+            signature: signature,
             timestamp: timestamp
         };
 
@@ -45,10 +55,14 @@ export async function uploadToDsn({ data, previousCid }: { data: any; previousCi
         }
 
         const blake3hash = blake3HashFromCid(stringToCid(finalCid));
-
-        //TODO: Add the blake3hash to the smart contract
-
+        logger.info('Setting last memory hash', {
+            blake3hash: hexlify(blake3hash)
+        });
+        
+        const receipt = await setLastMemoryHash(hexlify(blake3hash));
+        
         logger.info('Data uploaded to DSN successfully', {
+            txHash: receipt,
             previousCid,
             cid: finalCid
         });
