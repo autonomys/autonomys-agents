@@ -64,6 +64,16 @@ function DSNViewer() {
                                 <Text fontSize="sm" color={item.response_status === 'pending' ? 'yellow.500' : '#00ff00'} mb={2}>
                                     Status: {item.response_status}
                                 </Text>
+                                <Link
+                                    as={RouterLink}
+                                    to={`/memory/${item.cid}`}
+                                    color="#00ff00"
+                                    display="flex"
+                                    alignItems="center"
+                                    gap={2}
+                                >
+                                    View Memory <ExternalLinkIcon mx="2px" />
+                                </Link>
                             </>
                         )}
                     </CardBody>
