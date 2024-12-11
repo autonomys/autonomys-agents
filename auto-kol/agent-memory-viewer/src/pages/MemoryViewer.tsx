@@ -58,7 +58,7 @@ function MemoryViewer() {
                         </Text>
                     </VStack>
 
-                    {memory.type === 'skipped' && memory.workflowState?.decision && (
+                    {memory.workflowState?.decision && (
                         <>
                             <Text fontSize="md" fontWeight="bold" color="purple.400" mb={2}>
                                 Decision

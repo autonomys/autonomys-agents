@@ -50,6 +50,7 @@ interface ResponseMemory extends BaseMemory {
     type: 'response';
     response: string;
     workflowState: {
+        decision: WorkflowDecision;
         toneAnalysis: WorkflowToneAnalysis;
         responseStrategy: WorkflowResponseStrategy;
     };

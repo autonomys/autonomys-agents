@@ -267,7 +267,7 @@ export const createNodes = async (config: WorkflowConfig) => {
         try {
             const lastMessage = state.messages[state.messages.length - 1];
             const parsedContent = parseMessageContent(lastMessage.content);
-            const { tweet, tweets, currentTweetIndex } = parsedContent;
+            const { tweet, tweets, currentTweetIndex, decision } = parsedContent;
 
             const toneAnalysis = await prompts.tonePrompt
                 .pipe(config.llms.tone)
@@ -282,7 +282,8 @@ export const createNodes = async (config: WorkflowConfig) => {
                         tweets,
                         currentTweetIndex,
                         tweet,
-                        toneAnalysis
+                        toneAnalysis,
+                        decision
                     })
                 })]
             };
@@ -298,7 +299,7 @@ export const createNodes = async (config: WorkflowConfig) => {
         try {
             const lastMessage = state.messages[state.messages.length - 1];
             const parsedContent = parseMessageContent(lastMessage.content);
-            const { tweet, toneAnalysis, tweets, currentTweetIndex } = parsedContent;
+            const { tweet, toneAnalysis, tweets, currentTweetIndex, decision } = parsedContent;
 
             // Search for similar tweets by this author
             const similarTweetsResponse = await config.toolNode.invoke({
@@ -340,7 +341,7 @@ export const createNodes = async (config: WorkflowConfig) => {
                     tweet,
                     response: responseStrategy.content,
                     workflowState: {
-                        decision: parsedContent.decision,
+                        decision,
                         toneAnalysis,
                         responseStrategy: {
                             tone: responseStrategy.tone,

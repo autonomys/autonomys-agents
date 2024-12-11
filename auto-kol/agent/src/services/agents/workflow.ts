@@ -74,29 +74,29 @@ const shouldContinue = (state: typeof State.State) => {
     const lastMessage = state.messages[state.messages.length - 1];
     const content = parseMessageContent(lastMessage.content);
 
+    // Check if we've processed all tweets
     if (!content.tweets || content.currentTweetIndex >= content.tweets.length) {
         if (content.fromRecheckNode && content.messages?.length === 0) {
             return END;
         }
-        return `recheckNode`;
+        return 'recheckNode';
     }
 
-    // If this is a completed tweet (has responseStrategy or was skipped), 
-    // go back to engagement node for next tweet
-    if (content.responseStrategy ||
-        (content.decision && !content.decision.shouldEngage)) {
+    // If we have a complete response or skipped tweet, move to next tweet
+    if (content.responseStrategy || (content.decision && !content.decision.shouldEngage)) {
         return 'engagementNode';
     }
 
-    // If we have an engagement decision and should engage, move to tone analysis
-    if (content.decision && content.decision.shouldEngage) {
-        return 'analyzeNode';
-    }
-    // If we have toneAnalysis, move to generate response
+    // Define the workflow progression
     if (content.toneAnalysis) {
         return 'generateNode';
     }
 
+    if (content.decision?.shouldEngage) {
+        return 'analyzeNode';
+    }
+
+    // Default to engagement node
     return 'engagementNode';
 };
 
