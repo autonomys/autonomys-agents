@@ -383,9 +383,15 @@ export async function getDsnByCID(cid: string) {
     }
 }
 
-export async function getAllDsn() {
+export async function getAllDsn(page: number = 1, limit: number = 10) {
     try {
-        return await db?.all(`
+        const offset = (page - 1) * limit;
+        
+        const totalCount = await db?.get(`
+            SELECT COUNT(*) as count FROM dsn
+        `);
+
+        const results = await db?.all(`
             SELECT 
                 dsn.id,
                 dsn.tweet_id,
@@ -406,7 +412,18 @@ export async function getAllDsn() {
             LEFT JOIN responses r ON t.id = r.tweet_id
             LEFT JOIN skipped_tweets st ON t.id = st.tweet_id
             ORDER BY dsn.created_at DESC
-        `);
+            LIMIT ? OFFSET ?
+        `, [limit, offset]);
+
+        return {
+            data: results,
+            pagination: {
+                total: totalCount?.count || 0,
+                page,
+                limit,
+                totalPages: Math.ceil((totalCount?.count || 0) / limit)
+            }
+        };
     } catch (error) {
         logger.error('Failed to get all DSN records', error);
         throw error;

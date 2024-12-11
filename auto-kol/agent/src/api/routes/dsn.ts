@@ -7,9 +7,18 @@ import { config } from '../../config/index.js';
 const router = Router();
 const logger = createLogger('dsn-api');
 
-router.get('/memories', async (_, res) => {
+router.get('/memories', async (req, res) => {
     try {
-        const dsnRecords = await getAllDsn();
+        const page = parseInt(req.query.page as string) || 1;
+        const limit = parseInt(req.query.limit as string) || 10;
+        
+        if (page < 1 || limit < 1 || limit > 100) {
+            return res.status(400).json({ 
+                error: 'Invalid pagination parameters. Page must be >= 1 and limit must be between 1 and 100' 
+            });
+        }
+
+        const dsnRecords = await getAllDsn(page, limit);
         res.json(dsnRecords);
     } catch (error) {
         logger.error('Error fetching DSN records:', error);

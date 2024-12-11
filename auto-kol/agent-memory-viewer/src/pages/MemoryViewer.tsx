@@ -1,4 +1,4 @@
-import { Card, CardBody, Text, Spinner, VStack, Link, HStack } from '@chakra-ui/react'
+import { Card, CardBody, Text, Spinner, VStack, Link, HStack, Box } from '@chakra-ui/react'
 import { useParams, Link as RouterLink } from 'react-router-dom'
 import { ExternalLinkIcon } from '@chakra-ui/icons'
 import { useMemory } from '../api/client'
@@ -45,10 +45,6 @@ function MemoryViewer() {
                             <Text as="span" color="white">{memory.tweet.id}</Text>
                         </Text>
                         <Text>
-                            <Text as="span" color="gray.400">Author ID:</Text>{' '}
-                            <Text as="span" color="white">{memory.tweet.author_id}</Text>
-                        </Text>
-                        <Text>
                             <Text as="span" color="gray.400">Author:</Text>{' '}
                             <Text as="span" color="blue.400">@{memory.tweet.author_username}</Text>
                         </Text>
@@ -62,41 +58,123 @@ function MemoryViewer() {
                         </Text>
                     </VStack>
 
-                    <Text fontSize="md" fontWeight="bold" color="purple.400" mb={2}>
-                        Decision
-                    </Text>
-                    <VStack align="stretch" mb={4} pl={4}>
-                        <Text>
-                            <Text as="span" color="gray.400">Should Engage:</Text>{' '}
-                            <Text as="span" color={memory.decision.shouldEngage ? "green.400" : "red.400"}>
-                                {memory.decision.shouldEngage ? 'Yes' : 'No'}
+                    {memory.workflowState?.decision && (
+                        <>
+                            <Text fontSize="md" fontWeight="bold" color="purple.400" mb={2}>
+                                Decision
                             </Text>
-                        </Text>
-                        <Text>
-                            <Text as="span" color="gray.400">Reason:</Text>{' '}
-                            <Text as="span" color="white">{memory.decision.reason}</Text>
-                        </Text>
-                        <Text>
-                            <Text as="span" color="gray.400">Priority:</Text>{' '}
-                            <Text as="span" color="orange.400">{memory.decision.priority}</Text>
-                        </Text>
-                        <Text>
-                            <Text as="span" color="gray.400">Confidence:</Text>{' '}
-                            <Text as="span" color="orange.400">{memory.decision.confidence}</Text>
-                        </Text>
-                    </VStack>
+                            <VStack align="stretch" mb={4} pl={4}>
+                                <Text>
+                                    <Text as="span" color="gray.400">Should Engage:</Text>{' '}
+                                    <Text as="span" color={memory.workflowState.decision.shouldEngage ? "green.400" : "red.400"}>
+                                        {memory.workflowState.decision.shouldEngage ? "Yes" : "No"}
+                                    </Text>
+                                </Text>
+                                <Text>
+                                    <Text as="span" color="gray.400">Reason:</Text>{' '}
+                                    <Text as="span" color="white">{memory.workflowState.decision.reason}</Text>
+                                </Text>
+                                <Text>
+                                    <Text as="span" color="gray.400">Priority:</Text>{' '}
+                                    <Text as="span" color="orange.400">{memory.workflowState.decision.priority}</Text>
+                                </Text>
+                                <Text>
+                                    <Text as="span" color="gray.400">Confidence:</Text>{' '}
+                                    <Text as="span" color="green.400">
+                                        {(memory.workflowState.decision.confidence * 100).toFixed(1)}%
+                                    </Text>
+                                </Text>
+                            </VStack>
+                        </>
+                    )}
+
+                    {memory.type === 'response' && memory.workflowState && (
+                        <>
+                            <Text fontSize="md" fontWeight="bold" color="purple.400" mb={2}>
+                                Response
+                            </Text>
+                            <VStack align="stretch" mb={4} pl={4}>
+                                <Text>
+                                    <Text as="span" color="gray.400">Content:</Text>{' '}
+                                    <Text as="span" color="white">{memory.response}</Text>
+                                </Text>
+                            </VStack>
+
+                            <Text fontSize="md" fontWeight="bold" color="purple.400" mb={2}>
+                                Tone Analysis
+                            </Text>
+                            <VStack align="stretch" mb={4} pl={4}>
+                                <Text>
+                                    <Text as="span" color="gray.400">Dominant Tone:</Text>{' '}
+                                    <Text as="span" color="orange.400">{memory.workflowState.toneAnalysis.dominantTone}</Text>
+                                </Text>
+                                <Text>
+                                    <Text as="span" color="gray.400">Suggested Tone:</Text>{' '}
+                                    <Text as="span" color="orange.400">{memory.workflowState.toneAnalysis.suggestedTone}</Text>
+                                </Text>
+                                <Text>
+                                    <Text as="span" color="gray.400">Reasoning:</Text>{' '}
+                                    <Text as="span" color="white">{memory.workflowState.toneAnalysis.reasoning}</Text>
+                                </Text>
+                                <Text>
+                                    <Text as="span" color="gray.400">Confidence:</Text>{' '}
+                                    <Text as="span" color="green.400">{(memory.workflowState.toneAnalysis.confidence * 100).toFixed(1)}%</Text>
+                                </Text>
+                            </VStack>
+
+                            <Text fontSize="md" fontWeight="bold" color="purple.400" mb={2}>
+                                Response Strategy
+                            </Text>
+                            <VStack align="stretch" mb={4} pl={4}>
+                                <Text>
+                                    <Text as="span" color="gray.400">Tone:</Text>{' '}
+                                    <Text as="span" color="orange.400">{memory.workflowState.responseStrategy.tone}</Text>
+                                </Text>
+                                <Text>
+                                    <Text as="span" color="gray.400">Strategy:</Text>{' '}
+                                    <Text as="span" color="white">{memory.workflowState.responseStrategy.strategy}</Text>
+                                </Text>
+                                <Text>
+                                    <Text as="span" color="gray.400">Confidence:</Text>{' '}
+                                    <Text as="span" color="green.400">{(memory.workflowState.responseStrategy.confidence * 100).toFixed(1)}%</Text>
+                                </Text>
+                            </VStack>
+
+                            <Text fontSize="md" fontWeight="bold" color="purple.400" mb={2}>
+                                Referenced Tweets
+                            </Text>
+                            <VStack align="stretch" mb={4} pl={4}>
+                                {memory.workflowState.responseStrategy.referencedTweets.map((tweet, index) => (
+                                    <Box key={index} p={2} border="1px solid" borderColor="gray.600" borderRadius="md">
+                                        <Text color="white" mb={2}>{tweet.text}</Text>
+                                        <Text fontSize="sm" color="gray.400">Reason: {tweet.reason}</Text>
+                                        <Text fontSize="sm" color="gray.400">
+                                            Similarity: {(tweet.similarity_score * 100).toFixed(1)}%
+                                        </Text>
+                                    </Box>
+                                ))}
+                            </VStack>
+                        </>
+                    )}
 
                     <Text fontSize="md" fontWeight="bold" color="purple.400" mb={2}>
                         Additional Information
                     </Text>
-                    <VStack align="stretch" mb={4} pl={4}>
+                    <VStack align="stretch" pl={4}>
                         <Text>
                             <Text as="span" color="gray.400">Previous CID:</Text>{' '}
-                            <Text as="span" color="white">{memory.previousCid || 'None'}</Text>
-                        </Text>
-                        <Text>
-                            <Text as="span" color="gray.400">Signature:</Text>{' '}
-                            <Text as="span" color="white">{memory.signature || 'None'}</Text>
+                            {memory.previousCid ? (
+                                <Link
+                                    as={RouterLink}
+                                    to={`/memory/${memory.previousCid}`}
+                                    color="blue.400"
+                                    _hover={{ color: 'blue.300' }}
+                                >
+                                    {memory.previousCid}
+                                </Link>
+                            ) : (
+                                <Text as="span" color="white">None</Text>
+                            )}
                         </Text>
                         <Text>
                             <Text as="span" color="gray.400">Timestamp:</Text>{' '}
