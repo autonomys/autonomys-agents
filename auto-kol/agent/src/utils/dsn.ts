@@ -4,7 +4,7 @@ import { stringToCid, blake3HashFromCid, cidFromBlakeHash } from '@autonomys/aut
 import { addDsn } from '../database/index.js';
 import { v4 as generateId } from 'uuid';
 import { config } from '../config/index.js';
-import { setLastMemoryHash } from './sc.js';
+import { setLastMemoryHash } from './agentMemoryContract.js';
 import { toHex, fromHex } from 'viem'
 import { signMessage } from './agentWallet.js';
 
