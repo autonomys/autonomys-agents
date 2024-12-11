@@ -171,14 +171,6 @@ export const createNodes = async (config: WorkflowConfig) => {
                     .invoke({ tweet: tweet.text });
 
                 logger.info('LLM decision:', { decision });
-                
-                await uploadToDsn({ 
-                    data: {
-                        decision,
-                        tweet
-                    }, 
-                    previousCid: await getLastDsnCid()
-                });
 
                 if (!decision.shouldEngage) {
                     logger.info('Queueing skipped tweet to review queue:', { tweetId: tweet.id });
@@ -208,7 +200,19 @@ export const createNodes = async (config: WorkflowConfig) => {
                     });
 
                     logger.info('Queue skipped result:', toolResult);
-
+                    await uploadToDsn({ 
+                        data: {
+                            type: 'skipped',
+                            tweet,
+                            decision,
+                            workflowState: {
+                                decision,
+                                toneAnalysis: null,
+                                responseStrategy: null
+                            }
+                        }, 
+                        previousCid: await getLastDsnCid()
+                    });
                     return {
                         messages: [new AIMessage({
                             content: JSON.stringify({
@@ -329,6 +333,25 @@ export const createNodes = async (config: WorkflowConfig) => {
                 });
 
             logger.info('Response strategy:', { responseStrategy });
+            
+            await uploadToDsn({ 
+                data: {
+                    type: 'response',
+                    tweet,
+                    response: responseStrategy.content,
+                    workflowState: {
+                        decision: parsedContent.decision,
+                        toneAnalysis,
+                        responseStrategy: {
+                            tone: responseStrategy.tone,
+                            strategy: responseStrategy.strategy,
+                            referencedTweets: responseStrategy.referencedTweets,
+                            confidence: responseStrategy.confidence
+                        }
+                    }
+                }, 
+                previousCid: await getLastDsnCid()
+            });
 
             // Queue the response
             await config.toolNode.invoke({

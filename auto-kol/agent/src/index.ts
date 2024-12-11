@@ -34,13 +34,13 @@ const main = async () => {
             logger.info(`Server running on port ${config.PORT}`);
         });
 
-        // await startWorkflowPolling();
-        // setInterval(startWorkflowPolling, config.CHECK_INTERVAL);
+        await startWorkflowPolling();
+        setInterval(startWorkflowPolling, config.CHECK_INTERVAL);
 
-        // logger.info('Application started successfully', {
-        //     checkInterval: config.CHECK_INTERVAL,
-        //     port: config.PORT
-        // });
+        logger.info('Application started successfully', {
+            checkInterval: config.CHECK_INTERVAL,
+            port: config.PORT
+        });
     } catch (error) {
         logger.error('Failed to start application:', error);
         process.exit(1);
