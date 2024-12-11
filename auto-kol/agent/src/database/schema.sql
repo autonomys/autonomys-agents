@@ -41,13 +41,8 @@ CREATE TABLE IF NOT EXISTS skipped_tweets (
 CREATE TABLE IF NOT EXISTS dsn (
     id TEXT PRIMARY KEY,
     tweet_id TEXT NOT NULL,
-    kol_username TEXT NOT NULL,
     cid TEXT NOT NULL,
-    response_id TEXT NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (tweet_id) REFERENCES tweets(id),
-    FOREIGN KEY (kol_username) REFERENCES kol_accounts(username),
-    FOREIGN KEY (response_id) REFERENCES responses(id)
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE INDEX idx_kor_accounts_username ON kor_accounts(username);

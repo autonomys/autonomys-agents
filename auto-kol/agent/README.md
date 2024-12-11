@@ -62,6 +62,10 @@ OPENAI_API_KEY=your_openai_api_key
 - GET `/tweets/skipped/:id` - Get specific skipped tweet
 - POST `/tweets/skipped/:id/queue` - Move skipped tweet to response queue
 
+### DSN Management
+- GET `/dsn` - Get all DSN records
+- GET `/dsn/:tweetId` - Get DSN record for a specific tweet
+
 ## Architecture
 
 The system follows a multi-stage workflow:

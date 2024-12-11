@@ -5,7 +5,7 @@ import { OpenAIEmbeddings } from "@langchain/openai";
 import { createLogger } from "../../utils/logger.js";
 import { Tweet } from "../../types/twitter.js";
 import { config } from "../../config/index.js";
-import * as fs from 'fs';
+
 
 const logger = createLogger('chroma-service');
 
@@ -16,11 +16,6 @@ export class ChromaService {
     private collection!: Chroma;
 
     private constructor() {
-        // Ensure directory exists
-        if (!fs.existsSync(config.CHROMA_DIR)) {
-            fs.mkdirSync(config.CHROMA_DIR, { recursive: true });
-        }
-
         this.client = new ChromaClient({
             path: config.CHROMA_URL
         });
@@ -120,30 +115,6 @@ export class ChromaService {
             logger.info(`Deleted tweet ${tweetId} from vector store`);
         } catch (error) {
             logger.error(`Failed to delete tweet ${tweetId} from vector store:`, error);
-            throw error;
-        }
-    }
-
-    public async addSampleTweet() {
-        try {
-            const sampleTweet: Tweet = {
-                id: `sample_${Date.now()}`,
-                text: "This is a sample tweet about AI and blockchain technology. The future of decentralized systems looks promising! #AI #Blockchain",
-                author_id: "sample_author_123",
-                author_username: "techinfluencer",
-                created_at: new Date().toISOString()
-            };
-
-            await this.addTweet(sampleTweet);
-            logger.info('Sample tweet added successfully to vector store');
-            
-            // Verify by searching for it
-            const results = await this.searchSimilarTweets("AI blockchain", 1);
-            logger.info('Sample tweet search results:', results);
-            
-            return sampleTweet;
-        } catch (error) {
-            logger.error('Failed to add sample tweet:', error);
             throw error;
         }
     }

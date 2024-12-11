@@ -22,6 +22,12 @@ export const createTools = (scraper: any) => {
         queueSkippedTool,
         searchSimilarTweetsTool,
         fetchTimelineTool,
-        tools: [tweetSearchTool, queueResponseTool, queueSkippedTool, searchSimilarTweetsTool, fetchTimelineTool]
+        tools: [
+            tweetSearchTool,
+            queueResponseTool,
+            queueSkippedTool,
+            searchSimilarTweetsTool,
+            fetchTimelineTool,
+        ]
     };
 };

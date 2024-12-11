@@ -3,9 +3,9 @@ import { State, logger, parseMessageContent, WorkflowConfig } from './workflow.j
 import * as prompts from './prompts.js';
 import { ChromaService } from '../vectorstore/chroma.js';
 import * as db from '../database/index.js';
-import { flagBackSkippedTweet, getAllSkippedTweetsToRecheck } from '../../database/index.js';
+import { flagBackSkippedTweet, getAllSkippedTweetsToRecheck, getLastDsnCid } from '../../database/index.js';
 import { tweetSearchSchema } from '../../schemas/workflow.js';
-
+import { uploadToDsn } from '../../utils/dsn.js';
 export const createNodes = async (config: WorkflowConfig) => {
 
     ///////////TIMELINE///////////
@@ -200,7 +200,19 @@ export const createNodes = async (config: WorkflowConfig) => {
                     });
 
                     logger.info('Queue skipped result:', toolResult);
-
+                    await uploadToDsn({ 
+                        data: {
+                            type: 'skipped',
+                            tweet,
+                            decision,
+                            workflowState: {
+                                decision,
+                                toneAnalysis: null,
+                                responseStrategy: null
+                            }
+                        }, 
+                        previousCid: await getLastDsnCid()
+                    });
                     return {
                         messages: [new AIMessage({
                             content: JSON.stringify({
@@ -255,7 +267,7 @@ export const createNodes = async (config: WorkflowConfig) => {
         try {
             const lastMessage = state.messages[state.messages.length - 1];
             const parsedContent = parseMessageContent(lastMessage.content);
-            const { tweet, tweets, currentTweetIndex } = parsedContent;
+            const { tweet, tweets, currentTweetIndex, decision } = parsedContent;
 
             const toneAnalysis = await prompts.tonePrompt
                 .pipe(config.llms.tone)
@@ -270,7 +282,8 @@ export const createNodes = async (config: WorkflowConfig) => {
                         tweets,
                         currentTweetIndex,
                         tweet,
-                        toneAnalysis
+                        toneAnalysis,
+                        decision
                     })
                 })]
             };
@@ -286,7 +299,7 @@ export const createNodes = async (config: WorkflowConfig) => {
         try {
             const lastMessage = state.messages[state.messages.length - 1];
             const parsedContent = parseMessageContent(lastMessage.content);
-            const { tweet, toneAnalysis, tweets, currentTweetIndex } = parsedContent;
+            const { tweet, toneAnalysis, tweets, currentTweetIndex, decision } = parsedContent;
 
             // Search for similar tweets by this author
             const similarTweetsResponse = await config.toolNode.invoke({
@@ -321,6 +334,25 @@ export const createNodes = async (config: WorkflowConfig) => {
                 });
 
             logger.info('Response strategy:', { responseStrategy });
+            
+            await uploadToDsn({ 
+                data: {
+                    type: 'response',
+                    tweet,
+                    response: responseStrategy.content,
+                    workflowState: {
+                        decision,
+                        toneAnalysis,
+                        responseStrategy: {
+                            tone: responseStrategy.tone,
+                            strategy: responseStrategy.strategy,
+                            referencedTweets: responseStrategy.referencedTweets,
+                            confidence: responseStrategy.confidence
+                        }
+                    }
+                }, 
+                previousCid: await getLastDsnCid()
+            });
 
             // Queue the response
             await config.toolNode.invoke({

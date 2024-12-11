@@ -345,13 +345,92 @@ export async function getAllSkippedTweetsToRecheck(): Promise<Tweet[]> {
 export async function addDsn(dsn: {
     id: string;
     tweetId: string;
-    kolUsername: string;
     cid: string;
-    responseId: string;
 }) {
-    const db = await initializeDatabase();
-    logger.info(`Adding DSN record to database: ${dsn.id}, ${dsn.tweetId}, ${dsn.kolUsername}, ${dsn.cid}, ${dsn.responseId}`);
-    return db.run(`
-        INSERT INTO dsn (id, tweet_id, kol_username, cid, response_id) VALUES (?, ?, ?, ?, ?)
-    `, [dsn.id, dsn.tweetId, dsn.kolUsername, dsn.cid, dsn.responseId]);
+    return db?.run(`
+        INSERT INTO dsn (id, tweet_id, cid) 
+        VALUES (?, ?, ?)
+    `, [dsn.id, dsn.tweetId, dsn.cid]);
+}
+
+export async function getDsnByCID(cid: string) {
+    try {
+        return await db?.get(`
+            SELECT 
+                dsn.id,
+                dsn.tweet_id,
+                dsn.cid,
+                dsn.created_at,
+                t.author_username,
+                t.content as tweet_content,
+                r.content as response_content,
+                r.status as response_status,
+                st.reason as skip_reason,
+                CASE 
+                    WHEN r.id IS NOT NULL THEN 'response'
+                    WHEN st.id IS NOT NULL THEN 'skipped'
+                    ELSE NULL 
+                END as result_type
+            FROM dsn
+            LEFT JOIN tweets t ON dsn.tweet_id = t.id
+            LEFT JOIN responses r ON t.id = r.tweet_id
+            LEFT JOIN skipped_tweets st ON t.id = st.tweet_id
+            WHERE dsn.cid = ?
+        `, [cid]);
+    } catch (error) {
+        logger.error(`Failed to get DSN by CID: ${cid}`, error);
+        throw error;
+    }
+}
+
+export async function getAllDsn(page: number = 1, limit: number = 10) {
+    try {
+        const offset = (page - 1) * limit;
+        
+        const totalCount = await db?.get(`
+            SELECT COUNT(*) as count FROM dsn
+        `);
+
+        const results = await db?.all(`
+            SELECT 
+                dsn.id,
+                dsn.tweet_id,
+                dsn.cid,
+                dsn.created_at,
+                t.author_username,
+                t.content as tweet_content,
+                r.content as response_content,
+                r.status as response_status,
+                st.reason as skip_reason,
+                CASE 
+                    WHEN r.id IS NOT NULL THEN 'response'
+                    WHEN st.id IS NOT NULL THEN 'skipped'
+                    ELSE NULL 
+                END as result_type
+            FROM dsn
+            LEFT JOIN tweets t ON dsn.tweet_id = t.id
+            LEFT JOIN responses r ON t.id = r.tweet_id
+            LEFT JOIN skipped_tweets st ON t.id = st.tweet_id
+            ORDER BY dsn.created_at DESC
+            LIMIT ? OFFSET ?
+        `, [limit, offset]);
+
+        return {
+            data: results,
+            pagination: {
+                total: totalCount?.count || 0,
+                page,
+                limit,
+                totalPages: Math.ceil((totalCount?.count || 0) / limit)
+            }
+        };
+    } catch (error) {
+        logger.error('Failed to get all DSN records', error);
+        throw error;
+    }
+}
+
+export async function getLastDsnCid(): Promise<string> {
+    const dsn = await db?.get(`SELECT cid FROM dsn ORDER BY created_at DESC LIMIT 1`);
+    return dsn?.cid || '';
 }
