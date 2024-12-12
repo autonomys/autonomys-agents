@@ -1,11 +1,11 @@
 import { createLogger } from '../utils/logger.js';
+import { hexlify } from 'ethers';
 import { createAutoDriveApi, uploadFile } from '@autonomys/auto-drive';
 import { stringToCid, blake3HashFromCid, cidFromBlakeHash } from '@autonomys/auto-dag-data';
 import { addDsn } from '../database/index.js';
 import { v4 as generateId } from 'uuid';
 import { config } from '../config/index.js';
-import { setLastMemoryHash } from './sc.js';
-import { toHex, fromHex } from 'viem'
+import { setLastMemoryHash } from './agentMemoryContract.js';
 import { signMessage } from './agentWallet.js';
 
 
@@ -56,10 +56,10 @@ export async function uploadToDsn({ data, previousCid }: { data: any; previousCi
 
         const blake3hash = blake3HashFromCid(stringToCid(finalCid));
         logger.info('Setting last memory hash', {
-            blake3hash: toHex(blake3hash)
+            blake3hash: hexlify(blake3hash)
         });
         
-        const receipt = await setLastMemoryHash(toHex(blake3hash));
+        const receipt = await setLastMemoryHash(hexlify(blake3hash));
         
         logger.info('Data uploaded to DSN successfully', {
             txHash: receipt,
@@ -83,9 +83,4 @@ export async function uploadToDsn({ data, previousCid }: { data: any; previousCi
         logger.error('Error uploading to DSN:', error);
         throw error;
     }
-}
-export function getCidFromBlakeHash(blake3: string) {       
-    const blake3Bytes = fromHex(blake3 as `0x${string}`, 'bytes')
-    const cid = cidFromBlakeHash(Buffer.from(blake3Bytes))
-    return cid
 }
