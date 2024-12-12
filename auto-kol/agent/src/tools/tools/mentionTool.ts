@@ -28,6 +28,7 @@ export const createMentionTool = (scraper: any) => new DynamicStructuredTool({
                 author_id: mention.userId!,
                 author_username: mention.username!.toLowerCase(),
                 created_at: mention.timeParsed!.toISOString(),
+                mention: true
             }));
 
             // Store the latest mention ID

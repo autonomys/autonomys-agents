@@ -6,9 +6,12 @@ import * as db from '../database/index.js';
 import { flagBackSkippedTweet, getAllSkippedTweetsToRecheck, getLastDsnCid } from '../../database/index.js';
 import { tweetSearchSchema } from '../../schemas/workflow.js';
 import { uploadToDsn } from '../../utils/dsn.js';
+import { createTwitterClientScraper } from '../twitter/api.js';
+
 export const createNodes = async (config: WorkflowConfig) => {
 
-
+    const scraper = await createTwitterClientScraper();
+    
     ///////////MENTIONS///////////
     const mentionNode = async (state: typeof State.State) => {
         logger.info('Mention Node - Fetching recent mentions');
@@ -60,13 +63,11 @@ export const createNodes = async (config: WorkflowConfig) => {
             ]
         });
 
-        // Log the tool response
         logger.info('Tool response received:', {
             messageCount: toolResponse.messages.length,
             lastMessageContent: toolResponse.messages[toolResponse.messages.length - 1].content
         });
 
-            // Parse the string content into an object first
         const content = toolResponse.messages[toolResponse.messages.length - 1].content;
         const parsedContent = typeof content === 'string' ? JSON.parse(content) : content;
         
@@ -178,7 +179,7 @@ export const createNodes = async (config: WorkflowConfig) => {
         }
     };
 
-
+    ///////////ENGAGEMENT///////////
     const engagementNode = async (state: typeof State.State) => {
         logger.info('Engagement Node - Evaluating tweet engagement');
         try {
@@ -342,7 +343,15 @@ export const createNodes = async (config: WorkflowConfig) => {
             const parsedContent = parseMessageContent(lastMessage.content);
             const { tweet, toneAnalysis, tweets, currentTweetIndex, decision } = parsedContent;
 
-            // Search for similar tweets by this author
+            const threadMentionsTweets = [];
+            if (tweet.mention!) {
+              const mentions = await scraper.getThread(tweet.id);
+              for (const mention of mentions) {
+                  console.log(mention.text);
+                  threadMentionsTweets.push(mention);
+              }
+            }
+
             const similarTweetsResponse = await config.toolNode.invoke({
                 messages: [new AIMessage({
                     content: '',
@@ -358,12 +367,10 @@ export const createNodes = async (config: WorkflowConfig) => {
                 })],
             });
 
-            // Parse similar tweets response
             const similarTweets = parseMessageContent(
                 similarTweetsResponse.messages[similarTweetsResponse.messages.length - 1].content
             );
 
-            // Include similar tweets in the response prompt context
             const responseStrategy = await prompts.responsePrompt
                 .pipe(config.llms.response)
                 .pipe(prompts.responseParser)
@@ -371,7 +378,8 @@ export const createNodes = async (config: WorkflowConfig) => {
                     tweet: tweet.text,
                     tone: toneAnalysis.suggestedTone,
                     author: tweet.author_username,
-                    similarTweets: JSON.stringify(similarTweets.similar_tweets)
+                    similarTweets: JSON.stringify(similarTweets.similar_tweets),
+                    mentions: JSON.stringify(threadMentionsTweets)
                 });
 
             logger.info('Response strategy:', { responseStrategy });
@@ -415,7 +423,6 @@ export const createNodes = async (config: WorkflowConfig) => {
                 })]
             });
 
-            // Move to next tweet and add current to processed set
             return {
                 messages: [new AIMessage({
                     content: JSON.stringify({
@@ -437,7 +444,6 @@ export const createNodes = async (config: WorkflowConfig) => {
     const recheckSkippedNode = async (state: typeof State.State) => {
         logger.info('Recheck Skipped Node - Reviewing previously skipped tweets');
         try {
-            // Get all skipped tweets marked for rechecking
             const skippedTweets = await getAllSkippedTweetsToRecheck();
             
             if (!skippedTweets || skippedTweets.length === 0) {
@@ -454,7 +460,6 @@ export const createNodes = async (config: WorkflowConfig) => {
 
             logger.info(`Found ${skippedTweets.length} skipped tweets to recheck`);
 
-            // Process each tweet through engagement decision
             const processedTweets = [];
             for (const tweet of skippedTweets) {
                 const decision = await prompts.engagementPrompt
@@ -482,7 +487,6 @@ export const createNodes = async (config: WorkflowConfig) => {
                 return { messages: [] };
             }
 
-            // Return the first tweet that passed recheck
             const { tweet, decision } = processedTweets[0];
             
             return {
