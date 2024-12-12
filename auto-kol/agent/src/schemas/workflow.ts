@@ -6,7 +6,8 @@ export const tweetSearchSchema = z.object({
         text: z.string(),
         author_id: z.string(),
         author_username: z.string(),
-        created_at: z.string()
+        created_at: z.string(),
+        mention: z.boolean().optional()
     })),
     lastProcessedId: z.string().nullable().optional()
 });
@@ -35,7 +36,8 @@ export const responseSchema = z.object({
         text: z.string(),
         reason: z.string(),
         similarity_score: z.number()
-    })).optional()
+    })).optional(),
+    mentions: z.any().optional()
 });
 
 export const queueActionSchema = z.object({

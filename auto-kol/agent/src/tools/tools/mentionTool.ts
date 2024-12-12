@@ -13,7 +13,7 @@ export const createMentionTool = (scraper: any) => new DynamicStructuredTool({
         try {
             const sinceId = await getLatestMentionId();
             const mentions = await scraper.getMyMentions(100, sinceId);
-            
+            logger.info('Fetched mentions:', mentions);
             if (!mentions || mentions.length === 0) {
                 logger.info('No new mentions found');
                 return {
@@ -35,7 +35,7 @@ export const createMentionTool = (scraper: any) => new DynamicStructuredTool({
             await addMention({
                 latest_id: mentions[0].id!
             });
-
+            
             logger.info(`Fetched ${tweets.length} new mentions`);
 
             return {

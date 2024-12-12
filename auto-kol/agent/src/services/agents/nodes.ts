@@ -31,7 +31,7 @@ export const createNodes = async (config: WorkflowConfig) => {
 
         const parsedContent = parseMessageContent(toolResponse.messages[toolResponse.messages.length - 1].content);
         const parsedTweets = tweetSearchSchema.parse(parsedContent);
-
+        logger.info('Parsed tweets:', parsedTweets);
         logger.info(`Found ${parsedTweets.tweets.length} tweets`);
 
         return {
@@ -342,13 +342,19 @@ export const createNodes = async (config: WorkflowConfig) => {
             const lastMessage = state.messages[state.messages.length - 1];
             const parsedContent = parseMessageContent(lastMessage.content);
             const { tweet, toneAnalysis, tweets, currentTweetIndex, decision } = parsedContent;
-
+            logger.info('Tweet:', tweet);
             const threadMentionsTweets = [];
             if (tweet.mention!) {
               const mentions = await scraper.getThread(tweet.id);
               for (const mention of mentions) {
                   console.log(mention.text);
-                  threadMentionsTweets.push(mention);
+                  threadMentionsTweets.push({
+                    id: mention.id,
+                    text: mention.text,
+                    author_id: mention.userId,
+                    author_username: mention.username?.toLowerCase() || 'unknown',
+                    created_at: mention.timeParsed?.toISOString() || new Date().toISOString()
+                  });
               }
             }
 
