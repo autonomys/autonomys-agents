@@ -157,6 +157,33 @@ function MemoryViewer() {
                         </>
                     )}
 
+                    {memory.mentions && memory.mentions.length > 0 && (
+                        <>
+                            <Text fontSize="md" fontWeight="bold" color="purple.400" mb={2}>
+                                Conversation Thread
+                            </Text>
+                            <VStack align="stretch" mb={4} pl={4}>
+                                {memory.mentions.map((mention) => (
+                                    <Box 
+                                        key={mention.id} 
+                                        p={2} 
+                                        border="1px solid" 
+                                        borderColor="gray.600" 
+                                        borderRadius="md"
+                                    >
+                                        <Text>
+                                            <Text as="span" color="gray.400">@{mention.author_username}:</Text>{' '}
+                                            <Text as="span" color="white">{mention.text}</Text>
+                                        </Text>
+                                        <Text fontSize="sm" color="gray.400">
+                                            {new Date(mention.created_at).toLocaleString()}
+                                        </Text>
+                                    </Box>
+                                ))}
+                            </VStack>
+                        </>
+                    )}
+
                     <Text fontSize="md" fontWeight="bold" color="purple.400" mb={2}>
                         Additional Information
                     </Text>
@@ -179,6 +206,18 @@ function MemoryViewer() {
                         <Text>
                             <Text as="span" color="gray.400">Timestamp:</Text>{' '}
                             <Text as="span" color="white">{new Date(memory.timestamp).toLocaleString()}</Text>
+                        </Text>
+                    </VStack>
+
+                    <Text fontSize="md" fontWeight="bold" color="purple.400" mb={2}>
+                        Signature
+                    </Text>
+                    <VStack align="stretch" mb={4} pl={4}>
+                        <Text>
+                            <Text as="span" color="gray.400">Value:</Text>{' '}
+                            <Text as="span" color="white" fontSize="sm" wordBreak="break-all">
+                                {memory.signature}
+                            </Text>
                         </Text>
                     </VStack>
                 </CardBody>

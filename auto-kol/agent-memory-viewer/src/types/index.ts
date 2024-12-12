@@ -1,3 +1,12 @@
+interface Tweet {
+    id: string;
+    text: string;
+    author_id: string;
+    author_username: string;
+    created_at: string;
+    mention?: boolean;
+}
+
 interface WorkflowDecision {
     shouldEngage: boolean;
     reason: string;
@@ -44,6 +53,7 @@ interface SkippedMemory extends BaseMemory {
         toneAnalysis: null;
         responseStrategy: null;
     };
+    mentions: Tweet[];
 }
 
 interface ResponseMemory extends BaseMemory {
@@ -54,6 +64,7 @@ interface ResponseMemory extends BaseMemory {
         toneAnalysis: WorkflowToneAnalysis;
         responseStrategy: WorkflowResponseStrategy;
     };
+    mentions: Tweet[];
 }
 
 export type AgentMemory = SkippedMemory | ResponseMemory;
