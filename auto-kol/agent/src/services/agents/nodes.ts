@@ -8,9 +8,44 @@ import { tweetSearchSchema } from '../../schemas/workflow.js';
 import { uploadToDsn } from '../../utils/dsn.js';
 export const createNodes = async (config: WorkflowConfig) => {
 
+
+    ///////////MENTIONS///////////
+    const mentionNode = async (state: typeof State.State) => {
+        logger.info('Mention Node - Fetching recent mentions');
+        const toolResponse = await config.toolNode.invoke({
+            messages: [
+                new AIMessage({
+                    content: '',
+                    tool_calls: [{
+                        name: 'fetch_mentions',
+                        args: {},
+                        id: 'fetch_mentions_call',
+                        type: 'tool_call'
+                    }]
+                })
+            ]
+        });
+
+        const parsedContent = parseMessageContent(toolResponse.messages[toolResponse.messages.length - 1].content);
+        const parsedTweets = tweetSearchSchema.parse(parsedContent);
+
+        logger.info(`Found ${parsedTweets.tweets.length} tweets`);
+        
+        return {
+            messages: [new AIMessage({
+                content: JSON.stringify(parsedTweets)
+            })],
+            lastProcessedId: parsedTweets.lastProcessedId || undefined
+        };
+    }
+
     ///////////TIMELINE///////////
     const timelineNode = async (state: typeof State.State) => {
         logger.info('Timeline Node - Fetching recent tweets');
+        const existingTweets = state.messages.length > 0 ? 
+            parseMessageContent(state.messages[state.messages.length - 1].content).tweets : [];
+
+        logger.info(`Existing tweets: ${existingTweets.length}`);
         const toolResponse = await config.toolNode.invoke({
             messages: [
                 new AIMessage({
@@ -34,13 +69,22 @@ export const createNodes = async (config: WorkflowConfig) => {
             // Parse the string content into an object first
         const content = toolResponse.messages[toolResponse.messages.length - 1].content;
         const parsedContent = typeof content === 'string' ? JSON.parse(content) : content;
-
+        
         const parsedTweets = tweetSearchSchema.parse(parsedContent);
 
+        const newTweets = [...existingTweets];
+        for (const tweet of parsedTweets.tweets) {
+            if (await db.isTweetExists(tweet.id)) {
+                continue;
+            }
+            newTweets.push(tweet);
+        }
 
         return {
             messages: [new AIMessage({
-                content: JSON.stringify(parsedTweets)
+                content: JSON.stringify({
+                    tweets: newTweets,
+                })
             })],
             lastProcessedId: parsedTweets.lastProcessedId || undefined
         };
@@ -461,6 +505,7 @@ export const createNodes = async (config: WorkflowConfig) => {
     };
 
     return {
+        mentionNode,
         timelineNode,
         searchNode,
         engagementNode,

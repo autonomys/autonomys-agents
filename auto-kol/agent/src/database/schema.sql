@@ -45,6 +45,11 @@ CREATE TABLE IF NOT EXISTS dsn (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE IF NOT EXISTS mentions (
+    latest_id TEXT PRIMARY KEY,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
 CREATE INDEX idx_kor_accounts_username ON kor_accounts(username);
 CREATE INDEX idx_tweets_created_at ON tweets(created_at);
 CREATE INDEX idx_responses_status ON responses(status);

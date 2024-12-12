@@ -103,13 +103,15 @@ const shouldContinue = (state: typeof State.State) => {
 // Workflow creation function
 export const createWorkflow = async (nodes: Awaited<ReturnType<typeof createNodes>>) => {
     return new StateGraph(State)
+        .addNode('mentionNode', nodes.mentionNode)
+        .addNode('timelineNode', nodes.timelineNode)
         .addNode('searchNode', nodes.searchNode)
         .addNode('engagementNode', nodes.engagementNode)
         .addNode('analyzeNode', nodes.toneAnalysisNode)
         .addNode('generateNode', nodes.responseGenerationNode)
         .addNode('recheckNode', nodes.recheckSkippedNode)
-        .addNode('timelineNode', nodes.timelineNode)
-        .addEdge(START, 'timelineNode')
+        .addEdge(START, 'mentionNode')
+        .addEdge('mentionNode', 'timelineNode')
         .addEdge('timelineNode', 'searchNode')
         .addEdge('searchNode', 'engagementNode')
         .addConditionalEdges('engagementNode', shouldContinue)

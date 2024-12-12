@@ -7,30 +7,46 @@ const logger = createLogger('agent-twitter-api');
 
 class ExtendedScraper extends Scraper {
     async getMyMentions(maxResults: number = 100, sinceId?: string) {
+        const username = config.AGENT_USERNAME!;
+
         const isLoggedIn = await this.isLoggedIn();
         if (!isLoggedIn) {
             throw new Error('Must be logged in to fetch mentions');
         }
     
-        const query = `to:${config.TWITTER_USERNAME} -from:${config.TWITTER_USERNAME}`;
+        const query = `@${username} -from:${username}`;
         const replies: Tweet[] = [];
         
         const searchIterator = this.searchTweets(query, maxResults, SearchMode.Latest);
         
-        for await (const reply of searchIterator) {
-            logger.info('Checking reply:', {
-                id: reply.id,
-                text: reply.text,
-                inReplyToStatusId: reply.inReplyToStatusId,
-                inReplyToUserId: reply.inReplyToStatus?.userId
+        for await (const tweet of searchIterator) {
+            logger.info('Checking tweet:', {
+                id: tweet.id,
+                text: tweet.text,
+                author: tweet.username
             });
             
-            if (sinceId && reply.id && reply.id <= sinceId) {
+            if (sinceId && tweet.id && tweet.id <= sinceId) {
                 break;
             }
+
+            const hasReplies = await this.searchTweets(
+                `from:${username} to:${tweet.username}`,
+                10,
+                SearchMode.Latest
+            );
             
-            if (reply.inReplyToStatusId && reply.inReplyToStatus?.userId === config.AGENT_TWITTER_ID) {
-                replies.push(reply);
+            let alreadyReplied = false;
+            for await (const reply of hasReplies) {
+                if (reply.inReplyToStatusId === tweet.id) {
+                    alreadyReplied = true;
+                    logger.info(`Skipping tweet ${tweet.id} - already replied with ${reply.id}`);
+                    break;
+                }
+            }
+            
+            if (!alreadyReplied) {
+                replies.push(tweet);
             }
             
             if (replies.length >= maxResults) {
