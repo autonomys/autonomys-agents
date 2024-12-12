@@ -56,6 +56,53 @@ class ExtendedScraper extends Scraper {
     
         return replies;
     }
+    async getThread(tweetId: string): Promise<Tweet[]> {
+        const username = config.AGENT_USERNAME!;
+        const isLoggedIn = await this.isLoggedIn();
+        if (!isLoggedIn) {
+            throw new Error('Must be logged in to fetch thread');
+        }
+
+        const thread: Tweet[] = [];
+        const seen = new Set<string>();
+        
+        const initialTweet = await this.getTweet(tweetId);
+        if (!initialTweet) {
+            throw new Error(`Tweet ${tweetId} not found`);
+        }
+
+        let currentTweet = initialTweet;
+        while (currentTweet.inReplyToStatusId) {
+            const parentTweet = await this.getTweet(currentTweet.inReplyToStatusId);
+            if (!parentTweet) break;
+            currentTweet = parentTweet;
+        }
+
+        const rootId = currentTweet.id!;
+        const conversationQuery = `conversation_id:${rootId} (from:${username} OR @${username})`;
+        const responses = this.searchTweets(conversationQuery, 100, SearchMode.Latest);
+        
+        if (currentTweet.text?.includes(`@${username}`) || currentTweet.username === username) {
+            thread.push(currentTweet);
+            seen.add(currentTweet.id!);
+        }
+
+        for await (const tweet of responses) {
+            if (!seen.has(tweet.id!)) {
+                seen.add(tweet.id!);
+                thread.push(tweet);
+            }
+        }
+
+        thread.sort((a, b) => {
+            const timeA = a.timeParsed?.getTime() || 0;
+            const timeB = b.timeParsed?.getTime() || 0;
+            return timeA - timeB;
+        });
+
+        logger.info(`Retrieved conversation thread with ${thread.length} tweets starting from root tweet ${rootId}`);
+        return thread;
+    }
 }
 
 export const createTwitterClientScraper = async () => {
