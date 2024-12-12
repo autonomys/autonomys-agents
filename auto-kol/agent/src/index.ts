@@ -5,7 +5,6 @@ import { runWorkflow } from './services/agents/workflow.js';
 import { initializeSchema } from './database/index.js';
 import apiRoutes from './api/index.js';
 import { corsMiddleware } from './api/middleware/cors.js';
-import { testMentions } from './services/twitter/api.js';
 const logger = createLogger('app');
 const app = express();
 
@@ -33,14 +32,13 @@ const main = async () => {
         app.listen(config.PORT, () => {
             logger.info(`Server running on port ${config.PORT}`);
         });
-        await testMentions();
-        // await startWorkflowPolling();
-        // setInterval(startWorkflowPolling, config.CHECK_INTERVAL);
+        await startWorkflowPolling();
+        setInterval(startWorkflowPolling, config.CHECK_INTERVAL);
 
-        // logger.info('Application started successfully', {
-        //     checkInterval: config.CHECK_INTERVAL,
-        //     port: config.PORT
-        // });
+        logger.info('Application started successfully', {
+            checkInterval: config.CHECK_INTERVAL,
+            port: config.PORT
+        });
     } catch (error) {
         logger.error('Failed to start application:', error);
         process.exit(1);

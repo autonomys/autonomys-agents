@@ -30,7 +30,7 @@ export const createNodes = async (config: WorkflowConfig) => {
         const parsedTweets = tweetSearchSchema.parse(parsedContent);
 
         logger.info(`Found ${parsedTweets.tweets.length} tweets`);
-        
+
         return {
             messages: [new AIMessage({
                 content: JSON.stringify(parsedTweets)
@@ -116,10 +116,8 @@ export const createNodes = async (config: WorkflowConfig) => {
                 ],
             });
 
-            // The tool response will be in the last message's content
             const lastMessage = toolResponse.messages[toolResponse.messages.length - 1];
 
-            // Handle different types of content
             let searchResult;
             if (typeof lastMessage.content === 'string') {
                 try {
@@ -141,20 +139,20 @@ export const createNodes = async (config: WorkflowConfig) => {
                 }
                 newTweets.push(tweet);
             }
-            // Validate the search result
             const validatedResult = tweetSearchSchema.parse({
                 tweets: newTweets,
                 lastProcessedId: searchResult.lastProcessedId
             });
 
 
-
-            if (validatedResult.tweets.length > 0) {
-                const chromaService = await ChromaService.getInstance();
-                for (const tweet of validatedResult.tweets) {
-                    await chromaService.addTweet(tweet);
-                }
-            }
+            // Temporary until Open AI back online!
+            
+            // if (validatedResult.tweets.length > 0) {
+            //     const chromaService = await ChromaService.getInstance();
+            //     for (const tweet of validatedResult.tweets) {
+            //         await chromaService.addTweet(tweet);
+            //     }
+            // }
 
             logger.info(`Found ${validatedResult.tweets.length} tweets`);
 
