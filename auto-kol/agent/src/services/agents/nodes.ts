@@ -145,14 +145,13 @@ export const createNodes = async (config: WorkflowConfig) => {
             });
 
 
-            // Temporary until Open AI back online!
-            
-            // if (validatedResult.tweets.length > 0) {
-            //     const chromaService = await ChromaService.getInstance();
-            //     for (const tweet of validatedResult.tweets) {
-            //         await chromaService.addTweet(tweet);
-            //     }
-            // }
+            const chromaService = await ChromaService.getInstance();
+
+            if (validatedResult.tweets.length > 0) {
+                for (const tweet of validatedResult.tweets) {
+                    await chromaService.addTweet(tweet);
+                }
+            }
 
             logger.info(`Found ${validatedResult.tweets.length} tweets`);
 
