@@ -75,32 +75,43 @@ class ExtendedScraper extends Scraper {
         while (currentTweet.inReplyToStatusId) {
             const parentTweet = await this.getTweet(currentTweet.inReplyToStatusId);
             if (!parentTweet) break;
+            if (!seen.has(parentTweet.id!)) {
+                thread.push(parentTweet);
+                seen.add(parentTweet.id!);
+            }
             currentTweet = parentTweet;
         }
 
-        const rootId = currentTweet.id!;
-        const conversationQuery = `conversation_id:${rootId} (from:${username} OR @${username})`;
-        const responses = this.searchTweets(conversationQuery, 100, SearchMode.Latest);
-        
-        if (currentTweet.text?.includes(`@${username}`) || currentTweet.username === username) {
-            thread.push(currentTweet);
-            seen.add(currentTweet.id!);
+        if (!seen.has(initialTweet.id!)) {
+            thread.push(initialTweet);
+            seen.add(initialTweet.id!);
         }
 
-        for await (const tweet of responses) {
-            if (!seen.has(tweet.id!)) {
-                seen.add(tweet.id!);
-                thread.push(tweet);
+        const agentTweet = thread.find(t => t.username === username);
+        if (agentTweet) {
+            const replies = this.searchTweets(
+                `conversation_id:${currentTweet.id!} in_reply_to_tweet_id:${agentTweet.id!}`,
+                100,
+                SearchMode.Latest
+            );
+            
+            for await (const reply of replies) {
+                if (!seen.has(reply.id!)) {
+                    thread.push(reply);
+                    seen.add(reply.id!);
+                }
             }
         }
 
+        // Sort chronologically
         thread.sort((a, b) => {
             const timeA = a.timeParsed?.getTime() || 0;
             const timeB = b.timeParsed?.getTime() || 0;
             return timeA - timeB;
         });
 
-        logger.info(`Retrieved conversation thread with ${thread.length} tweets starting from root tweet ${rootId}`);
+        logger.info(`Retrieved conversation thread with ${thread.length} tweets starting from root tweet ${currentTweet.id!}`);
+      
         return thread;
     }
 }

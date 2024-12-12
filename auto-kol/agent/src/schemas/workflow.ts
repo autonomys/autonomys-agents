@@ -37,7 +37,13 @@ export const responseSchema = z.object({
         reason: z.string(),
         similarity_score: z.number()
     })).optional(),
-    mentions: z.any().optional()
+    mentions: z.array(z.object({
+        id: z.string(),
+        text: z.string(),
+        author_id: z.string(),
+        author_username: z.string(),
+        created_at: z.string()
+    })).optional()
 });
 
 export const queueActionSchema = z.object({

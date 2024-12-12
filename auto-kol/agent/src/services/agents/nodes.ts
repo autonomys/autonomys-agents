@@ -344,9 +344,9 @@ export const createNodes = async (config: WorkflowConfig) => {
             const { tweet, toneAnalysis, tweets, currentTweetIndex, decision } = parsedContent;
             logger.info('Tweet:', tweet);
             const threadMentionsTweets = [];
-            if (tweet.mention!) {
+            if (tweet.mention) {
               const mentions = await scraper.getThread(tweet.id);
-              for (const mention of mentions) {
+              for await(const mention of mentions) {
                   console.log(mention.text);
                   threadMentionsTweets.push({
                     id: mention.id,
@@ -404,7 +404,8 @@ export const createNodes = async (config: WorkflowConfig) => {
                             referencedTweets: responseStrategy.referencedTweets,
                             confidence: responseStrategy.confidence
                         }
-                    }
+                    },
+                    mentions: threadMentionsTweets
                 }, 
                 previousCid: await getLastDsnCid()
             });
