@@ -7,7 +7,7 @@ import { createLogger } from '../../utils/logger.js';
 import { createTools } from '../../tools/index.js';
 import { ToolNode } from '@langchain/langgraph/prebuilt';
 import { createTwitterClientScraper } from '../twitter/api.js';
-export  const logger = createLogger('agent-workflow');
+export const logger = createLogger('agent-workflow');
 import { createNodes } from './nodes.js';
 
 
@@ -139,7 +139,7 @@ const createWorkflowRunner = async (): Promise<WorkflowRunner> => {
             logger.info('Starting tweet response workflow', { threadId });
 
             const config = {
-                recursionLimit: 100,
+                recursionLimit: 300, //TODO: solve https://github.com/autonomys/autonomys-agents/issues/44
                 configurable: {
                     thread_id: threadId
                 }
