@@ -17,7 +17,6 @@ export const createSearchSimilarTweetsTool = () => new DynamicStructuredTool({
         try {
             const chromaService = await ChromaService.getInstance();
             const results = await chromaService.searchSimilarTweetsWithScore(query, k);
-            logger.info('Similar tweets search results:', results);
             return {
                 similar_tweets: results.map(([doc, score]) => ({
                     text: doc.pageContent,

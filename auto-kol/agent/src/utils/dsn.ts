@@ -62,7 +62,7 @@ export async function uploadToDsn({ data, previousCid }: { data: any; previousCi
         const receipt = await setLastMemoryHash(hexlify(blake3hash));
         
         logger.info('Data uploaded to DSN successfully', {
-            txHash: receipt,
+            txHash: receipt.hash,
             previousCid,
             cid: finalCid
         });

@@ -434,3 +434,21 @@ export async function getLastDsnCid(): Promise<string> {
     const dsn = await db?.get(`SELECT cid FROM dsn ORDER BY created_at DESC LIMIT 1`);
     return dsn?.cid || '';
 }
+
+///////////MENTIONS///////////
+export async function addMention(mention: {
+    latest_id: string;
+}) {
+    return db?.run(`
+        INSERT INTO mentions (latest_id) 
+        VALUES (?)
+        ON CONFLICT(latest_id) DO UPDATE SET 
+            latest_id = excluded.latest_id,
+            updated_at = CURRENT_TIMESTAMP
+    `, [mention.latest_id]);
+}
+
+export async function getLatestMentionId(): Promise<string> {
+    const mention = await db?.get(`SELECT latest_id FROM mentions ORDER BY updated_at DESC LIMIT 1`);
+    return mention?.latest_id || '';
+}

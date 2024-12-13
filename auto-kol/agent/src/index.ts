@@ -5,7 +5,6 @@ import { runWorkflow } from './services/agents/workflow.js';
 import { initializeSchema } from './database/index.js';
 import apiRoutes from './api/index.js';
 import { corsMiddleware } from './api/middleware/cors.js';
-
 const logger = createLogger('app');
 const app = express();
 
@@ -33,7 +32,6 @@ const main = async () => {
         app.listen(config.PORT, () => {
             logger.info(`Server running on port ${config.PORT}`);
         });
-
         await startWorkflowPolling();
         setInterval(startWorkflowPolling, config.CHECK_INTERVAL);
 

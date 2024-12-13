@@ -27,7 +27,6 @@ export async function addResponse(response: QueuedResponseMemory): Promise<void>
                 throw error;
             }
         }
-        logger.info(`Adding response to queue: ${JSON.stringify(response)}`);
         await db.addResponse({
             id: response.id,
             tweet_id: response.tweet.id,

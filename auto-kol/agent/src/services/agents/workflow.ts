@@ -7,7 +7,7 @@ import { createLogger } from '../../utils/logger.js';
 import { createTools } from '../../tools/index.js';
 import { ToolNode } from '@langchain/langgraph/prebuilt';
 import { createTwitterClientScraper } from '../twitter/api.js';
-export  const logger = createLogger('agent-workflow');
+export const logger = createLogger('agent-workflow');
 import { createNodes } from './nodes.js';
 
 
@@ -103,13 +103,15 @@ const shouldContinue = (state: typeof State.State) => {
 // Workflow creation function
 export const createWorkflow = async (nodes: Awaited<ReturnType<typeof createNodes>>) => {
     return new StateGraph(State)
+        .addNode('mentionNode', nodes.mentionNode)
+        .addNode('timelineNode', nodes.timelineNode)
         .addNode('searchNode', nodes.searchNode)
         .addNode('engagementNode', nodes.engagementNode)
         .addNode('analyzeNode', nodes.toneAnalysisNode)
         .addNode('generateNode', nodes.responseGenerationNode)
         .addNode('recheckNode', nodes.recheckSkippedNode)
-        .addNode('timelineNode', nodes.timelineNode)
-        .addEdge(START, 'timelineNode')
+        .addEdge(START, 'mentionNode')
+        .addEdge('mentionNode', 'timelineNode')
         .addEdge('timelineNode', 'searchNode')
         .addEdge('searchNode', 'engagementNode')
         .addConditionalEdges('engagementNode', shouldContinue)
@@ -137,7 +139,7 @@ const createWorkflowRunner = async (): Promise<WorkflowRunner> => {
             logger.info('Starting tweet response workflow', { threadId });
 
             const config = {
-                recursionLimit: 100,
+                recursionLimit: 300, //TODO: solve https://github.com/autonomys/autonomys-agents/issues/44
                 configurable: {
                     thread_id: threadId
                 }

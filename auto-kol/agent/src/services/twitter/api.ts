@@ -1,10 +1,97 @@
-import { Scraper } from 'agent-twitter-client';
+import { Scraper, SearchMode, Tweet } from 'agent-twitter-client';
 import { createLogger } from '../../utils/logger.js';
 import { readFileSync, writeFileSync, existsSync } from 'fs';
 import { config } from '../../config/index.js';
 
-
 const logger = createLogger('agent-twitter-api');
+
+class ExtendedScraper extends Scraper {
+    async getMyMentions(maxResults: number = 100, sinceId?: string) {
+        const username = config.AGENT_USERNAME!;
+
+        const isLoggedIn = await this.isLoggedIn();
+        if (!isLoggedIn) {
+            throw new Error('Must be logged in to fetch mentions');
+        }
+
+        const query = `@${username} -from:${username}`;
+        const replies: Tweet[] = [];
+
+        const searchIterator = this.searchTweets(query, maxResults, SearchMode.Latest);
+
+        for await (const tweet of searchIterator) {
+            logger.info('Checking tweet:', {
+                id: tweet.id,
+                text: tweet.text,
+                author: tweet.username
+            });
+
+            if (sinceId && tweet.id && tweet.id <= sinceId) {
+                break;
+            }
+
+            const hasReplies = await this.searchTweets(
+                `from:${username} to:${tweet.username}`,
+                10,
+                SearchMode.Latest
+            );
+
+            let alreadyReplied = false;
+            for await (const reply of hasReplies) {
+                if (reply.inReplyToStatusId === tweet.id) {
+                    alreadyReplied = true;
+                    logger.info(`Skipping tweet ${tweet.id} - already replied with ${reply.id}`);
+                    break;
+                }
+            }
+
+            if (!alreadyReplied) {
+                replies.push(tweet);
+            }
+
+            if (replies.length >= maxResults) {
+                break;
+            }
+        }
+
+        return replies;
+    }
+    async getThread(tweetId: string): Promise<Tweet[]> {
+        const isLoggedIn = await this.isLoggedIn();
+        if (!isLoggedIn) {
+            throw new Error('Must be logged in to fetch thread');
+        }
+
+        // Get the initial tweet to get its conversation_id
+        const initialTweet = await this.getTweet(tweetId);
+        if (!initialTweet) {
+            throw new Error(`Tweet ${tweetId} not found`);
+        }
+
+        // Get all tweets in the conversation
+        const thread: Tweet[] = [];
+        const conversationIterator = this.searchTweets(
+            `conversation_id:${initialTweet.id}`,
+            100,
+            SearchMode.Latest
+        );
+
+        for await (const tweet of conversationIterator) {
+            thread.push(tweet);
+        }
+
+        // Sort chronologically
+        thread.sort((a, b) => {
+            const timeA = a.timeParsed?.getTime() || 0;
+            const timeB = b.timeParsed?.getTime() || 0;
+            return timeA - timeB;
+        });
+
+        logger.info(`Retrieved conversation thread with ${thread.length} tweets`);
+
+        return thread;
+    }
+}
 
 export const createTwitterClientScraper = async () => {
     try {
@@ -12,7 +99,7 @@ export const createTwitterClientScraper = async () => {
         const password = config.TWITTER_PASSWORD!;
         const cookiesPath = 'cookies.json';
 
-        const scraper = new Scraper();
+        const scraper = new ExtendedScraper();
         if (existsSync(cookiesPath)) {
             logger.info('Loading existing cookies');
             const cookies = readFileSync(cookiesPath, 'utf8');
@@ -42,7 +129,3 @@ export const createTwitterClientScraper = async () => {
         throw error;
     }
 };
-
-
-
-
