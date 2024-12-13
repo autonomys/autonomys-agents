@@ -13,7 +13,6 @@ export const config = {
     // Twitter API Configuration
     TWITTER_USERNAME: process.env.TWITTER_USERNAME,
     TWITTER_PASSWORD: process.env.TWITTER_PASSWORD,
-    AGENT_USERNAME: process.env.AGENT_USERNAME,
 
     // LLM Configuration
     LLM_MODEL: process.env.LLM_MODEL || "gpt-4o-mini",
