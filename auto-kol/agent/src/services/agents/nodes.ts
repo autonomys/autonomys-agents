@@ -7,11 +7,12 @@ import { flagBackSkippedTweet, getAllSkippedTweetsToRecheck, getLastDsnCid } fro
 import { tweetSearchSchema } from '../../schemas/workflow.js';
 import { uploadToDsn } from '../../utils/dsn.js';
 import { createTwitterClientScraper } from '../twitter/api.js';
+import { config as globalConfig } from '../../config/index.js';
 
 export const createNodes = async (config: WorkflowConfig) => {
 
     const scraper = await createTwitterClientScraper();
-    
+
     ///////////MENTIONS///////////
     const mentionNode = async (state: typeof State.State) => {
         logger.info('Mention Node - Fetching recent mentions');
@@ -45,7 +46,7 @@ export const createNodes = async (config: WorkflowConfig) => {
     ///////////TIMELINE///////////
     const timelineNode = async (state: typeof State.State) => {
         logger.info('Timeline Node - Fetching recent tweets');
-        const existingTweets = state.messages.length > 0 ? 
+        const existingTweets = state.messages.length > 0 ?
             parseMessageContent(state.messages[state.messages.length - 1].content).tweets : [];
 
         logger.info(`Existing tweets: ${existingTweets.length}`);
@@ -70,7 +71,7 @@ export const createNodes = async (config: WorkflowConfig) => {
 
         const content = toolResponse.messages[toolResponse.messages.length - 1].content;
         const parsedContent = typeof content === 'string' ? JSON.parse(content) : content;
-        
+
         const parsedTweets = tweetSearchSchema.parse(parsedContent);
 
         const newTweets = [...existingTweets];
@@ -94,9 +95,9 @@ export const createNodes = async (config: WorkflowConfig) => {
     ///////////SEARCH///////////
     const searchNode = async (state: typeof State.State) => {
         logger.info('Search Node - Fetching recent tweets');
-        const existingTweets = state.messages.length > 0 ? 
+        const existingTweets = state.messages.length > 0 ?
             parseMessageContent(state.messages[state.messages.length - 1].content).tweets : [];
-    
+
         logger.info(`Existing tweets: ${existingTweets.length}`);
         try {
             logger.info('Last processed id:', state.lastProcessedId);
@@ -242,19 +243,22 @@ export const createNodes = async (config: WorkflowConfig) => {
                     });
 
                     logger.info('Queue skipped result:', toolResult);
-                    await uploadToDsn({ 
-                        data: {
-                            type: 'skipped',
-                            tweet,
-                            decision,
-                            workflowState: {
+                    if (globalConfig.DSN_UPLOAD) {
+                        await uploadToDsn({
+                            data: {
+                                type: 'skipped',
+                                tweet,
                                 decision,
-                                toneAnalysis: null,
-                                responseStrategy: null
-                            }
-                        }, 
-                        previousCid: await getLastDsnCid()
-                    });
+                                workflowState: {
+                                    decision,
+                                    toneAnalysis: null,
+                                    responseStrategy: null
+                                }
+                            },
+                            previousCid: await getLastDsnCid()
+                        });
+                    }
+
                     return {
                         messages: [new AIMessage({
                             content: JSON.stringify({
@@ -277,26 +281,26 @@ export const createNodes = async (config: WorkflowConfig) => {
                         })
                     })]
                 };
-        } catch (error) {
-            logger.error('Error parsing LLM response:', error);
-            // Default to not engaging if parsing fails
-            return {
-                messages: [new AIMessage({
-                    content: JSON.stringify({
-                        tweets: parsedContent.tweets,
-                        currentTweetIndex: parsedContent.currentTweetIndex + 1,
-                        lastProcessedId: parsedContent.lastProcessedId,
-                        decision: {
-                            shouldEngage: false,
-                            reason: "Failed to parse LLM response",
-                            priority: 1,
-                            confidence: 0
-                        }
-                    })
-                })],
-                processedTweets: new Set([tweet.id])
-            };
-        }
+            } catch (error) {
+                logger.error('Error parsing LLM response:', error);
+                // Default to not engaging if parsing fails
+                return {
+                    messages: [new AIMessage({
+                        content: JSON.stringify({
+                            tweets: parsedContent.tweets,
+                            currentTweetIndex: parsedContent.currentTweetIndex + 1,
+                            lastProcessedId: parsedContent.lastProcessedId,
+                            decision: {
+                                shouldEngage: false,
+                                reason: "Failed to parse LLM response",
+                                priority: 1,
+                                confidence: 0
+                            }
+                        })
+                    })],
+                    processedTweets: new Set([tweet.id])
+                };
+            }
         } catch (error) {
             logger.error('Error in engagement node:', error);
             return { messages: [] };
@@ -345,17 +349,17 @@ export const createNodes = async (config: WorkflowConfig) => {
             logger.info('Tweet:', tweet);
             const threadMentionsTweets = [];
             if (tweet.mention) {
-              const mentions = await scraper.getThread(tweet.id);
-              for await(const mention of mentions) {
-                  console.log(mention.text);
-                  threadMentionsTweets.push({
-                    id: mention.id,
-                    text: mention.text,
-                    author_id: mention.userId,
-                    author_username: mention.username?.toLowerCase() || 'unknown',
-                    created_at: mention.timeParsed?.toISOString() || new Date().toISOString()
-                  });
-              }
+                const mentions = await scraper.getThread(tweet.id);
+                for await (const mention of mentions) {
+                    console.log(mention.text);
+                    threadMentionsTweets.push({
+                        id: mention.id,
+                        text: mention.text,
+                        author_id: mention.userId,
+                        author_username: mention.username?.toLowerCase() || 'unknown',
+                        created_at: mention.timeParsed?.toISOString() || new Date().toISOString()
+                    });
+                }
             }
 
             const similarTweetsResponse = await config.toolNode.invoke({
@@ -389,26 +393,28 @@ export const createNodes = async (config: WorkflowConfig) => {
                 });
 
             logger.info('Response strategy:', { responseStrategy });
-            
-            await uploadToDsn({ 
-                data: {
-                    type: 'response',
-                    tweet,
-                    response: responseStrategy.content,
-                    workflowState: {
-                        decision,
-                        toneAnalysis,
-                        responseStrategy: {
-                            tone: responseStrategy.tone,
-                            strategy: responseStrategy.strategy,
-                            referencedTweets: responseStrategy.referencedTweets,
-                            confidence: responseStrategy.confidence
-                        }
+
+            if (globalConfig.DSN_UPLOAD) {
+                await uploadToDsn({
+                    data: {
+                        type: 'response',
+                        tweet,
+                        response: responseStrategy.content,
+                        workflowState: {
+                            decision,
+                            toneAnalysis,
+                            responseStrategy: {
+                                tone: responseStrategy.tone,
+                                strategy: responseStrategy.strategy,
+                                referencedTweets: responseStrategy.referencedTweets,
+                                confidence: responseStrategy.confidence
+                            }
+                        },
+                        mentions: threadMentionsTweets
                     },
-                    mentions: threadMentionsTweets
-                }, 
-                previousCid: await getLastDsnCid()
-            });
+                    previousCid: await getLastDsnCid()
+                });
+            }
 
             await config.toolNode.invoke({
                 messages: [new AIMessage({
@@ -451,10 +457,10 @@ export const createNodes = async (config: WorkflowConfig) => {
         logger.info('Recheck Skipped Node - Reviewing previously skipped tweets');
         try {
             const skippedTweets = await getAllSkippedTweetsToRecheck();
-            
+
             if (!skippedTweets || skippedTweets.length === 0) {
                 logger.info('No skipped tweets to recheck');
-                return { 
+                return {
                     messages: [new AIMessage({
                         content: JSON.stringify({
                             fromRecheckNode: true,
@@ -494,7 +500,7 @@ export const createNodes = async (config: WorkflowConfig) => {
             }
 
             const { tweet, decision } = processedTweets[0];
-            
+
             return {
                 messages: [new AIMessage({
                     content: JSON.stringify({
