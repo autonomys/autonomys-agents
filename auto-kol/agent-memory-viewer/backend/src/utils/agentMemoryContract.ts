@@ -18,14 +18,14 @@ function hashToCid(hash: string) {
 }
 
 export async function getLastMemoryHash(): Promise<string> {
-    const hash = await contract.getLastMemoryHash(wallet.address);
+    const hash = await contract.getLastMemoryHash(config.AGENT_ADDRESS);
     return hashToCid(hash);
 }
 
 export function watchMemoryHashUpdates(
     callback: (agent: string, hash: string) => void
 ) {
-    const agentAddress = wallet.address;
+    const agentAddress = config.AGENT_ADDRESS;
     const filter = contract.filters.LastMemoryHashSet(agentAddress);
     
     logger.info('Setting up memory hash watcher', { 
