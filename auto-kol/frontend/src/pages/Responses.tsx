@@ -20,32 +20,67 @@ function Responses() {
                 ) : responses?.map((response: PendingResponse) => (
                     <Card key={response.id}>
                         <CardBody>
-                            <Text fontWeight="bold" mb={2}>
+                            <Text
+                                fontWeight="bold"
+                                mb={2}
+                                fontSize="lg"
+                                color="#00ff00"
+                            >
                                 @{response.tweet.author_username}
                             </Text>
                             <Link
                                 href={`https://x.com/${response.tweet.author_username}/status/${response.tweet.id}`}
                                 isExternal
-                                color="blue.500"
+                                color="#4a9eff"
                                 display="flex"
                                 alignItems="center"
                                 gap={2}
-                                mb={2}
-                                _hover={{ color: 'blue.600', textDecoration: 'none' }}
+                                mb={3}
+                                _hover={{ color: '#66b2ff', textDecoration: 'none' }}
                             >
                                 View tweet on X <ExternalLinkIcon mx="2px" />
                             </Link>
-                            <Text color="gray.600" mb={4}>
-                                {response.tweet.text}
-                            </Text>
-                            <Text color="blue.600" mb={4}>
-                                Response: {response.response.content}
-                            </Text>
+                            <Box
+                                bg="#001800"
+                                p={3}
+                                borderRadius="md"
+                                mb={4}
+                                border="1px solid #00ff00"
+                            >
+                                <Text color="#00ff00" fontSize="md">
+                                    {response.tweet.text}
+                                </Text>
+                            </Box>
+                            <Box
+                                bg="#000030"
+                                p={3}
+                                borderRadius="md"
+                                mb={4}
+                                border="1px solid #4a9eff"
+                            >
+                                <Text
+                                    color="#4a9eff"
+                                    fontSize="md"
+                                    fontWeight="500"
+                                >
+                                    Response: {response.response.content}
+                                </Text>
+                            </Box>
                             <ButtonGroup spacing={4}>
-                                <Button colorScheme="green" onClick={() => approveResponse(response.id, true)}>
+                                <Button
+                                    colorScheme="green"
+                                    variant="solid"
+                                    bg="#006400"
+                                    _hover={{ bg: '#008000' }}
+                                >
                                     Approve
                                 </Button>
-                                <Button colorScheme="red" onClick={() => approveResponse(response.id, false)}>
+                                <Button
+                                    colorScheme="red"
+                                    variant="solid"
+                                    bg="#8b0000"
+                                    _hover={{ bg: '#a00000' }}
+                                >
                                     Reject
                                 </Button>
                             </ButtonGroup>
