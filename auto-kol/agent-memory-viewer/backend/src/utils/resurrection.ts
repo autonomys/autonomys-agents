@@ -2,9 +2,13 @@ import { getLastMemoryHash } from './agentMemoryContract.js';
 import { saveMemoryRecord } from '../db/index.js';
 import { resetDatabase } from '../db/init.js';
 import { downloadMemory } from './dsn.js';
+import { createLogger } from './logger.js';
+
+
+const logger = createLogger('resurrection');
 
 export async function resurrection() {
-    console.log('Starting resurrection');
+    logger.info('Starting resurrection');
     await resetDatabase();
     let hash = await getLastMemoryHash();
 
@@ -17,5 +21,5 @@ export async function resurrection() {
         }
     }
 
-    console.log('Resurrection complete');
+    logger.info('Resurrection complete');
 }
