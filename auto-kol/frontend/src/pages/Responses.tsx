@@ -1,10 +1,52 @@
-import { Box, Heading, Stack, Card, CardBody, Text, Button, ButtonGroup, Link } from '@chakra-ui/react'
+import { Box, Heading, Stack, Card, CardBody, Text, Button, ButtonGroup, Link, useToast } from '@chakra-ui/react'
 import { usePendingResponses, approveResponse } from '../api/client'
 import type { PendingResponse } from '../types'
 import { ExternalLinkIcon } from '@chakra-ui/icons'
+import { useState } from 'react'
+
+type ProcessingState = {
+    id: string;
+    action: 'approve' | 'reject';
+} | null;
 
 function Responses() {
     const { data: responses, isLoading, error } = usePendingResponses()
+    const [localResponses, setLocalResponses] = useState<PendingResponse[]>([])
+    const [processing, setProcessing] = useState<ProcessingState>(null)
+    const toast = useToast()
+
+    // Initialize localResponses when responses data arrives
+    if (responses && localResponses.length === 0) {
+        setLocalResponses(responses)
+    }
+
+    const handleResponse = async (id: string, approved: boolean) => {
+        setProcessing({ id, action: approved ? 'approve' : 'reject' })
+
+        try {
+            const apiCall = approveResponse(id, approved)
+
+            await Promise.all([
+                apiCall,
+                new Promise(resolve => setTimeout(resolve, 700))
+            ])
+
+            setLocalResponses(prev => prev.filter(r => r.id !== id))
+
+            toast({
+                title: approved ? 'Response Approved' : 'Response Rejected',
+                status: 'success',
+                duration: 2000,
+            })
+        } catch (error) {
+            toast({
+                title: 'Error processing response',
+                status: 'error',
+                duration: 2000,
+            })
+        }
+        setProcessing(null)
+    }
 
     return (
         <Box>
@@ -17,7 +59,7 @@ function Responses() {
             <Stack spacing={4}>
                 {isLoading ? (
                     <Text>Loading...</Text>
-                ) : responses?.map((response: PendingResponse) => (
+                ) : localResponses.map((response: PendingResponse) => (
                     <Card key={response.id}>
                         <CardBody>
                             <Text
@@ -72,6 +114,9 @@ function Responses() {
                                     variant="solid"
                                     bg="#006400"
                                     _hover={{ bg: '#008000' }}
+                                    onClick={() => handleResponse(response.id, true)}
+                                    isLoading={processing?.id === response.id && processing.action === 'approve'}
+                                    loadingText="Approving..."
                                 >
                                     Approve
                                 </Button>
@@ -80,6 +125,9 @@ function Responses() {
                                     variant="solid"
                                     bg="#8b0000"
                                     _hover={{ bg: '#a00000' }}
+                                    onClick={() => handleResponse(response.id, false)}
+                                    isLoading={processing?.id === response.id && processing.action === 'reject'}
+                                    loadingText="Rejecting..."
                                 >
                                     Reject
                                 </Button>
