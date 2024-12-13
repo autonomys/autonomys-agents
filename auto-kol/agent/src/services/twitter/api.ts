@@ -13,19 +13,19 @@ class ExtendedScraper extends Scraper {
         if (!isLoggedIn) {
             throw new Error('Must be logged in to fetch mentions');
         }
-    
+
         const query = `@${username} -from:${username}`;
         const replies: Tweet[] = [];
-        
+
         const searchIterator = this.searchTweets(query, maxResults, SearchMode.Latest);
-        
+
         for await (const tweet of searchIterator) {
             logger.info('Checking tweet:', {
                 id: tweet.id,
                 text: tweet.text,
                 author: tweet.username
             });
-            
+
             if (sinceId && tweet.id && tweet.id <= sinceId) {
                 break;
             }
@@ -35,7 +35,7 @@ class ExtendedScraper extends Scraper {
                 10,
                 SearchMode.Latest
             );
-            
+
             let alreadyReplied = false;
             for await (const reply of hasReplies) {
                 if (reply.inReplyToStatusId === tweet.id) {
@@ -44,63 +44,40 @@ class ExtendedScraper extends Scraper {
                     break;
                 }
             }
-            
+
             if (!alreadyReplied) {
                 replies.push(tweet);
             }
-            
+
             if (replies.length >= maxResults) {
                 break;
             }
         }
-    
+
         return replies;
     }
     async getThread(tweetId: string): Promise<Tweet[]> {
-        const username = config.AGENT_USERNAME!;
         const isLoggedIn = await this.isLoggedIn();
         if (!isLoggedIn) {
             throw new Error('Must be logged in to fetch thread');
         }
 
-        const thread: Tweet[] = [];
-        const seen = new Set<string>();
-        
+        // Get the initial tweet to get its conversation_id
         const initialTweet = await this.getTweet(tweetId);
         if (!initialTweet) {
             throw new Error(`Tweet ${tweetId} not found`);
         }
 
-        let currentTweet = initialTweet;
-        while (currentTweet.inReplyToStatusId) {
-            const parentTweet = await this.getTweet(currentTweet.inReplyToStatusId);
-            if (!parentTweet) break;
-            if (!seen.has(parentTweet.id!)) {
-                thread.push(parentTweet);
-                seen.add(parentTweet.id!);
-            }
-            currentTweet = parentTweet;
-        }
+        // Get all tweets in the conversation
+        const thread: Tweet[] = [];
+        const conversationIterator = this.searchTweets(
+            `conversation_id:${initialTweet.id}`,
+            100,
+            SearchMode.Latest
+        );
 
-        if (!seen.has(initialTweet.id!)) {
-            thread.push(initialTweet);
-            seen.add(initialTweet.id!);
-        }
-
-        const agentTweet = thread.find(t => t.username === username);
-        if (agentTweet) {
-            const replies = this.searchTweets(
-                `conversation_id:${currentTweet.id!} in_reply_to_tweet_id:${agentTweet.id!}`,
-                100,
-                SearchMode.Latest
-            );
-            
-            for await (const reply of replies) {
-                if (!seen.has(reply.id!)) {
-                    thread.push(reply);
-                    seen.add(reply.id!);
-                }
-            }
+        for await (const tweet of conversationIterator) {
+            thread.push(tweet);
         }
 
         // Sort chronologically
@@ -110,8 +87,8 @@ class ExtendedScraper extends Scraper {
             return timeA - timeB;
         });
 
-        logger.info(`Retrieved conversation thread with ${thread.length} tweets starting from root tweet ${currentTweet.id!}`);
-      
+        logger.info(`Retrieved conversation thread with ${thread.length} tweets`);
+
         return thread;
     }
 }
