@@ -4,7 +4,7 @@ import { getAllDsn, getMemoryByCid, saveMemoryRecord } from './db/index.js';
 import { downloadMemory } from './utils/dsn.js';
 
 const app = express();
-const port = process.env.PORT || 3001;
+const port = process.env.PORT || 3010;
 
 app.use(cors());
 app.use(express.json());
@@ -52,8 +52,6 @@ app.use((err: Error, req: express.Request, res: express.Response, next: express.
     res.status(500).json({ error: 'Something broke!' });
 });
 
-app.listen(port, () => {
-    console.log(`Server is running on port ${port}`);
-});
+
 
 export default app;
