@@ -1,4 +1,5 @@
 import { Box, Heading, SimpleGrid, Stat, StatLabel, StatNumber, StatHelpText, Text } from '@chakra-ui/react'
+import { Link as RouterLink } from 'react-router-dom'
 import { usePendingResponses, useSkippedTweets } from '../api/client'
 
 function Dashboard() {
@@ -16,30 +17,44 @@ function Dashboard() {
                 </Heading>
             </Box>
             <SimpleGrid columns={{ base: 1, md: 3 }} spacing={6}>
-                <Stat 
-                    bg="#c0c0c0" 
-                    p={4} 
-                    border="2px outset #ffffff"
-                    color="black"
-                >
-                    <StatLabel fontFamily="Monaco, 'Courier New', monospace">
-                        &gt; Pending Responses
-                    </StatLabel>
-                    <StatNumber fontSize="24px" color="navy">
-                        {pendingResponses?.length || 0}
-                    </StatNumber>
-                    <StatHelpText color="maroon">
-                        [Awaiting approval]
-                    </StatHelpText>
-                </Stat>
+                <RouterLink to="/responses" style={{ textDecoration: 'none' }}>
+                    <Stat
+                        bg="#c0c0c0"
+                        p={4}
+                        border="2px outset #ffffff"
+                        color="black"
+                        cursor="pointer"
+                        _hover={{ bg: '#d0d0d0' }}
+                    >
+                        <StatLabel fontFamily="Monaco, 'Courier New', monospace">
+                            &gt; Pending Responses
+                        </StatLabel>
+                        <StatNumber fontSize="24px" color="navy">
+                            {pendingResponses?.length || 0}
+                        </StatNumber>
+                        <StatHelpText color="maroon">
+                            [Awaiting approval]
+                        </StatHelpText>
+                    </Stat>
+                </RouterLink>
 
-                <Stat bg="#c0c0c0" p={4} border="2px outset #ffffff" color="black">
-                    <StatLabel fontFamily="Monaco, 'Courier New', monospace">
-                        &gt; Skipped Tweets
-                    </StatLabel>
-                    <StatNumber>{skippedTweets?.length || 0}</StatNumber>
-                    <StatHelpText>Low engagement probability</StatHelpText>
-                </Stat>
+                <RouterLink to="/skipped" style={{ textDecoration: 'none' }}>
+                    <Stat
+                        bg="#c0c0c0"
+                        p={4}
+                        border="2px outset #ffffff"
+                        color="black"
+                        cursor="pointer"
+                        _hover={{ bg: '#d0d0d0' }}
+                    >
+                        <StatLabel fontFamily="Monaco, 'Courier New', monospace">
+                            &gt; Skipped Tweets
+                        </StatLabel>
+                        <StatNumber>{skippedTweets?.length || 0}</StatNumber>
+                        <StatHelpText>Low engagement probability</StatHelpText>
+                    </Stat>
+                </RouterLink>
+
                 <Stat bg="#c0c0c0" p={4} border="2px outset #ffffff" color="black">
                     <StatLabel fontFamily="Monaco, 'Courier New', monospace">
                         &gt; Response Rate
