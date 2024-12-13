@@ -2,7 +2,7 @@ import { Box, Heading, Stack, Card, CardBody, Text, Button, ButtonGroup, Link, u
 import { usePendingResponses, approveResponse } from '../api/client'
 import type { PendingResponse } from '../types'
 import { ExternalLinkIcon } from '@chakra-ui/icons'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
 type ProcessingState = {
     id: string;
@@ -15,10 +15,11 @@ function Responses() {
     const [processing, setProcessing] = useState<ProcessingState>(null)
     const toast = useToast()
 
-    // Initialize localResponses when responses data arrives
-    if (responses && localResponses.length === 0) {
-        setLocalResponses(responses)
-    }
+    useEffect(() => {
+        if (responses !== undefined) {
+            setLocalResponses(responses || [])
+        }
+    }, [responses])
 
     const handleResponse = async (id: string, approved: boolean) => {
         setProcessing({ id, action: approved ? 'approve' : 'reject' })
@@ -59,82 +60,96 @@ function Responses() {
             <Stack spacing={4}>
                 {isLoading ? (
                     <Text>Loading...</Text>
-                ) : localResponses.map((response: PendingResponse) => (
-                    <Card key={response.id}>
+                ) : localResponses.length === 0 ? (
+                    <Card>
                         <CardBody>
                             <Text
-                                fontWeight="bold"
-                                mb={2}
+                                textAlign="center"
                                 fontSize="lg"
-                                color="#00ff00"
+                                color="gray.500"
                             >
-                                @{response.tweet.author_username}
+                                No pending responses to review! 🎉
                             </Text>
-                            <Link
-                                href={`https://x.com/${response.tweet.author_username}/status/${response.tweet.id}`}
-                                isExternal
-                                color="#4a9eff"
-                                display="flex"
-                                alignItems="center"
-                                gap={2}
-                                mb={3}
-                                _hover={{ color: '#66b2ff', textDecoration: 'none' }}
-                            >
-                                View tweet on X <ExternalLinkIcon mx="2px" />
-                            </Link>
-                            <Box
-                                bg="#001800"
-                                p={3}
-                                borderRadius="md"
-                                mb={4}
-                                border="1px solid #00ff00"
-                            >
-                                <Text color="#00ff00" fontSize="md">
-                                    {response.tweet.text}
-                                </Text>
-                            </Box>
-                            <Box
-                                bg="#000030"
-                                p={3}
-                                borderRadius="md"
-                                mb={4}
-                                border="1px solid #4a9eff"
-                            >
-                                <Text
-                                    color="#4a9eff"
-                                    fontSize="md"
-                                    fontWeight="500"
-                                >
-                                    Response: {response.response.content}
-                                </Text>
-                            </Box>
-                            <ButtonGroup spacing={4}>
-                                <Button
-                                    colorScheme="green"
-                                    variant="solid"
-                                    bg="#006400"
-                                    _hover={{ bg: '#008000' }}
-                                    onClick={() => handleResponse(response.id, true)}
-                                    isLoading={processing?.id === response.id && processing.action === 'approve'}
-                                    loadingText="Approving..."
-                                >
-                                    Approve
-                                </Button>
-                                <Button
-                                    colorScheme="red"
-                                    variant="solid"
-                                    bg="#8b0000"
-                                    _hover={{ bg: '#a00000' }}
-                                    onClick={() => handleResponse(response.id, false)}
-                                    isLoading={processing?.id === response.id && processing.action === 'reject'}
-                                    loadingText="Rejecting..."
-                                >
-                                    Reject
-                                </Button>
-                            </ButtonGroup>
                         </CardBody>
                     </Card>
-                ))}
+                ) : (
+                    localResponses.map((response: PendingResponse) => (
+                        <Card key={response.id}>
+                            <CardBody>
+                                <Text
+                                    fontWeight="bold"
+                                    mb={2}
+                                    fontSize="lg"
+                                    color="#00ff00"
+                                >
+                                    @{response.tweet.author_username}
+                                </Text>
+                                <Link
+                                    href={`https://x.com/${response.tweet.author_username}/status/${response.tweet.id}`}
+                                    isExternal
+                                    color="#4a9eff"
+                                    display="flex"
+                                    alignItems="center"
+                                    gap={2}
+                                    mb={3}
+                                    _hover={{ color: '#66b2ff', textDecoration: 'none' }}
+                                >
+                                    View tweet on X <ExternalLinkIcon mx="2px" />
+                                </Link>
+                                <Box
+                                    bg="#001800"
+                                    p={3}
+                                    borderRadius="md"
+                                    mb={4}
+                                    border="1px solid #00ff00"
+                                >
+                                    <Text color="#00ff00" fontSize="md">
+                                        {response.tweet.text}
+                                    </Text>
+                                </Box>
+                                <Box
+                                    bg="#000030"
+                                    p={3}
+                                    borderRadius="md"
+                                    mb={4}
+                                    border="1px solid #4a9eff"
+                                >
+                                    <Text
+                                        color="#4a9eff"
+                                        fontSize="md"
+                                        fontWeight="500"
+                                    >
+                                        Response: {response.response.content}
+                                    </Text>
+                                </Box>
+                                <ButtonGroup spacing={4}>
+                                    <Button
+                                        colorScheme="green"
+                                        variant="solid"
+                                        bg="#006400"
+                                        _hover={{ bg: '#008000' }}
+                                        onClick={() => handleResponse(response.id, true)}
+                                        isLoading={processing?.id === response.id && processing.action === 'approve'}
+                                        loadingText="Approving..."
+                                    >
+                                        Approve
+                                    </Button>
+                                    <Button
+                                        colorScheme="red"
+                                        variant="solid"
+                                        bg="#8b0000"
+                                        _hover={{ bg: '#a00000' }}
+                                        onClick={() => handleResponse(response.id, false)}
+                                        isLoading={processing?.id === response.id && processing.action === 'reject'}
+                                        loadingText="Rejecting..."
+                                    >
+                                        Reject
+                                    </Button>
+                                </ButtonGroup>
+                            </CardBody>
+                        </Card>
+                    ))
+                )}
             </Stack>
         </Box>
     )
