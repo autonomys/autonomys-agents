@@ -28,23 +28,23 @@ Auto-KOL is an intelligent agent framework designed to engage with thought leade
 3. Configure environment variables:
 `cp .env.sample .env`
 
-Edit `.env` with your credentials:
-```
-TWITTER_USERNAME=your_twitter_username
-TWITTER_PASSWORD=your_twitter_password
-AGENT_TWITTER_ID=your_agent_twitter_id
-OPENAI_API_KEY=your_openai_api_key
-```
+Edit `.env` with your credentials
 
 ## Usage
 
-1. Start the development server:
+1. ChromaDB is used as a vector database to store tweet embeddings. First, pull the docker image:
+`docker pull chromadb/chroma:latest`
+
+2. Then, run the docker container:
+`docker run -d -p 8000:8000 chromadb/chroma:latest`
+
+3. Start the development server:
 `yarn dev`
 
-2. Build for production:
+4. Build for production:
 `yarn build`
 
-3. Start production server:
+5. Start production server:
 `yarn start`
 
 ## API Endpoints
@@ -108,24 +108,6 @@ graph TD
 - **Human Review**: Web interface for response approval
 - **DSN**: Decentralized storage for approved interactions
 
-## Configuration
-
-Key configuration options in `.env`:
-
-- `TARGET_ACCOUNTS`: Twitter handles to monitor
-- `CHECK_INTERVAL`: Monitoring frequency
-- `LLM_MODEL`: Language model selection
-- `NODE_ENV`: Environment setting
-
-## ChromaDB
-
-ChromaDB is used as a vector database to store tweet embeddings. First, pull the docker image:
-`docker pull chromadb/chroma:latest`
-
-Then, run the docker container:
-`docker run -d -p 8000:8000 chromadb/chroma:latest`
-
 ## License
-
 
 MIT
