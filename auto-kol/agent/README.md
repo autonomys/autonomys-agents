@@ -120,10 +120,10 @@ Key configuration options in `.env`:
 ## ChromaDB
 
 ChromaDB is used as a vector database to store tweet embeddings. First, pull the docker image:
-`docker pull chroma/chroma:latest`
+`docker pull chromadb/chroma:latest`
 
 Then, run the docker container:
-`docker run -d -p 8000:8000 chroma/chroma:latest`
+`docker run -d -p 8000:8000 chromadb/chroma:latest`
 
 ## License
 
