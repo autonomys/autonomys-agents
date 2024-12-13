@@ -8,7 +8,6 @@ import { config } from '../config/index.js';
 import { setLastMemoryHash } from './agentMemoryContract.js';
 import { signMessage } from './agentWallet.js';
 
-
 const logger = createLogger('dsn-upload-tool');
 const dsnAPI = createAutoDriveApi({ apiKey: config.DSN_API_KEY! });
 
@@ -40,7 +39,10 @@ export async function uploadToDsn({ data, previousCid }: { data: any; previousCi
                 size: jsonBuffer.length,
                 path: timestamp
             },
-            { compression: true }
+            {
+                compression: true,
+                password: config.DSN_ENCRYPTION_PASSWORD || undefined
+            }
         );
 
         let finalCid: string | undefined;
@@ -58,9 +60,9 @@ export async function uploadToDsn({ data, previousCid }: { data: any; previousCi
         logger.info('Setting last memory hash', {
             blake3hash: hexlify(blake3hash)
         });
-        
+
         const receipt = await setLastMemoryHash(hexlify(blake3hash));
-        
+
         logger.info('Data uploaded to DSN successfully', {
             txHash: receipt.hash,
             previousCid,

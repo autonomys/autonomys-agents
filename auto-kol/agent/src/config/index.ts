@@ -11,14 +11,9 @@ dotenv.config();
 
 export const config = {
     // Twitter API Configuration
-    TWITTER_API_KEY: process.env.TWITTER_API_KEY,
-    TWITTER_API_SECRET: process.env.TWITTER_API_SECRET,
-    TWITTER_ACCESS_TOKEN: process.env.TWITTER_ACCESS_TOKEN,
-    TWITTER_ACCESS_SECRET: process.env.TWITTER_ACCESS_SECRET,
     TWITTER_USERNAME: process.env.TWITTER_USERNAME,
     TWITTER_PASSWORD: process.env.TWITTER_PASSWORD,
-    AGENT_TWITTER_ID: process.env.AGENT_TWITTER_ID,
-    AGENT_USERNAME: process.env.AGENT_USERNAME,
+
     // LLM Configuration
     LLM_MODEL: process.env.LLM_MODEL || "gpt-4o-mini",
     OPENAI_API_KEY: process.env.OPENAI_API_KEY,
@@ -27,9 +22,6 @@ export const config = {
     // Agent Configuration
     CHECK_INTERVAL: 60 * 1000 * 45, // 45 minutes
     MEMORY_DIR: path.join(__dirname, '../../data/memory'),
-
-    // Blockchain Configuration
-    NETWORK: process.env.NETWORK || 'mainnet',
 
     // Server Configuration
     PORT: process.env.PORT || 3001,
@@ -46,6 +38,8 @@ export const config = {
 
     // AutoDrive Configuration
     DSN_API_KEY: process.env.DSN_API_KEY,
+    DSN_UPLOAD: process.env.DSN_UPLOAD === 'true',
+    DSN_ENCRYPTION_PASSWORD: process.env.DSN_ENCRYPTION_PASSWORD,
 
     // CORS Configuration
     CORS_ORIGINS: process.env.CORS_ORIGINS,
