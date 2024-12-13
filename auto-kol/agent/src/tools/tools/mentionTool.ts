@@ -31,7 +31,6 @@ export const createMentionTool = (scraper: any) => new DynamicStructuredTool({
                 mention: true
             }));
 
-            // Store the latest mention ID
             await addMention({
                 latest_id: mentions[0].id!
             });

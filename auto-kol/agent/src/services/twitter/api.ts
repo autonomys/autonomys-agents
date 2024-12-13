@@ -152,34 +152,3 @@ export const createTwitterClientScraper = async () => {
         throw error;
     }
 };
-
-
-
-export async function testMentions() {
-    try {
-        const scraper = await createTwitterClientScraper();
-        
-        logger.info('Fetching recent mentions...');
-        const mentions = await scraper.getMyMentions(1000);
-        logger.info(`Found ${mentions.length} mentions:`);
-        mentions.forEach(mention => {
-            logger.info({
-                id: mention.id,
-                text: mention.text,
-                author: mention.username,
-                inReplyTo: mention.inReplyToStatusId,
-                created: mention.timeParsed
-            });
-        });
-
-        if (mentions.length > 0) {
-            const sinceId = mentions[0].id;
-            logger.info(`\nFetching mentions since ID ${sinceId}...`);
-            const newMentions = await scraper.getMyMentions(10, sinceId);
-            logger.info(`Found ${newMentions.length} new mentions`);
-        }
-
-    } catch (error) {
-        logger.error('Error testing mentions:', error);
-    }
-}

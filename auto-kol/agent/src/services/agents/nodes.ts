@@ -410,7 +410,6 @@ export const createNodes = async (config: WorkflowConfig) => {
                 previousCid: await getLastDsnCid()
             });
 
-            // Queue the response
             await config.toolNode.invoke({
                 messages: [new AIMessage({
                     content: '',
