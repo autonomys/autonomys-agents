@@ -9,7 +9,10 @@ const envSchema = z.object({
   RPC_URL: z.string().url(),
   AGENT_ADDRESS: z.string().regex(/^0x[a-fA-F0-9]{40}$/),
   DSN_API_KEY: z.string(),
-  CORS_ORIGIN: z.string().url().default('http://localhost:3002'),
+  CORS_ORIGIN: z.union([
+    z.string().url(),
+    z.array(z.string().url())
+  ]).default('http://localhost:3002'),
   WS_PORT: z.string().transform(Number).default('3011')
 });
 

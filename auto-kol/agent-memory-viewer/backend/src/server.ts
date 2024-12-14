@@ -1,5 +1,4 @@
 import express from 'express';
-import { createLogger } from './utils/logger.js';
 import { setupSecurity } from './middleware/security.js';
 import { requestLogger } from './middleware/requestLogger.js';
 import { errorHandler } from './middleware/errorHandler.js';
