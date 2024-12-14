@@ -84,29 +84,38 @@ const shouldContinue = (state: typeof State.State) => {
     const lastMessage = state.messages[state.messages.length - 1];
     const content = parseMessageContent(lastMessage.content);
 
+    logger.debug('Evaluating workflow continuation', {
+        hasMessages: state.messages.length > 0,
+        currentIndex: content.currentTweetIndex,
+        totalTweets: content.tweets?.length,
+        hasTweet: !!content.tweet,
+        hasToneAnalysis: !!content.toneAnalysis,
+        hasDecision: !!content.decision
+    });
+
     // Check if we've processed all tweets
     if (!content.tweets || content.currentTweetIndex >= content.tweets.length) {
         if (content.fromRecheckNode && content.messages?.length === 0) {
+            logger.info('Workflow complete - no more tweets to process');
             return END;
         }
+        logger.info('Moving to recheck skipped tweets');
         return 'recheckNode';
     }
 
-    // If we have a complete response or skipped tweet, move to next tweet
-    if (content.responseStrategy || (content.decision && !content.decision.shouldEngage)) {
-        return 'engagementNode';
+    // If we have a tweet to process further
+    if (content.tweet) {
+        if (content.toneAnalysis) {
+            logger.debug('Moving to response generation');
+            return 'generateNode';
+        }
+        if (content.decision?.shouldEngage) {
+            logger.debug('Moving to tone analysis');
+            return 'analyzeNode';
+        }
     }
 
-    // Define the workflow progression
-    if (content.toneAnalysis) {
-        return 'generateNode';
-    }
-
-    if (content.decision?.shouldEngage) {
-        return 'analyzeNode';
-    }
-
-    // Default to engagement node
+    logger.debug('Moving to engagement evaluation');
     return 'engagementNode';
 };
 
@@ -149,7 +158,7 @@ const createWorkflowRunner = async (): Promise<WorkflowRunner> => {
             logger.info('Starting tweet response workflow', { threadId });
 
             const config = {
-                recursionLimit: 300, //TODO: solve https://github.com/autonomys/autonomys-agents/issues/44
+                recursionLimit: 50,
                 configurable: {
                     thread_id: threadId
                 }

@@ -182,7 +182,7 @@ export const createNodes = async (config: WorkflowConfig) => {
 
     ///////////ENGAGEMENT///////////
     const engagementNode = async (state: typeof State.State) => {
-        logger.info('Engagement Node - Evaluating tweet engagement');
+        logger.info('Engagement Node - Starting evaluation');
         try {
             const lastMessage = state.messages[state.messages.length - 1];
             const parsedContent = parseMessageContent(lastMessage.content);
@@ -193,117 +193,175 @@ export const createNodes = async (config: WorkflowConfig) => {
                 return { messages: [] };
             }
 
-            const tweet = parsedContent.tweets[parsedContent.currentTweetIndex];
+            // Process multiple tweets in one batch
+            const BATCH_SIZE = 15;
+            const startIdx = parsedContent.currentTweetIndex;
+            const endIdx = Math.min(startIdx + BATCH_SIZE, parsedContent.tweets.length);
+            const batchTweets = parsedContent.tweets.slice(startIdx, endIdx);
 
-            if (state.processedTweets.has(tweet.id)) {
-                logger.info(`Tweet ${tweet.id} already processed, moving to next`);
-                return {
-                    messages: [new AIMessage({
-                        content: JSON.stringify({
-                            tweets: parsedContent.tweets,
-                            currentTweetIndex: parsedContent.currentTweetIndex + 1,
-                            lastProcessedId: parsedContent.lastProcessedId
-                        })
-                    })]
-                };
-            }
-            try {
-                const decision = await prompts.engagementPrompt
-                    .pipe(config.llms.decision)
-                    .pipe(prompts.engagementParser)
-                    .invoke({ tweet: tweet.text });
+            logger.info('Processing batch of tweets', {
+                batchSize: batchTweets.length,
+                startIndex: startIdx,
+                endIndex: endIdx,
+                totalTweets: parsedContent.tweets.length
+            });
 
-                logger.info('LLM decision:', { decision });
-
-                if (!decision.shouldEngage) {
-                    logger.info('Queueing skipped tweet to review queue:', { tweetId: tweet.id });
-                    const tweetData = {
-                        id: tweet.id,
-                        text: tweet.text,
-                        author_id: tweet.author_id,
-                        author_username: tweet.author_username || 'unknown', // Ensure we have a fallback
-                        created_at: typeof tweet.created_at === 'string' ? tweet.created_at : tweet.created_at.toISOString()
-                    };
-
-                    const toolResult = await config.toolNode.invoke({
-                        messages: [new AIMessage({
-                            content: '',
-                            tool_calls: [{
-                                name: 'queue_skipped',
-                                args: {
-                                    tweet: tweetData,
-                                    reason: decision.reason,
-                                    priority: decision.priority || 0,
-                                    workflowState: { decision }
-                                },
-                                id: 'skip_call',
-                                type: 'tool_call'
-                            }]
-                        })]
-                    });
-
-                    logger.info('Queue skipped result:', toolResult);
-                    if (globalConfig.DSN_UPLOAD) {
-                        await uploadToDsn({
-                            data: {
-                                type: 'skipped',
-                                tweet,
-                                decision,
-                                workflowState: {
-                                    decision,
-                                    toneAnalysis: null,
-                                    responseStrategy: null
-                                }
-                            },
-                            previousCid: await getLastDsnCid()
-                        });
-                    }
-
+            const processedResults = await Promise.all(batchTweets.map(async (tweet: any) => {
+                if (state.processedTweets.has(tweet.id)) {
+                    logger.debug('Tweet already processed', { tweetId: tweet.id });
                     return {
-                        messages: [new AIMessage({
-                            content: JSON.stringify({
-                                tweets: parsedContent.tweets,
-                                currentTweetIndex: parsedContent.currentTweetIndex + 1,
-                                lastProcessedId: parsedContent.lastProcessedId
-                            })
-                        })],
-                        processedTweets: new Set([tweet.id])
+                        tweet,
+                        skip: true
                     };
                 }
 
+                try {
+                    logger.debug('Evaluating tweet engagement', {
+                        tweetId: tweet.id,
+                        author: tweet.author_username
+                    });
+
+                    const decision = await prompts.engagementPrompt
+                        .pipe(config.llms.decision)
+                        .pipe(prompts.engagementParser)
+                        .invoke({ tweet: tweet.text });
+
+                    logger.debug('Engagement decision made', {
+                        tweetId: tweet.id,
+                        shouldEngage: decision.shouldEngage,
+                        confidence: decision.confidence
+                    });
+
+                    return {
+                        tweet,
+                        decision,
+                        skip: false
+                    };
+                } catch (error: any) {
+                    logger.error('Error processing tweet:', {
+                        tweetId: tweet.id,
+                        error: error.message
+                    });
+                    return {
+                        tweet,
+                        skip: true
+                    };
+                }
+            }));
+
+            // Process results and update state
+            const newProcessedTweets = new Set<string>();
+            const tweetsToEngage = [];
+
+            logger.info('Batch processing complete', {
+                totalProcessed: processedResults.length,
+                skipped: processedResults.filter(r => r.skip).length
+            });
+
+            for (const result of processedResults) {
+                newProcessedTweets.add(result.tweet.id);
+
+                if (!result.skip && result.decision?.shouldEngage) {
+                    tweetsToEngage.push({
+                        tweet: result.tweet,
+                        decision: result.decision
+                    });
+                } else if (!result.skip) {
+                    logger.debug('Handling skipped tweet', {
+                        tweetId: result.tweet.id,
+                        reason: result.decision?.reason
+                    });
+                    await handleSkippedTweet(result.tweet, result.decision, config);
+                }
+            }
+
+            // Return next batch or first tweet to engage
+            if (tweetsToEngage.length > 0) {
+                const { tweet, decision } = tweetsToEngage[0];
+                logger.info('Found tweet to engage with', {
+                    tweetId: tweet.id,
+                    confidence: decision.confidence,
+                    remainingInBatch: tweetsToEngage.length - 1
+                });
+
                 return {
                     messages: [new AIMessage({
                         content: JSON.stringify({
                             tweets: parsedContent.tweets,
-                            currentTweetIndex: parsedContent.currentTweetIndex,
+                            currentTweetIndex: endIdx,
                             tweet,
                             decision
                         })
-                    })]
-                };
-            } catch (error) {
-                logger.error('Error parsing LLM response:', error);
-                // Default to not engaging if parsing fails
-                return {
-                    messages: [new AIMessage({
-                        content: JSON.stringify({
-                            tweets: parsedContent.tweets,
-                            currentTweetIndex: parsedContent.currentTweetIndex + 1,
-                            lastProcessedId: parsedContent.lastProcessedId,
-                            decision: {
-                                shouldEngage: false,
-                                reason: "Failed to parse LLM response",
-                                priority: 1,
-                                confidence: 0
-                            }
-                        })
                     })],
-                    processedTweets: new Set([tweet.id])
+                    processedTweets: newProcessedTweets
                 };
             }
-        } catch (error) {
-            logger.error('Error in engagement node:', error);
+
+            logger.info('Batch complete - no tweets to engage', {
+                nextIndex: endIdx,
+                remainingTweets: parsedContent.tweets.length - endIdx
+            });
+
+            return {
+                messages: [new AIMessage({
+                    content: JSON.stringify({
+                        tweets: parsedContent.tweets,
+                        currentTweetIndex: endIdx,
+                        lastProcessedId: parsedContent.lastProcessedId
+                    })
+                })],
+                processedTweets: newProcessedTweets
+            };
+        } catch (error: any) {
+            logger.error('Error in engagement node:', {
+                error: error.message,
+                stack: error.stack
+            });
             return { messages: [] };
+        }
+    };
+
+    // Helper function to handle skipped tweets
+    const handleSkippedTweet = async (tweet: any, decision: any, config: any) => {
+        const tweetData = {
+            id: tweet.id,
+            text: tweet.text,
+            author_id: tweet.author_id,
+            author_username: tweet.author_username || 'unknown',
+            created_at: typeof tweet.created_at === 'string' ? tweet.created_at : tweet.created_at.toISOString()
+        };
+
+        await config.toolNode.invoke({
+            messages: [new AIMessage({
+                content: '',
+                tool_calls: [{
+                    name: 'queue_skipped',
+                    args: {
+                        tweet: tweetData,
+                        reason: decision.reason,
+                        priority: decision.priority || 0,
+                        workflowState: { decision }
+                    },
+                    id: 'skip_call',
+                    type: 'tool_call'
+                }]
+            })]
+        });
+
+        if (globalConfig.DSN_UPLOAD) {
+            await uploadToDsn({
+                data: {
+                    type: 'skipped',
+                    tweet,
+                    decision,
+                    workflowState: {
+                        decision,
+                        toneAnalysis: null,
+                        responseStrategy: null
+                    }
+                },
+                previousCid: await getLastDsnCid()
+            });
         }
     };
 
