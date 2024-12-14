@@ -1,13 +1,15 @@
 import { useEffect, useRef } from 'react';
 import { useQueryClient } from 'react-query';
 
+const WS_URL = import.meta.env.VITE_WS_URL || 'ws://localhost:3011';
+
 export function useWebSocket() {
     const wsRef = useRef<WebSocket | null>(null);
     const queryClient = useQueryClient();
 
     useEffect(() => {
         if (!wsRef.current || wsRef.current.readyState === WebSocket.CLOSED) {
-            const ws = new WebSocket('ws://localhost:3011');
+            const ws = new WebSocket(WS_URL);
             wsRef.current = ws;
 
             ws.onmessage = (event) => {
@@ -19,6 +21,14 @@ export function useWebSocket() {
 
             ws.onerror = (error) => {
                 console.error('WebSocket error:', error);
+            };
+
+            ws.onopen = () => {
+                console.log('WebSocket Connected');
+            };
+
+            ws.onclose = () => {
+                console.log('WebSocket Disconnected');
             };
         }
 

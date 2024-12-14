@@ -1,0 +1,28 @@
+import { z } from 'zod';
+
+const envSchema = z.object({
+  NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
+  PORT: z.string().transform(Number).default('3010'),
+  DATABASE_URL: z.string().url(),
+  CONTRACT_ADDRESS: z.string().regex(/^0x[a-fA-F0-9]{40}$/),
+  PRIVATE_KEY: z.string(),
+  RPC_URL: z.string().url(),
+  AGENT_ADDRESS: z.string().regex(/^0x[a-fA-F0-9]{40}$/),
+  DSN_API_KEY: z.string(),
+  CORS_ORIGIN: z.string().url().default('http://localhost:3002'),
+  WS_PORT: z.string().transform(Number).default('3011')
+});
+
+export type EnvConfig = z.infer<typeof envSchema>;
+
+export function validateEnv(): EnvConfig {
+  try {
+    return envSchema.parse(process.env);
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      const missingVars = error.errors.map(err => err.path.join('.'));
+      throw new Error(`Missing/invalid environment variables: ${missingVars.join(', ')}`);
+    }
+    throw error;
+  }
+} 

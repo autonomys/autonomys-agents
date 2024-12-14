@@ -5,44 +5,66 @@ import { downloadMemory } from './utils/dsn.js';
 import { saveMemoryRecord } from './db/index.js';
 import { createLogger } from './utils/logger.js';
 import app from './server.js';
+import { config } from './config/index.js';
+import { createWebSocketServer, closeWebSocketServer } from './websocket.js';
 
 const logger = createLogger('main');
 
+process.on('uncaughtException', async (error) => {
+    logger.error('Uncaught Exception:', error);
+    await closeWebSocketServer();
+    process.exit(1);
+});
+
+process.on('unhandledRejection', async (reason, promise) => {
+    logger.error('Unhandled Rejection:', { reason, promise });
+    await closeWebSocketServer();
+    process.exit(1);
+});
+
 async function main() {
-    await initialize();
-    await resurrection();
+    try {
+        await initialize();
+        await resurrection();
 
-    const memoryWatcher = watchMemoryHashUpdates(async (agent, cid) => {
-        try {
-            logger.info('New memory hash detected', { agent, cid });
-            const memory = await downloadMemory(cid);
-            if (memory) {
-                await saveMemoryRecord(cid, memory, memory?.previousCid);
-                logger.info('Successfully saved new memory', { cid });
+        const memoryWatcher = watchMemoryHashUpdates(async (agent, cid) => {
+            try {
+                logger.info('New memory hash detected', { agent, cid });
+                const memory = await downloadMemory(cid);
+                if (memory) {
+                    await saveMemoryRecord(cid, memory, memory?.previousCid);
+                    logger.info('Successfully saved new memory', { cid });
+                }
+            } catch (error) {
+                logger.error('Error processing memory update', { error, agent, cid });
             }
-        } catch (error) {
-            logger.error('Error processing memory update', { error, agent, cid });
-        }
-    });
+        });
 
-    process.on('SIGINT', () => {
-        logger.info('Shutting down memory watcher');
-        memoryWatcher();
-        process.exit(0);
-    });
+        createWebSocketServer();
 
-    process.on('SIGTERM', () => {
-        logger.info('Shutting down memory watcher');
-        memoryWatcher();
-        process.exit(0);
-    });
+        const cleanup = async () => {
+            logger.info('Shutting down services');
+            memoryWatcher();
+            await closeWebSocketServer();
+            process.exit(0);
+        };
 
-    app.listen(3010, () => {
-        logger.info('Server is running on port 3010');
-    });
+        process.on('SIGINT', cleanup);
+        process.on('SIGTERM', cleanup);
+
+        const port = config.PORT || 3010;
+        app.listen(port, () => {
+            logger.info(`Server is running on port ${port}`);
+        });
+    } catch (error) {
+        logger.error('Failed to start server', { error });
+        await closeWebSocketServer();
+        process.exit(1);
+    }
 }
 
-main().catch((error) => {
-    logger.error('Failed to start server', { error });
+main().catch(async (error) => {
+    logger.error('Fatal error:', error);
+    await closeWebSocketServer();
     process.exit(1);
 });
