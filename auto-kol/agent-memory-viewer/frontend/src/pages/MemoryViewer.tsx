@@ -1,10 +1,11 @@
-import { Card, CardBody, Text, Spinner, VStack, Link, HStack, Box } from '@chakra-ui/react'
-import { useParams, Link as RouterLink } from 'react-router-dom'
-import { ExternalLinkIcon } from '@chakra-ui/icons'
+import { Card, CardBody, Text, Spinner, VStack, Link, HStack, Box, Button } from '@chakra-ui/react'
+import { useParams, Link as RouterLink, useNavigate } from 'react-router-dom'
+import { ExternalLinkIcon, ArrowBackIcon } from '@chakra-ui/icons'
 import { useMemory } from '../api/client'
 
 function MemoryViewer() {
     const { cid } = useParams()
+    const navigate = useNavigate()
     const { data: memory, isLoading, error } = useMemory(cid || '')
 
     if (isLoading) return <Spinner color="#00ff00" />
@@ -222,6 +223,18 @@ function MemoryViewer() {
                     </VStack>
                 </CardBody>
             </Card>
+            
+            <Button
+                leftIcon={<ArrowBackIcon />}
+                onClick={() => navigate('/')}
+                colorScheme="green"
+                variant="outline"
+                size="lg"
+                width="full"
+                mt={4}
+            >
+                Back to Home
+            </Button>
         </VStack>
     )
 }
