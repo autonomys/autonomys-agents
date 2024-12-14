@@ -3,6 +3,9 @@ const { Pool } = pkg;
 
 import { config } from '../config/index.js';
 import * as fs from 'fs/promises';
+import {createLogger} from '../utils/logger.js';
+
+const logger = createLogger('db');
 
 const parseConnectionString = (url: string) => {
     const regex = /postgresql:\/\/([^:]+):([^@]+)@([^:]+):(\d+)\//;
@@ -24,24 +27,36 @@ const initPool = new Pool({
 
 const schemaPath = new URL('./schema.sql', import.meta.url).pathname;
 
-async function initializeDatabase() {
+async function checkDatabaseExists(): Promise<boolean> {
     try {
-        await initPool.query(`
-            CREATE DATABASE agent_memory;
-        `);
-        console.log('Database created successfully');
-    } catch (error: any) {
-        if (error.code === '42P04') {
-            console.log('Database already exists, continuing...');
-        } else {
-            console.error('Error creating database:', error);
+        const result = await initPool.query(
+            "SELECT 1 FROM pg_database WHERE datname = 'agent_memory'"
+        );
+        return result.rows.length > 0;
+    } catch (error) {
+        console.error('Error checking database existence:', error);
+        throw error;
+    }
+}
+
+async function initializeDatabase() {
+    const exists = await checkDatabaseExists();
+    
+    if (!exists) {
+        try {
+            await initPool.query(`CREATE DATABASE agent_memory;`);
+            logger.info('Database created successfully');
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            await initializeTables();
+        } catch (error: any) {
+            logger.error('Error creating database:', error);
             throw error;
         }
-    } finally {
-        await initPool.end();
+    } else {
+        logger.info('Database already exists, skipping initialization');
     }
-
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    await initPool.end();
 }
 
 async function initializeTables() {
@@ -56,9 +71,9 @@ async function initializeTables() {
     try {
         const schema = await fs.readFile(schemaPath, 'utf8');
         await dbPool.query(schema);
-        console.log('Tables created successfully');
+        logger.info('Tables created successfully');
     } catch (error) {
-        console.error('Error creating tables:', error);
+        logger.error('Error creating tables:', error);
         throw error;
     } finally {
         await dbPool.end();
@@ -67,7 +82,6 @@ async function initializeTables() {
 
 export async function initialize() {
     await initializeDatabase();
-    await initializeTables();
 }
 
 export async function resetDatabase() {
@@ -89,7 +103,7 @@ export async function resetDatabase() {
 
         await initPool.query('DROP DATABASE IF EXISTS agent_memory;');
         await initPool.query('CREATE DATABASE agent_memory;');
-        console.log('Database reset successfully');
+        logger.info('Database reset successfully');
 
         await new Promise(resolve => setTimeout(resolve, 1000));
 
@@ -104,13 +118,13 @@ export async function resetDatabase() {
         try {
             const schema = await fs.readFile(schemaPath, 'utf8');
             await dbPool.query(schema);
-            console.log('Tables recreated successfully');
+            logger.info('Tables recreated successfully');
         } finally {
             await dbPool.end();
         }
 
     } catch (error) {
-        console.error('Error resetting database:', error);
+        logger.error('Error resetting database:', error);
         throw error;
     } finally {
         await initPool.end();
