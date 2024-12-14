@@ -20,6 +20,7 @@ export const engagementSystemPrompt = await PromptTemplate.fromTemplate(
     5. Avoid price or investment advice
     
     If the tweet is not relevant, does not warrant a response, or is not engaging, do not engage. Be very strict.
+    HOWEVER, if the tweet is a reply to a tweet you have already responded to and you have a engaging response you can be more lenient.
     {format_instructions}`
 ).format({
     format_instructions: engagementParser.getFormatInstructions()
