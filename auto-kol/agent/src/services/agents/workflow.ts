@@ -69,6 +69,16 @@ const createWorkflowConfig = async (): Promise<WorkflowConfig> => {
     };
 };
 
+export const getWorkflowConfig = (() => {
+    let workflowConfigInstance: WorkflowConfig | null = null;
+
+    return async (): Promise<WorkflowConfig> => {
+        if (!workflowConfigInstance) {
+            workflowConfigInstance = await createWorkflowConfig();
+        }
+        return workflowConfigInstance;
+    };
+})();
 
 const shouldContinue = (state: typeof State.State) => {
     const lastMessage = state.messages[state.messages.length - 1];
@@ -127,7 +137,7 @@ type WorkflowRunner = Readonly<{
 
 // Create workflow runner
 const createWorkflowRunner = async (): Promise<WorkflowRunner> => {
-    const workflowConfig = await createWorkflowConfig();
+    const workflowConfig = await getWorkflowConfig();
     const nodes = await createNodes(workflowConfig);
     const workflow = await createWorkflow(nodes);
     const memoryStore = new MemorySaver();
