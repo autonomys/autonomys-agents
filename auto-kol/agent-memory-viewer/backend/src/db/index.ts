@@ -2,6 +2,7 @@ import pkg from 'pg';
 const { Pool } = pkg;
 
 import { config } from '../config/index.js';
+import { broadcastNewMemory } from '../websocket.js';
 
 const parseConnectionString = (url: string) => {
     const regex = /postgresql:\/\/([^:]+):([^@]+)@([^:]+):(\d+)\//;
@@ -33,6 +34,7 @@ export async function saveMemoryRecord(cid: string, content: any, previous_cid: 
         'INSERT INTO memory_records (cid, content, previous_cid) VALUES ($1, $2, $3) RETURNING *',
         [cid, JSON.stringify(content), previous_cid]
     );
+    broadcastNewMemory(result.rows[0]);
     return result.rows[0];
 }
 

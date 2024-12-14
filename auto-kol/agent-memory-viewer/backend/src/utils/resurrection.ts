@@ -8,7 +8,6 @@ const logger = createLogger('resurrection');
 
 export async function resurrection() {
     logger.info('Starting resurrection');
-    await resetDatabase();
     let hash = await getLastMemoryHash();
     const memories: { hash: string; data: any }[] = [];
 
