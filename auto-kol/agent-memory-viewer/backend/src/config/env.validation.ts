@@ -11,6 +11,7 @@ const envSchema = z.object({
   DSN_API_KEY: z.string(),
   CORS_ORIGIN: z.union([
     z.string().url(),
+    z.string().transform(str => str.split(',')).pipe(z.array(z.string().url())),
     z.array(z.string().url())
   ]).default('http://localhost:3002'),
   WS_PORT: z.string().transform(Number).default('3011')
