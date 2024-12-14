@@ -32,11 +32,19 @@ async function main() {
                 logger.info('New memory hash detected', { agent, cid });
                 const memory = await downloadMemory(cid);
                 if (memory) {
-                    await saveMemoryRecord(cid, memory, memory?.previousCid);
-                    logger.info('Successfully saved new memory', { cid });
+                    const savedMemory = await saveMemoryRecord(cid, memory, memory?.previousCid);
+                    logger.info('Memory processed successfully', { 
+                        cid,
+                        isNew: savedMemory.created_at === savedMemory.created_at 
+                    });
                 }
             } catch (error) {
-                logger.error('Error processing memory update', { error, agent, cid });
+                logger.error('Error processing memory update', { 
+                    error,
+                    agent,
+                    cid,
+                    errorType: error instanceof Error ? error.constructor.name : typeof error
+                });
             }
         });
 

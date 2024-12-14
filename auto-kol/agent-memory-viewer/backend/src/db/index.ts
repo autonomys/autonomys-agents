@@ -30,12 +30,23 @@ export interface MemoryRecord {
 }
 
 export async function saveMemoryRecord(cid: string, content: any, previous_cid: string): Promise<MemoryRecord> {
-    const result = await pool.query(
-        'INSERT INTO memory_records (cid, content, previous_cid) VALUES ($1, $2, $3) RETURNING *',
-        [cid, JSON.stringify(content), previous_cid]
-    );
-    broadcastNewMemory(result.rows[0]);
-    return result.rows[0];
+    try {
+        const result = await pool.query(
+            'INSERT INTO memory_records (cid, content, previous_cid) VALUES ($1, $2, $3) RETURNING *',
+            [cid, JSON.stringify(content), previous_cid]
+        );
+        broadcastNewMemory(result.rows[0]);
+        return result.rows[0];
+    } catch (error: any) {
+        if (error.code === '23505') { 
+            const existingRecord = await pool.query(
+                'SELECT * FROM memory_records WHERE cid = $1',
+                [cid]
+            );
+            return existingRecord.rows[0];
+        }
+        throw error;
+    }
 }
 
 export async function getMemoryByCid(cid: string): Promise<MemoryRecord | null> {
