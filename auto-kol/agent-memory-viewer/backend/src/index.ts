@@ -52,7 +52,8 @@ async function main() {
 
         const cleanup = async () => {
             logger.info('Shutting down services');
-            memoryWatcher();
+            const stopWatcher = await memoryWatcher;
+            await stopWatcher();
             await closeWebSocketServer();
             process.exit(0);
         };

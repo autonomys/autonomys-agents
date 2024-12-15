@@ -13,7 +13,7 @@ const envSchema = z.object({
     z.string().url(),
     z.string().transform(str => str.split(',')).pipe(z.array(z.string().url())),
     z.array(z.string().url())
-  ]).default('http://localhost:3002'),
+  ]).default(''),
   WS_PORT: z.string().transform(Number).default('3011')
 });
 

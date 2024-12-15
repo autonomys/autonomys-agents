@@ -1,4 +1,4 @@
-import { ethers } from 'ethers';
+import { ethers, Contract } from 'ethers';
 import { MEMORY_ABI } from '../abi/memory.js';
 import { config } from '../config/index.js';
 import { wallet } from './agentWallet.js';
@@ -8,56 +8,85 @@ import { createLogger } from './logger.js';
 const logger = createLogger('agentMemoryContract');
 
 const CONTRACT_ADDRESS = config.CONTRACT_ADDRESS as `0x${string}`;
+const contract = new Contract(CONTRACT_ADDRESS, MEMORY_ABI, wallet);
 
-const contract = new ethers.Contract(CONTRACT_ADDRESS, MEMORY_ABI, wallet);
-
-function hashToCid(hash: string) {
-    const bytes = ethers.getBytes(hash);
-    const cid = cidFromBlakeHash(Buffer.from(bytes));
+function hashToCid(hash: Uint8Array): string {
+    const cid = cidFromBlakeHash(Buffer.from(hash));
     return cid.toString();
 }
 
 export async function getLastMemoryHash(): Promise<string> {
     const hash = await contract.getLastMemoryHash(config.AGENT_ADDRESS);
-    return hashToCid(hash);
+    return hashToCid(ethers.getBytes(hash));
 }
 
-export function watchMemoryHashUpdates(
-    callback: (agent: string, hash: string) => void
+export async function watchMemoryHashUpdates(
+    callback: (agent: string, cid: string) => void
 ) {
-    const agentAddress = config.AGENT_ADDRESS;
-    const filter = contract.filters.LastMemoryHashSet(agentAddress);
-    
-    logger.info('Setting up memory hash watcher', { 
+    const agentAddress = config.AGENT_ADDRESS.toLowerCase();
+
+    const filter = await contract.filters.LastMemoryHashSet(agentAddress);
+
+    let isWatching = true;
+
+    logger.info('Setting up memory hash watcher', {
         agentAddress,
-        contractAddress: CONTRACT_ADDRESS
+        contractAddress: CONTRACT_ADDRESS,
     });
 
-    contract.on(filter, (event: any) => {
-        const eventLog = event.log;
-        const agent = '0x' + eventLog.topics[1].slice(26);  
-        const hash = eventLog.data;
-        const cid = hashToCid(hash);
-        logger.info('Raw event received', { 
-            agent,
-            hash,
-            blockNumber: eventLog.blockNumber,
-            transactionHash: eventLog.transactionHash
+    const setupListener = () => {
+        if (!isWatching) return;
+
+        contract.on(filter, (eventPayload) => {
+            if (!isWatching) return;
+
+            try {
+                const [agent, hash] = eventPayload.args;
+
+                if (!agent || !hash) {
+                    logger.error('Missing event arguments', { eventArgs: eventPayload });
+                    return;
+                }
+
+                const cid = hashToCid(ethers.getBytes(hash));
+
+                if (agent.toLowerCase() === agentAddress) {
+                    callback(agent, cid);
+                }
+            } catch (error) {
+                logger.error('Error processing event data', { 
+                    error, 
+                    eventArgs: eventPayload 
+                });
+            }
         });
 
-        if (agent.toLowerCase() === agentAddress.toLowerCase()) {
-            callback(agent, cid);
-        } else {
-            logger.info('Ignoring event for different agent', { 
-                eventAgent: agent, 
-                ourAgent: agentAddress 
+        if (contract.runner && contract.runner.provider) {
+            const provider = contract.runner.provider;
+
+            provider.on('error', (error: Error) => {
+                logger.error('WebSocket error, attempting to reconnect...', { error });
+
+                setTimeout(() => {
+                    if (isWatching) {
+                        contract.off(filter);
+                        setupListener();
+                    }
+                }, 5000);
             });
+        } else {
+            logger.warn('Runner or provider is null, reconnection logic may not work.');
         }
-    });
-    
+    };
+
+    setupListener();
+
     return () => {
-        logger.info('Unsetting memory hash watcher');
-        contract.off(filter);
+        isWatching = false;
+        try {
+            contract.off(filter);
+        } catch (error) {
+            logger.warn('Error while removing event listener', { error });
+        }
     };
 }
-
