@@ -1,9 +1,18 @@
-
 import { createAutoDriveApi, downloadObject } from '@autonomys/auto-drive';
 import { config } from '../config/index.js';
 import { inflate } from 'pako';
+import { createLogger } from './logger.js';
 
-export async function downloadMemory(cid: string) {
+const logger = createLogger('dsn');
+
+const MAX_RETRIES = 3;
+const INITIAL_RETRY_DELAY = 1000;
+
+async function delay(ms: number) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+export async function downloadMemory(cid: string, retryCount = 0): Promise<any> {
     try {
         const api = createAutoDriveApi({ 
             apiKey: config.DSN_API_KEY || '' 
@@ -31,7 +40,24 @@ export async function downloadMemory(cid: string) {
         const memoryData = JSON.parse(jsonString);
         return memoryData;
     } catch (error) {
-        console.error('Error downloading memory:', error);
-    }
+        if (retryCount < MAX_RETRIES) {
+            const retryDelay = INITIAL_RETRY_DELAY * Math.pow(2, retryCount);
+            logger.warn(`Failed to download memory, retrying in ${retryDelay}ms`, {
+                cid,
+                retryCount: retryCount + 1,
+                maxRetries: MAX_RETRIES,
+                error: error instanceof Error ? error.message : String(error)
+            });
+            
+            await delay(retryDelay);
+            return downloadMemory(cid, retryCount + 1);
+        }
 
+        logger.error('Failed to download memory after max retries', {
+            cid,
+            maxRetries: MAX_RETRIES,
+            error: error instanceof Error ? error.message : String(error)
+        });
+        throw error;
+    }
 }
