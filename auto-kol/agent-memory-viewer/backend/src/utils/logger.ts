@@ -43,19 +43,17 @@ const createTransports = () => [
 ];
 
 const addConsoleTransport = (logger: winston.Logger): winston.Logger => {
-    if (config.NODE_ENV !== 'production') {
-        logger.add(
-            new winston.transports.Console({
-                format: winston.format.combine(
-                    winston.format.colorize({ level: true }),
-                    winston.format.printf(({ level, message, context, timestamp, ...meta }) => {
-                        const metaStr = formatMeta(meta);
-                        return `\x1b[32m${timestamp} [${context}]\x1b[0m ${level}: ${message}${metaStr}`;
-                    })
-                )
-            })
-        );
-    }
+    logger.add(
+        new winston.transports.Console({
+            format: winston.format.combine(
+                winston.format.colorize({ level: true }),
+                winston.format.printf(({ level, message, context, timestamp, ...meta }) => {
+                    const metaStr = formatMeta(meta);
+                    return `\x1b[32m${timestamp} [${context}]\x1b[0m ${level}: ${message}${metaStr}`;
+                })
+            )
+        })
+    );
     return logger;
 };
 
