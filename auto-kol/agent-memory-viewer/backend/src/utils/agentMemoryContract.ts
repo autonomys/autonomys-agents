@@ -19,7 +19,6 @@ export async function getLastMemoryHash(): Promise<string> {
     const hash = await contract.getLastMemoryHash(config.AGENT_ADDRESS);
     return hashToCid(ethers.getBytes(hash));
 }
-
 export async function watchMemoryHashUpdates(
     callback: (agent: string, cid: string) => void
 ) {
@@ -61,10 +60,8 @@ export async function watchMemoryHashUpdates(
     const setupListener = async () => {
         if (!isWatching) return;
 
-        // Cleanup any existing listeners
         await cleanupListener();
 
-        // Define the event listener logic
         listener = (agent, hash) => {
             if (!isWatching) return;
 
@@ -78,15 +75,19 @@ export async function watchMemoryHashUpdates(
             }
         };
 
-        // Attach the listener to the contract
         logger.info('Attaching event listener for LastMemoryHashSet');
         contract.on(eventName, listener);
 
         if (contract.runner?.provider) {
             const provider = contract.runner.provider;
 
-            provider.on('error', async (error) => {
-                logger.error('Provider error, attempting to reconnect...', { error });
+            provider.on('error', async (error: any) => {
+                logger.error('Provider error encountered', { error });
+
+                if (error?.error?.message?.includes('Filter id') || 
+                    error?.message?.includes('Filter id')) {
+                    logger.info('Filter ID error detected, re-creating filters...');
+                }
 
                 if (isWatching) {
                     await cleanupListener();
@@ -95,10 +96,8 @@ export async function watchMemoryHashUpdates(
                 }
             });
 
-            // Clear any existing refresh interval
             if (refreshInterval) clearInterval(refreshInterval);
 
-            // Set up new refresh interval to refresh the listener every 4 minutes
             refreshInterval = setInterval(async () => {
                 if (!isWatching) {
                     if (refreshInterval) clearInterval(refreshInterval);
@@ -117,7 +116,6 @@ export async function watchMemoryHashUpdates(
         }
     };
 
-    // Start the listener setup
     await setupListener();
 
     return async () => {
@@ -130,7 +128,6 @@ export async function watchMemoryHashUpdates(
 
         await cleanupListener();
         
-        // Remove any remaining provider listeners
         if (contract.runner?.provider) {
             contract.runner.provider.removeAllListeners('error');
         }
