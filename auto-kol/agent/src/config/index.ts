@@ -20,7 +20,7 @@ export const config = {
     TEMPERATURE: 0.7,
 
     // Agent Configuration
-    CHECK_INTERVAL: 60 * 1000 * 45, // 45 minutes
+    CHECK_INTERVAL: (Number(process.env.CHECK_INTERVAL_MINUTES) || 30) * 60 * 1000,
     MEMORY_DIR: path.join(__dirname, '../../data/memory'),
 
     // Server Configuration
