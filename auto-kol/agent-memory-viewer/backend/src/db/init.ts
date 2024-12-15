@@ -4,6 +4,8 @@ const { Pool } = pkg;
 import { config } from '../config/index.js';
 import * as fs from 'fs/promises';
 import {createLogger} from '../utils/logger.js';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
 const logger = createLogger('db');
 
@@ -25,7 +27,9 @@ const initPool = new Pool({
     database: 'postgres'
 });
 
-const schemaPath = new URL('./schema.sql', import.meta.url).pathname;
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const schemaPath = path.join(__dirname, 'schema.sql');
 
 async function checkDatabaseExists(): Promise<boolean> {
     try {
