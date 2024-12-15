@@ -24,9 +24,6 @@ export async function watchMemoryHashUpdates(
     callback: (agent: string, cid: string) => void
 ) {
     const agentAddress = config.AGENT_ADDRESS.toLowerCase();
-
-    const filter = await contract.filters.LastMemoryHashSet(agentAddress);
-
     let isWatching = true;
 
     logger.info('Setting up memory hash watcher', {
@@ -34,59 +31,94 @@ export async function watchMemoryHashUpdates(
         contractAddress: CONTRACT_ADDRESS,
     });
 
-    const setupListener = () => {
+    const setupListener = async () => {
         if (!isWatching) return;
 
-        contract.on(filter, (eventPayload) => {
-            if (!isWatching) return;
+        try {
+            // Create a new filter each time we set up the listener
+            const filter = contract.filters.LastMemoryHashSet(agentAddress);
 
-            try {
-                const [agent, hash] = eventPayload.args;
+            contract.on(filter, (eventPayload) => {
+                if (!isWatching) return;
 
-                if (!agent || !hash) {
-                    logger.error('Missing event arguments', { eventArgs: eventPayload });
-                    return;
+                try {
+                    const [agent, hash] = eventPayload.args;
+
+                    if (!agent || !hash) {
+                        logger.error('Missing event arguments', { eventArgs: eventPayload });
+                        return;
+                    }
+
+                    const cid = hashToCid(ethers.getBytes(hash));
+
+                    if (agent.toLowerCase() === agentAddress) {
+                        callback(agent, cid);
+                    }
+                } catch (error) {
+                    logger.error('Error processing event data', { 
+                        error, 
+                        eventArgs: eventPayload 
+                    });
                 }
+            });
 
-                const cid = hashToCid(ethers.getBytes(hash));
+            if (contract.runner?.provider) {
+                const provider = contract.runner.provider;
 
-                if (agent.toLowerCase() === agentAddress) {
-                    callback(agent, cid);
-                }
-            } catch (error) {
-                logger.error('Error processing event data', { 
-                    error, 
-                    eventArgs: eventPayload 
-                });
-            }
-        });
-
-        if (contract.runner && contract.runner.provider) {
-            const provider = contract.runner.provider;
-
-            provider.on('error', (error: Error) => {
-                logger.error('WebSocket error, attempting to reconnect...', { error });
-
-                setTimeout(() => {
+                // Handle provider errors and reconnection
+                provider.on('error', async (error) => {
+                    logger.error('Provider error, attempting to reconnect...', { error });
+                    
                     if (isWatching) {
-                        contract.off(filter);
+                        try {
+                            contract.off(filter);
+                        } catch (e) {
+                            logger.warn('Error removing event listener', { error: e });
+                        }
+
+                        // Add exponential backoff for reconnection attempts
+                        await new Promise(resolve => setTimeout(resolve, 5000));
                         setupListener();
                     }
-                }, 5000);
-            });
-        } else {
-            logger.warn('Runner or provider is null, reconnection logic may not work.');
+                });
+
+                // Periodically refresh the filter to prevent expiration
+                const refreshInterval = setInterval(async () => {
+                    if (!isWatching) {
+                        clearInterval(refreshInterval);
+                        return;
+                    }
+
+                    try {
+                        // Re-create the filter
+                        contract.off(filter);
+                        await setupListener();
+                    } catch (error) {
+                        logger.error('Error refreshing filter', { error });
+                    }
+                }, 4 * 60 * 1000); // Refresh every 4 minutes
+            } else {
+                logger.warn('Runner or provider is null, reconnection logic may not work.');
+            }
+        } catch (error) {
+            logger.error('Error setting up event listener', { error });
+            
+            // Retry setup after delay if still watching
+            if (isWatching) {
+                await new Promise(resolve => setTimeout(resolve, 5000));
+                setupListener();
+            }
         }
     };
 
-    setupListener();
+    await setupListener();
 
     return () => {
         isWatching = false;
         try {
-            contract.off(filter);
+            contract.removeAllListeners();
         } catch (error) {
-            logger.warn('Error while removing event listener', { error });
+            logger.warn('Error while removing event listeners', { error });
         }
     };
 }
