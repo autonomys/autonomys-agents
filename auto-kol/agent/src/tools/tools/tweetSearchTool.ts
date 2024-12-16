@@ -35,31 +35,34 @@ export const createTweetSearchTool = (scraper: any) => new DynamicStructuredTool
 
             const selectedAccounts = getRandomAccounts(cleanAccounts, config.ACCOUNTS_PER_BATCH);
             
-            const accountQuery = `(${selectedAccounts.map(account => `from:${account}`).join(' OR ')})`;
+            const ACCOUNTS_PER_QUERY = 3;
+            const tweetGroups = [];
             
-            logger.info('Starting batch tweet search with:', {
-                selectedAccounts,
-                lastProcessedId
-            });
-
-            const allTweets = [];
-            const searchIterator = scraper.searchTweets(accountQuery, config.MAX_SEARCH_TWEETS, SearchMode.Latest);
-
-            for await (const tweet of searchIterator) {
-                if (lastProcessedId && tweet.id && tweet.id <= lastProcessedId) {
-                    break;
+            for (let i = 0; i < selectedAccounts.length; i += ACCOUNTS_PER_QUERY) {
+                const accountsBatch = selectedAccounts.slice(i, i + ACCOUNTS_PER_QUERY);
+                const query = `(${accountsBatch.map(account => `from:${account}`).join(' OR ')})`;
+                
+                const searchIterator = scraper.searchTweets(query, Math.floor(config.MAX_SEARCH_TWEETS / 4), SearchMode.Latest);
+                
+                for await (const tweet of searchIterator) {
+                    if (lastProcessedId && tweet.id && tweet.id <= lastProcessedId) {
+                        break;
+                    }
+                    tweetGroups.push({
+                        id: tweet.id || '',
+                        text: tweet.text || '',
+                        author_id: tweet.userId || '',
+                        author_username: tweet.username?.toLowerCase() || '',
+                        created_at: tweet.timeParsed || new Date()
+                    });
                 }
-                allTweets.push({
-                    id: tweet.id || '',
-                    text: tweet.text || '',
-                    author_id: tweet.userId || '',
-                    author_username: tweet.username?.toLowerCase() || '',
-                    created_at: tweet.timeParsed || new Date()
-                });
+        
+                await new Promise(resolve => setTimeout(resolve, 1000));
             }
 
-            allTweets.sort((a, b) => b.created_at.getTime() - a.created_at.getTime());
 
+            const allTweets = tweetGroups.sort((a, b) => b.created_at.getTime() - a.created_at.getTime());
+            
             logger.info('Tweet search completed:', {
                 foundTweets: allTweets.length,
                 selectedAccounts
