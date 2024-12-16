@@ -6,7 +6,8 @@ import { SearchMode } from 'agent-twitter-client';
 
 const logger = createLogger('tweet-search-tool');
 
-const ACCOUNTS_PER_BATCH = 5; // Number of random accounts to search per iteration
+const ACCOUNTS_PER_BATCH = 10;
+const MAX_SEARCH_TWEETS = 20;
 
 function getRandomAccounts(accounts: string[], n: number): string[] {
     const shuffled = [...accounts].sort(() => 0.5 - Math.random());
@@ -35,7 +36,6 @@ export const createTweetSearchTool = (scraper: any) => new DynamicStructuredTool
 
             const selectedAccounts = getRandomAccounts(cleanAccounts, ACCOUNTS_PER_BATCH);
             
-            // Construct search query for multiple accounts
             const accountQuery = `(${selectedAccounts.map(account => `from:${account}`).join(' OR ')})`;
             
             logger.info('Starting batch tweet search with:', {
@@ -44,7 +44,7 @@ export const createTweetSearchTool = (scraper: any) => new DynamicStructuredTool
             });
 
             const allTweets = [];
-            const searchIterator = scraper.searchTweets(accountQuery, 100, SearchMode.Latest);
+            const searchIterator = scraper.searchTweets(accountQuery, MAX_SEARCH_TWEETS, SearchMode.Latest);
 
             for await (const tweet of searchIterator) {
                 if (lastProcessedId && tweet.id && tweet.id <= lastProcessedId) {
