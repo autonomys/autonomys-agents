@@ -14,6 +14,9 @@ export async function getLastMemoryHash(): Promise<string> {
 
 export async function setLastMemoryHash(hash: string, nonce?: number) {
     const bytes32Hash = ethers.zeroPadValue(hash, 32);
-    const tx = await contract.setLastMemoryHash(bytes32Hash, { nonce: nonce });
+    const tx = await contract.setLastMemoryHash(bytes32Hash, {
+        nonce: nonce,
+        gasLimit: 100000
+    });
     return tx;
 }
