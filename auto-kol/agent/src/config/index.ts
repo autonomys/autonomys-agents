@@ -29,9 +29,6 @@ export const config = {
     // Environment
     NODE_ENV: process.env.NODE_ENV || 'development',
 
-    // Target Accounts to Monitor
-    TARGET_ACCOUNTS: (process.env.TARGET_ACCOUNTS || '').split(',').map(account => account.trim()),
-
     // Chroma Configuration
     CHROMA_DIR: path.join(__dirname, '../../data/chroma'),
     CHROMA_URL: process.env.CHROMA_URL || 'http://localhost:8000',
@@ -39,6 +36,7 @@ export const config = {
     // AutoDrive Configuration
     DSN_API_KEY: process.env.DSN_API_KEY,
     DSN_UPLOAD: process.env.DSN_UPLOAD === 'true',
+    DSN_SKIP_UPLOAD: process.env.DSN_SKIP_UPLOAD === 'true',
     DSN_ENCRYPTION_PASSWORD: process.env.DSN_ENCRYPTION_PASSWORD,
 
     // CORS Configuration

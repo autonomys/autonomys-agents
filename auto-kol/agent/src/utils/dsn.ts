@@ -6,10 +6,11 @@ import { addDsn } from '../database/index.js';
 import { v4 as generateId } from 'uuid';
 import { config } from '../config/index.js';
 import { setLastMemoryHash } from './agentMemoryContract.js';
-import { signMessage } from './agentWallet.js';
+import { signMessage, wallet } from './agentWallet.js';
 
 const logger = createLogger('dsn-upload-tool');
 const dsnAPI = createAutoDriveApi({ apiKey: config.DSN_API_KEY! });
+let currentNonce = await wallet.getNonce();
 
 export async function uploadToDsn({ data, previousCid }: { data: any; previousCid?: string }) {
     try {
@@ -61,12 +62,16 @@ export async function uploadToDsn({ data, previousCid }: { data: any; previousCi
             blake3hash: hexlify(blake3hash)
         });
 
-        const receipt = await setLastMemoryHash(hexlify(blake3hash));
-
-        logger.info('Data uploaded to DSN successfully', {
-            txHash: receipt.hash,
-            previousCid,
-            cid: finalCid
+        setLastMemoryHash(hexlify(blake3hash), currentNonce++)
+        .then(tx => {
+            logger.info('Memory hash transaction submitted', { 
+                txHash: tx.hash,
+                previousCid,
+                cid: finalCid 
+            });
+        })
+        .catch(error => {
+            logger.error('Failed to submit memory hash transaction', error);
         });
 
         await addDsn({
