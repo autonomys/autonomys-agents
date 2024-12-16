@@ -4,6 +4,7 @@ import { createLogger } from '../../utils/logger.js';
 import { getKOLsAccounts, updateKOLs } from '../../utils/twitter.js';
 import { SearchMode } from 'agent-twitter-client';
 import { config } from '../../config/index.js';
+import { ExtendedScraper } from '../../services/twitter/api.js';
 const logger = createLogger('tweet-search-tool');
 
 
@@ -13,7 +14,7 @@ function getRandomAccounts(accounts: string[], n: number): string[] {
     return shuffled.slice(0, Math.min(n, accounts.length));
 }
 
-export const createTweetSearchTool = (scraper: any) => new DynamicStructuredTool({
+export const createTweetSearchTool = (scraper: ExtendedScraper) => new DynamicStructuredTool({
     name: 'search_recent_tweets',
     description: 'Search for recent tweets from specified accounts',
     schema: z.object({
@@ -23,9 +24,9 @@ export const createTweetSearchTool = (scraper: any) => new DynamicStructuredTool
         try {
             logger.info('Called search_recent_tweets');
             await updateKOLs();
-            const cleanAccounts = await getKOLsAccounts();
+            const kols = await getKOLsAccounts();
             
-            if (cleanAccounts.length === 0) {
+            if (kols.length === 0) {
                 logger.error('No valid accounts found after cleaning');
                 return {
                     tweets: [],
@@ -33,13 +34,13 @@ export const createTweetSearchTool = (scraper: any) => new DynamicStructuredTool
                 };
             }
 
-            const selectedAccounts = getRandomAccounts(cleanAccounts, config.ACCOUNTS_PER_BATCH);
+            const selectedKols = getRandomAccounts(kols, config.ACCOUNTS_PER_BATCH);
             
             const ACCOUNTS_PER_QUERY = 3;
             const tweetGroups = [];
             
-            for (let i = 0; i < selectedAccounts.length; i += ACCOUNTS_PER_QUERY) {
-                const accountsBatch = selectedAccounts.slice(i, i + ACCOUNTS_PER_QUERY);
+            for (let i = 0; i < selectedKols.length; i += ACCOUNTS_PER_QUERY) {
+                const accountsBatch = selectedKols.slice(i, i + ACCOUNTS_PER_QUERY);
                 const query = `(${accountsBatch.map(account => `from:${account}`).join(' OR ')})`;
                 
                 const searchIterator = scraper.searchTweets(query, Math.floor(config.MAX_SEARCH_TWEETS / 4), SearchMode.Latest);
@@ -65,7 +66,7 @@ export const createTweetSearchTool = (scraper: any) => new DynamicStructuredTool
             
             logger.info('Tweet search completed:', {
                 foundTweets: allTweets.length,
-                selectedAccounts
+                selectedKols
             });
 
             return {

@@ -8,8 +8,6 @@ import { Tweet } from '../types/twitter.js';
 
 const logger = createLogger('twitter-utils');
 const twitterScraper = await createTwitterClientScraper();
-
-
 export const timeLineTweets: TimeLineTweet[] = [];
 
 export const updateKOLs = async () => {
