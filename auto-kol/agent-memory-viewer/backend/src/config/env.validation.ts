@@ -5,8 +5,8 @@ const envSchema = z.object({
   PORT: z.string().transform(Number).default('3010'),
   DATABASE_URL: z.string().url(),
   CONTRACT_ADDRESS: z.string().regex(/^0x[a-fA-F0-9]{40}$/),
-  PRIVATE_KEY: z.string(),
-  RPC_URL: z.string().url(),
+  RPC_URL: z.string().url().default('https://auto-evm.taurus.autonomys.xyz/ws'),
+  WS_RPC_URL: z.string().url().default('wss://auto-evm.taurus.autonomys.xyz/ws'),
   AGENT_ADDRESS: z.string().regex(/^0x[a-fA-F0-9]{40}$/),
   DSN_API_KEY: z.string(),
   CORS_ORIGIN: z.union([

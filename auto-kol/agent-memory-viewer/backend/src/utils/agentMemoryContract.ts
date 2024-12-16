@@ -7,8 +7,8 @@ import { createLogger } from './logger.js';
 const logger = createLogger('agentMemoryContract');
 
 const CONTRACT_ADDRESS = config.CONTRACT_ADDRESS as `0x${string}`;
-const wsProvider = new ethers.WebSocketProvider('wss://auto-evm.taurus.autonomys.xyz/ws');
-const wallet = new ethers.Wallet(config.PRIVATE_KEY, wsProvider);
+const wsProvider = new ethers.WebSocketProvider(config.WS_RPC_URL);
+const wallet = ethers.Wallet.createRandom(wsProvider);
 const contract = new Contract(CONTRACT_ADDRESS, MEMORY_ABI, wallet);
 
 function hashToCid(hash: Uint8Array): string {
