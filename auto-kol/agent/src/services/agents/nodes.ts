@@ -150,9 +150,9 @@ export const createNodes = async (config: WorkflowConfig) => {
             const chromaService = await ChromaService.getInstance();
 
             if (validatedResult.tweets.length > 0) {
-                for (const tweet of validatedResult.tweets) {
-                    await chromaService.addTweet(tweet);
-                }
+                await Promise.all(
+                    validatedResult.tweets.map(tweet => chromaService.addTweet(tweet))
+                );
             }
 
             logger.info(`Found ${validatedResult.tweets.length} tweets`);
