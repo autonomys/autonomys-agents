@@ -46,4 +46,9 @@ export const config = {
     RPC_URL: process.env.RPC_URL,
     CONTRACT_ADDRESS: process.env.CONTRACT_ADDRESS,
     PRIVATE_KEY: process.env.PRIVATE_KEY,
+
+    // Tweet Search/Fetch Configuration
+    ACCOUNTS_PER_BATCH: 10,
+    MAX_SEARCH_TWEETS: 20,
+    MAX_TIMELINE_TWEETS: 10,
 }; 

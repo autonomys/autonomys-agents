@@ -9,8 +9,6 @@ import { Tweet } from '../types/twitter.js';
 const logger = createLogger('twitter-utils');
 const twitterScraper = await createTwitterClientScraper();
 
-const MAX_TIMELINE_TWEETS = 10;
-
 
 export const timeLineTweets: TimeLineTweet[] = [];
 
@@ -46,7 +44,7 @@ export const getTimeLine = async () => {
         .filter(id => id != null);
     const timeline = await twitterScraper.fetchHomeTimeline(0, validTweetIds);
     clearTimeLine();
-    for (const tweet of timeline.slice(0, MAX_TIMELINE_TWEETS)) {
+    for (const tweet of timeline.slice(0, config.MAX_TIMELINE_TWEETS)) {
         timeLineTweets.push({
             id: tweet.rest_id!,
         });

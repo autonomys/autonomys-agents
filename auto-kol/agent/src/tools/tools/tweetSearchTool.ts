@@ -3,11 +3,10 @@ import { z } from 'zod';
 import { createLogger } from '../../utils/logger.js';
 import { getKOLsAccounts, updateKOLs } from '../../utils/twitter.js';
 import { SearchMode } from 'agent-twitter-client';
-
+import { config } from '../../config/index.js';
 const logger = createLogger('tweet-search-tool');
 
-const ACCOUNTS_PER_BATCH = 10;
-const MAX_SEARCH_TWEETS = 20;
+
 
 function getRandomAccounts(accounts: string[], n: number): string[] {
     const shuffled = [...accounts].sort(() => 0.5 - Math.random());
@@ -34,7 +33,7 @@ export const createTweetSearchTool = (scraper: any) => new DynamicStructuredTool
                 };
             }
 
-            const selectedAccounts = getRandomAccounts(cleanAccounts, ACCOUNTS_PER_BATCH);
+            const selectedAccounts = getRandomAccounts(cleanAccounts, config.ACCOUNTS_PER_BATCH);
             
             const accountQuery = `(${selectedAccounts.map(account => `from:${account}`).join(' OR ')})`;
             
@@ -44,7 +43,7 @@ export const createTweetSearchTool = (scraper: any) => new DynamicStructuredTool
             });
 
             const allTweets = [];
-            const searchIterator = scraper.searchTweets(accountQuery, MAX_SEARCH_TWEETS, SearchMode.Latest);
+            const searchIterator = scraper.searchTweets(accountQuery, config.MAX_SEARCH_TWEETS, SearchMode.Latest);
 
             for await (const tweet of searchIterator) {
                 if (lastProcessedId && tweet.id && tweet.id <= lastProcessedId) {
