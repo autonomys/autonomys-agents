@@ -181,6 +181,43 @@ export const createNodes = async (config: WorkflowConfig) => {
     };
 
     ///////////ENGAGEMENT///////////
+    // Helper function to handle skipped tweets
+    const handleSkippedTweet = async (tweet: any, decision: any, config: any) => {
+        logger.info('Skipping engagement for tweet', { tweetId: tweet.id, reason: decision.reason });
+        await config.toolNode.invoke({
+            messages: [new AIMessage({
+                content: '',
+                tool_calls: [{
+                    name: 'queue_skipped',
+                    args: {
+                        tweet,
+                        reason: decision.reason,
+                        priority: decision.priority || 0,
+                        workflowState: { decision }
+                    },
+                    id: 'skip_call',
+                    type: 'tool_call'
+                }]
+            })]
+        });
+
+        if (globalConfig.DSN_UPLOAD) {
+            await uploadToDsn({
+                data: {
+                    type: 'skipped',
+                    tweet,
+                    decision,
+                    workflowState: {
+                        decision,
+                        toneAnalysis: null,
+                        responseStrategy: null
+                    }
+                },
+                previousCid: await getLastDsnCid()
+            });
+        }
+    };
+
     const engagementNode = async (state: typeof State.State) => {
         logger.info('Engagement Node - Starting evaluation');
         try {
@@ -211,7 +248,7 @@ export const createNodes = async (config: WorkflowConfig) => {
                     logger.debug('Tweet already processed', { tweetId: tweet.id });
                     return {
                         tweet,
-                        skip: true
+                        status: 'alreadyProcessed'
                     };
                 }
 
@@ -235,7 +272,7 @@ export const createNodes = async (config: WorkflowConfig) => {
                     return {
                         tweet,
                         decision,
-                        skip: false
+                        status: 'processing'
                     };
                 } catch (error: any) {
                     logger.error('Error processing tweet:', {
@@ -244,7 +281,7 @@ export const createNodes = async (config: WorkflowConfig) => {
                     });
                     return {
                         tweet,
-                        skip: true
+                        status: 'errorProcessing'
                     };
                 }
             }));
@@ -253,24 +290,21 @@ export const createNodes = async (config: WorkflowConfig) => {
             const newProcessedTweets = new Set<string>();
             const tweetsToEngage = [];
 
-            logger.info('Batch processing complete', {
+            logger.info('Batch pre-processing complete', {
                 totalProcessed: processedResults.length,
-                skipped: processedResults.filter(r => r.skip).length
+                alreadyProcessed: processedResults.filter(r => r.status === 'alreadyProcessed').length,
+                processingError: processedResults.filter(r => r.status === 'error').length
             });
 
             for (const result of processedResults) {
                 newProcessedTweets.add(result.tweet.id);
 
-                if (!result.skip && result.decision?.shouldEngage) {
+                if (result.decision?.shouldEngage) {
                     tweetsToEngage.push({
                         tweet: result.tweet,
                         decision: result.decision
                     });
-                } else if (!result.skip) {
-                    logger.debug('Handling skipped tweet', {
-                        tweetId: result.tweet.id,
-                        reason: result.decision?.reason
-                    });
+                } else if (result.status === 'processing') {
                     await handleSkippedTweet(result.tweet, result.decision, config);
                 }
             }
@@ -318,50 +352,6 @@ export const createNodes = async (config: WorkflowConfig) => {
                 stack: error.stack
             });
             return { messages: [] };
-        }
-    };
-
-    // Helper function to handle skipped tweets
-    const handleSkippedTweet = async (tweet: any, decision: any, config: any) => {
-        const tweetData = {
-            id: tweet.id,
-            text: tweet.text,
-            author_id: tweet.author_id,
-            author_username: tweet.author_username || 'unknown',
-            created_at: typeof tweet.created_at === 'string' ? tweet.created_at : tweet.created_at.toISOString()
-        };
-
-        await config.toolNode.invoke({
-            messages: [new AIMessage({
-                content: '',
-                tool_calls: [{
-                    name: 'queue_skipped',
-                    args: {
-                        tweet: tweetData,
-                        reason: decision.reason,
-                        priority: decision.priority || 0,
-                        workflowState: { decision }
-                    },
-                    id: 'skip_call',
-                    type: 'tool_call'
-                }]
-            })]
-        });
-
-        if (globalConfig.DSN_UPLOAD) {
-            await uploadToDsn({
-                data: {
-                    type: 'skipped',
-                    tweet,
-                    decision,
-                    workflowState: {
-                        decision,
-                        toneAnalysis: null,
-                        responseStrategy: null
-                    }
-                },
-                previousCid: await getLastDsnCid()
-            });
         }
     };
 
