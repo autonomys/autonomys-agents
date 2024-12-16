@@ -1,11 +1,17 @@
-
 import { DynamicStructuredTool } from '@langchain/core/tools';
 import { z } from 'zod';
 import { createLogger } from '../../utils/logger.js';
-import { config } from '../../config/index.js';
 import { getKOLsAccounts, updateKOLs } from '../../utils/twitter.js';
+import { SearchMode } from 'agent-twitter-client';
 
 const logger = createLogger('tweet-search-tool');
+
+const ACCOUNTS_PER_BATCH = 5; // Number of random accounts to search per iteration
+
+function getRandomAccounts(accounts: string[], n: number): string[] {
+    const shuffled = [...accounts].sort(() => 0.5 - Math.random());
+    return shuffled.slice(0, Math.min(n, accounts.length));
+}
 
 export const createTweetSearchTool = (scraper: any) => new DynamicStructuredTool({
     name: 'search_recent_tweets',
@@ -17,8 +23,8 @@ export const createTweetSearchTool = (scraper: any) => new DynamicStructuredTool
         try {
             logger.info('Called search_recent_tweets');
             await updateKOLs();
-            const cleanAccounts = await getKOLsAccounts()
-            logger.info('Fetching KOLs:', await getKOLsAccounts());
+            const cleanAccounts = await getKOLsAccounts();
+            
             if (cleanAccounts.length === 0) {
                 logger.error('No valid accounts found after cleaning');
                 return {
@@ -27,33 +33,37 @@ export const createTweetSearchTool = (scraper: any) => new DynamicStructuredTool
                 };
             }
 
-            logger.info('Starting tweet search with:', {
-                cleanAccounts,
+            const selectedAccounts = getRandomAccounts(cleanAccounts, ACCOUNTS_PER_BATCH);
+            
+            // Construct search query for multiple accounts
+            const accountQuery = `(${selectedAccounts.map(account => `from:${account}`).join(' OR ')})`;
+            
+            logger.info('Starting batch tweet search with:', {
+                selectedAccounts,
                 lastProcessedId
             });
-            const allTweets = [];
 
-            for (const account of cleanAccounts) {
-                const tweetIterator = scraper.getTweets(account, 2);
-                for await (const tweet of tweetIterator) {
-                    if (lastProcessedId && tweet.id && tweet.id <= lastProcessedId) {
-                        break;
-                    }
-                    allTweets.push({
-                        id: tweet.id || '',
-                        text: tweet.text || '',
-                        author_id: tweet.userId || '',
-                        author_username: tweet.username?.toLowerCase() || '',
-                        created_at: tweet.timeParsed || new Date()
-                    });
+            const allTweets = [];
+            const searchIterator = scraper.searchTweets(accountQuery, 100, SearchMode.Latest);
+
+            for await (const tweet of searchIterator) {
+                if (lastProcessedId && tweet.id && tweet.id <= lastProcessedId) {
+                    break;
                 }
+                allTweets.push({
+                    id: tweet.id || '',
+                    text: tweet.text || '',
+                    author_id: tweet.userId || '',
+                    author_username: tweet.username?.toLowerCase() || '',
+                    created_at: tweet.timeParsed || new Date()
+                });
             }
 
             allTweets.sort((a, b) => b.created_at.getTime() - a.created_at.getTime());
 
             logger.info('Tweet search completed:', {
                 foundTweets: allTweets.length,
-                accounts: cleanAccounts
+                selectedAccounts
             });
 
             return {
