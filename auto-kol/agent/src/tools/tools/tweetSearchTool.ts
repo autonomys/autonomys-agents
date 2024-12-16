@@ -16,13 +16,6 @@ export const createTweetSearchTool = (scraper: any) => new DynamicStructuredTool
     func: async ({ lastProcessedId }) => {
         try {
             logger.info('Called search_recent_tweets');
-            if (!Array.isArray(config.TARGET_ACCOUNTS) || config.TARGET_ACCOUNTS.length === 0) {
-                logger.error('No target accounts configured');
-                return {
-                    tweets: [],
-                    lastProcessedId: null
-                };
-            }
             await updateKOLs();
             const cleanAccounts = await getKOLsAccounts()
             logger.info('Fetching KOLs:', await getKOLsAccounts());
@@ -35,7 +28,6 @@ export const createTweetSearchTool = (scraper: any) => new DynamicStructuredTool
             }
 
             logger.info('Starting tweet search with:', {
-                rawAccounts: config.TARGET_ACCOUNTS,
                 cleanAccounts,
                 lastProcessedId
             });
