@@ -2,10 +2,11 @@ import { DynamicStructuredTool } from '@langchain/core/tools';
 import { z } from 'zod';
 import { createLogger } from '../../utils/logger.js';
 import { addMention, getLatestMentionId } from '../../database/index.js';
+import { ExtendedScraper } from '../../services/twitter/api.js';
 
 const logger = createLogger('mention-tool');
 
-export const createMentionTool = (scraper: any) => new DynamicStructuredTool({
+export const createMentionTool = (scraper: ExtendedScraper) => new DynamicStructuredTool({
     name: 'fetch_mentions',
     description: 'Fetch mentions since the last processed mention',
     schema: z.object({}),

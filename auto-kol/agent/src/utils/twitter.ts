@@ -42,7 +42,7 @@ export const getTimeLine = async () => {
         .filter(id => id != null);
     const timeline = await twitterScraper.fetchHomeTimeline(0, validTweetIds);
     clearTimeLine();
-    for (const tweet of timeline) {
+    for (const tweet of timeline.slice(0, config.MAX_TIMELINE_TWEETS)) {
         timeLineTweets.push({
             id: tweet.rest_id!,
         });
@@ -57,6 +57,7 @@ export const clearTimeLine = () => {
 
 export const getTimeLineTweets = async () => {
     const tweets: Tweet[] = [];
+    console.error('timeLineTweets', timeLineTweets.length);
     for (const tweet of timeLineTweets) {
         const result = await twitterScraper.getTweet(tweet.id!);
         if (result) {

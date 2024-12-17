@@ -5,7 +5,7 @@ import { config } from '../../config/index.js';
 
 const logger = createLogger('agent-twitter-api');
 
-class ExtendedScraper extends Scraper {
+export class ExtendedScraper extends Scraper {
     private static instance: ExtendedScraper | null = null;
 
     private constructor() {
