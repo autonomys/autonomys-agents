@@ -88,9 +88,8 @@ const shouldContinue = (state: typeof State.State) => {
         hasMessages: state.messages.length > 0,
         currentIndex: content.currentTweetIndex,
         totalTweets: content.tweets?.length,
-        hasTweet: !!content.tweet,
-        hasToneAnalysis: !!content.toneAnalysis,
-        hasDecision: !!content.decision
+        hasBatchToAnalyze: !!content.batchToAnalyze?.length,
+        hasBatchToRespond: !!content.batchToRespond?.length
     });
 
     // Check if we've processed all tweets
@@ -103,16 +102,15 @@ const shouldContinue = (state: typeof State.State) => {
         return 'recheckNode';
     }
 
-    // If we have a tweet to process further
-    if (content.tweet) {
-        if (content.toneAnalysis) {
-            logger.debug('Moving to response generation');
-            return 'generateNode';
-        }
-        if (content.decision?.shouldEngage) {
-            logger.debug('Moving to tone analysis');
-            return 'analyzeNode';
-        }
+    // Check for batches to process
+    if (content.batchToAnalyze?.length > 0) {
+        logger.debug('Moving to tone analysis');
+        return 'analyzeNode';
+    }
+
+    if (content.batchToRespond?.length > 0) {
+        logger.debug('Moving to response generation');
+        return 'generateNode';
     }
 
     logger.debug('Moving to engagement evaluation');
