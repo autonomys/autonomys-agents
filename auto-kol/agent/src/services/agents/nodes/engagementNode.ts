@@ -67,7 +67,7 @@ export const createEngagementNode = (config: WorkflowConfig) => {
                 };
             }
 
-            const BATCH_SIZE = 15;
+            const BATCH_SIZE = globalConfig.ENGAGEMENT_BATCH_SIZE;
             const startIdx = parsedContent.currentTweetIndex || 0;
             const endIdx = Math.min(startIdx + BATCH_SIZE, parsedContent.tweets.length);
             const batchTweets = parsedContent.tweets.slice(startIdx, endIdx);
