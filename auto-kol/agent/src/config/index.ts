@@ -48,7 +48,7 @@ export const config = {
     PRIVATE_KEY: process.env.PRIVATE_KEY,
 
     // Tweet Search/Fetch Configuration
-    ACCOUNTS_PER_BATCH: 10,
-    MAX_SEARCH_TWEETS: 20,
-    MAX_TIMELINE_TWEETS: 10,
+    ACCOUNTS_PER_BATCH: Number(process.env.ACCOUNTS_PER_BATCH) || 10,
+    MAX_SEARCH_TWEETS: Number(process.env.MAX_SEARCH_TWEETS) || 20,
+    MAX_TIMELINE_TWEETS: Number(process.env.MAX_TIMELINE_TWEETS) || 10,
 }; 
