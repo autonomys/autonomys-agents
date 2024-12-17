@@ -224,13 +224,26 @@ export const createNodes = async (config: WorkflowConfig) => {
             const lastMessage = state.messages[state.messages.length - 1];
             const parsedContent = parseMessageContent(lastMessage.content);
 
-            if (!parsedContent.tweets ||
-                parsedContent.currentTweetIndex >= parsedContent.tweets.length) {
-                logger.info('No more tweets to process');
-                return { messages: [] };
+            const pendingEngagements = parsedContent.pendingEngagements || [];
+            logger.info(`number of pending engagements: ${pendingEngagements.length}`);
+            
+            if (pendingEngagements.length > 0) {
+                const [nextEngagement, ...remainingEngagements] = pendingEngagements;
+                logger.info(`Processing pending engagement. Remaining: ${remainingEngagements.length}`);
+                logger.info(`current tweet index: ${parsedContent.currentTweetIndex}`);
+                return {
+                    messages: [new AIMessage({
+                        content: JSON.stringify({
+                            ...parsedContent,
+                            pendingEngagements: remainingEngagements, 
+                            tweet: nextEngagement.tweet,
+                            decision: nextEngagement.decision
+                        })
+                    })],
+                    processedTweets: state.processedTweets
+                };
             }
 
-            // Process multiple tweets in one batch
             const BATCH_SIZE = 15;
             const startIdx = parsedContent.currentTweetIndex;
             const endIdx = Math.min(startIdx + BATCH_SIZE, parsedContent.tweets.length);
@@ -286,8 +299,7 @@ export const createNodes = async (config: WorkflowConfig) => {
                 }
             }));
 
-            // Process results and update state
-            const newProcessedTweets = new Set<string>();
+            const newProcessedTweets = new Set<string>(state.processedTweets);
             const tweetsToEngage = [];
 
             logger.info('Batch pre-processing complete', {
@@ -298,7 +310,6 @@ export const createNodes = async (config: WorkflowConfig) => {
 
             for (const result of processedResults) {
                 newProcessedTweets.add(result.tweet.id);
-
                 if (result.decision?.shouldEngage) {
                     tweetsToEngage.push({
                         tweet: result.tweet,
@@ -309,38 +320,12 @@ export const createNodes = async (config: WorkflowConfig) => {
                 }
             }
 
-            // Return next batch or first tweet to engage
-            if (tweetsToEngage.length > 0) {
-                const { tweet, decision } = tweetsToEngage[0];
-                logger.info('Found tweet to engage with', {
-                    tweetId: tweet.id,
-                    confidence: decision.confidence,
-                    remainingInBatch: tweetsToEngage.length - 1
-                });
-
-                return {
-                    messages: [new AIMessage({
-                        content: JSON.stringify({
-                            tweets: parsedContent.tweets,
-                            currentTweetIndex: endIdx,
-                            tweet,
-                            decision
-                        })
-                    })],
-                    processedTweets: newProcessedTweets
-                };
-            }
-
-            logger.info('Batch complete - no tweets to engage', {
-                nextIndex: endIdx,
-                remainingTweets: parsedContent.tweets.length - endIdx
-            });
-
             return {
                 messages: [new AIMessage({
                     content: JSON.stringify({
                         tweets: parsedContent.tweets,
-                        currentTweetIndex: endIdx,
+                        currentTweetIndex: tweetsToEngage.length > 0 ? startIdx : endIdx, // Only increment if no new engagements found
+                        pendingEngagements: tweetsToEngage,
                         lastProcessedId: parsedContent.lastProcessedId
                     })
                 })],
@@ -361,7 +346,7 @@ export const createNodes = async (config: WorkflowConfig) => {
         try {
             const lastMessage = state.messages[state.messages.length - 1];
             const parsedContent = parseMessageContent(lastMessage.content);
-            const { tweet, tweets, currentTweetIndex, decision } = parsedContent;
+            const { tweet, tweets, currentTweetIndex, decision, pendingEngagements } = parsedContent;
 
             const toneAnalysis = await prompts.tonePrompt
                 .pipe(config.llms.tone)
@@ -377,7 +362,8 @@ export const createNodes = async (config: WorkflowConfig) => {
                         currentTweetIndex,
                         tweet,
                         toneAnalysis,
-                        decision
+                        decision,
+                        pendingEngagements
                     })
                 })]
             };
@@ -393,7 +379,7 @@ export const createNodes = async (config: WorkflowConfig) => {
         try {
             const lastMessage = state.messages[state.messages.length - 1];
             const parsedContent = parseMessageContent(lastMessage.content);
-            const { tweet, toneAnalysis, tweets, currentTweetIndex, decision } = parsedContent;
+            const { tweet, toneAnalysis, tweets, currentTweetIndex, decision, pendingEngagements } = parsedContent;
             logger.info('Tweet:', tweet);
             const threadMentionsTweets = [];
             if (tweet.mention) {
@@ -487,9 +473,10 @@ export const createNodes = async (config: WorkflowConfig) => {
                 messages: [new AIMessage({
                     content: JSON.stringify({
                         tweets,
-                        currentTweetIndex: currentTweetIndex + 1,
+                        currentTweetIndex: currentTweetIndex,
                         lastProcessedId: tweet.id,
-                        responseStrategy
+                        responseStrategy,
+                        pendingEngagements
                     })
                 })],
                 processedTweets: new Set([tweet.id])

@@ -158,7 +158,7 @@ const createWorkflowRunner = async (): Promise<WorkflowRunner> => {
             logger.info('Starting tweet response workflow', { threadId });
 
             const config = {
-                recursionLimit: 50,
+                recursionLimit: 100,
                 configurable: {
                     thread_id: threadId
                 }
