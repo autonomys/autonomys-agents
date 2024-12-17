@@ -223,21 +223,19 @@ export const createNodes = async (config: WorkflowConfig) => {
         try {
             const lastMessage = state.messages[state.messages.length - 1];
             const parsedContent = parseMessageContent(lastMessage.content);
-
-            const pendingEngagements = parsedContent.pendingEngagements || [];
-            logger.info(`number of pending engagements: ${pendingEngagements.length}`);
+            const pendingEngagements = parsedContent.pendingEngagements || [];            
             
             if (pendingEngagements.length > 0) {
-                const [nextEngagement, ...remainingEngagements] = pendingEngagements;
-                logger.info(`Processing pending engagement. Remaining: ${remainingEngagements.length}`);
-                logger.info(`current tweet index: ${parsedContent.currentTweetIndex}`);
+                logger.info(`number of pending engagements: ${pendingEngagements.length}`);
+
                 return {
                     messages: [new AIMessage({
                         content: JSON.stringify({
-                            ...parsedContent,
-                            pendingEngagements: remainingEngagements, 
-                            tweet: nextEngagement.tweet,
-                            decision: nextEngagement.decision
+                            tweets: parsedContent.tweets,
+                            currentTweetIndex: parsedContent.currentTweetIndex,
+                            batchToAnalyze: pendingEngagements,
+                            pendingEngagements: [],
+                            lastProcessedId: parsedContent.lastProcessedId
                         })
                     })],
                     processedTweets: state.processedTweets
@@ -245,7 +243,7 @@ export const createNodes = async (config: WorkflowConfig) => {
             }
 
             const BATCH_SIZE = 15;
-            const startIdx = parsedContent.currentTweetIndex;
+            const startIdx = parsedContent.currentTweetIndex || 0;
             const endIdx = Math.min(startIdx + BATCH_SIZE, parsedContent.tweets.length);
             const batchTweets = parsedContent.tweets.slice(startIdx, endIdx);
 
@@ -258,59 +256,23 @@ export const createNodes = async (config: WorkflowConfig) => {
 
             const processedResults = await Promise.all(batchTweets.map(async (tweet: any) => {
                 if (state.processedTweets.has(tweet.id)) {
-                    logger.debug('Tweet already processed', { tweetId: tweet.id });
-                    return {
-                        tweet,
-                        status: 'alreadyProcessed'
-                    };
+                    return { tweet, status: 'alreadyProcessed' };
                 }
 
-                try {
-                    logger.debug('Evaluating tweet engagement', {
-                        tweetId: tweet.id,
-                        author: tweet.author_username
-                    });
+                const decision = await prompts.engagementPrompt
+                    .pipe(config.llms.decision)
+                    .pipe(prompts.engagementParser)
+                    .invoke({ tweet: tweet.text });
 
-                    const decision = await prompts.engagementPrompt
-                        .pipe(config.llms.decision)
-                        .pipe(prompts.engagementParser)
-                        .invoke({ tweet: tweet.text });
-
-                    logger.debug('Engagement decision made', {
-                        tweetId: tweet.id,
-                        shouldEngage: decision.shouldEngage,
-                        confidence: decision.confidence
-                    });
-
-                    return {
-                        tweet,
-                        decision,
-                        status: 'processing'
-                    };
-                } catch (error: any) {
-                    logger.error('Error processing tweet:', {
-                        tweetId: tweet.id,
-                        error: error.message
-                    });
-                    return {
-                        tweet,
-                        status: 'errorProcessing'
-                    };
-                }
+                return { tweet, decision, status: 'processing' };
             }));
 
-            const newProcessedTweets = new Set<string>(state.processedTweets);
             const tweetsToEngage = [];
-
-            logger.info('Batch pre-processing complete', {
-                totalProcessed: processedResults.length,
-                alreadyProcessed: processedResults.filter(r => r.status === 'alreadyProcessed').length,
-                processingError: processedResults.filter(r => r.status === 'error').length
-            });
+            const newProcessedTweets = new Set<string>(state.processedTweets);
 
             for (const result of processedResults) {
                 newProcessedTweets.add(result.tweet.id);
-                if (result.decision?.shouldEngage) {
+                if (result.status === 'processing' && result.decision?.shouldEngage) {
                     tweetsToEngage.push({
                         tweet: result.tweet,
                         decision: result.decision
@@ -324,18 +286,15 @@ export const createNodes = async (config: WorkflowConfig) => {
                 messages: [new AIMessage({
                     content: JSON.stringify({
                         tweets: parsedContent.tweets,
-                        currentTweetIndex: tweetsToEngage.length > 0 ? startIdx : endIdx, // Only increment if no new engagements found
+                        currentTweetIndex: tweetsToEngage.length > 0 ? startIdx : endIdx,
                         pendingEngagements: tweetsToEngage,
                         lastProcessedId: parsedContent.lastProcessedId
                     })
                 })],
                 processedTweets: newProcessedTweets
             };
-        } catch (error: any) {
-            logger.error('Error in engagement node:', {
-                error: error.message,
-                stack: error.stack
-            });
+        } catch (error) {
+            logger.error('Error in engagement node:', error);
             return { messages: [] };
         }
     };
@@ -346,24 +305,35 @@ export const createNodes = async (config: WorkflowConfig) => {
         try {
             const lastMessage = state.messages[state.messages.length - 1];
             const parsedContent = parseMessageContent(lastMessage.content);
-            const { tweet, tweets, currentTweetIndex, decision, pendingEngagements } = parsedContent;
+            const batchToAnalyze = parsedContent.batchToAnalyze || [];
 
-            const toneAnalysis = await prompts.tonePrompt
-                .pipe(config.llms.tone)
-                .pipe(prompts.toneParser)
-                .invoke({ tweet: tweet.text });
+            logger.info(`Processing batch of ${batchToAnalyze.length} tweets for tone analysis`);
 
-            logger.info('Tone analysis:', { toneAnalysis });
+            const analyzedBatch = await Promise.all(
+                batchToAnalyze.map(async ({ tweet, decision }: { tweet: any; decision: any }) => {
+                    const toneAnalysis = await prompts.tonePrompt
+                        .pipe(config.llms.tone)
+                        .pipe(prompts.toneParser)
+                        .invoke({ tweet: tweet.text });
+
+                    logger.info('Tone analysis:', { toneAnalysis });
+
+                    return {
+                        tweet,
+                        decision,
+                        toneAnalysis
+                    };
+                })
+            );
 
             return {
                 messages: [new AIMessage({
                     content: JSON.stringify({
-                        tweets,
-                        currentTweetIndex,
-                        tweet,
-                        toneAnalysis,
-                        decision,
-                        pendingEngagements
+                        tweets: parsedContent.tweets,
+                        currentTweetIndex: parsedContent.currentTweetIndex,
+                        batchToRespond: analyzedBatch,
+                        pendingEngagements: parsedContent.pendingEngagements,
+                        lastProcessedId: parsedContent.lastProcessedId
                     })
                 })]
             };
@@ -379,107 +349,115 @@ export const createNodes = async (config: WorkflowConfig) => {
         try {
             const lastMessage = state.messages[state.messages.length - 1];
             const parsedContent = parseMessageContent(lastMessage.content);
-            const { tweet, toneAnalysis, tweets, currentTweetIndex, decision, pendingEngagements } = parsedContent;
-            logger.info('Tweet:', tweet);
-            const threadMentionsTweets = [];
-            if (tweet.mention) {
-                const mentions = await scraper.getThread(tweet.id);
-                for await (const mention of mentions) {
-                    console.log(mention.text);
-                    threadMentionsTweets.push({
-                        id: mention.id,
-                        text: mention.text,
-                        author_id: mention.userId,
-                        author_username: mention.username?.toLowerCase() || 'unknown',
-                        created_at: mention.timeParsed?.toISOString() || new Date().toISOString()
+            const batchToRespond = parsedContent.batchToRespond || [];
+
+            logger.info(`Processing batch of ${batchToRespond.length} tweets for response generation`);
+
+            await Promise.all(
+                batchToRespond.map(async ({ tweet, decision, toneAnalysis }: { tweet: any; decision: any; toneAnalysis: any }) => {
+
+                    const threadMentionsTweets = [];
+                    if (tweet.mention) {
+                        const mentions = await scraper.getThread(tweet.id);
+                        for await (const mention of mentions) {
+                            threadMentionsTweets.push({
+                                id: mention.id,
+                                text: mention.text,
+                                author_id: mention.userId,
+                                author_username: mention.username?.toLowerCase() || 'unknown',
+                                created_at: mention.timeParsed?.toISOString() || new Date().toISOString()
+                            });
+                        }
+                    }
+
+                    const similarTweetsResponse = await config.toolNode.invoke({
+                        messages: [new AIMessage({
+                            content: '',
+                            tool_calls: [{
+                                name: 'search_similar_tweets',
+                                args: {
+                                    query: `author:${tweet.author_username} ${tweet.text}`,
+                                    k: 5
+                                },
+                                id: 'similar_tweets_call',
+                                type: 'tool_call'
+                            }],
+                        })],
                     });
-                }
-            }
 
-            const similarTweetsResponse = await config.toolNode.invoke({
-                messages: [new AIMessage({
-                    content: '',
-                    tool_calls: [{
-                        name: 'search_similar_tweets',
-                        args: {
-                            query: `author:${tweet.author_username} ${tweet.text}`,
-                            k: 5
-                        },
-                        id: 'similar_tweets_call',
-                        type: 'tool_call'
-                    }],
-                })],
-            });
+                    const similarTweets = parseMessageContent(
+                        similarTweetsResponse.messages[similarTweetsResponse.messages.length - 1].content
+                    );
 
-            const similarTweets = parseMessageContent(
-                similarTweetsResponse.messages[similarTweetsResponse.messages.length - 1].content
+                    const responseStrategy = await prompts.responsePrompt
+                        .pipe(config.llms.response)
+                        .pipe(prompts.responseParser)
+                        .invoke({
+                            tweet: tweet.text,
+                            tone: toneAnalysis.suggestedTone,
+                            author: tweet.author_username,
+                            similarTweets: JSON.stringify(similarTweets.similar_tweets),
+                            mentions: JSON.stringify(threadMentionsTweets)
+                        });
+
+                    logger.info('Response strategy:', { responseStrategy });
+
+                    if (globalConfig.DSN_UPLOAD) {
+                        await uploadToDsn({
+                            data: {
+                                type: 'response',
+                                tweet,
+                                response: responseStrategy.content,
+                                workflowState: {
+                                    decision,
+                                    toneAnalysis,
+                                    responseStrategy: {
+                                        tone: responseStrategy.tone,
+                                        strategy: responseStrategy.strategy,
+                                        referencedTweets: responseStrategy.referencedTweets,
+                                        confidence: responseStrategy.confidence
+                                    }
+                                },
+                                mentions: threadMentionsTweets
+                            },
+                            previousCid: await getLastDsnCid()
+                        });
+                    }
+
+                    await config.toolNode.invoke({
+                        messages: [new AIMessage({
+                            content: '',
+                            tool_calls: [{
+                                name: 'queue_response',
+                                args: {
+                                    tweet,
+                                    response: responseStrategy.content,
+                                    workflowState: {
+                                        toneAnalysis,
+                                        responseStrategy,
+                                        mentions: threadMentionsTweets,
+                                        similarTweets: similarTweets.similar_tweets
+                                    }
+                                },
+                                id: 'queue_response_call',
+                                type: 'tool_call'
+                            }]
+                        })]
+                    });
+
+                })
             );
-
-            const responseStrategy = await prompts.responsePrompt
-                .pipe(config.llms.response)
-                .pipe(prompts.responseParser)
-                .invoke({
-                    tweet: tweet.text,
-                    tone: toneAnalysis.suggestedTone,
-                    author: tweet.author_username,
-                    similarTweets: JSON.stringify(similarTweets.similar_tweets),
-                    mentions: JSON.stringify(threadMentionsTweets)
-                });
-
-            logger.info('Response strategy:', { responseStrategy });
-
-            if (globalConfig.DSN_UPLOAD) {
-                await uploadToDsn({
-                    data: {
-                        type: 'response',
-                        tweet,
-                        response: responseStrategy.content,
-                        workflowState: {
-                            decision,
-                            toneAnalysis,
-                            responseStrategy: {
-                                tone: responseStrategy.tone,
-                                strategy: responseStrategy.strategy,
-                                referencedTweets: responseStrategy.referencedTweets,
-                                confidence: responseStrategy.confidence
-                            }
-                        },
-                        mentions: threadMentionsTweets
-                    },
-                    previousCid: await getLastDsnCid()
-                });
-            }
-
-            await config.toolNode.invoke({
-                messages: [new AIMessage({
-                    content: '',
-                    tool_calls: [{
-                        name: 'queue_response',
-                        args: {
-                            tweet,
-                            response: responseStrategy.content,
-                            workflowState: {
-                                toneAnalysis,
-                                responseStrategy
-                            }
-                        },
-                        id: 'queue_response_call',
-                        type: 'tool_call'
-                    }]
-                })]
-            });
 
             return {
                 messages: [new AIMessage({
                     content: JSON.stringify({
-                        tweets,
-                        currentTweetIndex: currentTweetIndex,
-                        lastProcessedId: tweet.id,
-                        responseStrategy,
-                        pendingEngagements
+                        tweets: parsedContent.tweets,
+                        currentTweetIndex: parsedContent.currentTweetIndex,
+                        pendingEngagements: parsedContent.pendingEngagements,
+                        lastProcessedId: parsedContent.lastProcessedId
                     })
                 })],
-                processedTweets: new Set([tweet.id])
+                processedTweets: new Set(batchToRespond.map((item: any) => item.tweet.id))
             };
         } catch (error) {
             logger.error('Error in response generation node:', error);
