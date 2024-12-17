@@ -2,7 +2,7 @@ import winston from 'winston';
 import { config } from '../config/index.js';
 import util from 'util';
 
-const formatMeta = (meta: any) => {
+const formatMeta = (meta: any, useColors: boolean = false) => {
     const cleanMeta = Object.entries(meta)
         .filter(([key]) => !key.startsWith('Symbol(') && key !== 'splat')
         .reduce((acc, [key, value]) => ({ ...acc, [key]: value }), {});
@@ -14,31 +14,51 @@ const formatMeta = (meta: any) => {
     }
 
     return Object.keys(cleanMeta).length
-        ? '\n' + util.inspect(cleanMeta, {
-            colors: true,
-            depth: 4,
-            compact: false,
-            breakLength: 80
-        })
+        ? '\n' + JSON.stringify(cleanMeta, null, 2)
         : '';
 };
 
-const createFormat = () =>
+const createFileFormat = () =>
     winston.format.combine(
-        winston.format.timestamp(),
+        winston.format.timestamp({
+            format: 'YYYY-MM-DD HH:mm:ss.SSS'
+        }),
+        winston.format.uncolorize(),
         winston.format.printf(({ level, message, context, timestamp, ...meta }) => {
-            const metaStr = formatMeta(meta);
-            return `${timestamp} [${context}] ${level}: ${message}${metaStr}`;
+            const metaStr = formatMeta(meta, false);
+            const paddedLevel = level.toUpperCase().padEnd(7);
+            return `${timestamp} | ${paddedLevel} | [${context}] | ${message}${metaStr}`;
+        })
+    );
+
+const createConsoleFormat = () =>
+    winston.format.combine(
+        winston.format.timestamp({
+            format: 'YYYY-MM-DD HH:mm:ss.SSS'
+        }),
+        winston.format.colorize({ level: true }),
+        winston.format.printf(({ level, message, context, timestamp, ...meta }) => {
+            const metaStr = formatMeta(meta, true);
+            const paddedLevel = level.toUpperCase().padEnd(7);
+            return `${timestamp} | ${paddedLevel} | [${context}] | ${message}${metaStr}`;
         })
     );
 
 const createTransports = () => [
     new winston.transports.File({
-        filename: 'error.log',
-        level: 'error'
+        filename: 'logs/error.log',
+        level: 'error',
+        format: createFileFormat(),
+        maxsize: 5242880,
+        maxFiles: 5,
+        tailable: true
     }),
     new winston.transports.File({
-        filename: 'combined.log'
+        filename: 'logs/combined.log',
+        format: createFileFormat(),
+        maxsize: 5242880,
+        maxFiles: 5,
+        tailable: true
     })
 ];
 
@@ -46,13 +66,7 @@ const addConsoleTransport = (logger: winston.Logger): winston.Logger => {
     if (config.NODE_ENV !== 'production') {
         logger.add(
             new winston.transports.Console({
-                format: winston.format.combine(
-                    winston.format.colorize({ level: true }),
-                    winston.format.printf(({ level, message, context, timestamp, ...meta }) => {
-                        const metaStr = formatMeta(meta);
-                        return `\x1b[32m${timestamp} [${context}]\x1b[0m ${level}: ${message}${metaStr}`;
-                    })
-                )
+                format: createConsoleFormat()
             })
         );
     }
@@ -63,7 +77,7 @@ export const createLogger = (context: string) => {
     const logger = winston.createLogger({
         defaultMeta: { context },
         level: 'info',
-        format: createFormat(),
+        format: createFileFormat(),
         transports: createTransports()
     });
 

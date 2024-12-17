@@ -20,7 +20,7 @@ export const config = {
     TEMPERATURE: 0.7,
 
     // Agent Configuration
-    CHECK_INTERVAL: 60 * 1000 * 45, // 45 minutes
+    CHECK_INTERVAL: (Number(process.env.CHECK_INTERVAL_MINUTES) || 30) * 60 * 1000,
     MEMORY_DIR: path.join(__dirname, '../../data/memory'),
 
     // Server Configuration
@@ -29,9 +29,6 @@ export const config = {
     // Environment
     NODE_ENV: process.env.NODE_ENV || 'development',
 
-    // Target Accounts to Monitor
-    TARGET_ACCOUNTS: (process.env.TARGET_ACCOUNTS || '').split(',').map(account => account.trim()),
-
     // Chroma Configuration
     CHROMA_DIR: path.join(__dirname, '../../data/chroma'),
     CHROMA_URL: process.env.CHROMA_URL || 'http://localhost:8000',
@@ -39,6 +36,7 @@ export const config = {
     // AutoDrive Configuration
     DSN_API_KEY: process.env.DSN_API_KEY,
     DSN_UPLOAD: process.env.DSN_UPLOAD === 'true',
+    DSN_SKIP_UPLOAD: process.env.DSN_SKIP_UPLOAD === 'true',
     DSN_ENCRYPTION_PASSWORD: process.env.DSN_ENCRYPTION_PASSWORD,
 
     // CORS Configuration
@@ -48,4 +46,12 @@ export const config = {
     RPC_URL: process.env.RPC_URL,
     CONTRACT_ADDRESS: process.env.CONTRACT_ADDRESS,
     PRIVATE_KEY: process.env.PRIVATE_KEY,
+
+    // Tweet Search/Fetch Configuration
+    ACCOUNTS_PER_BATCH: Number(process.env.ACCOUNTS_PER_BATCH) || 10,
+    MAX_SEARCH_TWEETS: Number(process.env.MAX_SEARCH_TWEETS) || 20,
+    MAX_TIMELINE_TWEETS: Number(process.env.MAX_TIMELINE_TWEETS) || 10,
+
+    // BATCH CONFIG
+    ENGAGEMENT_BATCH_SIZE: process.env.ENGAGEMENT_BATCH_SIZE || 15,
 }; 

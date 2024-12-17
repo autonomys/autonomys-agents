@@ -5,6 +5,7 @@ import { OpenAIEmbeddings } from "@langchain/openai";
 import { createLogger } from "../../utils/logger.js";
 import { Tweet } from "../../types/twitter.js";
 import { config } from "../../config/index.js";
+import { isTweetExists } from '../../services/database/index.js';
 
 
 const logger = createLogger('chroma-service');
@@ -66,6 +67,11 @@ export class ChromaService {
 
     public async addTweet(tweet: Tweet) {
         try {
+            if (await isTweetExists(tweet.id)) {
+                logger.info(`Tweet ${tweet.id} already exists in vector store, skipping`);
+                return;
+            }
+
             const doc = new Document({
                 pageContent: tweet.text,
                 metadata: {

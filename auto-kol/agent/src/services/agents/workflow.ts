@@ -69,34 +69,51 @@ const createWorkflowConfig = async (): Promise<WorkflowConfig> => {
     };
 };
 
+export const getWorkflowConfig = (() => {
+    let workflowConfigInstance: WorkflowConfig | null = null;
+
+    return async (): Promise<WorkflowConfig> => {
+        if (!workflowConfigInstance) {
+            workflowConfigInstance = await createWorkflowConfig();
+        }
+        return workflowConfigInstance;
+    };
+})();
 
 const shouldContinue = (state: typeof State.State) => {
     const lastMessage = state.messages[state.messages.length - 1];
     const content = parseMessageContent(lastMessage.content);
 
+    logger.debug('Evaluating workflow continuation', {
+        hasMessages: state.messages.length > 0,
+        currentIndex: content.currentTweetIndex,
+        totalTweets: content.tweets?.length,
+        hasBatchToAnalyze: !!content.batchToAnalyze?.length,
+        hasBatchToRespond: !!content.batchToRespond?.length
+    });
+
     // Check if we've processed all tweets
     if (!content.tweets || content.currentTweetIndex >= content.tweets.length) {
         if (content.fromRecheckNode && content.messages?.length === 0) {
+            logger.info('Workflow complete - no more tweets to process');
             return END;
         }
+        logger.info('Moving to recheck skipped tweets');
         return 'recheckNode';
     }
 
-    // If we have a complete response or skipped tweet, move to next tweet
-    if (content.responseStrategy || (content.decision && !content.decision.shouldEngage)) {
-        return 'engagementNode';
-    }
-
-    // Define the workflow progression
-    if (content.toneAnalysis) {
-        return 'generateNode';
-    }
-
-    if (content.decision?.shouldEngage) {
+    // Check for batches to process
+    if (content.batchToAnalyze?.length > 0) {
+        logger.debug('Moving to tone analysis');
         return 'analyzeNode';
     }
 
-    // Default to engagement node
+    if (content.batchToRespond?.length > 0) {
+        logger.debug('Moving to response generation');
+        return 'generateNode';
+    }
+
+    logger.debug('Moving to engagement evaluation');
     return 'engagementNode';
 };
 
@@ -127,7 +144,7 @@ type WorkflowRunner = Readonly<{
 
 // Create workflow runner
 const createWorkflowRunner = async (): Promise<WorkflowRunner> => {
-    const workflowConfig = await createWorkflowConfig();
+    const workflowConfig = await getWorkflowConfig();
     const nodes = await createNodes(workflowConfig);
     const workflow = await createWorkflow(nodes);
     const memoryStore = new MemorySaver();
@@ -139,7 +156,7 @@ const createWorkflowRunner = async (): Promise<WorkflowRunner> => {
             logger.info('Starting tweet response workflow', { threadId });
 
             const config = {
-                recursionLimit: 300, //TODO: solve https://github.com/autonomys/autonomys-agents/issues/44
+                recursionLimit: 50,
                 configurable: {
                     thread_id: threadId
                 }
