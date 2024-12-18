@@ -174,6 +174,29 @@ export async function addResponse(response: PendingResponse) {
     ]);
 }
 
+
+export async function updateResponse(response: PendingResponse) {
+    const db = await initializeDatabase();
+    return db.run(`
+        UPDATE responses 
+        SET 
+            content = ?, 
+            tone = ?, 
+            strategy = ?, 
+            estimated_impact = ?, 
+            confidence = ?, 
+            updated_at = CURRENT_TIMESTAMP
+        WHERE ${response.id ? 'id = ?' : 'tweet_id = ?'}
+    `, [
+        response.content, 
+        response.tone, 
+        response.strategy, 
+        response.estimatedImpact, 
+        response.confidence, 
+        response.id || response.tweet_id
+    ]);
+}
+
 export async function getPendingResponses() {
     const db = await initializeDatabase();
     return db.all(`
@@ -181,7 +204,8 @@ export async function getPendingResponses() {
             pr.*,
             t.author_username,
             t.author_id,
-            t.content as tweet_content
+            t.content as tweet_content,
+            t.created_at as tweet_created_at
         FROM responses pr
         JOIN tweets t ON pr.tweet_id = t.id
         WHERE pr.status = 'pending'

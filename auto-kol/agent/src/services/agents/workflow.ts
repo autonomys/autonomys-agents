@@ -89,17 +89,27 @@ const shouldContinue = (state: typeof State.State) => {
         currentIndex: content.currentTweetIndex,
         totalTweets: content.tweets?.length,
         hasBatchToAnalyze: !!content.batchToAnalyze?.length,
-        hasBatchToRespond: !!content.batchToRespond?.length
+        hasBatchToRespond: !!content.batchToRespond?.length,
+        fromAutoApproval: content.fromAutoApproval
     });
+
+    // If responses were rejected by auto-approval, send back to generation
+    if (content.fromAutoApproval && content.batchToRespond?.length > 0) {
+        logger.debug('Moving back to response generation for rejected responses');
+        return 'generateNode';
+    }
 
     // Check if we've processed all tweets
     if (!content.tweets || content.currentTweetIndex >= content.tweets.length) {
-        if (content.fromRecheckNode && content.messages?.length === 0) {
-            logger.info('Workflow complete - no more tweets to process');
+        // If we're coming from auto-approval and there are no pending responses, end workflow
+        if (!content.tweets?.length && !content.batchToRespond?.length) {
+            logger.info('Workflow complete - no more tweets or responses to process');
             return END;
         }
-        logger.info('Moving to recheck skipped tweets');
-        return 'recheckNode';
+
+        // Otherwise check for pending responses
+        logger.info('Moving to auto-approval for pending responses');
+        return 'autoApprovalNode';
     }
 
     // Check for batches to process
@@ -126,7 +136,7 @@ export const createWorkflow = async (nodes: Awaited<ReturnType<typeof createNode
         .addNode('engagementNode', nodes.engagementNode)
         .addNode('analyzeNode', nodes.toneAnalysisNode)
         .addNode('generateNode', nodes.responseGenerationNode)
-        .addNode('recheckNode', nodes.recheckSkippedNode)
+        .addNode('autoApprovalNode', nodes.autoApprovalNode)
         .addEdge(START, 'mentionNode')
         .addEdge('mentionNode', 'timelineNode')
         .addEdge('timelineNode', 'searchNode')
@@ -134,7 +144,7 @@ export const createWorkflow = async (nodes: Awaited<ReturnType<typeof createNode
         .addConditionalEdges('engagementNode', shouldContinue)
         .addConditionalEdges('analyzeNode', shouldContinue)
         .addConditionalEdges('generateNode', shouldContinue)
-        .addConditionalEdges('recheckNode', shouldContinue);
+        .addConditionalEdges('autoApprovalNode', shouldContinue);
 };
 
 // Workflow runner type

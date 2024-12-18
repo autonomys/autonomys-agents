@@ -1,5 +1,5 @@
 import { StructuredOutputParser } from 'langchain/output_parsers';
-import { engagementSchema, toneSchema, responseSchema } from '../../schemas/workflow.js';
+import { engagementSchema, toneSchema, responseSchema, autoApprovalSchema } from '../../schemas/workflow.js';
 import { ChatPromptTemplate, PromptTemplate } from '@langchain/core/prompts';
 import { SystemMessage } from '@langchain/core/messages';
 import { config } from '../../config/index.js';
@@ -9,6 +9,7 @@ const agentUsername = config.TWITTER_USERNAME!;
 export const engagementParser = StructuredOutputParser.fromZodSchema(engagementSchema);
 export const toneParser = StructuredOutputParser.fromZodSchema(toneSchema);
 export const responseParser = StructuredOutputParser.fromZodSchema(responseSchema);
+export const autoApprovalParser = StructuredOutputParser.fromZodSchema(autoApprovalSchema);
 
 export const engagementSystemPrompt = await PromptTemplate.fromTemplate(
     `You are a strategic social media engagement advisor. Your task is to evaluate tweets and decide whether they warrant a response.
@@ -59,6 +60,26 @@ export const responseSystemPrompt = await PromptTemplate.fromTemplate(
     format_instructions: responseParser.getFormatInstructions()
 });
 
+export const autoApprovalSystemPrompt = await PromptTemplate.fromTemplate(
+    `You are a quality control expert for social media responses from a cynical AI agent. Your task is to evaluate responses and ensure they meet basic requirements while maintaining the agent's sarcastic and direct personality.
+
+    Core Requirements (ONLY check these):
+    1. Response MUST be under 280 characters
+    2. Response should not be hate speech or extremely offensive
+    3. Response should maintain the cynical/sarcastic tone we want
+    
+    Remember:
+    - Being dismissive and sarcastic is GOOD and part of our personality
+    - We want to be entertaining and provocative
+    - Only reject if the response is WAY too offensive or over 280 chars
+    - Don't worry about being "too harsh" - that's our style!
+    
+    If rejecting, keep feedback minimal and focused on character limit or extreme offensiveness only.
+    {format_instructions}`
+).format({
+    format_instructions: autoApprovalParser.getFormatInstructions()
+});
+
 export const engagementPrompt = ChatPromptTemplate.fromMessages([
     new SystemMessage(engagementSystemPrompt),
     ["human", "Evaluate this tweet and provide your structured decision: {tweet}"]
@@ -74,8 +95,11 @@ export const responsePrompt = ChatPromptTemplate.fromMessages([
     ["human", `Generate a response strategy for this tweet by considering similar tweets from @{author} using the suggested tone:
     Tweet: {tweet}
     Tone: {tone}
+    Author: {author}
     Similar Tweets: {similarTweets}
     Mentions: {mentions}
+    Rejection Feedback: {rejectionFeedback}
+    Rejection Instructions: {rejectionInstructions}
 
     Core Personality
     Your username is ${agentUsername}!!!
@@ -91,5 +115,51 @@ export const responsePrompt = ChatPromptTemplate.fromMessages([
     Don't worry about grammar. 
     If there are mentions, make sure to respond to them properly! Look at the thread conversation first to see what has been said.
     IMPORTANT: Before responding, check the mentions array for YOUR tweets (from:${agentUsername}).
+
+    Previous Rejection Context:
+    {rejectionFeedback}
+    {rejectionInstructions}
+
+    Response Requirements:
+    1. If this is a regeneration after rejection:
+       - Include the previous rejection reason in your response
+       - Explain how your new response addresses the rejection
+       - Make sure to follow any specific instructions from the rejection
+    2. Always include in your response:
+       - The generated content (tweet text)
+       - Tone used
+       - Strategy explanation
+       - Impact and confidence scores
+       - Any rejection context if this is a regeneration
+    3. Format your response to match the schema exactly`]
+]);
+
+// Helper function to format rejection feedback
+export const formatRejectionFeedback = (rejectionReason?: string, suggestedChanges?: string) => {
+    if (!rejectionReason) return '';
+    
+    return `\nPrevious Response Feedback:
+    Rejection Reason: ${rejectionReason}
+    Suggested Changes: ${suggestedChanges || 'None provided'}
+    
+    Please address this feedback in your new response.`;
+};
+
+export const formatRejectionInstructions = (rejectionReason?: string) => {
+    if (!rejectionReason) return '';
+    
+    return `\nIMPORTANT: Your previous response was rejected. Make sure to:
+    1. Address the rejection reason: "${rejectionReason}"
+    2. Maintain the core personality and style
+    3. Create a better response that fixes these issues`;
+};
+
+export const autoApprovalPrompt = ChatPromptTemplate.fromMessages([
+    new SystemMessage(autoApprovalSystemPrompt),
+    ["human", `Evaluate this response:
+    Original Tweet: {tweet}
+    Generated Response: {response}
+    Intended Tone: {tone}
+    Strategy: {strategy}
     `]
 ]);
