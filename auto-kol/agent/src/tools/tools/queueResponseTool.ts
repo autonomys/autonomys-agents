@@ -4,7 +4,7 @@ import { v4 as generateId } from 'uuid';
 import { queueActionSchema } from '../../schemas/workflow.js';
 import { addResponse } from '../../services/database/index.js';
 import { QueuedResponseMemory } from '../../types/queue.js';
-import { Tweet } from '../../types/twitter.js';
+import { Tweet } from '../../services/twitter/types.js';
 import { AgentResponse } from '../../types/agent.js';
 import { WorkflowState } from '../../types/workflow.js';
 
@@ -20,14 +20,14 @@ export const createQueueResponseTool = () => new DynamicStructuredTool({
             const id = generateId();
             const response: QueuedResponseMemory = {
                 id,
-                tweet: <Tweet> input.tweet,
-                response: <AgentResponse> {
+                tweet: <Tweet>input.tweet,
+                response: <AgentResponse>{
                     content: input.workflowState?.responseStrategy?.content,
                 },
                 status: 'pending' as const,
                 created_at: new Date(),
                 updatedAt: new Date(),
-                workflowState: <WorkflowState> input.workflowState
+                workflowState: <WorkflowState>input.workflowState
             };
 
             addResponse(response);

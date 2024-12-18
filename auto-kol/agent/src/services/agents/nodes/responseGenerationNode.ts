@@ -6,7 +6,7 @@ import { getLastDsnCid } from '../../../database/index.js';
 import { WorkflowConfig } from '../workflow.js';
 import { config as globalConfig } from '../../../config/index.js';
 
-export const createResponseGenerationNode = (config: WorkflowConfig, scraper: any) => {
+export const createResponseGenerationNode = (config: WorkflowConfig) => {
     return async (state: typeof State.State) => {
         logger.info('Response Generation Node - Creating response strategy');
         try {
@@ -19,19 +19,19 @@ export const createResponseGenerationNode = (config: WorkflowConfig, scraper: an
             await Promise.all(
                 batchToRespond.map(async ({ tweet, decision, toneAnalysis }: { tweet: any; decision: any; toneAnalysis: any }) => {
 
-                    const threadMentionsTweets = [];
-                    if (tweet.mention) {
-                        const mentions = await scraper.getThread(tweet.id);
-                        for await (const mention of mentions) {
-                            threadMentionsTweets.push({
-                                id: mention.id,
-                                text: mention.text,
-                                author_id: mention.userId,
-                                author_username: mention.username?.toLowerCase() || 'unknown',
-                                created_at: mention.timeParsed?.toISOString() || new Date().toISOString()
-                            });
-                        }
-                    }
+                    // const threadMentionsTweets = [];
+                    // if (tweet.mention) {
+                    //     const mentions = await scraper.getThread(tweet.id);
+                    //     for await (const mention of mentions) {
+                    //         threadMentionsTweets.push({
+                    //             id: mention.id,
+                    //             text: mention.text,
+                    //             author_id: mention.userId,
+                    //             author_username: mention.username?.toLowerCase() || 'unknown',
+                    //             created_at: mention.timeParsed?.toISOString() || new Date().toISOString()
+                    //         });
+                    //     }
+                    // }
 
                     const similarTweetsResponse = await config.toolNode.invoke({
                         messages: [new AIMessage({
@@ -60,7 +60,7 @@ export const createResponseGenerationNode = (config: WorkflowConfig, scraper: an
                             tone: toneAnalysis.suggestedTone,
                             author: tweet.author_username,
                             similarTweets: JSON.stringify(similarTweets.similar_tweets),
-                            mentions: JSON.stringify(threadMentionsTweets)
+                            mentions: '' //JSON.stringify(threadMentionsTweets)
                         });
 
                     logger.info('Response strategy:', { responseStrategy });
@@ -81,7 +81,7 @@ export const createResponseGenerationNode = (config: WorkflowConfig, scraper: an
                                         confidence: responseStrategy.confidence
                                     }
                                 },
-                                mentions: threadMentionsTweets
+                                mentions: '' //threadMentionsTweets
                             },
                             previousCid: await getLastDsnCid()
                         });
@@ -98,7 +98,7 @@ export const createResponseGenerationNode = (config: WorkflowConfig, scraper: an
                                     workflowState: {
                                         toneAnalysis,
                                         responseStrategy,
-                                        mentions: threadMentionsTweets,
+                                        mentions: '', //threadMentionsTweets,
                                         similarTweets: similarTweets.similar_tweets
                                     }
                                 },

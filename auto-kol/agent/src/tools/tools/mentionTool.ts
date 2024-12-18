@@ -2,18 +2,18 @@ import { DynamicStructuredTool } from '@langchain/core/tools';
 import { z } from 'zod';
 import { createLogger } from '../../utils/logger.js';
 import { addMention, getLatestMentionId } from '../../database/index.js';
-import { ExtendedScraper } from '../../services/twitter/api.js';
+import type { TwitterService } from '../../services/twitter/twitterService.js';
 
 const logger = createLogger('mention-tool');
 
-export const createMentionTool = (scraper: ExtendedScraper) => new DynamicStructuredTool({
+export const createMentionTool = (twitterService: TwitterService) => new DynamicStructuredTool({
     name: 'fetch_mentions',
     description: 'Fetch mentions since the last processed mention',
     schema: z.object({}),
     func: async () => {
         try {
             const sinceId = await getLatestMentionId();
-            const mentions = await scraper.getMyMentions(100, sinceId);
+            const mentions = await twitterService.twitterAPI.getMyMentions(100, sinceId);
             logger.info('Fetched mentions:', mentions);
             if (!mentions || mentions.length === 0) {
                 logger.info('No new mentions found');
@@ -35,7 +35,7 @@ export const createMentionTool = (scraper: ExtendedScraper) => new DynamicStruct
             await addMention({
                 latest_id: mentions[0].id!
             });
-            
+
             logger.info(`Fetched ${tweets.length} new mentions`);
 
             return {

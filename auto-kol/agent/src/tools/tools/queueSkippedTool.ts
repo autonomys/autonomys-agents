@@ -27,7 +27,7 @@ export const createQueueSkippedTool = () => new DynamicStructuredTool({
                 skippedTweet
             });
 
-            addToSkipped(skippedTweet);
+            await addToSkipped(skippedTweet);
 
             logger.info('Successfully queued skipped tweet:', { id });
 

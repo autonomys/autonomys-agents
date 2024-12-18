@@ -1,17 +1,13 @@
 import { Router } from 'express';
 import { createLogger } from '../../utils/logger.js';
 import { updateResponseStatus, getAllPendingResponses } from '../../services/database/index.js';
-import { createTwitterClientScraper } from '../../services/twitter/api.js';
-import { initializeDatabase, addDsn, isKOLExists, addKOL } from '../../database/index.js';
-import { createAutoDriveApi, uploadFile } from '@autonomys/auto-drive';
+import { createTwitterService } from '../../services/twitter/twitterService.js';
 import { config } from '../../config/index.js';
-import { getUserProfile } from '../../utils/twitter.js';
 import { ApprovalAction } from '../../types/queue.js';
 
 const router = Router();
 const logger = createLogger('responses-api');
-const dsnAPI = createAutoDriveApi({ apiKey: config.DSN_API_KEY! });
-const twitterScraper = await createTwitterClientScraper();
+const twitterService = await createTwitterService(config.TWITTER_CONFIG);
 
 router.get('/responses/pending', async (_, res) => {
     const pendingResponses = await getAllPendingResponses();
@@ -39,7 +35,7 @@ router.post('/responses/:id/approve', async (req, res) => {
 
         if (updatedResponse.status === 'approved') {
 
-            const twitterResponse: Response = await twitterScraper.sendTweet(
+            const twitterResponse: Response = await twitterService.twitterAPI.scraper.sendTweet(
                 updatedResponse.response.content,
                 updatedResponse.tweet.id
             );
@@ -49,7 +45,7 @@ router.post('/responses/:id/approve', async (req, res) => {
             logger.info('tweetId', tweetId)
 
             // TODO. Should the log here also be uploaded to dsn?
-            
+
         }
 
         res.json(updatedResponse);
@@ -62,14 +58,14 @@ router.post('/responses/:id/approve', async (req, res) => {
 router.get('/responses/:id/workflow', async (req, res) => {
     try {
         const responses = await getAllPendingResponses();
-            const response = responses.find(r => r.id === req.params.id);
-            if (!response) {
-                return res.status(404).json({ error: 'Response not found' });
-            }
-            res.json(response.workflowState);
-        } catch (error) {
-            logger.error('Error getting workflow state:', error);
-            res.status(500).json({ error: 'Failed to get workflow state' });
+        const response = responses.find(r => r.id === req.params.id);
+        if (!response) {
+            return res.status(404).json({ error: 'Response not found' });
+        }
+        res.json(response.workflowState);
+    } catch (error) {
+        logger.error('Error getting workflow state:', error);
+        res.status(500).json({ error: 'Failed to get workflow state' });
     }
 });
 

@@ -6,9 +6,10 @@ import { config } from '../../config/index.js';
 import { createLogger } from '../../utils/logger.js';
 import { createTools } from '../../tools/index.js';
 import { ToolNode } from '@langchain/langgraph/prebuilt';
-import { createTwitterClientScraper } from '../twitter/api.js';
 export const logger = createLogger('agent-workflow');
 import { createNodes } from './nodes.js';
+import { createTwitterService } from '../twitter/twitterService.js';
+import { TwitterService } from '../twitter/twitterService.js';
 
 
 export const parseMessageContent = (content: MessageContent): any => {
@@ -34,7 +35,7 @@ export const State = Annotation.Root({
 });
 
 export type WorkflowConfig = Readonly<{
-    client: any;
+    twitterService: TwitterService;
     toolNode: ToolNode;
     llms: Readonly<{
         decision: ChatOpenAI;
@@ -44,11 +45,11 @@ export type WorkflowConfig = Readonly<{
 }>;
 
 const createWorkflowConfig = async (): Promise<WorkflowConfig> => {
-    const client = await createTwitterClientScraper();
-    const { tools } = createTools(client);
+    const twitterService = await createTwitterService(config.TWITTER_CONFIG);
+    const { tools } = createTools(twitterService);
 
     return {
-        client,
+        twitterService,
         toolNode: new ToolNode(tools),
         llms: {
             decision: new ChatOpenAI({
