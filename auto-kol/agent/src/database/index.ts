@@ -2,14 +2,13 @@ import sqlite3 from 'sqlite3';
 import { open } from 'sqlite';
 import fs from 'fs/promises';
 import path from 'path';
-import { v4 as generateId } from 'uuid';
 import { createLogger } from '../utils/logger.js';
 import { KOL } from '../types/kol.js';
-import { config } from '../config/index.js';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
-import { Tweet } from '../types/twitter.js';
+import { Tweet } from '../services/twitter/types.js';
 import { SkippedTweet, PendingResponse } from '../types/queue.js';
+import { DbTweet } from '../services/database/index.js';
 
 const logger = createLogger('database');
 
@@ -28,9 +27,9 @@ export async function initializeDatabase() {
                 filename: './data/engagement.db',
                 driver: sqlite3.Database
             });
-            
+
             await db.run('PRAGMA foreign_keys = ON');
-            
+
             // Test database connection
             await db.get('SELECT 1');
         } catch (error) {
@@ -50,7 +49,7 @@ export async function closeDatabase() {
 
 export async function initializeSchema() {
     const db = await initializeDatabase();
-    
+
     try {
         await db.run('BEGIN TRANSACTION');
 
@@ -94,7 +93,7 @@ export async function initializeSchema() {
         logger.error('Failed to initialize schema:', error);
         throw new Error(`Failed to initialize schema: ${error}`);
     }
-} 
+}
 
 
 
@@ -105,7 +104,7 @@ export async function addKOL(kol: {
     created_at?: Date;
 }): Promise<void> {
     const db = await initializeDatabase();
-    
+
     try {
         await db.run(`
             INSERT INTO kol_accounts (
@@ -115,7 +114,7 @@ export async function addKOL(kol: {
                 updated_at
             ) VALUES (?, ?, ?, CURRENT_TIMESTAMP)
         `, [kol.id, kol.username, kol.created_at || new Date()]);
-        
+
         logger.info(`Added KOL account: ${kol.username}`);
     } catch (error: any) {
         if (error?.code === 'SQLITE_CONSTRAINT' && error?.message?.includes('UNIQUE')) {
@@ -135,7 +134,7 @@ export async function getKOLAccounts(): Promise<KOL[]> {
             FROM kol_accounts
             ORDER BY created_at DESC
         `);
-        
+
         return accounts.map(account => ({
             id: account.id,
             username: account.username,
@@ -179,9 +178,9 @@ export async function getPendingResponses() {
     return db.all(`
         SELECT 
             pr.*,
-            t.author_username,
-            t.author_id,
-            t.content as tweet_content
+            t.username,
+            t.user_id,
+            t.text as tweet_text
         FROM responses pr
         JOIN tweets t ON pr.tweet_id = t.id
         WHERE pr.status = 'pending'
@@ -206,13 +205,13 @@ export async function getPendingResponsesByTweetId(id: string): Promise<PendingR
 }
 
 export async function updateResponseStatus(
-    id: string, 
+    id: string,
     status: 'approved' | 'rejected',
 ) {
     const db = await initializeDatabase();
-    
+
     await db.run('BEGIN TRANSACTION');
-    
+
     try {
         await db.run(`
             UPDATE responses 
@@ -231,30 +230,30 @@ export async function updateResponseStatus(
 ///////////TWEET///////////
 export async function addTweet(tweet: {
     id: string;
-    author_id: string;
-    author_username: string;
-    content: string;
-    created_at: string;
+    text: string;
+    user_id: string;
+    username: string;
+    time_parsed: Date;
 }) {
     const db = await initializeDatabase();
     return db.run(`
         INSERT INTO tweets (
-            id, author_id, author_username, content, 
-            created_at
+            id, text, user_id, username, 
+            time_parsed
         ) VALUES (?, ?, ?, ?, ?)
     `, [
         tweet.id,
-        tweet.author_id,
-        tweet.author_username,
-        tweet.content,
-        tweet.created_at,
+        tweet.text,
+        tweet.user_id,
+        tweet.username,
+        tweet.time_parsed,
     ]);
 }
 
-export async function getTweetById(tweetId: string): Promise<Tweet | undefined> {
+export async function getTweetById(tweetId: string): Promise<DbTweet | undefined> {
     const db = await initializeDatabase();
     const tweet = await db.get(`SELECT * FROM tweets WHERE id = ?`, [tweetId]);
-    return tweet as Tweet;
+    return tweet as DbTweet;
 }
 
 
@@ -283,8 +282,8 @@ export async function getSkippedTweets() {
     return db.all(`
         SELECT 
             st.*,
-            t.author_username,
-            t.content as tweet_content
+            t.username,
+            t.text as tweet_text
         FROM skipped_tweets st
         JOIN tweets t ON st.tweet_id = t.id
         ORDER BY st.created_at DESC
@@ -335,8 +334,8 @@ export async function getDsnByCID(cid: string) {
                 dsn.tweet_id,
                 dsn.cid,
                 dsn.created_at,
-                t.author_username,
-                t.content as tweet_content,
+                t.username,
+                t.text as tweet_text,
                 r.content as response_content,
                 r.status as response_status,
                 st.reason as skip_reason,
@@ -360,7 +359,7 @@ export async function getDsnByCID(cid: string) {
 export async function getAllDsn(page: number = 1, limit: number = 10) {
     try {
         const offset = (page - 1) * limit;
-        
+
         const totalCount = await db?.get(`
             SELECT COUNT(*) as count FROM dsn
         `);

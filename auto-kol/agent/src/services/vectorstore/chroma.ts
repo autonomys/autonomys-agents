@@ -3,7 +3,7 @@ import { Document } from "langchain/document";
 import { Chroma } from "@langchain/community/vectorstores/chroma";
 import { OpenAIEmbeddings } from "@langchain/openai";
 import { createLogger } from "../../utils/logger.js";
-import { Tweet } from "../../types/twitter.js";
+import { Tweet } from "../twitter/types.js";
 import { config } from "../../config/index.js";
 import { isTweetExists } from '../../services/database/index.js';
 

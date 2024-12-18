@@ -7,10 +7,10 @@ CREATE TABLE IF NOT EXISTS kol_accounts (
 
 CREATE TABLE IF NOT EXISTS tweets (
     id TEXT PRIMARY KEY,
-    author_id TEXT NOT NULL,
-    author_username TEXT NOT NULL,
-    content TEXT NOT NULL,
-    created_at TIMESTAMP NOT NULL,
+    text TEXT NOT NULL,
+    user_id TEXT NOT NULL,
+    username TEXT NOT NULL,
+    time_parsed TIMESTAMP NOT NULL,
     processed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 

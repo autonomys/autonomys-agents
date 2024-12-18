@@ -1,6 +1,13 @@
-import { Tweet } from './twitter.js';
 import { AgentResponse } from './agent.js';
 import { WorkflowState } from './workflow.js';
+
+export interface QueuedTweet {
+    id: string;
+    text: string;
+    userId: string;
+    username: string;
+    timeParsed: Date;
+}
 
 export interface PendingResponse {
     id: string;
@@ -13,7 +20,7 @@ export interface PendingResponse {
 }
 
 export type ActionResponse = Readonly<{
-    tweet: Tweet;
+    tweet: QueuedTweet;
     status: 'pending' | 'approved' | 'rejected';
     response: {
         id: string;
@@ -27,7 +34,13 @@ export type ActionResponse = Readonly<{
 
 export type QueuedResponseMemory = Readonly<{
     id: string;
-    tweet: Tweet;
+    tweet: {
+        id: string;
+        text: string;
+        userId: string;
+        username: string;
+        timeParsed: Date;
+    };
     response: AgentResponse;
     status: 'pending' | 'approved' | 'rejected';
     created_at: Date;
@@ -37,7 +50,7 @@ export type QueuedResponseMemory = Readonly<{
 
 export type SkippedTweetMemory = Readonly<{
     id: string;
-    tweet: Tweet;
+    tweet: QueuedTweet;
     reason: string;
     priority: number;
     created_at: Date;
@@ -55,7 +68,7 @@ export type ApprovalAction = Readonly<{
     id: string;
     approved: boolean;
     feedback?: string;
-}>; 
+}>;
 
 export type TimeLineTweet = Readonly<{
     id: string;
