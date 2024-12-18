@@ -1,18 +1,21 @@
 import { config } from '../config/index.js';
 import { createLogger } from '../utils/logger.js';
-import {createTwitterClientScraper } from '../services/twitter/api.js';
+import { createTwitterClientScraper } from '../services/twitter/api.js';
 import * as db from '../database/index.js';
 import { KOL } from '../types/kol.js';
 import { TimeLineTweet } from '../types/queue.js';
 import { Tweet } from '../types/twitter.js';
+
 const logger = createLogger('twitter-utils');
 const twitterScraper = await createTwitterClientScraper();
-
 export const timeLineTweets: TimeLineTweet[] = [];
 
 export const updateKOLs = async () => {
     const currentKOLs = await db.getKOLAccounts();
-    const followings = await twitterScraper.getFollowing(config.AGENT_TWITTER_ID!, 1000);
+    const twitterProfile = await twitterScraper.getProfile(config.TWITTER_USERNAME!);
+    const followings = twitterScraper.getFollowing(twitterProfile.userId!, 1000);
+    logger.info(`following count: ${twitterProfile.followingCount}`);
+
     const newKOLs: KOL[] = [];
     for await (const following of followings) {
         if (!currentKOLs.some(kol => kol.username === following.username)) {
@@ -39,7 +42,7 @@ export const getTimeLine = async () => {
         .filter(id => id != null);
     const timeline = await twitterScraper.fetchHomeTimeline(0, validTweetIds);
     clearTimeLine();
-    for (const tweet of timeline) {
+    for (const tweet of timeline.slice(0, config.MAX_TIMELINE_TWEETS)) {
         timeLineTweets.push({
             id: tweet.rest_id!,
         });
@@ -54,6 +57,7 @@ export const clearTimeLine = () => {
 
 export const getTimeLineTweets = async () => {
     const tweets: Tweet[] = [];
+    console.error('timeLineTweets', timeLineTweets.length);
     for (const tweet of timeLineTweets) {
         const result = await twitterScraper.getTweet(tweet.id!);
         if (result) {

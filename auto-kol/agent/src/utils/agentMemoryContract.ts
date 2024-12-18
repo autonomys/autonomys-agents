@@ -12,25 +12,11 @@ export async function getLastMemoryHash(): Promise<string> {
     return await contract.getLastMemoryHash(wallet.address);
 }
 
-export async function setLastMemoryHash(hash: string) {
-    const tx = await contract.setLastMemoryHash(hash);
-    const receipt = await tx.wait();
-    return receipt;
-}
-
-export function watchMemoryHashUpdates(
-    agentAddress: string,
-    callback: (agent: string, hash: string) => void
-) {
-    const filter = contract.filters.LastMemoryHashSet(agentAddress);
-    contract.on(filter, (agent: any, hash: any) => {
-        if (agent === agentAddress) {
-            callback(agent, hash);
-        }
+export async function setLastMemoryHash(hash: string, nonce?: number) {
+    const bytes32Hash = ethers.zeroPadValue(hash, 32);
+    const tx = await contract.setLastMemoryHash(bytes32Hash, {
+        nonce: nonce,
+        gasLimit: 100000
     });
-    
-    return () => {
-        contract.off(filter);
-    };
+    return tx;
 }
-

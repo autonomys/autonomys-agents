@@ -4,7 +4,9 @@ import { createQueueResponseTool } from './tools/queueResponseTool.js';
 import { createQueueSkippedTool } from './tools/queueSkippedTool.js';
 import { createSearchSimilarTweetsTool } from './tools/searchSimilarTweetsTool.js';
 import { createMentionTool } from './tools/mentionTool.js';
-export const createTools = (scraper: any) => {
+import { ExtendedScraper } from '../services/twitter/api.js';
+
+export const createTools = (scraper: ExtendedScraper) => {
 
     const mentionTool = createMentionTool(scraper);
 

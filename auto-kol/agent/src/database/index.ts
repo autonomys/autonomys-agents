@@ -154,32 +154,6 @@ export async function isKOLExists(username: string): Promise<boolean> {
     return kol !== undefined;
 }
 
-export async function initializeDefaultKOLs(): Promise<void> {
-    const logger = createLogger('database');
-    const { TARGET_ACCOUNTS } = config;
-    
-    if (!TARGET_ACCOUNTS.length) {
-        logger.warn('No target accounts configured in environment variables');
-        return;
-    }
-
-    logger.info(`Initializing ${TARGET_ACCOUNTS.length} default KOL accounts`);
-    
-    for (const username of TARGET_ACCOUNTS) {
-        if (!username) continue;
-        
-        try {
-            await addKOL({
-                id: generateId(),
-                username: username.replace('@', '')
-            });
-        } catch (error) {
-            continue;
-        }
-    }
-}
-
-
 ///////////RESPONSE///////////
 export async function addResponse(response: PendingResponse) {
     const db = await initializeDatabase();
