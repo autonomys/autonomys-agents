@@ -1,166 +1,153 @@
-import { Scraper, SearchMode, Tweet } from 'agent-twitter-client';
+import { Scraper, SearchMode, Tweet, Profile } from 'agent-twitter-client';
 import { createLogger } from '../../utils/logger.js';
 import { readFileSync, writeFileSync, existsSync } from 'fs';
-import { config } from '../../config/index.js';
+import type { TwitterConfig, } from './types.js';
 
-const logger = createLogger('agent-twitter-api');
+const logger = createLogger('twitter-api');
 
-export class ExtendedScraper extends Scraper {
-    private static instance: ExtendedScraper | null = null;
-
-    private constructor() {
-        super();
-    }
-
-    public static async getInstance(): Promise<ExtendedScraper> {
-        if (!ExtendedScraper.instance) {
-            ExtendedScraper.instance = new ExtendedScraper();
-            await ExtendedScraper.instance.initialize();
-        }
-        return ExtendedScraper.instance;
-    }
-
-    private async initialize() {
-        const username = config.TWITTER_USERNAME!;
-        const password = config.TWITTER_PASSWORD!;
-        const cookiesPath = 'cookies.json';
-
-        if (existsSync(cookiesPath)) {
-            logger.info('Loading existing cookies');
-            const cookies = readFileSync(cookiesPath, 'utf8');
-            try {
-                const parsedCookies = JSON.parse(cookies).map((cookie: any) =>
-                    `${cookie.key}=${cookie.value}; Domain=${cookie.domain}; Path=${cookie.path}`
-                );
-                await this.setCookies(parsedCookies);
-                logger.info('Loaded existing cookies from file');
-            } catch (error) {
-                logger.error('Error loading cookies:', error);
-            }
-        } else {
-            logger.info('No existing cookies found, proceeding with login');
-            await this.login(username, password);
-
-            const newCookies = await this.getCookies();
-            writeFileSync(cookiesPath, JSON.stringify(newCookies, null, 2));
-            logger.info('New cookies saved to file');
-        }
-
-        const isLoggedIn = await this.isLoggedIn();
-        logger.info(`Login status: ${isLoggedIn}`);
-    }
-
-    async getMyMentions(maxResults: number = 100, sinceId?: string) {
-        const username = config.TWITTER_USERNAME!;
-
-        const isLoggedIn = await this.isLoggedIn();
-        if (!isLoggedIn) {
-            throw new Error('Must be logged in to fetch mentions');
-        }
-
-        const query = `@${username} -from:${username}`;
-        const replies: Tweet[] = [];
-
-        const searchIterator = this.searchTweets(query, maxResults, SearchMode.Latest);
-
-        for await (const tweet of searchIterator) {
-            logger.info('Checking tweet:', {
-                id: tweet.id,
-                text: tweet.text,
-                author: tweet.username
-            });
-
-            if (sinceId && tweet.id && tweet.id <= sinceId) {
-                break;
-            }
-
-            const hasReplies = await this.searchTweets(
-                `from:${username} to:${tweet.username}`,
-                10,
-                SearchMode.Latest
-            );
-
-            let alreadyReplied = false;
-            for await (const reply of hasReplies) {
-                if (reply.inReplyToStatusId === tweet.id) {
-                    alreadyReplied = true;
-                    logger.info(`Skipping tweet ${tweet.id} - already replied with ${reply.id}`);
-                    break;
-                }
-            }
-
-            if (!alreadyReplied) {
-                replies.push(tweet);
-            }
-
-            if (replies.length >= maxResults) {
-                break;
-            }
-        }
-
-        return replies;
-    }
-
-    async getThread(tweetId: string): Promise<Tweet[]> {
-        const username = config.TWITTER_USERNAME!;
-        const isLoggedIn = await this.isLoggedIn();
-        if (!isLoggedIn) {
-            throw new Error('Must be logged in to fetch thread');
-        }
-
-        const thread: Tweet[] = [];
-        const seen = new Set<string>();
-
-        const initialTweet = await this.getTweet(tweetId);
-        if (!initialTweet) {
-            throw new Error(`Tweet ${tweetId} not found`);
-        }
-
-        let currentTweet = initialTweet;
-        while (currentTweet.inReplyToStatusId) {
-            const parentTweet = await this.getTweet(currentTweet.inReplyToStatusId);
-            if (!parentTweet) break;
-            if (!seen.has(parentTweet.id!)) {
-                thread.push(parentTweet);
-                seen.add(parentTweet.id!);
-            }
-            currentTweet = parentTweet;
-        }
-
-        if (!seen.has(initialTweet.id!)) {
-            thread.push(initialTweet);
-            seen.add(initialTweet.id!);
-        }
-
-        const agentTweet = thread.find(t => t.username === username);
-        if (agentTweet) {
-            const replies = this.searchTweets(
-                `conversation_id:${currentTweet.id!} in_reply_to_tweet_id:${agentTweet.id!}`,
-                100,
-                SearchMode.Latest
-            );
-
-            for await (const reply of replies) {
-                if (!seen.has(reply.id!)) {
-                    thread.push(reply);
-                    seen.add(reply.id!);
-                }
-            }
-        }
-
-        // Sort chronologically
-        thread.sort((a, b) => {
-            const timeA = a.timeParsed?.getTime() || 0;
-            const timeB = b.timeParsed?.getTime() || 0;
-            return timeA - timeB;
-        });
-
-        logger.info(`Retrieved conversation thread with ${thread.length} tweets starting from root tweet ${currentTweet.id!}`);
-
-        return thread;
-    }
+export interface TwitterAPI {
+    scraper: Scraper;
+    username: string;
+    getMyMentions: (maxResults: number, sinceId?: string) => Promise<Tweet[]>;
+    isLoggedIn: () => Promise<boolean>;
+    getProfile: (username: string) => Promise<Profile>;
+    getTweet: (tweetId: string) => Promise<Tweet | null>;
+    getFollowing: (userId: string, limit: number) => Promise<Profile[]>;
+    fetchHomeTimeline: (cursor: number, excludeIds: string[]) => Promise<Tweet[]>;
+    searchTweets: (query: string, limit: number) => AsyncGenerator<Tweet>;
 }
 
-export const createTwitterClientScraper = async () => {
-    return ExtendedScraper.getInstance();
+
+const loadCookies = async (scraper: Scraper, cookiesPath: string): Promise<void> => {
+    logger.info('Loading existing cookies');
+    const cookies = readFileSync(cookiesPath, 'utf8');
+    try {
+        const parsedCookies = JSON.parse(cookies).map((cookie: any) =>
+            `${cookie.key}=${cookie.value}; Domain=${cookie.domain}; Path=${cookie.path}`
+        );
+        await scraper.setCookies(parsedCookies);
+        logger.info('Loaded existing cookies from file');
+    } catch (error) {
+        logger.error('Error loading cookies:', error);
+        throw error;
+    }
+};
+
+const login = async (scraper: Scraper, config: TwitterConfig, cookiesPath: string): Promise<void> => {
+    logger.info('No existing cookies found, proceeding with login');
+    await scraper.login(config.username, config.password);
+
+    const newCookies = await scraper.getCookies();
+    writeFileSync(cookiesPath, JSON.stringify(newCookies, null, 2));
+    logger.info('New cookies saved to file');
+};
+
+const getMyMentions = async (scraper: Scraper, username: string, maxResults: number = 100, sinceId?: string) => {
+    const query = `@${username} -from:${username}`;
+    const replies: Tweet[] = [];
+
+    const searchIterator = scraper.searchTweets(query, maxResults, SearchMode.Latest);
+
+    for await (const tweet of searchIterator) {
+        logger.info('Checking tweet:', {
+            id: tweet.id,
+            text: tweet.text,
+            author: tweet.username
+        });
+
+        if (sinceId && tweet.id && tweet.id <= sinceId) {
+            break;
+        }
+
+        const hasReplies = await scraper.searchTweets(
+            `from:${username} to:${tweet.username}`,
+            10,
+            SearchMode.Latest
+        );
+
+        let alreadyReplied = false;
+        for await (const reply of hasReplies) {
+            if (reply.inReplyToStatusId === tweet.id) {
+                alreadyReplied = true;
+                logger.info(`Skipping tweet ${tweet.id} - already replied with ${reply.id}`);
+                break;
+            }
+        }
+
+        if (!alreadyReplied) {
+            replies.push(tweet);
+        }
+
+        if (replies.length >= maxResults) {
+            break;
+        }
+    }
+
+    return replies;
+}
+
+export const createTwitterAPI = async (config: TwitterConfig): Promise<TwitterAPI> => {
+    const scraper = new Scraper();
+    const cookiesPath = config.cookiesPath || 'cookies.json';
+
+    // Initialize authentication
+    if (existsSync(cookiesPath)) {
+        await loadCookies(scraper, cookiesPath);
+    } else {
+        await login(scraper, config, cookiesPath);
+    }
+
+    const isLoggedIn = await scraper.isLoggedIn();
+    logger.info(`Login status: ${isLoggedIn}`);
+
+    if (!isLoggedIn) {
+        throw new Error('Failed to initialize Twitter API - not logged in');
+    }
+
+    return {
+        scraper,
+        username: config.username,
+        getMyMentions: (maxResults: number, sinceId?: string) =>
+            getMyMentions(scraper, config.username, maxResults, sinceId),
+
+        isLoggedIn: () => scraper.isLoggedIn(),
+
+        getProfile: async (username: string) => {
+            const profile = await scraper.getProfile(username);
+            if (!profile) {
+                throw new Error(`Profile not found: ${username}`);
+            }
+            return profile;
+        },
+
+        getTweet: async (tweetId: string) => {
+            return scraper.getTweet(tweetId);
+        },
+
+        getFollowing: async (userId: string, limit: number = 100) => {
+            const following: Profile[] = [];
+            const iterator = scraper.getFollowing(userId, limit);
+
+            for await (const user of iterator) {
+                following.push(user);
+                if (following.length >= limit) break;
+            }
+
+            return following;
+        },
+
+        fetchHomeTimeline: async (count: number, excludeIds: string[]) => {
+            const timelineTweets = await scraper.fetchHomeTimeline(count, excludeIds);
+
+            return timelineTweets;
+        },
+
+        searchTweets: async function* (query: string, limit: number, mode: SearchMode = SearchMode.Latest) {
+            const iterator = scraper.searchTweets(query, limit, mode);
+            for await (const tweet of iterator) {
+                yield tweet;
+                if (--limit <= 0) break;
+            }
+        }
+    };
 };

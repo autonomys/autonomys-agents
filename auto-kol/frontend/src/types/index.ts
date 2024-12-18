@@ -1,8 +1,9 @@
 export interface Tweet {
     id: string
     text: string
-    author_username: string
-    created_at: string
+    username: string
+    userId: string
+    timeParsed: string
 }
 
 export interface PendingResponse {

@@ -1,4 +1,4 @@
-import { Tweet } from './twitter.js';
+import { Tweet } from '../services/twitter/types.js';
 import { BaseMessage } from '@langchain/core/messages';
 
 export type EngagementDecision = Readonly<{
@@ -17,7 +17,7 @@ export type ResponseAlternative = Readonly<{
     content: string;
     tone: string;
     strategy: string;
-    estimatedImpact: number; 
+    estimatedImpact: number;
 }>;
 
 export type ResponseSelection = Readonly<{

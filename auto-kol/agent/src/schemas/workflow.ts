@@ -1,14 +1,16 @@
 import { z } from 'zod';
 
+
+export const tweetSchema = z.object({
+    id: z.string(),
+    text: z.string(),
+    userId: z.string(),
+    username: z.string(),
+    timeParsed: z.date(),
+});
+
 export const tweetSearchSchema = z.object({
-    tweets: z.array(z.object({
-        id: z.string(),
-        text: z.string(),
-        author_id: z.string(),
-        author_username: z.string(),
-        created_at: z.string(),
-        mention: z.boolean().optional()
-    })),
+    tweets: z.array(tweetSchema),
     lastProcessedId: z.string().nullable().optional()
 });
 
@@ -47,13 +49,7 @@ export const responseSchema = z.object({
 });
 
 export const queueActionSchema = z.object({
-    tweet: z.object({
-        id: z.string(),
-        text: z.string(),
-        author_id: z.string(),
-        author_username: z.string(),
-        created_at: z.string()
-    }),
+    tweet: tweetSchema,
     reason: z.string().optional(),
     priority: z.number().optional(),
     workflowState: z.record(z.any()).optional()

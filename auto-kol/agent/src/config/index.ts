@@ -8,11 +8,15 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 dotenv.config();
+const twitterConfig = {
+    username: process.env.TWITTER_USERNAME || '',
+    password: process.env.TWITTER_PASSWORD || '',
+    maxTimelineTweets: Number(process.env.MAX_TIMELINE_TWEETS) || 30,
+    cookiesPath: 'cookies.json'
+}
 
 export const config = {
-    // Twitter API Configuration
-    TWITTER_USERNAME: process.env.TWITTER_USERNAME,
-    TWITTER_PASSWORD: process.env.TWITTER_PASSWORD,
+    TWITTER_CONFIG: twitterConfig,
 
     // LLM Configuration
     LLM_MODEL: process.env.LLM_MODEL || "gpt-4o-mini",
