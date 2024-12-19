@@ -42,7 +42,7 @@ export async function uploadToDsn({ data, previousCid }: { data: any; previousCi
             },
             {
                 compression: true,
-                password: config.DSN_ENCRYPTION_PASSWORD || undefined
+                password: config.DSN_ENCRYPT_UPLOADS ? config.DSN_ENCRYPTION_PASSWORD : undefined
             }
         );
 
