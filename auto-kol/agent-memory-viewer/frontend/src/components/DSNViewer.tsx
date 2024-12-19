@@ -79,16 +79,28 @@ function DSNViewer() {
                                         <Text fontSize="sm" color="yellow.500" mb={2}>
                                             Skipped: {item.skip_reason}
                                         </Text>
-                                        <Link
-                                            as={RouterLink}
-                                            to={`/memory/${item.cid}`}
-                                            color="#00ff00"
-                                            display="flex"
-                                            alignItems="center"
-                                            gap={2}
-                                        >
-                                            View Memory <ExternalLinkIcon mx="2px" />
-                                        </Link>
+                                        <HStack spacing={4}>
+                                            <Link
+                                                as={RouterLink}
+                                                to={`/memory/${item.cid}`}
+                                                color="#00ff00"
+                                                display="flex"
+                                                alignItems="center"
+                                                gap={2}
+                                            >
+                                                View Memory <ExternalLinkIcon mx="2px" />
+                                            </Link>
+                                            <Link
+                                                href={`https://astral.autonomys.xyz/taurus/permanent-storage/files/${item.cid}`}
+                                                isExternal
+                                                color="#00ff00"
+                                                display="flex"
+                                                alignItems="center"
+                                                gap={2}
+                                            >
+                                                View in Explorer <ExternalLinkIcon mx="2px" />
+                                            </Link>
+                                        </HStack>
                                     </>
                                 ) : (
                                     <>
@@ -101,16 +113,28 @@ function DSNViewer() {
                                         <Text fontSize="sm" color={item.response_status === 'pending' ? 'yellow.500' : '#00ff00'} mb={2}>
                                             Status: {item.response_status}
                                         </Text>
-                                        <Link
-                                            as={RouterLink}
-                                            to={`/memory/${item.cid}`}
-                                            color="#00ff00"
-                                            display="flex"
-                                            alignItems="center"
-                                            gap={2}
-                                        >
-                                            View Memory <ExternalLinkIcon mx="2px" />
-                                        </Link>
+                                        <HStack spacing={4}>
+                                            <Link
+                                                as={RouterLink}
+                                                to={`/memory/${item.cid}`}
+                                                color="#00ff00"
+                                                display="flex"
+                                                alignItems="center"
+                                                gap={2}
+                                            >
+                                                View Memory <ExternalLinkIcon mx="2px" />
+                                            </Link>
+                                            <Link
+                                                href={`https://astral.autonomys.xyz/taurus/permanent-storage/files/${item.cid}`}
+                                                isExternal
+                                                color="#00ff00"
+                                                display="flex"
+                                                alignItems="center"
+                                                gap={2}
+                                            >
+                                                View in Explorer <ExternalLinkIcon mx="2px" />
+                                            </Link>
+                                        </HStack>
                                     </>
                                 )}
                             </CardBody>

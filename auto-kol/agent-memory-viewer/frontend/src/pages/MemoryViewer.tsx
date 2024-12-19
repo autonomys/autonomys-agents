@@ -17,9 +17,21 @@ function MemoryViewer() {
             <Card>
                 <CardBody>
                     <HStack justify="space-between" mb={4}>
-                        <Text fontSize="sm" color="gray.400">
-                            Memory CID: <Text as="span" color="green.400">{cid}</Text>
-                        </Text>
+                        <HStack spacing={4}>
+                            <Text fontSize="sm" color="gray.400">
+                                Memory CID: <Text as="span" color="green.400">{cid}</Text>
+                            </Text>
+                            <Link
+                                href={`https://astral.autonomys.xyz/taurus/permanent-storage/files/${cid}`}
+                                isExternal
+                                color="#00ff00"
+                                display="flex"
+                                alignItems="center"
+                                gap={2}
+                            >
+                                View in Explorer <ExternalLinkIcon mx="2px" />
+                            </Link>
+                        </HStack>
                         {memory.previousCid ? (
                             <Link
                                 as={RouterLink}
