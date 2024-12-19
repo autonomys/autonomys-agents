@@ -63,6 +63,7 @@ export const createAutoApprovalNode = (config: WorkflowConfig) => {
                 }
             }
 
+            console.log('processedResponses ------> ', processedResponses);
             return {
                 messages: [new AIMessage({
                     content: JSON.stringify({

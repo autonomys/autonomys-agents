@@ -114,31 +114,33 @@ export const createResponseGenerationNode = (config: WorkflowConfig, scraper: an
                         });
                     }
                     
+                    
                     const queueResponse = await config.toolNode.invoke({
-                        messages: [new AIMessage({
-                            content: '',
-                            tool_calls: [{
-                                name: 'queue_response',
-                                args: {
-                                    tweet,
-                                    response: responseStrategy.content,
-                                    workflowState: {
-                                        toneAnalysis,
-                                        responseStrategy,
-                                        mentions: threadMentionsTweets,
-                                        similarTweets: similarTweets.similar_tweets,
-                                        previousRejection: rejectionReason ? {
-                                            reason: rejectionReason,
-                                            suggestedChanges
-                                        } : undefined
-                                    }
-                                },
-                                id: 'queue_response_call',
-                                type: 'tool_call'
-                            }]
+                    messages: [new AIMessage({
+                        content: '',
+                        tool_calls: [{
+                            name: 'queue_response',
+                            args: {
+                                tweet,
+                                response: responseStrategy.content,
+                                workflowState: {
+                                    toneAnalysis,
+                                    responseStrategy,
+                                    mentions: threadMentionsTweets,
+                                    similarTweets: similarTweets.similar_tweets,
+                                    previousRejection: rejectionReason ? {
+                                        reason: rejectionReason,
+                                        suggestedChanges
+                                    } : undefined
+                                }
+                            },
+                            id: 'queue_response_call',
+                            type: 'tool_call'
+                        }]
                         })]
                     });
                     return queueResponse;
+                    
                 })
             );
 
@@ -148,7 +150,8 @@ export const createResponseGenerationNode = (config: WorkflowConfig, scraper: an
                         tweets: parsedContent.tweets,
                         currentTweetIndex: parsedContent.currentTweetIndex,
                         pendingEngagements: parsedContent.pendingEngagements,
-                        lastProcessedId: parsedContent.lastProcessedId
+                        lastProcessedId: parsedContent.lastProcessedId,
+                        batchToFeedback: batchToRespond,
                     })
                 })],
                 processedTweets: new Set(batchToRespond.map((item: any) => item.tweet.id))

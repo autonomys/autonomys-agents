@@ -89,27 +89,31 @@ const shouldContinue = (state: typeof State.State) => {
         currentIndex: content.currentTweetIndex,
         totalTweets: content.tweets?.length,
         hasBatchToAnalyze: !!content.batchToAnalyze?.length,
-        hasBatchToRespond: !!content.batchToRespond?.length,
-        fromAutoApproval: content.fromAutoApproval
+        hasBatchToRespond: !!content.batchToRespond?.length
     });
 
-    // If responses were rejected by auto-approval, send back to generation
-    if (content.fromAutoApproval && content.batchToRespond?.length > 0) {
-        logger.debug('Moving back to response generation for rejected responses');
-        return 'generateNode';
+    // If we just came from auto-approval node and have more responses to fix
+    if (!content.fromAutoApproval && content.batchToFeedback?.length > 0) {
+        return 'autoApprovalNode';
     }
 
+    if (content.fromAutoApproval) {
+        if (content.batchToRespond?.length > 0) {
+          // There are some tweets that need re-generation of responses
+          return 'generateNode';
+        } else {
+          // No tweets need re-generation, move to recheckNode
+          return 'recheckNode';
+        }
+      }
     // Check if we've processed all tweets
     if (!content.tweets || content.currentTweetIndex >= content.tweets.length) {
-        // If we're coming from auto-approval and there are no pending responses, end workflow
-        if (!content.tweets?.length && !content.batchToRespond?.length) {
-            logger.info('Workflow complete - no more tweets or responses to process');
+        if (content.fromRecheckNode && content.messages?.length === 0) {
+            logger.info('Workflow complete - no more tweets to process');
             return END;
         }
-
-        // Otherwise check for pending responses
-        logger.info('Moving to auto-approval for pending responses');
-        return 'autoApprovalNode';
+        logger.info('Moving to recheck skipped tweets');
+        return 'recheckNode';
     }
 
     // Check for batches to process
@@ -118,7 +122,7 @@ const shouldContinue = (state: typeof State.State) => {
         return 'analyzeNode';
     }
 
-    if (content.batchToRespond?.length > 0) {
+    if (content.batchToRespond?.length > 0 && !content.fromAutoApproval) {
         logger.debug('Moving to response generation');
         return 'generateNode';
     }
@@ -137,6 +141,7 @@ export const createWorkflow = async (nodes: Awaited<ReturnType<typeof createNode
         .addNode('analyzeNode', nodes.toneAnalysisNode)
         .addNode('generateNode', nodes.responseGenerationNode)
         .addNode('autoApprovalNode', nodes.autoApprovalNode)
+        .addNode('recheckNode', nodes.recheckSkippedNode)
         .addEdge(START, 'mentionNode')
         .addEdge('mentionNode', 'timelineNode')
         .addEdge('timelineNode', 'searchNode')
@@ -144,7 +149,8 @@ export const createWorkflow = async (nodes: Awaited<ReturnType<typeof createNode
         .addConditionalEdges('engagementNode', shouldContinue)
         .addConditionalEdges('analyzeNode', shouldContinue)
         .addConditionalEdges('generateNode', shouldContinue)
-        .addConditionalEdges('autoApprovalNode', shouldContinue);
+        .addConditionalEdges('autoApprovalNode', shouldContinue)
+        .addConditionalEdges('recheckNode', shouldContinue);
 };
 
 // Workflow runner type
