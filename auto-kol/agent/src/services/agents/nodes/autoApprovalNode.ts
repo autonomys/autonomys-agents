@@ -33,12 +33,13 @@ export const createAutoApprovalNode = (config: WorkflowConfig) => {
                         tone: response.tone,
                         strategy: response.strategy
                     });
-                
+
                 if (approval.approved) {
                     // POST THE TWEET
-
+                    logger.info('Approval granted for response:', approval);
                     await updateResponseStatus(response.id, 'approved');
                 } else {
+                    logger.info('Approval denied for response:', approval);
                     processedResponses.push({
                         tweet: {
                             id: response.tweet_id,
@@ -62,8 +63,7 @@ export const createAutoApprovalNode = (config: WorkflowConfig) => {
                     });
                 }
             }
-
-            console.log('processedResponses ------> ', processedResponses);
+            logger.info('Processed responses:', processedResponses);
             return {
                 messages: [new AIMessage({
                     content: JSON.stringify({
