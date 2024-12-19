@@ -1,6 +1,6 @@
 import { ResponseStatus } from './enums';
 
-interface Tweet {
+export interface Tweet {
     id: string;
     text: string;
     author_id: string;
@@ -9,21 +9,21 @@ interface Tweet {
     mention?: boolean;
 }
 
-interface WorkflowDecision {
+export interface WorkflowDecision {
     shouldEngage: boolean;
     reason: string;
     priority: number;
     confidence: number;
 }
 
-interface WorkflowToneAnalysis {
+export interface WorkflowToneAnalysis {
     dominantTone: string;
     suggestedTone: string;
     reasoning: string;
     confidence: number;
 }
 
-interface WorkflowResponseStrategy {
+export interface WorkflowResponseStrategy {
     tone: string;
     strategy: string;
     referencedTweets: {
@@ -34,7 +34,7 @@ interface WorkflowResponseStrategy {
     confidence: number;
 }
 
-interface BaseMemory {
+export interface BaseMemory {
     tweet: {
         id: string;
         text: string;
@@ -47,7 +47,7 @@ interface BaseMemory {
     timestamp: string;
 }
 
-interface SkippedMemory extends BaseMemory {
+export interface SkippedMemory extends BaseMemory {
     type: 'skipped';
     decision: WorkflowDecision;
     workflowState: {
@@ -58,7 +58,7 @@ interface SkippedMemory extends BaseMemory {
     mentions: Tweet[];
 }
 
-interface PendingMemory extends BaseMemory {
+export interface PendingMemory extends BaseMemory {
     type: 'pending';
     response: string;
     workflowState: {
@@ -69,7 +69,7 @@ interface PendingMemory extends BaseMemory {
     mentions: Tweet[];
 }
 
-interface ApprovedMemory extends BaseMemory {
+export interface ApprovedMemory extends BaseMemory {
     type: 'approved';
     response: string;
     workflowState: {
@@ -80,7 +80,7 @@ interface ApprovedMemory extends BaseMemory {
     mentions: Tweet[];
 }
 
-interface ResponseMemory extends BaseMemory {
+export interface ResponseMemory extends BaseMemory {
     type: 'response';
     response: string;
     workflowState: {
@@ -91,7 +91,7 @@ interface ResponseMemory extends BaseMemory {
     mentions: Tweet[];
 }
 
-interface RejectedMemory extends BaseMemory {
+export interface RejectedMemory extends BaseMemory {
     type: 'rejected';
     response: string;
     workflowState: {
@@ -104,6 +104,7 @@ interface RejectedMemory extends BaseMemory {
         };
     };
     mentions: Tweet[];
+    retry: number;
 }
 
 export type AgentMemory = 
