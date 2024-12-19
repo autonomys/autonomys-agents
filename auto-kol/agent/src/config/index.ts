@@ -37,7 +37,6 @@ export const config = {
     DSN_API_KEY: process.env.DSN_API_KEY,
     DSN_UPLOAD: process.env.DSN_UPLOAD === 'true',
     DSN_SKIP_UPLOAD: process.env.DSN_SKIP_UPLOAD === 'true',
-    DSN_ENCRYPT_UPLOADS: process.env.DSN_ENCRYPT_UPLOADS === 'true',
     DSN_ENCRYPTION_PASSWORD: process.env.DSN_ENCRYPTION_PASSWORD,
 
     // CORS Configuration
