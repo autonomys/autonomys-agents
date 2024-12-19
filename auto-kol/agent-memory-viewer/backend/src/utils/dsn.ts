@@ -5,8 +5,8 @@ import { createLogger } from './logger.js';
 
 const logger = createLogger('dsn');
 
-const MAX_RETRIES = 3;
-const INITIAL_RETRY_DELAY = 1000;
+const MAX_RETRIES = 10;
+const INITIAL_RETRY_DELAY = 10000;
 
 async function delay(ms: number) {
     return new Promise(resolve => setTimeout(resolve, ms));

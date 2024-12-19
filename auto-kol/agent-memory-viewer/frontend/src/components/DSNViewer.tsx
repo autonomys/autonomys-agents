@@ -40,7 +40,6 @@ function DSNViewer() {
         setPage(1);
     };
 
-    // Create static filter options
     const filterOptions = [
         { value: 'all', label: 'All Tweets' },
         ...Object.values(ResponseStatus).map(status => ({
