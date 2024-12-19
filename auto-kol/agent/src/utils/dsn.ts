@@ -35,7 +35,7 @@ export async function uploadToDsn({ data, previousCid }: { data: any; previousCi
                 read: async function* () {
                     yield jsonBuffer;
                 },
-                name: `agent-memory-${timestamp}.json`,
+                name: `${config.TWITTER_USERNAME}-agent-memory-${timestamp}.json`,
                 mimeType: 'application/json',
                 size: jsonBuffer.length,
                 path: timestamp
