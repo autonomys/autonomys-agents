@@ -5,6 +5,7 @@ import { uploadToDsn } from '../../../utils/dsn.js';
 import { getLastDsnCid } from '../../../database/index.js';
 import { WorkflowConfig } from '../workflow.js';
 import { config as globalConfig } from '../../../config/index.js';
+import { ResponseStatus } from '../../../types/queue.js';
 
 const handleSkippedTweet = async (tweet: any, decision: any, config: any) => {
     logger.info('Skipping engagement for tweet', { tweetId: tweet.id, reason: decision.reason });
@@ -28,7 +29,7 @@ const handleSkippedTweet = async (tweet: any, decision: any, config: any) => {
     if (globalConfig.DSN_UPLOAD) {
         await uploadToDsn({
             data: {
-                type: 'skipped',
+                type: ResponseStatus.SKIPPED,
                 tweet,
                 decision,
                 workflowState: {

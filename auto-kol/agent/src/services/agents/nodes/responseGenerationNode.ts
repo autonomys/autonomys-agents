@@ -5,7 +5,7 @@ import { uploadToDsn } from '../../../utils/dsn.js';
 import { getLastDsnCid } from '../../../database/index.js';
 import { WorkflowConfig } from '../workflow.js';
 import { config as globalConfig } from '../../../config/index.js';
-import { any } from "zod";
+import { ResponseStatus } from '../../../types/queue.js';
 
 export const createResponseGenerationNode = (config: WorkflowConfig, scraper: any) => {
     return async (state: typeof State.State) => {
@@ -14,7 +14,7 @@ export const createResponseGenerationNode = (config: WorkflowConfig, scraper: an
             const lastMessage = state.messages[state.messages.length - 1];
             const parsedContent = parseMessageContent(lastMessage.content);
             const batchToRespond = parsedContent.batchToRespond || [];
-
+            const dsnData: Record<string, any> = {};
             logger.info(`Processing batch of ${batchToRespond.length} tweets for response generation`, {
                 hasRejectedResponses: batchToRespond.some((item: any) => item.rejectionReason)
             });
@@ -23,17 +23,15 @@ export const createResponseGenerationNode = (config: WorkflowConfig, scraper: an
                 batchToRespond.map(async (item: any) => {
                     const { tweet, decision, toneAnalysis, rejectionReason, suggestedChanges } = item;
                     if (rejectionReason) {
+                        item.retry = item.retry + 1;
                         logger.info('Regenerating response due to rejection:', {
-                            tweetId: tweet.id,
-                            rejectionReason,
-                            suggestedChanges
-                        });
-                        logger.info('prompts', {
-                            rejectionInstructions: prompts.formatRejectionInstructions(rejectionReason),
-                            rejectionFeedback: prompts.formatRejectionFeedback(rejectionReason, suggestedChanges)
+                            retry: item.retry
                         });
                         
+                    } else {
+                        item.retry = item.retry || 0;
                     }
+
                     const rejectionInstructions = prompts.formatRejectionInstructions(rejectionReason);
                     const rejectionFeedback = prompts.formatRejectionFeedback(rejectionReason, suggestedChanges);    
 
@@ -87,33 +85,34 @@ export const createResponseGenerationNode = (config: WorkflowConfig, scraper: an
                         responseStrategy,
                         isRegeneration: !!rejectionReason
                     });
-
+                    const data = {
+                        type: ResponseStatus.PENDING,
+                        tweet,
+                        response: responseStrategy.content,
+                        workflowState: {
+                            decision,
+                            toneAnalysis,
+                            responseStrategy: {
+                                tone: responseStrategy.tone,
+                                strategy: responseStrategy.strategy,
+                                referencedTweets: responseStrategy.referencedTweets,
+                                confidence: responseStrategy.confidence
+                                },
+                                autoFeedback: rejectionReason ? {
+                                    reason: rejectionReason,
+                                    suggestedChanges
+                                } : undefined
+                        },
+                        mentions: threadMentionsTweets,
+                        retry: item.retry
+                    }
+                    dsnData[tweet.id] = data;
                     if (globalConfig.DSN_UPLOAD) {
                         await uploadToDsn({
-                            data: {
-                                type: 'response',
-                                tweet,
-                                response: responseStrategy.content,
-                                workflowState: {
-                                    decision,
-                                    toneAnalysis,
-                                    responseStrategy: {
-                                        tone: responseStrategy.tone,
-                                        strategy: responseStrategy.strategy,
-                                        referencedTweets: responseStrategy.referencedTweets,
-                                        confidence: responseStrategy.confidence
-                                    },
-                                    previousRejection: rejectionReason ? {
-                                        reason: rejectionReason,
-                                        suggestedChanges
-                                    } : undefined
-                                },
-                                mentions: threadMentionsTweets
-                            },
+                            data,
                             previousCid: await getLastDsnCid()
                         });
                     }
-                    
                     
                     const queueResponse = await config.toolNode.invoke({
                     messages: [new AIMessage({
@@ -128,7 +127,7 @@ export const createResponseGenerationNode = (config: WorkflowConfig, scraper: an
                                     responseStrategy,
                                     mentions: threadMentionsTweets,
                                     similarTweets: similarTweets.similar_tweets,
-                                    previousRejection: rejectionReason ? {
+                                    autoFeedback: rejectionReason ? {
                                         reason: rejectionReason,
                                         suggestedChanges
                                     } : undefined
@@ -152,6 +151,7 @@ export const createResponseGenerationNode = (config: WorkflowConfig, scraper: an
                         pendingEngagements: parsedContent.pendingEngagements,
                         lastProcessedId: parsedContent.lastProcessedId,
                         batchToFeedback: batchToRespond,
+                        dsnData
                     })
                 })],
                 processedTweets: new Set(batchToRespond.map((item: any) => item.tweet.id))

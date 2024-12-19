@@ -34,6 +34,11 @@ export type ResponseStrategy = Readonly<{
     estimatedImpact: number;
 }>;
 
+export type AutoFeedback = Readonly<{
+    reason: string;
+    suggestedChanges: string[];
+}>;
+
 export type WorkflowState = Readonly<{
     tweet: Tweet;
     messages: BaseMessage[];
@@ -42,5 +47,5 @@ export type WorkflowState = Readonly<{
     alternatives?: ResponseAlternative[];
     selectedResponse?: ResponseSelection;
     responseStrategy?: ResponseStrategy;
-    previousInteractions: readonly string[];
+    autoFeedback?: AutoFeedback;
 }>; 

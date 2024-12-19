@@ -1,13 +1,20 @@
 import { AIMessage } from "@langchain/core/messages";
-import { State, logger } from '../workflow.js';
+import { State, logger, parseMessageContent } from '../workflow.js';
 import * as prompts from '../prompts.js';
 import { WorkflowConfig } from '../workflow.js';
-import { getPendingResponses, updateResponseStatus } from '../../../database/index.js';
+import { getLastDsnCid, getPendingResponses, updateResponseStatus } from '../../../database/index.js';
+import { uploadToDsn } from "../../../utils/dsn.js";
+import { config as globalConfig } from '../../../config/index.js';
+import { ResponseStatus } from '../../../types/queue.js';
 
 export const createAutoApprovalNode = (config: WorkflowConfig) => {
     return async (state: typeof State.State) => {
         logger.info('Auto Approval Node - Evaluating pending responses');
         try {
+            const lastMessage = state.messages[state.messages.length - 1];
+            const parsedContent = parseMessageContent(lastMessage.content);
+            const { dsnData } = parsedContent;
+           
             const pendingResponses = await getPendingResponses();
             if (!pendingResponses.length) {
                 logger.info('No pending responses found');
@@ -36,9 +43,32 @@ export const createAutoApprovalNode = (config: WorkflowConfig) => {
                 
                 if (approval.approved) {
                     // POST THE TWEET
-
-                    await updateResponseStatus(response.id, 'approved');
+                    dsnData[response.tweet_id].type = ResponseStatus.APPROVED;
+                    await updateResponseStatus(response.id, ResponseStatus.APPROVED);
+                    if (globalConfig.DSN_UPLOAD) {
+                        await uploadToDsn({
+                            data: dsnData[response.tweet_id],
+                            previousCid: await getLastDsnCid()
+                        });
+                    }
+                } else if (dsnData[response.tweet_id]?.retry > 1) {
+                    dsnData[response.tweet_id].type = ResponseStatus.REJECTED;
+                    logger.info('Rejecting tweet', {
+                        data: dsnData[response.tweet_id].tweet.id
+                    });
+                    await updateResponseStatus(response.id, ResponseStatus.REJECTED);
+                    if (globalConfig.DSN_UPLOAD) {
+                        await uploadToDsn({
+                            data: dsnData[response.tweet_id],
+                            previousCid: await getLastDsnCid()
+                        });
+                    }
                 } else {
+                    if (!dsnData[response.tweet_id]) {
+                        dsnData[response.tweet_id] = { retry: 0 };
+                    } else if (!dsnData[response.tweet_id].retry) {
+                        dsnData[response.tweet_id].retry = 0;
+                    }
                     processedResponses.push({
                         tweet: {
                             id: response.tweet_id,
@@ -58,12 +88,12 @@ export const createAutoApprovalNode = (config: WorkflowConfig) => {
                             reasoning: response.strategy
                         },
                         rejectionReason: approval.reason,
-                        suggestedChanges: approval.suggestedChanges
+                        suggestedChanges: approval.suggestedChanges,
+                        retry: dsnData[response.tweet_id].retry
                     });
                 }
             }
 
-            console.log('processedResponses ------> ', processedResponses);
             return {
                 messages: [new AIMessage({
                     content: JSON.stringify({
