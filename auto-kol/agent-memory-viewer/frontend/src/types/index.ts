@@ -58,6 +58,28 @@ interface SkippedMemory extends BaseMemory {
     mentions: Tweet[];
 }
 
+interface PendingMemory extends BaseMemory {
+    type: 'pending';
+    response: string;
+    workflowState: {
+        decision: WorkflowDecision;
+        toneAnalysis: WorkflowToneAnalysis;
+        responseStrategy: WorkflowResponseStrategy;
+    };
+    mentions: Tweet[];
+}
+
+interface ApprovedMemory extends BaseMemory {
+    type: 'approved';
+    response: string;
+    workflowState: {
+        decision: WorkflowDecision;
+        toneAnalysis: WorkflowToneAnalysis;
+        responseStrategy: WorkflowResponseStrategy;
+    };
+    mentions: Tweet[];
+}
+
 interface ResponseMemory extends BaseMemory {
     type: 'response';
     response: string;
@@ -69,7 +91,27 @@ interface ResponseMemory extends BaseMemory {
     mentions: Tweet[];
 }
 
-export type AgentMemory = SkippedMemory | ResponseMemory;
+interface RejectedMemory extends BaseMemory {
+    type: 'rejected';
+    response: string;
+    workflowState: {
+        decision: WorkflowDecision;
+        toneAnalysis: WorkflowToneAnalysis;
+        responseStrategy: WorkflowResponseStrategy;
+        autoFeedback?: {
+            reason: string;
+            suggestedChanges: string;
+        };
+    };
+    mentions: Tweet[];
+}
+
+export type AgentMemory = 
+    | SkippedMemory 
+    | ResponseMemory 
+    | RejectedMemory 
+    | PendingMemory 
+    | ApprovedMemory;
 
 export interface Agent {
     id: string
@@ -98,4 +140,8 @@ export interface DSNData {
     result_type: string
     skip_reason: string
     response_status: ResponseStatus | null
+    auto_feedback: {
+        reason: string;
+        suggestedChanges: string;
+    } | null;
 } 

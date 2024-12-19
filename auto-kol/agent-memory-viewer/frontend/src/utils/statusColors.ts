@@ -12,6 +12,8 @@ export const getStatusColor = (status: ResponseStatus | null): string => {
             return 'yellow.500';
         case ResponseStatus.SKIPPED:
             return 'gray.500';
+        case ResponseStatus.RESPONSE:
+            return 'blue.500';
         default:
             return '#00ff00';
     }

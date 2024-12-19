@@ -2,6 +2,8 @@ import { Card, CardBody, Text, Spinner, VStack, Link, HStack, Box, Button } from
 import { useParams, Link as RouterLink, useNavigate } from 'react-router-dom'
 import { ExternalLinkIcon, ArrowBackIcon } from '@chakra-ui/icons'
 import { useMemory } from '../api/client'
+import { ResponseStatus } from '@/types/enums'
+import { getStatusColor } from '../utils/statusColors'
 
 function MemoryViewer() {
     const { cid } = useParams()
@@ -87,24 +89,14 @@ function MemoryViewer() {
                                     <Text as="span" color="gray.400">Reason:</Text>{' '}
                                     <Text as="span" color="white">{memory.workflowState.decision.reason}</Text>
                                 </Text>
-                                <Text>
-                                    <Text as="span" color="gray.400">Priority:</Text>{' '}
-                                    <Text as="span" color="orange.400">{memory.workflowState.decision.priority}</Text>
-                                </Text>
-                                <Text>
-                                    <Text as="span" color="gray.400">Confidence:</Text>{' '}
-                                    <Text as="span" color="green.400">
-                                        {(memory.workflowState.decision.confidence * 100).toFixed(1)}%
-                                    </Text>
-                                </Text>
                             </VStack>
                         </>
                     )}
 
-                    {memory.type === 'response' && memory.workflowState && (
+                    {memory.type !== 'skipped' && (
                         <>
                             <Text fontSize="md" fontWeight="bold" color="purple.400" mb={2}>
-                                Response
+                                Response 
                             </Text>
                             <VStack align="stretch" mb={4} pl={4}>
                                 <Text>
@@ -112,6 +104,24 @@ function MemoryViewer() {
                                     <Text as="span" color="white">{memory.response}</Text>
                                 </Text>
                             </VStack>
+
+                            {memory.type === 'rejected' && memory.workflowState?.autoFeedback && (
+                                <>
+                                    <Text fontSize="md" fontWeight="bold" color="red.400" mb={2}>
+                                        Rejection Feedback
+                                    </Text>
+                                    <VStack align="stretch" mb={4} pl={4}>
+                                        <Text>
+                                            <Text as="span" color="gray.400">Reason:</Text>{' '}
+                                            <Text as="span" color="red.400">{memory.workflowState.autoFeedback.reason}</Text>
+                                        </Text>
+                                        <Text>
+                                            <Text as="span" color="gray.400">Suggested Changes:</Text>{' '}
+                                            <Text as="span" color="yellow.400">{memory.workflowState.autoFeedback.suggestedChanges}</Text>
+                                        </Text>
+                                    </VStack>
+                                </>
+                            )}
 
                             <Text fontSize="md" fontWeight="bold" color="purple.400" mb={2}>
                                 Tone Analysis
@@ -129,10 +139,7 @@ function MemoryViewer() {
                                     <Text as="span" color="gray.400">Reasoning:</Text>{' '}
                                     <Text as="span" color="white">{memory.workflowState.toneAnalysis.reasoning}</Text>
                                 </Text>
-                                <Text>
-                                    <Text as="span" color="gray.400">Confidence:</Text>{' '}
-                                    <Text as="span" color="green.400">{(memory.workflowState.toneAnalysis.confidence * 100).toFixed(1)}%</Text>
-                                </Text>
+                               
                             </VStack>
 
                             <Text fontSize="md" fontWeight="bold" color="purple.400" mb={2}>
@@ -153,86 +160,108 @@ function MemoryViewer() {
                                 </Text>
                             </VStack>
 
-                            <Text fontSize="md" fontWeight="bold" color="purple.400" mb={2}>
-                                Referenced Tweets
-                            </Text>
-                            <VStack align="stretch" mb={4} pl={4}>
-                                {memory.workflowState.responseStrategy.referencedTweets.map((tweet, index) => (
-                                    <Box key={index} p={2} border="1px solid" borderColor="gray.600" borderRadius="md">
-                                        <Text color="white" mb={2}>{tweet.text}</Text>
-                                        <Text fontSize="sm" color="gray.400">Reason: {tweet.reason}</Text>
-                                        <Text fontSize="sm" color="gray.400">
-                                            Similarity: {(tweet.similarity_score * 100).toFixed(1)}%
-                                        </Text>
-                                    </Box>
-                                ))}
-                            </VStack>
-                        </>
-                    )}
-
-                    {memory.mentions && memory.mentions.length > 0 && (
-                        <>
-                            <Text fontSize="md" fontWeight="bold" color="purple.400" mb={2}>
-                                Conversation Thread
-                            </Text>
-                            <VStack align="stretch" mb={4} pl={4}>
-                                {memory.mentions.map((mention) => (
-                                    <Box 
-                                        key={mention.id} 
-                                        p={2} 
-                                        border="1px solid" 
-                                        borderColor="gray.600" 
-                                        borderRadius="md"
-                                    >
-                                        <Text>
-                                            <Text as="span" color="gray.400">@{mention.author_username}:</Text>{' '}
-                                            <Text as="span" color="white">{mention.text}</Text>
-                                        </Text>
-                                        <Text fontSize="sm" color="gray.400">
-                                            {new Date(mention.created_at).toLocaleString()}
-                                        </Text>
-                                    </Box>
-                                ))}
-                            </VStack>
-                        </>
-                    )}
-
-                    <Text fontSize="md" fontWeight="bold" color="purple.400" mb={2}>
-                        Additional Information
-                    </Text>
-                    <VStack align="stretch" pl={4}>
-                        <Text>
-                            <Text as="span" color="gray.400">Previous CID:</Text>{' '}
-                            {memory.previousCid ? (
-                                <Link
-                                    as={RouterLink}
-                                    to={`/memory/${memory.previousCid}`}
-                                    color="blue.400"
-                                    _hover={{ color: 'blue.300' }}
-                                >
-                                    {memory.previousCid}
-                                </Link>
-                            ) : (
-                                <Text as="span" color="white">None</Text>
+                            {memory.workflowState.responseStrategy.referencedTweets.length > 0 && (
+                                <>
+                                    <Text fontSize="md" fontWeight="bold" color="purple.400" mb={2}>
+                                        Referenced Tweets
+                                    </Text>
+                                    <VStack align="stretch" mb={4} pl={4}>
+                                        {memory.workflowState.responseStrategy.referencedTweets.map((tweet, index) => (
+                                            <Box 
+                                                key={index} 
+                                                p={2} 
+                                                border="1px solid" 
+                                                borderColor="gray.600" 
+                                                borderRadius="md"
+                                            >
+                                                <Text color="white" mb={2}>{tweet.text}</Text>
+                                                <Text fontSize="sm" color="gray.400">Reason: {tweet.reason}</Text>
+                                                <Text fontSize="sm" color="gray.400">
+                                                    Similarity: {(tweet.similarity_score * 100).toFixed(1)}%
+                                                </Text>
+                                            </Box>
+                                        ))}
+                                    </VStack>
+                                </>
                             )}
-                        </Text>
-                        <Text>
-                            <Text as="span" color="gray.400">Timestamp:</Text>{' '}
-                            <Text as="span" color="white">{new Date(memory.timestamp).toLocaleString()}</Text>
-                        </Text>
-                    </VStack>
 
-                    <Text fontSize="md" fontWeight="bold" color="purple.400" mb={2}>
-                        Signature
-                    </Text>
-                    <VStack align="stretch" mb={4} pl={4}>
-                        <Text>
-                            <Text as="span" color="gray.400">Value:</Text>{' '}
-                            <Text as="span" color="white" fontSize="sm" wordBreak="break-all">
-                                {memory.signature}
+                            {memory.mentions && memory.mentions.length > 0 && (
+                                <>
+                                    <Text fontSize="md" fontWeight="bold" color="purple.400" mb={2}>
+                                        Conversation Thread
+                                    </Text>
+                                    <VStack align="stretch" mb={4} pl={4}>
+                                        {memory.mentions.map((mention) => (
+                                            <Box 
+                                                key={mention.id} 
+                                                p={2} 
+                                                border="1px solid" 
+                                                borderColor="gray.600" 
+                                                borderRadius="md"
+                                            >
+                                                <Text>
+                                                    <Text as="span" color="gray.400">@{mention.author_username}:</Text>{' '}
+                                                    <Text as="span" color="white">{mention.text}</Text>
+                                                </Text>
+                                                <Text fontSize="sm" color="gray.400">
+                                                    {new Date(mention.created_at).toLocaleString()}
+                                                </Text>
+                                            </Box>
+                                        ))}
+                                    </VStack>
+                                </>
+                            )}
+
+                            <Text fontSize="md" fontWeight="bold" color="purple.400" mb={2}>
+                                Memory Status
                             </Text>
-                        </Text>
-                    </VStack>
+                            <VStack align="stretch" mb={4} pl={4}>
+                                <Text>
+                                    <Text as="span" color="gray.400">Type:</Text>{' '}
+                                    <Text as="span" color={getStatusColor(memory.type as ResponseStatus)}>
+                                        {memory.type.charAt(0).toUpperCase() + memory.type.slice(1)}
+                                    </Text>
+                                </Text>
+                            </VStack>
+
+                            <Text fontSize="md" fontWeight="bold" color="purple.400" mb={2}>
+                                Additional Information
+                            </Text>
+                            <VStack align="stretch" pl={4}>
+                                <Text>
+                                    <Text as="span" color="gray.400">Previous CID:</Text>{' '}
+                                    {memory.previousCid ? (
+                                        <Link
+                                            as={RouterLink}
+                                            to={`/memory/${memory.previousCid}`}
+                                            color="blue.400"
+                                            _hover={{ color: 'blue.300' }}
+                                        >
+                                            {memory.previousCid}
+                                        </Link>
+                                    ) : (
+                                        <Text as="span" color="white">None</Text>
+                                    )}
+                                </Text>
+                                <Text>
+                                    <Text as="span" color="gray.400">Timestamp:</Text>{' '}
+                                    <Text as="span" color="white">{new Date(memory.timestamp).toLocaleString()}</Text>
+                                </Text>
+                            </VStack>
+
+                            <Text fontSize="md" fontWeight="bold" color="purple.400" mb={2}>
+                                Signature
+                            </Text>
+                            <VStack align="stretch" mb={4} pl={4}>
+                                <Text>
+                                    <Text as="span" color="gray.400">Value:</Text>{' '}
+                                    <Text as="span" color="white" fontSize="sm" wordBreak="break-all">
+                                        {memory.signature}
+                                    </Text>
+                                </Text>
+                            </VStack>
+                        </>
+                    )}
                 </CardBody>
             </Card>
             

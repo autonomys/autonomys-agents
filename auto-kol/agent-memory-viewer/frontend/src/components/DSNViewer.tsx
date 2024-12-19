@@ -131,6 +131,37 @@ function DSNViewer() {
                                                 </Link>
                                             </HStack>
                                         </>
+                                    ) : item.result_type === 'rejected' ? (
+                                        <>
+                                            <Text {...textStyles.heading}>Response</Text>
+                                            <Text {...textStyles.value} whiteSpace="pre-wrap" mb={4}>
+                                                {item.response_content}
+                                            </Text>
+                                            
+                                            <Text 
+                                                {...textStyles.label}
+                                                color={getStatusColor(ResponseStatus.REJECTED)} 
+                                                mb={2}
+                                            >
+                                                Status: Rejected
+                                            </Text>
+                                            <HStack spacing={4}>
+                                                <Link
+                                                    as={RouterLink}
+                                                    to={`/memory/${item.cid}`}
+                                                    {...linkStyles.baseStyle}
+                                                >
+                                                    View Memory <ExternalLinkIcon mx="2px" />
+                                                </Link>
+                                                <Link
+                                                    href={`https://astral.autonomys.xyz/taurus/permanent-storage/files/${item.cid}`}
+                                                    isExternal
+                                                    {...linkStyles.baseStyle}
+                                                >
+                                                    View in Explorer <ExternalLinkIcon mx="2px" />
+                                                </Link>
+                                            </HStack>
+                                        </>
                                     ) : (
                                         <>
                                             <Text {...textStyles.heading}>Response:</Text>
