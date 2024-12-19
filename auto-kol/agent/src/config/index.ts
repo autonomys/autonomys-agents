@@ -54,4 +54,7 @@ export const config = {
 
     // BATCH CONFIG
     ENGAGEMENT_BATCH_SIZE: process.env.ENGAGEMENT_BATCH_SIZE || 15,
+
+    // RESPONSE CONFIG
+    RETRY_LIMIT: process.env.RETRY_LIMIT || 2,
 }; 

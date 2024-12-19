@@ -51,7 +51,7 @@ export const createAutoApprovalNode = (config: WorkflowConfig) => {
                             previousCid: await getLastDsnCid()
                         });
                     }
-                } else if (dsnData[response.tweet_id]?.retry > 1) {
+                } else if (dsnData[response.tweet_id]?.retry > globalConfig.RETRY_LIMIT) {
                     dsnData[response.tweet_id].type = ResponseStatus.REJECTED;
                     logger.info('Rejecting tweet', {
                         data: dsnData[response.tweet_id].tweet.id
