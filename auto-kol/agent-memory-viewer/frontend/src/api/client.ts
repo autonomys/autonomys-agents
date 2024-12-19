@@ -39,11 +39,20 @@ export const useLatestMemory = (agentId: string) => {
     )
 }
 
-export const useDSNData = (page: number = 1, limit: number = 10) => {
+export const useDSNData = (page: number = 1, limit: number = 10, type: string = 'all') => {
     return useQuery<DSNResponse, Error>(
-        ['dsn', page, limit],
+        ['dsn', page, limit, type],
         async () => {
-            const { data } = await api.get(`/memories?page=${page}&limit=${limit}`);
+            const params = new URLSearchParams({
+                page: page.toString(),
+                limit: limit.toString(),
+            });
+            
+            if (type !== 'all') {
+                params.append('type', type);
+            }
+            
+            const { data } = await api.get(`/memories?${params}`);
             return data;
         },
         {

@@ -57,25 +57,39 @@ export async function getMemoryByCid(cid: string): Promise<MemoryRecord | null> 
     return result.rows[0] || null;
 }
 
-export async function getAllDsn(page: number = 1, limit: number = 10) {
+export async function getAllDsn(page: number = 1, limit: number = 10, type?: string) {
     const offset = (page - 1) * limit;
     
     try {
-        const countResult = await pool.query('SELECT COUNT(*) FROM memory_records');
+        let countQuery = 'SELECT COUNT(*) FROM memory_records';
+        let params: any[] = [];
+        
+        if (type) {
+            countQuery += ` WHERE content->>'type' = $1`;
+            params.push(type);
+        }
+        
+        const countResult = await pool.query(countQuery, params);
         const total = parseInt(countResult.rows[0].count);
 
-        const result = await pool.query(
-            `SELECT 
+        let query = `
+            SELECT 
                 mr.id,
                 mr.cid,
                 mr.previous_cid,
                 mr.content,
                 mr.created_at
-            FROM memory_records mr
-            ORDER BY mr.created_at DESC
-            LIMIT $1 OFFSET $2`,
-            [limit, offset]
-        );
+            FROM memory_records mr`;
+            
+        if (type) {
+            query += ` WHERE content->>'type' = $1`;
+        }
+        
+        query += ` ORDER BY mr.created_at DESC
+                  LIMIT $${params.length + 1} OFFSET $${params.length + 2}`;
+
+        const queryParams = [...params, limit, offset];
+        const result = await pool.query(query, queryParams);
 
         const transformedData = result.rows.map(record => {
             try {
@@ -94,7 +108,6 @@ export async function getAllDsn(page: number = 1, limit: number = 10) {
                 };
             } catch (error) {
                 console.error('Error transforming record:', error, 'Record:', record);
-                // Return a safe default object if transformation fails
                 return {
                     id: record.id,
                     tweet_id: null,

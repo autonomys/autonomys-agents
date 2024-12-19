@@ -19,8 +19,14 @@ import { useWebSocket } from '../hooks/useWebSocket';
 function DSNViewer() {
     const [page, setPage] = useState(1);
     const [limit, setLimit] = useState(10);
-    const { data, isLoading, error } = useDSNData(page, limit);
+    const [type, setType] = useState<'all' | 'skipped' | 'response'>('all');
+    const { data, isLoading, error } = useDSNData(page, limit, type);
     useWebSocket();
+
+    const handleTypeChange = (newType: 'all' | 'skipped' | 'response') => {
+        setType(newType);
+        setPage(1); // Reset to first page when changing filter
+    };
 
     if (isLoading) return <Spinner color="#00ff00" />;
     if (error) return <Text color="red.500">Error loading DSN data: {(error as Error).message}</Text>;
@@ -30,6 +36,20 @@ function DSNViewer() {
 
     return (
         <VStack spacing={4} align="stretch">
+            <HStack justify="space-between">
+                <Select
+                    value={type}
+                    onChange={(e) => handleTypeChange(e.target.value as typeof type)}
+                    width="200px"
+                    color="#00ff00"
+                    borderColor="#00ff00"
+                >
+                    <option value="all">All Tweets</option>
+                    <option value="skipped">Skipped Only</option>
+                    <option value="response">Responses Only</option>
+                </Select>
+            </HStack>
+
             <AnimatePresence>
                 {data.data.map((item, index) => (
                     <motion.div

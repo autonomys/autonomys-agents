@@ -10,6 +10,7 @@ router.get('/', async (req, res) => {
   try {
     const page = parseInt(req.query.page as string) || 1;
     const limit = parseInt(req.query.limit as string) || 10;
+    const type = req.query.type as string | undefined;
     
     if (page < 1 || limit < 1 || limit > 100) {
       res.status(400).json({ 
@@ -18,7 +19,14 @@ router.get('/', async (req, res) => {
       return;
     }
 
-    const dsnRecords = await getAllDsn(page, limit);
+    if (type && !['skipped', 'response'].includes(type)) {
+      res.status(400).json({
+        error: 'Invalid type parameter. Must be either "skipped" or "response"'
+      });
+      return;
+    }
+
+    const dsnRecords = await getAllDsn(page, limit, type);
     res.json(dsnRecords);
   } catch (error) {
     logger.error('Error fetching DSN records:', error);
