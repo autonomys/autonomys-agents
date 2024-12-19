@@ -7,7 +7,7 @@ import {
     Link, 
     Button, 
     HStack, 
-    Select 
+    Select
 } from '@chakra-ui/react';
 import { useState } from 'react';
 import { useDSNData } from '../api/client';
@@ -17,6 +17,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useWebSocket } from '../hooks/useWebSocket';
 import { ResponseStatus } from '../types/enums';
 import { getStatusColor } from '../utils/statusColors';
+import { ChevronDownIcon } from '@chakra-ui/icons';
 
 function DSNViewer() {
     const [page, setPage] = useState(1);
@@ -26,165 +27,238 @@ function DSNViewer() {
     useWebSocket();
 
     const handleTypeChange = (newType: ResponseStatus | 'all') => {
+        console.log('Changing type to:', newType);
         setType(newType);
         setPage(1);
     };
 
+    // Create static filter options
+    const filterOptions = [
+        { value: 'all', label: 'All Tweets' },
+        ...Object.values(ResponseStatus).map(status => ({
+            value: status,
+            label: status.charAt(0).toUpperCase() + status.slice(1)
+        }))
+    ];
+
+
     if (isLoading) return <Spinner color="#00ff00" />;
     if (error) return <Text color="red.500">Error loading DSN data: {(error as Error).message}</Text>;
-    if (!data || !data.data || data.data.length === 0) return <Text>No DSN data found</Text>;
 
-    const { totalPages } = data.pagination;
+    const { totalPages } = data?.pagination || { totalPages: 0 };
 
     return (
         <VStack spacing={4} align="stretch">
-            <HStack justify="space-between">
-                <Select
-                    value={type}
-                    onChange={(e) => handleTypeChange(e.target.value as typeof type)}
-                    width="200px"
-                    color="#00ff00"
-                    borderColor="#00ff00"
-                >
-                    <option value="all">All Tweets</option>
-                    {Object.values(ResponseStatus).map(status => (
-                        <option key={status} value={status}>
-                            {status.charAt(0).toUpperCase() + status.slice(1)}
-                        </option>
+            <Card>
+                <CardBody>
+                    <HStack justify="space-between" align="center">
+                        <Text color="#00ff00" fontSize="sm">Filter by Status:</Text>
+                        <Select
+                            value={type}
+                            onChange={(e) => handleTypeChange(e.target.value as typeof type)}
+                            width="200px"
+                            color="#00ff00"
+                            borderColor="#00ff00"
+                            bg="#001100"
+                            icon={<ChevronDownIcon color="#00ff00" />}
+                            _hover={{
+                                borderColor: "#00ff00",
+                                boxShadow: "0 0 10px #00ff00",
+                            }}
+                            sx={{
+                                // Style for the dropdown menu
+                                option: {
+                                    bg: '#001100',
+                                    color: '#00ff00',
+                                    padding: '10px',
+                                    cursor: 'pointer',
+                                    _hover: {
+                                        bg: '#002200',
+                                    }
+                                },
+                                // Style for the dropdown container
+                                '& > option': {
+                                    bg: 'rgba(0, 17, 0, 0.95)',
+                                    backdropFilter: 'blur(10px)',
+                                },
+                                // Custom scrollbar
+                                '&::-webkit-scrollbar': {
+                                    width: '8px',
+                                },
+                                '&::-webkit-scrollbar-track': {
+                                    bg: '#001100',
+                                },
+                                '&::-webkit-scrollbar-thumb': {
+                                    bg: '#00ff00',
+                                    borderRadius: '4px',
+                                },
+                                // Selected option style
+                                '& option:checked': {
+                                    bg: '#002200',
+                                    _before: {
+                                        content: '"✓ "',
+                                        color: '#00ff00',
+                                    }
+                                }
+                            }}
+                        >
+                            {filterOptions.map(option => (
+                                <option 
+                                    key={option.value} 
+                                    value={option.value}
+                                    style={{
+                                        backgroundColor: '#001100',
+                                        padding: '8px 12px',
+                                    }}
+                                >
+                                    {option.label}
+                                </option>
+                            ))}
+                        </Select>
+                    </HStack>
+                </CardBody>
+            </Card>
+
+            {/* Show message when no data but filters are still visible */}
+            {(!data?.data || data.data.length === 0) ? (
+                <Text color="gray.500" textAlign="center">
+                    No tweets found for the selected filter
+                </Text>
+            ) : (
+                <AnimatePresence>
+                    {data.data.map((item, index) => (
+                        <motion.div
+                            key={item.id}
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: "auto", opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            transition={{
+                                type: "spring",
+                                damping: 20,
+                                stiffness: 100,
+                                duration: 0.3,
+                                delay: index * 0.1
+                            }}
+                        >
+                            <Card>
+                                <CardBody>
+                                    <Text fontSize="sm" color="#00ff00" mb={2}>
+                                        Tweet by @{item.author_username}
+                                    </Text>
+                                    <Text whiteSpace="pre-wrap" mb={4}>
+                                        {item.tweet_content}
+                                    </Text>
+                                    
+                                    {item.result_type === 'skipped' ? (
+                                        <>
+                                            <Text fontSize="sm" color="yellow.500" mb={2}>
+                                                Skipped: {item.skip_reason}
+                                            </Text>
+                                            <HStack spacing={4}>
+                                                <Link
+                                                    as={RouterLink}
+                                                    to={`/memory/${item.cid}`}
+                                                    color="#00ff00"
+                                                    display="flex"
+                                                    alignItems="center"
+                                                    gap={2}
+                                                >
+                                                    View Memory <ExternalLinkIcon mx="2px" />
+                                                </Link>
+                                                <Link
+                                                    href={`https://astral.autonomys.xyz/taurus/permanent-storage/files/${item.cid}`}
+                                                    isExternal
+                                                    color="#00ff00"
+                                                    display="flex"
+                                                    alignItems="center"
+                                                    gap={2}
+                                                >
+                                                    View in Explorer <ExternalLinkIcon mx="2px" />
+                                                </Link>
+                                            </HStack>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Text fontSize="sm" color="#00ff00" mb={2}>
+                                                Response:
+                                            </Text>
+                                            <Text whiteSpace="pre-wrap" mb={4}>
+                                                {item.response_content}
+                                            </Text>
+                                            <Text 
+                                                fontSize="sm" 
+                                                color={getStatusColor(item.response_status)} 
+                                                mb={2}
+                                            >
+                                                Status: {item.response_status || 'N/A'}
+                                            </Text>
+                                            <HStack spacing={4}>
+                                                <Link
+                                                    as={RouterLink}
+                                                    to={`/memory/${item.cid}`}
+                                                    color="#00ff00"
+                                                    display="flex"
+                                                    alignItems="center"
+                                                    gap={2}
+                                                >
+                                                    View Memory <ExternalLinkIcon mx="2px" />
+                                                </Link>
+                                                <Link
+                                                    href={`https://astral.autonomys.xyz/taurus/permanent-storage/files/${item.cid}`}
+                                                    isExternal
+                                                    color="#00ff00"
+                                                    display="flex"
+                                                    alignItems="center"
+                                                    gap={2}
+                                                >
+                                                    View in Explorer <ExternalLinkIcon mx="2px" />
+                                                </Link>
+                                            </HStack>
+                                        </>
+                                    )}
+                                </CardBody>
+                            </Card>
+                        </motion.div>
                     ))}
-                </Select>
-            </HStack>
+                </AnimatePresence>
+            )}
 
-            <AnimatePresence>
-                {data.data.map((item, index) => (
-                    <motion.div
-                        key={item.id}
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: "auto", opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
-                        transition={{
-                            type: "spring",
-                            damping: 20,
-                            stiffness: 100,
-                            duration: 0.3,
-                            delay: index * 0.1
+            {/* Show pagination only if we have data */}
+            {data?.data && data.data.length > 0 && (
+                <HStack justify="space-between" mt={4}>
+                    <HStack spacing={4}>
+                        <Button 
+                            onClick={() => setPage(p => Math.max(1, p - 1))}
+                            isDisabled={page === 1}
+                        >
+                            Previous
+                        </Button>
+                        <Text>
+                            Page {page} of {totalPages}
+                        </Text>
+                        <Button 
+                            onClick={() => setPage(p => p + 1)}
+                            isDisabled={page >= totalPages}
+                        >
+                            Next
+                        </Button>
+                    </HStack>
+                    <Select 
+                        value={limit}
+                        onChange={(e) => {
+                            setLimit(Number(e.target.value));
+                            setPage(1);
                         }}
+                        width="auto"
+                        color="#00ff00"
+                        borderColor="#00ff00"
                     >
-                        <Card>
-                            <CardBody>
-                                <Text fontSize="sm" color="#00ff00" mb={2}>
-                                    Tweet by @{item.author_username}
-                                </Text>
-                                <Text whiteSpace="pre-wrap" mb={4}>
-                                    {item.tweet_content}
-                                </Text>
-                                
-                                {item.result_type === 'skipped' ? (
-                                    <>
-                                        <Text fontSize="sm" color="yellow.500" mb={2}>
-                                            Skipped: {item.skip_reason}
-                                        </Text>
-                                        <HStack spacing={4}>
-                                            <Link
-                                                as={RouterLink}
-                                                to={`/memory/${item.cid}`}
-                                                color="#00ff00"
-                                                display="flex"
-                                                alignItems="center"
-                                                gap={2}
-                                            >
-                                                View Memory <ExternalLinkIcon mx="2px" />
-                                            </Link>
-                                            <Link
-                                                href={`https://astral.autonomys.xyz/taurus/permanent-storage/files/${item.cid}`}
-                                                isExternal
-                                                color="#00ff00"
-                                                display="flex"
-                                                alignItems="center"
-                                                gap={2}
-                                            >
-                                                View in Explorer <ExternalLinkIcon mx="2px" />
-                                            </Link>
-                                        </HStack>
-                                    </>
-                                ) : (
-                                    <>
-                                        <Text fontSize="sm" color="#00ff00" mb={2}>
-                                            Response:
-                                        </Text>
-                                        <Text whiteSpace="pre-wrap" mb={4}>
-                                            {item.response_content}
-                                        </Text>
-                                        <Text 
-                                            fontSize="sm" 
-                                            color={getStatusColor(item.response_status)} 
-                                            mb={2}
-                                        >
-                                            Status: {item.response_status || 'N/A'}
-                                        </Text>
-                                        <HStack spacing={4}>
-                                            <Link
-                                                as={RouterLink}
-                                                to={`/memory/${item.cid}`}
-                                                color="#00ff00"
-                                                display="flex"
-                                                alignItems="center"
-                                                gap={2}
-                                            >
-                                                View Memory <ExternalLinkIcon mx="2px" />
-                                            </Link>
-                                            <Link
-                                                href={`https://astral.autonomys.xyz/taurus/permanent-storage/files/${item.cid}`}
-                                                isExternal
-                                                color="#00ff00"
-                                                display="flex"
-                                                alignItems="center"
-                                                gap={2}
-                                            >
-                                                View in Explorer <ExternalLinkIcon mx="2px" />
-                                            </Link>
-                                        </HStack>
-                                    </>
-                                )}
-                            </CardBody>
-                        </Card>
-                    </motion.div>
-                ))}
-            </AnimatePresence>
-
-            <HStack justify="space-between" mt={4}>
-                <HStack spacing={4}>
-                    <Button 
-                        onClick={() => setPage(p => Math.max(1, p - 1))}
-                        isDisabled={page === 1}
-                    >
-                        Previous
-                    </Button>
-                    <Text>
-                        Page {page} of {totalPages}
-                    </Text>
-                    <Button 
-                        onClick={() => setPage(p => p + 1)}
-                        isDisabled={page >= totalPages}
-                    >
-                        Next
-                    </Button>
+                        <option value={10}>10 per page</option>
+                        <option value={25}>25 per page</option>
+                        <option value={50}>50 per page</option>
+                    </Select>
                 </HStack>
-                <Select 
-                    value={limit}
-                    onChange={(e) => {
-                        setLimit(Number(e.target.value));
-                        setPage(1);
-                    }}
-                    width="auto"
-                    color="#00ff00"
-                    borderColor="#00ff00"
-                >
-                    <option value={10}>10 per page</option>
-                    <option value={25}>25 per page</option>
-                    <option value={50}>50 per page</option>
-                </Select>
-            </HStack>
+            )}
         </VStack>
     );
 }
