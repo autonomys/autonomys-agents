@@ -3,6 +3,7 @@ const { Pool } = pkg;
 
 import { config } from '../config/index.js';
 import { broadcastNewMemory } from '../websocket.js';
+import { ResponseStatus } from '../types/enums.js';
 
 const parseConnectionString = (url: string) => {
     const regex = /postgresql:\/\/([^:]+):([^@]+)@([^:]+):(\d+)\//;
@@ -57,7 +58,11 @@ export async function getMemoryByCid(cid: string): Promise<MemoryRecord | null> 
     return result.rows[0] || null;
 }
 
-export async function getAllDsn(page: number = 1, limit: number = 10, type?: string) {
+export async function getAllDsn(
+    page: number, 
+    limit: number, 
+    type?: ResponseStatus
+): Promise<any> {
     const offset = (page - 1) * limit;
     
     try {

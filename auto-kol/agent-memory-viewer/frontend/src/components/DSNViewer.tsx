@@ -15,17 +15,19 @@ import { ExternalLinkIcon } from '@chakra-ui/icons';
 import { Link as RouterLink } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useWebSocket } from '../hooks/useWebSocket';
+import { ResponseStatus } from '../types/enums';
+import { getStatusColor } from '../utils/statusColors';
 
 function DSNViewer() {
     const [page, setPage] = useState(1);
     const [limit, setLimit] = useState(10);
-    const [type, setType] = useState<'all' | 'skipped' | 'response'>('all');
+    const [type, setType] = useState<ResponseStatus | 'all'>('all');
     const { data, isLoading, error } = useDSNData(page, limit, type);
     useWebSocket();
 
-    const handleTypeChange = (newType: 'all' | 'skipped' | 'response') => {
+    const handleTypeChange = (newType: ResponseStatus | 'all') => {
         setType(newType);
-        setPage(1); // Reset to first page when changing filter
+        setPage(1);
     };
 
     if (isLoading) return <Spinner color="#00ff00" />;
@@ -45,8 +47,11 @@ function DSNViewer() {
                     borderColor="#00ff00"
                 >
                     <option value="all">All Tweets</option>
-                    <option value="skipped">Skipped Only</option>
-                    <option value="response">Responses Only</option>
+                    {Object.values(ResponseStatus).map(status => (
+                        <option key={status} value={status}>
+                            {status.charAt(0).toUpperCase() + status.slice(1)}
+                        </option>
+                    ))}
                 </Select>
             </HStack>
 
@@ -110,8 +115,12 @@ function DSNViewer() {
                                         <Text whiteSpace="pre-wrap" mb={4}>
                                             {item.response_content}
                                         </Text>
-                                        <Text fontSize="sm" color={item.response_status === 'pending' ? 'yellow.500' : '#00ff00'} mb={2}>
-                                            Status: {item.response_status}
+                                        <Text 
+                                            fontSize="sm" 
+                                            color={getStatusColor(item.response_status)} 
+                                            mb={2}
+                                        >
+                                            Status: {item.response_status || 'N/A'}
                                         </Text>
                                         <HStack spacing={4}>
                                             <Link

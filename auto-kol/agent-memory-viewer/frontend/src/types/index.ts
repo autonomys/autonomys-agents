@@ -1,3 +1,5 @@
+import { ResponseStatus } from './enums';
+
 interface Tweet {
     id: string;
     text: string;
@@ -95,5 +97,5 @@ export interface DSNData {
     response_content: string
     result_type: string
     skip_reason: string
-    response_status: string
+    response_status: ResponseStatus | null
 } 

@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { getAllDsn, getMemoryByCid, saveMemoryRecord } from '../db/index.js';
 import { downloadMemory } from '../utils/dsn.js';
 import { createLogger } from '../utils/logger.js';
+import { ResponseStatus } from '../types/enums.js';
 
 const router = Router();
 const logger = createLogger('memories-router');
@@ -10,7 +11,7 @@ router.get('/', async (req, res) => {
   try {
     const page = parseInt(req.query.page as string) || 1;
     const limit = parseInt(req.query.limit as string) || 10;
-    const type = req.query.type as string | undefined;
+    const type = req.query.type as ResponseStatus | undefined;
     
     if (page < 1 || limit < 1 || limit > 100) {
       res.status(400).json({ 
@@ -19,9 +20,9 @@ router.get('/', async (req, res) => {
       return;
     }
 
-    if (type && !['skipped', 'response'].includes(type)) {
+    if (type && !Object.values(ResponseStatus).includes(type)) {
       res.status(400).json({
-        error: 'Invalid type parameter. Must be either "skipped" or "response"'
+        error: `Invalid type parameter. Must be one of: ${Object.values(ResponseStatus).join(', ')}`
       });
       return;
     }

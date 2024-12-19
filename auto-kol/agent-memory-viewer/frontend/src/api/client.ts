@@ -1,6 +1,7 @@
 import axios from 'axios'
 import { useQuery } from 'react-query'
 import type { AgentMemory, DSNResponse } from '../types'
+import { ResponseStatus } from '../types/enums'
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
@@ -39,7 +40,7 @@ export const useLatestMemory = (agentId: string) => {
     )
 }
 
-export const useDSNData = (page: number = 1, limit: number = 10, type: string = 'all') => {
+export const useDSNData = (page: number = 1, limit: number = 10, type: ResponseStatus | 'all' = 'all') => {
     return useQuery<DSNResponse, Error>(
         ['dsn', page, limit, type],
         async () => {
