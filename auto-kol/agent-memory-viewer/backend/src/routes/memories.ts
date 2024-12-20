@@ -28,6 +28,21 @@ router.get('/', async (req, res) => {
     }
 
     const dsnRecords = await getAllDsn(page, limit, type);
+    
+    if (!dsnRecords.data || dsnRecords.data.length === 0) {
+      res.json({
+        data: [],
+        pagination: {
+          total: 0,
+          page: page,
+          limit: limit,
+          totalPages: 0
+        },
+        message: 'No memory found'
+      });
+      return;
+    }
+
     res.json(dsnRecords);
   } catch (error) {
     logger.error('Error fetching DSN records:', error);

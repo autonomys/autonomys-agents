@@ -40,13 +40,23 @@ export async function downloadMemory(cid: string, retryCount = 0): Promise<any> 
         const memoryData = JSON.parse(jsonString);
         return memoryData;
     } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        
+        if (errorMessage.includes('Not Found')) {
+            logger.warn('Memory not found, skipping retries', {
+                cid,
+                error: errorMessage
+            });
+            return null;
+        }
+
         if (retryCount < MAX_RETRIES) {
             const retryDelay = INITIAL_RETRY_DELAY * Math.pow(2, retryCount);
             logger.warn(`Failed to download memory, retrying in ${retryDelay}ms`, {
                 cid,
                 retryCount: retryCount + 1,
                 maxRetries: MAX_RETRIES,
-                error: error instanceof Error ? error.message : String(error)
+                error: errorMessage
             });
             
             await delay(retryDelay);
@@ -56,7 +66,7 @@ export async function downloadMemory(cid: string, retryCount = 0): Promise<any> 
         logger.error('Failed to download memory after max retries', {
             cid,
             maxRetries: MAX_RETRIES,
-            error: error instanceof Error ? error.message : String(error)
+            error: errorMessage
         });
         throw error;
     }
