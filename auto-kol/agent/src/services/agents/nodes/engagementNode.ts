@@ -88,7 +88,11 @@ export const createEngagementNode = (config: WorkflowConfig) => {
                 const decision = await prompts.engagementPrompt
                     .pipe(config.llms.decision)
                     .pipe(prompts.engagementParser)
-                    .invoke({ tweet: tweet.text });
+                    .invoke({ tweet: tweet.text })
+                    .catch((error) => {
+                        logger.error('Error in engagement node:', error);
+                        return { shouldEngage: false, reason: 'Error in engagement node', priority: 0, confidence: 0 };
+                    });
 
                 return { tweet, decision, status: 'processing' };
             }));
