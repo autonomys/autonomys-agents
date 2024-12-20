@@ -59,15 +59,20 @@ forge test -vvv
 
 2. Deploy contract:
    ```shell
-   ./script/deploy.sh local
+   bash ./script/deploy.sh local
    ```
 
 #### Network Deployment
 
-Deploy to Taurus network:
-```shell
-./deploy.sh taurus
-```
+1. Deploy to Taurus network:
+   ```shell
+   bash ./deploy.sh taurus
+   ```
+
+3. Verify contract:
+   ```shell
+   bash ./script/verify.sh
+   ```
 
 Environment variables should be set in `.env`:
 ```shell
