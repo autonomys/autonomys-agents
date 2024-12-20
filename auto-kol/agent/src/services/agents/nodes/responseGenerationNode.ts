@@ -102,8 +102,8 @@ export const createResponseGenerationNode = (config: WorkflowConfig, scraper: an
                         tweet,
                         response: responseStrategy.content,
                         workflowState: {
-                            decision,
-                            toneAnalysis,
+                            decision: decision || workflowState?.decision,
+                            toneAnalysis: toneAnalysis || workflowState?.toneAnalysis,
                             responseStrategy: {
                                 tone: responseStrategy.tone,
                                 strategy: responseStrategy.strategy,
@@ -134,7 +134,7 @@ export const createResponseGenerationNode = (config: WorkflowConfig, scraper: an
                                 tweet,
                                 response: responseStrategy.content,
                                 workflowState: {
-                                    toneAnalysis,
+                                    toneAnalysis: toneAnalysis,
                                     responseStrategy,
                                     mentions: threadMentionsTweets,
                                     similarTweets: similarTweets.similar_tweets,

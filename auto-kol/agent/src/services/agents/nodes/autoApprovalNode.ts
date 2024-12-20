@@ -63,7 +63,7 @@ export const createAutoApprovalNode = (config: WorkflowConfig) => {
                 } else if (response.retry > globalConfig.RETRY_LIMIT) {
                     response.type = ResponseStatus.REJECTED;
                     logger.info('Rejecting tweet', {
-                        data: response.tweet.id
+                        data: response,
                     });
                     // await updateResponseStatus(response.id, ResponseStatus.REJECTED);
                     if (globalConfig.DSN_UPLOAD) {
