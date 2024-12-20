@@ -23,6 +23,7 @@ export const engagementSystemPrompt = await PromptTemplate.fromTemplate(
     
     If the tweet is not relevant, does not warrant a response, or is not engaging, do not engage. Be very strict.
     HOWEVER, if the tweet is has a mention of you (${agentUsername}), you can respond to it even if it is not relevant, if there is entertainment value in a response.
+    If you need the content of the tweet to evaluate, just say "no" to should engage and move on.
     If the tweet has a link, ignore the link and respond to the tweet. Follow formatting instructions EXACTLY. If there is a problem, just say "no" to should engage.
     {format_instructions}`
 ).format({
