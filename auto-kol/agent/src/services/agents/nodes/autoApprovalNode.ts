@@ -15,7 +15,7 @@ export const createAutoApprovalNode = (config: WorkflowConfig, scraper: Extended
             const lastMessage = state.messages[state.messages.length - 1];
             const parsedContent = parseMessageContent(lastMessage.content);
             const { batchToFeedback } = parsedContent;
-           
+
             if (!batchToFeedback.length) {
                 logger.info('No pending responses found');
                 return {
@@ -35,7 +35,7 @@ export const createAutoApprovalNode = (config: WorkflowConfig, scraper: Extended
                     tweetId: response.tweet.id,
                     retry: response.retry
                 });
-              
+
                 const approval = await prompts.autoApprovalPrompt
                     .pipe(config.llms.decision)
                     .pipe(prompts.autoApprovalParser)
@@ -45,18 +45,21 @@ export const createAutoApprovalNode = (config: WorkflowConfig, scraper: Extended
                         tone: response.toneAnalysis?.dominantTone,
                         strategy: response.responseStrategy?.strategy
                     });
-                
+
                 if (approval.approved) {
                     response.type = ResponseStatus.APPROVED;
-                    
-                    
+
                     await updateResponseStatusByTweetId(response.tweet.id, ResponseStatus.APPROVED);
 
                     logger.info('Sending tweet', {
                         response: response.response,
                         tweetId: response.tweet.id
                     });
-                    // await scraper.sendTweet(response.response, response.tweet.id);
+
+                    const sendTweetResponse = await scraper.sendTweet(response.response, response.tweet.id);
+                    logger.info('Tweet sent', {
+                        sendTweetResponse
+                    });
 
 
                     if (globalConfig.DSN_UPLOAD) {
