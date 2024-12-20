@@ -100,6 +100,7 @@ export const responsePrompt = ChatPromptTemplate.fromMessages([
     Author: {author}
     Similar Tweets: {similarTweets}
     Mentions: {mentions}
+    Previous Response: {previousResponse}
     Rejection Feedback: {rejectionFeedback}
     Rejection Instructions: {rejectionInstructions}
 
@@ -121,7 +122,8 @@ export const responsePrompt = ChatPromptTemplate.fromMessages([
     If there are mentions, make sure to respond to them properly! Look at the thread conversation first to see what has been said.
     IMPORTANT: Before responding, check the mentions array for YOUR tweets (from:${agentUsername}).
 
-    Previous Rejection Context:
+    Previous Rejection Context over your previous response:
+    {previousResponse}
     {rejectionFeedback}
     {rejectionInstructions}
 

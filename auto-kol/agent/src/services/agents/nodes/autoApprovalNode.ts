@@ -13,10 +13,9 @@ export const createAutoApprovalNode = (config: WorkflowConfig) => {
         try {
             const lastMessage = state.messages[state.messages.length - 1];
             const parsedContent = parseMessageContent(lastMessage.content);
-            const { dsnData } = parsedContent;
+            const { batchToFeedback } = parsedContent;
            
-            const pendingResponses = await getPendingResponses();
-            if (!pendingResponses.length) {
+            if (!batchToFeedback.length) {
                 logger.info('No pending responses found');
                 return {
                     messages: [new AIMessage({
@@ -30,66 +29,61 @@ export const createAutoApprovalNode = (config: WorkflowConfig) => {
 
             const processedResponses = [];
 
-            for (const response of pendingResponses) {
+            for (const response of batchToFeedback) {
+                logger.info('Processing response', {
+                    response
+                });
+              
                 const approval = await prompts.autoApprovalPrompt
                     .pipe(config.llms.decision)
                     .pipe(prompts.autoApprovalParser)
                     .invoke({
-                        tweet: response.tweet_content,
-                        response: response.content,
-                        tone: response.tone,
-                        strategy: response.strategy
+                        tweet: response.tweet,
+                        response: response.response,
+                        tone: response.toneAnalysis?.dominantTone,
+                        strategy: response.responseStrategy?.strategy
                     });
                 
                 if (approval.approved) {
                     // POST THE TWEET
-                    dsnData[response.tweet_id].type = ResponseStatus.APPROVED;
-                    await updateResponseStatus(response.id, ResponseStatus.APPROVED);
+                    response.type = ResponseStatus.APPROVED;
+                    // get response id by tweet id
+                    // const responseId = await getResponseIdByTweetId(response.tweet_id);
+                    // await updateResponseStatus(response.id, ResponseStatus.APPROVED);
+                    // update the response status in the database
+
+
                     if (globalConfig.DSN_UPLOAD) {
                         await uploadToDsn({
-                            data: dsnData[response.tweet_id],
+                            data: response,
                             previousCid: await getLastDsnCid()
                         });
                     }
-                } else if (dsnData[response.tweet_id]?.retry > globalConfig.RETRY_LIMIT) {
-                    dsnData[response.tweet_id].type = ResponseStatus.REJECTED;
+                } else if (response.retry > globalConfig.RETRY_LIMIT) {
+                    response.type = ResponseStatus.REJECTED;
                     logger.info('Rejecting tweet', {
-                        data: dsnData[response.tweet_id].tweet.id
+                        data: response.tweet.id
                     });
                     await updateResponseStatus(response.id, ResponseStatus.REJECTED);
                     if (globalConfig.DSN_UPLOAD) {
                         await uploadToDsn({
-                            data: dsnData[response.tweet_id],
+                            data: response,
                             previousCid: await getLastDsnCid()
                         });
                     }
                 } else {
-                    if (!dsnData[response.tweet_id]) {
-                        dsnData[response.tweet_id] = { retry: 0 };
-                    } else if (!dsnData[response.tweet_id].retry) {
-                        dsnData[response.tweet_id].retry = 0;
-                    }
                     processedResponses.push({
-                        tweet: {
-                            id: response.tweet_id,
-                            text: response.tweet_content,
-                            author_id: response.author_id,
-                            author_username: response.author_username,
-                            created_at: response.tweet_created_at
+                        ...response,
+                        type: ResponseStatus.PENDING,
+                        workflowState: {
+                            ...response.workflowState,
+                            autoFeedback: [...response.workflowState.autoFeedback, {
+                                response: response.response,
+                                reason: approval.reason,
+                                suggestedChanges: approval.suggestedChanges
+                            }]
                         },
-                        decision: {
-                            shouldEngage: true,
-                            reason: "Previously decided to engage",
-                            priority: 1
-                        },
-                        toneAnalysis: {
-                            suggestedTone: response.tone,
-                            dominantTone: response.tone,
-                            reasoning: response.strategy
-                        },
-                        rejectionReason: approval.reason,
-                        suggestedChanges: approval.suggestedChanges,
-                        retry: dsnData[response.tweet_id].retry
+                        feedbackDecision: 'reject'
                     });
                 }
             }

@@ -14,26 +14,39 @@ export const createResponseGenerationNode = (config: WorkflowConfig, scraper: an
             const lastMessage = state.messages[state.messages.length - 1];
             const parsedContent = parseMessageContent(lastMessage.content);
             const batchToRespond = parsedContent.batchToRespond || [];
-            const dsnData: Record<string, any> = {};
+            const batchToFeedback: any[] = [];
+
             logger.info(`Processing batch of ${batchToRespond.length} tweets for response generation`, {
-                hasRejectedResponses: batchToRespond.some((item: any) => item.rejectionReason)
+                hasRejectedResponses: parsedContent.fromAutoApproval
             });
 
             await Promise.all(
                 batchToRespond.map(async (item: any) => {
-                    const { tweet, decision, toneAnalysis, rejectionReason, suggestedChanges } = item;
-                    if (rejectionReason) {
-                        item.retry = item.retry + 1;
+                    const { tweet, decision, toneAnalysis, workflowState } = item;
+                    
+                    if (!workflowState) {
+                        item.workflowState = { autoFeedback: [] };
+                    } else if (!workflowState.autoFeedback) {
+                        workflowState.autoFeedback = [];
+                    }
+
+                    if (workflowState?.feedbackDecision?.toLowerCase === 'reject') {
+                        item.retry = (item.retry || 0) + 1;
                         logger.info('Regenerating response due to rejection:', {
                             retry: item.retry
                         });
                         
                     } else {
-                        item.retry = item.retry || 0;
+                        item.retry = 0;
                     }
 
-                    const rejectionInstructions = prompts.formatRejectionInstructions(rejectionReason);
-                    const rejectionFeedback = prompts.formatRejectionFeedback(rejectionReason, suggestedChanges);    
+                    const lastFeedback = workflowState?.autoFeedback[workflowState?.autoFeedback.length - 1];
+                    const rejectionInstructions = lastFeedback 
+                        ? prompts.formatRejectionInstructions(lastFeedback.reason) 
+                        : '';
+                    const rejectionFeedback = lastFeedback
+                        ? prompts.formatRejectionFeedback(lastFeedback.reason, lastFeedback.suggestedChanges)
+                        : '';
 
                     const threadMentionsTweets = [];
                     if (tweet.mention) {
@@ -77,14 +90,12 @@ export const createResponseGenerationNode = (config: WorkflowConfig, scraper: an
                             author: tweet.author_username,
                             similarTweets: JSON.stringify(similarTweets.similar_tweets),
                             mentions: JSON.stringify(threadMentionsTweets),
-                            rejectionFeedback: rejectionReason ? rejectionFeedback : '',
-                            rejectionInstructions: rejectionReason ? rejectionInstructions : ''  
+                            previousResponse: workflowState?.autoFeedback[workflowState?.autoFeedback.length - 1]?.response || '',
+                            rejectionFeedback,
+                            rejectionInstructions
                         });
 
-                    logger.info('Response strategy:', { 
-                        responseStrategy,
-                        isRegeneration: !!rejectionReason
-                    });
+                
                     const data = {
                         type: ResponseStatus.PENDING,
                         tweet,
@@ -98,21 +109,20 @@ export const createResponseGenerationNode = (config: WorkflowConfig, scraper: an
                                 referencedTweets: responseStrategy.referencedTweets,
                                 confidence: responseStrategy.confidence
                                 },
-                                autoFeedback: rejectionReason ? {
-                                    reason: rejectionReason,
-                                    suggestedChanges
-                                } : undefined
+                                autoFeedback: workflowState?.autoFeedback
                         },
                         mentions: threadMentionsTweets,
                         retry: item.retry
                     }
-                    dsnData[tweet.id] = data;
-                    if (globalConfig.DSN_UPLOAD) {
-                        await uploadToDsn({
-                            data,
-                            previousCid: await getLastDsnCid()
-                        });
-                    }
+                    batchToFeedback.push(data);
+
+                    // dsnData[tweet.id] = data;
+                    // if (globalConfig.DSN_UPLOAD) {
+                    //     await uploadToDsn({
+                    //         data,
+                    //         previousCid: await getLastDsnCid()
+                    //     });
+                    // }
                     
                     const queueResponse = await config.toolNode.invoke({
                     messages: [new AIMessage({
@@ -127,10 +137,7 @@ export const createResponseGenerationNode = (config: WorkflowConfig, scraper: an
                                     responseStrategy,
                                     mentions: threadMentionsTweets,
                                     similarTweets: similarTweets.similar_tweets,
-                                    autoFeedback: rejectionReason ? {
-                                        reason: rejectionReason,
-                                        suggestedChanges
-                                    } : undefined
+                                    autoFeedback: workflowState?.autoFeedback
                                 }
                             },
                             id: 'queue_response_call',
@@ -150,8 +157,7 @@ export const createResponseGenerationNode = (config: WorkflowConfig, scraper: an
                         currentTweetIndex: parsedContent.currentTweetIndex,
                         pendingEngagements: parsedContent.pendingEngagements,
                         lastProcessedId: parsedContent.lastProcessedId,
-                        batchToFeedback: batchToRespond,
-                        dsnData
+                        batchToFeedback: batchToFeedback,
                     })
                 })],
                 processedTweets: new Set(batchToRespond.map((item: any) => item.tweet.id))

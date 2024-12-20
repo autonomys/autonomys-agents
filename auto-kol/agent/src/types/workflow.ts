@@ -35,6 +35,7 @@ export type ResponseStrategy = Readonly<{
 }>;
 
 export type AutoFeedback = Readonly<{
+    response: string;
     reason: string;
     suggestedChanges: string[];
 }>;
@@ -47,5 +48,5 @@ export type WorkflowState = Readonly<{
     alternatives?: ResponseAlternative[];
     selectedResponse?: ResponseSelection;
     responseStrategy?: ResponseStrategy;
-    autoFeedback?: AutoFeedback;
+    autoFeedback?: AutoFeedback[];
 }>; 
