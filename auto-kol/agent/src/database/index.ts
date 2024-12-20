@@ -251,6 +251,13 @@ export async function updateResponseStatus(
     }
 }
 
+export async function updateResponseStatusByTweetId(tweet_id: string, status: 'approved' | 'rejected') {
+    const db = await initializeDatabase();
+    return db.run(`
+        UPDATE responses SET status = ? WHERE tweet_id = ?
+    `, [status, tweet_id]);
+}
+
 
 ///////////TWEET///////////
 export async function addTweet(tweet: {

@@ -138,8 +138,9 @@ export const createResponseGenerationNode = (config: WorkflowConfig, scraper: an
                                     responseStrategy,
                                     mentions: threadMentionsTweets,
                                     similarTweets: similarTweets.similar_tweets,
-                                    autoFeedback: workflowState?.autoFeedback
-                                }
+                                },
+                                fromAutoApproval: parsedContent.fromAutoApproval || false
+
                             },
                             id: 'queue_response_call',
                             type: 'tool_call'

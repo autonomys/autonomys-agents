@@ -16,15 +16,10 @@ export const createQueueResponseTool = () => new DynamicStructuredTool({
     name: 'queue_response',
     description: 'Add or update a response in the approval queue',
     schema: queueActionSchema,
-    func: async (input) => {
+    func: async (input: any) => {
 
         try {
-            if (input.workflowState?.previousRejection) {
-                logger.info('Updating existing response after rejection:', {
-                    tweet_id: input.tweet.id,
-                    previousRejection: input.workflowState.previousRejection
-                });
-
+            if (input?.fromAutoApproval) {
                 const existingResponse = await getResponseByTweetId(input.tweet.id);
                 
                 if (!existingResponse) {

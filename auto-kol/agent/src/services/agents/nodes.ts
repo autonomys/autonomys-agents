@@ -35,7 +35,7 @@ export const createNodes = async (config: WorkflowConfig) => {
     const recheckSkippedNode = createRecheckSkippedNode(config);
 
     ///////////AUTO APPROVAL///////////
-    const autoApprovalNode = createAutoApprovalNode(config);
+    const autoApprovalNode = createAutoApprovalNode(config, scraper);
 
     return {
         mentionNode,
