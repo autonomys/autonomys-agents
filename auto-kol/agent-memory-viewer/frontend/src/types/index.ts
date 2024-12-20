@@ -1,5 +1,9 @@
 import { ResponseStatus } from './enums';
-
+interface AutoFeedback {
+    response: string;
+    reason: string;
+    suggestedChanges: string;
+}
 export interface Tweet {
     id: string;
     text: string;
@@ -98,10 +102,7 @@ export interface RejectedMemory extends BaseMemory {
         decision: WorkflowDecision;
         toneAnalysis: WorkflowToneAnalysis;
         responseStrategy: WorkflowResponseStrategy;
-        autoFeedback?: {
-            reason: string;
-            suggestedChanges: string;
-        };
+        autoFeedback: AutoFeedback[];
     };
     mentions: Tweet[];
     retry: number;

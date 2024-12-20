@@ -54,20 +54,32 @@ export function RejectedMemoryView({ memory }: Props) {
                 </Text>
             </VStack>
 
-            {memory.workflowState.autoFeedback && (
+            {memory.workflowState.autoFeedback && memory.workflowState.autoFeedback.length > 0 && (
                 <>
                     <Text fontSize="md" fontWeight="bold" color="red.400" mb={2}>
                         Rejection Feedback
                     </Text>
                     <VStack align="stretch" mb={4} pl={4}>
-                        <Text>
-                            <Text as="span" color="gray.400">Reason:</Text>{' '}
-                            <Text as="span" color="red.400">{memory.workflowState.autoFeedback.reason}</Text>
-                        </Text>
-                        <Text>
-                            <Text as="span" color="gray.400">Suggested Changes:</Text>{' '}
-                            <Text as="span" color="yellow.400">{memory.workflowState.autoFeedback.suggestedChanges}</Text>
-                        </Text>
+                        {memory.workflowState.autoFeedback.map((feedback, index) => (
+                            <VStack 
+                                key={index}
+                                align="stretch" 
+                                p={2} 
+                                border="1px solid" 
+                                borderColor="gray.600" 
+                                borderRadius="md"
+                                mb={2}
+                            >
+                                <Text>
+                                    <Text as="span" color="gray.400">Reason:</Text>{' '}
+                                    <Text as="span" color="red.400">{feedback.reason}</Text>
+                                </Text>
+                                <Text>
+                                    <Text as="span" color="gray.400">Suggested Changes:</Text>{' '}
+                                    <Text as="span" color="yellow.400">{feedback.suggestedChanges}</Text>
+                                </Text>
+                            </VStack>
+                        ))}
                     </VStack>
                 </>
             )}

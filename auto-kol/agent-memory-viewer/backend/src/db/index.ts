@@ -125,7 +125,7 @@ export async function getAllDsn(
                     created_at: record.created_at,
                     author_username: content.tweet?.author_username || null,
                     tweet_content: content.tweet?.text || null,
-                    response_content: ['response', 'rejected', 'approved', 'pending'].includes(content.type) 
+                    response_content: ['response', 'rejected', 'approved', 'pending', 'skipped'].includes(content.type) 
                         ? content.response || null 
                         : null,
                     result_type: content.type || 'unknown',
@@ -133,9 +133,7 @@ export async function getAllDsn(
                         ? content.workflowState?.decision?.reason || null 
                         : null,
                     response_status: getResponseStatus(content),
-                    auto_feedback: content.type === 'rejected' 
-                        ? content.workflowState?.autoFeedback || null 
-                        : null
+                    auto_feedback: content.workflowState?.autoFeedback || null 
                 };
             } catch (error) {
                 console.error('Error transforming record:', error, 'Record:', record);
