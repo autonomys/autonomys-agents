@@ -42,10 +42,9 @@ function DSNViewer() {
 
     const filterOptions = [
         { value: 'all', label: 'All Tweets' },
-        ...Object.values(ResponseStatus).map(status => ({
-            value: status,
-            label: status.charAt(0).toUpperCase() + status.slice(1)
-        }))
+        { value: ResponseStatus.SKIPPED, label: 'Skipped' },
+        { value: ResponseStatus.APPROVED, label: 'Approved' },
+        { value: ResponseStatus.REJECTED, label: 'Rejected' }
     ];
 
 
