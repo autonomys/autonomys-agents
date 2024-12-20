@@ -31,7 +31,8 @@ export const createAutoApprovalNode = (config: WorkflowConfig) => {
 
             for (const response of batchToFeedback) {
                 logger.info('Processing response', {
-                    response
+                    tweetId: response.tweet.id,
+                    retry: response.retry
                 });
               
                 const approval = await prompts.autoApprovalPrompt
@@ -64,7 +65,7 @@ export const createAutoApprovalNode = (config: WorkflowConfig) => {
                     logger.info('Rejecting tweet', {
                         data: response.tweet.id
                     });
-                    await updateResponseStatus(response.id, ResponseStatus.REJECTED);
+                    // await updateResponseStatus(response.id, ResponseStatus.REJECTED);
                     if (globalConfig.DSN_UPLOAD) {
                         await uploadToDsn({
                             data: response,

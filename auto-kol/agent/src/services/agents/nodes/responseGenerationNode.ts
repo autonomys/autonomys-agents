@@ -30,7 +30,7 @@ export const createResponseGenerationNode = (config: WorkflowConfig, scraper: an
                         workflowState.autoFeedback = [];
                     }
 
-                    if (workflowState?.feedbackDecision?.toLowerCase === 'reject') {
+                    if (parsedContent.fromAutoApproval) {
                         item.retry = (item.retry || 0) + 1;
                         logger.info('Regenerating response due to rejection:', {
                             retry: item.retry
@@ -49,7 +49,9 @@ export const createResponseGenerationNode = (config: WorkflowConfig, scraper: an
                         : '';
 
                     const threadMentionsTweets = [];
-                    if (tweet.mention) {
+                    if (item?.mentions) {
+                        threadMentionsTweets.push(...item.mentions);
+                    } else if (tweet.mention) {
                         const mentions = await scraper.getThread(tweet.id);
                         for await (const mention of mentions) {
                             threadMentionsTweets.push({
@@ -80,13 +82,12 @@ export const createResponseGenerationNode = (config: WorkflowConfig, scraper: an
                     const similarTweets = parseMessageContent(
                         similarTweetsResponse.messages[similarTweetsResponse.messages.length - 1].content
                     );
-
                     const responseStrategy = await prompts.responsePrompt
                         .pipe(config.llms.response)
                         .pipe(prompts.responseParser)
                         .invoke({
                             tweet: tweet.text,
-                            tone: toneAnalysis.suggestedTone,
+                            tone: toneAnalysis?.suggestedTone || workflowState?.toneAnalysis?.suggestedTone,
                             author: tweet.author_username,
                             similarTweets: JSON.stringify(similarTweets.similar_tweets),
                             mentions: JSON.stringify(threadMentionsTweets),
@@ -109,7 +110,7 @@ export const createResponseGenerationNode = (config: WorkflowConfig, scraper: an
                                 referencedTweets: responseStrategy.referencedTweets,
                                 confidence: responseStrategy.confidence
                                 },
-                                autoFeedback: workflowState?.autoFeedback
+                                autoFeedback: workflowState?.autoFeedback || []
                         },
                         mentions: threadMentionsTweets,
                         retry: item.retry
