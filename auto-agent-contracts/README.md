@@ -66,7 +66,7 @@ forge test -vvv
 
 Deploy to Taurus network:
 ```shell
-./script/deploy.sh taurus
+./deploy.sh taurus
 ```
 
 Environment variables should be set in `.env`:
