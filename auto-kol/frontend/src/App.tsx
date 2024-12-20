@@ -4,6 +4,7 @@ import Navbar from './components/Navbar'
 import Dashboard from './pages/Dashboard'
 import Responses from './pages/Responses'
 import SkippedTweets from './pages/SkippedTweets'
+import Analytics from './components/Analytics'
 
 function App() {
     return (
@@ -11,6 +12,7 @@ function App() {
             <Navbar />
             <Box as="main" p={4}>
                 <Routes>
+                    <Analytics />
                     <Route path="/" element={<Dashboard />} />
                     <Route path="/responses" element={<Responses />} />
                     <Route path="/skipped" element={<SkippedTweets />} />
