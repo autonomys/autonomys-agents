@@ -12,14 +12,45 @@ import { WorkflowState } from '../../types/workflow.js';
 
 const logger = createLogger('queue-response-tool');
 
-export const createQueueResponseTool = () => new DynamicStructuredTool({
-    name: 'queue_response',
+export const createAddResponseTool = () => new DynamicStructuredTool({
+    name: 'add_response',
     description: 'Add or update a response in the approval queue',
     schema: queueActionSchema,
     func: async (input: any) => {
+        const id = generateId();
+        const response: QueuedResponseMemory = {
+            id,
+            tweet: <Tweet>input.tweet,
+            response: <AgentResponse>{
+                content: input.workflowState?.responseStrategy?.content,
+            },
+            status: 'pending' as const,
+            created_at: new Date(),
+            updatedAt: new Date(),
+            workflowState: <WorkflowState>input.workflowState
+        };
 
+        await addResponse(response);
+        return {
+            success: true,
+            id,
+            type: 'response' as const,
+            message: 'Response queued successfully'
+        };
+            
+    }
+});
+
+
+export const createUpdateResponseTool = () => new DynamicStructuredTool({
+    name: 'update_response',
+    description: 'Update a response in the approval queue',
+    schema: queueActionSchema,
+    func: async (input: any) => {
         try {
-            if (input?.fromAutoApproval) {
+                logger.info('Updating response', {
+                    tweet_id: input.tweet.id
+                });
                 const existingResponse = await getResponseByTweetId(input.tweet.id);
                 
                 if (!existingResponse) {
@@ -39,37 +70,17 @@ export const createQueueResponseTool = () => new DynamicStructuredTool({
                     confidence: input.workflowState.responseStrategy.confidence,
                 } as PendingResponse);
 
-
+                logger.info('Response updated successfully', {
+                    response_id: existingResponse.id
+                });
                 return {
                     success: true,
                     id: existingResponse.id,
                     type: 'response' as const,
-                    message: 'Response updated successfully'
-                };
-            }
-
-            const id = generateId();
-            const response: QueuedResponseMemory = {
-                id,
-                tweet: <Tweet>input.tweet,
-                response: <AgentResponse>{
-                    content: input.workflowState?.responseStrategy?.content,
-                },
-                status: 'pending' as const,
-                created_at: new Date(),
-                updatedAt: new Date(),
-                workflowState: <WorkflowState>input.workflowState
-            };
-
-            await addResponse(response);
-            return {
-                success: true,
-                id,
-                type: 'response' as const,
-                message: 'Response queued successfully'
+                message: 'Response updated successfully'
             };
         } catch (error) {
-            logger.error('Error in queue response tool:', error);
+            logger.error('Error in update response tool:', error);
             throw error;
         }
     }

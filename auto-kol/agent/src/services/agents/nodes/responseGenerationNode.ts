@@ -116,39 +116,44 @@ export const createResponseGenerationNode = (config: WorkflowConfig, scraper: an
                         retry: item.retry
                     }
                     batchToFeedback.push(data);
-
-                    // dsnData[tweet.id] = data;
-                    // if (globalConfig.DSN_UPLOAD) {
-                    //     await uploadToDsn({
-                    //         data,
-                    //         previousCid: await getLastDsnCid()
-                    //     });
-                    // }
                     
-                    const queueResponse = await config.toolNode.invoke({
-                    messages: [new AIMessage({
-                        content: '',
-                        tool_calls: [{
-                            name: 'queue_response',
-                            args: {
-                                tweet,
-                                response: responseStrategy.content,
-                                workflowState: {
-                                    toneAnalysis: toneAnalysis,
-                                    responseStrategy,
-                                    mentions: threadMentionsTweets,
-                                    similarTweets: similarTweets.similar_tweets,
-                                },
-                                fromAutoApproval: parsedContent.fromAutoApproval || false
-
-                            },
-                            id: 'queue_response_call',
-                            type: 'tool_call'
-                        }]
-                        })]
-                    });
-                    return queueResponse;
-                    
+                    const args = {
+                        tweet,
+                        response: responseStrategy.content,
+                        workflowState: {
+                            toneAnalysis: toneAnalysis,
+                            responseStrategy,
+                            mentions: threadMentionsTweets,
+                            similarTweets: similarTweets.similar_tweets,
+                        },
+                    }
+                    if (!parsedContent.fromAutoApproval) {
+                        const addResponse = await config.toolNode.invoke({
+                        messages: [new AIMessage({
+                            content: '',
+                            tool_calls: [{
+                                name: 'add_response',
+                                args,
+                                id: 'add_response_call',
+                                type: 'tool_call'
+                            }]
+                            })]
+                        });
+                        return addResponse;
+                    } else {
+                        const updateResponse = await config.toolNode.invoke({
+                            messages: [new AIMessage({
+                                content: '',
+                                tool_calls: [{
+                                    name: 'update_response',
+                                    args,
+                                    id: 'update_response_call',
+                                    type: 'tool_call'
+                                }]
+                                })]
+                            });
+                            return updateResponse;
+                    }
                 })
             );
 
