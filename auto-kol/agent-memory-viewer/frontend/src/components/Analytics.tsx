@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
 
-const MEASUREMENT_ID = import.meta.env.VITE_GA_MEASUREMENT_ID
+const MEASUREMENT_ID = 'G-N5E7RC09G1'
 
 // Extend the Window interface to include dataLayer
 declare global {
