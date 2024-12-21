@@ -51,8 +51,6 @@ export const config = {
     // Tweet Search/Fetch Configuration
     ACCOUNTS_PER_BATCH: Number(process.env.ACCOUNTS_PER_BATCH) || 10,
     MAX_SEARCH_TWEETS: Number(process.env.MAX_SEARCH_TWEETS) || 20,
-    MAX_TIMELINE_TWEETS: Number(process.env.MAX_TIMELINE_TWEETS) || 10,
-
     // BATCH CONFIG
     ENGAGEMENT_BATCH_SIZE: process.env.ENGAGEMENT_BATCH_SIZE || 15,
 
