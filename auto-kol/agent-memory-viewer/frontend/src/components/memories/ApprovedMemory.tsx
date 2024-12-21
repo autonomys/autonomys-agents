@@ -22,6 +22,32 @@ export function ApprovedMemoryView({ memory }: Props) {
             </VStack>
 
             <Text fontSize="md" fontWeight="bold" color="purple.400" mb={2}>
+                Decision
+            </Text>
+            <VStack align="stretch" mb={4} pl={4}>
+                <Text>
+                    <Text as="span" color="gray.400">Should Engage:</Text>{' '}
+                    <Text as="span" color={memory.workflowState.decision.shouldEngage ? "green.400" : "red.400"}>
+                        {memory.workflowState.decision.shouldEngage ? "Yes" : "No"}
+                    </Text>
+                </Text>
+                <Text>
+                    <Text as="span" color="gray.400">Reason:</Text>{' '}
+                    <Text as="span" color="white">{memory.workflowState.decision.reason}</Text>
+                </Text>
+                <Text>
+                    <Text as="span" color="gray.400">Priority:</Text>{' '}
+                    <Text as="span" color="orange.400">{memory.workflowState.decision.priority}</Text>
+                </Text>
+                <Text>
+                    <Text as="span" color="gray.400">Confidence:</Text>{' '}
+                    <Text as="span" color="green.400">
+                        {(memory.workflowState.decision.confidence * 100).toFixed(1)}%
+                    </Text>
+                </Text>
+            </VStack>
+            
+            <Text fontSize="md" fontWeight="bold" color="purple.400" mb={2}>
                 Tone Analysis
             </Text>
             <VStack align="stretch" mb={4} pl={4}>
