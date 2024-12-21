@@ -35,7 +35,13 @@ Specialized viewer for exploring agent memory stored on DSN:
 
 ## Setup
 
-1. Start the agent service:
+1. Start ChromaDB:
+```
+docker pull chromadb/chroma:latest
+docker run -d -p 8000:8000 chromadb/chroma:latest
+```
+
+2. Start the agent service:
 ```
 cd agent
 yarn install
@@ -43,7 +49,7 @@ cp .env.sample .env  # Configure your credentials
 yarn dev
 ```
 
-2. Start the dashboard:
+3. Start the dashboard:
 ```
 cd frontend
 yarn install
@@ -51,7 +57,7 @@ cp .env.sample .env
 yarn dev
 ```
 
-3. Start the memory viewer:
+4. Start the memory viewer:
 ```
 cd agent-memory-viewer
 yarn install
