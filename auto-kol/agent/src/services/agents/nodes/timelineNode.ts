@@ -29,7 +29,6 @@ export const createTimelineNode = (config: WorkflowConfig) => {
 
         logger.info('Tool response received:', {
             messageCount: toolResponse.messages.length,
-            lastMessageContent: toolResponse.messages[toolResponse.messages.length - 1].content
         });
 
         const content = toolResponse.messages[toolResponse.messages.length - 1].content;

@@ -2,7 +2,7 @@
 import { DynamicStructuredTool } from '@langchain/core/tools';
 import { z } from 'zod';
 import { createLogger } from '../../utils/logger.js';
-import { getTimeLine, getTimeLineTweets } from '../../utils/twitter.js';
+import { getTimeLine } from '../../utils/twitter.js';
 
 const logger = createLogger('fetch-timeline-tool');
 
@@ -12,14 +12,10 @@ export const createFetchTimelineTool = () => new DynamicStructuredTool({
     schema: z.object({}),
     func: async () => {
         try {
-            await getTimeLine();
-            const tweets = await getTimeLineTweets();
-            logger.info(`Fetched timeline tweets, ${tweets.length}`);
-
+            const tweets = await getTimeLine();
             tweets.sort((a, b) => 
                 new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
             );
-
             return {
                 tweets: tweets,
                 lastProcessedId: tweets[tweets.length - 1]?.id || null
