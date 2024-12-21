@@ -46,6 +46,7 @@ export const config = {
     RPC_URL: process.env.RPC_URL,
     CONTRACT_ADDRESS: process.env.CONTRACT_ADDRESS,
     PRIVATE_KEY: process.env.PRIVATE_KEY,
+    WALLET_ADDRESS: process.env.WALLET_ADDRESS,
 
     // Tweet Search/Fetch Configuration
     ACCOUNTS_PER_BATCH: Number(process.env.ACCOUNTS_PER_BATCH) || 10,
