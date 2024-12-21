@@ -58,4 +58,7 @@ export const config = {
 
     // RESPONSE CONFIG
     RETRY_LIMIT: process.env.RETRY_LIMIT || 2,
+
+    // POSTING TWEETS PERMISSION
+    POST_TWEETS: process.env.POST_TWEETS === 'true',
 }; 

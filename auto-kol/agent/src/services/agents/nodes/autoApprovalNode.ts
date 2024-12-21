@@ -51,16 +51,17 @@ export const createAutoApprovalNode = (config: WorkflowConfig, scraper: Extended
 
                     await updateResponseStatusByTweetId(response.tweet.id, ResponseStatus.APPROVED);
 
-                    logger.info('Sending tweet', {
-                        response: response.response,
-                        tweetId: response.tweet.id
-                    });
+                    if (globalConfig.POST_TWEETS) {
+                        logger.info('Sending tweet', {
+                            response: response.response,
+                            tweetId: response.tweet.id
+                        });
 
-                    const sendTweetResponse = await scraper.sendTweet(response.response, response.tweet.id);
-                    logger.info('Tweet sent', {
-                        sendTweetResponse
-                    });
-
+                        const sendTweetResponse = await scraper.sendTweet(response.response, response.tweet.id);
+                        logger.info('Tweet sent', {
+                            sendTweetResponse
+                        });
+                    }
 
                     if (globalConfig.DSN_UPLOAD) {
                         await uploadToDsn({
