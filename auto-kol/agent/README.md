@@ -90,9 +90,10 @@ graph TD
     H -->|Rejected| G
     H -->|Approved| K[Twitter API]
     H -->|Approved| L[DSN Upload]
+    H -->|Store| I[(SQLite DB)]
     L -->|Store Hash| M[Memory Contract]
     M -->|Previous Hash| L
-    E -->|Store| I[(SQLite DB)]
+    E -->|Store| I
     E -->|Upload| L
 ```
 
