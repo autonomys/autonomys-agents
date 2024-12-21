@@ -109,10 +109,6 @@ export async function getAllDsn(
                             return ResponseStatus.REJECTED;
                         case 'approved':
                             return ResponseStatus.APPROVED;
-                        case 'response':
-                            return ResponseStatus.RESPONSE;
-                        case 'pending':
-                            return ResponseStatus.PENDING;
                         default:
                             return null;
                     }
@@ -125,7 +121,7 @@ export async function getAllDsn(
                     created_at: record.created_at,
                     author_username: content.tweet?.author_username || null,
                     tweet_content: content.tweet?.text || null,
-                    response_content: ['response', 'rejected', 'approved', 'pending', 'skipped'].includes(content.type) 
+                    response_content: ['rejected', 'approved', 'skipped'].includes(content.type) 
                         ? content.response || null 
                         : null,
                     result_type: content.type || 'unknown',

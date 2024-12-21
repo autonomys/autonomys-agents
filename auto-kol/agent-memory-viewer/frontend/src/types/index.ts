@@ -62,30 +62,8 @@ export interface SkippedMemory extends BaseMemory {
     mentions: Tweet[];
 }
 
-export interface PendingMemory extends BaseMemory {
-    type: 'pending';
-    response: string;
-    workflowState: {
-        decision: WorkflowDecision;
-        toneAnalysis: WorkflowToneAnalysis;
-        responseStrategy: WorkflowResponseStrategy;
-    };
-    mentions: Tweet[];
-}
-
 export interface ApprovedMemory extends BaseMemory {
     type: 'approved';
-    response: string;
-    workflowState: {
-        decision: WorkflowDecision;
-        toneAnalysis: WorkflowToneAnalysis;
-        responseStrategy: WorkflowResponseStrategy;
-    };
-    mentions: Tweet[];
-}
-
-export interface ResponseMemory extends BaseMemory {
-    type: 'response';
     response: string;
     workflowState: {
         decision: WorkflowDecision;
@@ -110,9 +88,7 @@ export interface RejectedMemory extends BaseMemory {
 
 export type AgentMemory = 
     | SkippedMemory 
-    | ResponseMemory 
     | RejectedMemory 
-    | PendingMemory 
     | ApprovedMemory;
 
 export interface Agent {

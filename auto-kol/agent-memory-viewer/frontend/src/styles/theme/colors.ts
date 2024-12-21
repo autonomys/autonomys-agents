@@ -13,7 +13,6 @@ export const colors = {
     status: {
         approved: 'green.500',
         rejected: 'red.500',
-        pending: 'yellow.500',
         skipped: 'gray.500'
     }
 }; 

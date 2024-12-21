@@ -4,8 +4,6 @@ import { ArrowBackIcon, ExternalLinkIcon } from '@chakra-ui/icons'
 import { useMemory } from '../api/client'
 import { TweetInfo } from '../components/memories/shared/TweetInfo'
 import { SkippedMemoryView } from '../components/memories/SkippedMemory'
-import { PendingMemoryView } from '../components/memories/PendingMemory'
-import { ResponseMemoryView } from '../components/memories/ResponseMemory'
 import { ApprovedMemoryView } from '../components/memories/ApprovedMemory'
 import { RejectedMemoryView } from '../components/memories/RejectedMemory'
 import { ResponseStatus } from '../types/enums'
@@ -25,10 +23,6 @@ function MemoryViewer() {
         switch (memory.type) {
             case ResponseStatus.SKIPPED:
                 return <SkippedMemoryView memory={memory} />
-            case ResponseStatus.PENDING:
-                return <PendingMemoryView memory={memory} />
-            case ResponseStatus.RESPONSE:
-                return <ResponseMemoryView memory={memory} />
             case ResponseStatus.APPROVED:
                 return <ApprovedMemoryView memory={memory} />
             case ResponseStatus.REJECTED:
