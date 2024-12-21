@@ -93,6 +93,7 @@ graph TD
     L -->|Store Hash| M[Memory Contract]
     M -->|Previous Hash| L
     E -->|Store| I[(SQLite DB)]
+    E -->|Upload| L
 ```
 
 ### Components
