@@ -43,7 +43,9 @@ export const responseSchema = z.object({
         author_id: z.string(),
         author_username: z.string(),
         created_at: z.string()
-    })).optional()
+    })).optional(),
+    rejectionReason: z.string().optional(),
+    suggestedChanges: z.string().optional()
 });
 
 export const queueActionSchema = z.object({
@@ -62,4 +64,11 @@ export const queueActionSchema = z.object({
 export const dsnUploadSchema = z.object({
     previousCid: z.string().optional(),
     data: z.any(),
+});
+
+export const autoApprovalSchema = z.object({
+    approved: z.boolean(),
+    reason: z.string(),
+    confidence: z.number().min(0).max(1),
+    suggestedChanges: z.string().optional()
 });

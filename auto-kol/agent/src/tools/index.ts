@@ -1,6 +1,7 @@
 import { createFetchTimelineTool } from './tools/fetchTimelineTool.js';
 import { createTweetSearchTool } from './tools/tweetSearchTool.js';
-import { createQueueResponseTool } from './tools/queueResponseTool.js';
+import { createAddResponseTool } from './tools/queueResponseTool.js';
+import { createUpdateResponseTool } from './tools/queueResponseTool.js';
 import { createQueueSkippedTool } from './tools/queueSkippedTool.js';
 import { createSearchSimilarTweetsTool } from './tools/searchSimilarTweetsTool.js';
 import { createMentionTool } from './tools/mentionTool.js';
@@ -14,7 +15,9 @@ export const createTools = (scraper: ExtendedScraper) => {
 
     const tweetSearchTool = createTweetSearchTool(scraper);
 
-    const queueResponseTool = createQueueResponseTool();
+    const addResponseTool = createAddResponseTool();
+
+    const updateResponseTool = createUpdateResponseTool();
 
     const queueSkippedTool = createQueueSkippedTool();
 
@@ -23,14 +26,16 @@ export const createTools = (scraper: ExtendedScraper) => {
     return {
         mentionTool,
         tweetSearchTool,
-        queueResponseTool,
+        addResponseTool,
+        updateResponseTool,
         queueSkippedTool,
         searchSimilarTweetsTool,
         fetchTimelineTool,
         tools: [
             mentionTool,
             tweetSearchTool,
-            queueResponseTool,
+            addResponseTool,
+            updateResponseTool,
             queueSkippedTool,
             searchSimilarTweetsTool,
             fetchTimelineTool,

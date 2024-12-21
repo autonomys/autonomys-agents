@@ -7,6 +7,8 @@ import { createResponseGenerationNode } from "./nodes/responseGenerationNode.js"
 import { createRecheckSkippedNode } from "./nodes/recheckSkippedNode.js";
 import { createTimelineNode } from "./nodes/timelineNode.js";
 import { createMentionNode } from "./nodes/mentionNode.js";
+import { createAutoApprovalNode } from './nodes/autoApprovalNode.js';
+
 export const createNodes = async (config: WorkflowConfig) => {
 
     const scraper = await createTwitterClientScraper();
@@ -32,6 +34,9 @@ export const createNodes = async (config: WorkflowConfig) => {
     ///////////RECHECK SKIPPED///////////
     const recheckSkippedNode = createRecheckSkippedNode(config);
 
+    ///////////AUTO APPROVAL///////////
+    const autoApprovalNode = createAutoApprovalNode(config, scraper);
+
     return {
         mentionNode,
         timelineNode,
@@ -39,6 +44,7 @@ export const createNodes = async (config: WorkflowConfig) => {
         engagementNode,
         toneAnalysisNode,
         responseGenerationNode,
-        recheckSkippedNode
+        recheckSkippedNode,
+        autoApprovalNode
     };
 };

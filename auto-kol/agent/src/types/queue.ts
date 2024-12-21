@@ -2,6 +2,13 @@ import { Tweet } from './twitter.js';
 import { AgentResponse } from './agent.js';
 import { WorkflowState } from './workflow.js';
 
+export enum ResponseStatus {
+    SKIPPED = 'skipped',
+    PENDING = 'pending',
+    APPROVED = 'approved',
+    REJECTED = 'rejected'
+}
+
 export interface PendingResponse {
     id: string;
     tweet_id: string;
@@ -55,8 +62,4 @@ export type ApprovalAction = Readonly<{
     id: string;
     approved: boolean;
     feedback?: string;
-}>; 
-
-export type TimeLineTweet = Readonly<{
-    id: string;
 }>;

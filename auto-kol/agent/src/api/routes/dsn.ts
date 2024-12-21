@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { createLogger } from '../../utils/logger.js';
-import { getAllDsn, getDsnByCID } from '../../database/index.js';
+import { getAllDsn } from '../../database/index.js';
 import { inflate } from 'pako';
 import { createAutoDriveApi, downloadObject } from '@autonomys/auto-drive';
 import { config } from '../../config/index.js';
