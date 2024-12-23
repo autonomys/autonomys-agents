@@ -7,7 +7,7 @@ import { Tweet } from '../types/twitter.js';
 
 const logger = createLogger('twitter-utils');
 const twitterScraper = await createTwitterClientScraper();
-export const timeLineTweets: Tweet[] = [];
+export const timelineTweets: Tweet[] = [];
 
 export const updateKOLs = async () => {
     const currentKOLs = await db.getKOLAccounts();
@@ -36,26 +36,33 @@ export const getKOLsAccounts = async () => {
 }
 
 export const getTimeLine = async () => {
-    const validTweetIds = timeLineTweets
+    const validTweetIds = timelineTweets
         .map(tweet => tweet.id)
         .filter(id => id != null);
     const timeline = await twitterScraper.fetchHomeTimeline(0, validTweetIds);
+
+
+    // clear timeline
     clearTimeLine();
     for (const tweet of timeline) {
-        timeLineTweets.push({
+        if (!tweet.legacy || !tweet.legacy.full_text) {
+            logger.info(`Tweet full_text not found for tweet id: ${tweet.rest_id}`);
+            continue;
+        }
+        timelineTweets.push({
             id: tweet.rest_id!,
-            text: tweet.legacy!.full_text!,
+            text: tweet.legacy!.full_text,
             author_id: tweet.legacy!.user_id_str!,
             author_username: tweet.core!.user_results!.result!.legacy!.screen_name,
             created_at: new Date(tweet.legacy!.created_at!).toISOString(),
         })
     }
-    logger.info(`Time line tweets size: ${timeLineTweets.length}`);
-    return timeLineTweets;
+    logger.info(`Timeline tweets size: ${timelineTweets.length}`);
+    return timelineTweets;
 }
 
 const clearTimeLine = () => {
-    timeLineTweets.length = 0;
+    timelineTweets.length = 0;
 }
 
 export const getUserProfile = async (username: string) => {
