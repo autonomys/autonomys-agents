@@ -25,7 +25,6 @@ export const createMentionNode = (config: WorkflowConfig, scraper: ExtendedScrap
 
         const parsedContent = parseMessageContent(toolResponse.messages[toolResponse.messages.length - 1].content);
         const parsedTweets = tweetSearchSchema.parse(parsedContent);
-        // logger.info('Parsed tweets:', parsedTweets);
         logger.info(`Found ${parsedTweets.tweets.length} tweets`);
         for (const tweet of parsedTweets.tweets) {
             tweet.mention = true;
