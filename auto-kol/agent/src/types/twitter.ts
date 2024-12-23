@@ -4,6 +4,8 @@ export type Tweet = {
     readonly author_id: string;
     readonly author_username: string;
     readonly created_at: string;
+    readonly mention?: boolean;
+    readonly thread?: Tweet[];
 }
 
 export type TwitterCredentials = {

@@ -14,7 +14,7 @@ export const createMentionTool = (scraper: ExtendedScraper) => new DynamicStruct
         try {
             const sinceId = await getLatestMentionId();
             const mentions = await scraper.getMyMentions(100, sinceId);
-            logger.info('Fetched mentions:', mentions);
+            // logger.info('Fetched mentions:', mentions);
             if (!mentions || mentions.length === 0) {
                 logger.info('No new mentions found');
                 return {

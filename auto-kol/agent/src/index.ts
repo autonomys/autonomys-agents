@@ -7,7 +7,7 @@ import apiRoutes from './api/index.js';
 import { corsMiddleware } from './api/middleware/cors.js';
 const logger = createLogger('app');
 const app = express();
-
+import { createTwitterClientScraper } from './services/twitter/api.js';
 app.use(corsMiddleware);
 
 app.use(express.json());
@@ -27,6 +27,20 @@ const startWorkflowPolling = async () => {
 
 const main = async () => {
     try {
+        // const scraper = await createTwitterClientScraper();
+        // logger.info('Scraper:', scraper.isLoggedIn());
+        // const thread = await scraper.getThread('1870973877272375519');
+        // const tweetsWithThreads: any[] = [];
+        // for await (const threadTweet of thread) {
+        //     tweetsWithThreads.push({
+        //         id: threadTweet.id || '',
+        //         text: threadTweet.text || '',
+        //         author_id: threadTweet.userId || '',
+        //         author_username: threadTweet.username?.toLowerCase() || 'unknown',
+        //         created_at: threadTweet.timeParsed?.toISOString() || new Date().toISOString()
+        //     });
+        // }
+        // logger.info('Tweets with threads:', tweetsWithThreads);
         await initializeSchema();
 
         app.listen(config.PORT, () => {

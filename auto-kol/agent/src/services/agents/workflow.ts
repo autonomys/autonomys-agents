@@ -115,7 +115,7 @@ const shouldContinue = (state: typeof State.State) => {
         logger.info('Moving to recheck skipped tweets');
         return 'recheckNode';
     }
-
+    
     // Check for batches to process
     if (content.batchToAnalyze?.length > 0) {
         logger.debug('Moving to tone analysis');

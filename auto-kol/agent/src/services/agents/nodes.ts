@@ -14,7 +14,7 @@ export const createNodes = async (config: WorkflowConfig) => {
     const scraper = await createTwitterClientScraper();
 
     ///////////MENTIONS///////////
-    const mentionNode = createMentionNode(config);
+    const mentionNode = createMentionNode(config, scraper);
 
     ///////////TIMELINE///////////
     const timelineNode = createTimelineNode(config);
