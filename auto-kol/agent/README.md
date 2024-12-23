@@ -7,7 +7,7 @@ Auto-KOL is an intelligent agent framework designed to engage with thought leade
 - Automated tweet monitoring and response generation
 - Multi-step workflow with engagement decision making
 - Tone analysis and adaptive response strategies
-- Human-in-the-loop approval system (for now)
+- Agent Review with Feedback
 - Rate limit handling and queue management
 - Extensible agent architecture
 
@@ -53,8 +53,6 @@ Edit `.env` with your credentials
 - GET `/health`
 
 ### Response Management
-- GET `/responses/pending` - Get all pending responses
-- POST `/responses/:id/approve` - Approve/reject a response
 - GET `/responses/:id/workflow` - Get workflow state for a response
 
 ### Tweet Management
@@ -74,27 +72,29 @@ The system follows a multi-stage workflow:
 2. Engagement Decision
 3. Tone Analysis
 4. Response Generation
-5. Human Review
+5. Agent Review with Feedback
 6. Response Execution
 
 ### Data Flow
 
 ```mermaid
 graph TD
-    A[Timeline/Search Node] -->|Fetch Tweets| B[ChromaDB]
+    A[Timeline/Search/Mention Node] -->|Fetch Tweets| B[ChromaDB]
     B -->|Store Tweet Vectors| C[Engagement Node]
     C -->|Decision| D{Should Engage?}
     D -->|No| E[Queue Skipped]
     D -->|Yes| F[Tone Analysis Node]
     F -->|Analyze| G[Response Generation Node]
     G -->|Similar Tweets| B
-    G -->|Generate| H[Queue Response]
+    G -->|Generate| H[Auto Approval Node]
+    H -->|Rejected| G
+    H -->|Approved| K[Twitter API]
+    H -->|Approved| L[DSN Upload]
     H -->|Store| I[(SQLite DB)]
+    L -->|Store Hash| M[Memory Contract]
+    M -->|Previous Hash| L
     E -->|Store| I
-    I -->|Pending| J[Human Review]
-    J -->|Approved| K[Twitter API]
-    J -->|Approved| L[DSN Upload]
-    L -->|Store| I
+    E -->|Upload| L
 ```
 
 ### Components
@@ -105,7 +105,7 @@ graph TD
 - **Tone Analysis**: Analyzes tweet tone and suggests response strategy
 - **Response Generation**: Creates context-aware responses using similar tweets
 - **SQLite DB**: Stores tweets, responses, and interaction history
-- **Human Review**: Web interface for response approval
+- **Agent Review**: Special node to review responses and provide feedback
 - **DSN**: Decentralized storage for approved interactions
 
 ## License
