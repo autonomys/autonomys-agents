@@ -114,14 +114,8 @@ const shouldContinue = (state: typeof State.State) => {
     if (content.batchToRespond?.length > 0) {
         return 'generateNode';
     }
-
-    // Continue with next batch if there are more tweets
-    if (content.batchProcessing) {
-        return 'engagementNode';
-    }
-
     // Check if we've processed all tweets
-    if (!content.tweets || content.currentTweetIndex >= content.tweets.length) {
+    if ((!content.tweets || content.currentTweetIndex >= content.tweets.length) && content.pendingEngagements?.length === 0) {
         if (content.fromRecheckNode && content.messages?.length === 0) {
             logger.info('Workflow complete - no more tweets to process');
             return END;
@@ -129,7 +123,6 @@ const shouldContinue = (state: typeof State.State) => {
         logger.info('Moving to recheck skipped tweets');
         return 'recheckNode';
     }
-
     return 'engagementNode';
 };
 
