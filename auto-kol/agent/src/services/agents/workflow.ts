@@ -92,6 +92,20 @@ const shouldContinue = (state: typeof State.State) => {
         hasBatchToRespond: !!content.batchToRespond?.length
     });
 
+    // If we just came from auto-approval node and have more responses to fix
+    if (!content.fromAutoApproval && content.batchToFeedback?.length > 0) {
+        return 'autoApprovalNode';
+    }
+
+    if (content.fromAutoApproval) {
+        if (content.batchToRespond?.length > 0) {
+          // There are some tweets that need re-generation of responses
+          return 'generateNode';
+        } else {
+          // No tweets need re-generation, move to recheckNode
+          return 'recheckNode';
+        }
+      }
     // Check if we've processed all tweets
     if (!content.tweets || content.currentTweetIndex >= content.tweets.length) {
         if (content.fromRecheckNode && content.messages?.length === 0) {
@@ -108,7 +122,7 @@ const shouldContinue = (state: typeof State.State) => {
         return 'analyzeNode';
     }
 
-    if (content.batchToRespond?.length > 0) {
+    if (content.batchToRespond?.length > 0 && !content.fromAutoApproval) {
         logger.debug('Moving to response generation');
         return 'generateNode';
     }
@@ -126,6 +140,7 @@ export const createWorkflow = async (nodes: Awaited<ReturnType<typeof createNode
         .addNode('engagementNode', nodes.engagementNode)
         .addNode('analyzeNode', nodes.toneAnalysisNode)
         .addNode('generateNode', nodes.responseGenerationNode)
+        .addNode('autoApprovalNode', nodes.autoApprovalNode)
         .addNode('recheckNode', nodes.recheckSkippedNode)
         .addEdge(START, 'mentionNode')
         .addEdge('mentionNode', 'timelineNode')
@@ -134,6 +149,7 @@ export const createWorkflow = async (nodes: Awaited<ReturnType<typeof createNode
         .addConditionalEdges('engagementNode', shouldContinue)
         .addConditionalEdges('analyzeNode', shouldContinue)
         .addConditionalEdges('generateNode', shouldContinue)
+        .addConditionalEdges('autoApprovalNode', shouldContinue)
         .addConditionalEdges('recheckNode', shouldContinue);
 };
 

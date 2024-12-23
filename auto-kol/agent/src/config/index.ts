@@ -46,12 +46,17 @@ export const config = {
     RPC_URL: process.env.RPC_URL,
     CONTRACT_ADDRESS: process.env.CONTRACT_ADDRESS,
     PRIVATE_KEY: process.env.PRIVATE_KEY,
+    WALLET_ADDRESS: process.env.WALLET_ADDRESS,
 
     // Tweet Search/Fetch Configuration
     ACCOUNTS_PER_BATCH: Number(process.env.ACCOUNTS_PER_BATCH) || 10,
     MAX_SEARCH_TWEETS: Number(process.env.MAX_SEARCH_TWEETS) || 20,
-    MAX_TIMELINE_TWEETS: Number(process.env.MAX_TIMELINE_TWEETS) || 10,
-
     // BATCH CONFIG
     ENGAGEMENT_BATCH_SIZE: process.env.ENGAGEMENT_BATCH_SIZE || 15,
+
+    // RESPONSE CONFIG
+    RETRY_LIMIT: process.env.RETRY_LIMIT || 2,
+
+    // POSTING TWEETS PERMISSION
+    POST_TWEETS: process.env.POST_TWEETS === 'true',
 }; 
