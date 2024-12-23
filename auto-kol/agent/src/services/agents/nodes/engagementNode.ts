@@ -50,10 +50,10 @@ export const createEngagementNode = (config: WorkflowConfig) => {
             const lastMessage = state.messages[state.messages.length - 1];
             const parsedContent = parseMessageContent(lastMessage.content);
             const pendingEngagements = parsedContent.pendingEngagements || [];            
+            logger.info(`Current tweet index: ${parsedContent?.currentTweetIndex}`);
             
             if (pendingEngagements.length > 0) {
                 logger.info(`number of pending engagements: ${pendingEngagements.length}`);
-
                 return {
                     messages: [new AIMessage({
                         content: JSON.stringify({
@@ -61,7 +61,8 @@ export const createEngagementNode = (config: WorkflowConfig) => {
                             currentTweetIndex: parsedContent.currentTweetIndex,
                             batchToAnalyze: pendingEngagements,
                             pendingEngagements: [],
-                            lastProcessedId: parsedContent.lastProcessedId
+                            lastProcessedId: parsedContent.lastProcessedId,
+                            batchProcessing: true
                         })
                     })],
                     processedTweets: state.processedTweets
@@ -70,8 +71,9 @@ export const createEngagementNode = (config: WorkflowConfig) => {
 
             const BATCH_SIZE = globalConfig.ENGAGEMENT_BATCH_SIZE;
             const startIdx = parsedContent.currentTweetIndex || 0;
-            const endIdx = Math.min(startIdx + BATCH_SIZE, parsedContent.tweets.length);
-            const batchTweets = parsedContent.tweets.slice(startIdx, endIdx);
+            const proposedEndIdx = Number(startIdx) + Number(BATCH_SIZE);
+            const endIdx = Math.min(proposedEndIdx, parsedContent.tweets?.length || 0);
+            const batchTweets = parsedContent.tweets?.slice(startIdx, endIdx) || [];
 
             logger.info('Processing batch of tweets', {
                 batchSize: batchTweets.length,
@@ -116,9 +118,10 @@ export const createEngagementNode = (config: WorkflowConfig) => {
                 messages: [new AIMessage({
                     content: JSON.stringify({
                         tweets: parsedContent.tweets,
-                        currentTweetIndex: tweetsToEngage.length > 0 ? startIdx : endIdx,
+                        currentTweetIndex: endIdx,
                         pendingEngagements: tweetsToEngage,
-                        lastProcessedId: parsedContent.lastProcessedId
+                        lastProcessedId: parsedContent.lastProcessedId,
+                        batchProcessing: true,
                     })
                 })],
                 processedTweets: newProcessedTweets

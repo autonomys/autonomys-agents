@@ -1,5 +1,5 @@
 import { AIMessage } from "@langchain/core/messages";
-import { State, logger } from '../workflow.js';
+import { State, logger, parseMessageContent } from '../workflow.js';
 import * as prompts from '../prompts.js';
 import { flagBackSkippedTweet, getAllSkippedTweetsToRecheck } from '../../../database/index.js';
 import { WorkflowConfig } from '../workflow.js';
@@ -8,6 +8,11 @@ export const createRecheckSkippedNode = (config: WorkflowConfig) => {
     return async (state: typeof State.State) => {
         logger.info('Recheck Skipped Node - Reviewing previously skipped tweets');
         try {
+            const lastMessage = state.messages[state.messages.length - 1];
+            const parsedContent = parseMessageContent(lastMessage.content);
+            const {tweets, currentTweetIndex} = parsedContent;
+            logger.info(`currentTweetIndex: ${currentTweetIndex}`);
+          
             const skippedTweets = await getAllSkippedTweetsToRecheck();
 
             if (!skippedTweets || skippedTweets.length === 0) {
@@ -16,6 +21,9 @@ export const createRecheckSkippedNode = (config: WorkflowConfig) => {
                     messages: [new AIMessage({
                         content: JSON.stringify({
                             fromRecheckNode: true,
+                            currentTweetIndex: currentTweetIndex,
+                            tweets: tweets,
+                            pendingEngagements: [],
                             messages: []
                         })
                     })]
@@ -48,7 +56,17 @@ export const createRecheckSkippedNode = (config: WorkflowConfig) => {
 
             if (processedTweets.length === 0) {
                 logger.info('No skipped tweets passed recheck');
-                return { messages: [] };
+                return {
+                    messages: [new AIMessage({
+                        content: JSON.stringify({
+                            fromRecheckNode: true,
+                            currentTweetIndex: currentTweetIndex,
+                            tweets: tweets,
+                            pendingEngagements: [],
+                            messages: []
+                        })
+                    })]
+                };
             }
 
             const { tweet, decision } = processedTweets[0];
