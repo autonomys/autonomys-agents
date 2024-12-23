@@ -89,23 +89,37 @@ const shouldContinue = (state: typeof State.State) => {
         currentIndex: content.currentTweetIndex,
         totalTweets: content.tweets?.length,
         hasBatchToAnalyze: !!content.batchToAnalyze?.length,
-        hasBatchToRespond: !!content.batchToRespond?.length
+        hasBatchToRespond: !!content.batchToRespond?.length,
+        batchProcessing: content.batchProcessing
     });
 
-    // If we just came from auto-approval node and have more responses to fix
+    // Handle auto-approval flow
     if (!content.fromAutoApproval && content.batchToFeedback?.length > 0) {
         return 'autoApprovalNode';
     }
 
     if (content.fromAutoApproval) {
         if (content.batchToRespond?.length > 0) {
-          // There are some tweets that need re-generation of responses
-          return 'generateNode';
+            return 'generateNode';
         } else {
-          // No tweets need re-generation, move to recheckNode
-          return 'recheckNode';
+            return 'engagementNode';
         }
-      }
+    }
+
+    // Handle batch processing flow
+    if (content.batchToAnalyze?.length > 0) {
+        return 'analyzeNode';
+    }
+
+    if (content.batchToRespond?.length > 0) {
+        return 'generateNode';
+    }
+
+    // Continue with next batch if there are more tweets
+    if (content.batchProcessing) {
+        return 'engagementNode';
+    }
+
     // Check if we've processed all tweets
     if (!content.tweets || content.currentTweetIndex >= content.tweets.length) {
         if (content.fromRecheckNode && content.messages?.length === 0) {
@@ -116,18 +130,6 @@ const shouldContinue = (state: typeof State.State) => {
         return 'recheckNode';
     }
 
-    // Check for batches to process
-    if (content.batchToAnalyze?.length > 0) {
-        logger.debug('Moving to tone analysis');
-        return 'analyzeNode';
-    }
-
-    if (content.batchToRespond?.length > 0 && !content.fromAutoApproval) {
-        logger.debug('Moving to response generation');
-        return 'generateNode';
-    }
-
-    logger.debug('Moving to engagement evaluation');
     return 'engagementNode';
 };
 
