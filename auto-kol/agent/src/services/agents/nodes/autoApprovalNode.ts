@@ -62,9 +62,8 @@ export const createAutoApprovalNode = (config: WorkflowConfig, scraper: Extended
                             sendTweetResponse
                         });
                     }
-                    if (response.tweet.thread?.length > 0) {
-                        logger.info('Mention found!')
                     
+                    if (globalConfig.DSN_UPLOAD) {
                         await uploadToDsn({
                             data: response,
                             previousCid: await getLastDsnCid()

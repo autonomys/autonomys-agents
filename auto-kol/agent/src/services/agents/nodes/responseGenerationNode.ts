@@ -1,10 +1,7 @@
 import { AIMessage } from "@langchain/core/messages";
 import { State, logger, parseMessageContent } from '../workflow.js';
 import * as prompts from '../prompts.js';
-import { uploadToDsn } from '../../../utils/dsn.js';
-import { getLastDsnCid } from '../../../database/index.js';
 import { WorkflowConfig } from '../workflow.js';
-import { config as globalConfig } from '../../../config/index.js';
 import { ResponseStatus } from '../../../types/queue.js';
 
 export const createResponseGenerationNode = (config: WorkflowConfig, scraper: any) => {

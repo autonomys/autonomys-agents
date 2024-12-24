@@ -40,9 +40,8 @@ export const createMentionNode = (config: WorkflowConfig, scraper: ExtendedScrap
                 });
             }
             tweet.thread = tweetsWithThreads;
-            await new Promise(resolve => setTimeout(resolve, 5000));
+            await new Promise(resolve => setTimeout(resolve, 1000));
             logger.info(`Found ${tweetsWithThreads.length} tweets in thread`);
-            break;
         }
         return {
             messages: [new AIMessage({
