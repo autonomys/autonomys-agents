@@ -7,7 +7,11 @@ import { uploadToDsn } from '../../../utils/dsn.js';
 import { config as globalConfig } from '../../../config/index.js';
 import { ResponseStatus } from '../../../types/queue.js';
 
+<<<<<<< HEAD
 export const createAutoApprovalNode = (config: WorkflowConfig) => {
+=======
+export const createAutoApprovalNode = (config: WorkflowConfig, scraper: ExtendedScraper) => {
+>>>>>>> main
   return async (state: typeof State.State) => {
     logger.info('Auto Approval Node - Evaluating pending responses');
     try {
@@ -58,10 +62,14 @@ export const createAutoApprovalNode = (config: WorkflowConfig) => {
               tweetId: response.tweet.id,
             });
 
+<<<<<<< HEAD
             const sendTweetResponse = await config.client.sendTweet(
               response.response,
               response.tweet.id,
             );
+=======
+            const sendTweetResponse = await scraper.sendTweet(response.response, response.tweet.id);
+>>>>>>> main
             logger.info('Tweet sent', {
               sendTweetResponse,
             });

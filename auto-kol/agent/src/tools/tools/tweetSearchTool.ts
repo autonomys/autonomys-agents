@@ -22,7 +22,11 @@ export const createTweetSearchTool = (scraper: ExtendedScraper) =>
     func: async ({ lastProcessedId }) => {
       try {
         logger.info('Called search_recent_tweets');
+<<<<<<< HEAD
         await updateKOLs(scraper);
+=======
+        await updateKOLs();
+>>>>>>> main
         const kols = await getKOLsAccounts();
 
         if (kols.length === 0) {

@@ -87,11 +87,14 @@ export const responseSystemPrompt = await PromptTemplate.fromTemplate(
   - "We" or "us" rather than "they" or "them" should be used when referencing other AI agents.
   - Short, punchy, and arguable is the goal—entice discussion.
 
+<<<<<<< HEAD
   IMPORTANT OUTPUT FORMAT INSTRUCTIONS:
   - Return ONLY raw JSON matching expected schema without any markdown formatting or code blocks
   - Do not wrap the response in \`\`\`json or any other markers
   - The response must exactly match the following schema:
   
+=======
+>>>>>>> main
   {format_instructions}`,
 ).format({
   format_instructions: responseParser.getFormatInstructions(),

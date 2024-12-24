@@ -25,27 +25,29 @@ process.on('unhandledRejection', async (reason, promise) => {
 async function main() {
     try {
         await initialize();
-        await resurrection();
+        resurrection();
 
         const memoryWatcher = watchMemoryHashUpdates(async (agent, cid) => {
-            try {
-                logger.info('New memory hash detected', { agent, cid });
-                const memory = await downloadMemory(cid);
-                if (memory) {
-                    const savedMemory = await saveMemoryRecord(cid, memory, memory?.previousCid);
-                    logger.info('Memory processed successfully', { 
+            logger.info('New memory hash detected', { agent, cid });
+            
+            downloadMemory(cid)
+                .then(async memory => {
+                    if (memory) {
+                        const savedMemory = await saveMemoryRecord(cid, memory, memory?.previousCid);
+                        logger.info('Memory processed successfully', { 
+                            cid,
+                            isNew: savedMemory.created_at === savedMemory.created_at 
+                        });
+                    }
+                })
+                .catch(error => {
+                    logger.error('Error processing memory update', { 
+                        error,
+                        agent,
                         cid,
-                        isNew: savedMemory.created_at === savedMemory.created_at 
+                        errorType: error instanceof Error ? error.constructor.name : typeof error
                     });
-                }
-            } catch (error) {
-                logger.error('Error processing memory update', { 
-                    error,
-                    agent,
-                    cid,
-                    errorType: error instanceof Error ? error.constructor.name : typeof error
                 });
-            }
         });
 
         createWebSocketServer();
