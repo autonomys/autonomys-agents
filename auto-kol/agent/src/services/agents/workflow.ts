@@ -6,7 +6,7 @@ import { config } from '../../config/index.js';
 import { createLogger } from '../../utils/logger.js';
 import { createTools } from '../../tools/index.js';
 import { ToolNode } from '@langchain/langgraph/prebuilt';
-import { createTwitterClientScraper } from '../twitter/api.js';
+import { createTwitterClientScraper, ExtendedScraper } from '../twitter/api.js';
 export const logger = createLogger('agent-workflow');
 import { createNodes } from './nodes.js';
 
@@ -34,7 +34,7 @@ export const State = Annotation.Root({
 });
 
 export type WorkflowConfig = Readonly<{
-    client: any;
+    client: ExtendedScraper;
     toolNode: ToolNode;
     llms: Readonly<{
         decision: ChatOpenAI;

@@ -50,6 +50,39 @@ export class ExtendedScraper extends Scraper {
         logger.info(`Login status: ${isLoggedIn}`);
     }
 
+    private async reAuthenticate(maxRetries: number = 3): Promise<boolean> {
+        let isLoggedIn = false;
+        let retryCount = 0;
+        
+        while (!isLoggedIn && retryCount < maxRetries) {
+            logger.warn(`Session expired, attempting to re-authenticate... (attempt ${retryCount + 1}/${maxRetries})`);
+            try {
+                await this.initialize();
+                isLoggedIn = await this.isLoggedIn();
+                if (isLoggedIn) {
+                    logger.info('Successfully re-authenticated');
+                    return true;
+                }
+                logger.error('Re-authentication failed');
+                retryCount++;
+                if (retryCount < maxRetries) {
+                    const delay = 2000 * Math.pow(2, retryCount - 1);
+                    await new Promise(resolve => setTimeout(resolve, delay));                    
+                }
+            } catch (error) {
+                logger.error('Error during re-authentication:', error);
+                retryCount++;
+                if (retryCount < maxRetries) {
+                    const delay = 2000 * Math.pow(2, retryCount - 1);
+                    await new Promise(resolve => setTimeout(resolve, delay));                    
+                }
+            }
+        }
+        
+        logger.error(`Failed to re-authenticate after ${maxRetries} attempts`);
+        return false;
+    }
+
     async getMyMentions(maxResults: number = 100, sinceId?: string) {
         const username = config.TWITTER_USERNAME!;
 
@@ -101,40 +134,73 @@ export class ExtendedScraper extends Scraper {
         return replies;
     }
 
-    async getThread(tweetId: string, maxDepth: number = 100): Promise<Tweet[]> {
-        let isLoggedIn = await this.isLoggedIn();
-        
+    async getThread(tweetId: string): Promise<Tweet[]> {
+        const username = config.TWITTER_USERNAME!;
+        const isLoggedIn = await this.isLoggedIn();
         if (!isLoggedIn) {
-            const maxRetries = 3;
-            let retryCount = 0;
-            
-            while (!isLoggedIn && retryCount < maxRetries) {
-                logger.warn(`Session expired, attempting to re-authenticate... (attempt ${retryCount + 1}/${maxRetries})`);
-                try {
-                    await this.initialize();
-                    isLoggedIn = await this.isLoggedIn();
-                    if (isLoggedIn) {
-                        logger.info('Successfully re-authenticated');
-                        break;
-                    }
-                    logger.error('Re-authentication failed');
-                    retryCount++;
-                    if (retryCount < maxRetries) {
-                        // Wait for 2 seconds before retrying
-                        await new Promise(resolve => setTimeout(resolve, 2000));
-                    }
-                } catch (error) {
-                    logger.error('Error during re-authentication:', error);
-                    retryCount++;
-                    if (retryCount < maxRetries) {
-                        // Wait for 2 seconds before retrying
-                        await new Promise(resolve => setTimeout(resolve, 2000));
-                    }
+            throw new Error('Must be logged in to fetch thread');
+        }
+
+        const thread: Tweet[] = [];
+        const seen = new Set<string>();
+
+        const initialTweet = await this.getTweet(tweetId);
+        if (!initialTweet) {
+            throw new Error(`Tweet ${tweetId} not found`);
+        }
+
+        let currentTweet = initialTweet;
+        while (currentTweet.inReplyToStatusId) {
+            const parentTweet = await this.getTweet(currentTweet.inReplyToStatusId);
+            if (!parentTweet) break;
+            if (!seen.has(parentTweet.id!)) {
+                thread.push(parentTweet);
+                seen.add(parentTweet.id!);
+            }
+            currentTweet = parentTweet;
+        }
+
+        if (!seen.has(initialTweet.id!)) {
+            thread.push(initialTweet);
+            seen.add(initialTweet.id!);
+        }
+
+        const agentTweet = thread.find(t => t.username === username);
+        if (agentTweet) {
+            const replies = this.searchTweets(
+                `conversation_id:${currentTweet.id!} in_reply_to_tweet_id:${agentTweet.id!}`,
+                100,
+                SearchMode.Latest
+            );
+
+            for await (const reply of replies) {
+                if (!seen.has(reply.id!)) {
+                    thread.push(reply);
+                    seen.add(reply.id!);
                 }
             }
-            
-            if (!isLoggedIn) {
-                logger.error(`Failed to re-authenticate after ${maxRetries} attempts`);
+        }
+
+        // Sort chronologically
+        thread.sort((a, b) => {
+            const timeA = a.timeParsed?.getTime() || 0;
+            const timeB = b.timeParsed?.getTime() || 0;
+            return timeA - timeB;
+        });
+
+        logger.info(`Retrieved conversation thread with ${thread.length} tweets starting from root tweet ${currentTweet.id!}`);
+
+        return thread;
+    }
+
+    // Placeholder for efficient thread fetching
+    async getThreadPlaceHolder(tweetId: string, maxDepth: number = 100): Promise<Tweet[]> {
+        const username = config.TWITTER_USERNAME!;
+        const isLoggedIn = await this.isLoggedIn();
+        if (!isLoggedIn) {
+            const reAuthenticate = await this.reAuthenticate();
+            if (!reAuthenticate) {
+                logger.error('Failed to re-authenticate');
                 return [];
             }
         }
@@ -142,7 +208,6 @@ export class ExtendedScraper extends Scraper {
         try {
             const thread: Tweet[] = [];
             const seen = new Set<string>();
-            const myUsername = config.TWITTER_USERNAME!.toLowerCase();
             const conversationTweets = new Map<string, Tweet>();
 
             const initialTweet = await this.getTweet(tweetId);
@@ -152,74 +217,57 @@ export class ExtendedScraper extends Scraper {
             }
 
             let rootTweet = initialTweet;
+            const conversationId = initialTweet.conversationId || initialTweet.id;
+            
+            logger.info('Initial tweet:', {
+                id: initialTweet.id,
+                conversationId: conversationId,
+                inReplyToStatusId: initialTweet.inReplyToStatusId
+            });
+
             if (initialTweet.conversationId && initialTweet.conversationId !== initialTweet.id) {
                 const conversationRoot = await this.getTweet(initialTweet.conversationId);
                 if (conversationRoot) {
                     rootTweet = conversationRoot;
                     conversationTweets.set(rootTweet.id!, rootTweet);
+                    logger.info('Found root tweet:', {
+                        id: rootTweet.id,
+                        conversationId: rootTweet.conversationId
+                    });
                 }
             }
 
             try {
+                logger.info('Fetching conversation with query:', `conversation_id:${conversationId}`);
                 const conversationIterator = this.searchTweets(
-                    `conversation_id:${initialTweet.conversationId} (from:${myUsername} OR to:${myUsername})`,
+                    `conversation_id:${conversationId}`,
                     100,
                     SearchMode.Latest
                 );
 
                 for await (const tweet of conversationIterator) {
                     conversationTweets.set(tweet.id!, tweet);
+                    logger.info('Found conversation tweet:', {
+                        id: tweet.id,
+                        inReplyToStatusId: tweet.inReplyToStatusId,
+                        text: tweet.text?.substring(0, 50) + '...'
+                    });
                 }
+
+                logger.info('Total conversation tweets found:', conversationTweets.size);
             } catch (error) {
                 logger.warn(`Error fetching conversation: ${error}`);
                 return [rootTweet, initialTweet];
             }
 
-            thread.push(rootTweet);
-            seen.add(rootTweet.id!);
-
-            const buildThread = (tweet: Tweet) => {
-                if (seen.has(tweet.id!)) return;
-                
-                const isRelevant = 
-                    tweet.username?.toLowerCase() === myUsername || // Tweet is from agent
-                    tweet.text?.toLowerCase().includes(`@${myUsername}`) || // Tweet mentions agent
-                    Array.from(conversationTweets.values()).some(t => // Tweet is replied to by agent
-                        t.username?.toLowerCase() === myUsername && 
-                        t.inReplyToStatusId === tweet.id
-                    );
-
-                if (isRelevant) {
-                    seen.add(tweet.id!);
-                    thread.push(tweet);
-
-                    // If this tweet is a reply, get its parent
-                    if (tweet.inReplyToStatusId) {
-                        const parentTweet = conversationTweets.get(tweet.inReplyToStatusId);
-                        if (parentTweet && !seen.has(parentTweet.id!)) {
-                            buildThread(parentTweet);
-                        }
-                    }
-
-                    // Get direct replies to this tweet
-                    for (const [, potentialReply] of conversationTweets) {
-                        if (potentialReply.inReplyToStatusId === tweet.id) {
-                            buildThread(potentialReply);
-                        }
-                    }
-                }
-            };
-
-            buildThread(initialTweet);
-
-
+            thread.push(...conversationTweets.values());
             thread.sort((a, b) => {
                 const timeA = a.timeParsed?.getTime() || 0;
                 const timeB = b.timeParsed?.getTime() || 0;
                 return timeA - timeB;
             });
 
-            logger.info(`Retrieved thread with ${thread.length} relevant tweets (including root tweet)`);
+            logger.info(`Retrieved thread with ${thread.length} tweets`);
             return thread;
         } catch (error) {
             logger.error(`Unexpected error in getThread: ${error}`);
@@ -227,6 +275,8 @@ export class ExtendedScraper extends Scraper {
         }
     }
 }
+
+
 
 export const createTwitterClientScraper = async () => {
     return ExtendedScraper.getInstance();

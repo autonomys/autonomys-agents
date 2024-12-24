@@ -4,7 +4,7 @@ import * as prompts from '../prompts.js';
 import { WorkflowConfig } from '../workflow.js';
 import { ResponseStatus } from '../../../types/queue.js';
 
-export const createResponseGenerationNode = (config: WorkflowConfig, scraper: any) => {
+export const createResponseGenerationNode = (config: WorkflowConfig) => {
     return async (state: typeof State.State) => {
         logger.info('Response Generation Node - Creating response strategy');
         try {
