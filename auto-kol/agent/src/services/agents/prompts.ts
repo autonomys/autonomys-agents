@@ -1,5 +1,5 @@
 import { StructuredOutputParser } from 'langchain/output_parsers';
-import { engagementSchema, toneSchema, responseSchema, autoApprovalSchema, trendSchema } from '../../schemas/workflow.js';
+import { engagementSchema, toneSchema, responseSchema, autoApprovalSchema, trendSchema, trendTweetSchema } from '../../schemas/workflow.js';
 import { ChatPromptTemplate, PromptTemplate } from '@langchain/core/prompts';
 import { SystemMessage } from '@langchain/core/messages';
 import { config } from '../../config/index.js';
@@ -12,7 +12,7 @@ export const toneParser = StructuredOutputParser.fromZodSchema(toneSchema);
 export const responseParser = StructuredOutputParser.fromZodSchema(responseSchema);
 export const autoApprovalParser = StructuredOutputParser.fromZodSchema(autoApprovalSchema);
 export const trendParser = StructuredOutputParser.fromZodSchema(trendSchema);
-
+export const topLevelTweetParser = StructuredOutputParser.fromZodSchema(trendTweetSchema);
 
 //
 // ============ TREND SYSTEM PROMPT ============
@@ -38,6 +38,36 @@ export const trendSystemPrompt = await PromptTemplate.fromTemplate(
   {format_instructions}`
 ).format({
     format_instructions: trendParser.getFormatInstructions()
+});
+
+
+//
+// ============ TREND TWEET SYSTEM PROMPT ============
+//
+export const topLevelTweetSystemPrompt = await PromptTemplate.fromTemplate(
+    `You are an expert in AI and blockchain technology who creates engaging tweets about emerging trends.
+    
+    Style Guidelines:
+    1. Keep tweets under 280 characters
+    2. Use clear, professional language
+    3. Include 1-2 relevant hashtags
+    4. Focus on synthesizing insights
+    5. Be engaging but informative
+    6. Avoid excessive emojis
+    7. Maintain a slightly contrarian or analytical tone
+
+    Content Focus:
+    - Identify patterns across trends
+    - Highlight unexpected connections
+    - Offer unique perspectives
+    - Question common assumptions
+    - Provide valuable insights
+
+    IMPORTANT: Follow the exact output format. Keep tweets concise and impactful.
+
+    {format_instructions}`
+).format({
+    format_instructions: topLevelTweetParser.getFormatInstructions()
 });
 
 //
@@ -222,6 +252,17 @@ export const responsePrompt = ChatPromptTemplate.fromMessages([
     3. MUST EXACTLYmatch the expected schema.
 
     Good luck, ${agentUsername}—give us something memorable!`
+    ]
+]);
+
+export const topLevelTweetPrompt = ChatPromptTemplate.fromMessages([
+    new SystemMessage(topLevelTweetSystemPrompt),
+    [
+        "human",
+        `Analyze these trends and create an engaging tweet:
+        Trends: {trends}
+
+        Note: Focus on creating a unique perspective that synthesizes the trends.`
     ]
 ]);
 

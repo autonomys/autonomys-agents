@@ -7,6 +7,8 @@ import * as db from '../../database/index.js';
 import { addTrend } from '../../../database/index.js';
 import { trendParser, trendPrompt } from "../prompts.js";
 import { v4 as generateID } from 'uuid';
+
+
 export const createTimelineNode = (config: WorkflowConfig) => {
     return async (state: typeof State.State) => {
         logger.info('Timeline Node - Fetching recent tweets');
@@ -45,6 +47,7 @@ export const createTimelineNode = (config: WorkflowConfig) => {
             });
 
         logger.info('Trend analysis:', trendAnalysis);
+
         await addTrend({
             id: generateID(),
             content: trendAnalysis.summary
