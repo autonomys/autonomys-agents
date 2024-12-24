@@ -1,4 +1,4 @@
-import { Tweet } from "./twitter.js";
+import { Tweet } from './twitter.js';
 
 export type AgentResponse = Readonly<{
   content: string;

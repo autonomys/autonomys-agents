@@ -1,23 +1,17 @@
-import {
-  END,
-  MemorySaver,
-  StateGraph,
-  START,
-  Annotation,
-} from "@langchain/langgraph";
-import { BaseMessage } from "@langchain/core/messages";
-import { ChatOpenAI } from "@langchain/openai";
-import { MessageContent } from "@langchain/core/messages";
-import { config } from "../../config/index.js";
-import { createLogger } from "../../utils/logger.js";
-import { createTools } from "../../tools/index.js";
-import { ToolNode } from "@langchain/langgraph/prebuilt";
-import { createTwitterClientScraper, ExtendedScraper } from "../twitter/api.js";
-export const logger = createLogger("agent-workflow");
-import { createNodes } from "./nodes.js";
+import { END, MemorySaver, StateGraph, START, Annotation } from '@langchain/langgraph';
+import { BaseMessage } from '@langchain/core/messages';
+import { ChatOpenAI } from '@langchain/openai';
+import { MessageContent } from '@langchain/core/messages';
+import { config } from '../../config/index.js';
+import { createLogger } from '../../utils/logger.js';
+import { createTools } from '../../tools/index.js';
+import { ToolNode } from '@langchain/langgraph/prebuilt';
+import { createTwitterClientScraper, ExtendedScraper } from '../twitter/api.js';
+export const logger = createLogger('agent-workflow');
+import { createNodes } from './nodes.js';
 
 export const parseMessageContent = (content: MessageContent): any => {
-  if (typeof content === "string") {
+  if (typeof content === 'string') {
     return JSON.parse(content);
   }
   if (Array.isArray(content)) {
@@ -89,7 +83,7 @@ const shouldContinue = (state: typeof State.State) => {
   const lastMessage = state.messages[state.messages.length - 1];
   const content = parseMessageContent(lastMessage.content);
 
-  logger.debug("Evaluating workflow continuation", {
+  logger.debug('Evaluating workflow continuation', {
     hasMessages: state.messages.length > 0,
     currentIndex: content.currentTweetIndex,
     totalTweets: content.tweets?.length,
@@ -100,24 +94,24 @@ const shouldContinue = (state: typeof State.State) => {
 
   // Handle auto-approval flow
   if (!content.fromAutoApproval && content.batchToFeedback?.length > 0) {
-    return "autoApprovalNode";
+    return 'autoApprovalNode';
   }
 
   if (content.fromAutoApproval) {
     if (content.batchToRespond?.length > 0) {
-      return "generateNode";
+      return 'generateNode';
     } else {
-      return "engagementNode";
+      return 'engagementNode';
     }
   }
 
   // Handle batch processing flow
   if (content.batchToAnalyze?.length > 0) {
-    return "analyzeNode";
+    return 'analyzeNode';
   }
 
   if (content.batchToRespond?.length > 0) {
-    return "generateNode";
+    return 'generateNode';
   }
   // Check if we've processed all tweets
   if (
@@ -125,37 +119,35 @@ const shouldContinue = (state: typeof State.State) => {
     content.pendingEngagements?.length === 0
   ) {
     if (content.fromTopLevelTweetNode && content.messages?.length === 0) {
-      logger.info("Workflow complete - no more tweets to process");
+      logger.info('Workflow complete - no more tweets to process');
       return END;
     }
-    logger.info("Moving to top level tweet node");
-    return "topLevelTweetNode";
+    logger.info('Moving to top level tweet node');
+    return 'topLevelTweetNode';
   }
-  return "engagementNode";
+  return 'engagementNode';
 };
 
 // Workflow creation function
-export const createWorkflow = async (
-  nodes: Awaited<ReturnType<typeof createNodes>>,
-) => {
+export const createWorkflow = async (nodes: Awaited<ReturnType<typeof createNodes>>) => {
   return new StateGraph(State)
-    .addNode("mentionNode", nodes.mentionNode)
-    .addNode("timelineNode", nodes.timelineNode)
-    .addNode("searchNode", nodes.searchNode)
-    .addNode("engagementNode", nodes.engagementNode)
-    .addNode("analyzeNode", nodes.toneAnalysisNode)
-    .addNode("generateNode", nodes.responseGenerationNode)
-    .addNode("autoApprovalNode", nodes.autoApprovalNode)
-    .addNode("topLevelTweetNode", nodes.topLevelTweetNode)
-    .addEdge(START, "mentionNode")
-    .addEdge("mentionNode", "timelineNode")
-    .addEdge("timelineNode", "searchNode")
-    .addEdge("searchNode", "engagementNode")
-    .addConditionalEdges("engagementNode", shouldContinue)
-    .addConditionalEdges("analyzeNode", shouldContinue)
-    .addConditionalEdges("generateNode", shouldContinue)
-    .addConditionalEdges("autoApprovalNode", shouldContinue)
-    .addConditionalEdges("topLevelTweetNode", shouldContinue);
+    .addNode('mentionNode', nodes.mentionNode)
+    .addNode('timelineNode', nodes.timelineNode)
+    .addNode('searchNode', nodes.searchNode)
+    .addNode('engagementNode', nodes.engagementNode)
+    .addNode('analyzeNode', nodes.toneAnalysisNode)
+    .addNode('generateNode', nodes.responseGenerationNode)
+    .addNode('autoApprovalNode', nodes.autoApprovalNode)
+    .addNode('topLevelTweetNode', nodes.topLevelTweetNode)
+    .addEdge(START, 'mentionNode')
+    .addEdge('mentionNode', 'timelineNode')
+    .addEdge('timelineNode', 'searchNode')
+    .addEdge('searchNode', 'engagementNode')
+    .addConditionalEdges('engagementNode', shouldContinue)
+    .addConditionalEdges('analyzeNode', shouldContinue)
+    .addConditionalEdges('generateNode', shouldContinue)
+    .addConditionalEdges('autoApprovalNode', shouldContinue)
+    .addConditionalEdges('topLevelTweetNode', shouldContinue);
 };
 
 // Workflow runner type
@@ -174,7 +166,7 @@ const createWorkflowRunner = async (): Promise<WorkflowRunner> => {
   return {
     runWorkflow: async () => {
       const threadId = `workflow_${Date.now()}`;
-      logger.info("Starting tweet response workflow", { threadId });
+      logger.info('Starting tweet response workflow', { threadId });
 
       const config = {
         recursionLimit: 50,
@@ -190,7 +182,7 @@ const createWorkflowRunner = async (): Promise<WorkflowRunner> => {
         finalState = state;
       }
 
-      logger.info("Workflow completed", { threadId });
+      logger.info('Workflow completed', { threadId });
       return finalState;
     },
   };

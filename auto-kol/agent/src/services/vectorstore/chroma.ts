@@ -1,13 +1,13 @@
-import { ChromaClient } from "chromadb";
-import { Document } from "langchain/document";
-import { Chroma } from "@langchain/community/vectorstores/chroma";
-import { OpenAIEmbeddings } from "@langchain/openai";
-import { createLogger } from "../../utils/logger.js";
-import { Tweet } from "../../types/twitter.js";
-import { config } from "../../config/index.js";
-import { isTweetExists } from "../../services/database/index.js";
+import { ChromaClient } from 'chromadb';
+import { Document } from 'langchain/document';
+import { Chroma } from '@langchain/community/vectorstores/chroma';
+import { OpenAIEmbeddings } from '@langchain/openai';
+import { createLogger } from '../../utils/logger.js';
+import { Tweet } from '../../types/twitter.js';
+import { config } from '../../config/index.js';
+import { isTweetExists } from '../../services/database/index.js';
 
-const logger = createLogger("chroma-service");
+const logger = createLogger('chroma-service');
 
 export class ChromaService {
   private static instance: ChromaService;
@@ -21,7 +21,7 @@ export class ChromaService {
     });
     this.embeddings = new OpenAIEmbeddings({
       openAIApiKey: config.OPENAI_API_KEY,
-      modelName: "text-embedding-ada-002",
+      modelName: 'text-embedding-ada-002',
     });
     this.initializeCollection();
   }
@@ -29,24 +29,24 @@ export class ChromaService {
   private async initializeCollection() {
     try {
       this.collection = await Chroma.fromExistingCollection(this.embeddings, {
-        collectionName: "tweets",
+        collectionName: 'tweets',
         url: config.CHROMA_URL,
         collectionMetadata: {
-          "hnsw:space": "cosine",
+          'hnsw:space': 'cosine',
         },
       });
-      logger.info("Chroma collection initialized");
+      logger.info('Chroma collection initialized');
     } catch (error) {
-      logger.info("Collection does not exist, creating new one");
+      logger.info('Collection does not exist, creating new one');
       this.collection = await Chroma.fromTexts(
         [], // No initial texts
         [], // No initial metadatas
         this.embeddings,
         {
-          collectionName: "tweets",
+          collectionName: 'tweets',
           url: config.CHROMA_URL,
           collectionMetadata: {
-            "hnsw:space": "cosine",
+            'hnsw:space': 'cosine',
           },
         },
       );
@@ -64,9 +64,7 @@ export class ChromaService {
   public async addTweet(tweet: Tweet) {
     try {
       if (await isTweetExists(tweet.id)) {
-        logger.info(
-          `Tweet ${tweet.id} already exists in vector store, skipping`,
-        );
+        logger.info(`Tweet ${tweet.id} already exists in vector store, skipping`);
         return;
       }
 
@@ -93,7 +91,7 @@ export class ChromaService {
       const results = await this.collection.similaritySearch(query, k);
       return results;
     } catch (error) {
-      logger.error("Failed to search similar tweets:", error);
+      logger.error('Failed to search similar tweets:', error);
       throw error;
     }
   }
@@ -101,13 +99,10 @@ export class ChromaService {
   public async searchSimilarTweetsWithScore(query: string, k: number = 5) {
     try {
       const queryEmbedding = await this.embeddings.embedQuery(query);
-      const results = await this.collection.similaritySearchVectorWithScore(
-        queryEmbedding,
-        k,
-      );
+      const results = await this.collection.similaritySearchVectorWithScore(queryEmbedding, k);
       return results;
     } catch (error) {
-      logger.error("Failed to search similar tweets with scores:", error);
+      logger.error('Failed to search similar tweets with scores:', error);
       throw error;
     }
   }
@@ -121,10 +116,7 @@ export class ChromaService {
       });
       logger.info(`Deleted tweet ${tweetId} from vector store`);
     } catch (error) {
-      logger.error(
-        `Failed to delete tweet ${tweetId} from vector store:`,
-        error,
-      );
+      logger.error(`Failed to delete tweet ${tweetId} from vector store:`, error);
       throw error;
     }
   }

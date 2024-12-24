@@ -1,9 +1,9 @@
-import { Scraper, SearchMode, Tweet } from "agent-twitter-client";
-import { createLogger } from "../../utils/logger.js";
-import { readFileSync, writeFileSync, existsSync } from "fs";
-import { config } from "../../config/index.js";
+import { Scraper, SearchMode, Tweet } from 'agent-twitter-client';
+import { createLogger } from '../../utils/logger.js';
+import { readFileSync, writeFileSync, existsSync } from 'fs';
+import { config } from '../../config/index.js';
 
-const logger = createLogger("agent-twitter-api");
+const logger = createLogger('agent-twitter-api');
 
 export class ExtendedScraper extends Scraper {
   private static instance: ExtendedScraper | null = null;
@@ -23,28 +23,28 @@ export class ExtendedScraper extends Scraper {
   private async initialize() {
     const username = config.TWITTER_USERNAME!;
     const password = config.TWITTER_PASSWORD!;
-    const cookiesPath = "cookies.json";
+    const cookiesPath = 'cookies.json';
 
     if (existsSync(cookiesPath)) {
-      logger.info("Loading existing cookies");
-      const cookies = readFileSync(cookiesPath, "utf8");
+      logger.info('Loading existing cookies');
+      const cookies = readFileSync(cookiesPath, 'utf8');
       try {
         const parsedCookies = JSON.parse(cookies).map(
           (cookie: any) =>
             `${cookie.key}=${cookie.value}; Domain=${cookie.domain}; Path=${cookie.path}`,
         );
         await this.setCookies(parsedCookies);
-        logger.info("Loaded existing cookies from file");
+        logger.info('Loaded existing cookies from file');
       } catch (error) {
-        logger.error("Error loading cookies:", error);
+        logger.error('Error loading cookies:', error);
       }
     } else {
-      logger.info("No existing cookies found, proceeding with login");
+      logger.info('No existing cookies found, proceeding with login');
       await this.login(username, password);
 
       const newCookies = await this.getCookies();
       writeFileSync(cookiesPath, JSON.stringify(newCookies, null, 2));
-      logger.info("New cookies saved to file");
+      logger.info('New cookies saved to file');
     }
 
     const isLoggedIn = await this.isLoggedIn();
@@ -63,21 +63,21 @@ export class ExtendedScraper extends Scraper {
         await this.initialize();
         isLoggedIn = await this.isLoggedIn();
         if (isLoggedIn) {
-          logger.info("Successfully re-authenticated");
+          logger.info('Successfully re-authenticated');
           return true;
         }
-        logger.error("Re-authentication failed");
+        logger.error('Re-authentication failed');
         retryCount++;
         if (retryCount < maxRetries) {
           const delay = 2000 * Math.pow(2, retryCount - 1);
-          await new Promise((resolve) => setTimeout(resolve, delay));
+          await new Promise(resolve => setTimeout(resolve, delay));
         }
       } catch (error) {
-        logger.error("Error during re-authentication:", error);
+        logger.error('Error during re-authentication:', error);
         retryCount++;
         if (retryCount < maxRetries) {
           const delay = 2000 * Math.pow(2, retryCount - 1);
-          await new Promise((resolve) => setTimeout(resolve, delay));
+          await new Promise(resolve => setTimeout(resolve, delay));
         }
       }
     }
@@ -91,20 +91,16 @@ export class ExtendedScraper extends Scraper {
 
     const isLoggedIn = await this.isLoggedIn();
     if (!isLoggedIn) {
-      throw new Error("Must be logged in to fetch mentions");
+      throw new Error('Must be logged in to fetch mentions');
     }
 
     const query = `@${username} -from:${username}`;
     const replies: Tweet[] = [];
 
-    const searchIterator = this.searchTweets(
-      query,
-      maxResults,
-      SearchMode.Latest,
-    );
+    const searchIterator = this.searchTweets(query, maxResults, SearchMode.Latest);
 
     for await (const tweet of searchIterator) {
-      logger.info("Checking tweet:", {
+      logger.info('Checking tweet:', {
         id: tweet.id,
         text: tweet.text,
         author: tweet.username,
@@ -124,9 +120,7 @@ export class ExtendedScraper extends Scraper {
       for await (const reply of hasReplies) {
         if (reply.inReplyToStatusId === tweet.id) {
           alreadyReplied = true;
-          logger.info(
-            `Skipping tweet ${tweet.id} - already replied with ${reply.id}`,
-          );
+          logger.info(`Skipping tweet ${tweet.id} - already replied with ${reply.id}`);
           break;
         }
       }
@@ -147,7 +141,7 @@ export class ExtendedScraper extends Scraper {
     const username = config.TWITTER_USERNAME!;
     const isLoggedIn = await this.isLoggedIn();
     if (!isLoggedIn) {
-      throw new Error("Must be logged in to fetch thread");
+      throw new Error('Must be logged in to fetch thread');
     }
 
     const thread: Tweet[] = [];
@@ -174,7 +168,7 @@ export class ExtendedScraper extends Scraper {
       seen.add(initialTweet.id!);
     }
 
-    const agentTweet = thread.find((t) => t.username === username);
+    const agentTweet = thread.find(t => t.username === username);
     if (agentTweet) {
       const replies = this.searchTweets(
         `conversation_id:${currentTweet.id!} in_reply_to_tweet_id:${agentTweet.id!}`,
@@ -205,16 +199,13 @@ export class ExtendedScraper extends Scraper {
   }
 
   // Placeholder for efficient thread fetching
-  async getThreadPlaceHolder(
-    tweetId: string,
-    maxDepth: number = 100,
-  ): Promise<Tweet[]> {
+  async getThreadPlaceHolder(tweetId: string, maxDepth: number = 100): Promise<Tweet[]> {
     const username = config.TWITTER_USERNAME!;
     const isLoggedIn = await this.isLoggedIn();
     if (!isLoggedIn) {
       const reAuthenticate = await this.reAuthenticate();
       if (!reAuthenticate) {
-        logger.error("Failed to re-authenticate");
+        logger.error('Failed to re-authenticate');
         return [];
       }
     }
@@ -233,23 +224,18 @@ export class ExtendedScraper extends Scraper {
       let rootTweet = initialTweet;
       const conversationId = initialTweet.conversationId || initialTweet.id;
 
-      logger.info("Initial tweet:", {
+      logger.info('Initial tweet:', {
         id: initialTweet.id,
         conversationId: conversationId,
         inReplyToStatusId: initialTweet.inReplyToStatusId,
       });
 
-      if (
-        initialTweet.conversationId &&
-        initialTweet.conversationId !== initialTweet.id
-      ) {
-        const conversationRoot = await this.getTweet(
-          initialTweet.conversationId,
-        );
+      if (initialTweet.conversationId && initialTweet.conversationId !== initialTweet.id) {
+        const conversationRoot = await this.getTweet(initialTweet.conversationId);
         if (conversationRoot) {
           rootTweet = conversationRoot;
           conversationTweets.set(rootTweet.id!, rootTweet);
-          logger.info("Found root tweet:", {
+          logger.info('Found root tweet:', {
             id: rootTweet.id,
             conversationId: rootTweet.conversationId,
           });
@@ -257,10 +243,7 @@ export class ExtendedScraper extends Scraper {
       }
 
       try {
-        logger.info(
-          "Fetching conversation with query:",
-          `conversation_id:${conversationId}`,
-        );
+        logger.info('Fetching conversation with query:', `conversation_id:${conversationId}`);
         const conversationIterator = this.searchTweets(
           `conversation_id:${conversationId}`,
           100,
@@ -269,17 +252,14 @@ export class ExtendedScraper extends Scraper {
 
         for await (const tweet of conversationIterator) {
           conversationTweets.set(tweet.id!, tweet);
-          logger.info("Found conversation tweet:", {
+          logger.info('Found conversation tweet:', {
             id: tweet.id,
             inReplyToStatusId: tweet.inReplyToStatusId,
-            text: tweet.text?.substring(0, 50) + "...",
+            text: tweet.text?.substring(0, 50) + '...',
           });
         }
 
-        logger.info(
-          "Total conversation tweets found:",
-          conversationTweets.size,
-        );
+        logger.info('Total conversation tweets found:', conversationTweets.size);
       } catch (error) {
         logger.warn(`Error fetching conversation: ${error}`);
         return [rootTweet, initialTweet];

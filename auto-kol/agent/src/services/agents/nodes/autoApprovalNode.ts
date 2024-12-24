@@ -1,22 +1,22 @@
-import { AIMessage } from "@langchain/core/messages";
-import { State, logger, parseMessageContent } from "../workflow.js";
-import * as prompts from "../prompts.js";
-import { WorkflowConfig } from "../workflow.js";
-import { updateResponseStatusByTweetId } from "../../../database/index.js";
-import { uploadToDsn } from "../../../utils/dsn.js";
-import { config as globalConfig } from "../../../config/index.js";
-import { ResponseStatus } from "../../../types/queue.js";
+import { AIMessage } from '@langchain/core/messages';
+import { State, logger, parseMessageContent } from '../workflow.js';
+import * as prompts from '../prompts.js';
+import { WorkflowConfig } from '../workflow.js';
+import { updateResponseStatusByTweetId } from '../../../database/index.js';
+import { uploadToDsn } from '../../../utils/dsn.js';
+import { config as globalConfig } from '../../../config/index.js';
+import { ResponseStatus } from '../../../types/queue.js';
 
 export const createAutoApprovalNode = (config: WorkflowConfig) => {
   return async (state: typeof State.State) => {
-    logger.info("Auto Approval Node - Evaluating pending responses");
+    logger.info('Auto Approval Node - Evaluating pending responses');
     try {
       const lastMessage = state.messages[state.messages.length - 1];
       const parsedContent = parseMessageContent(lastMessage.content);
       const { tweets, currentTweetIndex, batchToFeedback } = parsedContent;
 
       if (!batchToFeedback.length) {
-        logger.info("No pending responses found");
+        logger.info('No pending responses found');
         return {
           messages: [
             new AIMessage({
@@ -32,7 +32,7 @@ export const createAutoApprovalNode = (config: WorkflowConfig) => {
       const processedResponses = [];
 
       for (const response of batchToFeedback) {
-        logger.info("Processing response", {
+        logger.info('Processing response', {
           tweetId: response.tweet.id,
           retry: response.retry,
         });
@@ -50,13 +50,10 @@ export const createAutoApprovalNode = (config: WorkflowConfig) => {
         if (approval.approved) {
           response.type = ResponseStatus.APPROVED;
 
-          await updateResponseStatusByTweetId(
-            response.tweet.id,
-            ResponseStatus.APPROVED,
-          );
+          await updateResponseStatusByTweetId(response.tweet.id, ResponseStatus.APPROVED);
 
           if (globalConfig.POST_TWEETS) {
-            logger.info("Sending tweet", {
+            logger.info('Sending tweet', {
               response: response.response,
               tweetId: response.tweet.id,
             });
@@ -65,7 +62,7 @@ export const createAutoApprovalNode = (config: WorkflowConfig) => {
               response.response,
               response.tweet.id,
             );
-            logger.info("Tweet sent", {
+            logger.info('Tweet sent', {
               sendTweetResponse,
             });
           }
@@ -77,13 +74,10 @@ export const createAutoApprovalNode = (config: WorkflowConfig) => {
           }
         } else if (response.retry > globalConfig.RETRY_LIMIT) {
           response.type = ResponseStatus.REJECTED;
-          logger.info("Rejecting tweet", {
+          logger.info('Rejecting tweet', {
             tweetId: response.tweet.id,
           });
-          await updateResponseStatusByTweetId(
-            response.tweet.id,
-            ResponseStatus.REJECTED,
-          );
+          await updateResponseStatusByTweetId(response.tweet.id, ResponseStatus.REJECTED);
           if (globalConfig.DSN_UPLOAD) {
             await uploadToDsn({
               data: response,
@@ -104,7 +98,7 @@ export const createAutoApprovalNode = (config: WorkflowConfig) => {
                 },
               ],
             },
-            feedbackDecision: "reject",
+            feedbackDecision: 'reject',
           });
         }
       }
@@ -122,7 +116,7 @@ export const createAutoApprovalNode = (config: WorkflowConfig) => {
         ],
       };
     } catch (error) {
-      logger.error("Error in auto approval node:", error);
+      logger.error('Error in auto approval node:', error);
       return { messages: [] };
     }
   };
