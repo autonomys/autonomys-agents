@@ -2,17 +2,18 @@ import { DynamicStructuredTool } from '@langchain/core/tools';
 import { z } from 'zod';
 import { createLogger } from '../../utils/logger.js';
 import { getTimeLine } from '../../utils/twitter.js';
+import { ExtendedScraper } from '../../services/twitter/api.js';
 
 const logger = createLogger('fetch-timeline-tool');
 
-export const createFetchTimelineTool = () =>
+export const createFetchTimelineTool = (twitterScraper: ExtendedScraper) =>
   new DynamicStructuredTool({
     name: 'fetch_timeline',
     description: 'Fetch the timeline regularly to get new tweets',
     schema: z.object({}),
     func: async () => {
       try {
-        const tweets = await getTimeLine();
+        const tweets = await getTimeLine(twitterScraper);
         tweets.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
         return {
           tweets: tweets,

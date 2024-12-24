@@ -92,11 +92,13 @@ export const createEngagementNode = (config: WorkflowConfig) => {
           if (state.processedTweets.has(tweet.id)) {
             return { tweet, status: 'alreadyProcessed' };
           }
-
           const decision = await prompts.engagementPrompt
             .pipe(config.llms.decision)
             .pipe(prompts.engagementParser)
-            .invoke({ tweet: tweet.text })
+            .invoke({
+              tweet: tweet.text,
+              thread: tweet.thread || [],
+            })
             .catch(error => {
               logger.error('Error in engagement node:', error);
               return {

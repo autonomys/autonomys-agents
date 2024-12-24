@@ -27,8 +27,6 @@ export const createMentionNode = (config: WorkflowConfig) => {
       toolResponse.messages[toolResponse.messages.length - 1].content,
     );
     const parsedTweets = tweetSearchSchema.parse(parsedContent);
-    logger.info('Parsed tweets:', parsedTweets);
-    logger.info(`Found ${parsedTweets.tweets.length} tweets`);
 
     return {
       messages: [
