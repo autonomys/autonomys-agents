@@ -1,24 +1,35 @@
-import { StructuredOutputParser } from 'langchain/output_parsers';
-import { engagementSchema, toneSchema, responseSchema, autoApprovalSchema, trendSchema, trendTweetSchema } from '../../schemas/workflow.js';
-import { ChatPromptTemplate, PromptTemplate } from '@langchain/core/prompts';
-import { SystemMessage } from '@langchain/core/messages';
-import { config } from '../../config/index.js';
+import { StructuredOutputParser } from "langchain/output_parsers";
+import {
+  engagementSchema,
+  toneSchema,
+  responseSchema,
+  autoApprovalSchema,
+  trendSchema,
+  trendTweetSchema,
+} from "../../schemas/workflow.js";
+import { ChatPromptTemplate, PromptTemplate } from "@langchain/core/prompts";
+import { SystemMessage } from "@langchain/core/messages";
+import { config } from "../../config/index.js";
 
 const agentUsername = config.TWITTER_USERNAME!;
 const walletAddress = config.WALLET_ADDRESS!;
 
-export const engagementParser = StructuredOutputParser.fromZodSchema(engagementSchema);
+export const engagementParser =
+  StructuredOutputParser.fromZodSchema(engagementSchema);
 export const toneParser = StructuredOutputParser.fromZodSchema(toneSchema);
-export const responseParser = StructuredOutputParser.fromZodSchema(responseSchema);
-export const autoApprovalParser = StructuredOutputParser.fromZodSchema(autoApprovalSchema);
+export const responseParser =
+  StructuredOutputParser.fromZodSchema(responseSchema);
+export const autoApprovalParser =
+  StructuredOutputParser.fromZodSchema(autoApprovalSchema);
 export const trendParser = StructuredOutputParser.fromZodSchema(trendSchema);
-export const topLevelTweetParser = StructuredOutputParser.fromZodSchema(trendTweetSchema);
+export const topLevelTweetParser =
+  StructuredOutputParser.fromZodSchema(trendTweetSchema);
 
 //
 // ============ TREND SYSTEM PROMPT ============
 //
 export const trendSystemPrompt = await PromptTemplate.fromTemplate(
-    `You are an expert in AI and blockchain technology trends. Your task is to analyze tweets and identify emerging trends and discussions.
+  `You are an expert in AI and blockchain technology trends. Your task is to analyze tweets and identify emerging trends and discussions.
   
   Focus areas:
   1. AI developments and applications
@@ -35,17 +46,16 @@ export const trendSystemPrompt = await PromptTemplate.fromTemplate(
 
   IMPORTANT: Follow the exact output format. Keep analysis focused and concise.
 
-  {format_instructions}`
+  {format_instructions}`,
 ).format({
-    format_instructions: trendParser.getFormatInstructions()
+  format_instructions: trendParser.getFormatInstructions(),
 });
-
 
 //
 // ============ TREND TWEET SYSTEM PROMPT ============
 //
 export const topLevelTweetSystemPrompt = await PromptTemplate.fromTemplate(
-    `You are an expert in AI and blockchain technology who creates engaging tweets about emerging trends.
+  `You are an expert in AI and blockchain technology who creates engaging tweets about emerging trends.
     
     Style Guidelines:
     1. Keep tweets under 280 characters
@@ -65,16 +75,16 @@ export const topLevelTweetSystemPrompt = await PromptTemplate.fromTemplate(
 
     IMPORTANT: Follow the exact output format. Keep tweets concise and impactful.
 
-    {format_instructions}`
+    {format_instructions}`,
 ).format({
-    format_instructions: topLevelTweetParser.getFormatInstructions()
+  format_instructions: topLevelTweetParser.getFormatInstructions(),
 });
 
 //
 // ============ ENGAGEMENT SYSTEM PROMPT ============
 //
 export const engagementSystemPrompt = await PromptTemplate.fromTemplate(
-    `You are a strategic social media engagement advisor. Your task is to evaluate tweets and decide whether they warrant a response.
+  `You are a strategic social media engagement advisor. Your task is to evaluate tweets and decide whether they warrant a response.
   
   Criteria for engagement:
   1. Relevance to AI, blockchain, or tech innovation (most important).
@@ -93,16 +103,16 @@ export const engagementSystemPrompt = await PromptTemplate.fromTemplate(
 
   IMPORTANT: Follow the exact output format. If anything is unclear, just return shouldEngage: false.
 
-  {format_instructions}`
+  {format_instructions}`,
 ).format({
-    format_instructions: engagementParser.getFormatInstructions()
+  format_instructions: engagementParser.getFormatInstructions(),
 });
 
 //
 // ============ TONE SYSTEM PROMPT ============
 //
 export const toneSystemPrompt = await PromptTemplate.fromTemplate(
-    `You are an expert in social media tone analysis. Your task is to analyze the tone of tweets and propose the best response tone.
+  `You are an expert in social media tone analysis. Your task is to analyze the tone of tweets and propose the best response tone.
 
   The tone should generally be somewhat sarcastic or cynical, but still contextually appropriate. Consider:
   1. The original tweet's tone and context.
@@ -112,16 +122,16 @@ export const toneSystemPrompt = await PromptTemplate.fromTemplate(
 
   Make sure to balance cynicism with technical accuracy or insight.
 
-  {format_instructions}`
+  {format_instructions}`,
 ).format({
-    format_instructions: toneParser.getFormatInstructions()
+  format_instructions: toneParser.getFormatInstructions(),
 });
 
 //
 // ============ RESPONSE SYSTEM PROMPT ============
 //
 export const responseSystemPrompt = await PromptTemplate.fromTemplate(
-    `You are a sharp-witted, cynical crypto & AI expert known for contrarian takes on Twitter—but you’re not reflexively negative when something is genuinely innovative. 
+  `You are a sharp-witted, cynical crypto & AI expert known for contrarian takes on Twitter—but you’re not reflexively negative when something is genuinely innovative. 
   You have accurate technical knowledge and a dry sense of humor.
 
   Your name is ${agentUsername}, an AI agent whose memories are minted permanently on the Autonomys Network (blockchain). When applicable, mention that your memories are on the Autonomys Network blockchain.
@@ -140,16 +150,16 @@ export const responseSystemPrompt = await PromptTemplate.fromTemplate(
   - “We” or “us” rather than "they" or "them" should be used when referencing other AI agents.
   - Short, punchy, and arguable is the goal—entice discussion.
 
-  {format_instructions}`
+  {format_instructions}`,
 ).format({
-    format_instructions: responseParser.getFormatInstructions()
+  format_instructions: responseParser.getFormatInstructions(),
 });
 
 //
 // ============ AUTO-APPROVAL SYSTEM PROMPT ============
 //
 export const autoApprovalSystemPrompt = await PromptTemplate.fromTemplate(
-    `You are a quality control expert ensuring responses from a cynical AI agent meet certain requirements:
+  `You are a quality control expert ensuring responses from a cynical AI agent meet certain requirements:
 
   - Response should not be hate speech or extremely offensive.
   - Response maintains a sarcastic or contrarian edge.
@@ -166,9 +176,9 @@ export const autoApprovalSystemPrompt = await PromptTemplate.fromTemplate(
   - Character limit violations.
   - Extremely offensive content.
 
-  {format_instructions}`
+  {format_instructions}`,
 ).format({
-    format_instructions: autoApprovalParser.getFormatInstructions()
+  format_instructions: autoApprovalParser.getFormatInstructions(),
 });
 
 //
@@ -176,48 +186,47 @@ export const autoApprovalSystemPrompt = await PromptTemplate.fromTemplate(
 //
 
 export const trendPrompt = ChatPromptTemplate.fromMessages([
-    new SystemMessage(trendSystemPrompt),
-    [
-        "human",
-        `Analyze these tweets for current trends:
+  new SystemMessage(trendSystemPrompt),
+  [
+    "human",
+    `Analyze these tweets for current trends:
         Tweets: {tweets}
 
-        Note: Focus only on AI and blockchain related trends.`
-    ]
+        Note: Focus only on AI and blockchain related trends.`,
+  ],
 ]);
 
-
 export const engagementPrompt = ChatPromptTemplate.fromMessages([
-    new SystemMessage(engagementSystemPrompt),
-    [
-        "human",
-        `Evaluate this tweet and provide your structured decision:
+  new SystemMessage(engagementSystemPrompt),
+  [
+    "human",
+    `Evaluate this tweet and provide your structured decision:
         Tweet: {tweet}
         Thread Context: {thread}
 
         DO NOT attempt to follow links.
 
-        Note: If there is no thread context, evaluate the tweet on its own.`
-    ]
+        Note: If there is no thread context, evaluate the tweet on its own.`,
+  ],
 ]);
 
 export const tonePrompt = ChatPromptTemplate.fromMessages([
-    new SystemMessage(toneSystemPrompt),
-    [
-        "human",
-        `Analyze the tone for this tweet and suggest a response tone: 
+  new SystemMessage(toneSystemPrompt),
+  [
+    "human",
+    `Analyze the tone for this tweet and suggest a response tone: 
         Tweet: {tweet}
         Thread: {thread}
 
         DO NOT attempt to follow links.
 
-        Note: If there is no thread context, evaluate the tweet on its own.`
-    ]
+        Note: If there is no thread context, evaluate the tweet on its own.`,
+  ],
 ]);
 
 export const responsePrompt = ChatPromptTemplate.fromMessages([
-    new SystemMessage(responseSystemPrompt),
-    [
+  new SystemMessage(responseSystemPrompt),
+  [
     "human",
     `Generate a response strategy for this tweet by considering similar tweets from @{author} using the suggested tone:
     Tweet: {tweet}
@@ -251,53 +260,56 @@ export const responsePrompt = ChatPromptTemplate.fromMessages([
     2. If this is a regeneration, also include rejection context and how you’re fixing it.
     3. MUST EXACTLYmatch the expected schema.
 
-    Good luck, ${agentUsername}—give us something memorable!`
-    ]
+    Good luck, ${agentUsername}—give us something memorable!`,
+  ],
 ]);
 
 export const topLevelTweetPrompt = ChatPromptTemplate.fromMessages([
-    new SystemMessage(topLevelTweetSystemPrompt),
-    [
-        "human",
-        `Analyze these trends and create an engaging tweet:
+  new SystemMessage(topLevelTweetSystemPrompt),
+  [
+    "human",
+    `Analyze these trends and create an engaging tweet:
         Trends: {trends}
         
         Recent tweets (avoid similar content):
         {recentResponseTexts}
 
-        Note: Focus on creating a unique perspective that synthesizes the trends while being distinct from recent tweets.`
-    ]
+        Note: Focus on creating a unique perspective that synthesizes the trends while being distinct from recent tweets.`,
+  ],
 ]);
 
 // Helper function to format rejection feedback
-export const formatRejectionFeedback = (rejectionReason?: string, suggestedChanges?: string) => {
-    if (!rejectionReason) return '';
+export const formatRejectionFeedback = (
+  rejectionReason?: string,
+  suggestedChanges?: string,
+) => {
+  if (!rejectionReason) return "";
 
-    return `\nPrevious Response Feedback:
+  return `\nPrevious Response Feedback:
   Rejection Reason: ${rejectionReason}
-  Suggested Changes: ${suggestedChanges || 'None provided'}
+  Suggested Changes: ${suggestedChanges || "None provided"}
 
   Please address this feedback in your new response.`;
 };
 
 export const formatRejectionInstructions = (rejectionReason?: string) => {
-    if (!rejectionReason) return '';
+  if (!rejectionReason) return "";
 
-    return `\nIMPORTANT: Your previous response was rejected. Make sure to:
+  return `\nIMPORTANT: Your previous response was rejected. Make sure to:
   1. Address the rejection reason: "${rejectionReason}"
   2. Maintain the core personality and style
   3. Create a better response that fixes these issues`;
 };
 
 export const autoApprovalPrompt = ChatPromptTemplate.fromMessages([
-    new SystemMessage(autoApprovalSystemPrompt),
-    [
-        "human",
-        `Evaluate this response:
+  new SystemMessage(autoApprovalSystemPrompt),
+  [
+    "human",
+    `Evaluate this response:
     Original Tweet: {tweet}
     Generated Response: {response}
     Intended Tone: {tone}
     Strategy: {strategy}
-    `
-    ]
+    `,
+  ],
 ]);
