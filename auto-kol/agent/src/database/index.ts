@@ -61,7 +61,8 @@ export async function initializeSchema() {
                 'tweets', 
                 'responses', 
                 'skipped_tweets',  
-                'dsn'
+                'dsn',
+                'trends'
             )
         `);
 
@@ -454,4 +455,55 @@ export async function addMention(mention: {
 export async function getLatestMentionId(): Promise<string> {
     const mention = await db?.get(`SELECT latest_id FROM mentions ORDER BY updated_at DESC LIMIT 1`);
     return mention?.latest_id || '';
+}
+
+
+///////////TREND///////////
+export async function addTrend(trend: {
+    id: string;
+    content: string;
+}) {
+    const db = await initializeDatabase();
+    try {
+        await db.run(`
+            INSERT INTO trends (id, content)
+            VALUES (?, ?)
+        `, [trend.id, trend.content]);
+        
+        logger.info(`Added trend: ${trend.id}`);
+    } catch (error) {
+        logger.error('Failed to add trend:', error);
+        throw error;
+    }
+}
+
+export async function getAllTrends() {
+    const db = await initializeDatabase();
+    try {
+        const trends = await db.all(`
+            SELECT id, content, created_at
+            FROM trends
+            ORDER BY created_at DESC
+        `);
+        
+        return trends.map(trend => ({
+            id: trend.id,
+            content: trend.content,
+            created_at: new Date(trend.created_at)
+        }));
+    } catch (error) {
+        logger.error('Failed to get trends:', error);
+        throw error;
+    }
+}
+
+export async function wipeTrendsTable() {
+    const db = await initializeDatabase();
+    try {
+        await db.run('DELETE FROM trends');
+        logger.info('Wiped trends table');
+    } catch (error) {
+        logger.error('Failed to wipe trends table:', error);
+        throw error;
+    }
 }
