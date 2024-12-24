@@ -59,4 +59,7 @@ export const config = {
 
     // POSTING TWEETS PERMISSION
     POST_TWEETS: process.env.POST_TWEETS === 'true',
+
+    // TOP LEVEL TWEET CONFIG
+    TOP_LEVEL_TWEET_INTERVAL_HOURS: Number(process.env.TOP_LEVEL_TWEET_INTERVAL_HOURS) || 5,
 }; 

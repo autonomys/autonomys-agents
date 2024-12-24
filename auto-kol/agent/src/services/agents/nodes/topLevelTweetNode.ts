@@ -4,7 +4,7 @@ import * as prompts from '../prompts.js';
 import { getAllTrends } from '../../../database/index.js';
 import { WorkflowConfig } from '../workflow.js';
 import { config as globalConfig } from '../../../config/index.js';
-import {addTopLevelTweet, getLatestTopLevelTweets} from '../../../database/index.js';
+import {addTopLevelTweet, getLatestTopLevelTweets, wipeTrendsTable} from '../../../database/index.js';
 import { v4 as generateId } from 'uuid';
 
 export const createTopLevelTweetNode = (config: WorkflowConfig) => {
@@ -39,7 +39,9 @@ export const createTopLevelTweetNode = (config: WorkflowConfig) => {
             const trendSummaries = recentTrends.map(t => t.content).join('\n\n');
             const latestTopLevelTweets = await getLatestTopLevelTweets();
             const recentResponseTexts = latestTopLevelTweets.map(r => r.content).join('\n') || 'No previous responses yet';
-
+            const lastTweetTime = latestTopLevelTweets[latestTopLevelTweets.length - 1].created_at;
+            const timeSinceLastTweetInHours = (new Date().getTime() - lastTweetTime.getTime()) / (1000 * 60 * 60);
+            
             const tweetGeneration = await prompts.topLevelTweetPrompt
                 .pipe(config.llms.decision)
                 .pipe(prompts.topLevelTweetParser)
@@ -58,9 +60,10 @@ export const createTopLevelTweetNode = (config: WorkflowConfig) => {
                 content: tweetGeneration?.tweet
             });
 
-            if (globalConfig.POST_TWEETS) {
+            if (globalConfig.POST_TWEETS && timeSinceLastTweetInHours > globalConfig.TOP_LEVEL_TWEET_INTERVAL_HOURS) {
                 await config.client.sendTweet(tweetGeneration.tweet);
                 logger.info('Posted trend tweet successfully');
+                await wipeTrendsTable();
             }
 
             return {
