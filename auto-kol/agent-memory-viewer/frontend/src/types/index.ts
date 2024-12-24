@@ -11,6 +11,7 @@ export interface Tweet {
     author_username: string;
     created_at: string;
     mention?: boolean;
+    thread?: Array<Tweet>;
 }
 
 export interface WorkflowDecision {
@@ -45,6 +46,7 @@ export interface BaseMemory {
         author_id: string;
         author_username: string;
         created_at: string;
+        thread?: Array<Tweet>;
     };
     previousCid: string | null;
     signature: string;
