@@ -78,3 +78,12 @@ export const autoApprovalSchema = z.object({
     confidence: z.number().min(0).max(1),
     suggestedChanges: z.string().optional()
 });
+
+export const trendSchema = z.object({
+    trends: z.array(z.object({
+        topic: z.string(),
+        description: z.string(),
+        confidence: z.number().min(0).max(1)
+    })),
+    summary: z.string()
+});

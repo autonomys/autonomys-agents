@@ -4,7 +4,7 @@ import { logger } from "../workflow.js";
 import { State } from "../workflow.js";
 import { tweetSearchSchema } from "../../../schemas/workflow.js";
 import * as db from '../../database/index.js';
-
+import { trendParser, trendPrompt } from "../prompts.js";
 
 export const createTimelineNode = (config: WorkflowConfig) => {
     return async (state: typeof State.State) => {
@@ -35,6 +35,16 @@ export const createTimelineNode = (config: WorkflowConfig) => {
         const parsedContent = typeof content === 'string' ? JSON.parse(content) : content;
 
         const parsedTweets = tweetSearchSchema.parse(parsedContent);
+
+        const trendAnalysis = await trendPrompt
+            .pipe(config.llms.decision)
+            .pipe(trendParser)
+            .invoke({
+                tweets: parsedTweets.tweets.map(t => t.text).join('\n\n')
+            });
+
+        logger.info('Trend analysis:', trendAnalysis);
+
 
         const newTweets = [...existingTweets];
         for (const tweet of parsedTweets.tweets) {

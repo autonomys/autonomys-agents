@@ -51,6 +51,7 @@ export const createMentionTool = (scraper: ExtendedScraper) => new DynamicStruct
                 }
                 tweet.thread = tweetsWithThreads;
                 await new Promise(resolve => setTimeout(resolve, 1000));
+                break;
                 logger.info(`Found ${tweetsWithThreads.length} tweets in thread`);
             }
             return {

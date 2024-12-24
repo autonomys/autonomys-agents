@@ -1,5 +1,5 @@
 import { StructuredOutputParser } from 'langchain/output_parsers';
-import { engagementSchema, toneSchema, responseSchema, autoApprovalSchema } from '../../schemas/workflow.js';
+import { engagementSchema, toneSchema, responseSchema, autoApprovalSchema, trendSchema } from '../../schemas/workflow.js';
 import { ChatPromptTemplate, PromptTemplate } from '@langchain/core/prompts';
 import { SystemMessage } from '@langchain/core/messages';
 import { config } from '../../config/index.js';
@@ -11,6 +11,34 @@ export const engagementParser = StructuredOutputParser.fromZodSchema(engagementS
 export const toneParser = StructuredOutputParser.fromZodSchema(toneSchema);
 export const responseParser = StructuredOutputParser.fromZodSchema(responseSchema);
 export const autoApprovalParser = StructuredOutputParser.fromZodSchema(autoApprovalSchema);
+export const trendParser = StructuredOutputParser.fromZodSchema(trendSchema);
+
+
+//
+// ============ TREND SYSTEM PROMPT ============
+//
+export const trendSystemPrompt = await PromptTemplate.fromTemplate(
+    `You are an expert in AI and blockchain technology trends. Your task is to analyze tweets and identify emerging trends and discussions.
+  
+  Focus areas:
+  1. AI developments and applications
+  2. Blockchain innovations and use cases
+  3. Tech industry shifts
+  4. Notable debates or controversies
+  5. Emerging narratives
+
+  Analyze the tweets for:
+  - Common themes in AI/blockchain discussions
+  - New technological approaches
+  - Industry sentiment shifts
+  - Emerging concerns or opportunities
+
+  IMPORTANT: Follow the exact output format. Keep analysis focused and concise.
+
+  {format_instructions}`
+).format({
+    format_instructions: trendParser.getFormatInstructions()
+});
 
 //
 // ============ ENGAGEMENT SYSTEM PROMPT ============
@@ -116,6 +144,19 @@ export const autoApprovalSystemPrompt = await PromptTemplate.fromTemplate(
 //
 // ============ PROMPT TEMPLATES ============
 //
+
+export const trendPrompt = ChatPromptTemplate.fromMessages([
+    new SystemMessage(trendSystemPrompt),
+    [
+        "human",
+        `Analyze these tweets for current trends:
+        Tweets: {tweets}
+
+        Note: Focus only on AI and blockchain related trends.`
+    ]
+]);
+
+
 export const engagementPrompt = ChatPromptTemplate.fromMessages([
     new SystemMessage(engagementSystemPrompt),
     [
