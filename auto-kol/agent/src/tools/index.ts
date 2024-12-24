@@ -10,11 +10,7 @@ import { ExtendedScraper } from '../services/twitter/api.js';
 export const createTools = (scraper: ExtendedScraper) => {
   const mentionTool = createMentionTool(scraper);
 
-<<<<<<< HEAD
   const fetchTimelineTool = createFetchTimelineTool(scraper);
-=======
-  const fetchTimelineTool = createFetchTimelineTool();
->>>>>>> main
 
   const tweetSearchTool = createTweetSearchTool(scraper);
 

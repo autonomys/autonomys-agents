@@ -51,13 +51,9 @@ export const createRecheckSkippedNode = (config: WorkflowConfig) => {
         } else {
           const flagged = await flagBackSkippedTweet(tweet.id, decision.reason);
           if (!flagged) {
-<<<<<<< HEAD
             logger.info('Failed to flag back skipped tweet:', {
               tweetId: tweet.id,
             });
-=======
-            logger.info('Failed to flag back skipped tweet:', { tweetId: tweet.id });
->>>>>>> main
           }
         }
       }
