@@ -7,8 +7,6 @@ import apiRoutes from './api/index.js';
 import { corsMiddleware } from './api/middleware/cors.js';
 const logger = createLogger('app');
 const app = express();
-import { createTwitterClientScraper } from './services/twitter/api.js';
-import { stringToCid, blake3HashFromCid, cidFromBlakeHash } from '@autonomys/auto-dag-data';
 
 app.use(corsMiddleware);
 
