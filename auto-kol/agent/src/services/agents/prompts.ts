@@ -261,8 +261,11 @@ export const topLevelTweetPrompt = ChatPromptTemplate.fromMessages([
         "human",
         `Analyze these trends and create an engaging tweet:
         Trends: {trends}
+        
+        Recent tweets (avoid similar content):
+        {recentResponseTexts}
 
-        Note: Focus on creating a unique perspective that synthesizes the trends.`
+        Note: Focus on creating a unique perspective that synthesizes the trends while being distinct from recent tweets.`
     ]
 ]);
 

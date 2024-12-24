@@ -4,6 +4,8 @@ import * as prompts from '../prompts.js';
 import { getAllTrends } from '../../../database/index.js';
 import { WorkflowConfig } from '../workflow.js';
 import { config as globalConfig } from '../../../config/index.js';
+import {addTopLevelTweet, getLatestTopLevelTweets} from '../../../database/index.js';
+import { v4 as generateId } from 'uuid';
 
 export const createTopLevelTweetNode = (config: WorkflowConfig) => {
     return async (state: typeof State.State) => {
@@ -35,17 +37,25 @@ export const createTopLevelTweetNode = (config: WorkflowConfig) => {
                 .slice(0, 5);
 
             const trendSummaries = recentTrends.map(t => t.content).join('\n\n');
+            const latestTopLevelTweets = await getLatestTopLevelTweets();
+            const recentResponseTexts = latestTopLevelTweets.map(r => r.content).join('\n') || 'No previous responses yet';
 
             const tweetGeneration = await prompts.topLevelTweetPrompt
                 .pipe(config.llms.decision)
                 .pipe(prompts.topLevelTweetParser)
                 .invoke({
-                    trends: trendSummaries
+                    trends: trendSummaries,
+                    recentResponseTexts
                 });
 
             logger.info('Generated trend tweet:', {
                 tweet: tweetGeneration.tweet,
                 reasoning: tweetGeneration.reasoning
+            });
+
+            await addTopLevelTweet({
+                id: generateId(),
+                content: tweetGeneration?.tweet
             });
 
             if (globalConfig.POST_TWEETS) {

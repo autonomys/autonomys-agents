@@ -62,7 +62,8 @@ export async function initializeSchema() {
                 'responses', 
                 'skipped_tweets',  
                 'dsn',
-                'trends'
+                'trends',
+                'top_level_tweets'
             )
         `);
 
@@ -504,6 +505,46 @@ export async function wipeTrendsTable() {
         logger.info('Wiped trends table');
     } catch (error) {
         logger.error('Failed to wipe trends table:', error);
+        throw error;
+    }
+}
+
+///////////TOP LEVEL TWEETS///////////
+export async function addTopLevelTweet(tweet: {
+    id: string;
+    content: string;
+}) {
+    const db = await initializeDatabase();
+    try {
+        await db.run(`
+            INSERT INTO top_level_tweets (id, content)
+            VALUES (?, ?)
+        `, [tweet.id, tweet.content]);
+        
+        logger.info(`Added top level tweet: ${tweet.id}`);
+    } catch (error) {
+        logger.error('Failed to add top level tweet:', error);
+        throw error;
+    }
+}
+
+export async function getLatestTopLevelTweets(limit: number = 10) {
+    const db = await initializeDatabase();
+    try {
+        const tweets = await db.all(`
+            SELECT id, content, created_at
+            FROM top_level_tweets
+            ORDER BY created_at DESC
+            LIMIT ?
+        `, [limit]);
+        
+        return tweets.map(tweet => ({
+            id: tweet.id,
+            content: tweet.content,
+            created_at: new Date(tweet.created_at)
+        }));
+    } catch (error) {
+        logger.error('Failed to get latest top level tweets:', error);
         throw error;
     }
 }
