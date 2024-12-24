@@ -29,20 +29,6 @@ const startWorkflowPolling = async () => {
 
 const main = async () => {
     try {
-        // const scraper = await createTwitterClientScraper();
-        // logger.info('Scraper:', scraper.isLoggedIn());
-        // const thread = await scraper.getThread('1870417326170149218');
-        // const tweetsWithThreads: any[] = [];
-        // for await (const threadTweet of thread) {
-        //     tweetsWithThreads.push({
-        //         id: threadTweet.id || '',
-        //         text: threadTweet.text || '',
-        //         author_id: threadTweet.userId || '',
-        //         author_username: threadTweet.username?.toLowerCase() || 'unknown',
-        //         created_at: threadTweet.timeParsed?.toISOString() || new Date().toISOString()
-        //     });
-        // }
-        // logger.info('Tweets with threads:', tweetsWithThreads);
         await initializeSchema();
 
         app.listen(config.PORT, () => {
