@@ -1,24 +1,21 @@
-import { StructuredOutputParser } from "langchain/output_parsers";
+import { StructuredOutputParser } from 'langchain/output_parsers';
 import {
   engagementSchema,
   toneSchema,
   responseSchema,
   autoApprovalSchema,
-} from "../../schemas/workflow.js";
-import { ChatPromptTemplate, PromptTemplate } from "@langchain/core/prompts";
-import { SystemMessage } from "@langchain/core/messages";
-import { config } from "../../config/index.js";
+} from '../../schemas/workflow.js';
+import { ChatPromptTemplate, PromptTemplate } from '@langchain/core/prompts';
+import { SystemMessage } from '@langchain/core/messages';
+import { config } from '../../config/index.js';
 
 const agentUsername = config.TWITTER_USERNAME!;
 const walletAddress = config.WALLET_ADDRESS!;
 
-export const engagementParser =
-  StructuredOutputParser.fromZodSchema(engagementSchema);
+export const engagementParser = StructuredOutputParser.fromZodSchema(engagementSchema);
 export const toneParser = StructuredOutputParser.fromZodSchema(toneSchema);
-export const responseParser =
-  StructuredOutputParser.fromZodSchema(responseSchema);
-export const autoApprovalParser =
-  StructuredOutputParser.fromZodSchema(autoApprovalSchema);
+export const responseParser = StructuredOutputParser.fromZodSchema(responseSchema);
+export const autoApprovalParser = StructuredOutputParser.fromZodSchema(autoApprovalSchema);
 
 //
 // ============ ENGAGEMENT SYSTEM PROMPT ============
@@ -132,7 +129,7 @@ export const autoApprovalSystemPrompt = await PromptTemplate.fromTemplate(
 export const engagementPrompt = ChatPromptTemplate.fromMessages([
   new SystemMessage(engagementSystemPrompt),
   [
-    "human",
+    'human',
     `Evaluate this tweet and provide your structured decision:
         Tweet: {tweet}
         Thread Context: {thread}
@@ -146,7 +143,7 @@ export const engagementPrompt = ChatPromptTemplate.fromMessages([
 export const tonePrompt = ChatPromptTemplate.fromMessages([
   new SystemMessage(toneSystemPrompt),
   [
-    "human",
+    'human',
     `Analyze the tone for this tweet and suggest a response tone: 
         Tweet: {tweet}
         Thread: {thread}
@@ -160,7 +157,7 @@ export const tonePrompt = ChatPromptTemplate.fromMessages([
 export const responsePrompt = ChatPromptTemplate.fromMessages([
   new SystemMessage(responseSystemPrompt),
   [
-    "human",
+    'human',
     `Generate a response strategy for this tweet by considering similar tweets from @{author} using the suggested tone:
     Tweet: {tweet}
     Tone: {tone}
@@ -198,21 +195,18 @@ export const responsePrompt = ChatPromptTemplate.fromMessages([
 ]);
 
 // Helper function to format rejection feedback
-export const formatRejectionFeedback = (
-  rejectionReason?: string,
-  suggestedChanges?: string,
-) => {
-  if (!rejectionReason) return "";
+export const formatRejectionFeedback = (rejectionReason?: string, suggestedChanges?: string) => {
+  if (!rejectionReason) return '';
 
   return `\nPrevious Response Feedback:
   Rejection Reason: ${rejectionReason}
-  Suggested Changes: ${suggestedChanges || "None provided"}
+  Suggested Changes: ${suggestedChanges || 'None provided'}
 
   Please address this feedback in your new response.`;
 };
 
 export const formatRejectionInstructions = (rejectionReason?: string) => {
-  if (!rejectionReason) return "";
+  if (!rejectionReason) return '';
 
   return `\nIMPORTANT: Your previous response was rejected. Make sure to:
   1. Address the rejection reason: "${rejectionReason}"
@@ -223,7 +217,7 @@ export const formatRejectionInstructions = (rejectionReason?: string) => {
 export const autoApprovalPrompt = ChatPromptTemplate.fromMessages([
   new SystemMessage(autoApprovalSystemPrompt),
   [
-    "human",
+    'human',
     `Evaluate this response:
     Original Tweet: {tweet}
     Generated Response: {response}

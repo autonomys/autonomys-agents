@@ -1,24 +1,21 @@
-import { AIMessage } from "@langchain/core/messages";
-import { State, logger, parseMessageContent } from "../workflow.js";
-import * as prompts from "../prompts.js";
-import { WorkflowConfig } from "../workflow.js";
-import { ResponseStatus } from "../../../types/queue.js";
+import { AIMessage } from '@langchain/core/messages';
+import { State, logger, parseMessageContent } from '../workflow.js';
+import * as prompts from '../prompts.js';
+import { WorkflowConfig } from '../workflow.js';
+import { ResponseStatus } from '../../../types/queue.js';
 
 export const createResponseGenerationNode = (config: WorkflowConfig) => {
   return async (state: typeof State.State) => {
-    logger.info("Response Generation Node - Creating response strategy");
+    logger.info('Response Generation Node - Creating response strategy');
     try {
       const lastMessage = state.messages[state.messages.length - 1];
       const parsedContent = parseMessageContent(lastMessage.content);
       const batchToRespond = parsedContent.batchToRespond || [];
       const batchToFeedback: any[] = [];
 
-      logger.info(
-        `Processing batch of ${batchToRespond.length} tweets for response generation`,
-        {
-          hasRejectedResponses: parsedContent.fromAutoApproval,
-        },
-      );
+      logger.info(`Processing batch of ${batchToRespond.length} tweets for response generation`, {
+        hasRejectedResponses: parsedContent.fromAutoApproval,
+      });
 
       await Promise.all(
         batchToRespond.map(async (item: any) => {
@@ -32,38 +29,34 @@ export const createResponseGenerationNode = (config: WorkflowConfig) => {
 
           if (parsedContent.fromAutoApproval) {
             item.retry = (item.retry || 0) + 1;
-            logger.info("Regenerating response due to rejection:", {
+            logger.info('Regenerating response due to rejection:', {
               retry: item.retry,
             });
           } else {
             item.retry = 0;
           }
 
-          const lastFeedback =
-            workflowState?.autoFeedback[workflowState?.autoFeedback.length - 1];
+          const lastFeedback = workflowState?.autoFeedback[workflowState?.autoFeedback.length - 1];
           const rejectionInstructions = lastFeedback
             ? prompts.formatRejectionInstructions(lastFeedback.reason)
-            : "";
+            : '';
           const rejectionFeedback = lastFeedback
-            ? prompts.formatRejectionFeedback(
-                lastFeedback.reason,
-                lastFeedback.suggestedChanges,
-              )
-            : "";
+            ? prompts.formatRejectionFeedback(lastFeedback.reason, lastFeedback.suggestedChanges)
+            : '';
 
           const similarTweetsResponse = await config.toolNode.invoke({
             messages: [
               new AIMessage({
-                content: "",
+                content: '',
                 tool_calls: [
                   {
-                    name: "search_similar_tweets",
+                    name: 'search_similar_tweets',
                     args: {
                       query: `author:${tweet.author_username} ${tweet.text}`,
                       k: 5,
                     },
-                    id: "similar_tweets_call",
-                    type: "tool_call",
+                    id: 'similar_tweets_call',
+                    type: 'tool_call',
                   },
                 ],
               }),
@@ -71,9 +64,7 @@ export const createResponseGenerationNode = (config: WorkflowConfig) => {
           });
 
           const similarTweets = parseMessageContent(
-            similarTweetsResponse.messages[
-              similarTweetsResponse.messages.length - 1
-            ].content,
+            similarTweetsResponse.messages[similarTweetsResponse.messages.length - 1].content,
           );
 
           const responseStrategy = await prompts.responsePrompt
@@ -81,16 +72,12 @@ export const createResponseGenerationNode = (config: WorkflowConfig) => {
             .pipe(prompts.responseParser)
             .invoke({
               tweet: tweet.text,
-              tone:
-                toneAnalysis?.suggestedTone ||
-                workflowState?.toneAnalysis?.suggestedTone,
+              tone: toneAnalysis?.suggestedTone || workflowState?.toneAnalysis?.suggestedTone,
               author: tweet.author_username,
               similarTweets: JSON.stringify(similarTweets.similar_tweets),
               thread: JSON.stringify(tweet.thread || []),
               previousResponse:
-                workflowState?.autoFeedback[
-                  workflowState?.autoFeedback.length - 1
-                ]?.response || "",
+                workflowState?.autoFeedback[workflowState?.autoFeedback.length - 1]?.response || '',
               rejectionFeedback,
               rejectionInstructions,
             });
@@ -128,13 +115,13 @@ export const createResponseGenerationNode = (config: WorkflowConfig) => {
             const addResponse = await config.toolNode.invoke({
               messages: [
                 new AIMessage({
-                  content: "",
+                  content: '',
                   tool_calls: [
                     {
-                      name: "add_response",
+                      name: 'add_response',
                       args,
-                      id: "add_response_call",
-                      type: "tool_call",
+                      id: 'add_response_call',
+                      type: 'tool_call',
                     },
                   ],
                 }),
@@ -145,13 +132,13 @@ export const createResponseGenerationNode = (config: WorkflowConfig) => {
             const updateResponse = await config.toolNode.invoke({
               messages: [
                 new AIMessage({
-                  content: "",
+                  content: '',
                   tool_calls: [
                     {
-                      name: "update_response",
+                      name: 'update_response',
                       args,
-                      id: "update_response_call",
-                      type: "tool_call",
+                      id: 'update_response_call',
+                      type: 'tool_call',
                     },
                   ],
                 }),
@@ -174,12 +161,10 @@ export const createResponseGenerationNode = (config: WorkflowConfig) => {
             }),
           }),
         ],
-        processedTweets: new Set(
-          batchToRespond.map((item: any) => item.tweet.id),
-        ),
+        processedTweets: new Set(batchToRespond.map((item: any) => item.tweet.id)),
       };
     } catch (error) {
-      logger.error("Error in response generation node:", error);
+      logger.error('Error in response generation node:', error);
       return { messages: [] };
     }
   };

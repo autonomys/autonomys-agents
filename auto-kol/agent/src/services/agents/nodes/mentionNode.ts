@@ -1,22 +1,22 @@
-import { AIMessage } from "@langchain/core/messages";
-import { parseMessageContent, WorkflowConfig } from "../workflow.js";
-import { logger } from "../workflow.js";
-import { State } from "../workflow.js";
-import { tweetSearchSchema } from "../../../schemas/workflow.js";
+import { AIMessage } from '@langchain/core/messages';
+import { parseMessageContent, WorkflowConfig } from '../workflow.js';
+import { logger } from '../workflow.js';
+import { State } from '../workflow.js';
+import { tweetSearchSchema } from '../../../schemas/workflow.js';
 
 export const createMentionNode = (config: WorkflowConfig) => {
   return async (state: typeof State.State) => {
-    logger.info("Mention Node - Fetching recent mentions");
+    logger.info('Mention Node - Fetching recent mentions');
     const toolResponse = await config.toolNode.invoke({
       messages: [
         new AIMessage({
-          content: "",
+          content: '',
           tool_calls: [
             {
-              name: "fetch_mentions",
+              name: 'fetch_mentions',
               args: {},
-              id: "fetch_mentions_call",
-              type: "tool_call",
+              id: 'fetch_mentions_call',
+              type: 'tool_call',
             },
           ],
         }),

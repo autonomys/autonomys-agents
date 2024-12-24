@@ -1,15 +1,15 @@
-import sqlite3 from "sqlite3";
-import { open } from "sqlite";
-import fs from "fs/promises";
-import path from "path";
-import { createLogger } from "../utils/logger.js";
-import { KOL } from "../types/kol.js";
-import { fileURLToPath } from "url";
-import { dirname, join } from "path";
-import { Tweet } from "../types/twitter.js";
-import { SkippedTweet, PendingResponse } from "../types/queue.js";
+import sqlite3 from 'sqlite3';
+import { open } from 'sqlite';
+import fs from 'fs/promises';
+import path from 'path';
+import { createLogger } from '../utils/logger.js';
+import { KOL } from '../types/kol.js';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
+import { Tweet } from '../types/twitter.js';
+import { SkippedTweet, PendingResponse } from '../types/queue.js';
 
-const logger = createLogger("database");
+const logger = createLogger('database');
 
 let db: Awaited<ReturnType<typeof open>> | null = null;
 
@@ -17,18 +17,18 @@ let db: Awaited<ReturnType<typeof open>> | null = null;
 export async function initializeDatabase() {
   if (!db) {
     try {
-      const dbDir = path.dirname("./data/engagement.db");
+      const dbDir = path.dirname('./data/engagement.db');
       await fs.mkdir(dbDir, { recursive: true });
 
       db = await open({
-        filename: "./data/engagement.db",
+        filename: './data/engagement.db',
         driver: sqlite3.Database,
       });
 
-      await db.run("PRAGMA foreign_keys = ON");
+      await db.run('PRAGMA foreign_keys = ON');
 
       // Test database connection
-      await db.get("SELECT 1");
+      await db.get('SELECT 1');
     } catch (error) {
       db = null;
       throw new Error(`Failed to initialize database: ${error}`);
@@ -48,7 +48,7 @@ export async function initializeSchema() {
   const db = await initializeDatabase();
 
   try {
-    await db.run("BEGIN TRANSACTION");
+    await db.run('BEGIN TRANSACTION');
 
     // Check if tables exist first
     const tables = await db.all(`
@@ -63,33 +63,31 @@ export async function initializeSchema() {
             )
         `);
 
-    const existingTables = new Set(tables.map((t) => t.name));
+    const existingTables = new Set(tables.map(t => t.name));
 
     const __filename = fileURLToPath(import.meta.url);
     const __dirname = dirname(__filename);
-    const schemaPath = join(__dirname, "schema.sql");
-    const schema = await fs.readFile(schemaPath, "utf-8");
+    const schemaPath = join(__dirname, 'schema.sql');
+    const schema = await fs.readFile(schemaPath, 'utf-8');
 
     const statements = schema
-      .split(";")
-      .map((s) => s.trim())
-      .filter((s) => s.length > 0);
+      .split(';')
+      .map(s => s.trim())
+      .filter(s => s.length > 0);
 
     for (const statement of statements) {
-      const tableName = statement.match(
-        /CREATE TABLE (?:IF NOT EXISTS )?([^\s(]+)/i,
-      )?.[1];
+      const tableName = statement.match(/CREATE TABLE (?:IF NOT EXISTS )?([^\s(]+)/i)?.[1];
       if (tableName && !existingTables.has(tableName)) {
         await db.run(statement);
         logger.info(`Created table: ${tableName}`);
       }
     }
 
-    await db.run("COMMIT");
-    logger.info("Schema initialization completed successfully");
+    await db.run('COMMIT');
+    logger.info('Schema initialization completed successfully');
   } catch (error) {
-    await db.run("ROLLBACK");
-    logger.error("Failed to initialize schema:", error);
+    await db.run('ROLLBACK');
+    logger.error('Failed to initialize schema:', error);
     throw new Error(`Failed to initialize schema: ${error}`);
   }
 }
@@ -117,10 +115,7 @@ export async function addKOL(kol: {
 
     logger.info(`Added KOL account: ${kol.username}`);
   } catch (error: any) {
-    if (
-      error?.code === "SQLITE_CONSTRAINT" &&
-      error?.message?.includes("UNIQUE")
-    ) {
+    if (error?.code === 'SQLITE_CONSTRAINT' && error?.message?.includes('UNIQUE')) {
       logger.warn(`KOL account already exists: ${kol.username}`);
       return;
     }
@@ -138,23 +133,21 @@ export async function getKOLAccounts(): Promise<KOL[]> {
             ORDER BY created_at DESC
         `);
 
-    return accounts.map((account) => ({
+    return accounts.map(account => ({
       id: account.id,
       username: account.username,
       created_at: new Date(account.created_at),
       updatedAt: new Date(account.updated_at),
     }));
   } catch (error) {
-    logger.error("Failed to get KOL accounts:", error);
+    logger.error('Failed to get KOL accounts:', error);
     throw error;
   }
 }
 
 export async function isKOLExists(username: string): Promise<boolean> {
   const db = await initializeDatabase();
-  const kol = await db.get(`SELECT * FROM kol_accounts WHERE username = ?`, [
-    username,
-  ]);
+  const kol = await db.get(`SELECT * FROM kol_accounts WHERE username = ?`, [username]);
   return kol !== undefined;
 }
 
@@ -176,7 +169,7 @@ export async function addResponse(response: PendingResponse) {
       response.strategy,
       response.estimatedImpact,
       response.confidence,
-      "pending",
+      'pending',
     ],
   );
 }
@@ -193,7 +186,7 @@ export async function updateResponse(response: PendingResponse) {
             estimated_impact = ?, 
             confidence = ?, 
             updated_at = CURRENT_TIMESTAMP
-        WHERE ${response.id ? "id = ?" : "tweet_id = ?"}
+        WHERE ${response.id ? 'id = ?' : 'tweet_id = ?'}
     `,
     [
       response.content,
@@ -222,9 +215,7 @@ export async function getPendingResponses() {
     `);
 }
 
-export async function getResponseByTweetId(
-  tweet_id: string,
-): Promise<PendingResponse> {
+export async function getResponseByTweetId(tweet_id: string): Promise<PendingResponse> {
   const db = await initializeDatabase();
   const response = await db.all(
     `
@@ -235,9 +226,7 @@ export async function getResponseByTweetId(
   return response[0] as PendingResponse;
 }
 
-export async function getPendingResponsesByTweetId(
-  id: string,
-): Promise<PendingResponse> {
+export async function getPendingResponsesByTweetId(id: string): Promise<PendingResponse> {
   const db = await initializeDatabase();
   const pending_response = await db.all(
     `
@@ -248,13 +237,10 @@ export async function getPendingResponsesByTweetId(
   return pending_response[0] as PendingResponse;
 }
 
-export async function updateResponseStatus(
-  id: string,
-  status: "approved" | "rejected",
-) {
+export async function updateResponseStatus(id: string, status: 'approved' | 'rejected') {
   const db = await initializeDatabase();
 
-  await db.run("BEGIN TRANSACTION");
+  await db.run('BEGIN TRANSACTION');
 
   try {
     await db.run(
@@ -265,17 +251,17 @@ export async function updateResponseStatus(
         `,
       [status, id],
     );
-    await db.run("COMMIT");
+    await db.run('COMMIT');
     logger.info(`Updated response status: ${id}`);
   } catch (error) {
-    await db.run("ROLLBACK");
+    await db.run('ROLLBACK');
     throw error;
   }
 }
 
 export async function updateResponseStatusByTweetId(
   tweet_id: string,
-  status: "approved" | "rejected",
+  status: 'approved' | 'rejected',
 ) {
   const db = await initializeDatabase();
   return db.run(
@@ -302,19 +288,11 @@ export async function addTweet(tweet: {
             created_at
         ) VALUES (?, ?, ?, ?, ?)
     `,
-    [
-      tweet.id,
-      tweet.author_id,
-      tweet.author_username,
-      tweet.content,
-      tweet.created_at,
-    ],
+    [tweet.id, tweet.author_id, tweet.author_username, tweet.content, tweet.created_at],
   );
 }
 
-export async function getTweetById(
-  tweetId: string,
-): Promise<Tweet | undefined> {
+export async function getTweetById(tweetId: string): Promise<Tweet | undefined> {
   const db = await initializeDatabase();
   const tweet = await db.get(`SELECT * FROM tweets WHERE id = ?`, [tweetId]);
   return tweet as Tweet;
@@ -351,29 +329,19 @@ export async function getSkippedTweets() {
     `);
 }
 
-export async function getSkippedTweetById(
-  skippedId: string,
-): Promise<SkippedTweet> {
+export async function getSkippedTweetById(skippedId: string): Promise<SkippedTweet> {
   const db = await initializeDatabase();
-  const skipped = await db.get(`SELECT * FROM skipped_tweets WHERE id = ?`, [
-    skippedId,
-  ]);
+  const skipped = await db.get(`SELECT * FROM skipped_tweets WHERE id = ?`, [skippedId]);
   return skipped;
 }
 
 export async function recheckSkippedTweet(skippedId: string): Promise<boolean> {
   const db = await initializeDatabase();
-  const result = await db.run(
-    `UPDATE skipped_tweets SET recheck = TRUE WHERE id = ?`,
-    [skippedId],
-  );
+  const result = await db.run(`UPDATE skipped_tweets SET recheck = TRUE WHERE id = ?`, [skippedId]);
   return result !== undefined;
 }
 
-export async function flagBackSkippedTweet(
-  skippedId: string,
-  reason: string,
-): Promise<boolean> {
+export async function flagBackSkippedTweet(skippedId: string, reason: string): Promise<boolean> {
   const db = await initializeDatabase();
   const result = await db.run(
     `UPDATE skipped_tweets SET recheck = FALSE, reason = ? WHERE id = ?`,
@@ -384,18 +352,12 @@ export async function flagBackSkippedTweet(
 
 export async function getAllSkippedTweetsToRecheck(): Promise<Tweet[]> {
   const db = await initializeDatabase();
-  const recheckTweets = await db.all(
-    `SELECT * FROM skipped_tweets WHERE recheck = TRUE`,
-  );
+  const recheckTweets = await db.all(`SELECT * FROM skipped_tweets WHERE recheck = TRUE`);
   return recheckTweets;
 }
 
 ///////////DSN///////////
-export async function addDsn(dsn: {
-  id: string;
-  tweetId: string;
-  cid: string;
-}) {
+export async function addDsn(dsn: { id: string; tweetId: string; cid: string }) {
   return db?.run(
     `
         INSERT INTO dsn (id, tweet_id, cid) 
@@ -483,16 +445,14 @@ export async function getAllDsn(page: number = 1, limit: number = 10) {
       },
     };
   } catch (error) {
-    logger.error("Failed to get all DSN records", error);
+    logger.error('Failed to get all DSN records', error);
     throw error;
   }
 }
 
 export async function getLastDsnCid(): Promise<string> {
-  const dsn = await db?.get(
-    `SELECT cid FROM dsn ORDER BY created_at DESC LIMIT 1`,
-  );
-  return dsn?.cid || "";
+  const dsn = await db?.get(`SELECT cid FROM dsn ORDER BY created_at DESC LIMIT 1`);
+  return dsn?.cid || '';
 }
 
 ///////////MENTIONS///////////
@@ -510,8 +470,6 @@ export async function addMention(mention: { latest_id: string }) {
 }
 
 export async function getLatestMentionId(): Promise<string> {
-  const mention = await db?.get(
-    `SELECT latest_id FROM mentions ORDER BY updated_at DESC LIMIT 1`,
-  );
-  return mention?.latest_id || "";
+  const mention = await db?.get(`SELECT latest_id FROM mentions ORDER BY updated_at DESC LIMIT 1`);
+  return mention?.latest_id || '';
 }

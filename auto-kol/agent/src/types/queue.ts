@@ -1,12 +1,12 @@
-import { Tweet } from "./twitter.js";
-import { AgentResponse } from "./agent.js";
-import { WorkflowState } from "./workflow.js";
+import { Tweet } from './twitter.js';
+import { AgentResponse } from './agent.js';
+import { WorkflowState } from './workflow.js';
 
 export enum ResponseStatus {
-  SKIPPED = "skipped",
-  PENDING = "pending",
-  APPROVED = "approved",
-  REJECTED = "rejected",
+  SKIPPED = 'skipped',
+  PENDING = 'pending',
+  APPROVED = 'approved',
+  REJECTED = 'rejected',
 }
 
 export interface PendingResponse {
@@ -21,7 +21,7 @@ export interface PendingResponse {
 
 export type ActionResponse = Readonly<{
   tweet: Tweet;
-  status: "pending" | "approved" | "rejected";
+  status: 'pending' | 'approved' | 'rejected';
   response: {
     id: string;
     content: string;
@@ -36,7 +36,7 @@ export type QueuedResponseMemory = Readonly<{
   id: string;
   tweet: Tweet;
   response: AgentResponse;
-  status: "pending" | "approved" | "rejected";
+  status: 'pending' | 'approved' | 'rejected';
   created_at: Date;
   updatedAt: Date;
   workflowState: WorkflowState;

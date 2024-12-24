@@ -1,18 +1,14 @@
-import { createLogger } from "../utils/logger.js";
-import { hexlify } from "ethers";
-import { createAutoDriveApi, uploadFile } from "@autonomys/auto-drive";
-import {
-  stringToCid,
-  blake3HashFromCid,
-  cidFromBlakeHash,
-} from "@autonomys/auto-dag-data";
-import { addDsn, getLastDsnCid } from "../database/index.js";
-import { v4 as generateId } from "uuid";
-import { config } from "../config/index.js";
-import { setLastMemoryHash, getLastMemoryCid } from "./agentMemoryContract.js";
-import { signMessage, wallet } from "./agentWallet.js";
+import { createLogger } from '../utils/logger.js';
+import { hexlify } from 'ethers';
+import { createAutoDriveApi, uploadFile } from '@autonomys/auto-drive';
+import { stringToCid, blake3HashFromCid, cidFromBlakeHash } from '@autonomys/auto-dag-data';
+import { addDsn, getLastDsnCid } from '../database/index.js';
+import { v4 as generateId } from 'uuid';
+import { config } from '../config/index.js';
+import { setLastMemoryHash, getLastMemoryCid } from './agentMemoryContract.js';
+import { signMessage, wallet } from './agentWallet.js';
 
-const logger = createLogger("dsn-upload-tool");
+const logger = createLogger('dsn-upload-tool');
 const dsnAPI = createAutoDriveApi({ apiKey: config.DSN_API_KEY! });
 let currentNonce = await wallet.getNonce();
 
@@ -22,10 +18,7 @@ interface RetryOptions {
   onRetry?: (error: Error, attempt: number) => void;
 }
 
-async function retry<T>(
-  fn: () => Promise<T>,
-  options: RetryOptions,
-): Promise<T> {
+async function retry<T>(fn: () => Promise<T>, options: RetryOptions): Promise<T> {
   const { maxRetries, delay, onRetry } = options;
   let lastError: Error;
 
@@ -45,9 +38,7 @@ async function retry<T>(
 
       // Add jitter to prevent thundering herd
       const jitter = Math.random() * 1000;
-      await new Promise((resolve) =>
-        setTimeout(resolve, delay * attempt + jitter),
-      );
+      await new Promise(resolve => setTimeout(resolve, delay * attempt + jitter));
     }
   }
 
@@ -57,16 +48,16 @@ async function retry<T>(
 const getPreviousCid = async (): Promise<string> => {
   const dsnLastCid = await getLastDsnCid();
   if (dsnLastCid) {
-    logger.info("Using last CID from local db", { cid: dsnLastCid });
+    logger.info('Using last CID from local db', { cid: dsnLastCid });
     return dsnLastCid;
   }
 
   const memoryLastCid = await getLastMemoryCid();
-  logger.info("Using fallback CID source", {
-    memoryLastCid: memoryLastCid || "not found",
+  logger.info('Using fallback CID source', {
+    memoryLastCid: memoryLastCid || 'not found',
   });
 
-  return memoryLastCid || "";
+  return memoryLastCid || '';
 };
 
 export async function uploadToDsn({ data }: { data: any }) {
@@ -101,7 +92,7 @@ export async function uploadToDsn({ data }: { data: any }) {
               yield jsonBuffer;
             },
             name: `${config.TWITTER_USERNAME}-agent-memory-${timestamp}.json`,
-            mimeType: "application/json",
+            mimeType: 'application/json',
             size: jsonBuffer.length,
             path: timestamp,
           },
@@ -111,14 +102,14 @@ export async function uploadToDsn({ data }: { data: any }) {
           },
         );
 
-        await uploadObservable.forEach((status) => {
-          if (status.type === "file" && status.cid) {
+        await uploadObservable.forEach(status => {
+          if (status.type === 'file' && status.cid) {
             finalCid = status.cid.toString();
           }
         });
 
         if (!finalCid) {
-          throw new Error("Failed to get CID from DSN upload");
+          throw new Error('Failed to get CID from DSN upload');
         }
       },
       {
@@ -134,18 +125,18 @@ export async function uploadToDsn({ data }: { data: any }) {
     );
 
     if (!finalCid) {
-      throw new Error("Failed to get CID from DSN upload after retries");
+      throw new Error('Failed to get CID from DSN upload after retries');
     }
 
     const blake3hash = blake3HashFromCid(stringToCid(finalCid));
-    logger.info("Setting last memory hash", {
+    logger.info('Setting last memory hash', {
       blake3hash: hexlify(blake3hash),
     });
 
     await retry(
       async () => {
         const tx = await setLastMemoryHash(hexlify(blake3hash), currentNonce++);
-        logger.info("Memory hash transaction submitted", {
+        logger.info('Memory hash transaction submitted', {
           txHash: tx.hash,
           previousCid,
           cid: finalCid,
@@ -162,8 +153,8 @@ export async function uploadToDsn({ data }: { data: any }) {
           });
         },
       },
-    ).catch((error) => {
-      logger.error("Failed to submit memory hash transaction", error);
+    ).catch(error => {
+      logger.error('Failed to submit memory hash transaction', error);
     });
 
     await addDsn({
@@ -178,7 +169,7 @@ export async function uploadToDsn({ data }: { data: any }) {
       previousCid: previousCid || null,
     };
   } catch (error) {
-    logger.error("Error uploading to DSN:", error);
+    logger.error('Error uploading to DSN:', error);
     throw error;
   }
 }

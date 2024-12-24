@@ -1,7 +1,7 @@
-import dotenv from "dotenv";
-import path from "path";
-import { fileURLToPath } from "url";
-import { dirname } from "path";
+import dotenv from 'dotenv';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
 
 // Get the equivalent of __dirname in ESM
 const __filename = fileURLToPath(import.meta.url);
@@ -15,29 +15,28 @@ export const config = {
   TWITTER_PASSWORD: process.env.TWITTER_PASSWORD,
 
   // LLM Configuration
-  LLM_MODEL: process.env.LLM_MODEL || "gpt-4o-mini",
+  LLM_MODEL: process.env.LLM_MODEL || 'gpt-4o-mini',
   OPENAI_API_KEY: process.env.OPENAI_API_KEY,
   TEMPERATURE: 0.7,
 
   // Agent Configuration
-  CHECK_INTERVAL:
-    (Number(process.env.CHECK_INTERVAL_MINUTES) || 30) * 60 * 1000,
-  MEMORY_DIR: path.join(__dirname, "../../data/memory"),
+  CHECK_INTERVAL: (Number(process.env.CHECK_INTERVAL_MINUTES) || 30) * 60 * 1000,
+  MEMORY_DIR: path.join(__dirname, '../../data/memory'),
 
   // Server Configuration
   PORT: process.env.PORT || 3001,
 
   // Environment
-  NODE_ENV: process.env.NODE_ENV || "development",
+  NODE_ENV: process.env.NODE_ENV || 'development',
 
   // Chroma Configuration
-  CHROMA_DIR: path.join(__dirname, "../../data/chroma"),
-  CHROMA_URL: process.env.CHROMA_URL || "http://localhost:8000",
+  CHROMA_DIR: path.join(__dirname, '../../data/chroma'),
+  CHROMA_URL: process.env.CHROMA_URL || 'http://localhost:8000',
 
   // AutoDrive Configuration
   DSN_API_KEY: process.env.DSN_API_KEY,
-  DSN_UPLOAD: process.env.DSN_UPLOAD === "true",
-  DSN_SKIP_UPLOAD: process.env.DSN_SKIP_UPLOAD === "true",
+  DSN_UPLOAD: process.env.DSN_UPLOAD === 'true',
+  DSN_SKIP_UPLOAD: process.env.DSN_SKIP_UPLOAD === 'true',
   DSN_ENCRYPTION_PASSWORD: process.env.DSN_ENCRYPTION_PASSWORD,
 
   // CORS Configuration
@@ -59,5 +58,5 @@ export const config = {
   RETRY_LIMIT: process.env.RETRY_LIMIT || 2,
 
   // POSTING TWEETS PERMISSION
-  POST_TWEETS: process.env.POST_TWEETS === "true",
+  POST_TWEETS: process.env.POST_TWEETS === 'true',
 };
