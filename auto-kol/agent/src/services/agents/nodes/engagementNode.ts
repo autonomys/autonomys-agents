@@ -38,7 +38,6 @@ const handleSkippedTweet = async (tweet: any, decision: any, config: any) => {
                     responseStrategy: null
                 }
             },
-            previousCid: await getLastDsnCid()
         });
     }
 };
@@ -49,9 +48,9 @@ export const createEngagementNode = (config: WorkflowConfig) => {
         try {
             const lastMessage = state.messages[state.messages.length - 1];
             const parsedContent = parseMessageContent(lastMessage.content);
-            const pendingEngagements = parsedContent.pendingEngagements || [];            
+            const pendingEngagements = parsedContent.pendingEngagements || [];
             logger.info(`Current tweet index: ${parsedContent?.currentTweetIndex}`);
-            
+
             if (pendingEngagements.length > 0) {
                 logger.info(`number of pending engagements: ${pendingEngagements.length}`);
                 return {

@@ -66,7 +66,6 @@ export const createAutoApprovalNode = (config: WorkflowConfig, scraper: Extended
                     if (globalConfig.DSN_UPLOAD) {
                         await uploadToDsn({
                             data: response,
-                            previousCid: await getLastDsnCid()
                         });
                     }
                 } else if (response.retry > globalConfig.RETRY_LIMIT) {
@@ -78,7 +77,6 @@ export const createAutoApprovalNode = (config: WorkflowConfig, scraper: Extended
                     if (globalConfig.DSN_UPLOAD) {
                         await uploadToDsn({
                             data: response,
-                            previousCid: await getLastDsnCid()
                         });
                     }
                 } else {
