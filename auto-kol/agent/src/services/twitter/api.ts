@@ -7,6 +7,7 @@ const logger = createLogger('agent-twitter-api');
 
 export class ExtendedScraper extends Scraper {
   private static instance: ExtendedScraper | null = null;
+  private conversationCache: Map<string, Tweet[]> = new Map();
 
   private constructor() {
     super();
@@ -136,19 +137,27 @@ export class ExtendedScraper extends Scraper {
       throw new Error('Must be logged in to fetch thread');
     }
 
-    const thread: Tweet[] = [];
-    const conversationTweets = new Map<string, Tweet>();
-
-    // Fetch initial/root tweet and conversation ID
     const initialTweet = await this.getTweet(tweetId);
     if (!initialTweet) {
       logger.warn(`Tweet ${tweetId} not found or deleted`);
       return [];
     }
-    let rootTweet = initialTweet;
+
     const conversationId = initialTweet.conversationId || initialTweet.id;
 
-    // If the conversation root differs from this particular tweet
+    // Check cache first
+    const cachedConversation = this.conversationCache.get(conversationId!);
+    if (cachedConversation) {
+      logger.info(
+        `Returning cached conversation with ${cachedConversation.length} tweets for conversation_id:${conversationId}`
+      );
+      return cachedConversation;
+    }
+
+    const conversationTweets = new Map<string, Tweet>();
+    let rootTweet = initialTweet;
+
+    // If the conversation root differs
     if (initialTweet.conversationId && initialTweet.conversationId !== initialTweet.id) {
       const conversationRoot = await this.getTweet(initialTweet.conversationId);
       if (conversationRoot) {
@@ -163,11 +172,10 @@ export class ExtendedScraper extends Scraper {
       conversationTweets.set(rootTweet.id!, rootTweet);
     }
 
-    // Perform a single bulk search for the entire conversation
     try {
       logger.info('Fetching entire conversation via `conversation_id`:', conversationId);
-      const conversationIterator = this.searchTweets(`conversation_id:${conversationId}`, 100, SearchMode.Latest);
 
+      const conversationIterator = this.searchTweets(`conversation_id:${conversationId}`, 100, SearchMode.Latest);
       for await (const tweet of conversationIterator) {
         conversationTweets.set(tweet.id!, tweet);
       }
@@ -176,8 +184,8 @@ export class ExtendedScraper extends Scraper {
       return [rootTweet, initialTweet];
     }
 
-    // Sort chronologically
-    thread.push(...conversationTweets.values());
+    // Convert to array and sort chronologically
+    const thread = Array.from(conversationTweets.values());
     thread.sort((a, b) => {
       const timeA = a.timeParsed?.getTime() || 0;
       const timeB = b.timeParsed?.getTime() || 0;
@@ -185,6 +193,10 @@ export class ExtendedScraper extends Scraper {
     });
 
     logger.info(`Retrieved conversation thread with ${thread.length} tweets for conversation_id:${conversationId}`);
+
+    // Save to cache
+    this.conversationCache.set(conversationId!, thread);
+
     return thread;
   }
 
