@@ -23,7 +23,7 @@ export const createResponseGenerationNode = (config: WorkflowConfig, scraper: an
             await Promise.all(
                 batchToRespond.map(async (item: any) => {
                     const { tweet, decision, toneAnalysis, workflowState } = item;
-                    if (tweet.mention) {
+                    if (tweet.thread?.length > 0) {
                         logger.info('Response Generation Node - Tweet has a thread!', { tweetId: tweet.id });
                     }
                     if (!workflowState) {
@@ -68,6 +68,7 @@ export const createResponseGenerationNode = (config: WorkflowConfig, scraper: an
                     const similarTweets = parseMessageContent(
                         similarTweetsResponse.messages[similarTweetsResponse.messages.length - 1].content
                     );
+
                     const responseStrategy = await prompts.responsePrompt
                         .pipe(config.llms.response)
                         .pipe(prompts.responseParser)
@@ -76,7 +77,7 @@ export const createResponseGenerationNode = (config: WorkflowConfig, scraper: an
                             tone: toneAnalysis?.suggestedTone || workflowState?.toneAnalysis?.suggestedTone,
                             author: tweet.author_username,
                             similarTweets: JSON.stringify(similarTweets.similar_tweets),
-                            mentions: JSON.stringify(tweet.thread || []),
+                            thread: JSON.stringify(tweet.thread || []),
                             previousResponse: workflowState?.autoFeedback[workflowState?.autoFeedback.length - 1]?.response || '',
                             rejectionFeedback,
                             rejectionInstructions
@@ -98,7 +99,6 @@ export const createResponseGenerationNode = (config: WorkflowConfig, scraper: an
                                 },
                                 autoFeedback: workflowState?.autoFeedback || []
                         },
-                        mentions: tweet.thread || [],
                         retry: item.retry
                     }
                     batchToFeedback.push(data);
@@ -109,7 +109,7 @@ export const createResponseGenerationNode = (config: WorkflowConfig, scraper: an
                         workflowState: {
                             toneAnalysis: toneAnalysis,
                             responseStrategy,
-                            mentions: tweet.thread || [],
+                            thread: tweet.thread || [],
                             similarTweets: similarTweets.similar_tweets,
                         },
                     }

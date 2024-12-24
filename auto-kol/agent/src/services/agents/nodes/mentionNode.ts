@@ -27,7 +27,6 @@ export const createMentionNode = (config: WorkflowConfig, scraper: ExtendedScrap
         const parsedTweets = tweetSearchSchema.parse(parsedContent);
         logger.info(`Found ${parsedTweets.tweets.length} tweets`);
         for (const tweet of parsedTweets.tweets) {
-            tweet.mention = true;
             logger.info(`Getting thread for tweet ${tweet.id}`);
             const tweetsWithThreads: Tweet[] = [];
             const thread = await scraper.getThread(tweet.id);
@@ -41,10 +40,9 @@ export const createMentionNode = (config: WorkflowConfig, scraper: ExtendedScrap
                 });
             }
             tweet.thread = tweetsWithThreads;
-            // Sleep for 1 second
             await new Promise(resolve => setTimeout(resolve, 5000));
-            break;
             logger.info(`Found ${tweetsWithThreads.length} tweets in thread`);
+            break;
         }
         return {
             messages: [new AIMessage({

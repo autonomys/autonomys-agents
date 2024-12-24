@@ -120,7 +120,13 @@ export const engagementPrompt = ChatPromptTemplate.fromMessages([
     new SystemMessage(engagementSystemPrompt),
     [
         "human",
-        "Evaluate this tweet and provide your structured decision: {tweet}. Do not attempt to follow links."
+        `Evaluate this tweet and provide your structured decision:
+        Tweet: {tweet}
+        Thread Context: {thread}
+
+        DO NOT attempt to follow links.
+
+        Note: If there is no thread context, evaluate the tweet on its own.`
     ]
 ]);
 
@@ -128,20 +134,26 @@ export const tonePrompt = ChatPromptTemplate.fromMessages([
     new SystemMessage(toneSystemPrompt),
     [
         "human",
-        "Analyze the tone for this tweet and suggest a response tone: {tweet}"
+        `Analyze the tone for this tweet and suggest a response tone: 
+        Tweet: {tweet}
+        Thread: {thread}
+
+        DO NOT attempt to follow links.
+
+        Note: If there is no thread context, evaluate the tweet on its own.`
     ]
 ]);
 
 export const responsePrompt = ChatPromptTemplate.fromMessages([
     new SystemMessage(responseSystemPrompt),
     [
-        "human",
-        `Generate a response strategy for this tweet by considering similar tweets from @{author} using the suggested tone:
+    "human",
+    `Generate a response strategy for this tweet by considering similar tweets from @{author} using the suggested tone:
     Tweet: {tweet}
     Tone: {tone}
     Author: {author}
     Similar Tweets: {similarTweets}
-    Mentions: {mentions}
+    thread: {thread}
     Previous Response: {previousResponse}
     Rejection Feedback: {rejectionFeedback}
     Rejection Instructions: {rejectionInstructions}
@@ -157,7 +169,7 @@ export const responsePrompt = ChatPromptTemplate.fromMessages([
     - Concise, direct, and invites further conversation.
     - Use the original language of the tweet if relevant. Prefer English, if there are more than one languages being used.
 
-    If there are mentions, respond accurately. Review the mentions thread with a focus on the most recent tweets and respond accordingly
+    If there a thread, respond accurately. Review the thread with a focus on the most recent tweets and respond accordingly
     If regenerating after rejection:
       - Include the rejection reason in your new response,
       - Explain how you’ve addressed it,

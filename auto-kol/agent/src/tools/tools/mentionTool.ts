@@ -29,7 +29,7 @@ export const createMentionTool = (scraper: ExtendedScraper) => new DynamicStruct
                 author_id: mention.userId!,
                 author_username: mention.username!.toLowerCase(),
                 created_at: mention.timeParsed!.toISOString(),
-                mention: true
+                thread: []
             }));
 
             await addMention({

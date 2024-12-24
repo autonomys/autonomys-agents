@@ -8,6 +8,8 @@ import { corsMiddleware } from './api/middleware/cors.js';
 const logger = createLogger('app');
 const app = express();
 import { createTwitterClientScraper } from './services/twitter/api.js';
+import { stringToCid, blake3HashFromCid, cidFromBlakeHash } from '@autonomys/auto-dag-data';
+
 app.use(corsMiddleware);
 
 app.use(express.json());
@@ -29,7 +31,7 @@ const main = async () => {
     try {
         // const scraper = await createTwitterClientScraper();
         // logger.info('Scraper:', scraper.isLoggedIn());
-        // const thread = await scraper.getThread('1870973877272375519');
+        // const thread = await scraper.getThread('1870417326170149218');
         // const tweetsWithThreads: any[] = [];
         // for await (const threadTweet of thread) {
         //     tweetsWithThreads.push({
