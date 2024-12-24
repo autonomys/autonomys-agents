@@ -1,22 +1,24 @@
-import { config } from '../config/index.js';
-import { createLogger } from '../utils/logger.js';
-import { ExtendedScraper } from '../services/twitter/api.js';
-import * as db from '../database/index.js';
-import { KOL } from '../types/kol.js';
-import { Tweet } from '../types/twitter.js';
+import { config } from "../config/index.js";
+import { createLogger } from "../utils/logger.js";
+import { ExtendedScraper } from "../services/twitter/api.js";
+import * as db from "../database/index.js";
+import { KOL } from "../types/kol.js";
+import { Tweet } from "../types/twitter.js";
 
-const logger = createLogger('twitter-utils');
+const logger = createLogger("twitter-utils");
 export const timelineTweets: Tweet[] = [];
 
 export const updateKOLs = async (twitterScraper: ExtendedScraper) => {
   const currentKOLs = await db.getKOLAccounts();
-  const twitterProfile = await twitterScraper.getProfile(config.TWITTER_USERNAME!);
+  const twitterProfile = await twitterScraper.getProfile(
+    config.TWITTER_USERNAME!,
+  );
   const followings = twitterScraper.getFollowing(twitterProfile.userId!, 1000);
   logger.info(`following count: ${twitterProfile.followingCount}`);
 
   const newKOLs: KOL[] = [];
   for await (const following of followings) {
-    if (!currentKOLs.some(kol => kol.username === following.username)) {
+    if (!currentKOLs.some((kol) => kol.username === following.username)) {
       newKOLs.push({
         id: following.userId!,
         username: following.username!.toLowerCase(),
@@ -31,11 +33,13 @@ export const updateKOLs = async (twitterScraper: ExtendedScraper) => {
 
 export const getKOLsAccounts = async () => {
   const kolAccounts = await db.getKOLAccounts();
-  return kolAccounts.map(kol => kol.username);
+  return kolAccounts.map((kol) => kol.username);
 };
 
 export const getTimeLine = async (twitterScraper: ExtendedScraper) => {
-  const validTweetIds = timelineTweets.map(tweet => tweet.id).filter(id => id != null);
+  const validTweetIds = timelineTweets
+    .map((tweet) => tweet.id)
+    .filter((id) => id != null);
   const timeline = await twitterScraper.fetchHomeTimeline(0, validTweetIds);
 
   // clear timeline
@@ -61,7 +65,10 @@ const clearTimeLine = () => {
   timelineTweets.length = 0;
 };
 
-export const getUserProfile = async (twitterScraper: ExtendedScraper, username: string) => {
+export const getUserProfile = async (
+  twitterScraper: ExtendedScraper,
+  username: string,
+) => {
   const user = await twitterScraper.getProfile(username);
   const result: KOL = {
     id: user.userId!,
