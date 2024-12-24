@@ -18,7 +18,10 @@ export const createToneAnalysisNode = (config: WorkflowConfig) => {
           const toneAnalysis = await prompts.tonePrompt
             .pipe(config.llms.tone)
             .pipe(prompts.toneParser)
-            .invoke({ tweet: tweet.text });
+            .invoke({
+              tweet: tweet.text,
+              thread: tweet.thread || [],
+            });
 
           logger.info('Tone analysis:', { toneAnalysis });
 

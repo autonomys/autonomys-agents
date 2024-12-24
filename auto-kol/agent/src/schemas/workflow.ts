@@ -8,7 +8,17 @@ export const tweetSearchSchema = z.object({
       author_id: z.string(),
       author_username: z.string(),
       created_at: z.string(),
-      mention: z.boolean().optional(),
+      thread: z
+        .array(
+          z.object({
+            id: z.string(),
+            text: z.string(),
+            author_id: z.string(),
+            author_username: z.string(),
+            created_at: z.string(),
+          }),
+        )
+        .optional(),
     }),
   ),
   lastProcessedId: z.string().nullable().optional(),
@@ -43,7 +53,7 @@ export const responseSchema = z.object({
       }),
     )
     .optional(),
-  mentions: z
+  thread: z
     .array(
       z.object({
         id: z.string(),
