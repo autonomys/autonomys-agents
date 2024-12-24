@@ -14,7 +14,7 @@ export const createAutoApprovalNode = (config: WorkflowConfig, scraper: Extended
         try {
             const lastMessage = state.messages[state.messages.length - 1];
             const parsedContent = parseMessageContent(lastMessage.content);
-            const { batchToFeedback } = parsedContent;
+            const { tweets, currentTweetIndex, batchToFeedback } = parsedContent;
 
             if (!batchToFeedback.length) {
                 logger.info('No pending responses found');
@@ -66,7 +66,6 @@ export const createAutoApprovalNode = (config: WorkflowConfig, scraper: Extended
                     if (globalConfig.DSN_UPLOAD) {
                         await uploadToDsn({
                             data: response,
-                            previousCid: await getLastDsnCid()
                         });
                     }
                 } else if (response.retry > globalConfig.RETRY_LIMIT) {
@@ -78,7 +77,6 @@ export const createAutoApprovalNode = (config: WorkflowConfig, scraper: Extended
                     if (globalConfig.DSN_UPLOAD) {
                         await uploadToDsn({
                             data: response,
-                            previousCid: await getLastDsnCid()
                         });
                     }
                 } else {
@@ -101,6 +99,8 @@ export const createAutoApprovalNode = (config: WorkflowConfig, scraper: Extended
             return {
                 messages: [new AIMessage({
                     content: JSON.stringify({
+                        tweets: tweets,
+                        currentTweetIndex: currentTweetIndex,
                         fromAutoApproval: true,
                         batchToRespond: processedResponses
                     })
