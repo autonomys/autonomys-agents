@@ -7,6 +7,7 @@ const logger = createLogger('agent-twitter-api');
 
 export class ExtendedScraper extends Scraper {
   private static instance: ExtendedScraper | null = null;
+  private conversationCache: Map<string, Tweet[]> = new Map();
 
   private constructor() {
     super();
@@ -110,7 +111,7 @@ export class ExtendedScraper extends Scraper {
         break;
       }
 
-      const hasReplies = await this.searchTweets(
+      const hasReplies = this.searchTweets(
         `from:${username} to:${tweet.username}`,
         10,
         SearchMode.Latest,
@@ -137,54 +138,65 @@ export class ExtendedScraper extends Scraper {
     return replies;
   }
 
-  async getThread(tweetId: string): Promise<Tweet[]> {
-    const username = config.TWITTER_USERNAME!;
+  public async getThread(tweetId: string): Promise<Tweet[]> {
     const isLoggedIn = await this.isLoggedIn();
     if (!isLoggedIn) {
       throw new Error('Must be logged in to fetch thread');
     }
 
-    const thread: Tweet[] = [];
-    const seen = new Set<string>();
-
     const initialTweet = await this.getTweet(tweetId);
     if (!initialTweet) {
-      throw new Error(`Tweet ${tweetId} not found`);
+      logger.warn(`Tweet ${tweetId} not found or deleted`);
+      return [];
     }
 
-    let currentTweet = initialTweet;
-    while (currentTweet.inReplyToStatusId) {
-      const parentTweet = await this.getTweet(currentTweet.inReplyToStatusId);
-      if (!parentTweet) break;
-      if (!seen.has(parentTweet.id!)) {
-        thread.push(parentTweet);
-        seen.add(parentTweet.id!);
+    const conversationId = initialTweet.conversationId || initialTweet.id;
+
+    // Check cache first
+    const cachedConversation = this.conversationCache.get(conversationId!);
+    if (cachedConversation) {
+      logger.info(
+        `Returning cached conversation with ${cachedConversation.length} tweets for conversation_id:${conversationId}`,
+      );
+      return cachedConversation;
+    }
+
+    const conversationTweets = new Map<string, Tweet>();
+    let rootTweet = initialTweet;
+
+    // If the conversation root differs
+    if (initialTweet.conversationId && initialTweet.conversationId !== initialTweet.id) {
+      const conversationRoot = await this.getTweet(initialTweet.conversationId);
+      if (conversationRoot) {
+        rootTweet = conversationRoot;
+        conversationTweets.set(rootTweet.id!, rootTweet);
+        logger.info('Found conversation root tweet:', {
+          id: rootTweet.id,
+          conversationId: rootTweet.conversationId,
+        });
       }
-      currentTweet = parentTweet;
+    } else {
+      conversationTweets.set(rootTweet.id!, rootTweet);
     }
 
-    if (!seen.has(initialTweet.id!)) {
-      thread.push(initialTweet);
-      seen.add(initialTweet.id!);
-    }
+    try {
+      logger.info('Fetching entire conversation via `conversation_id`:', conversationId);
 
-    const agentTweet = thread.find(t => t.username === username);
-    if (agentTweet) {
-      const replies = this.searchTweets(
-        `conversation_id:${currentTweet.id!} in_reply_to_tweet_id:${agentTweet.id!}`,
+      const conversationIterator = this.searchTweets(
+        `conversation_id:${conversationId}`,
         100,
         SearchMode.Latest,
       );
-
-      for await (const reply of replies) {
-        if (!seen.has(reply.id!)) {
-          thread.push(reply);
-          seen.add(reply.id!);
-        }
+      for await (const tweet of conversationIterator) {
+        conversationTweets.set(tweet.id!, tweet);
       }
+    } catch (error) {
+      logger.warn(`Error fetching conversation: ${error}`);
+      return [rootTweet, initialTweet];
     }
 
-    // Sort chronologically
+    // Convert to array and sort chronologically
+    const thread = Array.from(conversationTweets.values());
     thread.sort((a, b) => {
       const timeA = a.timeParsed?.getTime() || 0;
       const timeB = b.timeParsed?.getTime() || 0;
@@ -192,8 +204,11 @@ export class ExtendedScraper extends Scraper {
     });
 
     logger.info(
-      `Retrieved conversation thread with ${thread.length} tweets starting from root tweet ${currentTweet.id!}`,
+      `Retrieved conversation thread with ${thread.length} tweets for conversation_id:${conversationId}`,
     );
+
+    // Save to cache
+    this.conversationCache.set(conversationId!, thread);
 
     return thread;
   }

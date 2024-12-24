@@ -2,7 +2,7 @@ import { AIMessage } from '@langchain/core/messages';
 import { State, logger, parseMessageContent } from '../workflow.js';
 import * as prompts from '../prompts.js';
 import { WorkflowConfig } from '../workflow.js';
-import { updateResponseStatusByTweetId } from '../../../database/index.js';
+import { getLastDsnCid, updateResponseStatusByTweetId } from '../../../database/index.js';
 import { uploadToDsn } from '../../../utils/dsn.js';
 import { config as globalConfig } from '../../../config/index.js';
 import { ResponseStatus } from '../../../types/queue.js';

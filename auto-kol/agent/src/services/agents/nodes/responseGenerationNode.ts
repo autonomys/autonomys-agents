@@ -66,7 +66,6 @@ export const createResponseGenerationNode = (config: WorkflowConfig) => {
           const similarTweets = parseMessageContent(
             similarTweetsResponse.messages[similarTweetsResponse.messages.length - 1].content,
           );
-
           const responseStrategy = await prompts.responsePrompt
             .pipe(config.llms.response)
             .pipe(prompts.responseParser)
