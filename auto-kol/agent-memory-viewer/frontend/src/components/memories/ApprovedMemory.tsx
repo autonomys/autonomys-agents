@@ -159,7 +159,7 @@ export function ApprovedMemoryView({ memory }: Props) {
                 </Text>
             </VStack>
 
-            {(memory.mentions || memory.tweet?.thread) && (
+            {( (memory.mentions && memory.mentions.length > 0) || (memory.tweet?.thread && memory.tweet?.thread.length > 0)) && (
                 <>
                     <Text fontSize="md" fontWeight="bold" color="purple.400" mb={2}>
                         Conversation Thread
