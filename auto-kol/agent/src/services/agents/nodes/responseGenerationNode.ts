@@ -1,10 +1,7 @@
 import { AIMessage } from "@langchain/core/messages";
 import { State, logger, parseMessageContent } from '../workflow.js';
 import * as prompts from '../prompts.js';
-import { uploadToDsn } from '../../../utils/dsn.js';
-import { getLastDsnCid } from '../../../database/index.js';
 import { WorkflowConfig } from '../workflow.js';
-import { config as globalConfig } from '../../../config/index.js';
 import { ResponseStatus } from '../../../types/queue.js';
 
 export const createResponseGenerationNode = (config: WorkflowConfig, scraper: any) => {
@@ -23,7 +20,7 @@ export const createResponseGenerationNode = (config: WorkflowConfig, scraper: an
             await Promise.all(
                 batchToRespond.map(async (item: any) => {
                     const { tweet, decision, toneAnalysis, workflowState } = item;
-                    
+
                     if (!workflowState) {
                         item.workflowState = { autoFeedback: [] };
                     } else if (!workflowState.autoFeedback) {
@@ -35,14 +32,14 @@ export const createResponseGenerationNode = (config: WorkflowConfig, scraper: an
                         logger.info('Regenerating response due to rejection:', {
                             retry: item.retry
                         });
-                        
+
                     } else {
                         item.retry = 0;
                     }
 
                     const lastFeedback = workflowState?.autoFeedback[workflowState?.autoFeedback.length - 1];
-                    const rejectionInstructions = lastFeedback 
-                        ? prompts.formatRejectionInstructions(lastFeedback.reason) 
+                    const rejectionInstructions = lastFeedback
+                        ? prompts.formatRejectionInstructions(lastFeedback.reason)
                         : '';
                     const rejectionFeedback = lastFeedback
                         ? prompts.formatRejectionFeedback(lastFeedback.reason, lastFeedback.suggestedChanges)
@@ -96,7 +93,7 @@ export const createResponseGenerationNode = (config: WorkflowConfig, scraper: an
                             rejectionInstructions
                         });
 
-                
+
                     const data = {
                         type: ResponseStatus.PENDING,
                         tweet,
@@ -109,14 +106,14 @@ export const createResponseGenerationNode = (config: WorkflowConfig, scraper: an
                                 strategy: responseStrategy.strategy,
                                 referencedTweets: responseStrategy.referencedTweets,
                                 confidence: responseStrategy.confidence
-                                },
-                                autoFeedback: workflowState?.autoFeedback || []
+                            },
+                            autoFeedback: workflowState?.autoFeedback || []
                         },
                         mentions: threadMentionsTweets,
                         retry: item.retry
                     }
                     batchToFeedback.push(data);
-                    
+
                     const args = {
                         tweet,
                         response: responseStrategy.content,
@@ -129,14 +126,14 @@ export const createResponseGenerationNode = (config: WorkflowConfig, scraper: an
                     }
                     if (!parsedContent.fromAutoApproval) {
                         const addResponse = await config.toolNode.invoke({
-                        messages: [new AIMessage({
-                            content: '',
-                            tool_calls: [{
-                                name: 'add_response',
-                                args,
-                                id: 'add_response_call',
-                                type: 'tool_call'
-                            }]
+                            messages: [new AIMessage({
+                                content: '',
+                                tool_calls: [{
+                                    name: 'add_response',
+                                    args,
+                                    id: 'add_response_call',
+                                    type: 'tool_call'
+                                }]
                             })]
                         });
                         return addResponse;
@@ -150,9 +147,9 @@ export const createResponseGenerationNode = (config: WorkflowConfig, scraper: an
                                     id: 'update_response_call',
                                     type: 'tool_call'
                                 }]
-                                })]
-                            });
-                            return updateResponse;
+                            })]
+                        });
+                        return updateResponse;
                     }
                 })
             );

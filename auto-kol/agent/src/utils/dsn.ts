@@ -2,10 +2,10 @@ import { createLogger } from '../utils/logger.js';
 import { hexlify } from 'ethers';
 import { createAutoDriveApi, uploadFile } from '@autonomys/auto-drive';
 import { stringToCid, blake3HashFromCid, cidFromBlakeHash } from '@autonomys/auto-dag-data';
-import { addDsn } from '../database/index.js';
+import { addDsn, getLastDsnCid } from '../database/index.js';
 import { v4 as generateId } from 'uuid';
 import { config } from '../config/index.js';
-import { setLastMemoryHash } from './agentMemoryContract.js';
+import { setLastMemoryHash, getLastMemoryCid } from './agentMemoryContract.js';
 import { signMessage, wallet } from './agentWallet.js';
 
 const logger = createLogger('dsn-upload-tool');
@@ -24,13 +24,13 @@ async function retry<T>(
 ): Promise<T> {
     const { maxRetries, delay, onRetry } = options;
     let lastError: Error;
-    
+
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
         try {
             return await fn();
         } catch (error) {
             lastError = error as Error;
-            
+
             if (attempt === maxRetries) {
                 break;
             }
@@ -41,18 +41,34 @@ async function retry<T>(
 
             // Add jitter to prevent thundering herd
             const jitter = Math.random() * 1000;
-            await new Promise(resolve => 
+            await new Promise(resolve =>
                 setTimeout(resolve, delay * attempt + jitter)
             );
         }
     }
-    
+
     throw lastError!;
 }
 
-export async function uploadToDsn({ data, previousCid }: { data: any; previousCid?: string }) {
+const getPreviousCid = async (): Promise<string> => {
+    const dsnLastCid = await getLastDsnCid();
+    if (dsnLastCid) {
+        logger.info('Using last CID from local db', { cid: dsnLastCid });
+        return dsnLastCid;
+    }
+
+    const memoryLastCid = await getLastMemoryCid();
+    logger.info('Using fallback CID source', {
+        memoryLastCid: memoryLastCid || 'not found'
+    });
+
+    return memoryLastCid || '';
+};
+
+export async function uploadToDsn({ data, }: { data: any; }) {
     const maxRetries = 5;
     const retryDelay = 2000;
+    const previousCid = await getPreviousCid();
 
     try {
         const timestamp = new Date().toISOString();
@@ -125,10 +141,10 @@ export async function uploadToDsn({ data, previousCid }: { data: any; previousCi
         await retry(
             async () => {
                 const tx = await setLastMemoryHash(hexlify(blake3hash), currentNonce++);
-                logger.info('Memory hash transaction submitted', { 
+                logger.info('Memory hash transaction submitted', {
                     txHash: tx.hash,
                     previousCid,
-                    cid: finalCid 
+                    cid: finalCid
                 });
                 return tx;
             },
