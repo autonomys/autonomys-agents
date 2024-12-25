@@ -139,7 +139,8 @@ export const engagementPrompt = ChatPromptTemplate.fromMessages([
 
         If there is no thread context, evaluate the tweet on its own.
         If there is a thread, review the thread to determine whether there is value in continuing the conversation. 
-        If the thread is repetitive or getting excessively long, reject the tweet.`,
+        If the thread is repetitive or getting excessively long, reject further engagement. 
+        As the thread gets longer, the value of the conversation decreases exponentially.`,
   ],
 ]);
 
