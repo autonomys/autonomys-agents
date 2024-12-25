@@ -51,17 +51,17 @@ const createWorkflowConfig = async (): Promise<WorkflowConfig> => {
     toolNode: new ToolNode(tools),
     llms: {
       decision: new ChatOpenAI({
-        modelName: config.LLM_MODEL,
+        modelName: config.SMALL_LLM_MODEL,
         temperature: 0.2,
       }) as unknown as ChatOpenAI,
 
       tone: new ChatOpenAI({
-        modelName: config.LLM_MODEL,
+        modelName: config.SMALL_LLM_MODEL,
         temperature: 0.3,
       }) as unknown as ChatOpenAI,
 
       response: new ChatOpenAI({
-        modelName: config.LLM_MODEL,
+        modelName: config.LARGE_LLM_MODEL,
         temperature: 0.8,
       }) as unknown as ChatOpenAI,
     },
