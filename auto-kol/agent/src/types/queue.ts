@@ -7,6 +7,7 @@ export enum ResponseStatus {
   PENDING = 'pending',
   APPROVED = 'approved',
   REJECTED = 'rejected',
+  POSTED = 'posted',
 }
 
 export interface PendingResponse {

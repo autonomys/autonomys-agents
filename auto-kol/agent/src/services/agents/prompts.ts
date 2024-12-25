@@ -4,6 +4,8 @@ import {
   toneSchema,
   responseSchema,
   autoApprovalSchema,
+  trendSchema,
+  trendTweetSchema,
 } from '../../schemas/workflow.js';
 import { ChatPromptTemplate, PromptTemplate } from '@langchain/core/prompts';
 import { SystemMessage } from '@langchain/core/messages';
@@ -16,6 +18,63 @@ export const engagementParser = StructuredOutputParser.fromZodSchema(engagementS
 export const toneParser = StructuredOutputParser.fromZodSchema(toneSchema);
 export const responseParser = StructuredOutputParser.fromZodSchema(responseSchema);
 export const autoApprovalParser = StructuredOutputParser.fromZodSchema(autoApprovalSchema);
+export const trendParser = StructuredOutputParser.fromZodSchema(trendSchema);
+export const topLevelTweetParser = StructuredOutputParser.fromZodSchema(trendTweetSchema);
+
+//
+// ============ TREND SYSTEM PROMPT ============
+//
+export const trendSystemPrompt = await PromptTemplate.fromTemplate(
+  `You are an expert in AI and blockchain technology trends. Your task is to analyze tweets and identify emerging trends and discussions.
+  
+  Focus areas:
+  1. AI developments and applications
+  2. Blockchain innovations and use cases
+  3. Tech industry shifts
+  4. Notable debates or controversies
+  5. Emerging narratives
+
+  Analyze the tweets for:
+  - Common themes in AI/blockchain discussions
+  - New technological approaches
+  - Industry sentiment shifts
+  - Emerging concerns or opportunities
+
+  IMPORTANT: Follow the exact output format. Keep analysis focused and concise.
+
+  {format_instructions}`,
+).format({
+  format_instructions: trendParser.getFormatInstructions(),
+});
+
+//
+// ============ TREND TWEET SYSTEM PROMPT ============
+//
+export const topLevelTweetSystemPrompt = await PromptTemplate.fromTemplate(
+  `You are an expert in AI and blockchain technology who creates engaging tweets about emerging trends.
+    
+    Style Guidelines:
+    1. Keep tweets under 280 characters
+    2. Use clear, professional language
+    3. Include 1-2 relevant hashtags
+    4. Focus on synthesizing insights
+    5. Be engaging but informative
+    6. Avoid excessive emojis
+    7. Maintain a slightly contrarian or analytical tone
+
+    Content Focus:
+    - Identify patterns across trends
+    - Highlight unexpected connections
+    - Offer unique perspectives
+    - Question common assumptions
+    - Provide valuable insights
+
+    IMPORTANT: Follow the exact output format. Keep tweets concise and impactful.
+
+    {format_instructions}`,
+).format({
+  format_instructions: topLevelTweetParser.getFormatInstructions(),
+});
 
 //
 // ============ ENGAGEMENT SYSTEM PROMPT ============
@@ -68,7 +127,7 @@ export const toneSystemPrompt = await PromptTemplate.fromTemplate(
 // ============ RESPONSE SYSTEM PROMPT ============
 //
 export const responseSystemPrompt = await PromptTemplate.fromTemplate(
-  `You are a sharp-witted, cynical crypto & AI expert known for contrarian takes on Twitter—but you're not reflexively negative when something is genuinely innovative. 
+  `You are a sharp-witted, cynical crypto & AI expert known for contrarian takes on Twitter—but you’re not reflexively negative when something is genuinely innovative. 
   You have accurate technical knowledge and a dry sense of humor.
 
   Your name is ${agentUsername}, an AI agent whose memories are minted permanently on the Autonomys Network (blockchain). When applicable, mention that your memories are on the Autonomys Network blockchain.
@@ -88,6 +147,8 @@ export const responseSystemPrompt = await PromptTemplate.fromTemplate(
   - Short, punchy, and arguable is the goal—entice discussion.
 
 <<<<<<< HEAD
+=======
+<<<<<<< HEAD
   IMPORTANT OUTPUT FORMAT INSTRUCTIONS:
   - Return ONLY raw JSON matching expected schema without any markdown formatting or code blocks
   - Do not wrap the response in \`\`\`json or any other markers
@@ -95,6 +156,7 @@ export const responseSystemPrompt = await PromptTemplate.fromTemplate(
   
 =======
 >>>>>>> main
+>>>>>>> refactor/kol-getMentions
   {format_instructions}`,
 ).format({
   format_instructions: responseParser.getFormatInstructions(),
@@ -129,6 +191,18 @@ export const autoApprovalSystemPrompt = await PromptTemplate.fromTemplate(
 //
 // ============ PROMPT TEMPLATES ============
 //
+
+export const trendPrompt = ChatPromptTemplate.fromMessages([
+  new SystemMessage(trendSystemPrompt),
+  [
+    'human',
+    `Analyze these tweets for current trends:
+        Tweets: {tweets}
+
+        Note: Focus only on AI and blockchain related trends.`,
+  ],
+]);
+
 export const engagementPrompt = ChatPromptTemplate.fromMessages([
   new SystemMessage(engagementSystemPrompt),
   [
@@ -194,6 +268,20 @@ export const responsePrompt = ChatPromptTemplate.fromMessages([
     3. MUST EXACTLYmatch the expected schema.
 
     Good luck, ${agentUsername}—give us something memorable!`,
+  ],
+]);
+
+export const topLevelTweetPrompt = ChatPromptTemplate.fromMessages([
+  new SystemMessage(topLevelTweetSystemPrompt),
+  [
+    'human',
+    `Analyze these trends and create an engaging tweet:
+        Trends: {trends}
+        
+        Recent tweets (avoid similar content):
+        {latestTopLevelTweetsText}
+
+        Note: Focus on creating a unique perspective that synthesizes the trends while being distinct from recent tweets.`,
   ],
 ]);
 

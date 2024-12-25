@@ -50,6 +50,18 @@ CREATE TABLE IF NOT EXISTS mentions (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE IF NOT EXISTS trends (
+    id TEXT PRIMARY KEY,
+    content TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS top_level_tweets (
+    id TEXT PRIMARY KEY,
+    content TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
 CREATE INDEX idx_kol_accounts_username ON kol_accounts(username);
 CREATE INDEX idx_tweets_created_at ON tweets(created_at);
 CREATE INDEX idx_responses_status ON responses(status);
