@@ -25,7 +25,6 @@ export const createResponseGenerationNode = (config: WorkflowConfig) => {
             author: tweet.author_username,
           });
 
-
           if (!workflowState) {
             item.workflowState = { autoFeedback: [] };
           } else if (!workflowState.autoFeedback) {

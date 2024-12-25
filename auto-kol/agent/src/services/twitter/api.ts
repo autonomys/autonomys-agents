@@ -57,9 +57,7 @@ export class ExtendedScraper extends Scraper {
     let retryCount = 0;
 
     while (!isLoggedIn && retryCount < maxRetries) {
-      logger.warn(
-        `Attempting to re-authenticate... (attempt ${retryCount + 1}/${maxRetries})`,
-      );
+      logger.warn(`Attempting to re-authenticate... (attempt ${retryCount + 1}/${maxRetries})`);
       try {
         await this.initialize();
         isLoggedIn = await this.isLoggedIn();
