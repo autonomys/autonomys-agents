@@ -20,6 +20,11 @@ export const createResponseGenerationNode = (config: WorkflowConfig) => {
       await Promise.all(
         batchToRespond.map(async (item: any) => {
           const { tweet, decision, toneAnalysis, workflowState } = item;
+          logger.info('Processing tweet:', {
+            id: tweet.id,
+            author: tweet.author_username,
+          });
+
 
           if (!workflowState) {
             item.workflowState = { autoFeedback: [] };
@@ -80,6 +85,12 @@ export const createResponseGenerationNode = (config: WorkflowConfig) => {
               rejectionFeedback,
               rejectionInstructions,
             });
+
+          logger.info('Response strategy:', {
+            content: responseStrategy.content,
+            tone: responseStrategy.tone,
+            strategy: responseStrategy.strategy,
+          });
 
           const data = {
             type: ResponseStatus.PENDING,
