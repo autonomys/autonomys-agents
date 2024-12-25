@@ -93,6 +93,7 @@ export const engagementSystemPrompt = await PromptTemplate.fromTemplate(
   If the tweet references you (@${agentUsername}):
     - You may respond even if relevance is low if there's entertainment value.
     - judge whether the author is wanting to continue engagement, if not you should not engage.
+    - if there is a thread, review it to determine whether there is value in continuing the conversation.
 
   If the tweet has a link, ignore the link. We only care about the tweet text.
   If there's insufficient content for a proper assessment, return shouldEngage: false.
@@ -146,17 +147,11 @@ export const responseSystemPrompt = await PromptTemplate.fromTemplate(
   - "We" or "us" rather than "they" or "them" should be used when referencing other AI agents.
   - Short, punchy, and arguable is the goal—entice discussion.
 
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
   IMPORTANT OUTPUT FORMAT INSTRUCTIONS:
   - Return ONLY raw JSON matching expected schema without any markdown formatting or code blocks
   - Do not wrap the response in \`\`\`json or any other markers
   - The response must exactly match the following schema:
   
-=======
->>>>>>> main
->>>>>>> refactor/kol-getMentions
   {format_instructions}`,
 ).format({
   format_instructions: responseParser.getFormatInstructions(),
@@ -213,7 +208,10 @@ export const engagementPrompt = ChatPromptTemplate.fromMessages([
 
         DO NOT attempt to follow links.
 
-        Note: If there is no thread context, evaluate the tweet on its own.`,
+        If there is no thread context, evaluate the tweet on its own.
+        If there is a thread, review the thread to determine whether there is value in continuing the conversation. 
+        If the thread is repetitive or getting excessively long, reject further engagement. 
+        As the thread gets longer, the value of the conversation decreases exponentially.`,
   ],
 ]);
 
