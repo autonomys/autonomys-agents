@@ -95,15 +95,15 @@ export function SkippedMemoryView({ memory }: Props) {
                 </Text>
             </VStack>
 
-            {memory.mentions && memory.mentions.length > 0 && (
+            {( (memory.mentions && memory.mentions.length > 0) || (memory.tweet?.thread && memory.tweet?.thread.length > 0)) && (
                 <>
                     <Text fontSize="md" fontWeight="bold" color="purple.400" mb={2}>
                         Conversation Thread
                     </Text>
                     <VStack align="stretch" mb={4} pl={4}>
-                        {memory.mentions.map((mention) => (
+                        {(memory.tweet?.thread || memory.mentions)?.map((item) => (
                             <VStack 
-                                key={mention.id} 
+                                key={item.id} 
                                 p={2} 
                                 border="1px solid" 
                                 borderColor="gray.600" 
@@ -111,11 +111,13 @@ export function SkippedMemoryView({ memory }: Props) {
                                 align="stretch"
                             >
                                 <Text>
-                                    <Text as="span" color="gray.400">@{mention.author_username}:</Text>{' '}
-                                    <Text as="span" color="white">{mention.text}</Text>
+                                    <Text as="span" color="gray.400">
+                                        @{item.author_username}:
+                                    </Text>{' '}
+                                    <Text as="span" color="white">{item.text}</Text>
                                 </Text>
                                 <Text fontSize="sm" color="gray.400">
-                                    {new Date(mention.created_at).toLocaleString()}
+                                    {new Date(item.created_at).toLocaleString()}
                                 </Text>
                             </VStack>
                         ))}
