@@ -58,7 +58,7 @@ export class ExtendedScraper extends Scraper {
 
     while (!isLoggedIn && retryCount < maxRetries) {
       logger.warn(
-        `Session expired, attempting to re-authenticate... (attempt ${retryCount + 1}/${maxRetries})`,
+        `Attempting to re-authenticate... (attempt ${retryCount + 1}/${maxRetries})`,
       );
       try {
         await this.initialize();
@@ -139,12 +139,19 @@ export class ExtendedScraper extends Scraper {
   }
 
   public async getThread(tweetId: string): Promise<Tweet[]> {
-    const isLoggedIn = await this.isLoggedIn();
-    if (!isLoggedIn) {
-      throw new Error('Must be logged in to fetch thread');
+    if (!(await this.isLoggedIn())) {
+      const reAuthenticate = await this.reAuthenticate();
+      if (!reAuthenticate) {
+        logger.error('Failed to re-authenticate');
+        return [];
+      }
     }
 
     const initialTweet = await this.getTweet(tweetId);
+    logger.info('Initial tweet fetched:', {
+      id: initialTweet?.id,
+    });
+
     if (!initialTweet) {
       logger.warn(`Tweet ${tweetId} not found or deleted`);
       return [];
