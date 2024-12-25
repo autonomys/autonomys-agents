@@ -4,6 +4,9 @@ import * as prompts from '../prompts.js';
 import { getAllTrends } from '../../../database/index.js';
 import { WorkflowConfig } from '../workflow.js';
 import { config as globalConfig } from '../../../config/index.js';
+import { ResponseStatus } from '../../../types/queue.js';
+import { uploadToDsn } from '../../../utils/dsn.js';
+
 import {
   addTopLevelTweet,
   getLatestTopLevelTweets,
@@ -44,18 +47,21 @@ export const createTopLevelTweetNode = (config: WorkflowConfig) => {
 
       const trendSummaries = recentTrends.map(t => t.content).join('\n\n');
       const latestTopLevelTweets = await getLatestTopLevelTweets();
-      const recentResponseTexts =
-        latestTopLevelTweets.map(r => r.content).join('\n') || 'No previous responses yet';
-      const lastTweetTime = latestTopLevelTweets[latestTopLevelTweets.length - 1].created_at;
+      const latestTopLevelTweetsText =
+        latestTopLevelTweets.map(r => r.content).join('\n') || 'This is the first tweet';
+
+      const lastTweetTime = latestTopLevelTweets[0].created_at;
+
       const timeSinceLastTweetInHours =
-        (new Date().getTime() - lastTweetTime.getTime()) / (1000 * 60 * 60);
+        Math.abs(new Date().getTime() - (lastTweetTime.getTime() - 8 * 60 * 60 * 1000)) /
+        (1000 * 60 * 60);
 
       const tweetGeneration = await prompts.topLevelTweetPrompt
         .pipe(config.llms.decision)
         .pipe(prompts.topLevelTweetParser)
         .invoke({
           trends: trendSummaries,
-          recentResponseTexts,
+          latestTopLevelTweetsText,
         });
 
       logger.info('Generated trend tweet:', {
@@ -72,8 +78,27 @@ export const createTopLevelTweetNode = (config: WorkflowConfig) => {
         globalConfig.POST_TWEETS &&
         timeSinceLastTweetInHours > globalConfig.TOP_LEVEL_TWEET_INTERVAL_HOURS
       ) {
-        await config.client.sendTweet(tweetGeneration.tweet);
-        logger.info('Posted trend tweet successfully');
+        logger.info('Sending tweet');
+        await config.client.sendTweet(tweetGeneration.tweet).then(async res => {
+          const latestTweet = await config.client.getLatestTweet(
+            globalConfig.TWITTER_USERNAME || '',
+          );
+          const data = {
+            type: ResponseStatus.POSTED,
+            tweet: {
+              id: latestTweet?.id,
+              text: latestTweet?.text,
+              author_id: latestTweet?.userId,
+              author_username: latestTweet?.username,
+              created_at: (latestTweet?.timeParsed as Date).toISOString(),
+            },
+          };
+          if (globalConfig.DSN_UPLOAD) {
+            await uploadToDsn({
+              data,
+            });
+          }
+        });
         await wipeTrendsTable();
       }
 

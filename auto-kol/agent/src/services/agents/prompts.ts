@@ -279,7 +279,7 @@ export const topLevelTweetPrompt = ChatPromptTemplate.fromMessages([
         Trends: {trends}
         
         Recent tweets (avoid similar content):
-        {recentResponseTexts}
+        {latestTopLevelTweetsText}
 
         Note: Focus on creating a unique perspective that synthesizes the trends while being distinct from recent tweets.`,
   ],
