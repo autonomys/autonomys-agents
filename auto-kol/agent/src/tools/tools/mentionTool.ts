@@ -16,6 +16,7 @@ export const createMentionTool = (scraper: ExtendedScraper) =>
       try {
         const sinceId = await getLatestMentionId();
         const allRecentMentions = await scraper.getMyMentions(100, sinceId);
+        logger.info(`Found ${allRecentMentions.length} recent mentions`);
 
         //randomly select subset of mentions
         const mentions = allRecentMentions.sort(() => Math.random() - 0.5).slice(0, config.MAX_MENTIONS);
@@ -59,8 +60,10 @@ export const createMentionTool = (scraper: ExtendedScraper) =>
           await new Promise(resolve => setTimeout(resolve, 1000));
           logger.info(`Found ${tweetsWithThreads.length} tweets in thread`);
         }
+        // filter out tweets with too long of threads
+        const filteredTweets = tweets.filter(tweet => tweet.thread.length < config.MAX_THREAD_LENGTH);
         return {
-          tweets: tweets,
+          tweets: filteredTweets,
           lastProcessedId: mentions[0].id!,
         };
       } catch (error) {

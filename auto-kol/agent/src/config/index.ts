@@ -53,6 +53,7 @@ export const config = {
   ACCOUNTS_PER_BATCH: Number(process.env.ACCOUNTS_PER_BATCH) || 10,
   MAX_SEARCH_TWEETS: Number(process.env.MAX_SEARCH_TWEETS) || 20,
   MAX_MENTIONS: Number(process.env.MAX_MENTIONS) || 5,
+  MAX_THREAD_LENGTH: Number(process.env.MAX_THREAD_LENGTH) || 20,
 
   // BATCH CONFIG
   ENGAGEMENT_BATCH_SIZE: process.env.ENGAGEMENT_BATCH_SIZE || 15,
