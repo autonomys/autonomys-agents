@@ -10,9 +10,12 @@ export interface TwitterAPI {
   getMyMentions: (maxResults: number, sinceId?: string) => Promise<Tweet[]>;
   isLoggedIn: () => Promise<boolean>;
   getProfile: (username: string) => Promise<Profile>;
+  getMyProfile: () => Promise<Profile>;
   getTweet: (tweetId: string) => Promise<Tweet | null>;
+  getRecentTweets: (username: string, limit: number) => Promise<Tweet[]>;
+  getMyRecentTweets: (limit: number) => Promise<Tweet[]>;
   getFollowing: (userId: string, limit: number) => Promise<Profile[]>;
-  fetchHomeTimeline: (cursor: number, excludeIds: string[]) => Promise<Tweet[]>;
+  getMyTimeline: (cursor: number, excludeIds: string[]) => Promise<Tweet[]>;
   searchTweets: (query: string, limit: number) => AsyncGenerator<Tweet>;
 }
 
@@ -44,6 +47,14 @@ const login = async (
   const newCookies = await scraper.getCookies();
   writeFileSync(cookiesPath, JSON.stringify(newCookies, null, 2));
   logger.info('New cookies saved to file');
+};
+
+const iterateResponse = async <T>(response: AsyncGenerator<T>): Promise<T[]> => {
+  const iterated: T[] = [];
+  for await (const item of response) {
+    iterated.push(item);
+  }
+  return iterated;
 };
 
 const getMyMentions = async (
@@ -132,27 +143,23 @@ export const createTwitterAPI = async (
       return profile;
     },
 
-    getTweet: async (tweetId: string) => {
-      return scraper.getTweet(tweetId);
+    getMyProfile: async () => await scraper.getProfile(username),
+
+    getTweet: async (tweetId: string) => scraper.getTweet(tweetId),
+
+    getRecentTweets: async (username: string, limit: number = 100) => {
+      const userId = await scraper.getUserIdByScreenName(username);
+      return await iterateResponse(scraper.getTweetsByUserId(userId, limit));
     },
 
-    getFollowing: async (userId: string, limit: number = 100) => {
-      const following: Profile[] = [];
-      const iterator = scraper.getFollowing(userId, limit);
+    getMyRecentTweets: async (limit: number = 100) =>
+      await iterateResponse(scraper.getTweetsByUserId(username, limit)),
 
-      for await (const user of iterator) {
-        following.push(user);
-        if (following.length >= limit) break;
-      }
+    getFollowing: async (userId: string, limit: number = 100) =>
+      await iterateResponse(scraper.getFollowing(userId, limit)),
 
-      return following;
-    },
-
-    fetchHomeTimeline: async (count: number, excludeIds: string[]) => {
-      const timelineTweets = await scraper.fetchHomeTimeline(count, excludeIds);
-
-      return timelineTweets;
-    },
+    getMyTimeline: async (count: number, excludeIds: string[]) =>
+      await scraper.fetchHomeTimeline(count, excludeIds),
 
     searchTweets: async function* (
       query: string,
