@@ -1,28 +1,30 @@
-// import { DynamicStructuredTool } from '@langchain/core/tools';
-// import { z } from 'zod';
-// import { createLogger } from '../../utils/logger.js';
+import { DynamicStructuredTool } from '@langchain/core/tools';
+import { z } from 'zod';
+import { createLogger } from '../../utils/logger.js';
+import { TwitterAPI } from '../../services/twitter/client.js';
 
-// const logger = createLogger('fetch-timeline-tool');
+const logger = createLogger('fetch-timeline-tool');
 
-// export const createFetchTimelineTool = (twitterScraper: ExtendedScraper) =>
-//   new DynamicStructuredTool({
-//     name: 'fetch_timeline',
-//     description: 'Fetch the timeline regularly to get new tweets',
-//     schema: z.object({}),
-//     func: async () => {
-//       try {
-//         const tweets = await getTimeLine(twitterScraper);
-//         tweets.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-//         return {
-//           tweets: tweets,
-//           lastProcessedId: tweets[tweets.length - 1]?.id || null,
-//         };
-//       } catch (error) {
-//         logger.error('Error in fetchTimelineTool:', error);
-//         return {
-//           tweets: [],
-//           lastProcessedId: null,
-//         };
-//       }
-//     },
-//   });
+export const createFetchTimelineTool = (twitterAPI: TwitterAPI) =>
+  new DynamicStructuredTool({
+    name: 'fetch_timeline',
+    description: 'Fetch the timeline regularly to get new tweets',
+    schema: z.object({}),
+    func: async () => {
+      try {
+        const tweets = await twitterAPI.getMyTimeline(100, []);
+        tweets.sort(
+          (a, b) => new Date(b.timeParsed!).getTime() - new Date(a.timeParsed!).getTime(),
+        );
+        return {
+          tweets: tweets,
+        };
+      } catch (error) {
+        logger.error('Error in fetchTimelineTool:', error);
+        return {
+          tweets: [],
+          lastProcessedId: null,
+        };
+      }
+    },
+  });

@@ -1,12 +1,12 @@
 import express from 'express';
 import { config } from './config/index.js';
 import { createLogger } from './utils/logger.js';
-// import { runWorkflow } from './services/agents/workflow.js';
+import { runWorkflow } from './agents/workflows/kol/workflow.js';
 // import { initializeSchema } from './database/index.js';
 // import apiRoutes from './api/index.js';
 // import { corsMiddleware } from './api/middleware/cors.js';
 const logger = createLogger('app');
-const app = express();
+//const app = express();
 
 // app.use(corsMiddleware);
 
@@ -15,7 +15,7 @@ const app = express();
 
 const startWorkflowPolling = async () => {
   try {
-    //await runWorkflow();
+    await runWorkflow();
     logger.info('Workflow execution completed successfully');
   } catch (error) {
     logger.error('Error running workflow:', error);
@@ -24,11 +24,9 @@ const startWorkflowPolling = async () => {
 
 const main = async () => {
   try {
-    // await initializeSchema();
-
-    app.listen(config.PORT, () => {
-      logger.info(`Server running on port ${config.PORT}`);
-    });
+    // app.listen(config.PORT, () => {
+    //   logger.info(`Server running on port ${config.PORT}`);
+    // });
     await startWorkflowPolling();
     setInterval(startWorkflowPolling, config.CHECK_INTERVAL);
 
