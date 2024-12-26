@@ -15,11 +15,13 @@ export const createMentionTool = (scraper: ExtendedScraper) =>
     func: async () => {
       try {
         const sinceId = await getLatestMentionId();
-        const allRecentMentions = await scraper.getMyMentions(100, sinceId);
+        const allRecentMentions = await scraper.getMyMentions(10, sinceId);
         logger.info(`Found ${allRecentMentions.length} recent mentions`);
 
         //randomly select subset of mentions
-        const mentions = allRecentMentions.sort(() => Math.random() - 0.5).slice(0, config.MAX_MENTIONS);
+        const mentions = allRecentMentions
+          .sort(() => Math.random() - 0.5)
+          .slice(0, config.MAX_MENTIONS);
 
         if (!mentions || mentions.length === 0) {
           logger.info('No new mentions found');
@@ -61,7 +63,9 @@ export const createMentionTool = (scraper: ExtendedScraper) =>
           logger.info(`Found ${tweetsWithThreads.length} tweets in thread`);
         }
         // filter out tweets with too long of threads
-        const filteredTweets = tweets.filter(tweet => tweet.thread.length < config.MAX_THREAD_LENGTH);
+        const filteredTweets = tweets.filter(
+          tweet => tweet.thread.length < config.MAX_THREAD_LENGTH,
+        );
         return {
           tweets: filteredTweets,
           lastProcessedId: mentions[0].id!,

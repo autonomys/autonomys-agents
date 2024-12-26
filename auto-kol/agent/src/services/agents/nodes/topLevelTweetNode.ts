@@ -50,11 +50,12 @@ export const createTopLevelTweetNode = (config: WorkflowConfig) => {
       const latestTopLevelTweetsText =
         latestTopLevelTweets.map(r => r.content).join('\n') || 'This is the first tweet';
 
-      const lastTweetTime = latestTopLevelTweets[0].created_at;
+      const lastTweetTime =
+        latestTopLevelTweets.length > 0 ? latestTopLevelTweets[0].created_at : undefined;
 
-      const timeSinceLastTweetInHours =
-        Math.abs(new Date().getTime() - (lastTweetTime.getTime() - 8 * 60 * 60 * 1000)) /
-        (1000 * 60 * 60);
+      const timeSinceLastTweetInMinutes = lastTweetTime
+        ? Math.abs(new Date().getTime() - lastTweetTime.getTime()) / (1000 * 60)
+        : undefined;
 
       const tweetGeneration = await prompts.topLevelTweetPrompt
         .pipe(config.llms.decision)
@@ -76,7 +77,8 @@ export const createTopLevelTweetNode = (config: WorkflowConfig) => {
 
       if (
         globalConfig.POST_TWEETS &&
-        timeSinceLastTweetInHours > globalConfig.TOP_LEVEL_TWEET_INTERVAL_HOURS
+        (!timeSinceLastTweetInMinutes ||
+          timeSinceLastTweetInMinutes > globalConfig.TOP_LEVEL_TWEET_INTERVAL_MINUTES)
       ) {
         logger.info('Sending tweet');
         await config.client.sendTweet(tweetGeneration.tweet).then(async res => {
