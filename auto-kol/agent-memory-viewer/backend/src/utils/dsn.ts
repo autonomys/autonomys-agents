@@ -1,4 +1,4 @@
-import { createAutoDriveApi, downloadObject } from '@autonomys/auto-drive';
+import { createAutoDriveApi, downloadObject, getObjectMetadata } from '@autonomys/auto-drive';
 import { config } from '../config/index.js';
 import { inflate } from 'pako';
 import { createLogger } from './logger.js';
@@ -12,13 +12,85 @@ async function delay(ms: number) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
+async function validateMemoryMetadata(api: any, cid: string): Promise<boolean> {
+    try {
+        const metadata = await getObjectMetadata(api, { cid });
+        // Check if filename contains AGENT_ADDRESS
+        const agentAddressLower = config.AGENT_USERNAME.toLowerCase();
+        if (!metadata?.name?.toLowerCase().includes(agentAddressLower)) {
+            logger.warn('Memory rejected: File name does not contain agent address', {
+                cid,
+                filename: metadata.name,
+                agentAddress: config.AGENT_USERNAME
+            });
+            return false;
+        }
+
+        const totalSize = Number(metadata.totalSize);
+        if (totalSize > 102400) {
+            logger.warn('Memory rejected: File size exceeds 100KB limit', {
+                cid,
+                size: totalSize
+            });
+            return false;
+        }
+
+        return true;
+    } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        if (errorMessage.includes('Not Found')) {
+            logger.warn('Memory not found, skipping download', {
+                cid,
+                error: errorMessage
+            });
+            return false;
+        }
+        throw error;
+    }
+}
+
+async function validateMemoryData(memoryData: any): Promise<boolean> {
+    if (!memoryData || typeof memoryData !== 'object') {
+        logger.warn('Memory rejected: Invalid memory data format', {
+            type: typeof memoryData
+        });
+        return false;
+    }
+    const requiredFields = ['signature'];
+    for (const field of requiredFields) {
+        if (!(field in memoryData)) {
+            logger.warn('Memory rejected: Missing required field', {
+                missingField: field
+            });
+            return false;
+        }
+    }
+
+    if (typeof memoryData.signature !== 'string' || !memoryData.signature.trim()) {
+        logger.warn('Memory rejected: Invalid signature format', {
+            signatureType: typeof memoryData.signature
+        });
+        return false;
+    }
+
+    return true;
+}
+
 export async function downloadMemory(cid: string, retryCount = 0): Promise<any> {
+    logger.info(`Checking memory metadata: ${cid}`);
     try {
         const api = createAutoDriveApi({ 
             apiKey: config.DSN_API_KEY || '' 
         });
         
-        const stream = await downloadObject(api, { cid: cid });
+        const isValid = await validateMemoryMetadata(api, cid);
+        if (!isValid) {
+            return null;
+        }
+        logger.info(`Memory metadata is valid: ${cid}`);
+
+        logger.info(`Downloading memory: ${cid}`);
+        const stream = await downloadObject(api, { cid });
         const reader = stream.getReader();
         const chunks: Uint8Array[] = [];
         
@@ -38,12 +110,27 @@ export async function downloadMemory(cid: string, retryCount = 0): Promise<any> 
         const decompressed = inflate(allChunks);
         const jsonString = new TextDecoder().decode(decompressed);
         const memoryData = JSON.parse(jsonString);
+        
+        const isValidData = await validateMemoryData(memoryData);
+        if (!isValidData) {
+            return null;
+        }
+        logger.info(`Memory data is valid: ${cid}`);
+
         return memoryData;
     } catch (error) {
         const errorMessage = error instanceof Error ? error.message : String(error);
         
         if (errorMessage.includes('Not Found')) {
             logger.warn('Memory not found, skipping retries', {
+                cid,
+                error: errorMessage
+            });
+            return null;
+        }
+
+        if (errorMessage.includes('incorrect header check')) {
+            logger.warn('Invalid memory format, skipping retries', {
                 cid,
                 error: errorMessage
             });
