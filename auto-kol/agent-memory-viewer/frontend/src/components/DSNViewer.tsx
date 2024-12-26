@@ -42,6 +42,7 @@ function DSNViewer() {
 
     const filterOptions = [
         { value: 'all', label: 'All Tweets' },
+        { value: ResponseStatus.POSTED, label: 'Posted' },
         { value: ResponseStatus.SKIPPED, label: 'Skipped' },
         { value: ResponseStatus.APPROVED, label: 'Approved' },
         { value: ResponseStatus.REJECTED, label: 'Rejected' }

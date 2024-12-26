@@ -10,6 +10,8 @@ export const getStatusColor = (status: ResponseStatus | null): string => {
             return 'red.500';
         case ResponseStatus.SKIPPED:
             return 'gray.500';
+        case ResponseStatus.POSTED:
+            return 'purple.500';
         default:
             return '#00ff00';
     }

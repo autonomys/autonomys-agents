@@ -6,6 +6,7 @@ import { TweetInfo } from '../components/memories/shared/TweetInfo'
 import { SkippedMemoryView } from '../components/memories/SkippedMemory'
 import { ApprovedMemoryView } from '../components/memories/ApprovedMemory'
 import { RejectedMemoryView } from '../components/memories/RejectedMemory'
+import { PostedMemoryView } from '../components/memories/PostedMemory'
 import { ResponseStatus } from '../types/enums'
 
 function MemoryViewer() {
@@ -27,6 +28,8 @@ function MemoryViewer() {
                 return <ApprovedMemoryView memory={memory} />
             case ResponseStatus.REJECTED:
                 return <RejectedMemoryView memory={memory} />
+            case ResponseStatus.POSTED:
+                return <PostedMemoryView memory={memory} />
             default:
                 return <Text>Unknown memory type: {memory.type}</Text>
         }

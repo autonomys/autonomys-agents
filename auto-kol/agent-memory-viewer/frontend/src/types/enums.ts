@@ -1,5 +1,6 @@
 export enum ResponseStatus {
     SKIPPED = 'skipped',
     APPROVED = 'approved',
-    REJECTED = 'rejected'
+    REJECTED = 'rejected',
+    POSTED = 'posted'
 } 
