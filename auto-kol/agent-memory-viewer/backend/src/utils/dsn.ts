@@ -2,6 +2,7 @@ import { createAutoDriveApi, downloadObject, getObjectMetadata } from '@autonomy
 import { config } from '../config/index.js';
 import { inflate } from 'pako';
 import { createLogger } from './logger.js';
+import { ethers } from 'ethers';
 
 const logger = createLogger('dsn');
 
@@ -56,7 +57,8 @@ async function validateMemoryData(memoryData: any): Promise<boolean> {
         });
         return false;
     }
-    const requiredFields = ['signature'];
+
+    const requiredFields = ['signature', 'previousCid', 'timestamp'];
     for (const field of requiredFields) {
         if (!(field in memoryData)) {
             logger.warn('Memory rejected: Missing required field', {
@@ -66,14 +68,38 @@ async function validateMemoryData(memoryData: any): Promise<boolean> {
         }
     }
 
-    if (typeof memoryData.signature !== 'string' || !memoryData.signature.trim()) {
-        logger.warn('Memory rejected: Invalid signature format', {
-            signatureType: typeof memoryData.signature
+    // Validate signature
+    try {
+        const messageObject = {
+            data: memoryData.data || {
+                ...memoryData,
+                previousCid: undefined,
+                timestamp: undefined,
+                signature: undefined
+            },
+            previousCid: memoryData.previousCid,
+            timestamp: memoryData.timestamp
+        };
+        const message = JSON.stringify(messageObject);
+        const recoveredAddress = ethers.verifyMessage(message, memoryData.signature);
+        logger.info(`Recovered address: ${recoveredAddress}`);
+        const expectedAddress = config.AGENT_ADDRESS;
+        if (recoveredAddress.toLowerCase() !== expectedAddress.toLowerCase()) {
+            logger.warn('Memory rejected: Invalid signature', {
+                expectedSigner: expectedAddress,
+                actualSigner: recoveredAddress
+            });
+            return false;
+        }
+        
+        logger.info('Signature verified successfully');
+        return true;
+    } catch (error) {
+        logger.warn('Memory rejected: Signature verification failed', {
+            error: error instanceof Error ? error.message : String(error)
         });
         return false;
     }
-
-    return true;
 }
 
 export async function downloadMemory(cid: string, retryCount = 0): Promise<any> {
@@ -115,22 +141,14 @@ export async function downloadMemory(cid: string, retryCount = 0): Promise<any> 
         if (!isValidData) {
             return null;
         }
-        logger.info(`Memory data is valid: ${cid}`);
 
         return memoryData;
     } catch (error) {
         const errorMessage = error instanceof Error ? error.message : String(error);
         
-        if (errorMessage.includes('Not Found')) {
-            logger.warn('Memory not found, skipping retries', {
-                cid,
-                error: errorMessage
-            });
-            return null;
-        }
-
-        if (errorMessage.includes('incorrect header check')) {
-            logger.warn('Invalid memory format, skipping retries', {
+        if (errorMessage.includes('Not Found') || 
+            errorMessage.includes('incorrect header check')) {
+            logger.warn('Memory error, skipping retries', {
                 cid,
                 error: errorMessage
             });

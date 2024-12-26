@@ -21,7 +21,12 @@ export const useMemory = (cid: string) => {
         },
         {
             enabled: !!cid,
-            retry: 3,
+            retry: (failureCount, error) => {
+                if (axios.isAxiosError(error) && error.response?.status === 404) {
+                    return false;
+                }
+                return failureCount < 3;
+            },
             retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 30000),
         }
     )
