@@ -49,59 +49,69 @@ export const createTopLevelTweetNode = (config: WorkflowConfig) => {
       const latestTopLevelTweets = await getLatestTopLevelTweets();
       const latestTopLevelTweetsText =
         latestTopLevelTweets.map(r => r.content).join('\n') || 'This is the first tweet';
+      logger.info('Latest top level tweets:', latestTopLevelTweets);
 
-      const lastTweetTime =
-        latestTopLevelTweets.length > 0 ? latestTopLevelTweets[0].created_at : undefined;
+      const lastTweet = latestTopLevelTweets[0];
+      logger.info('Last tweet:', lastTweet);
+
+      const lastTweetTime = lastTweet ? lastTweet.created_at : undefined;
+      logger.info(`Last tweet time: ${lastTweetTime}`);
 
       const timeSinceLastTweetInMinutes = lastTweetTime
         ? Math.abs(new Date().getTime() - lastTweetTime.getTime()) / (1000 * 60)
-        : undefined;
+        : 0;
 
-      const tweetGeneration = await prompts.topLevelTweetPrompt
-        .pipe(config.llms.decision)
-        .pipe(prompts.topLevelTweetParser)
-        .invoke({
-          trends: trendSummaries,
-          latestTopLevelTweetsText,
+      logger.info(`Time since last tweet in minutes: ${timeSinceLastTweetInMinutes}`);
+
+      const timeToPostTweet =
+        timeSinceLastTweetInMinutes && timeSinceLastTweetInMinutes > globalConfig.TOP_LEVEL_TWEET_INTERVAL_MINUTES;
+      logger.info(`${timeSinceLastTweetInMinutes} > ${globalConfig.TOP_LEVEL_TWEET_INTERVAL_MINUTES} so should post tweet: ${timeToPostTweet}`);
+
+      if (timeToPostTweet) {
+        const tweetGeneration = await prompts.topLevelTweetPrompt
+          .pipe(config.llms.decision)
+          .pipe(prompts.topLevelTweetParser)
+          .invoke({
+            trends: trendSummaries,
+            latestTopLevelTweetsText,
+          });
+
+        logger.info('Generated trend tweet:', {
+          tweet: tweetGeneration.tweet,
+          reasoning: tweetGeneration.reasoning,
         });
 
-      logger.info('Generated trend tweet:', {
-        tweet: tweetGeneration.tweet,
-        reasoning: tweetGeneration.reasoning,
-      });
-
-      await addTopLevelTweet({
-        id: generateId(),
-        content: tweetGeneration?.tweet,
-      });
-
-      if (
-        globalConfig.POST_TWEETS &&
-        (!timeSinceLastTweetInMinutes ||
-          timeSinceLastTweetInMinutes > globalConfig.TOP_LEVEL_TWEET_INTERVAL_MINUTES)
-      ) {
-        logger.info('Sending tweet');
-        await config.client.sendTweet(tweetGeneration.tweet).then(async res => {
-          const latestTweet = await config.client.getLatestTweet(
-            globalConfig.TWITTER_USERNAME || '',
-          );
-          const data = {
-            type: ResponseStatus.POSTED,
-            tweet: {
-              id: latestTweet?.id,
-              text: latestTweet?.text,
-              author_id: latestTweet?.userId,
-              author_username: latestTweet?.username,
-              created_at: (latestTweet?.timeParsed as Date).toISOString(),
-            },
-          };
-          if (globalConfig.DSN_UPLOAD) {
-            await uploadToDsn({
-              data,
-            });
-          }
+        await addTopLevelTweet({
+          id: generateId(),
+          content: tweetGeneration?.tweet,
         });
-        await wipeTrendsTable();
+
+        if (
+          globalConfig.POST_TWEETS
+        ) {
+          logger.info('Sending tweet');
+          await config.client.sendTweet(tweetGeneration.tweet).then(async res => {
+            const latestTweet = await config.client.getLatestTweet(
+              globalConfig.TWITTER_USERNAME || '',
+            );
+            const data = {
+              type: ResponseStatus.POSTED,
+              tweet: {
+                id: latestTweet?.id,
+                text: latestTweet?.text,
+                author_id: latestTweet?.userId,
+                author_username: latestTweet?.username,
+                created_at: (latestTweet?.timeParsed as Date).toISOString(),
+              },
+            };
+            if (globalConfig.DSN_UPLOAD) {
+              await uploadToDsn({
+                data,
+              });
+            }
+          });
+          await wipeTrendsTable();
+        }
       }
 
       return {
