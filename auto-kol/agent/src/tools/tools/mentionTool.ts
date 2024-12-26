@@ -15,7 +15,7 @@ export const createMentionTool = (scraper: ExtendedScraper) =>
     func: async () => {
       try {
         const sinceId = await getLatestMentionId();
-        const allRecentMentions = await scraper.getMyMentions(10, sinceId);
+        const allRecentMentions = await scraper.getMyMentions(50, sinceId);
         logger.info(`Found ${allRecentMentions.length} recent mentions`);
 
         //randomly select subset of mentions
