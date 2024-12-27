@@ -11,10 +11,10 @@ export const createFetchTimelineTool = (twitterAPI: TwitterAPI) =>
   new DynamicStructuredTool({
     name: 'fetch_timeline',
     description: 'Fetch the timeline regularly to get new tweets',
-    schema: z.object({}),
-    func: async () => {
+    schema: z.object({ processedIds: z.array(z.string()) }),
+    func: async ({ processedIds }: { processedIds: string[] }) => {
       try {
-        const tweets = await twitterAPI.getMyTimeline(10, []);
+        const tweets = await twitterAPI.getMyTimeline(10, processedIds);
         tweets.sort(
           (a, b) => new Date(b.timeParsed!).getTime() - new Date(a.timeParsed!).getTime(),
         );
@@ -31,7 +31,7 @@ export const createFetchTimelineTool = (twitterAPI: TwitterAPI) =>
     },
   });
 
-export const invokeFetchTimelineTool = async (toolNode: ToolNode) => {
+export const invokeFetchTimelineTool = async (toolNode: ToolNode, processedIds: string[]) => {
   const toolResponse = await toolNode.invoke({
     messages: [
       new AIMessage({
@@ -39,7 +39,7 @@ export const invokeFetchTimelineTool = async (toolNode: ToolNode) => {
         tool_calls: [
           {
             name: 'fetch_timeline',
-            args: {},
+            args: { processedIds },
             id: 'fetch_timeline_call',
             type: 'tool_call',
           },
