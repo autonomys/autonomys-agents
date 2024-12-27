@@ -14,12 +14,14 @@ export const createFetchTimelineTool = (twitterAPI: TwitterAPI) =>
     schema: z.object({ processedIds: z.array(z.string()) }),
     func: async ({ processedIds }: { processedIds: string[] }) => {
       try {
-        const tweets = await twitterAPI.getMyTimeline(100, processedIds);
-        tweets.sort(
+        const myTimelineTweets = await twitterAPI.getMyTimeline(100, processedIds);
+        const followingRecents = await twitterAPI.getFollowingRecentTweets(100, 10);
+        const tweets = new Set([...myTimelineTweets, ...followingRecents]);
+        const sortedTweets = Array.from(tweets).sort(
           (a, b) => new Date(b.timeParsed!).getTime() - new Date(a.timeParsed!).getTime(),
         );
         return {
-          tweets: tweets,
+          tweets: sortedTweets,
         };
       } catch (error) {
         logger.error('Error in fetchTimelineTool:', error);

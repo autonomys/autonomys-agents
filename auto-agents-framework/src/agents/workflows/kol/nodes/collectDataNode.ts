@@ -1,7 +1,7 @@
 import { WorkflowConfig } from '../types.js';
 import { createLogger } from '../../../../utils/logger.js';
 import { State } from '../workflow.js';
-import { convertMessageContentToTweets } from '../../../tools/convertTweetMessages.js';
+import { convertMessageContentToTweets } from '../../../tools/twitterToolUtils.js';
 import { invokeFetchTimelineTool } from '../../../tools/fetchTimelineTool.js';
 import { invokeFetchMentionsTool } from '../../../tools/fetchMentionsTool.js';
 

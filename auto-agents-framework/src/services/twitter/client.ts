@@ -3,7 +3,6 @@ import { createLogger } from '../../utils/logger.js';
 import { readFileSync, writeFileSync, existsSync } from 'fs';
 import { isValidTweet } from './convertFromTimeline.js';
 import { convertTimelineTweetToTweet } from './convertFromTimeline.js';
-import { text } from 'stream/consumers';
 
 const logger = createLogger('twitter-api');
 
@@ -11,6 +10,7 @@ export interface TwitterAPI {
   scraper: Scraper;
   username: string;
   getMyUnrepliedToMentions: (maxResults: number, sinceId?: string) => Promise<Tweet[]>;
+  getFollowingRecentTweets: (maxResults: number, numberOfUsers: number) => Promise<Tweet[]>;
   isLoggedIn: () => Promise<boolean>;
   getProfile: (username: string) => Promise<Profile>;
   getMyProfile: () => Promise<Profile>;
@@ -19,6 +19,7 @@ export interface TwitterAPI {
   getMyRecentTweets: (limit: number) => Promise<Tweet[]>;
   getFollowing: (userId: string, limit: number) => Promise<Profile[]>;
   getMyTimeline: (count: number, excludeIds: string[]) => Promise<Tweet[]>;
+  getFollowingTimeline: (count: number, excludeIds: string[]) => Promise<Tweet[]>;
   searchTweets: (query: string, limit: number) => AsyncGenerator<Tweet>;
 }
 
@@ -60,10 +61,6 @@ const iterateResponse = async <T>(response: AsyncGenerator<T>): Promise<T[]> => 
   return iterated;
 };
 
-/**
- * Fetches recent replies from a specific user
- * and returns a Set of their inReplyToStatusIds.
- */
 const getUserReplyIds = async (
   scraper: Scraper,
   username: string,
@@ -91,7 +88,7 @@ const getUserReplyIds = async (
   return replyIdSet;
 };
 
-export const getMyUnrepliedToMentions = async (
+const getMyUnrepliedToMentions = async (
   scraper: Scraper,
   username: string,
   maxResults: number = 50,
@@ -137,6 +134,32 @@ export const getMyUnrepliedToMentions = async (
   return newMentions;
 };
 
+const getFollowingRecentTweets = async (
+  scraper: Scraper,
+  username: string,
+  maxResults: number = 50,
+  randomNumberOfUsers: number = 10,
+): Promise<Tweet[]> => {
+  logger.info('Getting following recent tweets', {
+    username,
+    maxResults,
+    randomNumberOfUsers,
+  });
+  const userId = await scraper.getUserIdByScreenName(username);
+  const following = await iterateResponse(scraper.getFollowing(userId, 100));
+  const randomFollowing = [...following]
+    .sort(() => 0.5 - Math.random())
+    .slice(0, randomNumberOfUsers);
+
+  logger.info('Random Following', {
+    randomFollowing: randomFollowing.map(user => user.username),
+  });
+
+  const query = `(${randomFollowing.map(user => `from:${user.username}`).join(' OR ')})`;
+  const tweets = await iterateResponse(scraper.searchTweets(query, maxResults, SearchMode.Latest));
+  return tweets;
+};
+
 export const createTwitterAPI = async (
   username: string,
   password: string,
@@ -163,6 +186,9 @@ export const createTwitterAPI = async (
     username: username,
     getMyUnrepliedToMentions: (maxResults: number, sinceId?: string) =>
       getMyUnrepliedToMentions(scraper, username, maxResults, sinceId),
+
+    getFollowingRecentTweets: (maxResults: number = 100, randomNumberOfUsers: number = 10) =>
+      getFollowingRecentTweets(scraper, username, maxResults, randomNumberOfUsers),
 
     isLoggedIn: () => scraper.isLoggedIn(),
 
@@ -191,6 +217,11 @@ export const createTwitterAPI = async (
 
     getMyTimeline: async (count: number, excludeIds: string[]) => {
       const tweets = await scraper.fetchHomeTimeline(count, excludeIds);
+      return tweets.filter(isValidTweet).map(tweet => convertTimelineTweetToTweet(tweet));
+    },
+
+    getFollowingTimeline: async (count: number, excludeIds: string[]) => {
+      const tweets = await scraper.fetchFollowingTimeline(count, excludeIds);
       return tweets.filter(isValidTweet).map(tweet => convertTimelineTweetToTweet(tweet));
     },
 
