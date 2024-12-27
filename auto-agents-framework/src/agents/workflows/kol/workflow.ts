@@ -10,6 +10,9 @@ import { ToolNode } from '@langchain/langgraph/prebuilt';
 import { createTwitterAPI, TwitterAPI } from '../../../services/twitter/client.js';
 import { createNodes } from './nodes.js';
 import { Tweet } from '../../../services/twitter/types.js';
+import { trendSchema } from './schemas.js';
+import { z } from 'zod';
+
 export const logger = createLogger('agent-workflow');
 
 export const parseMessageContent = (content: MessageContent): any => {
@@ -22,6 +25,8 @@ export const parseMessageContent = (content: MessageContent): any => {
   return content;
 };
 
+type TrendAnalysis = z.infer<typeof trendSchema>;
+
 export const State = Annotation.Root({
   messages: Annotation<readonly BaseMessage[]>({
     reducer: (curr, prev) => [...curr, ...prev],
@@ -30,6 +35,16 @@ export const State = Annotation.Root({
   timelineTweets: Annotation<ReadonlySet<Tweet>>({
     default: () => new Set(),
     reducer: (curr, prev) => new Set([...curr, ...prev]),
+  }),
+  trendAnalysis: Annotation<TrendAnalysis>({
+    default: () => ({
+      trends: [],
+      summary: '',
+    }),
+    reducer: (curr, _) => ({
+      trends: curr.trends,
+      summary: curr.summary,
+    }),
   }),
 });
 
@@ -95,17 +110,18 @@ const shouldContinue = (state: typeof State.State) => {
     content: content ? 'present' : 'missing',
   });
 
-  // For now, we'll always end after collecting tweets
-  // Later we can add more sophisticated continuation logic
-  return END;
+  if (state.trendAnalysis.trends.length > 0) return END;
+  return START;
 };
 
 // Workflow creation function
 export const createWorkflow = async (nodes: Awaited<ReturnType<typeof createNodes>>) => {
   return new StateGraph(State)
     .addNode('collectDataNode', nodes.collectDataNode)
+    .addNode('analyzeTrendNode', nodes.analyzeTrendNode)
     .addEdge(START, 'collectDataNode')
-    .addConditionalEdges('collectDataNode', shouldContinue);
+    .addEdge('collectDataNode', 'analyzeTrendNode')
+    .addConditionalEdges('analyzeTrendNode', shouldContinue);
 };
 
 // Workflow runner type

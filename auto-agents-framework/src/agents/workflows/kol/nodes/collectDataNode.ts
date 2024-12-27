@@ -11,14 +11,16 @@ export const createCollectDataNode =
   (config: WorkflowConfig) => async (state: typeof State.State) => {
     logger.info('Collect Data Node - Collecting recent data');
 
-    const toolResponse = await invokeFetchTimelineTool(config.toolNode);
+    const processedIds = Array.from(state.timelineTweets.values()).map(tweet => tweet.id!);
+    logger.info('Processed IDs:', { ids: processedIds });
+    const toolResponse = await invokeFetchTimelineTool(config.toolNode, processedIds);
 
     const content = toolResponse.messages[toolResponse.messages.length - 1].content;
     const tweets = convertMessageContentToTweets(content);
 
     logger.info('Tool response received:', {
       messageCount: tweets.length,
-      tweets: tweets,
+      tweets: tweets[0],
     });
 
     return {
