@@ -5,7 +5,7 @@ import { MessageContent } from '@langchain/core/messages';
 import { config } from '../../../config/index.js';
 import { createLogger } from '../../../utils/logger.js';
 import { WorkflowConfig } from './types.js';
-import { createTools } from '../tools.js';
+import { createTools } from './tools.js';
 import { ToolNode } from '@langchain/langgraph/prebuilt';
 import { createTwitterAPI, TwitterAPI } from '../../../services/twitter/client.js';
 import { createNodes } from './nodes.js';
