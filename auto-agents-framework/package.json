@@ -20,7 +20,7 @@
         "@langchain/langgraph": "0.2.23",
         "@langchain/openai": "0.3.14",
         "@types/pako": "^2.0.3",
-        "agent-twitter-client": "^0.0.16",
+        "agent-twitter-client": "0.0.17",
         "chromadb": "^1.8.1",
         "cors": "^2.8.5",
         "dotenv": "^16.3.1",

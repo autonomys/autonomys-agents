@@ -650,10 +650,10 @@ agent-base@6, agent-base@^6.0.2:
   dependencies:
     debug "4"
 
-agent-twitter-client@^0.0.16:
-  version "0.0.16"
-  resolved "https://registry.yarnpkg.com/agent-twitter-client/-/agent-twitter-client-0.0.16.tgz#c800047b668c111d4d07c7fdcad3237a2a34f29f"
-  integrity sha512-Clgb/N2LXoGMlId6GDUaaR05eJ0PqSifM6wikl/FiQ2+3+6I2ZhZB7KRulc8R4xvYFe6h0wNWe6FZiF48r124w==
+agent-twitter-client@0.0.17:
+  version "0.0.17"
+  resolved "https://registry.yarnpkg.com/agent-twitter-client/-/agent-twitter-client-0.0.17.tgz#76ff4df6004959c8f976df625ee5d5eb226504f7"
+  integrity sha512-IxLtNyy+fHmh5uHcaybcfXYkvPMP2h7y79sV2N6JpoAY40GKcy60iey6lsL7NO506MnnYDaqlG1JHMjqbfrOxA==
   dependencies:
     "@sinclair/typebox" "^0.32.20"
     headers-polyfill "^3.1.2"
@@ -664,6 +664,7 @@ agent-twitter-client@^0.0.16:
     tough-cookie "^4.1.2"
     tslib "^2.5.2"
     twitter-api-v2 "^1.18.2"
+    undici "^7.1.1"
 
 agentkeepalive@^4.1.3, agentkeepalive@^4.2.1:
   version "4.5.0"
@@ -3011,6 +3012,11 @@ undici-types@~6.20.0:
   version "6.20.0"
   resolved "https://registry.yarnpkg.com/undici-types/-/undici-types-6.20.0.tgz#8171bf22c1f588d1554d55bf204bc624af388433"
   integrity sha512-Ny6QZ2Nju20vw1SRHe3d9jVu6gJ+4e3+MMpqu7pqE5HT6WsTSlce++GQmK5UXS8mzV8DSYHrQH+Xrf2jVcuKNg==
+
+undici@^7.1.1:
+  version "7.2.0"
+  resolved "https://registry.yarnpkg.com/undici/-/undici-7.2.0.tgz#446219e2a57cfcbdc2f135fcfa6dc662b3cae169"
+  integrity sha512-klt+0S55GBViA9nsq48/NSCo4YX5mjydjypxD7UmHh/brMu8h/Mhd/F7qAeoH2NOO8SDTk6kjnTFc4WpzmfYpQ==
 
 unique-filename@^1.1.1:
   version "1.1.1"
