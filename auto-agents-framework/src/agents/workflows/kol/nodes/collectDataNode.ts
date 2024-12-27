@@ -1,14 +1,13 @@
 import { AIMessage } from '@langchain/core/messages';
 import { WorkflowConfig } from '../types.js';
-import { parseMessageContent } from '../../utils.js';
 import { createLogger } from '../../../../utils/logger.js';
 import { State } from '../workflow.js';
-import { v4 as generateID } from 'uuid';
+import { convertMessageContentToTweets } from '../../../tools/convertTweetMessages.js';
 
 const logger = createLogger('collect-data-node');
 
-export const createCollectDataNode = (config: WorkflowConfig) => {
-  return async (state: typeof State.State) => {
+export const createCollectDataNode =
+  (config: WorkflowConfig) => async (state: typeof State.State) => {
     logger.info('Collect Data Node - Collecting recent data');
 
     const toolResponse = await config.toolNode.invoke({
@@ -27,22 +26,15 @@ export const createCollectDataNode = (config: WorkflowConfig) => {
       ],
     });
 
+    const content = toolResponse.messages[toolResponse.messages.length - 1].content;
+    const tweets = convertMessageContentToTweets(content);
+
     logger.info('Tool response received:', {
-      messageCount: toolResponse.messages.length,
-      messages: toolResponse.messages,
+      messageCount: tweets.length,
+      tweets: tweets,
     });
 
-    const content = toolResponse.messages[toolResponse.messages.length - 1].content;
-    const parsedContent = parseMessageContent(content);
-
     return {
-      messages: [
-        new AIMessage({
-          content: JSON.stringify({
-            tweets: parsedContent.tweets,
-          }),
-        }),
-      ],
+      timelineTweets: new Set(tweets),
     };
   };
-};

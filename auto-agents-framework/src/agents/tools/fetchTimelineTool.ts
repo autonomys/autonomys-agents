@@ -12,7 +12,7 @@ export const createFetchTimelineTool = (twitterAPI: TwitterAPI) =>
     schema: z.object({}),
     func: async () => {
       try {
-        const tweets = await twitterAPI.getMyTimeline(100, []);
+        const tweets = await twitterAPI.getMyTimeline(10, []);
         tweets.sort(
           (a, b) => new Date(b.timeParsed!).getTime() - new Date(a.timeParsed!).getTime(),
         );

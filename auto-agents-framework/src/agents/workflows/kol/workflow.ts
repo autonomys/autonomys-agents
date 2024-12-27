@@ -9,7 +9,7 @@ import { createTools } from '../tools.js';
 import { ToolNode } from '@langchain/langgraph/prebuilt';
 import { createTwitterAPI, TwitterAPI } from '../../../services/twitter/client.js';
 import { createNodes } from './nodes.js';
-
+import { Tweet } from '../../../services/twitter/types.js';
 export const logger = createLogger('agent-workflow');
 
 export const parseMessageContent = (content: MessageContent): any => {
@@ -27,11 +27,10 @@ export const State = Annotation.Root({
     reducer: (curr, prev) => [...curr, ...prev],
     default: () => [],
   }),
-  timelineTweets: Annotation<ReadonlySet<string>>({
+  timelineTweets: Annotation<ReadonlySet<Tweet>>({
     default: () => new Set(),
     reducer: (curr, prev) => new Set([...curr, ...prev]),
   }),
-  lastProcessedId: Annotation<string | undefined>(),
 });
 
 const createWorkflowConfig = async (): Promise<WorkflowConfig> => {
@@ -73,19 +72,31 @@ export const getWorkflowConfig = (() => {
   };
 })();
 
-const shouldContinue = (state: typeof State.State) => {
+const hasMessages = (state: typeof State.State): boolean => state.messages.length > 0;
+
+const getLastMessageContent = (state: typeof State.State) => {
+  if (!hasMessages(state)) return null;
+
   const lastMessage = state.messages[state.messages.length - 1];
-  const content = parseMessageContent(lastMessage.content);
+  try {
+    return parseMessageContent(lastMessage.content);
+  } catch (error) {
+    logger.error('Error parsing message content:', error);
+    return null;
+  }
+};
+
+const shouldContinue = (state: typeof State.State) => {
+  const content = getLastMessageContent(state);
 
   logger.debug('Evaluating workflow continuation', {
-    hasMessages: state.messages.length > 0,
-    currentIndex: content.currentTweetIndex,
-    totalTweets: content.tweets?.length,
-    hasBatchToAnalyze: !!content.batchToAnalyze?.length,
-    hasBatchToRespond: !!content.batchToRespond?.length,
-    batchProcessing: content.batchProcessing,
+    hasMessages: hasMessages(state),
+    timelineTweetsCount: state.timelineTweets.size,
+    content: content ? 'present' : 'missing',
   });
 
+  // For now, we'll always end after collecting tweets
+  // Later we can add more sophisticated continuation logic
   return END;
 };
 
