@@ -3,13 +3,14 @@ import { createLogger } from '../../utils/logger.js';
 import { readFileSync, writeFileSync, existsSync } from 'fs';
 import { isValidTweet } from './convertFromTimeline.js';
 import { convertTimelineTweetToTweet } from './convertFromTimeline.js';
+import { text } from 'stream/consumers';
 
 const logger = createLogger('twitter-api');
 
 export interface TwitterAPI {
   scraper: Scraper;
   username: string;
-  getMyMentions: (maxResults: number, sinceId?: string) => Promise<Tweet[]>;
+  getMyUnrepliedToMentions: (maxResults: number, sinceId?: string) => Promise<Tweet[]>;
   isLoggedIn: () => Promise<boolean>;
   getProfile: (username: string) => Promise<Profile>;
   getMyProfile: () => Promise<Profile>;
@@ -59,53 +60,81 @@ const iterateResponse = async <T>(response: AsyncGenerator<T>): Promise<T[]> => 
   return iterated;
 };
 
-const getMyMentions = async (
+/**
+ * Fetches recent replies from a specific user
+ * and returns a Set of their inReplyToStatusIds.
+ */
+const getUserReplyIds = async (
+  scraper: Scraper,
+  username: string,
+  maxRepliesToCheck = 100,
+): Promise<Set<string>> => {
+  const replyIdSet = new Set<string>();
+
+  // Query: all recent tweets from the user that are replies to someone else
+  const userRepliesIterator = scraper.searchTweets(
+    `from:${username} @`, // "from: user" + "@" ensures it's a reply/mention
+    maxRepliesToCheck,
+    SearchMode.Latest,
+  );
+
+  for await (const reply of userRepliesIterator) {
+    if (reply.inReplyToStatusId) {
+      logger.info('Reply ID', {
+        text: reply.text,
+        replyId: reply.inReplyToStatusId,
+      });
+      replyIdSet.add(reply.inReplyToStatusId);
+    }
+  }
+
+  return replyIdSet;
+};
+
+export const getMyUnrepliedToMentions = async (
   scraper: Scraper,
   username: string,
   maxResults: number = 50,
   sinceId?: string,
-) => {
+): Promise<Tweet[]> => {
+  logger.info('Getting my mentions', { username, maxResults, sinceId });
+
+  // get all mentions of the user (excluding user’s own tweets)
   const query = `@${username} -from:${username}`;
-  const replies: Tweet[] = [];
+  const mentionIterator = scraper.searchTweets(query, maxResults, SearchMode.Latest);
 
-  const searchIterator = scraper.searchTweets(query, maxResults, SearchMode.Latest);
+  // build a set of "already replied to" tweet IDs in one query
+  const repliedToIds = await getUserReplyIds(scraper, username, 100);
 
-  for await (const tweet of searchIterator) {
-    logger.info('Checking tweet:', {
+  // filter out any mention we've already replied to
+  const newMentions: Tweet[] = [];
+  for await (const tweet of mentionIterator) {
+    logger.info('Checking mention:', {
       id: tweet.id,
       text: tweet.text,
       author: tweet.username,
     });
 
+    // Stop if we've reached or passed the sinceId
     if (sinceId && tweet.id && tweet.id <= sinceId) {
       break;
     }
 
-    const hasReplies = await scraper.searchTweets(
-      `from:${username} to:${tweet.username}`,
-      10,
-      SearchMode.Latest,
-    );
-
-    let alreadyReplied = false;
-    for await (const reply of hasReplies) {
-      if (reply.inReplyToStatusId === tweet.id) {
-        alreadyReplied = true;
-        logger.info(`Skipping tweet ${tweet.id} - already replied with ${reply.id}`);
-        break;
-      }
+    // Skip if user has already replied
+    if (repliedToIds.has(tweet.id!)) {
+      logger.info(`Skipping tweet ${tweet.id} (already replied)`);
+      continue;
     }
 
-    if (!alreadyReplied) {
-      replies.push(tweet);
-    }
+    newMentions.push(tweet);
 
-    if (replies.length >= maxResults) {
+    // Stop if we already have enough
+    if (newMentions.length >= maxResults) {
       break;
     }
   }
 
-  return replies;
+  return newMentions;
 };
 
 export const createTwitterAPI = async (
@@ -132,8 +161,8 @@ export const createTwitterAPI = async (
   return {
     scraper,
     username: username,
-    getMyMentions: (maxResults: number, sinceId?: string) =>
-      getMyMentions(scraper, username, maxResults, sinceId),
+    getMyUnrepliedToMentions: (maxResults: number, sinceId?: string) =>
+      getMyUnrepliedToMentions(scraper, username, maxResults, sinceId),
 
     isLoggedIn: () => scraper.isLoggedIn(),
 

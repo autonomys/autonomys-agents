@@ -36,6 +36,10 @@ export const State = Annotation.Root({
     default: () => new Set(),
     reducer: (curr, prev) => new Set([...curr, ...prev]),
   }),
+  mentionsTweets: Annotation<ReadonlySet<Tweet>>({
+    default: () => new Set(),
+    reducer: (curr, prev) => new Set([...curr, ...prev]),
+  }),
   trendAnalysis: Annotation<TrendAnalysis>({
     default: () => ({
       trends: [],

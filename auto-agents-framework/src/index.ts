@@ -16,7 +16,7 @@ const startWorkflowPolling = async () => {
 const main = async () => {
   try {
     await startWorkflowPolling();
-    setInterval(startWorkflowPolling, 10 * 1000); //config.CHECK_INTERVAL);
+    setInterval(startWorkflowPolling, config.CHECK_INTERVAL);
 
     logger.info('Application started successfully', {
       checkInterval: config.CHECK_INTERVAL,
