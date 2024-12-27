@@ -1,6 +1,8 @@
 import { Scraper, SearchMode, Tweet, Profile } from 'agent-twitter-client';
 import { createLogger } from '../../utils/logger.js';
 import { readFileSync, writeFileSync, existsSync } from 'fs';
+import { isValidTweet } from './convertFromTimeline.js';
+import { convertTimelineTweetToTweet } from './convertFromTimeline.js';
 
 const logger = createLogger('twitter-api');
 
@@ -15,7 +17,7 @@ export interface TwitterAPI {
   getRecentTweets: (username: string, limit: number) => Promise<Tweet[]>;
   getMyRecentTweets: (limit: number) => Promise<Tweet[]>;
   getFollowing: (userId: string, limit: number) => Promise<Profile[]>;
-  getMyTimeline: (cursor: number, excludeIds: string[]) => Promise<Tweet[]>;
+  getMyTimeline: (count: number, excludeIds: string[]) => Promise<Tweet[]>;
   searchTweets: (query: string, limit: number) => AsyncGenerator<Tweet>;
 }
 
@@ -158,8 +160,10 @@ export const createTwitterAPI = async (
     getFollowing: async (userId: string, limit: number = 100) =>
       await iterateResponse(scraper.getFollowing(userId, limit)),
 
-    getMyTimeline: async (count: number, excludeIds: string[]) =>
-      await scraper.fetchHomeTimeline(count, excludeIds),
+    getMyTimeline: async (count: number, excludeIds: string[]) => {
+      const tweets = await scraper.fetchHomeTimeline(count, excludeIds);
+      return tweets.filter(isValidTweet).map(tweet => convertTimelineTweetToTweet(tweet));
+    },
 
     searchTweets: async function* (
       query: string,

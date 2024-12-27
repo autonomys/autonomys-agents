@@ -1,4 +1,3 @@
-import { AIMessage } from '@langchain/core/messages';
 import { WorkflowConfig } from '../types.js';
 import { createLogger } from '../../../../utils/logger.js';
 import { State } from '../workflow.js';
@@ -13,17 +12,17 @@ export const createCollectDataNode =
 
     const processedIds = Array.from(state.timelineTweets.values()).map(tweet => tweet.id!);
     logger.info('Processed IDs:', { ids: processedIds });
-    const toolResponse = await invokeFetchTimelineTool(config.toolNode, processedIds);
+    const timelineToolResponse = await invokeFetchTimelineTool(config.toolNode, processedIds);
 
-    const content = toolResponse.messages[toolResponse.messages.length - 1].content;
-    const tweets = convertMessageContentToTweets(content);
+    const timelineContent =
+      timelineToolResponse.messages[timelineToolResponse.messages.length - 1].content;
+    const timelineTweets = convertMessageContentToTweets(timelineContent);
 
     logger.info('Tool response received:', {
-      messageCount: tweets.length,
-      tweets: tweets[0],
+      messageCount: timelineTweets.length,
     });
 
     return {
-      timelineTweets: new Set(tweets),
+      timelineTweets: new Set(timelineTweets),
     };
   };

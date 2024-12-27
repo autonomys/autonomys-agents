@@ -10,11 +10,11 @@ const logger = createLogger('fetch-timeline-tool');
 export const createFetchTimelineTool = (twitterAPI: TwitterAPI) =>
   new DynamicStructuredTool({
     name: 'fetch_timeline',
-    description: 'Fetch the timeline regularly to get new tweets',
+    description: 'Fetch the timeline to get new tweets',
     schema: z.object({ processedIds: z.array(z.string()) }),
     func: async ({ processedIds }: { processedIds: string[] }) => {
       try {
-        const tweets = await twitterAPI.getMyTimeline(10, processedIds);
+        const tweets = await twitterAPI.getMyTimeline(100, processedIds);
         tweets.sort(
           (a, b) => new Date(b.timeParsed!).getTime() - new Date(a.timeParsed!).getTime(),
         );
