@@ -7,7 +7,7 @@ const logger = createLogger('app');
 const startWorkflowPolling = async () => {
   try {
     const result = await runWorkflow();
-    logger.info('Workflow execution completed successfully', { result });
+    logger.info('Workflow execution completed successfully');
   } catch (error) {
     logger.error('Error running workflow:', error);
   }

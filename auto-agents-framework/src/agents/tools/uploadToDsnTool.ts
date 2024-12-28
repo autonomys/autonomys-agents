@@ -10,23 +10,22 @@ export const createUploadToDsnTool = () =>
   new DynamicStructuredTool({
     name: 'upload_to_dsn',
     description: 'Upload data to Dsn',
-    schema: z.object({ data: z.string() }),
-    func: async ({ data }: { data: string }) => {
+    schema: z.object({
+      data: z.record(z.any()),
+    }),
+    func: async ({ data }: { data: Record<string, any> }) => {
       try {
-        const uploadInfo = await uploadToDsn({ data });
-        return {
-          uploadInfo,
-        };
+        logger.info('Uploading data to DSN', { data });
+        const uploadInfo = await uploadToDsn(data);
+        return uploadInfo;
       } catch (error) {
         logger.error('Error uploading data to Dsn:', error);
-        return {
-          uploadedData: null,
-        };
+        throw error; // Let the error propagate up
       }
     },
   });
 
-export const invokeUploadToDsnTool = async (toolNode: ToolNode, data: string) => {
+export const invokeUploadToDsnTool = async (toolNode: ToolNode, data: object) => {
   const toolResponse = await toolNode.invoke({
     messages: [
       new AIMessage({

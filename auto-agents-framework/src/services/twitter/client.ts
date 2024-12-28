@@ -77,10 +77,6 @@ const getUserReplyIds = async (
 
   for await (const reply of userRepliesIterator) {
     if (reply.inReplyToStatusId) {
-      logger.info('Reply ID', {
-        text: reply.text,
-        replyId: reply.inReplyToStatusId,
-      });
       replyIdSet.add(reply.inReplyToStatusId);
     }
   }
@@ -106,12 +102,6 @@ const getMyUnrepliedToMentions = async (
   // filter out any mention we've already replied to
   const newMentions: Tweet[] = [];
   for await (const tweet of mentionIterator) {
-    logger.info('Checking mention:', {
-      id: tweet.id,
-      text: tweet.text,
-      author: tweet.username,
-    });
-
     // Stop if we've reached or passed the sinceId
     if (sinceId && tweet.id && tweet.id <= sinceId) {
       break;

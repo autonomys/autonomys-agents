@@ -22,9 +22,16 @@ const llmConfig = {
   OPENAI_API_KEY: process.env.OPENAI_API_KEY || '',
 };
 
+const autoDriveConfig = {
+  AUTO_DRIVE_API_KEY: process.env.AUTO_DRIVE_API_KEY,
+  AUTO_DRIVE_ENCRYPTION_PASSWORD: process.env.AUTO_DRIVE_ENCRYPTION_PASSWORD,
+  AUTO_DRIVE_UPLOAD: process.env.AUTO_DRIVE_UPLOAD === 'true',
+};
+
 export const config = {
   twitterConfig,
   llmConfig,
+  autoDriveConfig,
 
   // Agent Configuration
   CHECK_INTERVAL: (Number(process.env.CHECK_INTERVAL_MINUTES) || 30) * 60 * 1000,
@@ -39,12 +46,6 @@ export const config = {
   // Chroma Configuration
   CHROMA_DIR: path.join(__dirname, '../../data/chroma'),
   CHROMA_URL: process.env.CHROMA_URL || 'http://localhost:8000',
-
-  // AutoDrive Configuration
-  DSN_API_KEY: process.env.DSN_API_KEY,
-  DSN_UPLOAD: process.env.DSN_UPLOAD === 'true',
-  DSN_SKIP_UPLOAD: process.env.DSN_SKIP_UPLOAD === 'true',
-  DSN_ENCRYPTION_PASSWORD: process.env.DSN_ENCRYPTION_PASSWORD,
 
   // CORS Configuration
   CORS_ORIGINS: process.env.CORS_ORIGINS,

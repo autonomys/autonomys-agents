@@ -20,7 +20,5 @@ export const convertMessageContentToTweets = (messageContent: MessageContent): T
     return [];
   }
 
-  logger.info('Parsed content:', { parsedContent });
-
   return parsedContent.tweets.map((tweet: any) => convertTweet(tweet));
 };

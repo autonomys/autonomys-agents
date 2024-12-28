@@ -19,29 +19,19 @@ type TrendAnalysis = z.infer<typeof trendSchema>;
 
 export const State = Annotation.Root({
   messages: Annotation<readonly BaseMessage[]>({
-    reducer: (curr, prev) => [...curr, ...prev],
+    reducer: (curr, update) => [...curr, ...update],
     default: () => [],
   }),
   timelineTweets: Annotation<ReadonlySet<Tweet>>({
     default: () => new Set(),
-    reducer: (curr, prev) => new Set([...curr, ...prev]),
+    reducer: (curr, update) => new Set([...curr, ...update]),
   }),
   mentionsTweets: Annotation<ReadonlySet<Tweet>>({
     default: () => new Set(),
-    reducer: (curr, prev) => new Set([...curr, ...prev]),
+    reducer: (curr, update) => new Set([...curr, ...update]),
   }),
-  trendAnalysis: Annotation<TrendAnalysis>({
-    default: () => ({
-      trends: [],
-      summary: '',
-    }),
-    reducer: (curr, prev) => {
-      if (curr.trends.length > 0) {
-        return curr;
-      }
-      return prev;
-    },
-  }),
+  trendAnalysis: Annotation<TrendAnalysis>,
+  dsnData: Annotation<Record<string, any>>,
 });
 
 const createWorkflowConfig = async (): Promise<WorkflowConfig> => {
@@ -100,14 +90,18 @@ const getLastMessageContent = (state: typeof State.State) => {
 const shouldContinue = (state: typeof State.State) => {
   const content = getLastMessageContent(state);
 
-  logger.debug('Evaluating workflow continuation', {
+  logger.info('Evaluating workflow continuation', {
     hasMessages: hasMessages(state),
     timelineTweetsCount: state.timelineTweets.size,
     content: content ? 'present' : 'missing',
+    dsnData: state.dsnData,
+    skipUpload: config.autoDriveConfig.AUTO_DRIVE_UPLOAD,
   });
 
-  if (state.trendAnalysis.trends.length > 0) return END;
-  return START;
+  const hasDsnData = state.dsnData && Object.keys(state.dsnData).length > 0;
+
+  if (hasDsnData && config.autoDriveConfig.AUTO_DRIVE_UPLOAD) return 'uploadToDsnNode';
+  else return END;
 };
 
 // Workflow creation function
@@ -116,11 +110,11 @@ export const createWorkflow = async (nodes: Awaited<ReturnType<typeof createNode
     .addNode('collectDataNode', nodes.collectDataNode)
     .addNode('analyzeTrendNode', nodes.analyzeTrendNode)
     .addNode('generateTweetNode', nodes.generateTweetNode)
+    .addNode('uploadToDsnNode', nodes.uploadToDsnNode)
     .addEdge(START, 'collectDataNode')
     .addEdge('collectDataNode', 'analyzeTrendNode')
     .addEdge('analyzeTrendNode', 'generateTweetNode')
-    .addEdge('generateTweetNode', END);
-
+    .addConditionalEdges('generateTweetNode', shouldContinue);
   return workflow;
 };
 

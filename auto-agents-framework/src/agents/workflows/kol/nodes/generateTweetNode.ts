@@ -11,7 +11,6 @@ const logger = createLogger('generate-tweet-node');
 export const createGenerateTweetNode =
   (config: WorkflowConfig) => async (state: typeof State.State) => {
     logger.info('Generate Tweet Node - Generating tweet');
-    logger.info('Current state:', { state });
 
     if (!state.trendAnalysis || !state.trendAnalysis.trends.length) {
       logger.error('Missing trend analysis in state');
@@ -35,5 +34,6 @@ export const createGenerateTweetNode =
     }
     return {
       messages: [new AIMessage({ content: JSON.stringify(generatedTweet) })],
+      dsnData: generatedTweet,
     };
   };

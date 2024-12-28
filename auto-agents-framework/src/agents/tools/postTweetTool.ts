@@ -14,8 +14,12 @@ export const createPostTweetTool = (twitterApi: TwitterApi) =>
     schema: z.object({ tweet: z.string(), inReplyTo: z.string().optional() }),
     func: async ({ tweet, inReplyTo }: { tweet: string; inReplyTo?: string }) => {
       try {
-        const postedTweet = await twitterApi.scraper.sendTweet(tweet, inReplyTo);
-        logger.info('Tweet posted successfully', postedTweet);
+        logger.info('logged in', { loggedIn: await twitterApi.isLoggedIn(), tweet });
+        const postedTweet = await twitterApi.scraper.sendTweet(tweet).then(async res => {
+          const latestTweet = await twitterApi.scraper.getLatestTweet(twitterApi.username);
+          return latestTweet;
+        });
+        logger.info('Tweet posted successfully', { postedTweet });
         return {
           postedTweet,
         };

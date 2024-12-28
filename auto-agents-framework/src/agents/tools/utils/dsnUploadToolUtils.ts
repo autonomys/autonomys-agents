@@ -7,7 +7,7 @@ import { wallet, signMessage } from './agentWalletUtils.js';
 import { setLastMemoryHash, getLastMemoryCid } from './agentMemoryContract.js';
 
 const logger = createLogger('dsn-upload-tool');
-const dsnApi = createAutoDriveApi({ apiKey: config.DSN_API_KEY! });
+const dsnApi = createAutoDriveApi({ apiKey: config.autoDriveConfig.AUTO_DRIVE_API_KEY! });
 let currentNonce = await wallet.getNonce();
 
 // New retry utility function
@@ -66,8 +66,10 @@ const uploadFileToDsn = async (file: any, options: any) =>
 const submitMemoryHash = async (hash: string, nonce: number) =>
   withRetry(() => setLastMemoryHash(hash, nonce), { operationName: 'Memory hash submission' });
 
-export async function uploadToDsn({ data }: { data: any }) {
+export async function uploadToDsn(data: object) {
+  logger.info('Upload to Dsn - Starting upload');
   const previousCid = await getPreviousCid();
+  logger.info('Previous CID', { previousCid });
 
   try {
     const timestamp = new Date().toISOString();
@@ -84,6 +86,8 @@ export async function uploadToDsn({ data }: { data: any }) {
       timestamp: timestamp,
     };
 
+    logger.info('Upload to Dsn - DSN Data', { dsnData });
+
     const jsonBuffer = Buffer.from(JSON.stringify(dsnData, null, 2));
     const file = {
       read: async function* () {
@@ -96,7 +100,7 @@ export async function uploadToDsn({ data }: { data: any }) {
 
     const uploadedCid = await uploadFileToDsn(file, {
       compression: true,
-      password: config.DSN_ENCRYPTION_PASSWORD || undefined,
+      password: config.autoDriveConfig.AUTO_DRIVE_ENCRYPTION_PASSWORD || undefined,
     });
 
     const blake3hash = blake3HashFromCid(stringToCid(uploadedCid));
