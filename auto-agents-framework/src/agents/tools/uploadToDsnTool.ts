@@ -6,10 +6,10 @@ import { AIMessage } from '@langchain/core/messages';
 import { uploadToDsn } from './utils/dsnUploadToolUtils.js';
 const logger = createLogger('upload-to-dsn-tool');
 
-export const createUploadToDSNTool = () =>
+export const createUploadToDsnTool = () =>
   new DynamicStructuredTool({
     name: 'upload_to_dsn',
-    description: 'Upload data to DSN',
+    description: 'Upload data to Dsn',
     schema: z.object({ data: z.string() }),
     func: async ({ data }: { data: string }) => {
       try {
@@ -18,7 +18,7 @@ export const createUploadToDSNTool = () =>
           uploadInfo,
         };
       } catch (error) {
-        logger.error('Error uploading data to DSN:', error);
+        logger.error('Error uploading data to Dsn:', error);
         return {
           uploadedData: null,
         };
@@ -26,7 +26,7 @@ export const createUploadToDSNTool = () =>
     },
   });
 
-export const invokeUploadToDSNTool = async (toolNode: ToolNode, data: string) => {
+export const invokeUploadToDsnTool = async (toolNode: ToolNode, data: string) => {
   const toolResponse = await toolNode.invoke({
     messages: [
       new AIMessage({

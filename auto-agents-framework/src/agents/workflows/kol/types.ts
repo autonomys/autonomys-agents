@@ -1,9 +1,9 @@
-import { TwitterAPI } from '../../../services/twitter/client.js';
+import { TwitterApi } from '../../../services/twitter/client.js';
 import { ToolNode } from '@langchain/langgraph/prebuilt';
 import { ChatOpenAI } from '@langchain/openai';
 
 export type WorkflowConfig = Readonly<{
-  twitterAPI: TwitterAPI;
+  twitterApi: TwitterApi;
   toolNode: ToolNode;
   llms: Readonly<{
     decision: ChatOpenAI;

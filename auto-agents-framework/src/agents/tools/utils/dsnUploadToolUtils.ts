@@ -7,7 +7,7 @@ import { wallet, signMessage } from './agentWalletUtils.js';
 import { setLastMemoryHash, getLastMemoryCid } from './agentMemoryContract.js';
 
 const logger = createLogger('dsn-upload-tool');
-const dsnAPI = createAutoDriveApi({ apiKey: config.DSN_API_KEY! });
+const dsnApi = createAutoDriveApi({ apiKey: config.DSN_API_KEY! });
 let currentNonce = await wallet.getNonce();
 
 // New retry utility function
@@ -60,7 +60,7 @@ const getPreviousCid = async (): Promise<string> => {
 
 // Helper function for file upload
 const uploadFileToDsn = async (file: any, options: any) =>
-  withRetry(() => uploadFile(dsnAPI, file, options), { operationName: 'DSN file upload' });
+  withRetry(() => uploadFile(dsnApi, file, options), { operationName: 'Dsn file upload' });
 
 // Helper function for memory hash
 const submitMemoryHash = async (hash: string, nonce: number) =>
@@ -117,7 +117,7 @@ export async function uploadToDsn({ data }: { data: any }) {
       previousCid: previousCid || null,
     };
   } catch (error) {
-    logger.error('Error uploading to DSN:', error);
+    logger.error('Error uploading to Dsn:', error);
     throw error;
   }
 }

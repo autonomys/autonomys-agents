@@ -1,20 +1,20 @@
 import { DynamicStructuredTool } from '@langchain/core/tools';
 import { z } from 'zod';
 import { createLogger } from '../../utils/logger.js';
-import { TwitterAPI } from '../../services/twitter/client.js';
+import { TwitterApi } from '../../services/twitter/client.js';
 import { ToolNode } from '@langchain/langgraph/prebuilt';
 import { AIMessage } from '@langchain/core/messages';
 
 const logger = createLogger('post-tweet-tool');
 
-export const createPostTweetTool = (twitterAPI: TwitterAPI) =>
+export const createPostTweetTool = (twitterApi: TwitterApi) =>
   new DynamicStructuredTool({
     name: 'post_tweet',
     description: 'Post a tweet',
     schema: z.object({ tweet: z.string(), inReplyTo: z.string().optional() }),
     func: async ({ tweet, inReplyTo }: { tweet: string; inReplyTo?: string }) => {
       try {
-        const postedTweet = await twitterAPI.scraper.sendTweet(tweet, inReplyTo);
+        const postedTweet = await twitterApi.scraper.sendTweet(tweet, inReplyTo);
         logger.info('Tweet posted successfully', postedTweet);
         return {
           postedTweet,

@@ -1,20 +1,20 @@
 import { DynamicStructuredTool } from '@langchain/core/tools';
 import { z } from 'zod';
 import { createLogger } from '../../utils/logger.js';
-import { TwitterAPI } from '../../services/twitter/client.js';
+import { TwitterApi } from '../../services/twitter/client.js';
 import { ToolNode } from '@langchain/langgraph/prebuilt';
 import { AIMessage } from '@langchain/core/messages';
 
 const logger = createLogger('fetch-mentions-tool');
 
-export const createFetchMentionsTool = (twitterAPI: TwitterAPI) =>
+export const createFetchMentionsTool = (twitterApi: TwitterApi) =>
   new DynamicStructuredTool({
     name: 'fetch_mentions',
     description: 'Fetch recent mentions',
     schema: z.object({}),
     func: async () => {
       try {
-        const recentMentions = await twitterAPI.getMyUnrepliedToMentions(10);
+        const recentMentions = await twitterApi.getMyUnrepliedToMentions(10);
         recentMentions.sort(
           (a, b) => new Date(b.timeParsed!).getTime() - new Date(a.timeParsed!).getTime(),
         );

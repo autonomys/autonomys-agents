@@ -6,7 +6,7 @@ import { convertTimelineTweetToTweet } from './convertFromTimeline.js';
 
 const logger = createLogger('twitter-api');
 
-export interface TwitterAPI {
+export interface TwitterApi {
   scraper: Scraper;
   username: string;
   getMyUnrepliedToMentions: (maxResults: number, sinceId?: string) => Promise<Tweet[]>;
@@ -160,11 +160,11 @@ const getFollowingRecentTweets = async (
   return tweets;
 };
 
-export const createTwitterAPI = async (
+export const createTwitterApi = async (
   username: string,
   password: string,
   cookiesPath: string = 'cookies.json',
-): Promise<TwitterAPI> => {
+): Promise<TwitterApi> => {
   const scraper = new Scraper();
 
   // Initialize authentication
@@ -178,7 +178,7 @@ export const createTwitterAPI = async (
   logger.info(`Login status: ${isLoggedIn}`);
 
   if (!isLoggedIn) {
-    throw new Error('Failed to initialize Twitter API - not logged in');
+    throw new Error('Failed to initialize Twitter Api - not logged in');
   }
 
   return {

@@ -1,19 +1,19 @@
-import { TwitterAPI } from '../../../services/twitter/client.js';
+import { TwitterApi } from '../../../services/twitter/client.js';
 import { createFetchMentionsTool } from '../../tools/fetchMentionsTool.js';
 import { createFetchTimelineTool } from '../../tools/fetchTimelineTool.js';
 import { createPostTweetTool } from '../../tools/postTweetTool.js';
-import { createUploadToDSNTool } from '../../tools/uploadToDSNTool.js';
-export const createTools = (twitterAPI: TwitterAPI) => {
-  const fetchTimelineTool = createFetchTimelineTool(twitterAPI);
-  const fetchMentionsTool = createFetchMentionsTool(twitterAPI);
-  const postTweetTool = createPostTweetTool(twitterAPI);
-  const uploadToDSNTool = createUploadToDSNTool();
+import { createUploadToDsnTool } from '../../tools/uploadToDsnTool.js';
+export const createTools = (twitterApi: TwitterApi) => {
+  const fetchTimelineTool = createFetchTimelineTool(twitterApi);
+  const fetchMentionsTool = createFetchMentionsTool(twitterApi);
+  const postTweetTool = createPostTweetTool(twitterApi);
+  const uploadToDsnTool = createUploadToDsnTool();
 
   return {
     fetchTimelineTool,
     fetchMentionsTool,
     postTweetTool,
-    uploadToDSNTool,
-    tools: [fetchTimelineTool, fetchMentionsTool, postTweetTool, uploadToDSNTool],
+    uploadToDsnTool,
+    tools: [fetchTimelineTool, fetchMentionsTool, postTweetTool, uploadToDsnTool],
   };
 };

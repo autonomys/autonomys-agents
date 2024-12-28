@@ -7,7 +7,7 @@ import { createLogger } from '../../../utils/logger.js';
 import { WorkflowConfig } from './types.js';
 import { createTools } from './tools.js';
 import { ToolNode } from '@langchain/langgraph/prebuilt';
-import { createTwitterAPI } from '../../../services/twitter/client.js';
+import { createTwitterApi } from '../../../services/twitter/client.js';
 import { createNodes } from './nodes.js';
 import { Tweet } from '../../../services/twitter/types.js';
 import { trendSchema } from './schemas.js';
@@ -47,11 +47,11 @@ export const State = Annotation.Root({
 const createWorkflowConfig = async (): Promise<WorkflowConfig> => {
   const { USERNAME, PASSWORD, COOKIES_PATH } = config.twitterConfig;
   const { LARGE_LLM_MODEL, SMALL_LLM_MODEL } = config.llmConfig;
-  const twitterAPI = await createTwitterAPI(USERNAME, PASSWORD, COOKIES_PATH);
-  const { tools } = createTools(twitterAPI);
+  const twitterApi = await createTwitterApi(USERNAME, PASSWORD, COOKIES_PATH);
+  const { tools } = createTools(twitterApi);
 
   return {
-    twitterAPI,
+    twitterApi,
     toolNode: new ToolNode(tools),
     llms: {
       decision: new ChatOpenAI({
