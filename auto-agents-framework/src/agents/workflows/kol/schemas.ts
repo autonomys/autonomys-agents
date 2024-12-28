@@ -105,6 +105,6 @@ export const trendSchema = z.object({
 });
 
 export const trendTweetSchema = z.object({
-  tweet: z.string().max(280),
+  tweet: z.string(),
   reasoning: z.string(),
 });

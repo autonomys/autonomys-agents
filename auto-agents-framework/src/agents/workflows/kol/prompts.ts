@@ -22,6 +22,17 @@ export const trendTweetParser = StructuredOutputParser.fromZodSchema(trendTweetS
 //
 // ============ TREND PROMPTS ============
 //
+
+const followFormatInstructions = `
+  IMPORTANT:
+  - Return ONLY the raw JSON data
+  - DO NOT include any markdown formatting, code blocks, or backticks
+  - DO NOT wrap response in code block markers
+  - Do not include any additional text or explanations
+  - The response should NOT start with \`\`\`json and end with \`\`\`
+  - The response should start and end with curly braces
+`;
+
 const trendSystemPrompt = await PromptTemplate.fromTemplate(
   `You are an expert in:
   ${character.expertise}
@@ -31,7 +42,7 @@ const trendSystemPrompt = await PromptTemplate.fromTemplate(
   Focus areas:
   ${character.trendFocus}
 
-  IMPORTANT: Follow the EXACT output format.
+  ${followFormatInstructions}
 
   {format_instructions}`,
 ).format({
@@ -66,11 +77,15 @@ export const tweetSystemPrompt = await PromptTemplate.fromTemplate(
   ${character.personality}
   ${character.rules}
   ${character.contentFocus}
-  IMPORTANT: Follow the EXACT output format.
+
+  Do not use these words:
+  ${character.wordsToAvoid}
+
+  ${followFormatInstructions}
 
   {format_instructions}`,
 ).format({
-  format_instructions: trendParser.getFormatInstructions(),
+  format_instructions: trendTweetParser.getFormatInstructions(),
 });
 
 export const tweetPrompt = ChatPromptTemplate.fromMessages([

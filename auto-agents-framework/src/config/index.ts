@@ -13,6 +13,7 @@ const twitterConfig = {
   USERNAME: process.env.TWITTER_USERNAME || '',
   PASSWORD: process.env.TWITTER_PASSWORD || '',
   COOKIES_PATH: process.env.TWITTER_COOKIES_PATH || 'cookies.json',
+  POST_TWEETS: process.env.POST_TWEETS === 'true',
 };
 
 const llmConfig = {
@@ -65,9 +66,6 @@ export const config = {
 
   // RESPONSE CONFIG
   RETRY_LIMIT: process.env.RETRY_LIMIT || 2,
-
-  // POSTING TWEETS PERMISSION
-  POST_TWEETS: process.env.POST_TWEETS === 'true',
 
   // TOP LEVEL TWEET CONFIG
   TOP_LEVEL_TWEET_INTERVAL_MINUTES: Number(process.env.TOP_LEVEL_TWEET_INTERVAL_MINUTES) || 120,

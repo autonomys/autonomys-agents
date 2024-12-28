@@ -14,7 +14,7 @@ export const createFetchMentionsTool = (twitterAPI: TwitterAPI) =>
     schema: z.object({}),
     func: async () => {
       try {
-        const recentMentions = await twitterAPI.getMyUnrepliedToMentions(50);
+        const recentMentions = await twitterAPI.getMyUnrepliedToMentions(10);
         recentMentions.sort(
           (a, b) => new Date(b.timeParsed!).getTime() - new Date(a.timeParsed!).getTime(),
         );

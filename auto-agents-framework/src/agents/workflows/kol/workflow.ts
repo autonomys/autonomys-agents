@@ -1,29 +1,19 @@
 import { END, MemorySaver, StateGraph, START, Annotation } from '@langchain/langgraph';
 import { BaseMessage } from '@langchain/core/messages';
 import { ChatOpenAI } from '@langchain/openai';
-import { MessageContent } from '@langchain/core/messages';
+import { parseMessageContent } from '../utils.js';
 import { config } from '../../../config/index.js';
 import { createLogger } from '../../../utils/logger.js';
 import { WorkflowConfig } from './types.js';
 import { createTools } from './tools.js';
 import { ToolNode } from '@langchain/langgraph/prebuilt';
-import { createTwitterAPI, TwitterAPI } from '../../../services/twitter/client.js';
+import { createTwitterAPI } from '../../../services/twitter/client.js';
 import { createNodes } from './nodes.js';
 import { Tweet } from '../../../services/twitter/types.js';
 import { trendSchema } from './schemas.js';
 import { z } from 'zod';
 
 export const logger = createLogger('agent-workflow');
-
-export const parseMessageContent = (content: MessageContent): any => {
-  if (typeof content === 'string') {
-    return JSON.parse(content);
-  }
-  if (Array.isArray(content)) {
-    return JSON.parse(JSON.stringify(content));
-  }
-  return content;
-};
 
 type TrendAnalysis = z.infer<typeof trendSchema>;
 
@@ -45,10 +35,12 @@ export const State = Annotation.Root({
       trends: [],
       summary: '',
     }),
-    reducer: (curr, _) => ({
-      trends: curr.trends,
-      summary: curr.summary,
-    }),
+    reducer: (curr, prev) => {
+      if (curr.trends.length > 0) {
+        return curr;
+      }
+      return prev;
+    },
   }),
 });
 
@@ -120,12 +112,16 @@ const shouldContinue = (state: typeof State.State) => {
 
 // Workflow creation function
 export const createWorkflow = async (nodes: Awaited<ReturnType<typeof createNodes>>) => {
-  return new StateGraph(State)
+  const workflow = new StateGraph(State)
     .addNode('collectDataNode', nodes.collectDataNode)
     .addNode('analyzeTrendNode', nodes.analyzeTrendNode)
+    .addNode('generateTweetNode', nodes.generateTweetNode)
     .addEdge(START, 'collectDataNode')
     .addEdge('collectDataNode', 'analyzeTrendNode')
-    .addConditionalEdges('analyzeTrendNode', shouldContinue);
+    .addEdge('analyzeTrendNode', 'generateTweetNode')
+    .addEdge('generateTweetNode', END);
+
+  return workflow;
 };
 
 // Workflow runner type
