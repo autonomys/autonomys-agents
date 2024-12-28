@@ -20,10 +20,8 @@ const iterateResponse = async <T>(response: AsyncGenerator<T>): Promise<T[]> => 
   return tweets;
 };
 
-// const userId = await scraper.getUserIdByScreenName(USERNAME);
-// const myPostsIterator = scraper.getTweetsByUserId(userId, 5);
-// const myPosts = await iterateResponse(myPostsIterator);
-// logger.info('My Posts', { myPosts });
+const following = await twitterAPI.getFollowingRecentTweets(100, 10);
 
-const trends = await scraper.getTrends();
-logger.info('Trends', { trends });
+logger.info('Following', { following: following.length });
+//const followingRecents = await twitterAPI.getFollowingRecentTweets(50, 10);
+//logger.info('Following Recents', { followingRecents: followingRecents.length });
