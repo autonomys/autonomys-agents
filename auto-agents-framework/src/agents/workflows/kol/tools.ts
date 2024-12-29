@@ -1,4 +1,4 @@
-import { TwitterApi } from '../../../services/twitter/client.js';
+import { TwitterApi } from '../../../services/twitter/types.js';
 import { createFetchMentionsTool } from '../../tools/fetchMentionsTool.js';
 import { createFetchTimelineTool } from '../../tools/fetchTimelineTool.js';
 import { createPostTweetTool } from '../../tools/postTweetTool.js';

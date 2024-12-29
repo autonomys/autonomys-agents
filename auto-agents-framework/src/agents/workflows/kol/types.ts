@@ -1,4 +1,4 @@
-import { TwitterApi } from '../../../services/twitter/client.js';
+import { TwitterApi } from '../../../services/twitter/types.js';
 import { ToolNode } from '@langchain/langgraph/prebuilt';
 import { ChatOpenAI } from '@langchain/openai';
 

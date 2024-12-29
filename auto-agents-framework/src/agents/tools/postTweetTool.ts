@@ -1,18 +1,12 @@
 import { DynamicStructuredTool } from '@langchain/core/tools';
 import { z } from 'zod';
 import { createLogger } from '../../utils/logger.js';
-import { TwitterApi } from '../../services/twitter/client.js';
+import { TwitterApi } from '../../services/twitter/types.js';
 import { ToolNode } from '@langchain/langgraph/prebuilt';
 import { AIMessage } from '@langchain/core/messages';
 
 const logger = createLogger('post-tweet-tool');
 
-const postTweet = async (twitterApi: TwitterApi, tweet: string, inReplyTo?: string) => {
-  if (tweet.length > 280) {
-    return twitterApi.scraper.sendLongTweet(tweet, inReplyTo);
-  }
-  return twitterApi.scraper.sendTweet(tweet, inReplyTo);
-};
 export const createPostTweetTool = (twitterApi: TwitterApi) =>
   new DynamicStructuredTool({
     name: 'post_tweet',
@@ -20,10 +14,7 @@ export const createPostTweetTool = (twitterApi: TwitterApi) =>
     schema: z.object({ tweet: z.string(), inReplyTo: z.string().optional() }),
     func: async ({ tweet, inReplyTo }: { tweet: string; inReplyTo?: string }) => {
       try {
-        const postedTweet = postTweet(twitterApi, tweet, inReplyTo).then(async res => {
-          const latestTweet = await twitterApi.scraper.getLatestTweet(twitterApi.username);
-          return latestTweet;
-        });
+        const postedTweet = await twitterApi.sendTweet(tweet, inReplyTo);
         logger.info('Tweet posted successfully', { postedTweet });
         return {
           postedTweet,

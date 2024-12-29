@@ -3,25 +3,8 @@ import { createLogger } from '../../utils/logger.js';
 import { readFileSync, writeFileSync, existsSync } from 'fs';
 import { isValidTweet } from './convertFromTimeline.js';
 import { convertTimelineTweetToTweet } from './convertFromTimeline.js';
-
+import { TwitterApi } from './types.js';
 const logger = createLogger('twitter-api');
-
-export interface TwitterApi {
-  scraper: Scraper;
-  username: string;
-  getMyUnrepliedToMentions: (maxResults: number, sinceId?: string) => Promise<Tweet[]>;
-  getFollowingRecentTweets: (maxResults: number, numberOfUsers: number) => Promise<Tweet[]>;
-  isLoggedIn: () => Promise<boolean>;
-  getProfile: (username: string) => Promise<Profile>;
-  getMyProfile: () => Promise<Profile>;
-  getTweet: (tweetId: string) => Promise<Tweet | null>;
-  getRecentTweets: (username: string, limit: number) => Promise<Tweet[]>;
-  getMyRecentTweets: (limit: number) => Promise<Tweet[]>;
-  getFollowing: (userId: string, limit: number) => Promise<Profile[]>;
-  getMyTimeline: (count: number, excludeIds: string[]) => Promise<Tweet[]>;
-  getFollowingTimeline: (count: number, excludeIds: string[]) => Promise<Tweet[]>;
-  searchTweets: (query: string, limit: number) => AsyncGenerator<Tweet>;
-}
 
 const loadCookies = async (scraper: Scraper, cookiesPath: string): Promise<void> => {
   logger.info('Loading existing cookies');
@@ -122,6 +105,13 @@ const getMyUnrepliedToMentions = async (
   }
 
   return newMentions;
+};
+
+const postTweet = async (scraper: Scraper, tweet: string, inReplyTo?: string) => {
+  if (tweet.length > 280) {
+    return scraper.sendLongTweet(tweet, inReplyTo);
+  }
+  return scraper.sendTweet(tweet, inReplyTo);
 };
 
 const getFollowingRecentTweets = async (
@@ -225,6 +215,10 @@ export const createTwitterApi = async (
         yield tweet;
         if (--limit <= 0) break;
       }
+    },
+    sendTweet: async (tweet: string, inReplyTo?: string) => {
+      const _postedTweet = await postTweet(scraper, tweet, inReplyTo);
+      return await scraper.getLatestTweet(username);
     },
   };
 };

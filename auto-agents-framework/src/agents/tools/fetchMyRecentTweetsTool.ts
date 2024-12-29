@@ -1,11 +1,11 @@
 import { DynamicStructuredTool } from '@langchain/core/tools';
 import { z } from 'zod';
 import { createLogger } from '../../utils/logger.js';
-import { TwitterApi } from '../../services/twitter/client.js';
+import { TwitterApi } from '../../services/twitter/types.js';
 import { ToolNode } from '@langchain/langgraph/prebuilt';
 import { AIMessage } from '@langchain/core/messages';
 
-const logger = createLogger('fetch-timeline-tool');
+const logger = createLogger('fetch-recent-tweets-tool');
 
 export const createFetchMyRecentTweetsTool = (twitterApi: TwitterApi) =>
   new DynamicStructuredTool({
@@ -20,7 +20,7 @@ export const createFetchMyRecentTweetsTool = (twitterApi: TwitterApi) =>
           tweets: myRecentTweets,
         };
       } catch (error) {
-        logger.error('Error in fetchTimelineTool:', error);
+        logger.error('Error in fetchRecentTweetsTool:', error);
         return {
           tweets: [],
         };
@@ -35,9 +35,9 @@ export const invokeFetchMyRecentTweetsTool = async (toolNode: ToolNode) => {
         content: '',
         tool_calls: [
           {
-            name: 'fetch_timeline',
+            name: 'fetch_my_recent_tweets',
             args: {},
-            id: 'fetch_timeline_call',
+            id: 'fetch_my_recent_tweets_call',
             type: 'tool_call',
           },
         ],
