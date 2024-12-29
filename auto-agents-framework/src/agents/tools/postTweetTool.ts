@@ -8,11 +8,11 @@ import { AIMessage } from '@langchain/core/messages';
 const logger = createLogger('post-tweet-tool');
 
 const postTweet = async (twitterApi: TwitterApi, tweet: string, inReplyTo?: string) => {
-  if(tweet.length > 280) {
+  if (tweet.length > 280) {
     return twitterApi.scraper.sendLongTweet(tweet, inReplyTo);
   }
   return twitterApi.scraper.sendTweet(tweet, inReplyTo);
-}
+};
 export const createPostTweetTool = (twitterApi: TwitterApi) =>
   new DynamicStructuredTool({
     name: 'post_tweet',
@@ -20,7 +20,6 @@ export const createPostTweetTool = (twitterApi: TwitterApi) =>
     schema: z.object({ tweet: z.string(), inReplyTo: z.string().optional() }),
     func: async ({ tweet, inReplyTo }: { tweet: string; inReplyTo?: string }) => {
       try {
-        logger.info('logged in', { loggedIn: await twitterApi.isLoggedIn(), tweet });
         const postedTweet = postTweet(twitterApi, tweet, inReplyTo).then(async res => {
           const latestTweet = await twitterApi.scraper.getLatestTweet(twitterApi.username);
           return latestTweet;

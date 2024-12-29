@@ -10,14 +10,18 @@ export const createAnalyzeTrendNode =
   (config: WorkflowConfig) => async (state: typeof State.State) => {
     logger.info('Analyze Trend Node - Analyzing trends');
 
-    const tweets = Array.from(state.timelineTweets.values())
-      .map(tweet => `author: ${tweet.username} text: ${tweet.text}`)
-      .join('\n\n');
+    const tweets = Array.from(state.timelineTweets.values()).map(({ username, text }) => ({
+      username,
+      text,
+    }));
     logger.info('Tweets:', { tweets });
 
-    const trendAnalysis = await trendPrompt.pipe(config.llms.decision).pipe(trendParser).invoke({
-      tweets: tweets,
-    });
+    const trendAnalysis = await trendPrompt
+      .pipe(config.llms.decision)
+      .pipe(trendParser)
+      .invoke({
+        tweets: JSON.stringify(tweets),
+      });
 
     logger.info('Trend analysis:', trendAnalysis);
 

@@ -7,21 +7,17 @@ import { AIMessage } from '@langchain/core/messages';
 
 const logger = createLogger('fetch-timeline-tool');
 
-export const createFetchTimelineTool = (twitterApi: TwitterApi) =>
+export const createFetchMyRecentTweetsTool = (twitterApi: TwitterApi) =>
   new DynamicStructuredTool({
-    name: 'fetch_timeline',
-    description: 'Fetch the timeline to get new tweets',
-    schema: z.object({ processedIds: z.array(z.string()) }),
-    func: async ({ processedIds }: { processedIds: string[] }) => {
+    name: 'fetch_my_recent_tweets',
+    description: 'Fetch the recent tweets of the user',
+    schema: z.object({}),
+    func: async () => {
       try {
-        const myTimelineTweets = await twitterApi.getMyTimeline(100, processedIds);
-        const followingRecents = await twitterApi.getFollowingRecentTweets(100, 10);
-        const tweets = new Set([...myTimelineTweets, ...followingRecents]);
-        const sortedTweets = Array.from(tweets).sort(
-          (a, b) => new Date(b.timeParsed!).getTime() - new Date(a.timeParsed!).getTime(),
-        );
+        const myRecentTweets = await twitterApi.getMyRecentTweets(10);
+
         return {
-          tweets: sortedTweets,
+          tweets: myRecentTweets,
         };
       } catch (error) {
         logger.error('Error in fetchTimelineTool:', error);
@@ -32,7 +28,7 @@ export const createFetchTimelineTool = (twitterApi: TwitterApi) =>
     },
   });
 
-export const invokeFetchTimelineTool = async (toolNode: ToolNode, processedIds: string[]) => {
+export const invokeFetchMyRecentTweetsTool = async (toolNode: ToolNode) => {
   const toolResponse = await toolNode.invoke({
     messages: [
       new AIMessage({
@@ -40,7 +36,7 @@ export const invokeFetchTimelineTool = async (toolNode: ToolNode, processedIds: 
         tool_calls: [
           {
             name: 'fetch_timeline',
-            args: { processedIds },
+            args: {},
             id: 'fetch_timeline_call',
             type: 'tool_call',
           },
