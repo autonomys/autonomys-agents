@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { createLogger } from '../../utils/logger.js';
 import { ToolNode } from '@langchain/langgraph/prebuilt';
 import { AIMessage } from '@langchain/core/messages';
-import { uploadToDsn } from './utils/dsnUploadToolUtils.js';
+import { uploadToDsn } from './utils/dsnUpload.js';
 const logger = createLogger('upload-to-dsn-tool');
 
 export const createUploadToDsnTool = () =>

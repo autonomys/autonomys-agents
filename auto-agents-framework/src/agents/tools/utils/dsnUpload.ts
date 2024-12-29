@@ -3,7 +3,7 @@ import { hexlify } from 'ethers';
 import { createAutoDriveApi, uploadFile } from '@autonomys/auto-drive';
 import { stringToCid, blake3HashFromCid } from '@autonomys/auto-dag-data';
 import { config } from '../../../config/index.js';
-import { wallet, signMessage } from './agentWalletUtils.js';
+import { wallet, signMessage } from './agentWallet.js';
 import { setLastMemoryHash, getLastMemoryCid } from './agentMemoryContract.js';
 
 const logger = createLogger('dsn-upload-tool');

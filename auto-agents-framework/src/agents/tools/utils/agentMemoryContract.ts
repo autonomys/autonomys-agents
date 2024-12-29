@@ -1,7 +1,7 @@
 import { ethers } from 'ethers';
 import { MEMORY_ABI } from './abi/memory.js';
 import { config } from '../../../config/index.js';
-import { wallet } from './agentWalletUtils.js';
+import { wallet } from './agentWallet.js';
 import { cidFromBlakeHash, cidToString } from '@autonomys/auto-dag-data';
 
 const CONTRACT_ADDRESS = config.CONTRACT_ADDRESS as `0x${string}`;
