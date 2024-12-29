@@ -28,7 +28,6 @@ export const createGenerateTweetNode =
 
     if (globalConfig.twitterConfig.POST_TWEETS) {
       const tweet = await invokePostTweetTool(config.toolNode, generatedTweet.tweet);
-      logger.info('Tweet posted successfully', { tweet });
     } else {
       logger.info('Tweet not posted', { tweet: generatedTweet.tweet });
     }
