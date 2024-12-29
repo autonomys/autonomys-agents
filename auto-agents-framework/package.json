@@ -1,7 +1,7 @@
 {
-    "name": "auto-kol",
-    "version": "1.0.0",
-    "description": "AI Agent Campaign Framework for Twitter Engagement",
+    "name": "auto-agents-framework",
+    "version": "0.0.1",
+    "description": "Auto Agents Framework",
     "main": "dist/index.js",
     "type": "module",
     "scripts": {
