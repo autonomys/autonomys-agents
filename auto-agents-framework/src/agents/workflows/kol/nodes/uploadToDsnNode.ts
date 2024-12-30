@@ -26,5 +26,6 @@ export const createUploadToDsnNode =
 
     return {
       messages: [new AIMessage({ content: JSON.stringify(uploadInfo) })],
+      dsnData: null,
     };
   };

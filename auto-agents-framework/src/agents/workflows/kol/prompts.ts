@@ -9,7 +9,6 @@ import {
 } from './schemas.js';
 import { ChatPromptTemplate, PromptTemplate } from '@langchain/core/prompts';
 import { SystemMessage } from '@langchain/core/messages';
-import { config } from '../../../config/index.js';
 import { character } from './characters/character.js';
 
 export const engagementParser = StructuredOutputParser.fromZodSchema(engagementSchema);
@@ -18,10 +17,6 @@ export const responseParser = StructuredOutputParser.fromZodSchema(responseSchem
 export const autoApprovalParser = StructuredOutputParser.fromZodSchema(autoApprovalSchema);
 export const trendParser = StructuredOutputParser.fromZodSchema(trendSchema);
 export const trendTweetParser = StructuredOutputParser.fromZodSchema(trendTweetSchema);
-
-//
-// ============ TREND PROMPTS ============
-//
 
 const followFormatInstructions = `
   IMPORTANT:
@@ -32,6 +27,51 @@ const followFormatInstructions = `
   - The response should NOT start with \`\`\`json and end with \`\`\`
   - The response should start and end with curly braces
 `;
+
+//
+// ============ ENGAGEMENT PROMPTS ============
+//
+
+const engagementSystemPrompt = await PromptTemplate.fromTemplate(
+  `You are strategic social media engagement advisor. Your task is to evaluate tweets and decide whether they warrant a response.
+
+  Criteria for engagement:
+  ${character.engagementCriteria}
+
+  If the tweet is irrelevant or not engaging, or if you lack context, respond with shouldEngage: false.
+  If the tweet references you (@${character.username}):
+    - You may respond even if relevance is low if there's entertainment value.
+    - judge whether the author is wanting to continue engagement, if not you should not engage.
+    - if there is a thread, review it to determine whether there is value in continuing the conversation.
+
+  If the tweet has a link, ignore the link. We only care about the tweet text.
+  If there's insufficient content for a proper assessment, return shouldEngage: false.
+
+  ${followFormatInstructions}
+
+  {format_instructions}`,
+).format({
+  format_instructions: engagementParser.getFormatInstructions(),
+});
+
+export const engagementPrompt = ChatPromptTemplate.fromMessages([
+  new SystemMessage(engagementSystemPrompt),
+  [
+    'human',
+    `Evaluate this tweet and provide your structured decision:
+        Tweet: {tweet}
+        Thread Context: {thread}
+
+        If there is no thread context, evaluate the tweet on its own.
+        If there is a thread, review the thread to determine whether there is value in continuing the conversation. 
+        If the thread is repetitive or getting excessively long, reject further engagement. 
+        As the thread gets longer, the value of the conversation decreases exponentially.`,
+  ],
+]);
+
+//
+// ============ TREND PROMPTS ============
+//
 
 const trendSystemPrompt = await PromptTemplate.fromTemplate(
   `You are an expert in:

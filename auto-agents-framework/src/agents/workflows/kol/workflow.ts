@@ -4,7 +4,7 @@ import { ChatOpenAI } from '@langchain/openai';
 import { parseMessageContent } from '../utils.js';
 import { config } from '../../../config/index.js';
 import { createLogger } from '../../../utils/logger.js';
-import { WorkflowConfig } from './types.js';
+import { EngagementDecision, WorkflowConfig } from './types.js';
 import { createTools } from './tools.js';
 import { ToolNode } from '@langchain/langgraph/prebuilt';
 import { createTwitterApi } from '../../../services/twitter/client.js';
@@ -34,6 +34,7 @@ export const State = Annotation.Root({
     default: () => new Set(),
     reducer: (curr, update) => new Set([...update]),
   }),
+  engagementDecisions: Annotation<EngagementDecision[]>,
   trendAnalysis: Annotation<TrendAnalysis>,
   dsnData: Annotation<Record<string, any>>,
 });
@@ -102,7 +103,7 @@ const shouldContinue = (state: typeof State.State) => {
     timelineTweetsCount: state.timelineTweets.size,
     content: content ? 'present' : 'missing',
     dsnData: state.dsnData,
-    skipUpload: config.autoDriveConfig.AUTO_DRIVE_UPLOAD,
+    upload: config.autoDriveConfig.AUTO_DRIVE_UPLOAD,
   });
 
   const hasDsnData = state.dsnData && Object.keys(state.dsnData).length > 0;
@@ -115,10 +116,12 @@ const shouldContinue = (state: typeof State.State) => {
 export const createWorkflow = async (nodes: Awaited<ReturnType<typeof createNodes>>) => {
   const workflow = new StateGraph(State)
     .addNode('collectDataNode', nodes.collectDataNode)
+    .addNode('engagementNode', nodes.engagementNode)
     .addNode('analyzeTrendNode', nodes.analyzeTrendNode)
     .addNode('generateTweetNode', nodes.generateTweetNode)
     .addNode('uploadToDsnNode', nodes.uploadToDsnNode)
     .addEdge(START, 'collectDataNode')
+    .addEdge('collectDataNode', 'engagementNode')
     .addEdge('collectDataNode', 'analyzeTrendNode')
     .addEdge('analyzeTrendNode', 'generateTweetNode')
     .addConditionalEdges('generateTweetNode', shouldContinue);
