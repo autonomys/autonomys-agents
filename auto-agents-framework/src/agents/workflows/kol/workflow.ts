@@ -43,21 +43,24 @@ const createWorkflowConfig = async (): Promise<WorkflowConfig> => {
   const { LARGE_LLM_MODEL, SMALL_LLM_MODEL } = config.llmConfig;
   const twitterApi = await createTwitterApi(USERNAME, PASSWORD, COOKIES_PATH);
   const { tools } = createTools(twitterApi);
+  const toolNode = new ToolNode(tools);
 
   return {
     twitterApi,
-    toolNode: new ToolNode(tools),
+    toolNode,
     llms: {
       decision: new ChatOpenAI({
         modelName: SMALL_LLM_MODEL,
         temperature: 0.2,
       }),
-
-      tone: new ChatOpenAI({
-        modelName: SMALL_LLM_MODEL,
-        temperature: 0.3,
+      analyze: new ChatOpenAI({
+        modelName: LARGE_LLM_MODEL,
+        temperature: 0.5,
       }),
-
+      generation: new ChatOpenAI({
+        modelName: LARGE_LLM_MODEL,
+        temperature: 0.8,
+      }),
       response: new ChatOpenAI({
         modelName: LARGE_LLM_MODEL,
         temperature: 0.8,

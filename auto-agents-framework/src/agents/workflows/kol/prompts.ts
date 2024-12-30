@@ -55,7 +55,7 @@ export const trendPrompt = ChatPromptTemplate.fromMessages([
     'human',
     `Tweets: {tweets}
     Analyze these tweets for the top 2 trending narratives. 
-    Give a detailed summary of these as source of inspiration for a future tweet.
+    Give a 2-3 paragraph, detailed summary of these as source of inspiration for a future tweet.
     `,
   ],
 ]);
@@ -93,7 +93,15 @@ export const tweetPrompt = ChatPromptTemplate.fromMessages([
   [
     'human',
     `Trend analysis: {trendAnalysis}
-    Craft a tweet in response to this trend.
+    Craft an entertaining and engaging tweet in response to this trend. 
+    The tweet should be well thought out and thought provoking.
+    Use your personality and style to make the tweet more engaging.
+
+    IMPORTANT:
+    Recent tweets: {recentTweets}
+    - Avoid sounding repetitive and touching on the same topics.
+    - DO NOT use similar opening phrases as your recent tweets.
+    - Stay in character but mix up your language and style.
     `,
   ],
 ]);

@@ -10,7 +10,8 @@ export type WorkflowConfig = Readonly<{
   toolNode: ToolNode;
   llms: Readonly<{
     decision: ChatOpenAI;
-    tone: ChatOpenAI;
+    analyze: ChatOpenAI;
+    generation: Runnable<BaseLanguageModelInput, AIMessageChunk, ChatOpenAI>;
     response: Runnable<BaseLanguageModelInput, AIMessageChunk, ChatOpenAI>;
   }>;
 }>;

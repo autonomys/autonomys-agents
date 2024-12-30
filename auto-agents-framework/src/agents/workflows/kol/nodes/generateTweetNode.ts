@@ -20,17 +20,15 @@ export const createGenerateTweetNode =
     }
 
     const generatedTweet = await tweetPrompt
-      .pipe(config.llms.response)
+      .pipe(config.llms.generation)
       .pipe(trendTweetParser)
       .invoke({
         trendAnalysis: state.trendAnalysis,
+        recentTweets: state.myRecentTweets,
       });
 
-    if (globalConfig.twitterConfig.POST_TWEETS) {
-      const tweet = await invokePostTweetTool(config.toolNode, generatedTweet.tweet);
-    } else {
-      logger.info('Tweet not posted', { tweet: generatedTweet.tweet });
-    }
+    const _tweet = await invokePostTweetTool(config.toolNode, generatedTweet.tweet);
+
     return {
       messages: [new AIMessage({ content: JSON.stringify(generatedTweet) })],
       dsnData: generatedTweet,

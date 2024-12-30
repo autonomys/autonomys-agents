@@ -4,6 +4,7 @@ import { createLogger } from '../../utils/logger.js';
 import { TwitterApi } from '../../services/twitter/types.js';
 import { ToolNode } from '@langchain/langgraph/prebuilt';
 import { AIMessage } from '@langchain/core/messages';
+import { config } from '../../config/index.js';
 
 const logger = createLogger('post-tweet-tool');
 
@@ -14,11 +15,18 @@ export const createPostTweetTool = (twitterApi: TwitterApi) =>
     schema: z.object({ tweet: z.string(), inReplyTo: z.string().optional() }),
     func: async ({ tweet, inReplyTo }: { tweet: string; inReplyTo?: string }) => {
       try {
-        const postedTweet = await twitterApi.sendTweet(tweet, inReplyTo);
-        logger.info('Tweet posted successfully', { postedTweet });
-        return {
-          postedTweet,
-        };
+        if (config.twitterConfig.POST_TWEETS) {
+          const postedTweet = await twitterApi.sendTweet(tweet, inReplyTo);
+          logger.info('Tweet posted successfully', { postedTweet });
+          return {
+            postedTweet,
+          };
+        } else {
+          logger.info('Tweet not posted', { tweet });
+          return {
+            postedTweet: null,
+          };
+        }
       } catch (error) {
         logger.error('Error posting tweet:', error);
         return {

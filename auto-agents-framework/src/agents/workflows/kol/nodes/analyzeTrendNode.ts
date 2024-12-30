@@ -14,10 +14,10 @@ export const createAnalyzeTrendNode =
       username,
       text,
     }));
-    logger.info('Tweets:', { tweets });
+    logger.info('Tweets:', { tweets: tweets.length });
 
     const trendAnalysis = await trendPrompt
-      .pipe(config.llms.decision)
+      .pipe(config.llms.analyze)
       .pipe(trendParser)
       .invoke({
         tweets: JSON.stringify(tweets),
