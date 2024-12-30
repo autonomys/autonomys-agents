@@ -19,7 +19,7 @@ type TrendAnalysis = z.infer<typeof trendSchema>;
 
 export const State = Annotation.Root({
   messages: Annotation<readonly BaseMessage[]>({
-    reducer: (curr, update) => [...update, ...curr],
+    reducer: (curr, update) => [...curr, ...update],
     default: () => [],
   }),
   timelineTweets: Annotation<ReadonlySet<Tweet>>({

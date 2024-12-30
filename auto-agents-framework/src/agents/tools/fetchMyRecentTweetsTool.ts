@@ -10,7 +10,7 @@ const logger = createLogger('fetch-recent-tweets-tool');
 export const createFetchMyRecentTweetsTool = (twitterApi: TwitterApi) =>
   new DynamicStructuredTool({
     name: 'fetch_my_recent_tweets',
-    description: 'Fetch the recent tweets of the user',
+    description: 'Fetch the agents recent tweets',
     schema: z.object({}),
     func: async () => {
       try {
