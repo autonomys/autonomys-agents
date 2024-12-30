@@ -7,7 +7,7 @@
   resolved "https://registry.yarnpkg.com/@adraffy/ens-normalize/-/ens-normalize-1.10.1.tgz#63430d04bd8c5e74f8d7d049338f1cd9d4f02069"
   integrity sha512-96Z2IP3mYmF1Xg2cDm8f1gWGf/HUVedQ3FMifV4kG/PQ4yEP51xDtRAEfhVNt5f/uzpNkZHwWQuUcu6D6K+Ekw==
 
-"@autonomys/auto-dag-data@^1.0.12", "@autonomys/auto-dag-data@^1.2.1":
+"@autonomys/auto-dag-data@1.2.1", "@autonomys/auto-dag-data@^1.2.1":
   version "1.2.1"
   resolved "https://registry.yarnpkg.com/@autonomys/auto-dag-data/-/auto-dag-data-1.2.1.tgz#45042895f4e4083486e94de80f2025ee95ec800e"
   integrity sha512-I9jzvsOX1yB2I+YcdOSllSedfQbbeyL1TldnTCqx1Itp54KdfYcc4MrQwAGut0otcvKcIUEtzYpSK5z6ATeFOQ==
@@ -23,7 +23,7 @@
     protons "^7.6.0"
     protons-runtime "^5.5.0"
 
-"@autonomys/auto-drive@^1.0.12":
+"@autonomys/auto-drive@1.2.1":
   version "1.2.1"
   resolved "https://registry.yarnpkg.com/@autonomys/auto-drive/-/auto-drive-1.2.1.tgz#679db76f28239d961e63db820bd86adff9046528"
   integrity sha512-XR353ceE4lZ0LOdhc1TcVd0l5aVB6qbCx8CRmeoiLgo1EjgV9t6WHTWtgWNdVPheVVmfGkDbKzXm7Q+jF0xsUg==
@@ -213,10 +213,10 @@
   dependencies:
     lodash "^4.17.21"
 
-"@langchain/community@0.3.16":
-  version "0.3.16"
-  resolved "https://registry.yarnpkg.com/@langchain/community/-/community-0.3.16.tgz#8a5fb28916865d4366bf5c91ccf7a67645a640c8"
-  integrity sha512-oMYzL2O5Laxj6+onKf8HRewlxHoETXvz3n64Y5XqWKsjPtk6sg3g6NJJDNyp7D0M57oghHEhyWeQ0eVZas3Epw==
+"@langchain/community@0.3.20":
+  version "0.3.20"
+  resolved "https://registry.yarnpkg.com/@langchain/community/-/community-0.3.20.tgz#1c2dc6ab2837fe3d52c83c0d1602ed5ba54bfa8d"
+  integrity sha512-5XmguFWVrfYJ8s9kHPAmC1bTGfdVOKqzWVCoTolSXMVMDaVn+LVvCJxEedO01kU1y2AS4pUl5MDI9wssKS1Ehg==
   dependencies:
     "@langchain/openai" ">=0.2.0 <0.4.0"
     binary-extensions "^2.2.0"
@@ -224,7 +224,7 @@
     flat "^5.0.2"
     js-yaml "^4.1.0"
     langchain ">=0.2.3 <0.3.0 || >=0.3.4 <0.4.0"
-    langsmith "^0.2.0"
+    langsmith "^0.2.8"
     uuid "^10.0.0"
     zod "^3.22.3"
     zod-to-json-schema "^3.22.5"
@@ -246,7 +246,7 @@
     zod "^3.22.4"
     zod-to-json-schema "^3.22.3"
 
-"@langchain/langgraph-checkpoint@~0.0.12":
+"@langchain/langgraph-checkpoint@~0.0.13":
   version "0.0.13"
   resolved "https://registry.yarnpkg.com/@langchain/langgraph-checkpoint/-/langgraph-checkpoint-0.0.13.tgz#b349f1518184e1b154227d1fead2bec1e27707fd"
   integrity sha512-amdmBcNT8a9xP2VwcEWxqArng4gtRDcnVyVI4DsQIo1Aaz8e8+hH17zSwrUF3pt1pIYztngIfYnBOim31mtKMg==
@@ -263,27 +263,17 @@
     p-retry "4"
     uuid "^9.0.0"
 
-"@langchain/langgraph@0.2.23":
-  version "0.2.23"
-  resolved "https://registry.yarnpkg.com/@langchain/langgraph/-/langgraph-0.2.23.tgz#b892ae642c2ac49a44599ce18ab1897b14554f9f"
-  integrity sha512-aUD3G2cUSmrOb6xtJkd0AUctmHJXuyNPIzMR86JMEN591AtkHTVe2OhTxo15S8PPAQxJ7HrCJyMFd0EQECRASw==
+"@langchain/langgraph@0.2.36":
+  version "0.2.36"
+  resolved "https://registry.yarnpkg.com/@langchain/langgraph/-/langgraph-0.2.36.tgz#4a81bded1dd3febd95cacfa1f7a0c6c8effa79b8"
+  integrity sha512-zxk7ZCVxP0/Ut9785EiXCS7BE7sXd8cu943mcZUF2aNFUaQRTBbbiKpNdR3nb1+xO/B+HVktrJT2VFdkAywnng==
   dependencies:
-    "@langchain/langgraph-checkpoint" "~0.0.12"
+    "@langchain/langgraph-checkpoint" "~0.0.13"
     "@langchain/langgraph-sdk" "~0.0.21"
     uuid "^10.0.0"
     zod "^3.23.8"
 
-"@langchain/openai@0.3.14":
-  version "0.3.14"
-  resolved "https://registry.yarnpkg.com/@langchain/openai/-/openai-0.3.14.tgz#c2f50fe963769851287f0171385232a344a5484a"
-  integrity sha512-lNWjUo1tbvsss45IF7UQtMu1NJ6oUKvhgPYWXnX9f/d6OmuLu7D99HQ3Y88vLcUo9XjjOy417olYHignMduMjA==
-  dependencies:
-    js-tiktoken "^1.0.12"
-    openai "^4.71.0"
-    zod "^3.22.4"
-    zod-to-json-schema "^3.22.3"
-
-"@langchain/openai@>=0.1.0 <0.4.0", "@langchain/openai@>=0.2.0 <0.4.0":
+"@langchain/openai@0.3.16", "@langchain/openai@>=0.1.0 <0.4.0", "@langchain/openai@>=0.2.0 <0.4.0":
   version "0.3.16"
   resolved "https://registry.yarnpkg.com/@langchain/openai/-/openai-0.3.16.tgz#bc1ebf67e88d5e5f8320d1df4f01ec3151279101"
   integrity sha512-Om9HRlTeI0Ou6D4pfxbWHop4WGfkCdV/7v1W/+Jr7NSf0BNoA9jk5GqGms8ZtOYSGgPvizDu3i0TrM3B4cN4NA==
@@ -2231,7 +2221,7 @@ one-time@^1.0.0:
   dependencies:
     fn.name "1.x.x"
 
-openai@^4.71.0, openai@^4.77.0:
+openai@^4.77.0:
   version "4.77.0"
   resolved "https://registry.yarnpkg.com/openai/-/openai-4.77.0.tgz#228f2d43ffa79ae9d8b5d4155e965da82e5ac330"
   integrity sha512-WWacavtns/7pCUkOWvQIjyOfcdr9X+9n9Vvb0zFeKVDAqwCMDHB+iSr24SVaBAhplvSG6JrRXFpcNM9gWhOGIw==

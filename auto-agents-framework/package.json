@@ -13,12 +13,12 @@
         "example:twitter": "tsx examples/twitter.ts"
     },
     "dependencies": {
-        "@autonomys/auto-dag-data": "^1.0.12",
-        "@autonomys/auto-drive": "^1.0.12",
-        "@langchain/community": "0.3.16",
+        "@autonomys/auto-dag-data": "1.2.1",
+        "@autonomys/auto-drive": "1.2.1",
+        "@langchain/community": "0.3.20",
         "@langchain/core": "0.3.19",
-        "@langchain/langgraph": "0.2.23",
-        "@langchain/openai": "0.3.14",
+        "@langchain/langgraph": "0.2.36",
+        "@langchain/openai": "0.3.16",
         "@types/pako": "^2.0.3",
         "agent-twitter-client": "0.0.17",
         "chromadb": "^1.8.1",
