@@ -24,15 +24,15 @@ export const State = Annotation.Root({
   }),
   timelineTweets: Annotation<ReadonlySet<Tweet>>({
     default: () => new Set(),
-    reducer: (curr, update) => new Set([...update, ...curr]),
+    reducer: (curr, update) => new Set([...update]),
   }),
   mentionsTweets: Annotation<ReadonlySet<Tweet>>({
     default: () => new Set(),
-    reducer: (curr, update) => new Set([...update, ...curr]),
+    reducer: (curr, update) => new Set([...update]),
   }),
   myRecentTweets: Annotation<ReadonlySet<Tweet>>({
     default: () => new Set(),
-    reducer: (curr, update) => new Set([...update, ...curr]),
+    reducer: (curr, update) => new Set([...update]),
   }),
   trendAnalysis: Annotation<TrendAnalysis>,
   dsnData: Annotation<Record<string, any>>,
@@ -140,7 +140,8 @@ const createWorkflowRunner = async (): Promise<WorkflowRunner> => {
 
   return {
     runWorkflow: async () => {
-      const threadId = `workflow_${Date.now()}`;
+      // Use a fixed thread ID for shared state across runs
+      const threadId = 'shared_workflow_state';
       logger.info('Starting tweet response workflow', { threadId });
 
       const config = {

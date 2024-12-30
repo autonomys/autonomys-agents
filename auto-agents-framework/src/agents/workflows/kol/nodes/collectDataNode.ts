@@ -10,13 +10,12 @@ const logger = createLogger('collect-data-node');
 
 export const createCollectDataNode =
   (config: WorkflowConfig) => async (state: typeof State.State) => {
-    logger.info('Collect Data Node - Collecting recent data');
+    logger.info('Collect Data Node - Collecting fresh data');
 
-    // TODO: get state to exist across workflow runs, so we can use it here
     const processedIds = Array.from(state.timelineTweets.values()).map(tweet => tweet.id!);
-    logger.info('Processed IDs:', { ids: processedIds });
-    const timelineToolResponse = await invokeFetchTimelineTool(config.toolNode, processedIds);
+    logger.info('Processed IDs:', { processedIds: processedIds.length });
 
+    const timelineToolResponse = await invokeFetchTimelineTool(config.toolNode, processedIds);
     const timelineContent =
       timelineToolResponse.messages[timelineToolResponse.messages.length - 1].content;
     const timelineTweets = convertMessageContentToTweets(timelineContent);
@@ -34,7 +33,7 @@ export const createCollectDataNode =
     logger.info('Tool response received:', {
       timelineMessageCount: timelineTweets.length,
       mentionsMessageCount: mentionsTweets.length,
-      myRecentTweetsMessageCount: myRecentTweets.length,
+      myRecentTweetsCount: myRecentTweets.length,
     });
 
     return {
