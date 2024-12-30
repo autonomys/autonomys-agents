@@ -190,7 +190,9 @@ export const createTwitterApi = async (
     },
 
     getMyRecentTweets: async (limit: number = 100) =>
-      await iterateResponse(scraper.getTweetsByUserId(username, limit)),
+      await iterateResponse(
+        scraper.getTweetsByUserId(await scraper.getUserIdByScreenName(username), limit),
+      ),
 
     getFollowing: async (userId: string, limit: number = 100) =>
       await iterateResponse(scraper.getFollowing(userId, limit)),

@@ -1,4 +1,5 @@
-import { TwitterApi, createTwitterApi } from '../src/services/twitter/client.js';
+import { TwitterApi } from '../src/services/twitter/types.js';
+import { createTwitterApi } from '../src/services/twitter/client.js';
 import { config } from '../src/config/index.js';
 import { createLogger } from '../src/utils/logger.js';
 
@@ -20,8 +21,7 @@ const iterateResponse = async <T>(response: AsyncGenerator<T>): Promise<T[]> => 
   return tweets;
 };
 
-const following = await twitterApi.getFollowingRecentTweets(100, 10);
-
-logger.info('Following', { following: following.length });
+const myRecentTweets = await twitterApi.getMyRecentTweets(10);
+logger.info('My Recent Tweets', { myRecentTweets: myRecentTweets });
 //const followingRecents = await twitterApi.getFollowingRecentTweets(50, 10);
 //logger.info('Following Recents', { followingRecents: followingRecents.length });
