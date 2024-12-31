@@ -67,8 +67,6 @@ const getUserReplyIds = async (
   return replyIdSet;
 };
 
-
-
 const getMyUnrepliedToMentions = async (
   scraper: Scraper,
   username: string,
@@ -76,27 +74,27 @@ const getMyUnrepliedToMentions = async (
   sinceId?: string,
 ): Promise<Tweet[]> => {
   const conversationCache = new Map<string, Tweet[]>();
-  
+
   //TODO: This is not the way to get the thread, it is just a quick fix
   const getThread = async (scraper: Scraper, tweetId: string): Promise<Tweet[]> => {
     const initialTweet = await scraper.getTweet(tweetId);
-    
+
     if (!initialTweet) {
       logger.warn(`Tweet ${tweetId} not found or deleted`);
       return [];
     }
-  
+
     const conversationId = initialTweet.conversationId || initialTweet.id;
-  
+
     // Check cache first
     const cachedConversation = conversationCache.get(conversationId!);
     if (cachedConversation) {
       return cachedConversation;
     }
-  
+
     const conversationTweets = new Map<string, Tweet>();
     let rootTweet = initialTweet;
-  
+
     // If the conversation root differs
     if (initialTweet.conversationId && initialTweet.conversationId !== initialTweet.id) {
       const conversationRoot = await scraper.getTweet(initialTweet.conversationId);
@@ -111,9 +109,9 @@ const getMyUnrepliedToMentions = async (
     } else {
       conversationTweets.set(rootTweet.id!, rootTweet);
     }
-  
+
     try {
-      logger.info('Fetching entire conversation via `conversation_id`:', conversationId);  
+      logger.info('Fetching entire conversation via `conversation_id`:', conversationId);
       //TODO: This does not return direct replies to the loggedin user, not sure why. Will need to investigate later
       const conversationIterator = scraper.searchTweets(
         `conversation_id:${conversationId}`,
@@ -127,11 +125,11 @@ const getMyUnrepliedToMentions = async (
       logger.warn(`Error fetching conversation: ${error}`);
       return [rootTweet, initialTweet];
     }
-  
-    const thread = Array.from(conversationTweets.values());  
-    conversationCache.set(conversationId!, Array.from(conversationTweets.values()));  
+
+    const thread = Array.from(conversationTweets.values());
+    conversationCache.set(conversationId!, Array.from(conversationTweets.values()));
     return thread;
-  }
+  };
 
   logger.info('Getting my mentions', { username, maxResults, sinceId });
 
@@ -164,13 +162,15 @@ const getMyUnrepliedToMentions = async (
     }
   }
 
-  const withThreads = await Promise.all(newMentions.map(async mention => {  
-    const thread = await getThread(scraper, mention.id!);
-    return {
-      ...mention,
-      thread,
-    };
-  }));
+  const withThreads = await Promise.all(
+    newMentions.map(async mention => {
+      const thread = await getThread(scraper, mention.id!);
+      return {
+        ...mention,
+        thread,
+      };
+    }),
+  );
 
   return withThreads;
 };
@@ -257,10 +257,12 @@ export const createTwitterApi = async (
       return await iterateResponse(scraper.getTweetsByUserId(userId, limit));
     },
 
-    getMyRecentTweets: async (limit: number = 100) =>
+    getMyRecentTweets: async (limit: number = 10) =>
       await iterateResponse(
         scraper.getTweetsByUserId(await scraper.getUserIdByScreenName(username), limit),
       ),
+
+    getMyRepliedToIds: async () => Array.from(await getUserReplyIds(scraper, username, 100)),
 
     getFollowing: async (userId: string, limit: number = 100) =>
       await iterateResponse(scraper.getFollowing(userId, limit)),

@@ -34,9 +34,23 @@ export const State = Annotation.Root({
     default: () => new Set(),
     reducer: (curr, update) => new Set([...update]),
   }),
-  engagementDecisions: Annotation<EngagementDecision[]>,
+  engagementDecisions: Annotation<EngagementDecision[]>({
+    default: () => [],
+    reducer: (curr, update) => update,
+  }),
   trendAnalysis: Annotation<TrendAnalysis>,
-  dsnData: Annotation<Record<string, any>[]>,
+  dsnData: Annotation<Record<string, any>[]>({
+    default: () => [],
+    reducer: (curr, update) => update,
+  }),
+  processedTweetIds: Annotation<Set<string>>({
+    default: () => new Set(),
+    reducer: (curr, update) => new Set([...curr, ...update]),
+  }),
+  repliedToTweetIds: Annotation<Set<string>>({
+    default: () => new Set(),
+    reducer: (curr, update) => new Set([...curr, ...update]),
+  }),
 });
 
 const createWorkflowConfig = async (): Promise<WorkflowConfig> => {

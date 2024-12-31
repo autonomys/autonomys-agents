@@ -12,6 +12,7 @@ export interface TwitterApi {
   getTweet: (tweetId: string) => Promise<Tweet | null>;
   getRecentTweets: (username: string, limit: number) => Promise<Tweet[]>;
   getMyRecentTweets: (limit: number) => Promise<Tweet[]>;
+  getMyRepliedToIds: () => Promise<string[]>;
   getFollowing: (userId: string, limit: number) => Promise<Profile[]>;
   getMyTimeline: (count: number, excludeIds: string[]) => Promise<Tweet[]>;
   getFollowingTimeline: (count: number, excludeIds: string[]) => Promise<Tweet[]>;

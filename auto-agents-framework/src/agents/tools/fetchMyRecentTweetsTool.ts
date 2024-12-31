@@ -15,14 +15,21 @@ export const createFetchMyRecentTweetsTool = (twitterApi: TwitterApi) =>
     func: async () => {
       try {
         const myRecentTweets = await twitterApi.getMyRecentTweets(10);
+        const repliedToTweetIds = await twitterApi.getMyRepliedToIds();
+        logger.info('Fetch My Recent Tweets Tool - Result', {
+          tweets: myRecentTweets.length,
+          repliedToTweetIds: repliedToTweetIds.length,
+        });
 
         return {
           tweets: myRecentTweets,
+          repliedToTweetIds: repliedToTweetIds,
         };
       } catch (error) {
         logger.error('Error in fetchRecentTweetsTool:', error);
         return {
           tweets: [],
+          repliedToTweetIds: [],
         };
       }
     },

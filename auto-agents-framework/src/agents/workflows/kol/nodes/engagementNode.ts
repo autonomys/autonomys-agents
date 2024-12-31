@@ -25,8 +25,18 @@ export const createEngagementNode = (config: WorkflowConfig) => {
   return async (state: typeof State.State) => {
     logger.info('Engagement Node - Starting evaluation');
     try {
-      const { mentionsTweets, timelineTweets } = state;
-      const tweets = [...mentionsTweets, ...timelineTweets];
+      const { mentionsTweets, timelineTweets, processedTweetIds, repliedToTweetIds } = state;
+      const allTweets = [...mentionsTweets, ...timelineTweets];
+      const processedIds = [
+        ...Array.from(processedTweetIds.values()),
+        ...Array.from(repliedToTweetIds.values()),
+      ];
+      const tweets = allTweets.filter(tweet => !processedIds.includes(tweet.id!));
+      logger.info('Tweets to evaluate', {
+        allTweets: allTweets.length,
+        processedTweets: processedIds.length,
+        tweets: tweets.length,
+      });
       const engagementDecisions = await Promise.all(
         tweets.map(async tweet => {
           const decision = await getEngagementDecision(tweet, config);

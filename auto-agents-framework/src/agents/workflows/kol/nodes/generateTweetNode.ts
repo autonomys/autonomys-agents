@@ -98,5 +98,6 @@ export const createGenerateTweetNode =
     return {
       messages: [new AIMessage({ content: JSON.stringify(formattedDsnData) })],
       dsnData: formattedDsnData,
+      engagementDecisions: [],
     };
   };
