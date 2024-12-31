@@ -60,7 +60,8 @@ export const engagementPrompt = ChatPromptTemplate.fromMessages([
     'human',
     `Evaluate this tweet and provide your structured decision:
         Tweet: {tweet}
-        Thread Context: {thread}
+        Thread context (most recent tweets first): 
+        {thread}
 
         If there is no thread context, evaluate the tweet on its own.
         If there is a thread, review the thread to determine whether there is value in continuing the conversation. 

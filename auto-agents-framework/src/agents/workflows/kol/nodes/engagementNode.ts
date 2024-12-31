@@ -2,21 +2,23 @@ import { AIMessage } from '@langchain/core/messages';
 import { WorkflowConfig } from '../types.js';
 import { createLogger } from '../../../../utils/logger.js';
 import { State } from '../workflow.js';
-import { parseMessageContent } from '../../utils.js';
 import { engagementParser, engagementPrompt } from '../prompts.js';
 import { Tweet } from '../../../../services/twitter/types.js';
 
 const logger = createLogger('engagement-node');
 
 const getEngagementDecision = async (tweet: Tweet, config: WorkflowConfig) => {
-  const decision = await engagementPrompt
-    .pipe(config.llms.decision)
-    .pipe(engagementParser)
-    .invoke({
-      tweet: tweet.text,
-      thread: tweet.thread || [],
-    });
-  return decision;
+  const thread =
+    tweet.thread && tweet.thread.length > 0
+      ? tweet.thread.map(t => ({ text: t.text, username: t.username }))
+      : 'No thread';
+
+  const formattedPrompt = await engagementPrompt.format({
+    tweet: JSON.stringify({ text: tweet.text, username: tweet.username }),
+    thread: thread,
+  });
+
+  return await config.llms.decision.pipe(engagementParser).invoke(formattedPrompt);
 };
 
 export const createEngagementNode = (config: WorkflowConfig) => {
@@ -30,7 +32,7 @@ export const createEngagementNode = (config: WorkflowConfig) => {
           const decision = await getEngagementDecision(tweet, config);
           logger.info('Engagement Decision', {
             tweet: tweet.text,
-            thread: tweet.thread ? tweet.thread[0].text : 'No thread',
+            thread: tweet.thread && tweet.thread.length > 0 ? tweet.thread[0].text : 'No thread',
             decision,
           });
           return { tweet, decision };
@@ -40,7 +42,7 @@ export const createEngagementNode = (config: WorkflowConfig) => {
         messages: [
           new AIMessage({
             content: JSON.stringify({
-              tweets: [],
+              engagementDecisions,
             }),
           }),
         ],
