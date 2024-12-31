@@ -11,6 +11,7 @@ export const createNodes = async (config: WorkflowConfig) => {
   const generateTweetNode = createGenerateTweetNode(config);
   const uploadToDsnNode = createUploadToDsnNode(config);
   const engagementNode = createEngagementNode(config);
+
   return {
     collectDataNode,
     analyzeTrendNode,

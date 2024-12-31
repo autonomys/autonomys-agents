@@ -36,7 +36,7 @@ export const State = Annotation.Root({
   }),
   engagementDecisions: Annotation<EngagementDecision[]>,
   trendAnalysis: Annotation<TrendAnalysis>,
-  dsnData: Annotation<Record<string, any>>,
+  dsnData: Annotation<Record<string, any>[]>,
 });
 
 const createWorkflowConfig = async (): Promise<WorkflowConfig> => {
@@ -122,7 +122,7 @@ export const createWorkflow = async (nodes: Awaited<ReturnType<typeof createNode
     .addNode('uploadToDsnNode', nodes.uploadToDsnNode)
     .addEdge(START, 'collectDataNode')
     .addEdge('collectDataNode', 'engagementNode')
-    .addEdge('collectDataNode', 'analyzeTrendNode')
+    .addEdge('engagementNode', 'analyzeTrendNode')
     .addEdge('analyzeTrendNode', 'generateTweetNode')
     .addConditionalEdges('generateTweetNode', shouldContinue);
   return workflow;

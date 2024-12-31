@@ -35,7 +35,15 @@ export const createEngagementNode = (config: WorkflowConfig) => {
             thread: tweet.thread && tweet.thread.length > 0 ? tweet.thread[0].text : 'No thread',
             decision,
           });
-          return { tweet, decision };
+          return {
+            tweet: {
+              id: tweet.id!,
+              text: tweet.text!,
+              username: tweet.username!,
+              timeParsed: tweet.timeParsed!,
+            },
+            decision,
+          };
         }),
       );
       return {

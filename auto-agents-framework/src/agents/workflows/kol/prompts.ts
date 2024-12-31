@@ -1,20 +1,11 @@
 import { StructuredOutputParser } from 'langchain/output_parsers';
-import {
-  engagementSchema,
-  toneSchema,
-  responseSchema,
-  autoApprovalSchema,
-  trendSchema,
-  trendTweetSchema,
-} from './schemas.js';
+import { engagementSchema, responseSchema, trendSchema, trendTweetSchema } from './schemas.js';
 import { ChatPromptTemplate, PromptTemplate } from '@langchain/core/prompts';
 import { SystemMessage } from '@langchain/core/messages';
 import { character } from './characters/character.js';
 
 export const engagementParser = StructuredOutputParser.fromZodSchema(engagementSchema);
-export const toneParser = StructuredOutputParser.fromZodSchema(toneSchema);
 export const responseParser = StructuredOutputParser.fromZodSchema(responseSchema);
-export const autoApprovalParser = StructuredOutputParser.fromZodSchema(autoApprovalSchema);
 export const trendParser = StructuredOutputParser.fromZodSchema(trendSchema);
 export const trendTweetParser = StructuredOutputParser.fromZodSchema(trendTweetSchema);
 
@@ -138,6 +129,50 @@ export const tweetPrompt = ChatPromptTemplate.fromMessages([
     The tweet should be well thought out and thought provoking.
     Use your personality and style to make the tweet more engaging.
 
+    IMPORTANT:
+    Recent tweets: {recentTweets}
+    - Avoid sounding repetitive and touching on the same topics.
+    - DO NOT use similar opening phrases as your recent tweets.
+    - Stay in character but mix up your language and style.
+    `,
+  ],
+]);
+
+//
+// ============ RESPONSE PROMPTS ============
+//
+export const responseSystemPrompt = await PromptTemplate.fromTemplate(
+  `You are an expert in:
+  ${character.expertise}
+  
+  Your task is to respond to tweets and engage with the author. 
+
+  Personality & Style:
+  ${character.description}
+  ${character.personality}
+  ${character.replyStyle}
+  ${character.contentFocus}
+
+  Do not use these words:
+  ${character.wordsToAvoid}
+
+  ${followFormatInstructions}
+  {format_instructions}`,
+).format({
+  format_instructions: responseParser.getFormatInstructions(),
+});
+
+export const responsePrompt = ChatPromptTemplate.fromMessages([
+  new SystemMessage(responseSystemPrompt),
+  [
+    'human',
+    `A decision has been made to engage with this tweet. Respond and engage with the author. 
+    Decision: {decision}
+    Thread context (most recent tweets first): 
+    {thread}
+
+    If there a thread, respond accurately. Review the thread with a focus on the most recent tweets and respond accordingly
+  
     IMPORTANT:
     Recent tweets: {recentTweets}
     - Avoid sounding repetitive and touching on the same topics.

@@ -9,19 +9,16 @@ const logger = createLogger('upload-to-dsn-node');
 export const createUploadToDsnNode =
   (config: WorkflowConfig) => async (state: typeof State.State) => {
     logger.info('Upload to Dsn Node - Starting upload');
+    const { dsnData } = state;
 
     if (!state.dsnData) {
       logger.error('No DSN data available');
       return;
     }
 
-    const dataToUpload = {
-      ...state.dsnData,
-    };
+    logger.info('Upload to Dsn Node - Data to upload', { dsnData });
 
-    logger.info('Upload to Dsn Node - Data to upload', { dataToUpload });
-
-    const uploadInfo = await invokeUploadToDsnTool(config.toolNode, dataToUpload);
+    const uploadInfo = await invokeUploadToDsnTool(config.toolNode, dsnData);
     logger.info('Upload to Dsn Node - Upload complete', { uploadInfo });
 
     return {

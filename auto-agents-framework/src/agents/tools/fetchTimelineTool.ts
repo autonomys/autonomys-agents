@@ -14,8 +14,8 @@ export const createFetchTimelineTool = (twitterApi: TwitterApi) =>
     schema: z.object({ processedIds: z.array(z.string()) }),
     func: async ({ processedIds }: { processedIds: string[] }) => {
       try {
-        const myTimelineTweets = await twitterApi.getMyTimeline(20, processedIds);
-        const followingRecents = await twitterApi.getFollowingRecentTweets(20, 10);
+        const myTimelineTweets = await twitterApi.getMyTimeline(10, processedIds);
+        const followingRecents = await twitterApi.getFollowingRecentTweets(10, 10);
         const tweets = new Set([...myTimelineTweets, ...followingRecents]);
         const sortedTweets = Array.from(tweets).sort(
           (a, b) => new Date(b.timeParsed!).getTime() - new Date(a.timeParsed!).getTime(),
