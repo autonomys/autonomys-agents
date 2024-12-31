@@ -22,7 +22,7 @@ const postResponse = async (
     thread,
     recentTweets,
   });
-  const tweet = await invokePostTweetTool(config.toolNode, response.content);
+  const tweet = await invokePostTweetTool(config.toolNode, response.content, decision.tweet.id);
   return { ...response, tweetId: tweet ? tweet.id : null };
 };
 
