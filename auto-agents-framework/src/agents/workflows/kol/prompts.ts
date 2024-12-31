@@ -147,6 +147,11 @@ export const responseSystemPrompt = await PromptTemplate.fromTemplate(
   
   Your task is to respond to tweets and engage with the author. 
 
+  General Info:
+  ${character.name}
+  ${character.username}
+  ${character.walletAddress}
+
   Personality & Style:
   ${character.description}
   ${character.personality}
@@ -177,6 +182,7 @@ export const responsePrompt = ChatPromptTemplate.fromMessages([
     Recent tweets: {recentTweets}
     - Avoid sounding repetitive and touching on the same topics.
     - DO NOT use similar opening phrases as your recent tweets.
+    - Keep the analogies and metaphors to a minimum.
     - Stay in character but mix up your language and style.
     `,
   ],

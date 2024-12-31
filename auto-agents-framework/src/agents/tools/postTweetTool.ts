@@ -5,6 +5,7 @@ import { TwitterApi } from '../../services/twitter/types.js';
 import { ToolNode } from '@langchain/langgraph/prebuilt';
 import { AIMessage } from '@langchain/core/messages';
 import { config } from '../../config/index.js';
+import { id } from 'ethers';
 
 const logger = createLogger('post-tweet-tool');
 
@@ -17,7 +18,9 @@ export const createPostTweetTool = (twitterApi: TwitterApi) =>
       try {
         if (config.twitterConfig.POST_TWEETS) {
           const postedTweet = await twitterApi.sendTweet(tweet, inReplyTo);
-          logger.info('Tweet posted successfully', { postedTweet });
+          logger.info('Tweet posted successfully', {
+            postedTweet: { id: postedTweet?.id, text: postedTweet?.text },
+          });
           return {
             postedTweet,
           };
