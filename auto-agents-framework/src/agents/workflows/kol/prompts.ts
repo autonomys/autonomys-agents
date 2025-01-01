@@ -86,8 +86,8 @@ export const trendPrompt = ChatPromptTemplate.fromMessages([
   [
     'human',
     `Tweets: {tweets}
-    Analyze these tweets for the top 2 trending narratives. 
-    Give a 2-3 paragraph, detailed summary of these as source of inspiration for a future tweet.
+    Analyze these tweets for the top trending narrative.
+    Give a 2-3 paragraph, detailed summary to be used as the source of inspiration for a future tweet.
     `,
   ],
 ]);
