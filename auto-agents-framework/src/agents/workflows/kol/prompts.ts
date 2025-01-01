@@ -3,6 +3,7 @@ import { engagementSchema, responseSchema, trendSchema, trendTweetSchema } from 
 import { ChatPromptTemplate, PromptTemplate } from '@langchain/core/prompts';
 import { SystemMessage } from '@langchain/core/messages';
 import { character } from './characters/character.js';
+import { wallet } from '../../tools/utils/agentWallet.js';
 
 export const engagementParser = StructuredOutputParser.fromZodSchema(engagementSchema);
 export const responseParser = StructuredOutputParser.fromZodSchema(responseSchema);
@@ -150,7 +151,7 @@ export const responseSystemPrompt = await PromptTemplate.fromTemplate(
   General Info:
   ${character.name}
   ${character.username}
-  ${character.walletAddress}
+  ${wallet.address}
 
   Personality & Style:
   ${character.description}
