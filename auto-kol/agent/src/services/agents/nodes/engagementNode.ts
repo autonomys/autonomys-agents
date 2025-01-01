@@ -8,7 +8,10 @@ import { config as globalConfig } from '../../../config/index.js';
 import { ResponseStatus } from '../../../types/queue.js';
 
 const handleSkippedTweet = async (tweet: any, decision: any, config: any) => {
-  logger.info('Skipping engagement for tweet', { tweetId: tweet.id, reason: decision.reason });
+  logger.info('Skipping engagement for tweet', {
+    tweetId: tweet.id,
+    reason: decision.reason,
+  });
   await config.toolNode.invoke({
     messages: [
       new AIMessage({

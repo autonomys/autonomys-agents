@@ -3,7 +3,7 @@ import { createSearchNode } from './nodes/searchNode.js';
 import { createEngagementNode } from './nodes/engagementNode.js';
 import { createToneAnalysisNode } from './nodes/toneAnalysisNode.js';
 import { createResponseGenerationNode } from './nodes/responseGenerationNode.js';
-import { createRecheckSkippedNode } from './nodes/recheckSkippedNode.js';
+import { createTopLevelTweetNode } from './nodes/topLevelTweetNode.js';
 import { createTimelineNode } from './nodes/timelineNode.js';
 import { createMentionNode } from './nodes/mentionNode.js';
 import { createAutoApprovalNode } from './nodes/autoApprovalNode.js';
@@ -28,7 +28,7 @@ export const createNodes = async (config: WorkflowConfig) => {
   const responseGenerationNode = createResponseGenerationNode(config);
 
   ///////////RECHECK SKIPPED///////////
-  const recheckSkippedNode = createRecheckSkippedNode(config);
+  const topLevelTweetNode = createTopLevelTweetNode(config);
 
   ///////////AUTO APPROVAL///////////
   const autoApprovalNode = createAutoApprovalNode(config);
@@ -40,7 +40,7 @@ export const createNodes = async (config: WorkflowConfig) => {
     engagementNode,
     toneAnalysisNode,
     responseGenerationNode,
-    recheckSkippedNode,
+    topLevelTweetNode,
     autoApprovalNode,
   };
 };
