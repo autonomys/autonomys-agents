@@ -111,7 +111,6 @@ const getMyUnrepliedToMentions = async (
     }
 
     try {
-      logger.info('Fetching entire conversation via `conversation_id`:', conversationId);
       //TODO: This does not return direct replies to the loggedin user, not sure why. Will need to investigate later
       const conversationIterator = scraper.searchTweets(
         `conversation_id:${conversationId}`,
