@@ -20,7 +20,7 @@ const main = async () => {
 
     logger.info('Application started successfully', {
       checkInterval: config.twitterConfig.RESPONSE_INTERVAL_MS,
-      port: config.PORT,
+      username: config.twitterConfig.USERNAME,
     });
   } catch (error) {
     logger.error('Failed to start application:', error);
