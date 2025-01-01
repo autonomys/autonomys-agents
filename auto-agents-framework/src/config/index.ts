@@ -13,7 +13,15 @@ const twitterConfig = {
   USERNAME: process.env.TWITTER_USERNAME || '',
   PASSWORD: process.env.TWITTER_PASSWORD || '',
   COOKIES_PATH: process.env.TWITTER_COOKIES_PATH || 'cookies.json',
+  NUM_TIMELINE_TWEETS: Number(process.env.NUM_TIMELINE_TWEETS) || 10,
+  NUM_FOLLOWING_RECENT_TWEETS: Number(process.env.NUM_FOLLOWING_RECENT_TWEETS) || 10,
+  NUM_RANDOM_FOLLOWERS: Number(process.env.NUM_RANDOM_FOLLOWERS) || 5,
+  MAX_MENTIONS: Number(process.env.MAX_MENTIONS) || 5,
+  MAX_THREAD_LENGTH: Number(process.env.MAX_THREAD_LENGTH) || 20,
+  MAX_MY_RECENT_TWEETS: Number(process.env.MAX_MY_RECENT_TWEETS) || 10,
   POST_TWEETS: process.env.POST_TWEETS === 'true',
+  RESPONSE_INTERVAL_MS: Number(process.env.RESPONSE_INTERVAL_MINUTES) * 60 * 1000 || 26 * 60 * 1000,
+  POST_INTERVAL_MS: Number(process.env.POST_INTERVAL_MINUTES) * 60 * 1000 || 30 * 60 * 1000,
 };
 
 const llmConfig = {
@@ -26,6 +34,11 @@ const autoDriveConfig = {
   AUTO_DRIVE_API_KEY: process.env.AUTO_DRIVE_API_KEY,
   AUTO_DRIVE_ENCRYPTION_PASSWORD: process.env.AUTO_DRIVE_ENCRYPTION_PASSWORD,
   AUTO_DRIVE_UPLOAD: process.env.AUTO_DRIVE_UPLOAD === 'true',
+  // SC Configuration
+  RPC_URL: process.env.RPC_URL,
+  CONTRACT_ADDRESS: process.env.CONTRACT_ADDRESS,
+  PRIVATE_KEY: process.env.PRIVATE_KEY,
+  WALLET_ADDRESS: process.env.WALLET_ADDRESS,
 };
 
 export const config = {
@@ -33,41 +46,12 @@ export const config = {
   llmConfig,
   autoDriveConfig,
 
-  // Agent Configuration
-  CHECK_INTERVAL: (Number(process.env.CHECK_INTERVAL_MINUTES) || 30) * 60 * 1000,
-  MEMORY_DIR: path.join(__dirname, '../../data/memory'),
-
   // Server Configuration
   PORT: process.env.PORT || 3001,
 
   // Environment
   NODE_ENV: process.env.NODE_ENV || 'development',
 
-  // Chroma Configuration
-  CHROMA_DIR: path.join(__dirname, '../../data/chroma'),
-  CHROMA_URL: process.env.CHROMA_URL || 'http://localhost:8000',
-
-  // CORS Configuration
-  CORS_ORIGINS: process.env.CORS_ORIGINS,
-
-  // SC Configuration
-  RPC_URL: process.env.RPC_URL,
-  CONTRACT_ADDRESS: process.env.CONTRACT_ADDRESS,
-  PRIVATE_KEY: process.env.PRIVATE_KEY,
-  WALLET_ADDRESS: process.env.WALLET_ADDRESS,
-
-  // Tweet Search/Fetch Configuration
-  ACCOUNTS_PER_BATCH: Number(process.env.ACCOUNTS_PER_BATCH) || 10,
-  MAX_SEARCH_TWEETS: Number(process.env.MAX_SEARCH_TWEETS) || 20,
-  MAX_MENTIONS: Number(process.env.MAX_MENTIONS) || 5,
-  MAX_THREAD_LENGTH: Number(process.env.MAX_THREAD_LENGTH) || 20,
-
-  // BATCH CONFIG
-  ENGAGEMENT_BATCH_SIZE: process.env.ENGAGEMENT_BATCH_SIZE || 15,
-
   // RESPONSE CONFIG
   RETRY_LIMIT: process.env.RETRY_LIMIT || 2,
-
-  // TOP LEVEL TWEET CONFIG
-  TOP_LEVEL_TWEET_INTERVAL_MINUTES: Number(process.env.TOP_LEVEL_TWEET_INTERVAL_MINUTES) || 120,
 };

@@ -16,10 +16,10 @@ const startWorkflowPolling = async () => {
 const main = async () => {
   try {
     await startWorkflowPolling();
-    setInterval(startWorkflowPolling, config.CHECK_INTERVAL);
+    setInterval(startWorkflowPolling, config.twitterConfig.RESPONSE_INTERVAL_MS);
 
     logger.info('Application started successfully', {
-      checkInterval: config.CHECK_INTERVAL,
+      checkInterval: config.twitterConfig.RESPONSE_INTERVAL_MS,
       port: config.PORT,
     });
   } catch (error) {

@@ -4,7 +4,7 @@ import { config } from '../../../config/index.js';
 import { wallet } from './agentWallet.js';
 import { cidFromBlakeHash, cidToString } from '@autonomys/auto-dag-data';
 
-const CONTRACT_ADDRESS = config.CONTRACT_ADDRESS as `0x${string}`;
+const CONTRACT_ADDRESS = config.autoDriveConfig.CONTRACT_ADDRESS as `0x${string}`;
 
 const contract = new ethers.Contract(CONTRACT_ADDRESS, MEMORY_ABI, wallet);
 

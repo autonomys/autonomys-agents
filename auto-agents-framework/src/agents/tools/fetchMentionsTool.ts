@@ -11,10 +11,10 @@ export const createFetchMentionsTool = (twitterApi: TwitterApi) =>
   new DynamicStructuredTool({
     name: 'fetch_mentions',
     description: 'Fetch recent mentions',
-    schema: z.object({}),
-    func: async () => {
+    schema: z.object({ maxMentions: z.number(), sinceId: z.string().optional() }),
+    func: async ({ maxMentions, sinceId }: { maxMentions: number; sinceId?: string }) => {
       try {
-        const recentMentions = await twitterApi.getMyUnrepliedToMentions(10);
+        const recentMentions = await twitterApi.getMyUnrepliedToMentions(maxMentions, sinceId);
 
         return {
           tweets: recentMentions,
@@ -28,7 +28,10 @@ export const createFetchMentionsTool = (twitterApi: TwitterApi) =>
     },
   });
 
-export const invokeFetchMentionsTool = async (toolNode: ToolNode) => {
+export const invokeFetchMentionsTool = async (
+  toolNode: ToolNode,
+  { maxMentions, sinceId }: { maxMentions: number; sinceId?: string },
+) => {
   const toolResponse = await toolNode.invoke({
     messages: [
       new AIMessage({
@@ -36,7 +39,7 @@ export const invokeFetchMentionsTool = async (toolNode: ToolNode) => {
         tool_calls: [
           {
             name: 'fetch_mentions',
-            args: {},
+            args: { maxMentions, sinceId },
             id: 'fetch_mentions_call',
             type: 'tool_call',
           },

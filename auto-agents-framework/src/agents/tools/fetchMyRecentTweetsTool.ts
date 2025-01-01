@@ -11,10 +11,10 @@ export const createFetchMyRecentTweetsTool = (twitterApi: TwitterApi) =>
   new DynamicStructuredTool({
     name: 'fetch_my_recent_tweets',
     description: 'Fetch the agents recent tweets',
-    schema: z.object({}),
-    func: async () => {
+    schema: z.object({ maxMyRecentTweets: z.number() }),
+    func: async ({ maxMyRecentTweets }: { maxMyRecentTweets: number }) => {
       try {
-        const myRecentTweets = await twitterApi.getMyRecentTweets(10);
+        const myRecentTweets = await twitterApi.getMyRecentTweets(maxMyRecentTweets);
         const repliedToTweetIds = await twitterApi.getMyRepliedToIds();
         logger.info('Fetch My Recent Tweets Tool - Result', {
           tweets: myRecentTweets.length,
@@ -35,7 +35,10 @@ export const createFetchMyRecentTweetsTool = (twitterApi: TwitterApi) =>
     },
   });
 
-export const invokeFetchMyRecentTweetsTool = async (toolNode: ToolNode) => {
+export const invokeFetchMyRecentTweetsTool = async (
+  toolNode: ToolNode,
+  { maxMyRecentTweets }: { maxMyRecentTweets: number },
+) => {
   const toolResponse = await toolNode.invoke({
     messages: [
       new AIMessage({
@@ -43,7 +46,7 @@ export const invokeFetchMyRecentTweetsTool = async (toolNode: ToolNode) => {
         tool_calls: [
           {
             name: 'fetch_my_recent_tweets',
-            args: {},
+            args: { maxMyRecentTweets },
             id: 'fetch_my_recent_tweets_call',
             type: 'tool_call',
           },

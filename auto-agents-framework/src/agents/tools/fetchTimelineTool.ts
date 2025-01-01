@@ -11,11 +11,29 @@ export const createFetchTimelineTool = (twitterApi: TwitterApi) =>
   new DynamicStructuredTool({
     name: 'fetch_timeline',
     description: 'Fetch the agents timeline to get recent tweets',
-    schema: z.object({ processedIds: z.array(z.string()) }),
-    func: async ({ processedIds }: { processedIds: string[] }) => {
+    schema: z.object({
+      processedIds: z.array(z.string()),
+      numTimelineTweets: z.number(),
+      numFollowingRecentTweets: z.number(),
+      numRandomFollowers: z.number(),
+    }),
+    func: async ({
+      processedIds,
+      numTimelineTweets,
+      numFollowingRecentTweets,
+      numRandomFollowers,
+    }: {
+      processedIds: string[];
+      numTimelineTweets: number;
+      numFollowingRecentTweets: number;
+      numRandomFollowers: number;
+    }) => {
       try {
-        const myTimelineTweets = await twitterApi.getMyTimeline(10, processedIds);
-        const followingRecents = await twitterApi.getFollowingRecentTweets(10, 10);
+        const myTimelineTweets = await twitterApi.getMyTimeline(numTimelineTweets, processedIds);
+        const followingRecents = await twitterApi.getFollowingRecentTweets(
+          numFollowingRecentTweets,
+          numRandomFollowers,
+        );
         const tweets = new Set([...myTimelineTweets, ...followingRecents]);
         const sortedTweets = Array.from(tweets).sort(
           (a, b) => new Date(b.timeParsed!).getTime() - new Date(a.timeParsed!).getTime(),
@@ -33,7 +51,20 @@ export const createFetchTimelineTool = (twitterApi: TwitterApi) =>
     },
   });
 
-export const invokeFetchTimelineTool = async (toolNode: ToolNode, processedIds: string[]) => {
+export const invokeFetchTimelineTool = async (
+  toolNode: ToolNode,
+  {
+    processedIds,
+    numTimelineTweets,
+    numFollowingRecentTweets,
+    numRandomFollowers,
+  }: {
+    processedIds: string[];
+    numTimelineTweets: number;
+    numFollowingRecentTweets: number;
+    numRandomFollowers: number;
+  },
+) => {
   const toolResponse = await toolNode.invoke({
     messages: [
       new AIMessage({
@@ -41,7 +72,7 @@ export const invokeFetchTimelineTool = async (toolNode: ToolNode, processedIds: 
         tool_calls: [
           {
             name: 'fetch_timeline',
-            args: { processedIds },
+            args: { processedIds, numTimelineTweets, numFollowingRecentTweets, numRandomFollowers },
             id: 'fetch_timeline_call',
             type: 'tool_call',
           },
