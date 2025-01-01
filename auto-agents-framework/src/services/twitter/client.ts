@@ -276,17 +276,6 @@ export const createTwitterApi = async (
       return tweets.filter(isValidTweet).map(tweet => convertTimelineTweetToTweet(tweet));
     },
 
-    searchTweets: async function* (
-      query: string,
-      limit: number,
-      mode: SearchMode = SearchMode.Latest,
-    ) {
-      const iterator = scraper.searchTweets(query, limit, mode);
-      for await (const tweet of iterator) {
-        yield tweet;
-        if (--limit <= 0) break;
-      }
-    },
     sendTweet: async (tweet: string, inReplyTo?: string) => {
       const _postedTweet = await postTweet(scraper, tweet, inReplyTo);
       return await scraper.getLatestTweet(username);

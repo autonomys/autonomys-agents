@@ -16,6 +16,5 @@ export interface TwitterApi {
   getFollowing: (userId: string, limit: number) => Promise<Profile[]>;
   getMyTimeline: (count: number, excludeIds: string[]) => Promise<Tweet[]>;
   getFollowingTimeline: (count: number, excludeIds: string[]) => Promise<Tweet[]>;
-  searchTweets: (query: string, limit: number) => AsyncGenerator<Tweet>;
   sendTweet: (tweet: string, inReplyTo?: string) => Promise<Tweet | null | void>;
 }
