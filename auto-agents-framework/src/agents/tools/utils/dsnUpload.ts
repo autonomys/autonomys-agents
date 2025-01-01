@@ -49,15 +49,6 @@ const withRetry = async <T>(
   return attempt(maxRetries, initialDelayMs);
 };
 
-const getPreviousCid = async (): Promise<string> => {
-  const memoryLastCid = await getLastMemoryCid();
-  logger.info('Using fallback CID source', {
-    memoryLastCid: memoryLastCid || 'not found',
-  });
-
-  return memoryLastCid || '';
-};
-
 // Helper function for file upload
 const uploadFileToDsn = async (file: any, options: any) =>
   withRetry(() => uploadFile(dsnApi, file, options), { operationName: 'Dsn file upload' });
@@ -68,7 +59,7 @@ const submitMemoryHash = async (hash: string, nonce: number) =>
 
 export async function uploadToDsn(data: object) {
   logger.info('Upload to Dsn - Starting upload');
-  const previousCid = await getPreviousCid();
+  const previousCid = await getLastMemoryCid();
   logger.info('Previous CID', { previousCid });
 
   try {

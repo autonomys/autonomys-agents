@@ -7,20 +7,21 @@ import { uploadToDsn } from './utils/dsnUpload.js';
 
 const logger = createLogger('upload-to-dsn-tool');
 
-// Simplify to just accept any array of objects
-const dsnDataSchema = z.array(z.record(z.any()));
-
 export const createUploadToDsnTool = () =>
   new DynamicStructuredTool({
     name: 'upload_to_dsn',
     description: 'Upload data to Dsn',
     schema: z.object({
-      data: dsnDataSchema,
+      data: z.array(z.record(z.any())),
     }),
     func: async ({ data }) => {
       try {
         logger.info('Uploading data to DSN - Received data:', JSON.stringify(data, null, 2));
-        const uploadInfo = data.map(async d => await uploadToDsn(d));
+        const uploadInfo: any[] = [];
+        for (const d of data) {
+          const upload = await uploadToDsn(d);
+          uploadInfo.push(upload);
+        }
         logger.info('Uploading data to DSN - Upload info:', JSON.stringify(uploadInfo, null, 2));
         return uploadInfo;
       } catch (error) {
