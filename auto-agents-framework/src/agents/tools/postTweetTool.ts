@@ -18,22 +18,24 @@ export const createPostTweetTool = (twitterApi: TwitterApi) =>
       try {
         if (config.twitterConfig.POST_TWEETS) {
           const postedTweet = await twitterApi.sendTweet(tweet, inReplyTo);
-          logger.info('Tweet posted successfully', {
-            postedTweet: { id: postedTweet?.id, text: postedTweet?.text },
-          });
+          //TODO: After sending the tweet, we need to get the latest tweet, ensure it is the same as we sent and return it
+          //This has not been working as expected, so we need to investigate this later
+          // logger.info('Tweet posted successfully', {
+          //   postedTweet: { id: postedTweet?.id, text: postedTweet?.text },
+          // });
           return {
-            postedTweet,
+            postedTweet: true,
           };
         } else {
           logger.info('Tweet not posted', { tweet });
           return {
-            postedTweet: null,
+            postedTweet: false,
           };
         }
       } catch (error) {
         logger.error('Error posting tweet:', error);
         return {
-          postedTweet: null,
+          postedTweet: false,
         };
       }
     },

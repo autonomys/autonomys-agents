@@ -22,8 +22,14 @@ const postResponse = async (
     thread,
     recentTweets,
   });
+
+  //TODO: After sending the tweet, we need to get the latest tweet, ensure it is the same as we sent and return it
+  //This has not been working as expected, so we need to investigate this later
   const tweet = await invokePostTweetTool(config.toolNode, response.content, decision.tweet.id);
-  return { ...response, tweetId: tweet ? tweet.id : null };
+  return {
+    ...response,
+    //tweetId: tweet ? tweet.id : null
+  };
 };
 
 export const createGenerateTweetNode =
@@ -65,7 +71,8 @@ export const createGenerateTweetNode =
       shouldEngage.map(d => postResponse(config, d, recentTweets)),
     );
 
-    // Generate a top level tweet TODO: add a check to see if it has been long enough since the last tweet
+    // Generate a top level tweet
+    //TODO: add a check to see if it has been long enough since the last tweet
     const generatedTweet = await tweetPrompt
       .pipe(config.llms.generation)
       .pipe(trendTweetParser)
@@ -73,6 +80,8 @@ export const createGenerateTweetNode =
         trendAnalysis: state.trendAnalysis,
         recentTweets,
       });
+    //TODO: After sending the tweet, we need to get the latest tweet, ensure it is the same as we sent and return it
+    //This has not been working as expected, so we need to investigate this later
     const postedTweet = await invokePostTweetTool(config.toolNode, generatedTweet.tweet);
 
     // Transform the data into an array format expected by DSN
@@ -80,7 +89,7 @@ export const createGenerateTweetNode =
       ...postedResponses.map(response => ({
         type: 'response',
         content: response.content,
-        tweetId: response.tweetId,
+        //tweetId: response.tweetId,
         strategy: response.strategy,
       })),
       ...shouldNotEngage.map(item => ({
@@ -91,7 +100,7 @@ export const createGenerateTweetNode =
       {
         type: 'generated_tweet',
         content: generatedTweet.tweet,
-        tweetId: postedTweet ? postedTweet.id : null,
+        //tweetId: postedTweet ? postedTweet.id : null,
       },
     ];
 

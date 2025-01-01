@@ -4,6 +4,7 @@ export { Tweet, Profile, Scraper } from 'agent-twitter-client';
 export interface TwitterApi {
   scraper: Scraper;
   username: string;
+  userId: string;
   getMyUnrepliedToMentions: (maxResults: number, sinceId?: string) => Promise<Tweet[]>;
   getFollowingRecentTweets: (maxResults: number, numberOfUsers: number) => Promise<Tweet[]>;
   isLoggedIn: () => Promise<boolean>;
@@ -16,5 +17,5 @@ export interface TwitterApi {
   getFollowing: (userId: string, limit: number) => Promise<Profile[]>;
   getMyTimeline: (count: number, excludeIds: string[]) => Promise<Tweet[]>;
   getFollowingTimeline: (count: number, excludeIds: string[]) => Promise<Tweet[]>;
-  sendTweet: (tweet: string, inReplyTo?: string) => Promise<Tweet | null | void>;
+  sendTweet: (tweet: string, inReplyTo?: string) => Promise<void>;
 }

@@ -174,13 +174,6 @@ const getMyUnrepliedToMentions = async (
   return withThreads;
 };
 
-const postTweet = async (scraper: Scraper, tweet: string, inReplyTo?: string) => {
-  if (tweet.length > 280) {
-    return scraper.sendLongTweet(tweet, inReplyTo);
-  }
-  return scraper.sendTweet(tweet, inReplyTo);
-};
-
 const getFollowingRecentTweets = async (
   scraper: Scraper,
   username: string,
@@ -227,10 +220,11 @@ export const createTwitterApi = async (
   if (!isLoggedIn) {
     throw new Error('Failed to initialize Twitter Api - not logged in');
   }
-
+  const userId = await scraper.getUserIdByScreenName(username);
   return {
     scraper,
     username: username,
+    userId: userId,
     getMyUnrepliedToMentions: (maxResults: number, sinceId?: string) =>
       getMyUnrepliedToMentions(scraper, username, maxResults, sinceId),
 
@@ -276,9 +270,13 @@ export const createTwitterApi = async (
       return tweets.filter(isValidTweet).map(tweet => convertTimelineTweetToTweet(tweet));
     },
 
+    //TODO: After sending the tweet, we need to get the latest tweet, ensure it is the same as we sent and return it
+    //This has not been working as expected, so we need to investigate this later
     sendTweet: async (tweet: string, inReplyTo?: string) => {
-      const _postedTweet = await postTweet(scraper, tweet, inReplyTo);
-      return await scraper.getLatestTweet(username);
+      tweet.length > 280
+        ? await scraper.sendLongTweet(tweet, inReplyTo)
+        : await scraper.sendTweet(tweet, inReplyTo);
+      logger.info('Tweet sent', { tweet, inReplyTo });
     },
   };
 };
