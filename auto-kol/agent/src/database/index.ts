@@ -507,7 +507,7 @@ export async function getAllTrends() {
     return trends.map(trend => ({
       id: trend.id,
       content: trend.content,
-      created_at: new Date(trend.created_at),
+      created_at: new Date(trend.created_at + 'Z'),
     }));
   } catch (error) {
     logger.error('Failed to get trends:', error);
@@ -561,7 +561,7 @@ export async function getLatestTopLevelTweets(limit: number = 10) {
     return tweets.map(tweet => ({
       id: tweet.id,
       content: tweet.content,
-      created_at: new Date(tweet.created_at),
+      created_at: new Date(tweet.created_at + 'Z'),
     }));
   } catch (error) {
     logger.error('Failed to get latest top level tweets:', error);

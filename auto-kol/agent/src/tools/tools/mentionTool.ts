@@ -4,6 +4,7 @@ import { createLogger } from '../../utils/logger.js';
 import { addMention, getLatestMentionId } from '../../database/index.js';
 import { ExtendedScraper } from '../../services/twitter/api.js';
 import { Tweet } from '../../types/twitter.js';
+import { config } from '../../config/index.js';
 const logger = createLogger('mention-tool');
 
 export const createMentionTool = (scraper: ExtendedScraper) =>
@@ -14,7 +15,14 @@ export const createMentionTool = (scraper: ExtendedScraper) =>
     func: async () => {
       try {
         const sinceId = await getLatestMentionId();
-        const mentions = await scraper.getMyMentions(100, sinceId);
+        const allRecentMentions = await scraper.getMyMentions(50, sinceId);
+        logger.info(`Found ${allRecentMentions.length} recent mentions`);
+
+        //randomly select subset of mentions
+        const mentions = allRecentMentions
+          .sort(() => Math.random() - 0.5)
+          .slice(0, config.MAX_MENTIONS);
+
         if (!mentions || mentions.length === 0) {
           logger.info('No new mentions found');
           return {
@@ -54,8 +62,12 @@ export const createMentionTool = (scraper: ExtendedScraper) =>
           await new Promise(resolve => setTimeout(resolve, 1000));
           logger.info(`Found ${tweetsWithThreads.length} tweets in thread`);
         }
+        // filter out tweets with too long of threads
+        const filteredTweets = tweets.filter(
+          tweet => tweet.thread.length < config.MAX_THREAD_LENGTH,
+        );
         return {
-          tweets: tweets,
+          tweets: filteredTweets,
           lastProcessedId: mentions[0].id!,
         };
       } catch (error) {
