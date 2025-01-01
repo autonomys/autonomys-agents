@@ -26,13 +26,6 @@ export const createAnalyzeTrendNode =
     logger.info('Trend analysis:', trendAnalysis);
 
     return {
-      messages: [
-        new AIMessage({
-          content: JSON.stringify({
-            trend: trendAnalysis,
-          }),
-        }),
-      ],
       trendAnalysis,
     };
   };

@@ -57,14 +57,7 @@ export const createEngagementNode = (config: WorkflowConfig) => {
         }),
       );
       return {
-        messages: [
-          new AIMessage({
-            content: JSON.stringify({
-              engagementDecisions,
-            }),
-          }),
-        ],
-        engagementDecisions: engagementDecisions,
+        engagementDecisions,
       };
     } catch (error) {
       logger.error('Error in engagement node:', error);
