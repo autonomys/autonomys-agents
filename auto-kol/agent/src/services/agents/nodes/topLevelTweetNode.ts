@@ -64,8 +64,11 @@ export const createTopLevelTweetNode = (config: WorkflowConfig) => {
       logger.info(`Time since last tweet in minutes: ${timeSinceLastTweetInMinutes}`);
 
       const timeToPostTweet =
-        timeSinceLastTweetInMinutes && timeSinceLastTweetInMinutes > globalConfig.TOP_LEVEL_TWEET_INTERVAL_MINUTES;
-      logger.info(`${timeSinceLastTweetInMinutes} > ${globalConfig.TOP_LEVEL_TWEET_INTERVAL_MINUTES} so should post tweet: ${timeToPostTweet}`);
+        timeSinceLastTweetInMinutes &&
+        timeSinceLastTweetInMinutes > globalConfig.TOP_LEVEL_TWEET_INTERVAL_MINUTES;
+      logger.info(
+        `${timeSinceLastTweetInMinutes} > ${globalConfig.TOP_LEVEL_TWEET_INTERVAL_MINUTES} so should post tweet: ${timeToPostTweet}`,
+      );
 
       if (timeToPostTweet) {
         const tweetGeneration = await prompts.topLevelTweetPrompt
@@ -86,9 +89,7 @@ export const createTopLevelTweetNode = (config: WorkflowConfig) => {
           content: tweetGeneration?.tweet,
         });
 
-        if (
-          globalConfig.POST_TWEETS
-        ) {
+        if (globalConfig.POST_TWEETS) {
           logger.info('Sending tweet');
           await config.client.sendTweet(tweetGeneration.tweet).then(async res => {
             const latestTweet = await config.client.getLatestTweet(

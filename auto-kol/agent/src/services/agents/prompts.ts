@@ -194,7 +194,8 @@ export const trendPrompt = ChatPromptTemplate.fromMessages([
         Tweets: {tweets}
 
         Note: Focus only on AI and blockchain related trends. 
-        It is best if these trends touch on controversial topices`,],
+        It is best if these trends touch on controversial topices`,
+  ],
 ]);
 
 export const engagementPrompt = ChatPromptTemplate.fromMessages([
