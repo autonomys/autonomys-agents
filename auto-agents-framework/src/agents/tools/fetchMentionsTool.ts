@@ -11,10 +11,10 @@ export const createFetchMentionsTool = (twitterApi: TwitterApi) =>
   new DynamicStructuredTool({
     name: 'fetch_mentions',
     description: 'Fetch recent mentions',
-    schema: z.object({}),
-    func: async () => {
+    schema: z.object({ numberMentions: z.number().optional() }),
+    func: async ({ numberMentions = 10 }: { numberMentions?: number }) => {
       try {
-        const recentMentions = await twitterApi.getMyUnrepliedToMentions(10);
+        const recentMentions = await twitterApi.getMyUnrepliedToMentions(numberMentions);
 
         return {
           tweets: recentMentions,

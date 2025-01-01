@@ -11,11 +11,29 @@ export const createFetchTimelineTool = (twitterApi: TwitterApi) =>
   new DynamicStructuredTool({
     name: 'fetch_timeline',
     description: 'Fetch the agents timeline to get recent tweets',
-    schema: z.object({ processedIds: z.array(z.string()) }),
-    func: async ({ processedIds }: { processedIds: string[] }) => {
+    schema: z.object({
+      numTimelineTweets: z.number(),
+      numFollowingRecentTweets: z.number(),
+      numRandomFollowers: z.number(),
+      processedIds: z.array(z.string()),
+    }),
+    func: async ({
+      numTimelineTweets = 20,
+      numFollowingRecentTweets = 10,
+      numRandomFollowers = 5,
+      processedIds,
+    }: {
+      numTimelineTweets: number;
+      numFollowingRecentTweets: number;
+      numRandomFollowers: number;
+      processedIds: string[];
+    }) => {
       try {
-        const myTimelineTweets = await twitterApi.getMyTimeline(10, processedIds);
-        const followingRecents = await twitterApi.getFollowingRecentTweets(10, 10);
+        const myTimelineTweets = await twitterApi.getMyTimeline(numTimelineTweets, processedIds);
+        const followingRecents = await twitterApi.getFollowingRecentTweets(
+          numFollowingRecentTweets,
+          numRandomFollowers,
+        );
         const tweets = new Set([...myTimelineTweets, ...followingRecents]);
         const sortedTweets = Array.from(tweets).sort(
           (a, b) => new Date(b.timeParsed!).getTime() - new Date(a.timeParsed!).getTime(),
