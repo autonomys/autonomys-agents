@@ -4,13 +4,14 @@ import { State } from '../workflow.js';
 import { invokePostTweetTool } from '../../../tools/postTweetTool.js';
 import { tweetPrompt, trendTweetParser, responsePrompt, responseParser } from '../prompts.js';
 import { AIMessage } from '@langchain/core/messages';
-
+import { summarySchema } from '../schemas.js';
+import { z } from 'zod';
 const logger = createLogger('generate-tweet-node');
 
 const postResponse = async (
   config: WorkflowConfig,
   decision: EngagementDecision,
-  recentTweets: { text: string; username: string }[],
+  summary: z.infer<typeof summarySchema>,
 ) => {
   const thread =
     decision.tweet.thread && decision.tweet.thread.length > 0
@@ -20,9 +21,9 @@ const postResponse = async (
   const response = await responsePrompt.pipe(config.llms.generation).pipe(responseParser).invoke({
     decision: decisionInfo,
     thread,
-    recentTweets,
+    patterns: summary.patterns,
+    commonWords: summary.commonWords,
   });
-
   //TODO: After sending the tweet, we need to get the latest tweet, ensure it is the same as we sent and return it
   //This has not been working as expected, so we need to investigate this later
   const tweet = await invokePostTweetTool(config.toolNode, response.content, decision.tweet.id);
@@ -47,6 +48,7 @@ export const createGenerateTweetNode =
       text: t.text!,
       username: t.username!,
     }));
+    const summary = state.summary;
 
     const shouldEngage = state.engagementDecisions.filter(d => d.decision.shouldEngage);
     const shouldNotEngage = state.engagementDecisions
@@ -68,7 +70,7 @@ export const createGenerateTweetNode =
     });
 
     const postedResponses = await Promise.all(
-      shouldEngage.map(d => postResponse(config, d, recentTweets)),
+      shouldEngage.map(d => postResponse(config, d, summary)),
     );
 
     // Generate a top level tweet

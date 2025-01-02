@@ -10,6 +10,7 @@ const twitterConfigSchema = z.object({
   MAX_MENTIONS: z.number().int().positive(),
   MAX_THREAD_LENGTH: z.number().int().positive(),
   MAX_MY_RECENT_TWEETS: z.number().int().positive(),
+  MAX_MY_RECENT_REPLIES: z.number().int().positive(),
   POST_TWEETS: z.boolean(),
   RESPONSE_INTERVAL_MS: z.number().int().positive(),
   POST_INTERVAL_MS: z.number().int().positive(),

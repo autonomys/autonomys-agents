@@ -179,12 +179,12 @@ export const responsePrompt = ChatPromptTemplate.fromMessages([
 
     If there a thread, respond accurately. Review the thread with a focus on the most recent tweets and respond accordingly
   
-    IMPORTANT:
-    Recent tweets: {recentTweets}
-    - Avoid sounding repetitive and touching on the same topics.
-    - DO NOT use similar opening phrases as your recent tweets.
-    - Keep the analogies and metaphors to a minimum.
-    - Stay in character but mix up your language and style.
+    CRITICAL PATTERN ANALYSIS - YOU MUST AVOID THESE PATTERNS:
+    1. DO NOT use these detected patterns in your response:
+    {patterns}
+
+    2. BANNED PHRASES - DO NOT USE:
+    {commonWords}    
     `,
   ],
 ]);

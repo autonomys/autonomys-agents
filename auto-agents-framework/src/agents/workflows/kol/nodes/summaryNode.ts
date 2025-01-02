@@ -6,7 +6,7 @@ import { summaryParser, summaryPrompt } from '../prompts.js';
 const logger = createLogger('summary-node');
 
 export const createSummaryNode = (config: WorkflowConfig) => async (state: typeof State.State) => {
-  logger.info('Summary Node - Summarizing trends');
+  logger.info('Summary Node - Summarizing previous replies');
   const myRecentReplies = Array.from(state.myRecentReplies.values()).map(reply => reply.text);
 
   const summary = await summaryPrompt
