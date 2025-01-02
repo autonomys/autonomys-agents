@@ -34,6 +34,10 @@ export const State = Annotation.Root({
     default: () => new Set(),
     reducer: (curr, update) => new Set([...update]),
   }),
+  myRecentReplies: Annotation<ReadonlySet<Tweet>>({
+    default: () => new Set(),
+    reducer: (curr, update) => new Set([...update]),
+  }),
   engagementDecisions: Annotation<EngagementDecision[]>({
     default: () => [],
     reducer: (curr, update) => update,

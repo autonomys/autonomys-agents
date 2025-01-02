@@ -67,6 +67,29 @@ const getUserReplyIds = async (
   return replyIdSet;
 };
 
+const getMyRecentReplies = async (
+  scraper: Scraper,
+  username: string,
+  maxResults: number = 10,
+): Promise<Tweet[]> => {
+  
+  const userRepliesIterator = scraper.searchTweets(
+    `from:${username}`,
+    maxResults,
+    SearchMode.Latest,
+  );
+  const replies: Tweet[] = [];
+  try {
+    for await (const reply of userRepliesIterator) {
+      if (replies.length >= maxResults) break;
+      replies.push(reply);
+    }
+  } catch (error) {
+    logger.error('Error fetching replies:', error);
+  }
+  return replies;
+};
+
 const getMyUnrepliedToMentions = async (
   scraper: Scraper,
   username: string,
@@ -270,13 +293,16 @@ export const createTwitterApi = async (
       return tweets.filter(isValidTweet).map(tweet => convertTimelineTweetToTweet(tweet));
     },
 
+    getMyRecentReplies: (limit: number = 10) => getMyRecentReplies(scraper, username, limit),
+
+
     //TODO: After sending the tweet, we need to get the latest tweet, ensure it is the same as we sent and return it
     //This has not been working as expected, so we need to investigate this later
     sendTweet: async (tweet: string, inReplyTo?: string) => {
       tweet.length > 280
         ? await scraper.sendLongTweet(tweet, inReplyTo)
         : await scraper.sendTweet(tweet, inReplyTo);
-      logger.info('Tweet sent', { tweet, inReplyTo });
+      logger.info('Tweet sent', { tweet, inReplyTo });getMyRecentReplies
     },
   };
 };
