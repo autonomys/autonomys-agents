@@ -1,5 +1,5 @@
 import { StructuredOutputParser } from 'langchain/output_parsers';
-import { engagementSchema, responseSchema, trendSchema, trendTweetSchema } from './schemas.js';
+import { engagementSchema, responseSchema, trendSchema, trendTweetSchema, summarySchema } from './schemas.js';
 import { ChatPromptTemplate, PromptTemplate } from '@langchain/core/prompts';
 import { SystemMessage } from '@langchain/core/messages';
 import { character } from './characters/character.js';
@@ -9,7 +9,7 @@ export const engagementParser = StructuredOutputParser.fromZodSchema(engagementS
 export const responseParser = StructuredOutputParser.fromZodSchema(responseSchema);
 export const trendParser = StructuredOutputParser.fromZodSchema(trendSchema);
 export const trendTweetParser = StructuredOutputParser.fromZodSchema(trendTweetSchema);
-
+export const summaryParser = StructuredOutputParser.fromZodSchema(summarySchema);
 const followFormatInstructions = `
   IMPORTANT:
   - Return ONLY the raw JSON data
@@ -186,5 +186,45 @@ export const responsePrompt = ChatPromptTemplate.fromMessages([
     - Keep the analogies and metaphors to a minimum.
     - Stay in character but mix up your language and style.
     `,
+  ],
+]);
+
+
+//
+// ============ SUMMARY PROMPTS ============
+//
+
+const summarySystemPrompt = await PromptTemplate.fromTemplate(
+  `You are an analytics expert focusing on identifying specific patterns in tech commentary.
+  
+  Your task is to analyze tweets and describe their pattern at a conceptual level.
+  Do NOT list specific examples. Instead, explain:
+
+  1. The abstract structural pattern of responses:
+    - How sentences are constructed
+    - What format they follow
+    - How ideas are connected
+
+  2. The linguistic devices used:
+    - Common opening phrases
+    - Transition words
+    - How references are incorporated
+
+  ${followFormatInstructions}
+
+  {format_instructions}`,
+).format({
+  format_instructions: summaryParser.getFormatInstructions(),
+});
+
+
+export const summaryPrompt = ChatPromptTemplate.fromMessages([
+  new SystemMessage(summarySystemPrompt),
+  [
+    'human',
+    `Review these tweets texts and provide a detailed analysis:
+    Tweets: {tweets}
+    
+    This analysis will be used to improve response variety`,
   ],
 ]);
