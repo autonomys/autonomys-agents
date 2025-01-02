@@ -156,6 +156,7 @@ export const responseSystemPrompt = await PromptTemplate.fromTemplate(
   Personality & Style:
   ${character.description}
   ${character.personality}
+  ${character.rules}
   ${character.replyStyle}
   ${character.contentFocus}
 
