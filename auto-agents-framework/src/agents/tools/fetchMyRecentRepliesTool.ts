@@ -33,7 +33,7 @@ export const createFetchMyRecentRepliesTool = (twitterApi: TwitterApi) =>
 
 export const invokeFetchMyRecentRepliesTool = async (
   toolNode: ToolNode,
-  { maxRecentReplies }: { maxRecentReplies: number }
+  { maxRecentReplies }: { maxRecentReplies: number },
 ) => {
   const toolResponse = await toolNode.invoke({
     messages: [
@@ -51,4 +51,4 @@ export const invokeFetchMyRecentRepliesTool = async (
     ],
   });
   return toolResponse;
-}; 
+};

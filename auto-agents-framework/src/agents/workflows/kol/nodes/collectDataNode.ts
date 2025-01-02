@@ -22,7 +22,7 @@ export const createCollectDataNode =
       ...Array.from(repliedToTweetIds.values()),
     ];
     logger.info('Processed IDs:', { processedIds: processedIds.length });
-    
+
     const myRecentRepliesToolResponse = await invokeFetchMyRecentRepliesTool(config.toolNode, {
       maxRecentReplies: twitterConfig.MAX_MY_RECENT_REPLIES,
     });
@@ -57,7 +57,7 @@ export const createCollectDataNode =
     const myRepliedToIds = JSON.parse(myRecentTweetsContent).repliedToTweetIds
       ? JSON.parse(myRecentTweetsContent).repliedToTweetIds
       : [];
-    
+
     logger.info('Tool response received:', {
       myRecentRepliesCount: myRecentReplies.length,
       timelineMessageCount: timelineTweets.length,

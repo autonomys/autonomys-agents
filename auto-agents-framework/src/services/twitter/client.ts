@@ -72,7 +72,6 @@ const getMyRecentReplies = async (
   username: string,
   maxResults: number = 10,
 ): Promise<Tweet[]> => {
-  
   const userRepliesIterator = scraper.searchTweets(
     `from:${username}`,
     maxResults,
@@ -295,14 +294,14 @@ export const createTwitterApi = async (
 
     getMyRecentReplies: (limit: number = 10) => getMyRecentReplies(scraper, username, limit),
 
-
     //TODO: After sending the tweet, we need to get the latest tweet, ensure it is the same as we sent and return it
     //This has not been working as expected, so we need to investigate this later
     sendTweet: async (tweet: string, inReplyTo?: string) => {
       tweet.length > 280
         ? await scraper.sendLongTweet(tweet, inReplyTo)
         : await scraper.sendTweet(tweet, inReplyTo);
-      logger.info('Tweet sent', { tweet, inReplyTo });getMyRecentReplies
+      logger.info('Tweet sent', { tweet, inReplyTo });
+      getMyRecentReplies;
     },
   };
 };

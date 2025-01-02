@@ -1,5 +1,11 @@
 import { StructuredOutputParser } from 'langchain/output_parsers';
-import { engagementSchema, responseSchema, trendSchema, trendTweetSchema, summarySchema } from './schemas.js';
+import {
+  engagementSchema,
+  responseSchema,
+  trendSchema,
+  trendTweetSchema,
+  summarySchema,
+} from './schemas.js';
 import { ChatPromptTemplate, PromptTemplate } from '@langchain/core/prompts';
 import { SystemMessage } from '@langchain/core/messages';
 import { character } from './characters/character.js';
@@ -189,7 +195,6 @@ export const responsePrompt = ChatPromptTemplate.fromMessages([
   ],
 ]);
 
-
 //
 // ============ SUMMARY PROMPTS ============
 //
@@ -216,7 +221,6 @@ const summarySystemPrompt = await PromptTemplate.fromTemplate(
 ).format({
   format_instructions: summaryParser.getFormatInstructions(),
 });
-
 
 export const summaryPrompt = ChatPromptTemplate.fromMessages([
   new SystemMessage(summarySystemPrompt),
