@@ -1,9 +1,9 @@
 import { ethers } from 'ethers';
 import { config } from '../../../config/index.js';
 
-const provider = new ethers.JsonRpcProvider(config.autoDriveConfig.RPC_URL);
+const provider = new ethers.JsonRpcProvider(config.blockchainConfig.RPC_URL);
 
-export const wallet = new ethers.Wallet(config.autoDriveConfig.PRIVATE_KEY as string, provider);
+export const wallet = new ethers.Wallet(config.blockchainConfig.PRIVATE_KEY as string, provider);
 
 export async function signMessage(data: object): Promise<string> {
   const message = JSON.stringify(data);
