@@ -12,6 +12,8 @@ router.get('/', async (req, res) => {
     const page = parseInt(req.query.page as string) || 1;
     const limit = parseInt(req.query.limit as string) || 10;
     const type = req.query.type as ResponseStatus | undefined;
+    const searchText = req.query.search as string | undefined;
+    const authorUsername = req.query.author as string | undefined;
     
     if (page < 1 || limit < 1 || limit > 100) {
       res.status(400).json({ 
@@ -27,7 +29,7 @@ router.get('/', async (req, res) => {
       return;
     }
 
-    const dsnRecords = await getAllDsn(page, limit, type);
+    const dsnRecords = await getAllDsn(page, limit, type, searchText, authorUsername);
     
     if (!dsnRecords.data || dsnRecords.data.length === 0) {
       res.json({

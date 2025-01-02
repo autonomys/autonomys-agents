@@ -61,17 +61,37 @@ export async function getMemoryByCid(cid: string): Promise<MemoryRecord | null> 
 export async function getAllDsn(
     page: number, 
     limit: number, 
-    type?: ResponseStatus
+    type?: ResponseStatus,
+    searchText?: string,
+    authorUsername?: string
 ): Promise<any> {
     const offset = (page - 1) * limit;
     
     try {
         let countQuery = 'SELECT COUNT(*) FROM memory_records';
         let params: any[] = [];
+        let conditions: string[] = [];
         
         if (type) {
-            countQuery += ` WHERE content->>'type' = $1`;
+            conditions.push(`content->>'type' = $${params.length + 1}`);
             params.push(type);
+        }
+
+        if (searchText) {
+            conditions.push(`(
+                content->'tweet'->>'text'::text ILIKE $${params.length + 1} 
+                OR content->>'response'::text ILIKE $${params.length + 1}
+            )`);
+            params.push(`%${searchText}%`);
+        }
+
+        if (authorUsername) {
+            conditions.push(`content->'tweet'->>'author_username'::text ILIKE $${params.length + 1}`);
+            params.push(`%${authorUsername}%`);
+        }
+
+        if (conditions.length > 0) {
+            countQuery += ' WHERE ' + conditions.join(' AND ');
         }
         
         const countResult = await pool.query(countQuery, params);
@@ -86,8 +106,8 @@ export async function getAllDsn(
                 mr.created_at
             FROM memory_records mr`;
             
-        if (type) {
-            query += ` WHERE content->>'type' = $1`;
+        if (conditions.length > 0) {
+            query += ' WHERE ' + conditions.join(' AND ');
         }
         
         query += ` ORDER BY mr.created_at DESC
@@ -162,7 +182,7 @@ export async function getAllDsn(
             }
         };
     } catch (error) {
-        console.error('Failed to get all DSN records:', error);
+        console.error('Error in getAllDsn:', error);
         throw error;
     }
 }
