@@ -9,7 +9,7 @@ const logger = createLogger('engagement-node');
 const getEngagementDecision = async (tweet: Tweet, config: WorkflowConfig) => {
   const thread =
     tweet.thread && tweet.thread.length > 0
-      ? tweet.thread.map(t => ({ text: t.text, username: t.username }))
+      ? tweet.thread.map(t => ({text: t.text, username: t.username }))
       : 'No thread';
 
   const formattedPrompt = await config.prompts.engagementPrompt.format({
@@ -50,6 +50,9 @@ export const createEngagementNode = (config: WorkflowConfig) => {
               text: tweet.text!,
               username: tweet.username!,
               timeParsed: tweet.timeParsed!,
+              thread: tweet.thread && tweet.thread.length > 0
+                ? Array.from(tweet.thread.map(t => ({ id: t.id, text: t.text, username: t.username, timeParsed: t.timeParsed })))
+                : 'No thread',
             },
             decision,
           };

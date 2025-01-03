@@ -1,10 +1,11 @@
 import { z } from 'zod';
 
-export const DSNTweet: z.ZodType = z.object({
+export const dsnTweet: z.ZodType = z.object({
   id: z.string(),
   text: z.string(),
   username: z.string(),
-  thread: z.array(z.lazy(() => DSNTweet)).optional(),
+  timeParsed: z.string(),
+  thread: z.array(z.lazy(() => dsnTweet)).optional(),
 });
 
 export const engagementSchema = z.object({
@@ -22,8 +23,9 @@ export const skippedEngagementSchema = z.object({
 });
 
 export const dsnUploadSchema = z.object({
-  previousCid: z.string().optional(),
   data: z.any(),
+  signature: z.string(),
+  previousCid: z.string().optional(),
 });
 
 export const trendSchema = z.object({

@@ -21,10 +21,6 @@ const postResponse = async (
   decision: EngagementDecision,
   summary: z.infer<typeof summarySchema>,
 ) => {
-  const thread =
-    decision.tweet.thread && decision.tweet.thread.length > 0
-      ? decision.tweet.thread.map(t => ({ text: t.text, username: t.username }))
-      : 'No thread';
   const engagementDecision = { 
     tweetText: decision.tweet.text, 
     reason: decision.decision.reason,
@@ -34,7 +30,7 @@ const postResponse = async (
     .pipe(responseParser)
     .invoke({
       decision: engagementDecision,
-      thread,
+      thread: decision.tweet.thread,
       patterns: summary.patterns,
       commonWords: summary.commonWords,
     });
@@ -76,8 +72,6 @@ export const createGenerateTweetNode =
           text: d.tweet.text,
           username: d.tweet.username,
           thread: d.tweet.thread
-            ? d.tweet.thread.map(t => ({ id: t.id, text: t.text, username: t.username }))
-            : 'No thread',
         },
       }));
     logger.info('Engagement Decisions', {
