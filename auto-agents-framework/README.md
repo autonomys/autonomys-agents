@@ -14,39 +14,95 @@ Auto-Agents-Framework is an experimental framework for building AI agents that c
 ## Getting Started
 
 1. Install dependencies:
-   `yarn install`
+   `yarn install
+`
 
 2. Copy the environment file and configure your credentials:
    `cp .env.sample .env`
 
-3. Create your agent character by copying the example:
-   `cp src/agents/workflows/kol/characters/character.example.ts src/agents/workflows/kol/characters/character.ts`
+3. Configure your `.env` file with required credentials:
+   ``env
+   TWITTER_USERNAME=your_twitter_username
+   TWITTER_PASSWORD=your_twitter_password
+   OPENAI_API_KEY=your_openai_key
+   # See .env.sample for other configuration options
+   ``
 
-4. Configure your character:
+## Character System
 
+The framework uses a character system that allows you to create and run different AI personalities.
+
+### Creating Characters
+
+1. Characters are stored in `src/agents/workflows/kol/characters/`
+2. Create new characters by copying the example:
+   ```bash
+   # Create a new character
+   cp src/agents/workflows/kol/characters/character.example.ts src/agents/workflows/kol/characters/my-character.ts
    ```
-   // character.ts
-   const name = 'Your Agent Name';
-   const username = 'twitter_handle';
-   const walletAddress = '0x...'; // Your Autonomys Network wallet
-   const description = 'Your agent's personality description...';
 
+### Character Configuration
 
-    // Configure additional personality traits, expertise, rules, etc.
+Each character file should export a `character` object with the following properties:
+
+```typescript
+export const character = {
+  name: 'Agent Name',
+  username: 'twitter_handle',
+  description: 'Core personality description',
+  personality: 'Key behavioral traits',
+  expertise: 'Areas of knowledge',
+  rules: 'Operating guidelines',
+  trendFocus: 'Topics to monitor',
+  contentFocus: 'Content creation guidelines',
+  replyStyle: 'Engagement approach',
+  wordsToAvoid: ['list', 'of', 'words', 'to', 'avoid'],
+  engagementCriteria: 'Rules for when to engage with tweets',
+};
+```
+
+### Running with Different Characters
+
+Run the agent with a specific character:
+``bash
+
+# Use default character (character.ts)
+
+yarn dev
+
+# Use a specific character (omit .ts extension)
+
+```
+yarn dev argumint
+yarn dev techie
+```
+
+### Example Characters
+
+1. Default Rational Agent (`character.ts`):
+
+   ```typescript
+   export const character = {
+     name: 'Rational Thinker',
+     username: 'RationalBot',
+     description: 'A logical and analytical personality focused on clear reasoning',
+     expertise: 'Logic, critical thinking, cognitive biases',
+     trendFocus: 'Rational discourse, logical fallacies, clear thinking',
+     // ... other configuration
+   };
    ```
 
-## Character Configuration
-
-The character configuration defines your agent's personality and behavior. Key sections include:
-
-- `description`: Core personality and background
-- `personality`: Key behavioral traits
-- `expertise`: Areas of knowledge
-- `rules`: Operating guidelines
-- `trendFocus`: Topics to monitor
-- `contentFocus`: Content creation guidelines
-- `replyStyle`: Engagement approach
-- `wordsToAvoid`: Restricted vocabulary
+2. Tech Enthusiast (`techie.ts`):
+   ```typescript
+   export const character = {
+     name: 'Tech Explorer',
+     username: 'TechieBot',
+     description: 'An enthusiastic tech analyst exploring emerging technologies',
+     expertise: 'AI, blockchain, web3, programming',
+     trendFocus: 'Tech news, programming, AI developments',
+     // ... other configuration
+   };
+   ```
 
 ## Autonomys Network Integration
 
@@ -79,7 +135,14 @@ The KOL workflow enables agents to:
 ## Running the Agent
 
 Start the agent with:
-`yarn dev`
+
+```bash
+# Use default character
+yarn dev
+
+# Use a specific character (without .ts extension)
+yarn dev argumint
+```
 
 Monitor the agent's activity in the console and configured log files.
 

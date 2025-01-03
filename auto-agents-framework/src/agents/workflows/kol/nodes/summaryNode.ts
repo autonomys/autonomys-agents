@@ -1,7 +1,7 @@
 import { WorkflowConfig } from '../types.js';
 import { createLogger } from '../../../../utils/logger.js';
 import { State } from '../workflow.js';
-import { summaryParser, summaryPrompt } from '../prompts.js';
+import { summaryParser } from '../prompts.js';
 
 const logger = createLogger('summary-node');
 
@@ -9,7 +9,7 @@ export const createSummaryNode = (config: WorkflowConfig) => async (state: typeo
   logger.info('Summary Node - Summarizing previous replies');
   const myRecentReplies = Array.from(state.myRecentReplies.values()).map(reply => reply.text);
 
-  const summary = await summaryPrompt
+  const summary = await config.prompts.summaryPrompt
     .pipe(config.llms.analyze)
     .pipe(summaryParser)
     .invoke({

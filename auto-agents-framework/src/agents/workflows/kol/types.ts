@@ -6,6 +6,7 @@ import { ToolNode } from '@langchain/langgraph/prebuilt';
 import { ChatOpenAI } from '@langchain/openai';
 import { Runnable } from '@langchain/core/runnables';
 import { engagementSchema } from './schemas.js';
+import { ChatPromptTemplate } from '@langchain/core/prompts';
 
 export type WorkflowConfig = Readonly<{
   twitterApi: TwitterApi;
@@ -15,6 +16,13 @@ export type WorkflowConfig = Readonly<{
     analyze: ChatOpenAI;
     generation: Runnable<BaseLanguageModelInput, AIMessageChunk, ChatOpenAI>;
     response: Runnable<BaseLanguageModelInput, AIMessageChunk, ChatOpenAI>;
+  }>;
+  prompts: Readonly<{
+    engagementPrompt: ChatPromptTemplate;
+    trendPrompt: ChatPromptTemplate;
+    tweetPrompt: ChatPromptTemplate;
+    responsePrompt: ChatPromptTemplate;
+    summaryPrompt: ChatPromptTemplate;
   }>;
 }>;
 

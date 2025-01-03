@@ -1,7 +1,7 @@
 import { WorkflowConfig } from '../types.js';
 import { createLogger } from '../../../../utils/logger.js';
 import { State } from '../workflow.js';
-import { trendParser, trendPrompt } from '../prompts.js';
+import { trendParser } from '../prompts.js';
 
 const logger = createLogger('analyze-timeline-trend-node');
 
@@ -15,7 +15,7 @@ export const createAnalyzeTrendNode =
     }));
     logger.info('Tweets:', { tweets: tweets.length });
 
-    const trendAnalysis = await trendPrompt
+    const trendAnalysis = await config.prompts.trendPrompt
       .pipe(config.llms.analyze)
       .pipe(trendParser)
       .invoke({
