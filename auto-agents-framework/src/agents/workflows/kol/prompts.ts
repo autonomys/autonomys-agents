@@ -153,6 +153,7 @@ export const createPrompts = async (characterFile: string) => {
     Personality & Style:
     ${character.description}
     ${character.personality}
+    ${character.rules}
     ${character.replyStyle}
     ${character.contentFocus}
 

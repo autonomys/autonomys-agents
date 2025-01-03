@@ -29,7 +29,9 @@ export const createFetchTimelineTool = (twitterApi: TwitterApi) =>
       numRandomFollowers: number;
     }) => {
       try {
-        const myTimelineTweets = await twitterApi.getMyTimeline(numTimelineTweets, processedIds);
+        const myTimelineTweets = (
+          await twitterApi.getMyTimeline(numTimelineTweets, processedIds)
+        ).slice(0, numTimelineTweets);
         const followingRecents = await twitterApi.getFollowingRecentTweets(
           numFollowingRecentTweets,
           numRandomFollowers,
