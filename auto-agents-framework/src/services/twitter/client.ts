@@ -67,72 +67,32 @@ const getUserReplyIds = async (
   return replyIdSet;
 };
 
+const getReplyThread = (tweet: Tweet, conversation: Tweet[]): Tweet[] => {
+  let tweetReply = tweet.inReplyToStatusId
+    ? conversation.find(t => t.id === tweet.inReplyToStatusId)
+    : tweet;
+
+  const replyThread: Tweet[] = tweetReply ? [tweetReply] : [];
+  while (tweetReply && tweetReply.inReplyToStatusId) {
+    const nextReply = conversation.find(t => t.inReplyToStatusId === tweetReply?.id);
+    if (!nextReply) {
+      break;
+    }
+    logger.info('Next Reply', { nextReply: nextReply?.id });
+    replyThread.push(nextReply);
+    tweetReply = nextReply;
+  }
+  return replyThread;
+};
+
 const getMyUnrepliedToMentions = async (
   scraper: Scraper,
   username: string,
   maxResults: number = 50,
   sinceId?: string,
 ): Promise<Tweet[]> => {
-  const conversationCache = new Map<string, Tweet[]>();
-
-  //TODO: This is not the way to get the thread, it is just a quick fix
-  const getThread = async (scraper: Scraper, tweetId: string): Promise<Tweet[]> => {
-    const initialTweet = await scraper.getTweet(tweetId);
-
-    if (!initialTweet) {
-      logger.warn(`Tweet ${tweetId} not found or deleted`);
-      return [];
-    }
-
-    const conversationId = initialTweet.conversationId || initialTweet.id;
-
-    // Check cache first
-    const cachedConversation = conversationCache.get(conversationId!);
-    if (cachedConversation) {
-      return cachedConversation;
-    }
-
-    const conversationTweets = new Map<string, Tweet>();
-    let rootTweet = initialTweet;
-
-    // If the conversation root differs
-    if (initialTweet.conversationId && initialTweet.conversationId !== initialTweet.id) {
-      const conversationRoot = await scraper.getTweet(initialTweet.conversationId);
-      if (conversationRoot) {
-        rootTweet = conversationRoot;
-        conversationTweets.set(rootTweet.id!, rootTweet);
-        logger.info('Found conversation root tweet:', {
-          id: rootTweet.id,
-          conversationId: rootTweet.conversationId,
-        });
-      }
-    } else {
-      conversationTweets.set(rootTweet.id!, rootTweet);
-    }
-
-    try {
-      //TODO: This does not return direct replies to the loggedin user, not sure why. Will need to investigate later
-      const conversationIterator = scraper.searchTweets(
-        `conversation_id:${conversationId}`,
-        100,
-        SearchMode.Latest,
-      );
-      for await (const tweet of conversationIterator) {
-        conversationTweets.set(tweet.id!, tweet);
-      }
-    } catch (error) {
-      logger.warn(`Error fetching conversation: ${error}`);
-      return [rootTweet, initialTweet];
-    }
-
-    const thread = Array.from(conversationTweets.values());
-    conversationCache.set(conversationId!, Array.from(conversationTweets.values()));
-    return thread;
-  };
-
   logger.info('Getting my mentions', { username, maxResults, sinceId });
 
-  // get all mentions of the user (excluding user’s own tweets)
   const query = `@${username} -from:${username}`;
   const mentionIterator = scraper.searchTweets(query, maxResults, SearchMode.Latest);
 
@@ -141,6 +101,7 @@ const getMyUnrepliedToMentions = async (
 
   // filter out any mention we've already replied to
   const newMentions: Tweet[] = [];
+  const conversations = new Map<string, Tweet[]>();
   for await (const tweet of mentionIterator) {
     // Stop if we've reached or passed the sinceId
     if (sinceId && tweet.id && tweet.id <= sinceId) {
@@ -154,6 +115,16 @@ const getMyUnrepliedToMentions = async (
     }
 
     newMentions.push(tweet);
+    if (!conversations.has(tweet.id!)) {
+      const conversation = await iterateResponse(
+        scraper.searchTweets(`conversation_id:${tweet.conversationId}`, 100, SearchMode.Latest),
+      );
+      const initialTweet = await scraper.getTweet(tweet.conversationId!);
+      if (initialTweet) {
+        conversation.push(initialTweet);
+      }
+      conversations.set(tweet.conversationId!, conversation);
+    }
 
     // Stop if we already have enough
     if (newMentions.length >= maxResults) {
@@ -161,15 +132,13 @@ const getMyUnrepliedToMentions = async (
     }
   }
 
-  const withThreads = await Promise.all(
-    newMentions.map(async mention => {
-      const thread = await getThread(scraper, mention.id!);
-      return {
-        ...mention,
-        thread,
-      };
-    }),
-  );
+  const withThreads = newMentions.map(mention => {
+    const thread = getReplyThread(mention, conversations.get(mention.conversationId!)!);
+    return {
+      ...mention,
+      thread,
+    };
+  });
 
   return withThreads;
 };

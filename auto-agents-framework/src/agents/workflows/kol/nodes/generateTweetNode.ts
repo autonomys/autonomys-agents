@@ -28,6 +28,7 @@ const postResponse = async (
   const tweet = await invokePostTweetTool(config.toolNode, response.content, decision.tweet.id);
   return {
     ...response,
+    decisionInfo: decisionInfo,
     //tweetId: tweet ? tweet.id : null
   };
 };
@@ -80,8 +81,7 @@ export const createGenerateTweetNode =
         trendAnalysis: state.trendAnalysis,
         recentTweets,
       });
-    //TODO: After sending the tweet, we need to get the latest tweet, ensure it is the same as we sent and return it
-    //This has not been working as expected, so we need to investigate this later
+
     const postedTweet = await invokePostTweetTool(config.toolNode, generatedTweet.tweet);
 
     // Transform the data into an array format expected by DSN
@@ -89,6 +89,7 @@ export const createGenerateTweetNode =
       ...postedResponses.map(response => ({
         type: 'response',
         content: response.content,
+        decisionInfo: response.decisionInfo,
         //tweetId: response.tweetId,
         strategy: response.strategy,
       })),
@@ -100,7 +101,7 @@ export const createGenerateTweetNode =
       {
         type: 'generated_tweet',
         content: generatedTweet.tweet,
-        //tweetId: postedTweet ? postedTweet.id : null,
+        tweetId: postedTweet ? postedTweet.postedTweetId : null,
       },
     ];
 
