@@ -59,7 +59,9 @@ export async function initializeSchema() {
                 'tweets', 
                 'responses', 
                 'skipped_tweets',  
-                'dsn'
+                'dsn',
+                'trends',
+                'top_level_tweets'
             )
         `);
 
@@ -472,4 +474,97 @@ export async function addMention(mention: { latest_id: string }) {
 export async function getLatestMentionId(): Promise<string> {
   const mention = await db?.get(`SELECT latest_id FROM mentions ORDER BY updated_at DESC LIMIT 1`);
   return mention?.latest_id || '';
+}
+
+///////////TREND///////////
+export async function addTrend(trend: { id: string; content: string }) {
+  const db = await initializeDatabase();
+  try {
+    await db.run(
+      `
+            INSERT INTO trends (id, content)
+            VALUES (?, ?)
+        `,
+      [trend.id, trend.content],
+    );
+
+    logger.info(`Added trend: ${trend.id}`);
+  } catch (error) {
+    logger.error('Failed to add trend:', error);
+    throw error;
+  }
+}
+
+export async function getAllTrends() {
+  const db = await initializeDatabase();
+  try {
+    const trends = await db.all(`
+            SELECT id, content, created_at
+            FROM trends
+            ORDER BY created_at DESC
+        `);
+
+    return trends.map(trend => ({
+      id: trend.id,
+      content: trend.content,
+      created_at: new Date(trend.created_at + 'Z'),
+    }));
+  } catch (error) {
+    logger.error('Failed to get trends:', error);
+    throw error;
+  }
+}
+
+export async function wipeTrendsTable() {
+  const db = await initializeDatabase();
+  try {
+    await db.run('DELETE FROM trends');
+    logger.info('Wiped trends table');
+  } catch (error) {
+    logger.error('Failed to wipe trends table:', error);
+    throw error;
+  }
+}
+
+///////////TOP LEVEL TWEETS///////////
+export async function addTopLevelTweet(tweet: { id: string; content: string }) {
+  const db = await initializeDatabase();
+  try {
+    await db.run(
+      `
+            INSERT INTO top_level_tweets (id, content)
+            VALUES (?, ?)
+        `,
+      [tweet.id, tweet.content],
+    );
+
+    logger.info(`Added top level tweet: ${tweet.id}`);
+  } catch (error) {
+    logger.error('Failed to add top level tweet:', error);
+    throw error;
+  }
+}
+
+export async function getLatestTopLevelTweets(limit: number = 10) {
+  const db = await initializeDatabase();
+  try {
+    const tweets = await db.all(
+      `
+            SELECT id, content, created_at
+            FROM top_level_tweets
+            ORDER BY created_at DESC
+            LIMIT ?
+        `,
+      [limit],
+    );
+
+    return tweets.map(tweet => ({
+      id: tweet.id,
+      content: tweet.content,
+      created_at: new Date(tweet.created_at + 'Z'),
+    }));
+  } catch (error) {
+    logger.error('Failed to get latest top level tweets:', error);
+    throw error;
+  }
 }

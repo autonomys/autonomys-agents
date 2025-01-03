@@ -51,17 +51,17 @@ const createWorkflowConfig = async (): Promise<WorkflowConfig> => {
     toolNode: new ToolNode(tools),
     llms: {
       decision: new ChatOpenAI({
-        modelName: config.LLM_MODEL,
+        modelName: config.SMALL_LLM_MODEL,
         temperature: 0.2,
       }) as unknown as ChatOpenAI,
 
       tone: new ChatOpenAI({
-        modelName: config.LLM_MODEL,
+        modelName: config.SMALL_LLM_MODEL,
         temperature: 0.3,
       }) as unknown as ChatOpenAI,
 
       response: new ChatOpenAI({
-        modelName: config.LLM_MODEL,
+        modelName: config.LARGE_LLM_MODEL,
         temperature: 0.8,
       }) as unknown as ChatOpenAI,
     },
@@ -118,12 +118,12 @@ const shouldContinue = (state: typeof State.State) => {
     (!content.tweets || content.currentTweetIndex >= content.tweets.length) &&
     content.pendingEngagements?.length === 0
   ) {
-    if (content.fromRecheckNode && content.messages?.length === 0) {
+    if (content.fromTopLevelTweetNode && content.messages?.length === 0) {
       logger.info('Workflow complete - no more tweets to process');
       return END;
     }
-    logger.info('Moving to recheck skipped tweets');
-    return 'recheckNode';
+    logger.info('Moving to top level tweet node');
+    return 'topLevelTweetNode';
   }
   return 'engagementNode';
 };
@@ -138,7 +138,7 @@ export const createWorkflow = async (nodes: Awaited<ReturnType<typeof createNode
     .addNode('analyzeNode', nodes.toneAnalysisNode)
     .addNode('generateNode', nodes.responseGenerationNode)
     .addNode('autoApprovalNode', nodes.autoApprovalNode)
-    .addNode('recheckNode', nodes.recheckSkippedNode)
+    .addNode('topLevelTweetNode', nodes.topLevelTweetNode)
     .addEdge(START, 'mentionNode')
     .addEdge('mentionNode', 'timelineNode')
     .addEdge('timelineNode', 'searchNode')
@@ -147,7 +147,7 @@ export const createWorkflow = async (nodes: Awaited<ReturnType<typeof createNode
     .addConditionalEdges('analyzeNode', shouldContinue)
     .addConditionalEdges('generateNode', shouldContinue)
     .addConditionalEdges('autoApprovalNode', shouldContinue)
-    .addConditionalEdges('recheckNode', shouldContinue);
+    .addConditionalEdges('topLevelTweetNode', shouldContinue);
 };
 
 // Workflow runner type

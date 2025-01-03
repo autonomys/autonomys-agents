@@ -15,7 +15,8 @@ export const config = {
   TWITTER_PASSWORD: process.env.TWITTER_PASSWORD,
 
   // LLM Configuration
-  LLM_MODEL: process.env.LLM_MODEL || 'gpt-4o-mini',
+  LARGE_LLM_MODEL: process.env.LARGE_LLM_MODEL || 'gpt-4o',
+  SMALL_LLM_MODEL: process.env.SMALL_LLM_MODEL || 'gpt-4o-mini',
   OPENAI_API_KEY: process.env.OPENAI_API_KEY,
   TEMPERATURE: 0.7,
 
@@ -51,6 +52,9 @@ export const config = {
   // Tweet Search/Fetch Configuration
   ACCOUNTS_PER_BATCH: Number(process.env.ACCOUNTS_PER_BATCH) || 10,
   MAX_SEARCH_TWEETS: Number(process.env.MAX_SEARCH_TWEETS) || 20,
+  MAX_MENTIONS: Number(process.env.MAX_MENTIONS) || 5,
+  MAX_THREAD_LENGTH: Number(process.env.MAX_THREAD_LENGTH) || 20,
+
   // BATCH CONFIG
   ENGAGEMENT_BATCH_SIZE: process.env.ENGAGEMENT_BATCH_SIZE || 15,
 
@@ -59,4 +63,7 @@ export const config = {
 
   // POSTING TWEETS PERMISSION
   POST_TWEETS: process.env.POST_TWEETS === 'true',
+
+  // TOP LEVEL TWEET CONFIG
+  TOP_LEVEL_TWEET_INTERVAL_MINUTES: Number(process.env.TOP_LEVEL_TWEET_INTERVAL_MINUTES) || 120,
 };
