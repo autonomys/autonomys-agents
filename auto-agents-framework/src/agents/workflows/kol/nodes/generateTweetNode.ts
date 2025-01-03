@@ -1,8 +1,8 @@
 import {
-  DsnData,
-  DsnGeneratedTweetData,
-  DSNResponseData,
-  DsnSkippedEngagementData,
+  dsnData,
+  dsnGeneratedTweetData,
+  dsnResponseData,
+  dsnSkippedEngagementData,
   EngagementDecision,
   WorkflowConfig,
   dsnDataType,
@@ -102,7 +102,7 @@ export const createGenerateTweetNode =
     const postedTweet = await invokePostTweetTool(config.toolNode, generatedTweet.tweet);
 
     // Transform the data into an array format expected by DSN
-    const formattedDsnData: DsnData[] = [
+    const formattedDsnData: dsnData[] = [
       ...postedResponses.map(
         response =>
           ({
@@ -114,7 +114,7 @@ export const createGenerateTweetNode =
               shouldEngage: true,
               reason: response.engagementDecision.reason
             },
-          }) as DSNResponseData,
+          }) as dsnResponseData,
       ),
       ...shouldNotEngage.map(
         item =>
@@ -122,13 +122,13 @@ export const createGenerateTweetNode =
             type: dsnDataType.SKIPPED_ENGAGEMENT,
             decision: item.decision,
             tweet: item.tweet,
-          }) as DsnSkippedEngagementData,
+          }) as dsnSkippedEngagementData,
       ),
       {
         type: dsnDataType.GENERATED_TWEET,
         content: generatedTweet.tweet,
         tweetId: postedTweet ? postedTweet.postedTweetId : null,
-      } as DsnGeneratedTweetData,
+      } as dsnGeneratedTweetData,
     ];
 
     return {

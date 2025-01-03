@@ -37,21 +37,21 @@ export enum dsnDataType {
   GENERATED_TWEET = 'generated_tweet',
 }
 
-export type DSNResponseData = {
+export type dsnResponseData = {
   type: dsnDataType.RESPONSE;
   tweet: z.infer<typeof DSNTweet>;
   decision: z.infer<typeof engagementSchema>;
 } & z.infer<typeof responseSchema>;
 
-export type DsnSkippedEngagementData = {
+export type dsnSkippedEngagementData = {
   type: dsnDataType.SKIPPED_ENGAGEMENT;
   tweet: z.infer<typeof DSNTweet>;
 } & z.infer<typeof skippedEngagementSchema>;
 
-export type DsnGeneratedTweetData = {
+export type dsnGeneratedTweetData = {
   type: dsnDataType.GENERATED_TWEET;
   content: string;
   tweetId: string | null;
 };
 
-export type DsnData = DSNResponseData | DsnSkippedEngagementData | DsnGeneratedTweetData;
+export type dsnData = dsnResponseData | dsnSkippedEngagementData | dsnGeneratedTweetData;
