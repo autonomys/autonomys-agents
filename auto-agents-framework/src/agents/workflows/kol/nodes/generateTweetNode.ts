@@ -2,7 +2,7 @@ import { EngagementDecision, WorkflowConfig } from '../types.js';
 import { createLogger } from '../../../../utils/logger.js';
 import { State } from '../workflow.js';
 import { invokePostTweetTool } from '../../../tools/postTweetTool.js';
-import { tweetPrompt, trendTweetParser, responsePrompt, responseParser } from '../prompts.js';
+import { trendTweetParser, responseParser } from '../prompts.js';
 import { AIMessage } from '@langchain/core/messages';
 
 const logger = createLogger('generate-tweet-node');
@@ -17,14 +17,15 @@ const postResponse = async (
       ? decision.tweet.thread.map(t => ({ text: t.text, username: t.username }))
       : 'No thread';
   const decisionInfo = { tweet: decision.tweet.text, reason: decision.decision.reason };
-  const response = await responsePrompt.pipe(config.llms.generation).pipe(responseParser).invoke({
-    decision: decisionInfo,
-    thread,
-    recentTweets,
-  });
+  const response = await config.prompts.responsePrompt
+    .pipe(config.llms.generation)
+    .pipe(responseParser)
+    .invoke({
+      decision: decisionInfo,
+      thread,
+      recentTweets,
+    });
 
-  //TODO: After sending the tweet, we need to get the latest tweet, ensure it is the same as we sent and return it
-  //This has not been working as expected, so we need to investigate this later
   const tweet = await invokePostTweetTool(config.toolNode, response.content, decision.tweet.id);
   return {
     ...response,
@@ -74,7 +75,7 @@ export const createGenerateTweetNode =
 
     // Generate a top level tweet
     //TODO: add a check to see if it has been long enough since the last tweet
-    const generatedTweet = await tweetPrompt
+    const generatedTweet = await config.prompts.tweetPrompt
       .pipe(config.llms.generation)
       .pipe(trendTweetParser)
       .invoke({

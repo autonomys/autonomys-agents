@@ -1,1 +1,3 @@
-character.ts
+characters/
+!characters/character.example.ts
+.cookies/
