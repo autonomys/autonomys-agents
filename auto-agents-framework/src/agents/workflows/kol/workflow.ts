@@ -12,6 +12,7 @@ import { createNodes } from './nodes.js';
 import { Tweet } from '../../../services/twitter/types.js';
 import { trendSchema } from './schemas.js';
 import { z } from 'zod';
+import { createPrompts } from './prompts.js';
 
 export const logger = createLogger('agent-workflow');
 
@@ -53,16 +54,19 @@ export const State = Annotation.Root({
   }),
 });
 
-const createWorkflowConfig = async (): Promise<WorkflowConfig> => {
+const createWorkflowConfig = async (characterFile: string): Promise<WorkflowConfig> => {
   const { USERNAME, PASSWORD, COOKIES_PATH } = config.twitterConfig;
   const { LARGE_LLM_MODEL, SMALL_LLM_MODEL } = config.llmConfig;
+
   const twitterApi = await createTwitterApi(USERNAME, PASSWORD, COOKIES_PATH);
   const { tools } = createTools(twitterApi);
   const toolNode = new ToolNode(tools);
+  const prompts = await createPrompts(characterFile);
 
   return {
     twitterApi,
     toolNode,
+    prompts,
     llms: {
       decision: new ChatOpenAI({
         modelName: SMALL_LLM_MODEL,
@@ -86,10 +90,12 @@ const createWorkflowConfig = async (): Promise<WorkflowConfig> => {
 
 export const getWorkflowConfig = (() => {
   let workflowConfigInstance: WorkflowConfig | null = null;
+  let currentCharacterFile: string | null = null;
 
-  return async (): Promise<WorkflowConfig> => {
-    if (!workflowConfigInstance) {
-      workflowConfigInstance = await createWorkflowConfig();
+  return async (characterFile: string): Promise<WorkflowConfig> => {
+    if (!workflowConfigInstance || currentCharacterFile !== characterFile) {
+      currentCharacterFile = characterFile;
+      workflowConfigInstance = await createWorkflowConfig(characterFile);
     }
     return workflowConfigInstance;
   };
@@ -148,8 +154,8 @@ type WorkflowRunner = Readonly<{
 }>;
 
 // Create workflow runner
-const createWorkflowRunner = async (): Promise<WorkflowRunner> => {
-  const workflowConfig = await getWorkflowConfig();
+const createWorkflowRunner = async (characterFile: string): Promise<WorkflowRunner> => {
+  const workflowConfig = await getWorkflowConfig(characterFile);
   const nodes = await createNodes(workflowConfig);
   const workflow = await createWorkflow(nodes);
   const memoryStore = new MemorySaver();
@@ -183,16 +189,18 @@ const createWorkflowRunner = async (): Promise<WorkflowRunner> => {
 
 export const getWorkflowRunner = (() => {
   let runnerPromise: Promise<WorkflowRunner> | null = null;
+  let currentCharacterFile: string | null = null;
 
-  return () => {
-    if (!runnerPromise) {
-      runnerPromise = createWorkflowRunner();
+  return (characterFile: string) => {
+    if (!runnerPromise || currentCharacterFile !== characterFile) {
+      currentCharacterFile = characterFile;
+      runnerPromise = createWorkflowRunner(characterFile);
     }
     return runnerPromise;
   };
 })();
 
-export const runWorkflow = async () => {
-  const runner = await getWorkflowRunner();
+export const runWorkflow = async (characterFile: string) => {
+  const runner = await getWorkflowRunner(characterFile);
   return runner.runWorkflow();
 };

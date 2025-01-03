@@ -2,7 +2,7 @@ import { AIMessage } from '@langchain/core/messages';
 import { WorkflowConfig } from '../types.js';
 import { createLogger } from '../../../../utils/logger.js';
 import { State } from '../workflow.js';
-import { engagementParser, engagementPrompt } from '../prompts.js';
+import { engagementParser } from '../prompts.js';
 import { Tweet } from '../../../../services/twitter/types.js';
 
 const logger = createLogger('engagement-node');
@@ -13,7 +13,7 @@ const getEngagementDecision = async (tweet: Tweet, config: WorkflowConfig) => {
       ? tweet.thread.map(t => ({ text: t.text, username: t.username }))
       : 'No thread';
 
-  const formattedPrompt = await engagementPrompt.format({
+  const formattedPrompt = await config.prompts.engagementPrompt.format({
     tweet: JSON.stringify({ text: tweet.text, username: tweet.username }),
     thread: thread,
   });

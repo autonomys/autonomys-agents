@@ -3,11 +3,20 @@ import dotenv from 'dotenv';
 import { configSchema } from './schema.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { mkdir } from 'fs/promises';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 dotenv.config({ path: path.resolve(__dirname, '../../.env') });
+
+// Create cookies directory
+const cookiesDir = '.cookies';
+try {
+  await mkdir(cookiesDir, { recursive: true });
+} catch (error) {
+  console.error('Error creating cookies directory:', error);
+}
 
 function formatZodError(error: z.ZodError) {
   const missingVars = error.issues.map(issue => {
@@ -21,11 +30,14 @@ function formatZodError(error: z.ZodError) {
 
 export const config = (() => {
   try {
+    const username = process.env.TWITTER_USERNAME || '';
+    const cookiesPath = path.join(cookiesDir, `${username}-cookies.json`);
+
     const rawConfig = {
       twitterConfig: {
-        USERNAME: process.env.TWITTER_USERNAME || '',
+        USERNAME: username,
         PASSWORD: process.env.TWITTER_PASSWORD || '',
-        COOKIES_PATH: process.env.TWITTER_COOKIES_PATH || 'cookies.json',
+        COOKIES_PATH: cookiesPath,
         NUM_TIMELINE_TWEETS: Number(process.env.NUM_TIMELINE_TWEETS) || 10,
         NUM_FOLLOWING_RECENT_TWEETS: Number(process.env.NUM_FOLLOWING_RECENT_TWEETS) || 10,
         NUM_RANDOM_FOLLOWERS: Number(process.env.NUM_RANDOM_FOLLOWERS) || 5,
