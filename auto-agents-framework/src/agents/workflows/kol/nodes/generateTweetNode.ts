@@ -5,6 +5,7 @@ import {
   DsnSkippedEngagementData,
   EngagementDecision,
   WorkflowConfig,
+  dsnDataType,
 } from '../types.js';
 import { createLogger } from '../../../../utils/logger.js';
 import { State } from '../workflow.js';
@@ -105,7 +106,7 @@ export const createGenerateTweetNode =
       ...postedResponses.map(
         response =>
           ({
-            type: 'response',
+            type: dsnDataType.RESPONSE,
             tweet: response.tweet,
             content: response.content,
             strategy: response.strategy,
@@ -113,19 +114,18 @@ export const createGenerateTweetNode =
               shouldEngage: true,
               reason: response.engagementDecision.reason
             },
-            // tweetId: response.tweetId,
           }) as DSNResponseData,
       ),
       ...shouldNotEngage.map(
         item =>
           ({
-            type: 'skipped_engagement',
+            type: dsnDataType.SKIPPED_ENGAGEMENT,
             decision: item.decision,
             tweet: item.tweet,
           }) as DsnSkippedEngagementData,
       ),
       {
-        type: 'generated_tweet',
+        type: dsnDataType.GENERATED_TWEET,
         content: generatedTweet.tweet,
         tweetId: postedTweet ? postedTweet.postedTweetId : null,
       } as DsnGeneratedTweetData,

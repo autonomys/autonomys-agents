@@ -13,9 +13,12 @@ export const engagementSchema = z.object({
 });
 
 export const responseSchema = z.object({
-  tweet: DSNTweet,
   content: z.string().describe('The response to the tweet'),
   strategy: z.string().describe('The strategy used to generate the response'),
+});
+
+export const skippedEngagementSchema = z.object({
+  decision: engagementSchema,
 });
 
 export const dsnUploadSchema = z.object({
