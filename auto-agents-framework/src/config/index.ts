@@ -5,6 +5,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { mkdir } from 'fs/promises';
 
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const workspaceRoot = path.resolve(__dirname, '../..');
@@ -27,6 +28,8 @@ function formatZodError(error: z.ZodError) {
     \n${missingVars.join('\n')}
     \nPlease check your .env file and ensure all required variables are set correctly.`;
 }
+
+export const agentVersion = process.env.AGENT_VERSION || '1.0.0';
 
 export const config = (() => {
   try {
