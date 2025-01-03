@@ -1,5 +1,11 @@
 import { StructuredOutputParser } from 'langchain/output_parsers';
-import { engagementSchema, responseSchema, trendSchema, trendTweetSchema } from './schemas.js';
+import {
+  engagementSchema,
+  responseSchema,
+  trendSchema,
+  trendTweetSchema,
+  summarySchema,
+} from './schemas.js';
 import { ChatPromptTemplate, PromptTemplate } from '@langchain/core/prompts';
 import { SystemMessage } from '@langchain/core/messages';
 import { wallet } from '../../tools/utils/agentWallet.js';
@@ -18,6 +24,7 @@ export const engagementParser = StructuredOutputParser.fromZodSchema(engagementS
 export const responseParser = StructuredOutputParser.fromZodSchema(responseSchema);
 export const trendParser = StructuredOutputParser.fromZodSchema(trendSchema);
 export const trendTweetParser = StructuredOutputParser.fromZodSchema(trendTweetSchema);
+export const summaryParser = StructuredOutputParser.fromZodSchema(summarySchema);
 
 const loadCharacter = async (characterFile: string) => {
   try {
@@ -174,23 +181,57 @@ export const createPrompts = async (characterFile: string) => {
       Decision: {decision}
       Thread context (most recent tweets first): 
       {thread}
-
+  
       If there a thread, respond accurately. Review the thread with a focus on the most recent tweets and respond accordingly
     
-      IMPORTANT:
-      Recent tweets: {recentTweets}
-      - Avoid sounding repetitive and touching on the same topics.
-      - DO NOT use similar opening phrases as your recent tweets.
-      - Keep the analogies and metaphors to a minimum.
-      - Stay in character but mix up your language and style.
+      CRITICAL PATTERN ANALYSIS - YOU MUST AVOID THESE PATTERNS:
+      1. DO NOT use these detected patterns in your response:
+      {patterns}
+  
+      2. BANNED PHRASES - DO NOT USE:
+      {commonWords}    
       `,
     ],
   ]);
 
+  const summarySystemPrompt = await PromptTemplate.fromTemplate(
+    `You are an analytics expert focusing on identifying specific patterns in tech commentary.
+    
+    Your task is to analyze tweets and describe their pattern at a conceptual level.
+    Do NOT list specific examples. Instead, explain:
+  
+    1. The abstract structural pattern of responses:
+      - How sentences are constructed
+      - What format they follow
+      - How ideas are connected
+  
+    2. The linguistic devices used:
+      - Common opening phrases
+      - Transition words
+      - How references are incorporated
+  
+    ${followFormatInstructions}
+  
+    {format_instructions}`,
+  ).format({
+    format_instructions: summaryParser.getFormatInstructions(),
+  });
+
+  const summaryPrompt = ChatPromptTemplate.fromMessages([
+    new SystemMessage(summarySystemPrompt),
+    [
+      'human',
+      `Review these tweets texts and provide a detailed analysis:
+      Tweets: {tweets}
+      
+      This analysis will be used to improve response variety`,
+    ],
+  ]);
   return {
     engagementPrompt,
     trendPrompt,
     tweetPrompt,
     responsePrompt,
+    summaryPrompt,
   };
 };

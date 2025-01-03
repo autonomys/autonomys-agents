@@ -39,3 +39,8 @@ export const trendTweetSchema = z.object({
   tweet: z.string(),
   reasoning: z.string(),
 });
+
+export const summarySchema = z.object({
+  patterns: z.array(z.string()),
+  commonWords: z.array(z.string()),
+});

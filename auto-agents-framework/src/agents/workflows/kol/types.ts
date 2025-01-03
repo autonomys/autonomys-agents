@@ -22,6 +22,7 @@ export type WorkflowConfig = Readonly<{
     trendPrompt: ChatPromptTemplate;
     tweetPrompt: ChatPromptTemplate;
     responsePrompt: ChatPromptTemplate;
+    summaryPrompt: ChatPromptTemplate;
   }>;
 }>;
 

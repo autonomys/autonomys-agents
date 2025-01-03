@@ -10,13 +10,14 @@ import { ToolNode } from '@langchain/langgraph/prebuilt';
 import { createTwitterApi } from '../../../services/twitter/client.js';
 import { createNodes } from './nodes.js';
 import { Tweet } from '../../../services/twitter/types.js';
-import { trendSchema } from './schemas.js';
+import { trendSchema, summarySchema } from './schemas.js';
 import { z } from 'zod';
 import { createPrompts } from './prompts.js';
 
 export const logger = createLogger('agent-workflow');
 
 type TrendAnalysis = z.infer<typeof trendSchema>;
+type Summary = z.infer<typeof summarySchema>;
 
 export const State = Annotation.Root({
   messages: Annotation<readonly BaseMessage[]>({
@@ -35,6 +36,11 @@ export const State = Annotation.Root({
     default: () => new Set(),
     reducer: (curr, update) => new Set([...update]),
   }),
+  myRecentReplies: Annotation<ReadonlySet<Tweet>>({
+    default: () => new Set(),
+    reducer: (curr, update) => new Set([...update]),
+  }),
+  summary: Annotation<Summary>,
   engagementDecisions: Annotation<EngagementDecision[]>({
     default: () => [],
     reducer: (curr, update) => update,
@@ -136,12 +142,14 @@ const shouldContinue = (state: typeof State.State) => {
 export const createWorkflow = async (nodes: Awaited<ReturnType<typeof createNodes>>) => {
   const workflow = new StateGraph(State)
     .addNode('collectDataNode', nodes.collectDataNode)
+    .addNode('summaryNode', nodes.summaryNode)
     .addNode('engagementNode', nodes.engagementNode)
     .addNode('analyzeTrendNode', nodes.analyzeTrendNode)
     .addNode('generateTweetNode', nodes.generateTweetNode)
     .addNode('uploadToDsnNode', nodes.uploadToDsnNode)
     .addEdge(START, 'collectDataNode')
-    .addEdge('collectDataNode', 'engagementNode')
+    .addEdge('collectDataNode', 'summaryNode')
+    .addEdge('summaryNode', 'engagementNode')
     .addEdge('engagementNode', 'analyzeTrendNode')
     .addEdge('analyzeTrendNode', 'generateTweetNode')
     .addConditionalEdges('generateTweetNode', shouldContinue);

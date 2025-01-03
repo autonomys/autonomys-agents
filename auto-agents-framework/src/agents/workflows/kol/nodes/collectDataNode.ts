@@ -5,6 +5,7 @@ import { convertMessageContentToTweets } from '../../../tools/utils/twitter.js';
 import { invokeFetchTimelineTool } from '../../../tools/fetchTimelineTool.js';
 import { invokeFetchMentionsTool } from '../../../tools/fetchMentionsTool.js';
 import { invokeFetchMyRecentTweetsTool } from '../../../tools/fetchMyRecentTweetsTool.js';
+import { invokeFetchMyRecentRepliesTool } from '../../../tools/fetchMyRecentRepliesTool.js';
 import { config as globalConfig } from '../../../../config/index.js';
 
 const { twitterConfig } = globalConfig;
@@ -21,6 +22,13 @@ export const createCollectDataNode =
       ...Array.from(repliedToTweetIds.values()),
     ];
     logger.info('Processed IDs:', { processedIds: processedIds.length });
+
+    const myRecentRepliesToolResponse = await invokeFetchMyRecentRepliesTool(config.toolNode, {
+      maxRecentReplies: twitterConfig.MAX_MY_RECENT_REPLIES,
+    });
+    const myRecentRepliesContent =
+      myRecentRepliesToolResponse.messages[myRecentRepliesToolResponse.messages.length - 1].content;
+    const myRecentReplies = convertMessageContentToTweets(myRecentRepliesContent);
 
     const timelineToolResponse = await invokeFetchTimelineTool(config.toolNode, {
       processedIds,
@@ -51,6 +59,7 @@ export const createCollectDataNode =
       : [];
 
     logger.info('Tool response received:', {
+      myRecentRepliesCount: myRecentReplies.length,
       timelineMessageCount: timelineTweets.length,
       mentionsMessageCount: mentionsTweets.length,
       myRecentTweetsCount: myRecentTweets.length,
@@ -61,6 +70,7 @@ export const createCollectDataNode =
       timelineTweets: new Set(timelineTweets),
       mentionsTweets: new Set(mentionsTweets),
       myRecentTweets: new Set(myRecentTweets),
+      myRecentReplies: new Set(myRecentReplies),
       repliedToTweetIds: new Set(myRepliedToIds),
     };
   };

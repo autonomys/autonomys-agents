@@ -44,6 +44,7 @@ export const config = (() => {
         MAX_MENTIONS: Number(process.env.MAX_MENTIONS) || 5,
         MAX_THREAD_LENGTH: Number(process.env.MAX_THREAD_LENGTH) || 20,
         MAX_MY_RECENT_TWEETS: Number(process.env.MAX_MY_RECENT_TWEETS) || 10,
+        MAX_MY_RECENT_REPLIES: Number(process.env.MAX_MY_RECENT_REPLIES) || 10,
         POST_TWEETS: process.env.POST_TWEETS === 'true',
         RESPONSE_INTERVAL_MS: (Number(process.env.RESPONSE_INTERVAL_MS) || 26) * 60 * 1000,
         POST_INTERVAL_MS: (Number(process.env.POST_INTERVAL_MS) || 30) * 60 * 1000,
