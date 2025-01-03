@@ -1,4 +1,11 @@
-import { EngagementDecision, WorkflowConfig } from '../types.js';
+import {
+  DsnData,
+  DsnGeneratedTweetData,
+  DSNResponseData,
+  DsnSkippedEngagementData,
+  EngagementDecision,
+  WorkflowConfig,
+} from '../types.js';
 import { createLogger } from '../../../../utils/logger.js';
 import { State } from '../workflow.js';
 import { invokePostTweetTool } from '../../../tools/postTweetTool.js';
@@ -17,22 +24,26 @@ const postResponse = async (
     decision.tweet.thread && decision.tweet.thread.length > 0
       ? decision.tweet.thread.map(t => ({ text: t.text, username: t.username }))
       : 'No thread';
-  const decisionInfo = { tweet: decision.tweet.text, reason: decision.decision.reason };
+  const engagementDecision = { 
+    tweetText: decision.tweet.text, 
+    reason: decision.decision.reason,
+  };
   const response = await config.prompts.responsePrompt
     .pipe(config.llms.generation)
     .pipe(responseParser)
     .invoke({
-      decision: decisionInfo,
+      decision: engagementDecision,
       thread,
       patterns: summary.patterns,
       commonWords: summary.commonWords,
     });
   //TODO: After sending the tweet, we need to get the latest tweet, ensure it is the same as we sent and return it
   //This has not been working as expected, so we need to investigate this later
-  const tweet = await invokePostTweetTool(config.toolNode, response.content, decision.tweet.id);
+  const postedResponse = await invokePostTweetTool(config.toolNode, response.content, decision.tweet.id);
   return {
     ...response,
-    decisionInfo: decisionInfo,
+    tweet: decision.tweet,
+    engagementDecision,
     //tweetId: tweet ? tweet.id : null
   };
 };
@@ -90,24 +101,34 @@ export const createGenerateTweetNode =
     const postedTweet = await invokePostTweetTool(config.toolNode, generatedTweet.tweet);
 
     // Transform the data into an array format expected by DSN
-    const formattedDsnData = [
-      ...postedResponses.map(response => ({
-        type: 'response',
-        content: response.content,
-        decisionInfo: response.decisionInfo,
-        //tweetId: response.tweetId,
-        strategy: response.strategy,
-      })),
-      ...shouldNotEngage.map(item => ({
-        type: 'skipped_engagement',
-        decision: item.decision,
-        tweet: item.tweet,
-      })),
+    const formattedDsnData: DsnData[] = [
+      ...postedResponses.map(
+        response =>
+          ({
+            type: 'response',
+            tweet: response.tweet,
+            content: response.content,
+            strategy: response.strategy,
+            decision: {
+              shouldEngage: true,
+              reason: response.engagementDecision.reason
+            },
+            // tweetId: response.tweetId,
+          }) as DSNResponseData,
+      ),
+      ...shouldNotEngage.map(
+        item =>
+          ({
+            type: 'skipped_engagement',
+            decision: item.decision,
+            tweet: item.tweet,
+          }) as DsnSkippedEngagementData,
+      ),
       {
         type: 'generated_tweet',
         content: generatedTweet.tweet,
         tweetId: postedTweet ? postedTweet.postedTweetId : null,
-      },
+      } as DsnGeneratedTweetData,
     ];
 
     return {

@@ -1,22 +1,21 @@
 import { z } from 'zod';
 
+export const DSNTweet: z.ZodType = z.object({
+  id: z.string(),
+  text: z.string(),
+  username: z.string(),
+  thread: z.array(z.lazy(() => DSNTweet)).optional(),
+});
+
 export const engagementSchema = z.object({
   shouldEngage: z.boolean(),
-  reason: z.string(),
+  reason: z.string().optional(),
 });
 
 export const responseSchema = z.object({
+  tweet: DSNTweet,
   content: z.string().describe('The response to the tweet'),
   strategy: z.string().describe('The strategy used to generate the response'),
-  thread: z
-    .array(
-      z.object({
-        id: z.string(),
-        text: z.string(),
-        username: z.string(),
-      }),
-    )
-    .optional(),
 });
 
 export const dsnUploadSchema = z.object({
