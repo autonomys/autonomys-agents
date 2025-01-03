@@ -7,16 +7,16 @@ import { mkdir } from 'fs/promises';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+const workspaceRoot = path.resolve(__dirname, '../..');
 
-dotenv.config({ path: path.resolve(__dirname, '../../.env') });
-
-// Create cookies directory
-const cookiesDir = '.cookies';
+const cookiesDir = path.join(workspaceRoot, '.cookies');
 try {
   await mkdir(cookiesDir, { recursive: true });
 } catch (error) {
   console.error('Error creating cookies directory:', error);
 }
+
+dotenv.config({ path: path.resolve(workspaceRoot, '.env') });
 
 function formatZodError(error: z.ZodError) {
   const missingVars = error.issues.map(issue => {
