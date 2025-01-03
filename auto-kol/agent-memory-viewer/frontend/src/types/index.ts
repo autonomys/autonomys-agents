@@ -88,10 +88,15 @@ export interface RejectedMemory extends BaseMemory {
     retry: number;
 }
 
+export interface PostedMemory extends BaseMemory {
+    type: 'posted';
+}
+
 export type AgentMemory = 
     | SkippedMemory 
     | RejectedMemory 
-    | ApprovedMemory;
+    | ApprovedMemory
+    | PostedMemory;
 
 export interface Agent {
     id: string

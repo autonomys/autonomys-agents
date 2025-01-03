@@ -21,7 +21,12 @@ export const useMemory = (cid: string) => {
         },
         {
             enabled: !!cid,
-            retry: 3,
+            retry: (failureCount, error) => {
+                if (axios.isAxiosError(error) && error.response?.status === 404) {
+                    return false;
+                }
+                return failureCount < 3;
+            },
             retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 30000),
         }
     )
@@ -40,9 +45,15 @@ export const useLatestMemory = (agentId: string) => {
     )
 }
 
-export const useDSNData = (page: number = 1, limit: number = 10, type: ResponseStatus | 'all' = 'all') => {
+export const useDSNData = (
+    page: number = 1, 
+    limit: number = 10, 
+    type: ResponseStatus | 'all' = 'all',
+    search?: string,
+    author?: string
+) => {
     return useQuery<DSNResponse, Error>(
-        ['dsn', page, limit, type],
+        ['dsn', page, limit, type, search, author],
         async () => {
             const params = new URLSearchParams({
                 page: page.toString(),
@@ -51,6 +62,14 @@ export const useDSNData = (page: number = 1, limit: number = 10, type: ResponseS
             
             if (type !== 'all') {
                 params.append('type', type);
+            }
+
+            if (search) {
+                params.append('search', search);
+            }
+
+            if (author) {
+                params.append('author', author);
             }
             
             const { data } = await api.get(`/memories?${params}`);
@@ -62,6 +81,6 @@ export const useDSNData = (page: number = 1, limit: number = 10, type: ResponseS
             keepPreviousData: true,
         }
     );
-}
+};
 
 

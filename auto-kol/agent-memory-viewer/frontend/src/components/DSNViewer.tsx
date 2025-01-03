@@ -9,7 +9,7 @@ import {
     HStack, 
     Select
 } from '@chakra-ui/react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useDSNData } from '../api/client';
 import { ExternalLinkIcon } from '@chakra-ui/icons';
 import { Link as RouterLink } from 'react-router-dom';
@@ -17,7 +17,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useWebSocket } from '../hooks/useWebSocket';
 import { ResponseStatus } from '../types/enums';
 import { getStatusColor } from '../utils/statusColors';
-import { ChevronDownIcon } from '@chakra-ui/icons';
 import {
     cardStyles,
     textStyles,
@@ -26,27 +25,31 @@ import {
     selectStyles,
 } from '../styles';
 import { colors } from '../styles/theme/colors';
+import { useSearchParams } from 'react-router-dom';
+import SearchBar from './SearchBar';
+import StatusFilter from './StatusFilter';
 
 function DSNViewer() {
+    const [searchParams, setSearchParams] = useSearchParams();
     const [page, setPage] = useState(1);
     const [limit, setLimit] = useState(10);
     const [type, setType] = useState<ResponseStatus | 'all'>('all');
-    const { data, isLoading, error } = useDSNData(page, limit, type);
+    
+    const search = searchParams.get('search') || undefined;
+    const author = searchParams.get('author') || undefined;
+    
+    const { data, isLoading, error } = useDSNData(page, limit, type, search, author);
     useWebSocket();
 
     const handleTypeChange = (newType: ResponseStatus | 'all') => {
-        console.log('Changing type to:', newType);
         setType(newType);
         setPage(1);
     };
 
-    const filterOptions = [
-        { value: 'all', label: 'All Tweets' },
-        { value: ResponseStatus.SKIPPED, label: 'Skipped' },
-        { value: ResponseStatus.APPROVED, label: 'Approved' },
-        { value: ResponseStatus.REJECTED, label: 'Rejected' }
-    ];
-
+    // Reset page when search/author/type changes
+    useEffect(() => {
+        setPage(1);
+    }, [search, author, type]);
 
     if (isLoading) return <Spinner color={colors.primary} />;
     if (error) return <Text {...textStyles.noData}>Error loading DSN data: {(error as Error).message}</Text>;
@@ -57,23 +60,15 @@ function DSNViewer() {
         <VStack spacing={4} align="stretch">
             <Card {...cardStyles.baseStyle}>
                 <CardBody {...cardStyles.bodyStyle}>
-                    <HStack justify="space-between" align="center">
-                        <Text {...textStyles.label}>Filter by Status:</Text>
-                        <Select
-                            value={type}
-                            onChange={(e) => handleTypeChange(e.target.value as typeof type)}
-                            icon={<ChevronDownIcon color={colors.primary} />}
-                            {...selectStyles.baseStyle}
-                            {...selectStyles.filterWidth}
-                            _hover={selectStyles.hoverStyle}
-                            sx={selectStyles.dropdownStyle}
-                        >
-                            {filterOptions.map(option => (
-                                <option key={option.value} value={option.value}>
-                                    {option.label}
-                                </option>
-                            ))}
-                        </Select>
+                    <HStack spacing={4} justify="space-between" align="center">
+                        <SearchBar 
+                            setSearchParams={setSearchParams}
+                            defaultValue={searchParams.get('search') || searchParams.get('author') ? `@${searchParams.get('author')}` : ''}
+                        />
+                        <StatusFilter 
+                            type={type}
+                            onTypeChange={handleTypeChange}
+                        />
                     </HStack>
                 </CardBody>
             </Card>
