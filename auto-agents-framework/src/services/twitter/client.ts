@@ -73,14 +73,13 @@ const getMyRecentReplies = async (
   maxResults: number = 10,
 ): Promise<Tweet[]> => {
   const userRepliesIterator = scraper.searchTweets(
-    `from:${username}`,
+    `from:${username} filter:replies`,
     maxResults,
     SearchMode.Latest,
   );
   const replies: Tweet[] = [];
   try {
     for await (const reply of userRepliesIterator) {
-      if (replies.length >= maxResults) break;
       replies.push(reply);
     }
   } catch (error) {
