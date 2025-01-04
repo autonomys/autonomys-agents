@@ -7,7 +7,7 @@ function transformTweet(tweet: Tweet): any {
         text: tweet.text,
         author_username: tweet.username,
         created_at: tweet.timeParsed,
-        thread: tweet.thread?.map(transformTweet)
+        thread: Array.isArray(tweet.thread) ? tweet.thread.map(transformTweet) : undefined
     };
 }
 
@@ -22,7 +22,8 @@ export function transformMemoryToLegacy(memory: MemoryV2_0_0) {
             tweet: transformTweet(memory.tweet),
             signature: memory.signature,
             timestamp: memory.timestamp,
-            previousCid: memory.previousCid
+            previousCid: memory.previousCid,
+            agentVersion: memory.agentVersion
         };
 
         if (memory.type === 'response') {

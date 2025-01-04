@@ -173,6 +173,16 @@ export function ApprovedMemoryView({ memory }: Props) {
                 </Text>
             </VStack>
 
+            <Text fontSize="md" fontWeight="bold" color="purple.400" mb={2}>
+                Agent Version
+            </Text>
+            <VStack align="stretch" mb={4} pl={4}>
+                <Text>
+                    <Text as="span" color="gray.400">Version:</Text>{' '}
+                    <Text as="span" color="white">{memory.agentVersion ? memory.agentVersion : '1.0.0'}</Text>
+                </Text>
+            </VStack>
+
             {( (memory.mentions && memory.mentions.length > 0) || (memory.tweet?.thread && memory.tweet?.thread.length > 0)) && (
                 <>
                     <Text fontSize="md" fontWeight="bold" color="purple.400" mb={2}>

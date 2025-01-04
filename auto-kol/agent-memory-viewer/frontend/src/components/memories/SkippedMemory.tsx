@@ -27,16 +27,20 @@ export function SkippedMemoryView({ memory }: Props) {
                         <Text as="span" color="gray.400">Reason:</Text>{' '}
                         <Text as="span" color="white">{decision.reason}</Text>
                     </Text>
-                    <Text>
-                        <Text as="span" color="gray.400">Priority:</Text>{' '}
+                    {decision.priority && (
+                        <Text>
+                            <Text as="span" color="gray.400">Priority:</Text>{' '}
                         <Text as="span" color="orange.400">{decision.priority}</Text>
-                    </Text>
-                    <Text>
-                        <Text as="span" color="gray.400">Confidence:</Text>{' '}
-                        <Text as="span" color="green.400">
-                            {(decision.confidence * 100).toFixed(1)}%
                         </Text>
-                    </Text>
+                    )}
+                    {decision.confidence && (
+                        <Text>
+                            <Text as="span" color="gray.400">Confidence:</Text>{' '}
+                            <Text as="span" color="green.400">
+                            {(decision.confidence * 100).toFixed(1)}%
+                            </Text>
+                        </Text>
+                    )}
                 </VStack>
             </>
         );
@@ -92,6 +96,16 @@ export function SkippedMemoryView({ memory }: Props) {
                     <Text as="span" color="white" fontSize="sm" wordBreak="break-all">
                         {memory.signature}
                     </Text>
+                </Text>
+            </VStack>
+
+            <Text fontSize="md" fontWeight="bold" color="purple.400" mb={2}>
+                Agent Version
+            </Text>
+            <VStack align="stretch" mb={4} pl={4}>
+                <Text>
+                    <Text as="span" color="gray.400">Version:</Text>{' '}
+                    <Text as="span" color="white">{memory.agentVersion ? memory.agentVersion : '1.0.0'}</Text>
                 </Text>
             </VStack>
 

@@ -62,10 +62,12 @@ export interface SkippedMemory extends BaseMemory {
         responseStrategy: null;
     };
     mentions: Tweet[];
+    agentVersion: string;
 }
 
 export interface ApprovedMemory extends BaseMemory {
     type: 'approved';
+    agentVersion: string;
     response: string;
     workflowState: {
         decision: WorkflowDecision;
