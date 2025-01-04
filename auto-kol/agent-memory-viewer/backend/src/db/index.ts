@@ -127,7 +127,7 @@ export async function getAllDsn(
                             return ResponseStatus.SKIPPED;
                         case 'rejected':
                             return ResponseStatus.REJECTED;
-                        case 'approved':
+                        case 'approved' || 'response':
                             return ResponseStatus.APPROVED;
                         case 'posted':
                             return ResponseStatus.POSTED;
