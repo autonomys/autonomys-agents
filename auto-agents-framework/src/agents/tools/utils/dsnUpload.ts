@@ -95,7 +95,6 @@ export async function uploadToDsn(data: object) {
       compression: true,
       password: config.autoDriveConfig.AUTO_DRIVE_ENCRYPTION_PASSWORD || undefined,
     });
-    logger.info('Upload to Dsn - Uploaded CID', { uploadedCid }, stringToCid(uploadedCid));
 
     const blake3hash = blake3HashFromCid(stringToCid(uploadedCid));
     logger.info('Setting last memory hash', {
