@@ -73,8 +73,12 @@ export async function getAllDsn(
         let conditions: string[] = [];
         
         if (type) {
-            conditions.push(`content->>'type' = $${params.length + 1}`);
-            params.push(type);
+            if (type === ResponseStatus.APPROVED) {
+                conditions.push(`(content->>'type' = 'approved' OR content->>'type' = 'response')`);
+            } else {
+                conditions.push(`content->>'type' = $${params.length + 1}`);
+                params.push(type);
+            }
         }
 
         if (searchText) {
@@ -156,7 +160,7 @@ export async function getAllDsn(
                         : null,
                     result_type: content.type || 'unknown',
                     skip_reason: content.type === 'skipped' 
-                        ? content.workflowState?.decision?.reason || null 
+                        ? content.workflowState?.decision?.reason || content.decision?.reason || null 
                         : null,
                     response_status: getResponseStatus(content),
                     auto_feedback: content.workflowState?.autoFeedback || null,
