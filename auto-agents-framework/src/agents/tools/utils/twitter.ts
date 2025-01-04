@@ -5,7 +5,7 @@ import { createLogger } from '../../../utils/logger.js';
 
 const logger = createLogger('convert-tweet-messages');
 
-const convertTweet = async (tweet: any): Promise<Tweet | null> => {
+const convertTweet = (tweet: any): Tweet | null => {
   if (!tweet || typeof tweet !== 'object') {
     logger.warn('Invalid tweet object received:', tweet);
     return null;
