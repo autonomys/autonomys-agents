@@ -13,34 +13,38 @@ const dsnCommonFields = z.object({
 });
 
 const extractDsnResponseSchema = () => {
-  const schema = z.object({
-    type: z.literal(dsnDataType.RESPONSE),
-    tweet: dsnTweet,
-    decision: engagementSchema,
-  })
-  .merge(responseSchema)
-  .merge(dsnCommonFields);
+  const schema = z
+    .object({
+      type: z.literal(dsnDataType.RESPONSE),
+      tweet: dsnTweet,
+      decision: engagementSchema,
+    })
+    .merge(responseSchema)
+    .merge(dsnCommonFields);
 
   return zodToJsonSchema(schema);
 };
 
 const extractDsnSkippedEngagementSchema = () => {
-  const schema = z.object({
-    type: z.literal(dsnDataType.SKIPPED_ENGAGEMENT),
-    tweet: dsnTweet,
-  })
-  .merge(skippedEngagementSchema)
-  .merge(dsnCommonFields);
+  const schema = z
+    .object({
+      type: z.literal(dsnDataType.SKIPPED_ENGAGEMENT),
+      tweet: dsnTweet,
+    })
+    .merge(skippedEngagementSchema)
+    .merge(dsnCommonFields);
 
   return zodToJsonSchema(schema);
 };
 
 const extractDsnGeneratedTweetSchema = () => {
-  const schema = z.object({
-    type: z.literal(dsnDataType.GENERATED_TWEET),
-    content: z.string(),
-    tweetId: z.string().nullable(),
-  }).merge(dsnCommonFields);
+  const schema = z
+    .object({
+      type: z.literal(dsnDataType.GENERATED_TWEET),
+      content: z.string(),
+      tweetId: z.string().nullable(),
+    })
+    .merge(dsnCommonFields);
 
   return zodToJsonSchema(schema);
 };
@@ -57,4 +61,4 @@ const main = () => {
   console.log(`Schemas written to ${outputPath}`);
 };
 
-main(); 
+main();

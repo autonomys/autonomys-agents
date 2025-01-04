@@ -21,8 +21,8 @@ const postResponse = async (
   decision: EngagementDecision,
   summary: z.infer<typeof summarySchema>,
 ) => {
-  const engagementDecision = { 
-    tweetText: decision.tweet.text, 
+  const engagementDecision = {
+    tweetText: decision.tweet.text,
     reason: decision.decision.reason,
   };
   const response = await config.prompts.responsePrompt
@@ -36,7 +36,11 @@ const postResponse = async (
     });
   //TODO: After sending the tweet, we need to get the latest tweet, ensure it is the same as we sent and return it
   //This has not been working as expected, so we need to investigate this later
-  const postedResponse = await invokePostTweetTool(config.toolNode, response.content, decision.tweet.id);
+  const postedResponse = await invokePostTweetTool(
+    config.toolNode,
+    response.content,
+    decision.tweet.id,
+  );
   return {
     ...response,
     tweet: decision.tweet,
@@ -71,7 +75,7 @@ export const createGenerateTweetNode =
           id: d.tweet.id,
           text: d.tweet.text,
           username: d.tweet.username,
-          thread: d.tweet.thread
+          thread: d.tweet.thread,
         },
       }));
     logger.info('Engagement Decisions', {
@@ -106,7 +110,7 @@ export const createGenerateTweetNode =
             strategy: response.strategy,
             decision: {
               shouldEngage: true,
-              reason: response.engagementDecision.reason
+              reason: response.engagementDecision.reason,
             },
           }) as dsnResponseData,
       ),
