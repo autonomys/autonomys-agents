@@ -10,11 +10,10 @@ const convertTweet = (tweet: any): Tweet | null => {
     logger.warn('Invalid tweet object received:', tweet);
     return null;
   }
-
   try {
     return {
       ...tweet,
-      timeParsed: tweet.timestamp ? new Date(tweet.timestamp) : new Date(),
+      timeParsed: tweet.timestamp ? new Date(tweet.timestamp * 1000) : new Date(),
     };
   } catch (error) {
     logger.error('Error converting tweet:', error);
