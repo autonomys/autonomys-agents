@@ -81,12 +81,16 @@ export async function getAllDsn(
             conditions.push(`(
                 content->'tweet'->>'text'::text ILIKE $${params.length + 1} 
                 OR content->>'response'::text ILIKE $${params.length + 1}
+                OR content->>'content'::text ILIKE $${params.length + 1}
             )`);
             params.push(`%${searchText}%`);
         }
 
         if (authorUsername) {
-            conditions.push(`content->'tweet'->>'author_username'::text ILIKE $${params.length + 1}`);
+            conditions.push(`(
+                content->'tweet'->>'username'::text ILIKE $${params.length + 1}
+                OR content->'tweet'->>'author_username'::text ILIKE $${params.length + 1}
+            )`);
             params.push(`%${authorUsername}%`);
         }
 
@@ -141,18 +145,19 @@ export async function getAllDsn(
                     tweet_id: content.tweet?.id || null,
                     cid: record.cid,
                     created_at: record.created_at,
-                    author_username: content.tweet?.author_username || null,
+                    author_username: content.tweet?.username || content.tweet?.author_username || null,
                     tweet_content: content.tweet?.text || null,
                     thread: content.tweet?.thread || null,
-                    response_content: ['rejected', 'approved', 'skipped', 'posted'].includes(content.type) 
-                        ? content.response || null 
+                    response_content: ['rejected', 'approved', 'skipped', 'posted', 'response'].includes(content.type) 
+                        ? content.response || content.content || null 
                         : null,
                     result_type: content.type || 'unknown',
                     skip_reason: content.type === 'skipped' 
                         ? content.workflowState?.decision?.reason || null 
                         : null,
                     response_status: getResponseStatus(content),
-                    auto_feedback: content.workflowState?.autoFeedback || null 
+                    auto_feedback: content.workflowState?.autoFeedback || null,
+                    agent_version: content.agentVersion || null
                 };
             } catch (error) {
                 console.error('Error transforming record:', error, 'Record:', record);
