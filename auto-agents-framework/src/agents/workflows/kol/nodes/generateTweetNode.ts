@@ -79,10 +79,12 @@ const postTweet = async (config: WorkflowConfig, state: typeof State.State) => {
       });
 
     const postedTweet = await invokePostTweetTool(config.toolNode, generatedTweet.tweet);
+    const tweetReceipt = JSON.parse(postedTweet.messages[0].content);
+    const postedTweetId = tweetReceipt.postedTweetId;
     return {
       type: DsnDataType.GENERATED_TWEET,
       content: generatedTweet.tweet,
-      tweetId: postedTweet ? postedTweet.postedTweetId : null,
+      tweetId: postedTweetId || null,
     } as DsnGeneratedTweetData;
   }
   return undefined;
