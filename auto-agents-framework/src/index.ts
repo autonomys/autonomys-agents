@@ -23,10 +23,10 @@ const startWorkflowPolling = async () => {
 const main = async () => {
   try {
     await startWorkflowPolling();
-    setInterval(startWorkflowPolling, config.twitterConfig.RESPONSE_INTERVAL_MINUTES);
+    setInterval(startWorkflowPolling, config.twitterConfig.RESPONSE_INTERVAL_MS);
 
     logger.info('Application started successfully', {
-      checkInterval: config.twitterConfig.RESPONSE_INTERVAL_MINUTES / 1000 / 60,
+      checkInterval: config.twitterConfig.RESPONSE_INTERVAL_MS / 1000 / 60,
       username: config.twitterConfig.USERNAME,
     });
   } catch (error) {
