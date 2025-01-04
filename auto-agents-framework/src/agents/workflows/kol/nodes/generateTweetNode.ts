@@ -1,11 +1,11 @@
 import {
-  dsnData,
-  dsnGeneratedTweetData,
-  dsnResponseData,
-  dsnSkippedEngagementData,
+  DsnData,
+  DsnGeneratedTweetData,
+  DsnResponseData,
+  DsnSkippedEngagementData,
   EngagementDecision,
   WorkflowConfig,
-  dsnDataType,
+  DsnDataType,
 } from '../types.js';
 import { createLogger } from '../../../../utils/logger.js';
 import { State } from '../workflow.js';
@@ -100,11 +100,11 @@ export const createGenerateTweetNode =
     const postedTweet = await invokePostTweetTool(config.toolNode, generatedTweet.tweet);
 
     // Transform the data into an array format expected by DSN
-    const formattedDsnData: dsnData[] = [
+    const formattedDsnData: DsnData[] = [
       ...postedResponses.map(
         response =>
           ({
-            type: dsnDataType.RESPONSE,
+            type: DsnDataType.RESPONSE,
             tweet: response.tweet,
             content: response.content,
             strategy: response.strategy,
@@ -112,21 +112,21 @@ export const createGenerateTweetNode =
               shouldEngage: true,
               reason: response.engagementDecision.reason,
             },
-          }) as dsnResponseData,
+          }) as DsnResponseData,
       ),
       ...shouldNotEngage.map(
         item =>
           ({
-            type: dsnDataType.SKIPPED_ENGAGEMENT,
+            type: DsnDataType.SKIPPED_ENGAGEMENT,
             decision: item.decision,
             tweet: item.tweet,
-          }) as dsnSkippedEngagementData,
+          }) as DsnSkippedEngagementData,
       ),
       {
-        type: dsnDataType.GENERATED_TWEET,
+        type: DsnDataType.GENERATED_TWEET,
         content: generatedTweet.tweet,
         tweetId: postedTweet ? postedTweet.postedTweetId : null,
-      } as dsnGeneratedTweetData,
+      } as DsnGeneratedTweetData,
     ];
 
     return {

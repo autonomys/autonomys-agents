@@ -8,7 +8,7 @@ import { Runnable } from '@langchain/core/runnables';
 import { engagementSchema, responseSchema, skippedEngagementSchema, dsnTweet } from './schemas.js';
 import { ChatPromptTemplate } from '@langchain/core/prompts';
 
-export enum dsnDataType {
+export enum DsnDataType {
   RESPONSE = 'response',
   SKIPPED_ENGAGEMENT = 'skipped',
   GENERATED_TWEET = 'posted',
@@ -36,21 +36,21 @@ export type EngagementDecision = {
   tweet: Tweet;
 };
 
-export type dsnResponseData = {
-  type: dsnDataType.RESPONSE;
+export type DsnResponseData = {
+  type: DsnDataType.RESPONSE;
   tweet: z.infer<typeof dsnTweet>;
   decision: z.infer<typeof engagementSchema>;
 } & z.infer<typeof responseSchema>;
 
-export type dsnSkippedEngagementData = {
-  type: dsnDataType.SKIPPED_ENGAGEMENT;
+export type DsnSkippedEngagementData = {
+  type: DsnDataType.SKIPPED_ENGAGEMENT;
   tweet: z.infer<typeof dsnTweet>;
 } & z.infer<typeof skippedEngagementSchema>;
 
-export type dsnGeneratedTweetData = {
-  type: dsnDataType.GENERATED_TWEET;
+export type DsnGeneratedTweetData = {
+  type: DsnDataType.GENERATED_TWEET;
   content: string;
   tweetId: string | null;
 };
 
-export type dsnData = dsnResponseData | dsnSkippedEngagementData | dsnGeneratedTweetData;
+export type DsnData = DsnResponseData | DsnSkippedEngagementData | DsnGeneratedTweetData;
