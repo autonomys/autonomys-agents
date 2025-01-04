@@ -10,8 +10,8 @@ import { ChatPromptTemplate } from '@langchain/core/prompts';
 
 export enum dsnDataType {
   RESPONSE = 'response',
-  SKIPPED_ENGAGEMENT = 'skipped_engagement',
-  GENERATED_TWEET = 'generated_tweet',
+  SKIPPED_ENGAGEMENT = 'skipped',
+  GENERATED_TWEET = 'posted',
 }
 export type WorkflowConfig = Readonly<{
   twitterApi: TwitterApi;
