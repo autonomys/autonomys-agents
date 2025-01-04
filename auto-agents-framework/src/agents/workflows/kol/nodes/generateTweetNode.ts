@@ -62,10 +62,10 @@ const postTweet = async (config: WorkflowConfig, state: typeof State.State) => {
   const lastTweetTime = recentTweets.length > 0 ? recentTweets[0].timeParsed : null;
   const timeSinceLastTweet = lastTweetTime ? new Date().getTime() - lastTweetTime.getTime() : 0;
   const shouldGenerateTweet =
-    timeSinceLastTweet === 0 || timeSinceLastTweet > globalConfig.twitterConfig.POST_INTERVAL_MS;
+    timeSinceLastTweet === 0 || timeSinceLastTweet > globalConfig.twitterConfig.POST_INTERVAL_MINUTES;
   logger.info('Time since last tweet', {
     timeSinceLastTweet,
-    postInterval: globalConfig.twitterConfig.POST_INTERVAL_MS,
+    postInterval: globalConfig.twitterConfig.POST_INTERVAL_MINUTES,
     shouldGenerateTweet,
   });
 
