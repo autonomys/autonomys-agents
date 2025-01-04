@@ -14,7 +14,9 @@ export const getLastMemoryHash = async (): Promise<string> => {
 
 export const getLastMemoryCid = async (): Promise<string> => {
   const lastMemoryHash = await contract.getLastMemoryHash(wallet.address);
-  // Convert hex string to Buffer
+  if (!lastMemoryHash) {
+    return '';
+  }
   const hashBuffer = Buffer.from(lastMemoryHash.slice(2), 'hex');
 
   const cid = cidFromBlakeHash(hashBuffer);
@@ -27,5 +29,6 @@ export const setLastMemoryHash = async (hash: string, nonce?: number) => {
     nonce: nonce,
     gasLimit: 100000,
   });
+  const _receipt = await tx.wait();
   return tx;
 };
