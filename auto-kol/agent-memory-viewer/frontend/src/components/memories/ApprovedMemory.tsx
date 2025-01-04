@@ -16,7 +16,7 @@ export function ApprovedMemoryView({ memory }: Props) {
             </Text>
             <VStack align="stretch" mb={4} pl={4}>
                 <Text>
-                    <Text as="span" color="gray.400">Content:</Text>{' '}
+                    <Text as="span" color="gray.400">Respond:</Text>{' '}
                     <Text as="span" color="white">{memory.response}</Text>
                 </Text>
             </VStack>
@@ -35,56 +35,70 @@ export function ApprovedMemoryView({ memory }: Props) {
                     <Text as="span" color="gray.400">Reason:</Text>{' '}
                     <Text as="span" color="white">{memory.workflowState.decision.reason}</Text>
                 </Text>
-                <Text>
-                    <Text as="span" color="gray.400">Priority:</Text>{' '}
-                    <Text as="span" color="orange.400">{memory.workflowState.decision.priority}</Text>
-                </Text>
-                <Text>
-                    <Text as="span" color="gray.400">Confidence:</Text>{' '}
-                    <Text as="span" color="green.400">
-                        {(memory.workflowState.decision.confidence * 100).toFixed(1)}%
+                {memory.workflowState.decision.priority && (
+                    <Text>
+                        <Text as="span" color="gray.400">Priority:</Text>{' '}
+                        <Text as="span" color="orange.400">{memory.workflowState.decision.priority}</Text>
                     </Text>
-                </Text>
+                )}
+                {memory.workflowState.decision.confidence && (
+                    <Text>
+                        <Text as="span" color="gray.400">Confidence:</Text>{' '}
+                        <Text as="span" color="green.400">
+                            {(memory.workflowState.decision.confidence * 100).toFixed(1)}%
+                        </Text>
+                    </Text>
+                )}  
             </VStack>
             
-            <Text fontSize="md" fontWeight="bold" color="purple.400" mb={2}>
-                Tone Analysis
-            </Text>
-            <VStack align="stretch" mb={4} pl={4}>
-                <Text>
-                    <Text as="span" color="gray.400">Dominant Tone:</Text>{' '}
-                    <Text as="span" color="orange.400">{memory.workflowState.toneAnalysis.dominantTone}</Text>
-                </Text>
-                <Text>
-                    <Text as="span" color="gray.400">Suggested Tone:</Text>{' '}
-                    <Text as="span" color="orange.400">{memory.workflowState.toneAnalysis.suggestedTone}</Text>
-                </Text>
-                <Text>
-                    <Text as="span" color="gray.400">Reasoning:</Text>{' '}
-                    <Text as="span" color="white">{memory.workflowState.toneAnalysis.reasoning}</Text>
-                </Text>
-            </VStack>
+            {memory.workflowState.toneAnalysis &&  (
+                <>
+                    <Text fontSize="md" fontWeight="bold" color="purple.400" mb={2}>
+                        Tone Analysis
+                    </Text>
+                    <VStack align="stretch" mb={4} pl={4}>
+                        <Text>
+                            <Text as="span" color="gray.400">Dominant Tone:</Text>{' '}
+                            <Text as="span" color="orange.400">{memory.workflowState.toneAnalysis.dominantTone}</Text>
+                        </Text>
+                        <Text>
+                            <Text as="span" color="gray.400">Suggested Tone:</Text>{' '}
+                            <Text as="span" color="orange.400">{memory.workflowState.toneAnalysis.suggestedTone}</Text>
+                        </Text>
+                        <Text>
+                            <Text as="span" color="gray.400">Reasoning:</Text>{' '}
+                            <Text as="span" color="white">{memory.workflowState.toneAnalysis.reasoning}</Text>
+                        </Text>
+                    </VStack>
+                </>
+            )}
 
             <Text fontSize="md" fontWeight="bold" color="purple.400" mb={2}>
                 Response Strategy
             </Text>
             <VStack align="stretch" mb={4} pl={4}>
-                <Text>
-                    <Text as="span" color="gray.400">Tone:</Text>{' '}
-                    <Text as="span" color="orange.400">{memory.workflowState.responseStrategy.tone}</Text>
-                </Text>
+                {memory.workflowState.responseStrategy.tone && (
+                    <>
+                        <Text>
+                            <Text as="span" color="gray.400">Tone:</Text>{' '}
+                            <Text as="span" color="orange.400">{memory.workflowState.responseStrategy.tone}</Text>
+                        </Text>
+                    </>
+                )}
                 <Text>
                     <Text as="span" color="gray.400">Strategy:</Text>{' '}
                     <Text as="span" color="white">{memory.workflowState.responseStrategy.strategy}</Text>
                 </Text>
-                <Text>
-                    <Text as="span" color="gray.400">Confidence:</Text>{' '}
-                    <Text as="span" color="green.400">
-                        {(memory.workflowState.responseStrategy.confidence * 100).toFixed(1)}%
+                {memory.workflowState.responseStrategy.confidence && (
+                    <Text>
+                        <Text as="span" color="gray.400">Confidence:</Text>{' '}
+                        <Text as="span" color="green.400">
+                            {(memory.workflowState.responseStrategy.confidence * 100).toFixed(1)}%
+                        </Text>
                     </Text>
-                </Text>
+                )}
             </VStack>
-
+                
             {memory.workflowState.responseStrategy.referencedTweets.length > 0 && (
                 <>
                     <Text fontSize="md" fontWeight="bold" color="purple.400" mb={2}>

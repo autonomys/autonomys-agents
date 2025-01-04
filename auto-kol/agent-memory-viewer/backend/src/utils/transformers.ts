@@ -36,7 +36,6 @@ export function transformMemoryToLegacy(memory: MemoryV2_0_0) {
                         shouldEngage: true,
                         reason: responseMemory.decision.reason
                     },
-                    toneAnalysis: {},
                     responseStrategy: {
                         strategy: responseMemory.strategy,
                         referencedTweets: []
