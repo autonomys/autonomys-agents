@@ -14,6 +14,8 @@ import { trendTweetParser, responseParser } from '../prompts.js';
 import { AIMessage } from '@langchain/core/messages';
 import { summarySchema } from '../schemas.js';
 import { z } from 'zod';
+import { config as globalConfig } from '../../../../config/index.js';
+
 const logger = createLogger('generate-tweet-node');
 
 const postResponse = async (
@@ -34,9 +36,10 @@ const postResponse = async (
       patterns: summary.patterns,
       commonWords: summary.commonWords,
     });
+
   //TODO: After sending the tweet, we need to get the latest tweet, ensure it is the same as we sent and return it
   //This has not been working as expected, so we need to investigate this later
-  const postedResponse = await invokePostTweetTool(
+  const _postedResponse = await invokePostTweetTool(
     config.toolNode,
     response.content,
     decision.tweet.id,
@@ -47,6 +50,44 @@ const postResponse = async (
     engagementDecision,
     //tweetId: tweet ? tweet.id : null
   };
+};
+
+const postTweet = async (config: WorkflowConfig, state: typeof State.State) => {
+  const recentTweets = Array.from(state.myRecentTweets.values()).map(t => ({
+    text: t.text!,
+    username: t.username!,
+    timeParsed: t.timeParsed!,
+  }));
+
+  const lastTweetTime = recentTweets.length > 0 ? recentTweets[0].timeParsed : null;
+  const timeSinceLastTweet = lastTweetTime ? new Date().getTime() - lastTweetTime.getTime() : 0;
+  const shouldGenerateTweet =
+    timeSinceLastTweet === 0 || timeSinceLastTweet > globalConfig.twitterConfig.POST_INTERVAL_MS;
+  logger.info('Time since last tweet', {
+    timeSinceLastTweet,
+    postInterval: globalConfig.twitterConfig.POST_INTERVAL_MS,
+    shouldGenerateTweet,
+  });
+
+  if (shouldGenerateTweet) {
+    const generatedTweet = await config.prompts.tweetPrompt
+      .pipe(config.llms.generation)
+      .pipe(trendTweetParser)
+      .invoke({
+        trendAnalysis: state.trendAnalysis,
+        recentTweets,
+      });
+
+    const postedTweet = await invokePostTweetTool(config.toolNode, generatedTweet.tweet);
+    const tweetReceipt = JSON.parse(postedTweet.messages[0].content);
+    const postedTweetId = tweetReceipt.postedTweetId;
+    return {
+      type: DsnDataType.GENERATED_TWEET,
+      content: generatedTweet.tweet,
+      tweetId: postedTweetId || null,
+    } as DsnGeneratedTweetData;
+  }
+  return undefined;
 };
 
 export const createGenerateTweetNode =
@@ -60,10 +101,6 @@ export const createGenerateTweetNode =
       };
     }
 
-    const recentTweets = Array.from(state.myRecentTweets.values()).map(t => ({
-      text: t.text!,
-      username: t.username!,
-    }));
     const summary = state.summary;
 
     const shouldEngage = state.engagementDecisions.filter(d => d.decision.shouldEngage);
@@ -88,17 +125,7 @@ export const createGenerateTweetNode =
       shouldEngage.map(d => postResponse(config, d, summary)),
     );
 
-    // Generate a top level tweet
-    //TODO: add a check to see if it has been long enough since the last tweet
-    const generatedTweet = await config.prompts.tweetPrompt
-      .pipe(config.llms.generation)
-      .pipe(trendTweetParser)
-      .invoke({
-        trendAnalysis: state.trendAnalysis,
-        recentTweets,
-      });
-
-    const postedTweet = await invokePostTweetTool(config.toolNode, generatedTweet.tweet);
+    const postedTweet = await postTweet(config, state);
 
     // Transform the data into an array format expected by DSN
     const formattedDsnData: DsnData[] = [
@@ -123,11 +150,7 @@ export const createGenerateTweetNode =
             tweet: item.tweet,
           }) as DsnSkippedEngagementData,
       ),
-      {
-        type: DsnDataType.GENERATED_TWEET,
-        content: generatedTweet.tweet,
-        tweetId: postedTweet ? postedTweet.postedTweetId : null,
-      } as DsnGeneratedTweetData,
+      ...(postedTweet ? [postedTweet] : []),
     ];
 
     return {

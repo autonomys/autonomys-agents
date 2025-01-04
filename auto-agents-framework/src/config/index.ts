@@ -48,12 +48,12 @@ export const config = (() => {
         MAX_MY_RECENT_TWEETS: Number(process.env.MAX_MY_RECENT_TWEETS) || 10,
         MAX_MY_RECENT_REPLIES: Number(process.env.MAX_MY_RECENT_REPLIES) || 10,
         POST_TWEETS: process.env.POST_TWEETS === 'true',
-        RESPONSE_INTERVAL_MS: (Number(process.env.RESPONSE_INTERVAL_MS) || 26) * 60 * 1000,
-        POST_INTERVAL_MS: (Number(process.env.POST_INTERVAL_MS) || 30) * 60 * 1000,
+        RESPONSE_INTERVAL_MS: (Number(process.env.RESPONSE_INTERVAL_MINUTES) || 60) * 60 * 1000,
+        POST_INTERVAL_MS: (Number(process.env.POST_INTERVAL_MINUTES) || 90) * 60 * 1000,
       },
       llmConfig: {
-        LARGE_LLM_MODEL: process.env.LARGE_LLM_MODEL || 'gpt-4',
-        SMALL_LLM_MODEL: process.env.SMALL_LLM_MODEL || 'gpt-4-mini',
+        LARGE_LLM_MODEL: process.env.LARGE_LLM_MODEL || 'gpt-4o',
+        SMALL_LLM_MODEL: process.env.SMALL_LLM_MODEL || 'gpt-4o-mini',
         OPENAI_API_KEY: process.env.OPENAI_API_KEY || '',
       },
       autoDriveConfig: {

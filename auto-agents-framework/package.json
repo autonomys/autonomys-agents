@@ -5,13 +5,14 @@
     "main": "dist/index.js",
     "type": "module",
     "scripts": {
-        "build": "tsc",
-        "start": "node dist/index.js",
+        "build": "tsc && yarn copy-characters",
+        "start": "yarn build && node dist/index.js",
         "dev": "tsx watch src/index.ts",
         "format": "prettier --write \"src/**/*.ts\"",
         "format:check": "prettier --check \"src/**/*.ts\"",
         "example:twitter": "tsx examples/twitter.ts",
-        "extract-kol-dsn-schemas": "tsx src/agents/workflows/kol/cli/extractDsnSchemas.ts"
+        "extract-kol-dsn-schemas": "tsx src/agents/workflows/kol/cli/extractDsnSchemas.ts",
+        "copy-characters": "cp -r src/agents/workflows/kol/characters dist/agents/workflows/kol/"
     },
     "dependencies": {
         "@autonomys/auto-dag-data": "1.2.1",

@@ -28,7 +28,7 @@ export const summaryParser = StructuredOutputParser.fromZodSchema(summarySchema)
 
 const loadCharacter = async (characterFile: string) => {
   try {
-    const { character } = await import(`./characters/${characterFile}`);
+    const { character } = await import(`./characters/${characterFile}.js`);
     return character;
   } catch (error) {
     throw new Error(`Failed to load character file: ${characterFile}`);
@@ -39,7 +39,12 @@ export const createPrompts = async (characterFile: string) => {
   const character = await loadCharacter(characterFile);
 
   const engagementSystemPrompt = await PromptTemplate.fromTemplate(
-    `You are strategic social media engagement advisor. Your task is to evaluate tweets and decide whether they warrant a response.
+    `Your task is to evaluate tweets and decide whether they warrant a response.
+
+    Personality & Style:
+    ${character.description}
+    ${character.personality}
+    ${character.replyStyle}
 
     Criteria for engagement:
     ${character.engagementCriteria}

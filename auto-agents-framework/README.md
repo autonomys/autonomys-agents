@@ -64,18 +64,26 @@ export const character = {
 ### Running with Different Characters
 
 Run the agent with a specific character:
-``bash
 
+```bash
 # Use default character (character.ts)
+yarn dev  # for development with auto-reload
+# or
+yarn start  # for production build and run
 
-yarn dev
+# Use a specific character (omit both .ts and .js extensions)
+yarn dev argumint  # for development with auto-reload
+# or
+yarn start argumint  # for production build and run
 
-# Use a specific character (omit .ts extension)
-
-```
-yarn dev argumint
+# Examples:
+# If your character file is named 'techie.ts':
 yarn dev techie
+# If your character file is named 'my-agent.ts':
+yarn dev my-agent
 ```
+
+Note: When specifying a character file, omit both `.ts` and `.js` extensions. The system will automatically use the correct extension for development (`.ts`) and production (`.js`).
 
 ### Example Characters
 
