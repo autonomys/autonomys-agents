@@ -1,8 +1,8 @@
 import {
   dsnData,
-  dsnGeneratedTweetData,
-  dsnResponseData,
-  dsnSkippedEngagementData,
+  DsnGeneratedTweetData,
+  DsnResponseData,
+  DsnSkippedEngagementData,
   EngagementDecision,
   WorkflowConfig,
   dsnDataType,
@@ -112,7 +112,7 @@ export const createGenerateTweetNode =
               shouldEngage: true,
               reason: response.engagementDecision.reason,
             },
-          }) as dsnResponseData,
+          }) as DsnResponseData,
       ),
       ...shouldNotEngage.map(
         item =>
@@ -120,13 +120,13 @@ export const createGenerateTweetNode =
             type: dsnDataType.SKIPPED_ENGAGEMENT,
             decision: item.decision,
             tweet: item.tweet,
-          }) as dsnSkippedEngagementData,
+          }) as DsnSkippedEngagementData,
       ),
       {
         type: dsnDataType.GENERATED_TWEET,
         content: generatedTweet.tweet,
         tweetId: postedTweet ? postedTweet.postedTweetId : null,
-      } as dsnGeneratedTweetData,
+      } as DsnGeneratedTweetData,
     ];
 
     return {

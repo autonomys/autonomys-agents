@@ -36,21 +36,21 @@ export type EngagementDecision = {
   tweet: Tweet;
 };
 
-export type dsnResponseData = {
+export type DsnResponseData = {
   type: dsnDataType.RESPONSE;
   tweet: z.infer<typeof dsnTweet>;
   decision: z.infer<typeof engagementSchema>;
 } & z.infer<typeof responseSchema>;
 
-export type dsnSkippedEngagementData = {
+export type DsnSkippedEngagementData = {
   type: dsnDataType.SKIPPED_ENGAGEMENT;
   tweet: z.infer<typeof dsnTweet>;
 } & z.infer<typeof skippedEngagementSchema>;
 
-export type dsnGeneratedTweetData = {
+export type DsnGeneratedTweetData = {
   type: dsnDataType.GENERATED_TWEET;
   content: string;
   tweetId: string | null;
 };
 
-export type dsnData = dsnResponseData | dsnSkippedEngagementData | dsnGeneratedTweetData;
+export type dsnData = DsnResponseData | DsnSkippedEngagementData | DsnGeneratedTweetData;
