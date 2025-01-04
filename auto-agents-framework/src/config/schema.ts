@@ -12,8 +12,8 @@ const twitterConfigSchema = z.object({
   MAX_MY_RECENT_TWEETS: z.number().int().positive(),
   MAX_MY_RECENT_REPLIES: z.number().int().positive(),
   POST_TWEETS: z.boolean(),
-  RESPONSE_INTERVAL_MS: z.number().int().positive(),
-  POST_INTERVAL_MS: z.number().int().positive(),
+  RESPONSE_INTERVAL_MINUTES: z.number().int().positive(),
+  POST_INTERVAL_MINUTES: z.number().int().positive(),
 });
 
 const llmConfigSchema = z.object({
