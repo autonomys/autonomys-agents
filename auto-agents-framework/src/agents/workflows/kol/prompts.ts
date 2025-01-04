@@ -28,7 +28,7 @@ export const summaryParser = StructuredOutputParser.fromZodSchema(summarySchema)
 
 const loadCharacter = async (characterFile: string) => {
   try {
-    const { character } = await import(`./characters/${characterFile}`);
+    const { character } = await import(`./characters/${characterFile}.js`);
     return character;
   } catch (error) {
     throw new Error(`Failed to load character file: ${characterFile}`);
