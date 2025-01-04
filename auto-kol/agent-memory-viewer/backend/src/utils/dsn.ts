@@ -2,7 +2,7 @@ import { createAutoDriveApi, downloadObject, getObjectMetadata } from '@autonomy
 import { config } from '../config/index.js';
 import { inflate } from 'pako';
 import { createLogger } from './logger.js';
-import { ethers } from 'ethers';
+import { validateMemoryData, validateMemoryMetadata } from './validation/memory.js';
 
 const logger = createLogger('dsn');
 
@@ -13,94 +13,6 @@ async function delay(ms: number) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-async function validateMemoryMetadata(api: any, cid: string): Promise<boolean> {
-    try {
-        const metadata = await getObjectMetadata(api, { cid });
-        // Check if filename contains AGENT_ADDRESS
-        const agentAddressLower = config.AGENT_USERNAME.toLowerCase();
-        if (!metadata?.name?.toLowerCase().includes(agentAddressLower)) {
-            logger.warn('Memory rejected: File name does not contain agent address', {
-                cid,
-                filename: metadata.name,
-                agentAddress: config.AGENT_USERNAME
-            });
-            return false;
-        }
-
-        const totalSize = Number(metadata.totalSize);
-        if (totalSize > 102400) {
-            logger.warn('Memory rejected: File size exceeds 100KB limit', {
-                cid,
-                size: totalSize
-            });
-            return false;
-        }
-
-        return true;
-    } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : String(error);
-        if (errorMessage.includes('Not Found')) {
-            logger.warn('Memory not found, skipping download', {
-                cid,
-                error: errorMessage
-            });
-            return false;
-        }
-        throw error;
-    }
-}
-
-async function validateMemoryData(memoryData: any): Promise<boolean> {
-    if (!memoryData || typeof memoryData !== 'object') {
-        logger.warn('Memory rejected: Invalid memory data format', {
-            type: typeof memoryData
-        });
-        return false;
-    }
-
-    const requiredFields = ['signature', 'previousCid', 'timestamp'];
-    for (const field of requiredFields) {
-        if (!(field in memoryData)) {
-            logger.warn('Memory rejected: Missing required field', {
-                missingField: field
-            });
-            return false;
-        }
-    }
-
-    // Validate signature
-    try {
-        const messageObject = {
-            data: memoryData.data || {
-                ...memoryData,
-                previousCid: undefined,
-                timestamp: undefined,
-                signature: undefined
-            },
-            previousCid: memoryData.previousCid,
-            timestamp: memoryData.timestamp
-        };
-        const message = JSON.stringify(messageObject);
-        const recoveredAddress = ethers.verifyMessage(message, memoryData.signature);
-        logger.info(`Recovered address: ${recoveredAddress}`);
-        const expectedAddress = config.AGENT_ADDRESS;
-        if (recoveredAddress.toLowerCase() !== expectedAddress.toLowerCase()) {
-            logger.warn('Memory rejected: Invalid signature', {
-                expectedSigner: expectedAddress,
-                actualSigner: recoveredAddress
-            });
-            return false;
-        }
-        
-        logger.info('Signature verified successfully');
-        return true;
-    } catch (error) {
-        logger.warn('Memory rejected: Signature verification failed', {
-            error: error instanceof Error ? error.message : String(error)
-        });
-        return false;
-    }
-}
 
 export async function downloadMemory(cid: string, retryCount = 0): Promise<any> {
     logger.info(`Checking memory metadata: ${cid}`);
