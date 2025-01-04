@@ -75,6 +75,7 @@ export const createGenerateTweetNode =
           id: d.tweet.id,
           text: d.tweet.text,
           username: d.tweet.username,
+          timeParsed: d.tweet.timeParsed,
           thread: d.tweet.thread,
         },
       }));

@@ -5,16 +5,15 @@ import { createLogger } from '../../../utils/logger.js';
 
 const logger = createLogger('convert-tweet-messages');
 
-const convertTweet = (tweet: any): Tweet | null => {
+const convertTweet = async (tweet: any): Promise<Tweet | null> => {
   if (!tweet || typeof tweet !== 'object') {
     logger.warn('Invalid tweet object received:', tweet);
     return null;
   }
-
   try {
     return {
       ...tweet,
-      timeParsed: tweet.timestamp ? new Date(tweet.timestamp) : new Date(),
+      timeParsed: tweet.timestamp ? new Date(tweet.timestamp * 1000) : new Date(),
     };
   } catch (error) {
     logger.error('Error converting tweet:', error);
