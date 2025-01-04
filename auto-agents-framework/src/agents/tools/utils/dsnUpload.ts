@@ -2,7 +2,7 @@ import { createLogger } from '../../../utils/logger.js';
 import { hexlify } from 'ethers';
 import { createAutoDriveApi, uploadFile } from '@autonomys/auto-drive';
 import { stringToCid, blake3HashFromCid } from '@autonomys/auto-dag-data';
-import { config } from '../../../config/index.js';
+import { config, agentVersion } from '../../../config/index.js';
 import { wallet, signMessage } from './agentWallet.js';
 import { setLastMemoryHash, getLastMemoryCid } from './agentMemoryContract.js';
 
@@ -68,6 +68,7 @@ export async function uploadToDsn(data: object) {
       data: data,
       previousCid: previousCid,
       timestamp: timestamp,
+      agentVersion: agentVersion,
     });
 
     const dsnData = {
@@ -75,6 +76,7 @@ export async function uploadToDsn(data: object) {
       previousCid: previousCid,
       signature: signature,
       timestamp: timestamp,
+      agentVersion: agentVersion,
     };
 
     logger.info('Upload to Dsn - DSN Data', { dsnData });
@@ -93,6 +95,7 @@ export async function uploadToDsn(data: object) {
       compression: true,
       password: config.autoDriveConfig.AUTO_DRIVE_ENCRYPTION_PASSWORD || undefined,
     });
+    logger.info('Upload to Dsn - Uploaded CID', { uploadedCid }, stringToCid(uploadedCid));
 
     const blake3hash = blake3HashFromCid(stringToCid(uploadedCid));
     logger.info('Setting last memory hash', {

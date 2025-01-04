@@ -10,7 +10,8 @@
         "dev": "tsx watch src/index.ts",
         "format": "prettier --write \"src/**/*.ts\"",
         "format:check": "prettier --check \"src/**/*.ts\"",
-        "example:twitter": "tsx examples/twitter.ts"
+        "example:twitter": "tsx examples/twitter.ts",
+        "extract-kol-dsn-schemas": "tsx src/agents/workflows/kol/cli/extractDsnSchemas.ts"
     },
     "dependencies": {
         "@autonomys/auto-dag-data": "1.2.1",
@@ -21,9 +22,10 @@
         "@langchain/openai": "0.3.16",
         "agent-twitter-client": "0.0.18",
         "dotenv": "^16.3.1",
-        "ethers": "^6.13.4",        
+        "ethers": "^6.13.4",
         "winston": "^3.11.0",
-        "zod": "^3.22.4"
+        "zod": "^3.22.4",
+        "zod-to-json-schema": "^3.24.1"
     },
     "devDependencies": {
         "@tsconfig/node20": "^20.1.4",

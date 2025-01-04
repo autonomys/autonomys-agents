@@ -50,6 +50,17 @@ export const createEngagementNode = (config: WorkflowConfig) => {
               text: tweet.text!,
               username: tweet.username!,
               timeParsed: tweet.timeParsed!,
+              thread:
+                tweet.thread && tweet.thread.length > 0
+                  ? Array.from(
+                      tweet.thread.map(t => ({
+                        id: t.id,
+                        text: t.text,
+                        username: t.username,
+                        timeParsed: t.timeParsed,
+                      })),
+                    )
+                  : 'No thread',
             },
             decision,
           };
