@@ -92,6 +92,7 @@ export interface RejectedMemory extends BaseMemory {
 
 export interface PostedMemory extends BaseMemory {
     type: 'posted';
+    agentVersion: string;
 }
 
 export type AgentMemory = 

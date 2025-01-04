@@ -1,5 +1,6 @@
 import type { MemoryV2_0_0, ResponseV2_0_0, SkippedEngagementV2_0_0, GeneratedTweetV2_0_0, Tweet } from '../types/generated/v2_0_0.js';
 import { ResponseStatus } from '../types/enums.js';
+import { config } from '../config/index.js';
 
 function transformTweet(tweet: Tweet): any {
     return {
@@ -59,10 +60,17 @@ export function transformMemoryToLegacy(memory: MemoryV2_0_0) {
         return {
             type: 'posted',
             response: postedMemory.content,
-            tweetId: postedMemory.tweetId,
+            tweet: {
+                id: postedMemory.tweetId,
+                text: postedMemory.content,
+                author_id: '1861873566687404032',
+                author_username: config.AGENT_USERNAME,
+                created_at: postedMemory.timestamp,
+            },
             signature: postedMemory.signature,
             timestamp: postedMemory.timestamp,
-            previousCid: postedMemory.previousCid
+            previousCid: postedMemory.previousCid,
+            agentVersion: postedMemory.agentVersion
         };
     }
 

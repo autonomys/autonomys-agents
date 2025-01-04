@@ -59,6 +59,15 @@ export function PostedMemoryView({ memory }: Props) {
                     </Text>
                 </Text>
             </VStack>
+
+            <Text fontSize="md" fontWeight="bold" color="purple.400" mb={2}>
+                Agent Version
+            </Text>
+            <VStack align="stretch" mb={4} pl={4}>
+                <Text>
+                    <Text as="span" color="white">{memory.agentVersion ? memory.agentVersion : '1.0.0'}</Text>
+                </Text>
+            </VStack>
         </>
     );
 } 

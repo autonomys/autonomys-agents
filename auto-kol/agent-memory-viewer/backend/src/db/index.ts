@@ -147,7 +147,8 @@ export async function getAllDsn(
                     tweet_id: content.tweet?.id || null,
                     cid: record.cid,
                     created_at: record.created_at,
-                    author_username: content.tweet?.username || content.tweet?.author_username || null,
+                    author_username: content.tweet?.username || content.tweet?.author_username || 
+                        (content.type === 'posted' ? config.AGENT_USERNAME : null), 
                     tweet_content: content.tweet?.text || null,
                     thread: content.tweet?.thread || null,
                     response_content: ['rejected', 'approved', 'skipped', 'posted', 'response'].includes(content.type) 
