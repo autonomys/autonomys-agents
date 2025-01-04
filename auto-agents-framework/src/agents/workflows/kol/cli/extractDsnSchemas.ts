@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { zodToJsonSchema } from 'zod-to-json-schema';
-import { dsnDataType } from '../types.js';
+import { DsnDataType } from '../types.js';
 import { engagementSchema, responseSchema, skippedEngagementSchema, dsnTweet } from '../schemas.js';
 import { writeFileSync } from 'fs';
 import { join } from 'path';
@@ -15,7 +15,7 @@ const dsnCommonFields = z.object({
 const extractDsnResponseSchema = () => {
   const schema = z
     .object({
-      type: z.literal(dsnDataType.RESPONSE),
+      type: z.literal(DsnDataType.RESPONSE),
       tweet: dsnTweet,
       decision: engagementSchema,
     })
@@ -28,7 +28,7 @@ const extractDsnResponseSchema = () => {
 const extractDsnSkippedEngagementSchema = () => {
   const schema = z
     .object({
-      type: z.literal(dsnDataType.SKIPPED_ENGAGEMENT),
+      type: z.literal(DsnDataType.SKIPPED_ENGAGEMENT),
       tweet: dsnTweet,
     })
     .merge(skippedEngagementSchema)
@@ -40,7 +40,7 @@ const extractDsnSkippedEngagementSchema = () => {
 const extractDsnGeneratedTweetSchema = () => {
   const schema = z
     .object({
-      type: z.literal(dsnDataType.GENERATED_TWEET),
+      type: z.literal(DsnDataType.GENERATED_TWEET),
       content: z.string(),
       tweetId: z.string().nullable(),
     })
