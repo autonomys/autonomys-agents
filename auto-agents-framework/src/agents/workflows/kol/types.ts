@@ -5,9 +5,14 @@ import { Tweet, TwitterApi } from '../../../services/twitter/types.js';
 import { ToolNode } from '@langchain/langgraph/prebuilt';
 import { ChatOpenAI } from '@langchain/openai';
 import { Runnable } from '@langchain/core/runnables';
-import { engagementSchema } from './schemas.js';
+import { engagementSchema, responseSchema, skippedEngagementSchema, dsnTweet } from './schemas.js';
 import { ChatPromptTemplate } from '@langchain/core/prompts';
 
+export enum DsnDataType {
+  RESPONSE = 'response',
+  SKIPPED_ENGAGEMENT = 'skipped',
+  GENERATED_TWEET = 'posted',
+}
 export type WorkflowConfig = Readonly<{
   twitterApi: TwitterApi;
   toolNode: ToolNode;
@@ -30,3 +35,22 @@ export type EngagementDecision = {
   decision: z.infer<typeof engagementSchema>;
   tweet: Tweet;
 };
+
+export type DsnResponseData = {
+  type: DsnDataType.RESPONSE;
+  tweet: z.infer<typeof dsnTweet>;
+  decision: z.infer<typeof engagementSchema>;
+} & z.infer<typeof responseSchema>;
+
+export type DsnSkippedEngagementData = {
+  type: DsnDataType.SKIPPED_ENGAGEMENT;
+  tweet: z.infer<typeof dsnTweet>;
+} & z.infer<typeof skippedEngagementSchema>;
+
+export type DsnGeneratedTweetData = {
+  type: DsnDataType.GENERATED_TWEET;
+  content: string;
+  tweetId: string | null;
+};
+
+export type DsnData = DsnResponseData | DsnSkippedEngagementData | DsnGeneratedTweetData;

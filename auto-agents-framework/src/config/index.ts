@@ -28,6 +28,8 @@ function formatZodError(error: z.ZodError) {
     \nPlease check your .env file and ensure all required variables are set correctly.`;
 }
 
+export const agentVersion = process.env.AGENT_VERSION || '1.0.0';
+
 export const config = (() => {
   try {
     const username = process.env.TWITTER_USERNAME || '';

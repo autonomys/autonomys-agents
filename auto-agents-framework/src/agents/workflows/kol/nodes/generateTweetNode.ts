@@ -1,4 +1,12 @@
-import { EngagementDecision, WorkflowConfig } from '../types.js';
+import {
+  DsnData,
+  DsnGeneratedTweetData,
+  DsnResponseData,
+  DsnSkippedEngagementData,
+  EngagementDecision,
+  WorkflowConfig,
+  DsnDataType,
+} from '../types.js';
 import { createLogger } from '../../../../utils/logger.js';
 import { State } from '../workflow.js';
 import { invokePostTweetTool } from '../../../tools/postTweetTool.js';
@@ -13,26 +21,30 @@ const postResponse = async (
   decision: EngagementDecision,
   summary: z.infer<typeof summarySchema>,
 ) => {
-  const thread =
-    decision.tweet.thread && decision.tweet.thread.length > 0
-      ? decision.tweet.thread.map(t => ({ text: t.text, username: t.username }))
-      : 'No thread';
-  const decisionInfo = { tweet: decision.tweet.text, reason: decision.decision.reason };
+  const engagementDecision = {
+    tweetText: decision.tweet.text,
+    reason: decision.decision.reason,
+  };
   const response = await config.prompts.responsePrompt
     .pipe(config.llms.generation)
     .pipe(responseParser)
     .invoke({
-      decision: decisionInfo,
-      thread,
+      decision: engagementDecision,
+      thread: decision.tweet.thread,
       patterns: summary.patterns,
       commonWords: summary.commonWords,
     });
   //TODO: After sending the tweet, we need to get the latest tweet, ensure it is the same as we sent and return it
   //This has not been working as expected, so we need to investigate this later
-  const tweet = await invokePostTweetTool(config.toolNode, response.content, decision.tweet.id);
+  const postedResponse = await invokePostTweetTool(
+    config.toolNode,
+    response.content,
+    decision.tweet.id,
+  );
   return {
     ...response,
-    decisionInfo: decisionInfo,
+    tweet: decision.tweet,
+    engagementDecision,
     //tweetId: tweet ? tweet.id : null
   };
 };
@@ -63,9 +75,7 @@ export const createGenerateTweetNode =
           id: d.tweet.id,
           text: d.tweet.text,
           username: d.tweet.username,
-          thread: d.tweet.thread
-            ? d.tweet.thread.map(t => ({ id: t.id, text: t.text, username: t.username }))
-            : 'No thread',
+          thread: d.tweet.thread,
         },
       }));
     logger.info('Engagement Decisions', {
@@ -90,24 +100,33 @@ export const createGenerateTweetNode =
     const postedTweet = await invokePostTweetTool(config.toolNode, generatedTweet.tweet);
 
     // Transform the data into an array format expected by DSN
-    const formattedDsnData = [
-      ...postedResponses.map(response => ({
-        type: 'response',
-        content: response.content,
-        decisionInfo: response.decisionInfo,
-        //tweetId: response.tweetId,
-        strategy: response.strategy,
-      })),
-      ...shouldNotEngage.map(item => ({
-        type: 'skipped_engagement',
-        decision: item.decision,
-        tweet: item.tweet,
-      })),
+    const formattedDsnData: DsnData[] = [
+      ...postedResponses.map(
+        response =>
+          ({
+            type: DsnDataType.RESPONSE,
+            tweet: response.tweet,
+            content: response.content,
+            strategy: response.strategy,
+            decision: {
+              shouldEngage: true,
+              reason: response.engagementDecision.reason,
+            },
+          }) as DsnResponseData,
+      ),
+      ...shouldNotEngage.map(
+        item =>
+          ({
+            type: DsnDataType.SKIPPED_ENGAGEMENT,
+            decision: item.decision,
+            tweet: item.tweet,
+          }) as DsnSkippedEngagementData,
+      ),
       {
-        type: 'generated_tweet',
+        type: DsnDataType.GENERATED_TWEET,
         content: generatedTweet.tweet,
         tweetId: postedTweet ? postedTweet.postedTweetId : null,
-      },
+      } as DsnGeneratedTweetData,
     ];
 
     return {
