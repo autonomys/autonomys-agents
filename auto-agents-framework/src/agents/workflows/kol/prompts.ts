@@ -143,9 +143,10 @@ export const createPrompts = async (characterFile: string) => {
       Use your personality and style to make the tweet more engaging.
 
       IMPORTANT:
-      Recent tweets: {recentTweets}
+      Your recent tweets: {recentTweets}
+      - DO NOT use the same topics as your recent tweets.
       - Avoid sounding repetitive and touching on the same topics.
-      - DO NOT use similar opening phrases as your recent tweets.
+      - DO NOT use similar opening phrases as your recent tweets.      
       - Stay in character but mix up your language and style.
       `,
     ],
