@@ -1,35 +1,36 @@
+import { LLMProvider } from "./types.js";
 import { ChatOpenAI } from '@langchain/openai';
 import { ChatAnthropic } from '@langchain/anthropic';
-import { ChatLlama } from './chat_llama.js';
-export type LLMProvider = 'openai' | 'anthropic' | 'llama';
 import { ChatOllama } from "@langchain/ollama";
-import { Ollama } from "@langchain/community/llms/ollama";
+import { config } from "../../config/index.js";
 
 export class LLMFactory {
   static createModel(
     provider: LLMProvider,
-    modelName: string,
+    model: string,
     temperature: number,
   ): ChatOpenAI | ChatAnthropic | ChatOllama {
     switch (provider) {
       case 'openai':
         return new ChatOpenAI({
-          modelName,
+          apiKey: config.llmConfig.OPENAI_API_KEY,
+          model,
           temperature,
         });
 
       case 'anthropic':
         return new ChatAnthropic({
-          modelName,
+          apiKey: config.llmConfig.ANTHROPIC_API_KEY,
+          model,
           temperature,
-          anthropicApiKey: process.env.ANTHROPIC_API_KEY,
         });
 
       case 'llama':
         return new ChatOllama({
-          baseUrl: process.env.LLAMA_API_URL || '',
-          model: modelName,
+          baseUrl: config.llmConfig.LLAMA_API_URL || '',
+          model,
           temperature,
+          format: 'json',
           maxRetries: 3,
         });
 
