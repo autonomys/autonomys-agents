@@ -13,6 +13,7 @@ import { Tweet } from '../../../services/twitter/types.js';
 import { trendSchema, summarySchema } from './schemas.js';
 import { z } from 'zod';
 import { createPrompts } from './prompts.js';
+import { LLMFactory } from '../../../services/llm/factory.js';
 
 export const logger = createLogger('agent-workflow');
 
@@ -62,7 +63,7 @@ export const State = Annotation.Root({
 
 const createWorkflowConfig = async (characterFile: string): Promise<WorkflowConfig> => {
   const { USERNAME, PASSWORD, COOKIES_PATH } = config.twitterConfig;
-  const { LARGE_LLM_MODEL, SMALL_LLM_MODEL } = config.llmConfig;
+  const { LLM_PROVIDER,LARGE_LLM_MODEL, SMALL_LLM_MODEL } = config.llmConfig;
 
   const twitterApi = await createTwitterApi(USERNAME, PASSWORD, COOKIES_PATH);
   const { tools } = createTools(twitterApi);
@@ -74,22 +75,10 @@ const createWorkflowConfig = async (characterFile: string): Promise<WorkflowConf
     toolNode,
     prompts,
     llms: {
-      decision: new ChatOpenAI({
-        modelName: SMALL_LLM_MODEL,
-        temperature: 0.2,
-      }),
-      analyze: new ChatOpenAI({
-        modelName: LARGE_LLM_MODEL,
-        temperature: 0.5,
-      }),
-      generation: new ChatOpenAI({
-        modelName: LARGE_LLM_MODEL,
-        temperature: 0.8,
-      }),
-      response: new ChatOpenAI({
-        modelName: LARGE_LLM_MODEL,
-        temperature: 0.8,
-      }),
+      decision: LLMFactory.createModel(LLM_PROVIDER, SMALL_LLM_MODEL, 0.2),
+      analyze: LLMFactory.createModel(LLM_PROVIDER, LARGE_LLM_MODEL, 0.5),
+      generation: LLMFactory.createModel(LLM_PROVIDER, LARGE_LLM_MODEL, 0.8),
+      response: LLMFactory.createModel(LLM_PROVIDER, LARGE_LLM_MODEL, 0.8),
     },
   };
 };

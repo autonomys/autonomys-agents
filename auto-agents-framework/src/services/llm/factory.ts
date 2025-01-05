@@ -9,7 +9,7 @@ export class LLMFactory {
     provider: LLMProvider,
     modelName: string,
     temperature: number,
-  ): BaseChatModel {
+  ): ChatOpenAI | ChatAnthropic {
     switch (provider) {
       case 'openai':
         return new ChatOpenAI({

@@ -52,6 +52,7 @@ export const config = (() => {
         POST_INTERVAL_MS: (Number(process.env.POST_INTERVAL_MINUTES) || 90) * 60 * 1000,
       },
       llmConfig: {
+        LLM_PROVIDER: process.env.LLM_PROVIDER || 'openai',
         LARGE_LLM_MODEL: process.env.LARGE_LLM_MODEL || 'gpt-4o',
         SMALL_LLM_MODEL: process.env.SMALL_LLM_MODEL || 'gpt-4o-mini',
         OPENAI_API_KEY: process.env.OPENAI_API_KEY || '',
