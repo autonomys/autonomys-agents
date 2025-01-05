@@ -1,8 +1,8 @@
-import { LLMProvider } from "./types.js";
+import { LLMProvider } from './types.js';
 import { ChatOpenAI } from '@langchain/openai';
 import { ChatAnthropic } from '@langchain/anthropic';
-import { ChatOllama } from "@langchain/ollama";
-import { config } from "../../config/index.js";
+import { ChatOllama } from '@langchain/ollama';
+import { config } from '../../config/index.js';
 
 export class LLMFactory {
   static createModel(
@@ -38,4 +38,4 @@ export class LLMFactory {
         throw new Error(`Unsupported LLM provider: ${provider}`);
     }
   }
-} 
+}

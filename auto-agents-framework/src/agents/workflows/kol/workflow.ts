@@ -63,7 +63,7 @@ export const State = Annotation.Root({
 
 const createWorkflowConfig = async (characterFile: string): Promise<WorkflowConfig> => {
   const { USERNAME, PASSWORD, COOKIES_PATH } = config.twitterConfig;
-  const { LLM_PROVIDER,LARGE_LLM_MODEL, SMALL_LLM_MODEL } = config.llmConfig;
+  const { LLM_PROVIDER, LARGE_LLM_MODEL, SMALL_LLM_MODEL } = config.llmConfig;
 
   const twitterApi = await createTwitterApi(USERNAME, PASSWORD, COOKIES_PATH);
   const { tools } = createTools(twitterApi);
