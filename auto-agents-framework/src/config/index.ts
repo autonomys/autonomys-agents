@@ -55,6 +55,8 @@ export const config = (() => {
         LARGE_LLM_MODEL: process.env.LARGE_LLM_MODEL || 'gpt-4o',
         SMALL_LLM_MODEL: process.env.SMALL_LLM_MODEL || 'gpt-4o-mini',
         OPENAI_API_KEY: process.env.OPENAI_API_KEY || '',
+        ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY || '',
+        LLAMA_API_URL: process.env.LLAMA_API_URL || '',
       },
       autoDriveConfig: {
         AUTO_DRIVE_API_KEY: process.env.AUTO_DRIVE_API_KEY,

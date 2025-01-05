@@ -17,9 +17,12 @@ const twitterConfigSchema = z.object({
 });
 
 const llmConfigSchema = z.object({
+  LLM_PROVIDER: z.enum(['openai', 'anthropic', 'llama']).default('openai'),
   LARGE_LLM_MODEL: z.string().min(1),
   SMALL_LLM_MODEL: z.string().min(1),
-  OPENAI_API_KEY: z.string().min(1, 'OpenAI API key is required'),
+  OPENAI_API_KEY: z.string().optional(),
+  ANTHROPIC_API_KEY: z.string().optional(),
+  LLAMA_API_URL: z.string().optional(),
 });
 
 const autoDriveConfigSchema = z.object({
