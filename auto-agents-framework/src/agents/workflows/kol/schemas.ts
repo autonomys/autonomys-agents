@@ -10,7 +10,7 @@ export const dsnTweet: z.ZodType = z.object({
 
 export const engagementSchema = z.object({
   shouldEngage: z.boolean(),
-  reason: z.string().optional(),
+  reason: z.string(),
 });
 
 export const responseSchema = z.object({

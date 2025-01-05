@@ -1,15 +1,16 @@
 import { ChatOpenAI } from '@langchain/openai';
 import { ChatAnthropic } from '@langchain/anthropic';
-import { BaseChatModel } from '@langchain/core/language_models/chat_models';
-
+import { ChatLlama } from './chat_llama.js';
 export type LLMProvider = 'openai' | 'anthropic' | 'llama';
+import { ChatOllama } from "@langchain/ollama";
+import { Ollama } from "@langchain/community/llms/ollama";
 
 export class LLMFactory {
   static createModel(
     provider: LLMProvider,
     modelName: string,
     temperature: number,
-  ): ChatOpenAI | ChatAnthropic {
+  ): ChatOpenAI | ChatAnthropic | ChatOllama {
     switch (provider) {
       case 'openai':
         return new ChatOpenAI({
@@ -22,6 +23,14 @@ export class LLMFactory {
           modelName,
           temperature,
           anthropicApiKey: process.env.ANTHROPIC_API_KEY,
+        });
+
+      case 'llama':
+        return new ChatOllama({
+          baseUrl: process.env.LLAMA_API_URL || '',
+          model: modelName,
+          temperature,
+          maxRetries: 3,
         });
 
       default:

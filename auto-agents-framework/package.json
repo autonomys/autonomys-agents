@@ -21,6 +21,7 @@
         "@langchain/community": "0.3.20",
         "@langchain/core": "^0.3.27",
         "@langchain/langgraph": "0.2.36",
+        "@langchain/ollama": "^0.1.4",
         "@langchain/openai": "0.3.16",
         "agent-twitter-client": "0.0.18",
         "dotenv": "^16.3.1",
