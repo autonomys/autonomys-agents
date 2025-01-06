@@ -53,12 +53,22 @@ export const config = (() => {
         POST_INTERVAL_MS: (Number(process.env.POST_INTERVAL_MINUTES) || 90) * 60 * 1000,
       },
       llmConfig: {
-        DECISION_LLM_PROVIDER: llmConfig.DECISION_LLM_PROVIDER,
-        ANALYZE_LLM_PROVIDER: llmConfig.ANALYZE_LLM_PROVIDER,
-        GENERATION_LLM_PROVIDER: llmConfig.GENERATION_LLM_PROVIDER,
-        RESPONSE_LLM_PROVIDER: llmConfig.RESPONSE_LLM_PROVIDER,
-        LARGE_LLM_MODEL: llmConfig.LARGE_LLM_MODEL,
-        SMALL_LLM_MODEL: llmConfig.SMALL_LLM_MODEL,
+        configuration: {
+          large: {
+            provider: llmConfig.configuration.large.provider,
+            model: llmConfig.configuration.large.model,
+          },
+          small: {
+            provider: llmConfig.configuration.small.provider,
+            model: llmConfig.configuration.small.model,
+          },
+        },
+        nodes: {
+          decision: llmConfig.nodes.decision,
+          analyze: llmConfig.nodes.analyze,
+          generation: llmConfig.nodes.generation,
+          response: llmConfig.nodes.response,
+        },
         OPENAI_API_KEY: process.env.OPENAI_API_KEY || '',
         ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY || '',
         LLAMA_API_URL: process.env.LLAMA_API_URL || '',

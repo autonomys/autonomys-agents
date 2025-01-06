@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { LLMSize, LLMProvider } from '../services/llm/types.js';
 
 const twitterConfigSchema = z.object({
   USERNAME: z.string().min(1, 'Twitter username is required'),
@@ -18,33 +19,63 @@ const twitterConfigSchema = z.object({
 
 const llmConfigSchema = z
   .object({
-    DECISION_LLM_PROVIDER: z.enum(['openai', 'anthropic', 'llama']).default('openai'),
-    ANALYZE_LLM_PROVIDER: z.enum(['openai', 'anthropic', 'llama']).default('openai'),
-    GENERATION_LLM_PROVIDER: z.enum(['openai', 'anthropic', 'llama']).default('openai'),
-    RESPONSE_LLM_PROVIDER: z.enum(['openai', 'anthropic', 'llama']).default('openai'),
-    SMALL_LLM_MODEL: z.string().min(1),
-    LARGE_LLM_MODEL: z.string().min(1),
-    OPENAI_API_KEY: z.string().optional(),
-    ANTHROPIC_API_KEY: z.string().optional(),
-    LLAMA_API_URL: z.string().optional(),
+    configuration: z.object({
+      large: z.object({
+        provider: z.nativeEnum(LLMProvider),
+        model: z.string(),
+      }),
+      small: z.object({
+        provider: z.nativeEnum(LLMProvider),
+        model: z.string(),
+      }),
+    }),
+    nodes: z.object({
+      decision: z.object({
+        size: z.nativeEnum(LLMSize),
+        temperature: z.number(),
+      }),
+      analyze: z.object({
+        size: z.nativeEnum(LLMSize),
+        temperature: z.number(),
+      }),
+      generation: z.object({
+        size: z.nativeEnum(LLMSize),
+        temperature: z.number(),
+      }),
+      response: z.object({
+        size: z.nativeEnum(LLMSize),
+        temperature: z.number(),
+      }),
+    }),
+    OPENAI_API_KEY: z.string(),
+    ANTHROPIC_API_KEY: z.string(),
+    LLAMA_API_URL: z.string(),
   })
   .superRefine((data, ctx) => {
-    const providers = [
-      data.DECISION_LLM_PROVIDER,
-      data.ANALYZE_LLM_PROVIDER,
-      data.GENERATION_LLM_PROVIDER,
-      data.RESPONSE_LLM_PROVIDER,
-    ];
+    const providers = new Set([
+      data.nodes.decision.size === LLMSize.LARGE
+        ? data.configuration.large.provider
+        : data.configuration.small.provider,
+      data.nodes.analyze.size === LLMSize.LARGE
+        ? data.configuration.large.provider
+        : data.configuration.small.provider,
+      data.nodes.generation.size === LLMSize.LARGE
+        ? data.configuration.large.provider
+        : data.configuration.small.provider,
+      data.nodes.response.size === LLMSize.LARGE
+        ? data.configuration.large.provider
+        : data.configuration.small.provider,
+    ]);
 
     const missingConfigs = [];
 
-    if (providers.includes('openai') && !data.OPENAI_API_KEY) {
+    if (providers.has(LLMProvider.OPENAI) && !data.OPENAI_API_KEY) {
       missingConfigs.push('OpenAI API key');
     }
-    if (providers.includes('anthropic') && !data.ANTHROPIC_API_KEY) {
+    if (providers.has(LLMProvider.ANTHROPIC) && !data.ANTHROPIC_API_KEY) {
       missingConfigs.push('Anthropic API key');
     }
-    if (providers.includes('llama') && !data.LLAMA_API_URL) {
+    if (providers.has(LLMProvider.OLLAMA) && !data.LLAMA_API_URL) {
       missingConfigs.push('Llama API URL');
     }
 

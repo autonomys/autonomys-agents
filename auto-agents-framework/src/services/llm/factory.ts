@@ -1,41 +1,38 @@
-import { LLMProvider } from './types.js';
 import { ChatOpenAI } from '@langchain/openai';
 import { ChatAnthropic } from '@langchain/anthropic';
 import { ChatOllama } from '@langchain/ollama';
-import { config } from '../../config/index.js';
+import { LLMProvider, LLMConfiguration, LLMNodeConfiguration } from './types.js';
+import { llmConfig } from '../../config/llm.js';
+import { config as appConfig } from '../../config/index.js';
 
 export class LLMFactory {
-  static createModel(
-    provider: LLMProvider,
-    model: string,
-    temperature: number,
-  ): ChatOpenAI | ChatAnthropic | ChatOllama {
-    switch (provider) {
-      case 'openai':
+  static createModel(node: LLMNodeConfiguration) {
+    const cfg = llmConfig.configuration[node.size];
+    return this.createModelFromConfig(cfg, node.temperature);
+  }
+
+  static createModelFromConfig(config: LLMConfiguration, temperature: number) {
+    switch (config.provider) {
+      case LLMProvider.OPENAI:
         return new ChatOpenAI({
-          apiKey: config.llmConfig.OPENAI_API_KEY,
-          model,
+          apiKey: appConfig.llmConfig.OPENAI_API_KEY,
+          model: config.model,
           temperature,
         });
-
-      case 'anthropic':
+      case LLMProvider.ANTHROPIC:
         return new ChatAnthropic({
-          apiKey: config.llmConfig.ANTHROPIC_API_KEY,
-          model,
+          apiKey: appConfig.llmConfig.ANTHROPIC_API_KEY,
+          model: config.model,
           temperature,
         });
-
-      case 'llama':
+      case LLMProvider.OLLAMA:
         return new ChatOllama({
-          baseUrl: config.llmConfig.LLAMA_API_URL || '',
-          model,
+          baseUrl: appConfig.llmConfig.LLAMA_API_URL,
+          model: config.model,
           temperature,
-          format: 'json',
-          maxRetries: 3,
         });
-
       default:
-        throw new Error(`Unsupported LLM provider: ${provider}`);
+        throw new Error(`Unsupported LLM provider: ${config.provider}`);
     }
   }
 }

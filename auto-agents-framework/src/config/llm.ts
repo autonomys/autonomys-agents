@@ -1,8 +1,32 @@
+import { LLMNodeConfiguration, LLMSize, LLMProvider, llmModels } from '../services/llm/types.js';
+
 export const llmConfig = {
-  DECISION_LLM_PROVIDER: 'anthropic',
-  ANALYZE_LLM_PROVIDER: 'anthropic',
-  GENERATION_LLM_PROVIDER: 'anthropic',
-  RESPONSE_LLM_PROVIDER: 'anthropic',
-  LARGE_LLM_MODEL: 'claude-3-opus-20240229',
-  SMALL_LLM_MODEL: 'claude-3-5-sonnet-20240620',
+  configuration: {
+    large: {
+      provider: LLMProvider.ANTHROPIC,
+      model: llmModels.large.anthropic.claude3sonnet,
+    },
+    small: {
+      provider: LLMProvider.OPENAI,
+      model: llmModels.small.openai.gpt_4o_mini,
+    },
+  },
+  nodes: {
+    decision: {
+      size: LLMSize.SMALL,
+      temperature: 0.2,
+    } as LLMNodeConfiguration,
+    analyze: {
+      size: LLMSize.LARGE,
+      temperature: 0.5,
+    } as LLMNodeConfiguration,
+    generation: {
+      size: LLMSize.LARGE,
+      temperature: 0.8,
+    } as LLMNodeConfiguration,
+    response: {
+      size: LLMSize.SMALL,
+      temperature: 0.8,
+    } as LLMNodeConfiguration,
+  },
 };
