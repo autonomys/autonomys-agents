@@ -39,3 +39,16 @@ export const convertMessageContentToTweets = (messageContent: MessageContent): T
     return [];
   }
 };
+
+export const cleanTweetForCircularReferences = (tweet: Tweet): Tweet => ({
+  ...tweet,
+  thread: (tweet.thread?.filter(t => t.id !== tweet.id).map(t => ({
+    id: t.id,
+    text: t.text,
+    username: t.username,
+    timeParsed: t.timeParsed,
+  }))) as Tweet[],
+  inReplyToStatus: undefined,
+  quotedStatus: undefined,
+  retweetedStatus: undefined,
+});

@@ -4,6 +4,7 @@ import { createLogger } from '../../utils/logger.js';
 import { TwitterApi } from '../../services/twitter/types.js';
 import { ToolNode } from '@langchain/langgraph/prebuilt';
 import { AIMessage } from '@langchain/core/messages';
+import { cleanTweetForCircularReferences } from './utils/twitter.js';
 
 const logger = createLogger('fetch-mentions-tool');
 
@@ -15,10 +16,10 @@ export const createFetchMentionsTool = (twitterApi: TwitterApi) =>
     func: async ({ maxMentions, sinceId }: { maxMentions: number; sinceId?: string }) => {
       try {
         const recentMentions = await twitterApi.getMyUnrepliedToMentions(maxMentions, sinceId);
-
         return {
-          tweets: recentMentions,
+          tweets: recentMentions.map(cleanTweetForCircularReferences),
         };
+        
       } catch (error) {
         logger.error('Error in fetchTimelineTool:', error);
         return {
