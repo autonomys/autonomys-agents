@@ -21,7 +21,7 @@ export const createFetchMentionsTool = (twitterApi: TwitterApi) =>
         };
         
       } catch (error) {
-        logger.error('Error in fetchTimelineTool:', error);
+        logger.error('Error in fetchMentionsTool:', error);
         return {
           tweets: [],
         };
