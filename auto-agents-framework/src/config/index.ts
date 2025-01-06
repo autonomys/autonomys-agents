@@ -4,6 +4,7 @@ import { configSchema } from './schema.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { mkdir } from 'fs/promises';
+import { llmConfig } from './llm.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -52,12 +53,12 @@ export const config = (() => {
         POST_INTERVAL_MS: (Number(process.env.POST_INTERVAL_MINUTES) || 90) * 60 * 1000,
       },
       llmConfig: {
-        DECISION_LLM_PROVIDER: process.env.DECISION_LLM_PROVIDER || 'openai',
-        ANALYZE_LLM_PROVIDER: process.env.ANALYZE_LLM_PROVIDER || 'openai',
-        GENERATION_LLM_PROVIDER: process.env.GENERATION_LLM_PROVIDER || 'anthropic',
-        RESPONSE_LLM_PROVIDER: process.env.RESPONSE_LLM_PROVIDER || 'anthropic',
-        LARGE_LLM_MODEL: process.env.LARGE_LLM_MODEL || 'gpt-4',
-        SMALL_LLM_MODEL: process.env.SMALL_LLM_MODEL || 'gpt-4-turbo',
+        DECISION_LLM_PROVIDER: llmConfig.DECISION_LLM_PROVIDER,
+        ANALYZE_LLM_PROVIDER: llmConfig.ANALYZE_LLM_PROVIDER,
+        GENERATION_LLM_PROVIDER: llmConfig.GENERATION_LLM_PROVIDER,
+        RESPONSE_LLM_PROVIDER: llmConfig.RESPONSE_LLM_PROVIDER,
+        LARGE_LLM_MODEL: llmConfig.LARGE_LLM_MODEL,
+        SMALL_LLM_MODEL: llmConfig.SMALL_LLM_MODEL,
         OPENAI_API_KEY: process.env.OPENAI_API_KEY || '',
         ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY || '',
         LLAMA_API_URL: process.env.LLAMA_API_URL || '',
