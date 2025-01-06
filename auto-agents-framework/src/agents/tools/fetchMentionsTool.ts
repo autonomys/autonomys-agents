@@ -19,7 +19,6 @@ export const createFetchMentionsTool = (twitterApi: TwitterApi) =>
         return {
           tweets: recentMentions.map(cleanTweetForCircularReferences),
         };
-        
       } catch (error) {
         logger.error('Error in fetchMentionsTool:', error);
         return {
