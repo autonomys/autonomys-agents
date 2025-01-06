@@ -4,7 +4,7 @@ export const llmConfig = {
   configuration: {
     large: {
       provider: LLMProvider.ANTHROPIC,
-      model: llmModels.large.anthropic.claude3sonnet,
+      model: llmModels.large.anthropic.claude35sonnet,
     },
     small: {
       provider: LLMProvider.OPENAI,

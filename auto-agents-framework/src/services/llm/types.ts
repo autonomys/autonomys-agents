@@ -21,13 +21,11 @@ export type LLMNodeConfiguration = {
 
 export const llmModels = {
   large: {
-    anthropic: {
-      claude3opus: 'claude-3-opus-20240229',
-      claude3sonnet: 'claude-3-sonnet-20240229',
-    },
     openai: {
-      gpt4turbo: 'gpt-4-turbo',
-      gpt4: 'gpt-4',
+      gpt4o: 'gpt-4o',
+    },
+    anthropic: {
+      claude35sonnet: 'claude-3-5-sonnet-latest',
     },
     //placeholder
     ollama: {
@@ -37,10 +35,9 @@ export const llmModels = {
   small: {
     openai: {
       gpt_4o_mini: 'gpt-4o-mini',
-      gpt35turbo: 'gpt-3.5-turbo',
     },
     anthropic: {
-      claude3haiku: 'claude-3-haiku-20240307',
+      claude35haiku: 'claude-3-5-haiku-latest',
     },
     //placeholder
     ollama: {
