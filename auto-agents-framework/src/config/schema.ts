@@ -16,14 +16,46 @@ const twitterConfigSchema = z.object({
   POST_INTERVAL_MS: z.number().int().positive(),
 });
 
-const llmConfigSchema = z.object({
-  LLM_PROVIDER: z.enum(['openai', 'anthropic', 'llama']).default('openai'),
-  LARGE_LLM_MODEL: z.string().min(1),
-  SMALL_LLM_MODEL: z.string().min(1),
-  OPENAI_API_KEY: z.string().optional(),
-  ANTHROPIC_API_KEY: z.string().optional(),
-  LLAMA_API_URL: z.string().optional(),
-});
+const llmConfigSchema = z
+  .object({
+    DECISION_LLM_PROVIDER: z.enum(['openai', 'anthropic', 'llama']).default('openai'),
+    ANALYZE_LLM_PROVIDER: z.enum(['openai', 'anthropic', 'llama']).default('openai'),
+    GENERATION_LLM_PROVIDER: z.enum(['openai', 'anthropic', 'llama']).default('openai'),
+    RESPONSE_LLM_PROVIDER: z.enum(['openai', 'anthropic', 'llama']).default('openai'),
+    SMALL_LLM_MODEL: z.string().min(1),
+    LARGE_LLM_MODEL: z.string().min(1),
+    OPENAI_API_KEY: z.string().optional(),
+    ANTHROPIC_API_KEY: z.string().optional(),
+    LLAMA_API_URL: z.string().optional(),
+  })
+  .superRefine((data, ctx) => {
+    const providers = [
+      data.DECISION_LLM_PROVIDER,
+      data.ANALYZE_LLM_PROVIDER,
+      data.GENERATION_LLM_PROVIDER,
+      data.RESPONSE_LLM_PROVIDER,
+    ];
+
+    const missingConfigs = [];
+
+    if (providers.includes('openai') && !data.OPENAI_API_KEY) {
+      missingConfigs.push('OpenAI API key');
+    }
+    if (providers.includes('anthropic') && !data.ANTHROPIC_API_KEY) {
+      missingConfigs.push('Anthropic API key');
+    }
+    if (providers.includes('llama') && !data.LLAMA_API_URL) {
+      missingConfigs.push('Llama API URL');
+    }
+
+    if (missingConfigs.length > 0) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: `Missing required configs: ${missingConfigs.join(', ')}`,
+        path: ['llmConfig'],
+      });
+    }
+  });
 
 const autoDriveConfigSchema = z.object({
   AUTO_DRIVE_API_KEY: z.string().optional(),

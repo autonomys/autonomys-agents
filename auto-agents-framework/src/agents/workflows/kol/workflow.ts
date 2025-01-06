@@ -63,7 +63,14 @@ export const State = Annotation.Root({
 
 const createWorkflowConfig = async (characterFile: string): Promise<WorkflowConfig> => {
   const { USERNAME, PASSWORD, COOKIES_PATH } = config.twitterConfig;
-  const { LLM_PROVIDER, LARGE_LLM_MODEL, SMALL_LLM_MODEL } = config.llmConfig;
+  const {
+    DECISION_LLM_PROVIDER,
+    ANALYZE_LLM_PROVIDER,
+    GENERATION_LLM_PROVIDER,
+    RESPONSE_LLM_PROVIDER,
+    LARGE_LLM_MODEL,
+    SMALL_LLM_MODEL,
+  } = config.llmConfig;
 
   const twitterApi = await createTwitterApi(USERNAME, PASSWORD, COOKIES_PATH);
   const { tools } = createTools(twitterApi);
@@ -75,10 +82,10 @@ const createWorkflowConfig = async (characterFile: string): Promise<WorkflowConf
     toolNode,
     prompts,
     llms: {
-      decision: LLMFactory.createModel(LLM_PROVIDER, SMALL_LLM_MODEL, 0.2),
-      analyze: LLMFactory.createModel(LLM_PROVIDER, LARGE_LLM_MODEL, 0.5),
-      generation: LLMFactory.createModel(LLM_PROVIDER, LARGE_LLM_MODEL, 0.8),
-      response: LLMFactory.createModel(LLM_PROVIDER, LARGE_LLM_MODEL, 0.8),
+      decision: LLMFactory.createModel(DECISION_LLM_PROVIDER, SMALL_LLM_MODEL, 0.2),
+      analyze: LLMFactory.createModel(ANALYZE_LLM_PROVIDER, LARGE_LLM_MODEL, 0.5),
+      generation: LLMFactory.createModel(GENERATION_LLM_PROVIDER, LARGE_LLM_MODEL, 0.8),
+      response: LLMFactory.createModel(RESPONSE_LLM_PROVIDER, LARGE_LLM_MODEL, 0.8),
     },
   };
 };
