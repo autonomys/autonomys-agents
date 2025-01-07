@@ -9,7 +9,7 @@ export async function withRetry<T>(
     initialDelayMs = 1000,
     operationName = 'Operation',
     shouldRetry = (_error: unknown): boolean => true,
-  } = {}
+  } = {},
 ): Promise<T> {
   const attempt = async (retriesLeft: number, currentDelay: number): Promise<T> => {
     try {
@@ -24,7 +24,7 @@ export async function withRetry<T>(
         error,
         nextDelayMs: currentDelay,
       });
-      
+
       await new Promise(resolve => setTimeout(resolve, currentDelay));
       const jitter = Math.random() * 0.3 + 0.85; // Random value between 0.85 and 1.15
       const nextDelay = Math.min(currentDelay * 2 * jitter, 30000); // Cap at 30 seconds
@@ -33,4 +33,4 @@ export async function withRetry<T>(
   };
 
   return attempt(maxRetries, initialDelayMs);
-} 
+}

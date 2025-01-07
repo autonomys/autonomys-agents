@@ -10,7 +10,6 @@ import { withRetry } from './retry.js';
 const logger = createLogger('dsn-upload-tool');
 const dsnApi = createAutoDriveApi({ apiKey: config.autoDriveConfig.AUTO_DRIVE_API_KEY! });
 
-
 let currentNonce = await wallet.getNonce();
 
 // Helper function for file upload
@@ -99,11 +98,12 @@ export async function uploadCharacterToDsn(characterName: string, data: object) 
     };
 
     const uploadedCid = await withRetry(
-      () => uploadFileToDsn(file, {
-        compression: true,
-        password: config.autoDriveConfig.AUTO_DRIVE_ENCRYPTION_PASSWORD || undefined,
-      }),
-      { operationName: `Upload character ${characterName}` }
+      () =>
+        uploadFileToDsn(file, {
+          compression: true,
+          password: config.autoDriveConfig.AUTO_DRIVE_ENCRYPTION_PASSWORD || undefined,
+        }),
+      { operationName: `Upload character ${characterName}` },
     );
 
     logger.info('Character uploaded successfully', {
