@@ -29,25 +29,29 @@ export const createFetchTimelineTool = (twitterApi: TwitterApi) =>
       numRandomFollowers: number;
     }) => {
       try {
-        const myTimelineTweets = (
-          await twitterApi.getMyTimeline(numTimelineTweets, processedIds)
-        ).slice(0, numTimelineTweets);
+        const myTimelineTweets = await twitterApi.getMyTimeline(numTimelineTweets, processedIds);
         const followingRecents = await twitterApi.getFollowingRecentTweets(
           numFollowingRecentTweets,
           numRandomFollowers,
         );
-        const tweets = new Set([...myTimelineTweets, ...followingRecents]);
-        const sortedTweets = Array.from(tweets).sort(
-          (a, b) => new Date(b.timeParsed!).getTime() - new Date(a.timeParsed!).getTime(),
-        );
-        logger.info('Timeline tweets:', { tweets: sortedTweets.length });
+        const tweets = {
+          timelineTweets: myTimelineTweets,
+          followingRecents: followingRecents,
+        };
+        logger.info('Timeline tweets:', {
+          timelineTweets: tweets.timelineTweets.length,
+          followingRecents: tweets.followingRecents.length,
+        });
         return {
-          tweets: sortedTweets,
+          tweets: tweets,
         };
       } catch (error) {
         logger.error('Error in fetchTimelineTool:', error);
         return {
-          tweets: [],
+          tweets: {
+            timelineTweets: [],
+            followingRecents: [],
+          },
         };
       }
     },
