@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { LLMSize, LLMProvider } from '../services/llm/types.js';
 
 const twitterConfigSchema = z.object({
   USERNAME: z.string().min(1, 'Twitter username is required'),
@@ -16,11 +17,76 @@ const twitterConfigSchema = z.object({
   POST_INTERVAL_MS: z.number().int().positive(),
 });
 
-const llmConfigSchema = z.object({
-  LARGE_LLM_MODEL: z.string().min(1),
-  SMALL_LLM_MODEL: z.string().min(1),
-  OPENAI_API_KEY: z.string().min(1, 'OpenAI API key is required'),
-});
+const llmConfigSchema = z
+  .object({
+    configuration: z.object({
+      large: z.object({
+        provider: z.nativeEnum(LLMProvider),
+        model: z.string(),
+      }),
+      small: z.object({
+        provider: z.nativeEnum(LLMProvider),
+        model: z.string(),
+      }),
+    }),
+    nodes: z.object({
+      decision: z.object({
+        size: z.nativeEnum(LLMSize),
+        temperature: z.number(),
+      }),
+      analyze: z.object({
+        size: z.nativeEnum(LLMSize),
+        temperature: z.number(),
+      }),
+      generation: z.object({
+        size: z.nativeEnum(LLMSize),
+        temperature: z.number(),
+      }),
+      response: z.object({
+        size: z.nativeEnum(LLMSize),
+        temperature: z.number(),
+      }),
+    }),
+    OPENAI_API_KEY: z.string(),
+    ANTHROPIC_API_KEY: z.string(),
+    LLAMA_API_URL: z.string(),
+  })
+  .superRefine((data, ctx) => {
+    const providers = new Set([
+      data.nodes.decision.size === LLMSize.LARGE
+        ? data.configuration.large.provider
+        : data.configuration.small.provider,
+      data.nodes.analyze.size === LLMSize.LARGE
+        ? data.configuration.large.provider
+        : data.configuration.small.provider,
+      data.nodes.generation.size === LLMSize.LARGE
+        ? data.configuration.large.provider
+        : data.configuration.small.provider,
+      data.nodes.response.size === LLMSize.LARGE
+        ? data.configuration.large.provider
+        : data.configuration.small.provider,
+    ]);
+
+    const missingConfigs = [];
+
+    if (providers.has(LLMProvider.OPENAI) && !data.OPENAI_API_KEY) {
+      missingConfigs.push('OpenAI API key');
+    }
+    if (providers.has(LLMProvider.ANTHROPIC) && !data.ANTHROPIC_API_KEY) {
+      missingConfigs.push('Anthropic API key');
+    }
+    if (providers.has(LLMProvider.OLLAMA) && !data.LLAMA_API_URL) {
+      missingConfigs.push('Llama API URL');
+    }
+
+    if (missingConfigs.length > 0) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: `Missing required configs: ${missingConfigs.join(', ')}`,
+        path: ['llmConfig'],
+      });
+    }
+  });
 
 const autoDriveConfigSchema = z.object({
   AUTO_DRIVE_API_KEY: z.string().optional(),
