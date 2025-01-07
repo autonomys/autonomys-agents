@@ -5,49 +5,13 @@ import { stringToCid, blake3HashFromCid } from '@autonomys/auto-dag-data';
 import { config, agentVersion } from '../../../config/index.js';
 import { wallet, signMessage } from './agentWallet.js';
 import { setLastMemoryHash, getLastMemoryCid } from './agentMemoryContract.js';
+import { withRetry } from './retry.js';
 
 const logger = createLogger('dsn-upload-tool');
 const dsnApi = createAutoDriveApi({ apiKey: config.autoDriveConfig.AUTO_DRIVE_API_KEY! });
+
+
 let currentNonce = await wallet.getNonce();
-
-// New retry utility function
-const withRetry = async <T>(
-  operation: () => Promise<T>,
-  {
-    maxRetries = 5,
-    initialDelayMs = 1000,
-    operationName = 'Operation',
-  }: {
-    maxRetries?: number;
-    initialDelayMs?: number;
-    operationName?: string;
-  } = {},
-): Promise<T> => {
-  const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
-
-  const attempt = async (retriesLeft: number, currentDelay: number): Promise<T> => {
-    try {
-      return await operation();
-    } catch (error) {
-      if (retriesLeft <= 0) {
-        logger.error(`${operationName} failed after all retry attempts`, { error });
-        throw error;
-      }
-
-      logger.warn(`${operationName} failed, retrying... (${retriesLeft} attempts left)`, {
-        error,
-        nextDelayMs: currentDelay,
-      });
-      await delay(currentDelay);
-      // Exponential backoff with jitter
-      const jitter = Math.random() * 0.3 + 0.85; // Random value between 0.85 and 1.15
-      const nextDelay = Math.min(currentDelay * 2 * jitter, 30000); // Cap at 30 seconds
-      return attempt(retriesLeft - 1, nextDelay);
-    }
-  };
-
-  return attempt(maxRetries, initialDelayMs);
-};
 
 // Helper function for file upload
 const uploadFileToDsn = async (file: any, options: any) =>
@@ -115,6 +79,44 @@ export async function uploadToDsn(data: object) {
     };
   } catch (error) {
     logger.error('Error uploading to Dsn:', error);
+    throw error;
+  }
+}
+
+export async function uploadCharacterToDsn(characterName: string, data: object) {
+  logger.info('Upload Character to Dsn - Starting upload');
+
+  try {
+    const timestamp = new Date().toISOString();
+    const jsonBuffer = Buffer.from(JSON.stringify(data, null, 2));
+    const file = {
+      read: async function* () {
+        yield jsonBuffer;
+      },
+      name: `character-${characterName}-${timestamp}.json`,
+      mimeType: 'application/json',
+      size: jsonBuffer.length,
+    };
+
+    const uploadedCid = await withRetry(
+      () => uploadFileToDsn(file, {
+        compression: true,
+        password: config.autoDriveConfig.AUTO_DRIVE_ENCRYPTION_PASSWORD || undefined,
+      }),
+      { operationName: `Upload character ${characterName}` }
+    );
+
+    logger.info('Character uploaded successfully', {
+      cid: uploadedCid,
+      name: characterName,
+    });
+
+    return {
+      success: true,
+      cid: uploadedCid,
+    };
+  } catch (error) {
+    logger.error('Error uploading character to Dsn:', error);
     throw error;
   }
 }

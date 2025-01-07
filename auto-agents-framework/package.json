@@ -12,7 +12,8 @@
         "format:check": "prettier --check \"src/**/*.ts\"",
         "example:twitter": "tsx examples/twitter.ts",
         "extract-kol-dsn-schemas": "tsx src/agents/workflows/kol/cli/extractDsnSchemas.ts",
-        "copy-characters": "cp -r src/agents/workflows/kol/characters dist/agents/workflows/kol/"
+        "copy-characters": "cp -r src/agents/workflows/kol/characters dist/agents/workflows/kol/",
+        "manage-character": "tsx src/agents/workflows/kol/cli/characterManager.ts"
     },
     "dependencies": {
         "@autonomys/auto-dag-data": "1.2.1",

@@ -112,6 +112,19 @@ Note: When specifying a character file, omit both `.ts` and `.js` extensions. Th
    };
    ```
 
+
+## Upload Characters to DSN
+
+```bash
+yarn manage-character upload <character-name>
+```
+
+## Download Characters from DSN
+
+```bash
+yarn manage-character download <cid> <character-name>
+```
+
 ## Autonomys Network Integration
 
 The framework uses the Autonomys Network for permanent storage of agent memory and interactions. This enables:
