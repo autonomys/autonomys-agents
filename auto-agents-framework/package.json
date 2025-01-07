@@ -17,9 +17,11 @@
     "dependencies": {
         "@autonomys/auto-dag-data": "1.2.1",
         "@autonomys/auto-drive": "1.2.1",
+        "@langchain/anthropic": "^0.3.11",
         "@langchain/community": "0.3.20",
-        "@langchain/core": "0.3.19",
+        "@langchain/core": "^0.3.27",
         "@langchain/langgraph": "0.2.36",
+        "@langchain/ollama": "^0.1.4",
         "@langchain/openai": "0.3.16",
         "agent-twitter-client": "0.0.18",
         "dotenv": "^16.3.1",
