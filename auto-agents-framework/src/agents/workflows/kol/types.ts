@@ -4,6 +4,8 @@ import { z } from 'zod';
 import { Tweet, TwitterApi } from '../../../services/twitter/types.js';
 import { ToolNode } from '@langchain/langgraph/prebuilt';
 import { ChatOpenAI } from '@langchain/openai';
+import { ChatAnthropic } from '@langchain/anthropic';
+import { ChatOllama } from '@langchain/ollama';
 import { Runnable } from '@langchain/core/runnables';
 import { engagementSchema, responseSchema, skippedEngagementSchema, dsnTweet } from './schemas.js';
 import { ChatPromptTemplate } from '@langchain/core/prompts';
@@ -17,10 +19,10 @@ export type WorkflowConfig = Readonly<{
   twitterApi: TwitterApi;
   toolNode: ToolNode;
   llms: Readonly<{
-    decision: ChatOpenAI;
-    analyze: ChatOpenAI;
-    generation: Runnable<BaseLanguageModelInput, AIMessageChunk, ChatOpenAI>;
-    response: Runnable<BaseLanguageModelInput, AIMessageChunk, ChatOpenAI>;
+    decision: ChatOpenAI | ChatAnthropic | ChatOllama;
+    analyze: ChatOpenAI | ChatAnthropic | ChatOllama;
+    generation: ChatOpenAI | ChatAnthropic | ChatOllama;
+    response: ChatOpenAI | ChatAnthropic | ChatOllama;
   }>;
   prompts: Readonly<{
     engagementPrompt: ChatPromptTemplate;
