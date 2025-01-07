@@ -42,9 +42,7 @@ export const createFetchTimelineTool = (twitterApi: TwitterApi) =>
           timelineTweets: tweets.timelineTweets.length,
           followingRecents: tweets.followingRecents.length,
         });
-        return {
-          tweets: tweets,
-        };
+        return { tweets };
       } catch (error) {
         logger.error('Error in fetchTimelineTool:', error);
         return {
