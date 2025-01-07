@@ -135,5 +135,4 @@ export const configSchema = z.object({
   blockchainConfig: blockchainConfigSchema,
   SERPAPI_API_KEY: SERPAPI_API_KEY,
   NODE_ENV: z.enum(['development', 'production', 'test']),
-  RETRY_LIMIT: z.number().int().nonnegative(),
 });

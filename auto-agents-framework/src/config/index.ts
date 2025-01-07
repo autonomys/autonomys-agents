@@ -5,7 +5,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { mkdir } from 'fs/promises';
 import { llmConfig } from './llm.js';
-
+import { twitterConfig } from './twitter.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const workspaceRoot = path.resolve(__dirname, '../..');
@@ -41,34 +41,10 @@ export const config = (() => {
         USERNAME: username,
         PASSWORD: process.env.TWITTER_PASSWORD || '',
         COOKIES_PATH: cookiesPath,
-        NUM_TIMELINE_TWEETS: Number(process.env.NUM_TIMELINE_TWEETS) || 10,
-        NUM_FOLLOWING_RECENT_TWEETS: Number(process.env.NUM_FOLLOWING_RECENT_TWEETS) || 10,
-        NUM_RANDOM_FOLLOWERS: Number(process.env.NUM_RANDOM_FOLLOWERS) || 5,
-        MAX_MENTIONS: Number(process.env.MAX_MENTIONS) || 5,
-        MAX_THREAD_LENGTH: Number(process.env.MAX_THREAD_LENGTH) || 20,
-        MAX_MY_RECENT_TWEETS: Number(process.env.MAX_MY_RECENT_TWEETS) || 10,
-        MAX_MY_RECENT_REPLIES: Number(process.env.MAX_MY_RECENT_REPLIES) || 10,
-        POST_TWEETS: process.env.POST_TWEETS === 'true',
-        RESPONSE_INTERVAL_MS: (Number(process.env.RESPONSE_INTERVAL_MINUTES) || 60) * 60 * 1000,
-        POST_INTERVAL_MS: (Number(process.env.POST_INTERVAL_MINUTES) || 90) * 60 * 1000,
+        ...twitterConfig,
       },
       llmConfig: {
-        configuration: {
-          large: {
-            provider: llmConfig.configuration.large.provider,
-            model: llmConfig.configuration.large.model,
-          },
-          small: {
-            provider: llmConfig.configuration.small.provider,
-            model: llmConfig.configuration.small.model,
-          },
-        },
-        nodes: {
-          decision: llmConfig.nodes.decision,
-          analyze: llmConfig.nodes.analyze,
-          generation: llmConfig.nodes.generation,
-          response: llmConfig.nodes.response,
-        },
+        ...llmConfig,
         OPENAI_API_KEY: process.env.OPENAI_API_KEY || '',
         ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY || '',
         LLAMA_API_URL: process.env.LLAMA_API_URL || '',
@@ -85,7 +61,6 @@ export const config = (() => {
       },
       SERPAPI_API_KEY: process.env.SERPAPI_API_KEY || '',
       NODE_ENV: process.env.NODE_ENV || 'development',
-      RETRY_LIMIT: Number(process.env.RETRY_LIMIT) || 2,
     };
 
     return configSchema.parse(rawConfig);
