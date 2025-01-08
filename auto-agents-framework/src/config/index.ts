@@ -4,8 +4,8 @@ import { configSchema } from './schema.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { mkdir } from 'fs/promises';
-import { llmConfig } from './llm.js';
-import { twitterConfig } from './twitter.js';
+import { llmDefaultConfig } from './llm.js';
+import { twitterDefaultConfig } from './twitter.js';
 import yaml from 'yaml';
 import { readFileSync } from 'fs';
 
@@ -55,11 +55,11 @@ export const config = (() => {
         USERNAME: username,
         PASSWORD: process.env.TWITTER_PASSWORD || '',
         COOKIES_PATH: cookiesPath,
-        ...twitterConfig,
+        ...twitterDefaultConfig,
         ...(yamlConfig.twitter || {}),
       },
       llmConfig: {
-        ...llmConfig,
+        ...llmDefaultConfig,
         ...(yamlConfig.llm || {}),
         OPENAI_API_KEY: process.env.OPENAI_API_KEY || '',
         ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY || '',

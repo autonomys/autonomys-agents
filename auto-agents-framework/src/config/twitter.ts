@@ -1,4 +1,4 @@
-export const twitterConfig = {
+export const twitterDefaultConfig = {
   NUM_TIMELINE_TWEETS: 10,
   NUM_FOLLOWING_RECENT_TWEETS: 10,
   NUM_RANDOM_FOLLOWERS: 5,
