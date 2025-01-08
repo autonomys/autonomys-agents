@@ -60,6 +60,7 @@ export const config = (() => {
         PRIVATE_KEY: process.env.PRIVATE_KEY || undefined,
       },
       SERPAPI_API_KEY: process.env.SERPAPI_API_KEY || '',
+      CHROMA_URL: process.env.CHROMA_URL || '',
       NODE_ENV: process.env.NODE_ENV || 'development',
     };
 

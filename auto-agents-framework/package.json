@@ -24,6 +24,7 @@
         "@langchain/ollama": "^0.1.4",
         "@langchain/openai": "0.3.16",
         "agent-twitter-client": "0.0.18",
+        "chromadb": "^1.10.0",
         "dotenv": "^16.3.1",
         "ethers": "^6.13.4",
         "winston": "^3.11.0",

@@ -134,5 +134,6 @@ export const configSchema = z.object({
   autoDriveConfig: autoDriveConfigSchema,
   blockchainConfig: blockchainConfigSchema,
   SERPAPI_API_KEY: SERPAPI_API_KEY,
+  CHROMA_URL: z.string().optional(),
   NODE_ENV: z.enum(['development', 'production', 'test']),
 });
