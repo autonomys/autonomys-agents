@@ -18,10 +18,10 @@ llm:
     small:
       provider: "openai"
       model: "gpt-4o-mini"
-      
+
   nodes:
     decision:
-      size: "large"
+      size: "small"
       temperature: 0.2
     analyze:
       size: "large"

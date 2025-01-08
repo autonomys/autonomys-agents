@@ -14,19 +14,73 @@ Auto-Agents-Framework is an experimental framework for building AI agents that c
 ## Getting Started
 
 1. Install dependencies:
-   `yarn install
-`
+   `yarn install`
 
 2. Copy the environment file and configure your credentials:
    `cp .env.sample .env`
 
 3. Configure your `.env` file with required credentials:
-   ``env
+
+   ```env
    TWITTER_USERNAME=your_twitter_username
    TWITTER_PASSWORD=your_twitter_password
    OPENAI_API_KEY=your_openai_key
-   # See .env.sample for other configuration options
-   ``
+   See .env.sample for other configuration options
+   ```
+
+4. The framework supports multiple levels of configuration with the following priority (highest to lowest):
+
+   1. Environment variables (`.env` file)
+   2. YAML configuration (`config/default.yaml`)
+   3. Default values in code
+
+This means you can:
+- Use YAML for most settings
+- Override sensitive data (like API keys) using environment variables
+- Fall back to default values if nothing is specified
+### YAML Configuration
+
+1. Copy the example configuration file:
+   ```bash
+   cp src/config/config.example.yaml config/default.yaml
+   ```
+
+2. Customize the settings in `config/default.yaml`:
+   ```yaml
+   twitter:
+     NUM_TIMELINE_TWEETS: 10
+     NUM_FOLLOWING_RECENT_TWEETS: 10
+     NUM_RANDOM_FOLLOWERS: 5
+     MAX_MENTIONS: 20
+     MAX_THREAD_LENGTH: 20
+     MAX_MY_RECENT_TWEETS: 10
+     MAX_MY_RECENT_REPLIES: 10
+     RESPONSE_INTERVAL_MS: 3600000  # 1 hour
+     POST_INTERVAL_MS: 5400000      # 1.5 hours
+     POST_TWEETS: false
+
+   llm:
+     configuration:
+       large:
+         provider: "anthropic"
+         model: "claude-3-5-sonnet-latest"
+       small:
+         provider: "openai"
+         model: "gpt-4o-mini"
+     nodes:
+       decision:
+         size: "small"
+         temperature: 0.2
+       analyze:
+         size: "large"
+         temperature: 0.5
+       generation:
+         size: "large"
+         temperature: 0.8
+       response:
+         size: "small"
+         temperature: 0.8
+   ```
 
 ## Character System
 
