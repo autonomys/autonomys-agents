@@ -88,20 +88,26 @@ const getMyRecentReplies = async (
   return replies;
 };
 const getReplyThread = (tweet: Tweet, conversation: Tweet[]): Tweet[] => {
-  let tweetReply = tweet.inReplyToStatusId
-    ? conversation.find(t => t.id === tweet.inReplyToStatusId)
-    : tweet;
+  const replyThread: Tweet[] = [];
+  let currentTweet = tweet;
 
-  const replyThread: Tweet[] = tweetReply ? [tweetReply] : [];
-  while (tweetReply && tweetReply.inReplyToStatusId) {
-    const nextReply = conversation.find(t => t.inReplyToStatusId === tweetReply?.id);
-    if (!nextReply) {
+  while (currentTweet) {
+    if (currentTweet.inReplyToStatusId) {
+      const parentTweet = conversation.find(t => t.id === currentTweet.inReplyToStatusId);
+      if (parentTweet) {
+        replyThread.unshift(parentTweet);
+        currentTweet = parentTweet;
+      } else {
+        break;
+      }
+    } else {
+      if (!replyThread.some(t => t.id === currentTweet.id)) {
+        replyThread.unshift(currentTweet);
+      }
       break;
     }
-    logger.info('Next Reply', { nextReply: nextReply?.id });
-    replyThread.push(nextReply);
-    tweetReply = nextReply;
   }
+
   return replyThread;
 };
 
@@ -133,12 +139,12 @@ const getMyUnrepliedToMentions = async (
       logger.info(`Skipping tweet ${tweet.id} (already replied)`);
       continue;
     }
-
     newMentions.push(tweet);
     if (!conversations.has(tweet.id!)) {
       const conversation = await iterateResponse(
         scraper.searchTweets(`conversation_id:${tweet.conversationId}`, 100, SearchMode.Latest),
       );
+
       const initialTweet = await scraper.getTweet(tweet.conversationId!);
       if (initialTweet) {
         conversation.push(initialTweet);
