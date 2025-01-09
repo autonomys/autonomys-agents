@@ -5,6 +5,7 @@ import { createLogger } from '../utils/logger.js';
 import { ResponseStatus } from '../types/enums.js';
 import { transformMemoryToLegacy } from '../utils/transformers.js';
 import { isMemoryV2_0_0 } from '../types/generated/v2_0_0.js';
+import { processPreviousCids } from '../utils/backgroundProcessor.js';
 
 const router = Router();
 const logger = createLogger('memories-router');
@@ -65,8 +66,10 @@ router.get('/:cid', async (req, res) => {
         res.status(404).json({ error: 'Memory not found' });
         return;
       }
-      await saveMemoryRecord(cid, memoryData, memoryData?.previous_cid);
+      console.log('memoryData', memoryData);
+      await saveMemoryRecord(cid, memoryData, memoryData?.previousCid);
       memory = await getMemoryByCid(cid);
+      processPreviousCids(memoryData?.previousCid);
     }
      // Transform v2.0.0 memories to match frontend expectations
     if (isMemoryV2_0_0(memory?.content)) {
