@@ -118,7 +118,7 @@ export async function getAllDsn(
             query += ' WHERE ' + conditions.join(' AND ');
         }
         
-        query += ` ORDER BY mr.created_at DESC
+        query += ` ORDER BY (content->>'timestamp')::timestamp DESC
                   LIMIT $${params.length + 1} OFFSET $${params.length + 2}`;
 
         const queryParams = [...params, limit, offset];
