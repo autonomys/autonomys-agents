@@ -16,7 +16,7 @@ export const getLastMemoryHash = async (): Promise<string> => {
     logger.info('Using locally stored hash', { hash: localHash });
     return localHash;
   }
-  
+
   const blockchainHash = await contract.getLastMemoryHash(wallet.address);
   if (blockchainHash) {
     saveHashLocally(blockchainHash);
@@ -30,7 +30,7 @@ export const getLastMemoryCid = async (): Promise<string> => {
     return '';
   }
   const hashBuffer = Buffer.from(lastMemoryHash.slice(2), 'hex');
-  
+
   const cid = cidFromBlakeHash(hashBuffer);
   return cidToString(cid);
 };
@@ -41,9 +41,9 @@ export const setLastMemoryHash = async (hash: string, nonce?: number) => {
     nonce: nonce,
     gasLimit: 100000,
   });
-  
+
   saveHashLocally(hash);
-  
+
   const _receipt = await tx.wait();
   return tx;
 };
