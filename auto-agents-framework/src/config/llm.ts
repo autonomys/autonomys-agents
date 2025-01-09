@@ -1,6 +1,6 @@
 import { LLMNodeConfiguration, LLMSize, LLMProvider, llmModels } from '../services/llm/types.js';
 
-export const llmConfig = {
+export const llmDefaultConfig = {
   configuration: {
     large: {
       provider: LLMProvider.ANTHROPIC,

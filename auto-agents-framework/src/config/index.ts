@@ -4,8 +4,11 @@ import { configSchema } from './schema.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { mkdir } from 'fs/promises';
-import { llmConfig } from './llm.js';
-import { twitterConfig } from './twitter.js';
+import { llmDefaultConfig } from './llm.js';
+import { twitterDefaultConfig } from './twitter.js';
+import yaml from 'yaml';
+import { readFileSync } from 'fs';
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const workspaceRoot = path.resolve(__dirname, '../..');
@@ -31,6 +34,17 @@ function formatZodError(error: z.ZodError) {
 
 export const agentVersion = process.env.AGENT_VERSION || '1.0.0';
 
+const yamlConfig = (() => {
+  try {
+    const configPath = path.join(workspaceRoot, 'src', 'config', 'config.yaml');
+    const fileContents = readFileSync(configPath, 'utf8');
+    return yaml.parse(fileContents);
+  } catch (error) {
+    console.info('No YAML config found, falling back to environment variables');
+    return {};
+  }
+})();
+
 export const config = (() => {
   try {
     const username = process.env.TWITTER_USERNAME || '';
@@ -41,10 +55,12 @@ export const config = (() => {
         USERNAME: username,
         PASSWORD: process.env.TWITTER_PASSWORD || '',
         COOKIES_PATH: cookiesPath,
-        ...twitterConfig,
+        ...twitterDefaultConfig,
+        ...(yamlConfig.twitter || {}),
       },
       llmConfig: {
-        ...llmConfig,
+        ...llmDefaultConfig,
+        ...(yamlConfig.llm || {}),
         OPENAI_API_KEY: process.env.OPENAI_API_KEY || '',
         ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY || '',
         LLAMA_API_URL: process.env.LLAMA_API_URL || '',

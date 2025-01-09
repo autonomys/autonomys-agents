@@ -9,11 +9,11 @@ export const createAnalyzeTrendNode =
   (config: WorkflowConfig) => async (state: typeof State.State) => {
     logger.info('Analyze Trend Node - Analyzing trends');
 
-    const tweets = Array.from(state.timelineTweets.values()).map(({ username, text }) => ({
+    const tweets = Array.from(state.trendAnalysisTweets.values()).map(({ username, text }) => ({
       username,
       text,
     }));
-    logger.info('Tweets:', { tweets: tweets.length });
+    logger.info('Tweets for trend analysis:', { tweets: tweets.length });
 
     const trendAnalysis = await config.prompts.trendPrompt
       .pipe(config.llms.analyze)

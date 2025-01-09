@@ -23,6 +23,7 @@ export const createCollectDataNode =
     ];
     logger.info('Processed IDs:', { processedIds: processedIds.length });
 
+    //////////MY RECENT REPLIES//////////
     const myRecentRepliesToolResponse = await invokeFetchMyRecentRepliesTool(config.toolNode, {
       maxRecentReplies: twitterConfig.MAX_MY_RECENT_REPLIES,
     });
@@ -30,16 +31,31 @@ export const createCollectDataNode =
       myRecentRepliesToolResponse.messages[myRecentRepliesToolResponse.messages.length - 1].content;
     const myRecentReplies = convertMessageContentToTweets(myRecentRepliesContent);
 
+    //////////TIMELINE & TREND//////////
     const timelineToolResponse = await invokeFetchTimelineTool(config.toolNode, {
       processedIds,
       numTimelineTweets: twitterConfig.NUM_TIMELINE_TWEETS,
       numFollowingRecentTweets: twitterConfig.NUM_FOLLOWING_RECENT_TWEETS,
       numRandomFollowers: twitterConfig.NUM_RANDOM_FOLLOWERS,
     });
-    const timelineContent =
-      timelineToolResponse.messages[timelineToolResponse.messages.length - 1].content;
-    const timelineTweets = convertMessageContentToTweets(timelineContent);
+    const timelineContent = JSON.parse(
+      timelineToolResponse.messages[timelineToolResponse.messages.length - 1].content,
+    );
+    const timelineTweetsConverted = convertMessageContentToTweets(
+      JSON.stringify({ tweets: timelineContent.tweets.timelineTweets }),
+    );
+    const followingRecentsConverted = convertMessageContentToTweets(
+      JSON.stringify({ tweets: timelineContent.tweets.followingRecents }),
+    );
+    const trendAnalysisTweets = [...timelineTweetsConverted, ...followingRecentsConverted];
+    const timelineTweets = [
+      ...Array.from(timelineTweetsConverted)
+        .sort(() => Math.random() - 0.5)
+        .slice(0, twitterConfig.NUM_TIMELINE_TWEETS),
+      ...followingRecentsConverted,
+    ];
 
+    //////////MENTIONS//////////
     const mentionsToolResponse = await invokeFetchMentionsTool(config.toolNode, {
       maxMentions: twitterConfig.MAX_MENTIONS,
     });
@@ -47,6 +63,7 @@ export const createCollectDataNode =
       mentionsToolResponse.messages[mentionsToolResponse.messages.length - 1].content;
     const mentionsTweets = convertMessageContentToTweets(mentionsContent);
 
+    //////////MY RECENT TWEETS//////////
     const myRecentTweetsToolResponse = await invokeFetchMyRecentTweetsTool(config.toolNode, {
       maxMyRecentTweets: twitterConfig.MAX_MY_RECENT_TWEETS,
     });
@@ -54,6 +71,7 @@ export const createCollectDataNode =
       myRecentTweetsToolResponse.messages[myRecentTweetsToolResponse.messages.length - 1].content;
     const myRecentTweets = convertMessageContentToTweets(myRecentTweetsContent);
 
+    //////////REPLIED TO TWEET IDS//////////
     const myRepliedToIds = JSON.parse(myRecentTweetsContent).repliedToTweetIds
       ? JSON.parse(myRecentTweetsContent).repliedToTweetIds
       : [];
@@ -61,6 +79,7 @@ export const createCollectDataNode =
     logger.info('Tool response received:', {
       myRecentRepliesCount: myRecentReplies.length,
       timelineMessageCount: timelineTweets.length,
+      trendAnalysisMessageCount: trendAnalysisTweets.length,
       mentionsMessageCount: mentionsTweets.length,
       myRecentTweetsCount: myRecentTweets.length,
       repliedToTweetIds: myRepliedToIds.length,
@@ -68,6 +87,7 @@ export const createCollectDataNode =
 
     return {
       timelineTweets: new Set(timelineTweets),
+      trendAnalysisTweets: new Set(trendAnalysisTweets),
       mentionsTweets: new Set(mentionsTweets),
       myRecentTweets: new Set(myRecentTweets),
       myRecentReplies: new Set(myRecentReplies),
