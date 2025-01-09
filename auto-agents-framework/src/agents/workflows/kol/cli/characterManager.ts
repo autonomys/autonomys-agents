@@ -2,7 +2,7 @@ import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'fs';
 import { join } from 'path';
 import { createLogger } from '../../../../utils/logger.js';
 import { uploadCharacterToDsn } from '../../../tools/utils/dsnUpload.js';
-import { downloadCharacter as downloadCharacterFromDsn } from '../../../tools/utils/dsnDownload.js';
+import { download as downloadCharacter } from '../../../tools/utils/dsnDownload.js';
 
 const logger = createLogger('character-manager');
 
@@ -35,13 +35,13 @@ async function uploadCharacter(name: string) {
   }
 }
 
-async function downloadCharacter(cid: string, characterName: string) {
+async function download(cid: string, characterName: string) {
   try {
     if (!existsSync(CHARACTERS_DIR)) {
       mkdirSync(CHARACTERS_DIR, { recursive: true });
     }
 
-    const characterData = await downloadCharacterFromDsn(cid);
+    const characterData = await downloadCharacter(cid);
     const metadata = characterData.metadata;
 
     const formatValue = (value: string) => {
@@ -103,7 +103,7 @@ async function main() {
         if (!name) {
           throw new Error('Download requires both CID and character name');
         }
-        await downloadCharacter(arg, name);
+        await download(arg, name);
         break;
       default:
         throw new Error(`Unknown command: ${command}`);

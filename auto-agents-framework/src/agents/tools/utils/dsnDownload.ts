@@ -5,18 +5,13 @@ import { withRetry } from './retry.js';
 
 const logger = createLogger('dsn-download');
 
-export async function downloadCharacter(cid: string): Promise<any> {
-  logger.info(`Checking character metadata: ${cid}`);
-
+export async function download(cid: string): Promise<any> {
   return withRetry(
     async () => {
       const api = createAutoDriveApi({
         apiKey: config.autoDriveConfig.AUTO_DRIVE_API_KEY || '',
       });
-
-      logger.info(`Character metadata is valid: ${cid}`);
-      logger.info(`Downloading character: ${cid}`);
-
+      logger.info(`Downloading file: ${cid}`);
       const stream = await downloadFile(api, cid);
 
       const chunks: Uint8Array[] = [];
@@ -32,9 +27,9 @@ export async function downloadCharacter(cid: string): Promise<any> {
       }
 
       const jsonString = new TextDecoder().decode(allChunks);
-      const characterData = JSON.parse(jsonString);
+      const data = JSON.parse(jsonString);
 
-      return characterData;
+      return data;
     },
     {
       shouldRetry: error => {
