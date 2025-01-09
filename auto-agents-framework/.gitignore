@@ -1,6 +1,6 @@
 characters/
 !characters/character.example.ts
 *.yaml
-!src/config/config.example.yaml
+!config/config.example.yaml
 .cookies/
 dsn-kol-schemas.json
