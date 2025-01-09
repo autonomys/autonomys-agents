@@ -4,3 +4,4 @@ characters/
 !src/config/config.example.yaml
 .cookies/
 dsn-kol-schemas.json
+memories/

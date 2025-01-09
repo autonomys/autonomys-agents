@@ -1,8 +1,11 @@
 import { createLogger } from '../../utils/logger.js';
 import { getLastMemoryCid } from '../../agents/tools/utils/agentMemoryContract.js';
-import { downloadCharacter } from '../../agents/tools/utils/dsnDownload.js';
+import { download } from '../../agents/tools/utils/dsnDownload.js';
+import { writeFileSync, readFileSync, existsSync } from 'fs';
+import { join } from 'path';
 
 const logger = createLogger('memory-resurrector');
+const STATE_FILE = join(process.cwd(), 'data', 'last-processed-cid.json');
 
 interface Memory {
   cid: string;
@@ -11,28 +14,52 @@ interface Memory {
 }
 
 class MemoryResurrector {
-  private memories: Map<string, Memory> = new Map();
   private failedCids: Set<string> = new Set();
+  private processedCount: number = 0;
 
-  private async fetchMemoryChain(currentCid: string): Promise<void> {
-    if (!currentCid || this.memories.has(currentCid) || this.failedCids.has(currentCid)) {
+  constructor(private outputDir: string) {}
+
+  private getLastProcessedCid(): string | null {
+    try {
+      if (!existsSync(STATE_FILE)) {
+        return null;
+      }
+      const data = JSON.parse(readFileSync(STATE_FILE, 'utf-8'));
+      return data.lastProcessedCid;
+    } catch (error) {
+      logger.error('Failed to read last processed CID:', error);
+      return null;
+    }
+  }
+
+  private saveLastProcessedCid(cid: string): void {
+    try {
+      writeFileSync(STATE_FILE, JSON.stringify({ lastProcessedCid: cid }, null, 2));
+      logger.info(`Saved last processed CID: ${cid}`);
+    } catch (error) {
+      logger.error('Failed to save last processed CID:', error);
+    }
+  }
+
+  private async fetchMemoryChain(currentCid: string, stopAtCid: string | null): Promise<void> {
+    if (!currentCid || 
+        this.failedCids.has(currentCid) || 
+        currentCid === stopAtCid) {
       return;
     }
 
     try {
-      const content = await downloadCharacter(currentCid);
-
-      const memory: Memory = {
-        cid: currentCid,
-        previousCid: content.previousCid || null,
-        content
-      };
+      const content = await download(currentCid);
       
-      this.memories.set(currentCid, memory);
-      logger.info(`Successfully fetched memory ${currentCid}`);
+      const filename = `${currentCid}.json`;
+      const filepath = join(this.outputDir, filename);
+      writeFileSync(filepath, JSON.stringify(content, null, 2));
+      
+      this.processedCount++;
+      logger.info(`Successfully fetched and saved memory ${currentCid}`);
 
-      if (memory.previousCid) {
-        await this.fetchMemoryChain(memory.previousCid);
+      if (content.previousCid && content.previousCid !== stopAtCid) {
+        await this.fetchMemoryChain(content.previousCid, stopAtCid);
       }
 
     } catch (error) {
@@ -41,24 +68,30 @@ class MemoryResurrector {
     }
   }
 
-  async resurrect(startCid: string): Promise<Map<string, Memory>> {
-    await this.fetchMemoryChain(startCid);
-    return this.memories;
-  }
-
-  async downloadAllMemories(): Promise<Memory[]> {
+  async downloadAllMemories(): Promise<{ processed: number, failed: number }> {
     const latestCid = await getLastMemoryCid();
     if (!latestCid) {
       logger.info('No memories found (empty CID)');
-      return [];
+      return { processed: 0, failed: 0 };
+    }
+
+    const lastProcessedCid = this.getLastProcessedCid();
+    if (lastProcessedCid === latestCid) {
+      logger.info('Already up to date with latest CID');
+      return { processed: 0, failed: 0 };
     }
     
-    await this.resurrect(latestCid);
+    logger.info(`Starting download from ${latestCid} to ${lastProcessedCid || 'genesis'}`);
+    await this.fetchMemoryChain(latestCid, lastProcessedCid);
     
-    const memories = Array.from(this.memories.values());
-    logger.info(`Downloaded ${memories.length} memories, failed CIDs: ${this.failedCids.size}`);
+    this.saveLastProcessedCid(latestCid);
     
-    return memories;
+    logger.info(`Downloaded ${this.processedCount} memories, failed CIDs: ${this.failedCids.size}`);
+    
+    return {
+      processed: this.processedCount,
+      failed: this.failedCids.size
+    };
   }
 }
 

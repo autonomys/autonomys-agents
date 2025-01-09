@@ -13,7 +13,9 @@
         "example:twitter": "tsx examples/twitter.ts",
         "extract-kol-dsn-schemas": "tsx src/agents/workflows/kol/cli/extractDsnSchemas.ts",
         "copy-characters": "cp -r src/agents/workflows/kol/characters dist/agents/workflows/kol/",
-        "manage-character": "tsx src/agents/workflows/kol/cli/characterManager.ts"
+        "manage-character": "tsx src/agents/workflows/kol/cli/characterManager.ts",
+        "resurrect": "tsx src/cli/resurrect.ts"
+
     },
     "dependencies": {
         "@autonomys/auto-dag-data": "1.2.1",
