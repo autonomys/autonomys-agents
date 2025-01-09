@@ -5,7 +5,7 @@ import { writeFileSync, readFileSync, existsSync } from 'fs';
 import { join } from 'path';
 
 const logger = createLogger('memory-resurrector');
-const STATE_FILE = join(process.cwd(), 'data', 'last-processed-cid.json');
+const STATE_FILE = join(process.cwd(), 'memories', 'last-processed-cid.json');
 
 interface Memory {
   cid: string;
@@ -42,33 +42,30 @@ class MemoryResurrector {
   }
 
   private async fetchMemoryChain(currentCid: string, stopAtCid: string | null): Promise<void> {
-    if (!currentCid || 
-        this.failedCids.has(currentCid) || 
-        currentCid === stopAtCid) {
+    if (!currentCid || this.failedCids.has(currentCid) || currentCid === stopAtCid) {
       return;
     }
 
     try {
       const content = await download(currentCid);
-      
+
       const filename = `${currentCid}.json`;
       const filepath = join(this.outputDir, filename);
       writeFileSync(filepath, JSON.stringify(content, null, 2));
-      
+
       this.processedCount++;
       logger.info(`Successfully fetched and saved memory ${currentCid}`);
 
       if (content.previousCid && content.previousCid !== stopAtCid) {
         await this.fetchMemoryChain(content.previousCid, stopAtCid);
       }
-
     } catch (error) {
       logger.error(`Failed to fetch memory ${currentCid}:`, error);
       this.failedCids.add(currentCid);
     }
   }
 
-  async downloadAllMemories(): Promise<{ processed: number, failed: number }> {
+  async downloadAllMemories(): Promise<{ processed: number; failed: number }> {
     const latestCid = await getLastMemoryCid();
     if (!latestCid) {
       logger.info('No memories found (empty CID)');
@@ -80,17 +77,17 @@ class MemoryResurrector {
       logger.info('Already up to date with latest CID');
       return { processed: 0, failed: 0 };
     }
-    
+
     logger.info(`Starting download from ${latestCid} to ${lastProcessedCid || 'genesis'}`);
     await this.fetchMemoryChain(latestCid, lastProcessedCid);
-    
+
     this.saveLastProcessedCid(latestCid);
-    
+
     logger.info(`Downloaded ${this.processedCount} memories, failed CIDs: ${this.failedCids.size}`);
-    
+
     return {
       processed: this.processedCount,
-      failed: this.failedCids.size
+      failed: this.failedCids.size,
     };
   }
 }

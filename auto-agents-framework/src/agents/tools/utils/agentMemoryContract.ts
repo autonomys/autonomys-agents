@@ -12,8 +12,8 @@ export const getLastMemoryHash = async (): Promise<string> => {
   return await contract.getLastMemoryHash(wallet.address);
 };
 
-export const getLastMemoryCid = async (): Promise<string> => {
-  const lastMemoryHash = await contract.getLastMemoryHash(wallet.address);
+export const getLastMemoryCid = async (agentAddress?: string): Promise<string> => {
+  const lastMemoryHash = await contract.getLastMemoryHash(agentAddress || wallet.address);
   if (!lastMemoryHash) {
     return '';
   }
