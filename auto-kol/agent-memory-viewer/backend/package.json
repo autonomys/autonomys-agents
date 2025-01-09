@@ -11,7 +11,8 @@
     "lint": "eslint . --ext .ts",
     "test": "jest",
     "validate:env": "tsx src/scripts/validate-env.ts",
-    "generate-types": "tsx src/types/generateTypes.ts"
+    "generate-types": "tsx src/types/generateTypes.ts",
+    "sort-memories": "tsx src/scripts/sortMemories.ts"
   },
   "dependencies": {
     "@autonomys/auto-dag-data": "^1.1.2",
