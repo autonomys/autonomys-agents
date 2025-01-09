@@ -36,7 +36,7 @@ export const agentVersion = process.env.AGENT_VERSION || '1.0.0';
 
 const yamlConfig = (() => {
   try {
-    const configPath = path.join(workspaceRoot, 'src', 'config', 'config.yaml');
+    const configPath = path.join(workspaceRoot, 'config', 'config.yaml');
     const fileContents = readFileSync(configPath, 'utf8');
     return yaml.parse(fileContents);
   } catch (error) {
