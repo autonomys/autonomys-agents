@@ -31,7 +31,7 @@ Auto-Agents-Framework is an experimental framework for building AI agents that c
 4. The framework supports multiple levels of configuration with the following priority (highest to lowest):
 
    1. Environment variables (`.env` file)
-   2. YAML configuration (`config/default.yaml`)
+   2. YAML configuration (`config/config.yaml`)
    3. Default values in code
 
 This means you can:
@@ -42,10 +42,10 @@ This means you can:
 
 1. Copy the example configuration file:
    ```bash
-   cp src/config/config.example.yaml config/default.yaml
+   cp config/config.example.yaml config/config.yaml
    ```
 
-2. Customize the settings in `config/default.yaml`:
+2. Customize the settings in `config/config.yaml`:
    ```yaml
    twitter:
      NUM_TIMELINE_TWEETS: 10
