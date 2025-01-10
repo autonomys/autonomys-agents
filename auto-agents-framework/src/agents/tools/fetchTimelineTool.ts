@@ -15,24 +15,24 @@ export const createFetchTimelineTool = (twitterApi: TwitterApi) =>
       processedIds: z.array(z.string()),
       numTimelineTweets: z.number(),
       numFollowingRecentTweets: z.number(),
-      numRandomFollowers: z.number(),
+      numRandomFollowings: z.number(),
     }),
     func: async ({
       processedIds,
       numTimelineTweets,
       numFollowingRecentTweets,
-      numRandomFollowers,
+      numRandomFollowings,
     }: {
       processedIds: string[];
       numTimelineTweets: number;
       numFollowingRecentTweets: number;
-      numRandomFollowers: number;
+      numRandomFollowings: number;
     }) => {
       try {
         const myTimelineTweets = await twitterApi.getMyTimeline(numTimelineTweets, processedIds);
         const followingRecents = await twitterApi.getFollowingRecentTweets(
           numFollowingRecentTweets,
-          numRandomFollowers,
+          numRandomFollowings,
         );
         const tweets = {
           timelineTweets: myTimelineTweets,
@@ -61,12 +61,12 @@ export const invokeFetchTimelineTool = async (
     processedIds,
     numTimelineTweets,
     numFollowingRecentTweets,
-    numRandomFollowers,
+    numRandomFollowings,
   }: {
     processedIds: string[];
     numTimelineTweets: number;
     numFollowingRecentTweets: number;
-    numRandomFollowers: number;
+    numRandomFollowings: number;
   },
 ) => {
   const toolResponse = await toolNode.invoke({
@@ -76,7 +76,12 @@ export const invokeFetchTimelineTool = async (
         tool_calls: [
           {
             name: 'fetch_timeline',
-            args: { processedIds, numTimelineTweets, numFollowingRecentTweets, numRandomFollowers },
+            args: {
+              processedIds,
+              numTimelineTweets,
+              numFollowingRecentTweets,
+              numRandomFollowings,
+            },
             id: 'fetch_timeline_call',
             type: 'tool_call',
           },
