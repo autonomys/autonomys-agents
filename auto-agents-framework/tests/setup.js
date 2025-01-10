@@ -20,6 +20,66 @@ jest.mock('../src/config/index.js', () => ({
         generation: { size: 'large', temperature: 0.7 },
         response: { size: 'large', temperature: 0.7 }
       }
+    },
+    blockchainConfig: {
+      RPC_URL: 'http://mock-rpc',
+      PRIVATE_KEY: '1234567890123456789012345678901234567890123456789012345678901234',
+      CONTRACT_ADDRESS: '0x1234567890123456789012345678901234567890'
     }
   }
+}), { virtual: true }); 
+
+// Mock the agentWallet module
+jest.mock('../src/agents/tools/utils/agentWallet.ts', () => ({
+  wallet: {
+    getNonce: jest.fn().mockResolvedValue(0),
+    signMessage: jest.fn().mockResolvedValue('0xmockedsignature')
+  }
+}), { virtual: true });
+
+// Mock ethers
+jest.mock('ethers', () => ({
+  JsonRpcProvider: jest.fn().mockReturnValue({
+    getNetwork: jest.fn().mockResolvedValue({ chainId: 1 })
+  }),
+  Wallet: jest.fn().mockReturnValue({
+    getNonce: jest.fn().mockResolvedValue(0),
+    signMessage: jest.fn().mockResolvedValue('0xmockedsignature')
+  }),
+  Contract: jest.fn()
+}), { virtual: true }); 
+
+// Mock the dsnUpload module
+jest.mock('../src/agents/tools/utils/dsnUpload.ts', () => ({
+  uploadToDsn: jest.fn().mockResolvedValue('0xmockedtxhash'),
+  currentNonce: 0
+}), { virtual: true }); 
+
+// Mock the character loading
+jest.mock('../src/agents/workflows/kol/prompts.ts', () => ({
+  loadCharacter: jest.fn().mockImplementation((characterFile) => Promise.resolve({
+    name: `Test ${characterFile}`,
+    username: 'test-user',
+    description: 'A test character',
+    personality: 'Friendly and helpful',
+    expertise: 'Testing',
+    rules: 'Be helpful',
+    trendFocus: 'Testing trends',
+    contentFocus: 'Test content',
+    replyStyle: 'Professional',
+    wordsToAvoid: ['bad', 'words'],
+    engagementCriteria: 'Engage with relevant topics'
+  })),
+  // Add any other exports that might be needed
+  engagementParser: {},
+  responseParser: {},
+  trendParser: {},
+  trendTweetParser: {},
+  summaryParser: {},
+  createPrompts: jest.fn().mockImplementation(() => ({
+    engagementPrompt: {},
+    responsePrompt: {},
+    trendPrompt: {},
+    summaryPrompt: {},
+  }))
 }), { virtual: true }); 

@@ -5,7 +5,6 @@ import { vol } from 'memfs';
 // Mock fs module with memfs
 jest.mock('fs', () => require('memfs'));
 
-// Mock the Scraper class
 jest.mock('agent-twitter-client', () => ({
   Scraper: jest.fn().mockImplementation(() => ({
     login: jest.fn().mockResolvedValue(undefined),
@@ -22,9 +21,7 @@ describe('Twitter Client', () => {
   const cookiesPath = '/test/cookies.json';
 
   beforeEach(() => {
-    // Reset the file system before each test
     vol.reset();
-    // Create the /test directory
     vol.mkdirSync('/test', { recursive: true });
     jest.clearAllMocks();
   });
