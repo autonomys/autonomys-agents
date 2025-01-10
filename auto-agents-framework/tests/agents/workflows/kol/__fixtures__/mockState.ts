@@ -12,7 +12,7 @@ export const createMockState = () => ({
   dsnData: [],
   summary: { patterns: [], commonWords: [] },
   trendAnalysis: { summary: '', trends: [] },
-  engagementDecisions: []
+  engagementDecisions: [],
 });
 
 export const createMockTweet = (overrides = {}): Tweet => ({
@@ -26,5 +26,5 @@ export const createMockTweet = (overrides = {}): Tweet => ({
   videos: [],
   urls: [],
   thread: [],
-  ...overrides
-}); 
+  ...overrides,
+});

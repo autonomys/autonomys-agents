@@ -11,7 +11,7 @@ jest.mock('agent-twitter-client', () => ({
     setCookies: jest.fn().mockResolvedValue(undefined),
     getCookies: jest.fn().mockResolvedValue([]),
     isLoggedIn: jest.fn().mockResolvedValue(true),
-    getUserIdByScreenName: jest.fn().mockResolvedValue('123456')
+    getUserIdByScreenName: jest.fn().mockResolvedValue('123456'),
   })),
 }));
 
@@ -28,7 +28,7 @@ describe('Twitter Client', () => {
 
   it('should create a Twitter API instance', async () => {
     const api = await createTwitterApi(username, password, cookiesPath);
-    
+
     expect(api).toBeDefined();
     expect(api.username).toBe(username);
     expect(api.scraper).toBeDefined();
@@ -36,7 +36,7 @@ describe('Twitter Client', () => {
 
   it('should handle login when no cookies exist', async () => {
     const api = await createTwitterApi(username, password, cookiesPath);
-    
+
     expect(Scraper).toHaveBeenCalled();
     expect(api.scraper.login).toHaveBeenCalledWith(username, password);
   });
@@ -44,11 +44,11 @@ describe('Twitter Client', () => {
   it('should use existing cookies when available', async () => {
     // Create a mock cookie file
     vol.fromJSON({
-      [cookiesPath]: JSON.stringify([{ name: 'cookie1', value: 'value1' }])
+      [cookiesPath]: JSON.stringify([{ name: 'cookie1', value: 'value1' }]),
     });
-    
+
     const api = await createTwitterApi(username, password, cookiesPath);
-    
+
     expect(api.scraper.setCookies).toHaveBeenCalled();
     expect(api.scraper.login).not.toHaveBeenCalled();
   });

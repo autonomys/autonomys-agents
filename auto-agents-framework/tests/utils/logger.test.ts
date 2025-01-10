@@ -28,32 +28,37 @@ describe('Logger', () => {
   });
 
   it('should create a logger with default parameters', () => {
-    const logger = createLogger('test-context');
-    
+    const _logger = createLogger('test-context');
+
     expect(winston.createLogger).toHaveBeenCalled();
     expect(winston.transports.Console).toHaveBeenCalled();
     expect(winston.transports.File).toHaveBeenCalledTimes(2);
   });
 
   it('should create a logger with custom folder and file names', () => {
-    const logger = createLogger('test-context', 'custom-logs', 'custom-error.log', 'custom-combined.log');
-    
+    const _logger = createLogger(
+      'test-context',
+      'custom-logs',
+      'custom-error.log',
+      'custom-combined.log',
+    );
+
     expect(winston.createLogger).toHaveBeenCalled();
     expect(winston.transports.File).toHaveBeenCalledTimes(2);
     expect(winston.transports.File).toHaveBeenCalledWith(
       expect.objectContaining({
         filename: expect.stringContaining('custom-error.log'),
-      })
+      }),
     );
   });
 
   it('should log messages at different levels', () => {
     const logger = createLogger('test-context');
-    
+
     logger.info('test info message');
     logger.error('test error message');
     logger.warn('test warning message');
-    
+
     expect(logger.info).toHaveBeenCalledWith('test info message');
     expect(logger.error).toHaveBeenCalledWith('test error message');
     expect(logger.warn).toHaveBeenCalledWith('test warning message');

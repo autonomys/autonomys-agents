@@ -7,7 +7,6 @@ describe('Engagement Node', () => {
   let mockState: ReturnType<typeof createMockState>;
 
   beforeEach(() => {
-    // Mock the workflow config with default positive response
     mockWorkflowConfig = {
       llms: {
         decision: {
@@ -24,8 +23,6 @@ describe('Engagement Node', () => {
         },
       },
     } as any;
-
-    // Create a mock state
     mockState = createMockState();
   });
 
@@ -33,7 +30,7 @@ describe('Engagement Node', () => {
     const engagementNode = createEngagementNode(mockWorkflowConfig);
     const testTweet = createMockTweet();
     mockState.mentionsTweets.add(testTweet);
-    
+
     const result = await engagementNode(mockState);
 
     expect(result).toHaveProperty('engagementDecisions');
@@ -62,7 +59,7 @@ describe('Engagement Node', () => {
     const engagementNode = createEngagementNode(mockWorkflowConfig);
 
     const testTweet = createMockTweet();
-   
+
     mockState.mentionsTweets = new Set([testTweet]);
 
     const result = await engagementNode(mockState);
@@ -82,7 +79,7 @@ describe('Engagement Node', () => {
     const engagementNode = createEngagementNode(mockWorkflowConfig);
     const testTweet = createMockTweet();
     mockState.mentionsTweets.add(testTweet);
-    
+
     const result = await engagementNode(mockState);
 
     expect(result).toHaveProperty('engagementDecisions');
@@ -98,14 +95,15 @@ describe('Engagement Node', () => {
         text: testTweet.text,
         username: testTweet.username,
         timeParsed: testTweet.timeParsed,
-        thread: 'No thread'
+        thread: 'No thread',
       },
     });
   });
 
   it('should process multiple tweets with mixed engagement decisions', async () => {
     // Mock LLM to alternate between positive and negative decisions
-    mockWorkflowConfig.llms.decision.invoke = jest.fn()
+    mockWorkflowConfig.llms.decision.invoke = jest
+      .fn()
       .mockResolvedValueOnce({
         shouldEngage: true,
         reason: 'Relevant discussion',
@@ -118,13 +116,13 @@ describe('Engagement Node', () => {
     const engagementNode = createEngagementNode(mockWorkflowConfig);
     const tweet1 = createMockTweet({ id: '1', text: 'First tweet' });
     const tweet2 = createMockTweet({ id: '2', text: 'Second tweet' });
-    
+
     mockState.mentionsTweets = new Set([tweet1, tweet2]);
-    
+
     const result = await engagementNode(mockState);
 
     expect(result.engagementDecisions).toHaveLength(2);
     expect(result.engagementDecisions![0].decision.shouldEngage).toBe(true);
     expect(result.engagementDecisions![1].decision.shouldEngage).toBe(false);
   });
-}); 
+});

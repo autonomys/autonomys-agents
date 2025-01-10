@@ -1,4 +1,3 @@
-// Explicitly mock the config module
 jest.mock('../src/config/index.js', () => ({
   config: {
     twitterConfig: {
@@ -29,7 +28,6 @@ jest.mock('../src/config/index.js', () => ({
   }
 }), { virtual: true }); 
 
-// Mock the agentWallet module
 jest.mock('../src/agents/tools/utils/agentWallet.ts', () => ({
   wallet: {
     getNonce: jest.fn().mockResolvedValue(0),
@@ -37,7 +35,6 @@ jest.mock('../src/agents/tools/utils/agentWallet.ts', () => ({
   }
 }), { virtual: true });
 
-// Mock ethers
 jest.mock('ethers', () => ({
   JsonRpcProvider: jest.fn().mockReturnValue({
     getNetwork: jest.fn().mockResolvedValue({ chainId: 1 })
@@ -49,13 +46,11 @@ jest.mock('ethers', () => ({
   Contract: jest.fn()
 }), { virtual: true }); 
 
-// Mock the dsnUpload module
 jest.mock('../src/agents/tools/utils/dsnUpload.ts', () => ({
   uploadToDsn: jest.fn().mockResolvedValue('0xmockedtxhash'),
   currentNonce: 0
 }), { virtual: true }); 
 
-// Mock the character loading
 jest.mock('../src/agents/workflows/kol/prompts.ts', () => ({
   loadCharacter: jest.fn().mockImplementation((characterFile) => Promise.resolve({
     name: `Test ${characterFile}`,
@@ -70,7 +65,6 @@ jest.mock('../src/agents/workflows/kol/prompts.ts', () => ({
     wordsToAvoid: ['bad', 'words'],
     engagementCriteria: 'Engage with relevant topics'
   })),
-  // Add any other exports that might be needed
   engagementParser: {},
   responseParser: {},
   trendParser: {},

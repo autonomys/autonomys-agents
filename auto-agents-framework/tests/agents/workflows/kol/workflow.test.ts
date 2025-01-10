@@ -1,10 +1,8 @@
-import { createWorkflow, getWorkflowConfig, State } from '../../../../src/agents/workflows/kol/workflow';
+import { createWorkflow, getWorkflowConfig } from '../../../../src/agents/workflows/kol/workflow';
 import { createNodes } from '../../../../src/agents/workflows/kol/nodes';
 import { WorkflowConfig } from '../../../../src/agents/workflows/kol/types';
 import { createMockState } from './__fixtures__/mockState';
 
-// Mock the config module (already done in setup.js)
-// Mock the Twitter API client
 jest.mock('../../../../src/services/twitter/client', () => ({
   createTwitterApi: jest.fn().mockResolvedValue({
     username: 'test-user',
@@ -16,7 +14,6 @@ jest.mock('../../../../src/services/twitter/client', () => ({
   }),
 }));
 
-// Mock the LLM Factory
 jest.mock('../../../../src/services/llm/factory', () => ({
   LLMFactory: {
     createModel: jest.fn().mockReturnValue({
@@ -38,7 +35,7 @@ describe('KOL Workflow', () => {
     expect(workflowConfig).toHaveProperty('toolNode');
     expect(workflowConfig).toHaveProperty('prompts');
     expect(workflowConfig).toHaveProperty('llms');
-    
+
     // Check LLM instances
     expect(workflowConfig.llms).toHaveProperty('decision');
     expect(workflowConfig.llms).toHaveProperty('analyze');
@@ -50,9 +47,25 @@ describe('KOL Workflow', () => {
     const nodes = await createNodes(workflowConfig);
     const workflow = await createWorkflow(nodes);
 
-    // Check if workflow is created with correct structure
     expect(workflow).toBeDefined();
-    // You can add more specific checks for the workflow structure
+
+    // Check that all required nodes are present
+    const workflowNodes = (workflow as any).nodes;
+    expect(workflowNodes).toHaveProperty('collectDataNode');
+    expect(workflowNodes).toHaveProperty('summaryNode');
+    expect(workflowNodes).toHaveProperty('engagementNode');
+    expect(workflowNodes).toHaveProperty('analyzeTrendNode');
+    expect(workflowNodes).toHaveProperty('generateTweetNode');
+    expect(workflowNodes).toHaveProperty('uploadToDsnNode');
+
+    // Check workflow edges
+    const edges = (workflow as any).edges;
+    expect(edges).toBeInstanceOf(Set);
+    expect(edges).toContainEqual(['__start__', 'collectDataNode']);
+    expect(edges).toContainEqual(['collectDataNode', 'summaryNode']);
+    expect(edges).toContainEqual(['summaryNode', 'engagementNode']);
+    expect(edges).toContainEqual(['engagementNode', 'analyzeTrendNode']);
+    expect(edges).toContainEqual(['analyzeTrendNode', 'generateTweetNode']);
   });
 
   it('should maintain workflow config singleton per character', async () => {
@@ -67,10 +80,10 @@ describe('KOL Workflow', () => {
   // Test State annotations
   it('should properly handle state annotations', () => {
     const state = createMockState();
-    
+
     expect(state.messages).toEqual([]);
     expect(state.timelineTweets).toBeInstanceOf(Set);
     expect(state.mentionsTweets).toBeInstanceOf(Set);
     expect(state.processedTweetIds).toBeInstanceOf(Set);
   });
-}); 
+});
