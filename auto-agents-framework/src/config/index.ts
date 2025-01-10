@@ -4,7 +4,10 @@ import { configSchema } from './schema.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { mkdir } from 'fs/promises';
-import { llmConfig } from './llm.js';
+import { llmDefaultConfig } from './llm.js';
+import { twitterDefaultConfig } from './twitter.js';
+import yaml from 'yaml';
+import { readFileSync } from 'fs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -31,6 +34,17 @@ function formatZodError(error: z.ZodError) {
 
 export const agentVersion = process.env.AGENT_VERSION || '1.0.0';
 
+const yamlConfig = (() => {
+  try {
+    const configPath = path.join(workspaceRoot, 'config', 'config.yaml');
+    const fileContents = readFileSync(configPath, 'utf8');
+    return yaml.parse(fileContents);
+  } catch (error) {
+    console.info('No YAML config found, falling back to environment variables');
+    return {};
+  }
+})();
+
 export const config = (() => {
   try {
     const username = process.env.TWITTER_USERNAME || '';
@@ -41,34 +55,12 @@ export const config = (() => {
         USERNAME: username,
         PASSWORD: process.env.TWITTER_PASSWORD || '',
         COOKIES_PATH: cookiesPath,
-        NUM_TIMELINE_TWEETS: Number(process.env.NUM_TIMELINE_TWEETS) || 10,
-        NUM_FOLLOWING_RECENT_TWEETS: Number(process.env.NUM_FOLLOWING_RECENT_TWEETS) || 10,
-        NUM_RANDOM_FOLLOWERS: Number(process.env.NUM_RANDOM_FOLLOWERS) || 5,
-        MAX_MENTIONS: Number(process.env.MAX_MENTIONS) || 5,
-        MAX_THREAD_LENGTH: Number(process.env.MAX_THREAD_LENGTH) || 20,
-        MAX_MY_RECENT_TWEETS: Number(process.env.MAX_MY_RECENT_TWEETS) || 10,
-        MAX_MY_RECENT_REPLIES: Number(process.env.MAX_MY_RECENT_REPLIES) || 10,
-        POST_TWEETS: process.env.POST_TWEETS === 'true',
-        RESPONSE_INTERVAL_MS: (Number(process.env.RESPONSE_INTERVAL_MINUTES) || 60) * 60 * 1000,
-        POST_INTERVAL_MS: (Number(process.env.POST_INTERVAL_MINUTES) || 90) * 60 * 1000,
+        ...twitterDefaultConfig,
+        ...(yamlConfig.twitter || {}),
       },
       llmConfig: {
-        configuration: {
-          large: {
-            provider: llmConfig.configuration.large.provider,
-            model: llmConfig.configuration.large.model,
-          },
-          small: {
-            provider: llmConfig.configuration.small.provider,
-            model: llmConfig.configuration.small.model,
-          },
-        },
-        nodes: {
-          decision: llmConfig.nodes.decision,
-          analyze: llmConfig.nodes.analyze,
-          generation: llmConfig.nodes.generation,
-          response: llmConfig.nodes.response,
-        },
+        ...llmDefaultConfig,
+        ...(yamlConfig.llm || {}),
         OPENAI_API_KEY: process.env.OPENAI_API_KEY || '',
         ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY || '',
         LLAMA_API_URL: process.env.LLAMA_API_URL || '',
@@ -85,7 +77,6 @@ export const config = (() => {
       },
       SERPAPI_API_KEY: process.env.SERPAPI_API_KEY || '',
       NODE_ENV: process.env.NODE_ENV || 'development',
-      RETRY_LIMIT: Number(process.env.RETRY_LIMIT) || 2,
     };
 
     return configSchema.parse(rawConfig);
