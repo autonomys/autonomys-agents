@@ -2,12 +2,11 @@ import { ChatOpenAI } from '@langchain/openai';
 import { ChatAnthropic } from '@langchain/anthropic';
 import { ChatOllama } from '@langchain/ollama';
 import { LLMProvider, LLMConfiguration, LLMNodeConfiguration } from './types.js';
-import { llmConfig } from '../../config/llm.js';
 import { config as appConfig } from '../../config/index.js';
 
 export class LLMFactory {
   static createModel(node: LLMNodeConfiguration) {
-    const cfg = llmConfig.configuration[node.size];
+    const cfg = appConfig.llmConfig.configuration[node.size];
     return this.createModelFromConfig(cfg, node.temperature);
   }
 
