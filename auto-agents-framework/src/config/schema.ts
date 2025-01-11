@@ -7,7 +7,7 @@ const twitterConfigSchema = z.object({
   COOKIES_PATH: z.string(),
   NUM_TIMELINE_TWEETS: z.number().int().positive(),
   NUM_FOLLOWING_RECENT_TWEETS: z.number().int().positive(),
-  NUM_RANDOM_FOLLOWERS: z.number().int().positive(),
+  NUM_RANDOM_FOLLOWINGS: z.number().int().positive(),
   MAX_MENTIONS: z.number().int().positive(),
   MAX_THREAD_LENGTH: z.number().int().positive(),
   MAX_MY_RECENT_TWEETS: z.number().int().positive(),
