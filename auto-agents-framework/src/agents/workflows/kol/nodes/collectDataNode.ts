@@ -15,12 +15,9 @@ const logger = createLogger('collect-data-node');
 export const createCollectDataNode =
   (config: WorkflowConfig) => async (state: typeof State.State) => {
     logger.info('Collect Data Node - Collecting fresh data');
-    const { processedTweetIds, repliedToTweetIds } = state;
+    const { processedTweetIds } = state;
 
-    const processedIds = [
-      ...Array.from(processedTweetIds.values()),
-      ...Array.from(repliedToTweetIds.values()),
-    ];
+    const processedIds = [...Array.from(processedTweetIds.values())];
     logger.info('Processed IDs:', { processedIds: processedIds.length });
 
     //////////MY RECENT REPLIES//////////
