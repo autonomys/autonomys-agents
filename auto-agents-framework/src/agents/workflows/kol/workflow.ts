@@ -87,6 +87,31 @@ const createWorkflowConfig = async (characterFile: string): Promise<WorkflowConf
   };
 };
 
+export const pruneState = (state: typeof State.State) => {
+  const prunedState = {
+    ...state,
+    timelineTweets: pruneMemorySet(state.timelineTweets),
+    mentionsTweets: pruneMemorySet(state.mentionsTweets),
+    myRecentTweets: pruneMemorySet(state.myRecentTweets),
+    myRecentReplies: pruneMemorySet(state.myRecentReplies),
+    trendAnalysisTweets: pruneMemorySet(state.trendAnalysisTweets),
+    processedTweetIds: pruneProcessedIds(state.processedTweetIds),
+    repliedToTweetIds: pruneProcessedIds(state.repliedToTweetIds),
+  };
+
+  logger.info('State pruned', {
+    prunedTimelineTweetsSize: prunedState.timelineTweets.size,
+    prunedMentionsTweetsSize: prunedState.mentionsTweets.size,
+    prunedMyRecentTweetsSize: prunedState.myRecentTweets.size,
+    prunedMyRecentRepliesSize: prunedState.myRecentReplies.size,
+    prunedTrendAnalysisTweetsSize: prunedState.trendAnalysisTweets.size,
+    prunedProcessedTweetIdsSize: prunedState.processedTweetIds.size,
+    prunedRepliedToTweetIdsSize: prunedState.repliedToTweetIds.size,
+  });
+
+  return prunedState;
+};
+
 export const getWorkflowConfig = (() => {
   let workflowConfigInstance: WorkflowConfig | null = null;
   let currentCharacterFile: string | null = null;
@@ -128,7 +153,10 @@ const shouldContinue = (state: typeof State.State) => {
   const hasDsnData = state.dsnData && Object.keys(state.dsnData).length > 0;
 
   if (hasDsnData && config.autoDriveConfig.AUTO_DRIVE_UPLOAD) return 'uploadToDsnNode';
-  else return END;
+  else {
+    const _prunedState = pruneState(state);
+    return END;
+  }
 };
 
 // Workflow creation function
@@ -140,43 +168,15 @@ export const createWorkflow = async (nodes: Awaited<ReturnType<typeof createNode
     .addNode('analyzeTrendNode', nodes.analyzeTrendNode)
     .addNode('generateTweetNode', nodes.generateTweetNode)
     .addNode('uploadToDsnNode', nodes.uploadToDsnNode)
-    .addNode('pruneNode', pruneState)
     .addEdge(START, 'collectDataNode')
     .addEdge('collectDataNode', 'summaryNode')
     .addEdge('summaryNode', 'engagementNode')
     .addEdge('engagementNode', 'analyzeTrendNode')
     .addEdge('analyzeTrendNode', 'generateTweetNode')
-    .addEdge('generateTweetNode', 'pruneNode')
-    .addConditionalEdges('pruneNode', shouldContinue);
+    .addConditionalEdges('generateTweetNode', shouldContinue);
 
   return workflow;
 };
-
-export const pruneState = (state: typeof State.State) => {
-  const prunedState = {
-    ...state,
-    timelineTweets: pruneMemorySet(state.timelineTweets),
-    mentionsTweets: pruneMemorySet(state.mentionsTweets),
-    myRecentTweets: pruneMemorySet(state.myRecentTweets),
-    myRecentReplies: pruneMemorySet(state.myRecentReplies),
-    trendAnalysisTweets: pruneMemorySet(state.trendAnalysisTweets),
-    processedTweetIds: pruneProcessedIds(state.processedTweetIds),
-    repliedToTweetIds: pruneProcessedIds(state.repliedToTweetIds),
-  };
-
-  logger.info('State pruned', {
-    prunedTimelineTweetsSize: prunedState.timelineTweets.size,
-    prunedMentionsTweetsSize: prunedState.mentionsTweets.size,
-    prunedMyRecentTweetsSize: prunedState.myRecentTweets.size,
-    prunedMyRecentRepliesSize: prunedState.myRecentReplies.size,
-    prunedTrendAnalysisTweetsSize: prunedState.trendAnalysisTweets.size,
-    prunedProcessedTweetIdsSize: prunedState.processedTweetIds.size,
-    prunedRepliedToTweetIdsSize: prunedState.repliedToTweetIds.size,
-  });
-
-  return prunedState;
-};
-
 // Workflow runner type
 type WorkflowRunner = Readonly<{
   runWorkflow: () => Promise<unknown>;
