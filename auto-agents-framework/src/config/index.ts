@@ -6,6 +6,7 @@ import { fileURLToPath } from 'url';
 import { mkdir } from 'fs/promises';
 import { llmDefaultConfig } from './llm.js';
 import { twitterDefaultConfig } from './twitter.js';
+import { memoryDefaultConfig } from './memory.js';
 import yaml from 'yaml';
 import { readFileSync } from 'fs';
 
@@ -76,9 +77,7 @@ export const config = (() => {
         PRIVATE_KEY: process.env.PRIVATE_KEY || undefined,
       },
       memoryConfig: {
-        maxTweetsPerSet: Number(process.env.MAX_TWEETS_PER_SET) || 1000,
-        maxProcessedIds: Number(process.env.MAX_PROCESSED_IDS) || 5000,
-        maxAgeInDays: Number(process.env.MAX_AGE_IN_DAYS) || 7,
+        ...memoryDefaultConfig,
         ...(yamlConfig.memory || {}),
       },
       SERPAPI_API_KEY: process.env.SERPAPI_API_KEY || '',

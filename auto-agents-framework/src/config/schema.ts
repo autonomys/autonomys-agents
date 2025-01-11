@@ -127,9 +127,9 @@ const blockchainConfigSchema = z.object({
 });
 
 const memoryConfigSchema = z.object({
-  maxTweetsPerSet: z.number().int().positive().default(1000),
-  maxProcessedIds: z.number().int().positive().default(5000),
-  maxAgeInDays: z.number().int().positive().default(7),
+  MAX_TWEETS_PER_SET: z.number().int().positive().default(1000),
+  MAX_PROCESSED_IDS: z.number().int().positive().default(5000),
+  MAX_AGE_IN_DAYS: z.number().int().positive().default(7),
 });
 
 const SERPAPI_API_KEY = z.string().optional();

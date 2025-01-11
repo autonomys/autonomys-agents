@@ -26,9 +26,9 @@ jest.mock('../src/config/index.js', () => ({
       CONTRACT_ADDRESS: '0x1234567890123456789012345678901234567890'
     },
     memoryConfig: {
-      maxTweetsPerSet: 3,
-      maxProcessedIds: 2,
-      maxAgeInDays: 2
+      MAX_TWEETS_PER_SET: 3,
+      MAX_PROCESSED_IDS: 2,
+      MAX_AGE_IN_DAYS: 2
     }
   }
 }), { virtual: true }); 
