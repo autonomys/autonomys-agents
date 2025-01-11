@@ -165,6 +165,7 @@ const shouldContinue = (state: typeof State.State) => {
   if (hasDsnData && config.autoDriveConfig.AUTO_DRIVE_UPLOAD) return 'uploadToDsnNode';
   else {
     const _prunedState = pruneState(state);
+    state.repliedToTweetIds = new Set();
     return END;
   }
 };
