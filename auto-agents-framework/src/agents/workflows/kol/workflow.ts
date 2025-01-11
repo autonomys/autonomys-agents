@@ -140,14 +140,14 @@ export const createWorkflow = async (nodes: Awaited<ReturnType<typeof createNode
     .addNode('analyzeTrendNode', nodes.analyzeTrendNode)
     .addNode('generateTweetNode', nodes.generateTweetNode)
     .addNode('uploadToDsnNode', nodes.uploadToDsnNode)
-    .addNode('pruneNode', pruneState) 
+    .addNode('pruneNode', pruneState)
     .addEdge(START, 'collectDataNode')
     .addEdge('collectDataNode', 'summaryNode')
     .addEdge('summaryNode', 'engagementNode')
     .addEdge('engagementNode', 'analyzeTrendNode')
     .addEdge('analyzeTrendNode', 'generateTweetNode')
-    .addEdge('generateTweetNode', 'pruneNode') 
-    .addConditionalEdges('pruneNode', shouldContinue); 
+    .addEdge('generateTweetNode', 'pruneNode')
+    .addConditionalEdges('pruneNode', shouldContinue);
 
   return workflow;
 };
@@ -181,7 +181,6 @@ export const pruneState = (state: typeof State.State) => {
 type WorkflowRunner = Readonly<{
   runWorkflow: () => Promise<unknown>;
 }>;
-
 
 // Create workflow runner
 const createWorkflowRunner = async (characterFile: string): Promise<WorkflowRunner> => {

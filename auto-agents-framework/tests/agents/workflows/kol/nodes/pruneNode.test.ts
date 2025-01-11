@@ -64,13 +64,17 @@ describe('Prune Node', () => {
     mockState.summary = { patterns: ['test'], commonWords: ['word'] };
     mockState.trendAnalysis = {
       summary: 'test',
-      trends: [{
-        topic: 'trend1',
-        description: 'test trend',
-        trendStrength: 0.8
-      }]
+      trends: [
+        {
+          topic: 'trend1',
+          description: 'test trend',
+          trendStrength: 0.8,
+        },
+      ],
     };
-    mockState.engagementDecisions = [{ decision: { shouldEngage: true, reason: 'test' }, tweet: createMockTweet() }];
+    mockState.engagementDecisions = [
+      { decision: { shouldEngage: true, reason: 'test' }, tweet: createMockTweet() },
+    ];
     mockState.dsnData = [{ type: 'test', data: 'test' }];
 
     const prunedState = pruneState(mockState);
@@ -80,4 +84,4 @@ describe('Prune Node', () => {
     expect(prunedState.engagementDecisions).toEqual(mockState.engagementDecisions);
     expect(prunedState.dsnData).toEqual(mockState.dsnData);
   });
-}); 
+});
