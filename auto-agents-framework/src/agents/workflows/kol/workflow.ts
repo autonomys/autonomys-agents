@@ -88,6 +88,16 @@ const createWorkflowConfig = async (characterFile: string): Promise<WorkflowConf
 };
 
 export const pruneState = (state: typeof State.State) => {
+  logger.info('Pruning state Started', {
+    timelineTweetsSize: state.timelineTweets.size,
+    mentionsTweetsSize: state.mentionsTweets.size,
+    myRecentTweetsSize: state.myRecentTweets.size,
+    myRecentRepliesSize: state.myRecentReplies.size,
+    trendAnalysisTweetsSize: state.trendAnalysisTweets.size,
+    processedTweetIdsSize: state.processedTweetIds.size,
+    repliedToTweetIdsSize: state.repliedToTweetIds.size,
+  });
+
   const prunedState = {
     ...state,
     timelineTweets: pruneMemorySet(state.timelineTweets),
