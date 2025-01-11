@@ -1,17 +1,6 @@
 import { pruneMemorySet, pruneProcessedIds } from '../../../../src/agents/tools/utils/memoryPruning';
 import { createMockTweet } from '../../workflows/kol/__fixtures__/mockState';
 
-// Mock the config and logger
-jest.mock('../../../../src/config/index', () => ({
-  config: {
-    memoryConfig: {
-      maxTweetsPerSet: 3,
-      maxProcessedIds: 2,
-      maxAgeInDays: 2
-    }
-  }
-}));
-
 jest.mock('../../../../src/utils/logger', () => ({
   createLogger: () => ({
     info: jest.fn(),

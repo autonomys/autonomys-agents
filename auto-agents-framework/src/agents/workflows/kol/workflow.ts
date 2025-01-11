@@ -1,6 +1,5 @@
 import { END, MemorySaver, StateGraph, START, Annotation } from '@langchain/langgraph';
 import { BaseMessage } from '@langchain/core/messages';
-import { ChatOpenAI } from '@langchain/openai';
 import { parseMessageContent } from '../utils.js';
 import { config } from '../../../config/index.js';
 import { createLogger } from '../../../utils/logger.js';
@@ -14,7 +13,7 @@ import { trendSchema, summarySchema } from './schemas.js';
 import { z } from 'zod';
 import { createPrompts } from './prompts.js';
 import { LLMFactory } from '../../../services/llm/factory.js';
-import { MemoryPruningConfig, pruneMemorySet, pruneProcessedIds } from '../../tools/utils/memoryPruning.js';
+import { pruneMemorySet, pruneProcessedIds } from '../../tools/utils/memoryPruning.js';
 
 export const logger = createLogger('agent-workflow');
 
