@@ -140,17 +140,21 @@ export const createWorkflow = async (nodes: Awaited<ReturnType<typeof createNode
     .addNode('analyzeTrendNode', nodes.analyzeTrendNode)
     .addNode('generateTweetNode', nodes.generateTweetNode)
     .addNode('uploadToDsnNode', nodes.uploadToDsnNode)
+    .addNode('pruneNode', pruneState)  // Add pruning as a node
     .addEdge(START, 'collectDataNode')
     .addEdge('collectDataNode', 'summaryNode')
     .addEdge('summaryNode', 'engagementNode')
     .addEdge('engagementNode', 'analyzeTrendNode')
     .addEdge('analyzeTrendNode', 'generateTweetNode')
-    .addConditionalEdges('generateTweetNode', shouldContinue);
+    .addEdge('generateTweetNode', 'pruneNode')  // Add edge to pruning
+    .addConditionalEdges('pruneNode', shouldContinue);  // Move conditional edges after pruning
+
+  // Only prune at the very end when we have the complete state  
   return workflow;
 };
 
 const pruneState = (state: typeof State.State) => {
-  return {
+  const prunedState = {
     ...state,
     timelineTweets: pruneMemorySet(state.timelineTweets),
     mentionsTweets: pruneMemorySet(state.mentionsTweets),
@@ -160,6 +164,16 @@ const pruneState = (state: typeof State.State) => {
     processedTweetIds: pruneProcessedIds(state.processedTweetIds),
     repliedToTweetIds: pruneProcessedIds(state.repliedToTweetIds),
   };
+
+  logger.info('State pruned', {
+    prunedTimelineTweetsSize: prunedState.timelineTweets.size,
+    prunedMentionsTweetsSize: prunedState.mentionsTweets.size,
+    prunedMyRecentTweetsSize: prunedState.myRecentTweets.size,
+    prunedMyRecentRepliesSize: prunedState.myRecentReplies.size,
+    prunedTrendAnalysisTweetsSize: prunedState.trendAnalysisTweets.size,
+  });
+
+  return prunedState;
 };
 
 // Workflow runner type
@@ -192,7 +206,7 @@ const createWorkflowRunner = async (characterFile: string): Promise<WorkflowRunn
       let finalState = {};
 
       for await (const state of stream) {
-        finalState = pruneState(state);
+        finalState = state;
       }
 
       logger.info('Workflow completed', { threadId });
