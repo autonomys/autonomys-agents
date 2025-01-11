@@ -6,6 +6,7 @@ import { config, agentVersion } from '../../../config/index.js';
 import { wallet, signMessage } from './agentWallet.js';
 import { setLastMemoryHash, getLastMemoryCid } from './agentMemoryContract.js';
 import { withRetry } from './retry.js';
+import { saveHashLocally } from './localHashStorage.js';
 
 const logger = createLogger('dsn-upload-tool');
 const dsnApi = createAutoDriveApi({ apiKey: config.autoDriveConfig.AUTO_DRIVE_API_KEY! });
@@ -63,6 +64,8 @@ export async function uploadToDsn(data: object) {
     logger.info('Setting last memory hash', {
       blake3hash: hexlify(blake3hash),
     });
+    // Temporary fix
+    saveHashLocally(hexlify(blake3hash));
 
     const tx = await submitMemoryHash(hexlify(blake3hash), currentNonce++);
     logger.info('Memory hash transaction submitted', {
