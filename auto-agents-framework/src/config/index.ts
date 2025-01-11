@@ -75,6 +75,12 @@ export const config = (() => {
         CONTRACT_ADDRESS: process.env.CONTRACT_ADDRESS || undefined,
         PRIVATE_KEY: process.env.PRIVATE_KEY || undefined,
       },
+      memoryConfig: {
+        maxTweetsPerSet: Number(process.env.MAX_TWEETS_PER_SET) || 1000,
+        maxProcessedIds: Number(process.env.MAX_PROCESSED_IDS) || 5000,
+        maxAgeInDays: Number(process.env.MAX_AGE_IN_DAYS) || 7,
+        ...(yamlConfig.memory || {}),
+      },
       SERPAPI_API_KEY: process.env.SERPAPI_API_KEY || '',
       NODE_ENV: process.env.NODE_ENV || 'development',
     };

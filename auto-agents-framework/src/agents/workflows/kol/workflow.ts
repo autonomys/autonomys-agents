@@ -14,6 +14,7 @@ import { trendSchema, summarySchema } from './schemas.js';
 import { z } from 'zod';
 import { createPrompts } from './prompts.js';
 import { LLMFactory } from '../../../services/llm/factory.js';
+import { MemoryPruningConfig, pruneMemorySet, pruneProcessedIds } from '../../tools/utils/memoryPruning.js';
 
 export const logger = createLogger('agent-workflow');
 
@@ -149,10 +150,24 @@ export const createWorkflow = async (nodes: Awaited<ReturnType<typeof createNode
   return workflow;
 };
 
+const pruneState = (state: typeof State.State) => {
+  return {
+    ...state,
+    timelineTweets: pruneMemorySet(state.timelineTweets),
+    mentionsTweets: pruneMemorySet(state.mentionsTweets),
+    myRecentTweets: pruneMemorySet(state.myRecentTweets),
+    myRecentReplies: pruneMemorySet(state.myRecentReplies),
+    trendAnalysisTweets: pruneMemorySet(state.trendAnalysisTweets),
+    processedTweetIds: pruneProcessedIds(state.processedTweetIds),
+    repliedToTweetIds: pruneProcessedIds(state.repliedToTweetIds),
+  };
+};
+
 // Workflow runner type
 type WorkflowRunner = Readonly<{
   runWorkflow: () => Promise<unknown>;
 }>;
+
 
 // Create workflow runner
 const createWorkflowRunner = async (characterFile: string): Promise<WorkflowRunner> => {
@@ -164,7 +179,6 @@ const createWorkflowRunner = async (characterFile: string): Promise<WorkflowRunn
 
   return {
     runWorkflow: async () => {
-      // Use a fixed thread ID for shared state across runs
       const threadId = 'shared_workflow_state';
       logger.info('Starting tweet response workflow', { threadId });
 
@@ -179,7 +193,7 @@ const createWorkflowRunner = async (characterFile: string): Promise<WorkflowRunn
       let finalState = {};
 
       for await (const state of stream) {
-        finalState = state;
+        finalState = pruneState(state);
       }
 
       logger.info('Workflow completed', { threadId });
