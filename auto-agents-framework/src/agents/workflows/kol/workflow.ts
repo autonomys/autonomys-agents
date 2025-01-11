@@ -106,7 +106,7 @@ export const pruneState = (state: typeof State.State) => {
     myRecentReplies: pruneMemorySet(state.myRecentReplies),
     trendAnalysisTweets: pruneMemorySet(state.trendAnalysisTweets),
     processedTweetIds: pruneProcessedIds(state.processedTweetIds),
-    repliedToTweetIds: pruneProcessedIds(state.repliedToTweetIds),
+    repliedToTweetIds: new Set(),
   };
 
   logger.info('State pruned', {
@@ -116,7 +116,6 @@ export const pruneState = (state: typeof State.State) => {
     prunedMyRecentRepliesSize: prunedState.myRecentReplies.size,
     prunedTrendAnalysisTweetsSize: prunedState.trendAnalysisTweets.size,
     prunedProcessedTweetIdsSize: prunedState.processedTweetIds.size,
-    prunedRepliedToTweetIdsSize: prunedState.repliedToTweetIds.size,
   });
 
   return prunedState;
@@ -165,7 +164,6 @@ const shouldContinue = (state: typeof State.State) => {
   if (hasDsnData && config.autoDriveConfig.AUTO_DRIVE_UPLOAD) return 'uploadToDsnNode';
   else {
     const _prunedState = pruneState(state);
-    state.repliedToTweetIds = new Set();
     return END;
   }
 };

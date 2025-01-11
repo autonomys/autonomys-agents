@@ -1,6 +1,6 @@
-import { createMockState, createMockTweet } from '../__fixtures__/mockState';
-import { pruneState, State } from '../../../../../src/agents/workflows/kol/workflow';
-import { config } from '../../../../../src/config/index';
+import { createMockState, createMockTweet } from './__fixtures__/mockState';
+import { pruneState, State } from '../../../../src/agents/workflows/kol/workflow';
+import { config } from '../../../../src/config/index';
 
 describe('Prune Node', () => {
   let mockState: typeof State.State;
@@ -57,7 +57,7 @@ describe('Prune Node', () => {
 
     // Check processed IDs are pruned correctly (should have MAX_PROCESSED_IDS = 2)
     expect(prunedState.processedTweetIds.size).toBe(config.memoryConfig.MAX_PROCESSED_IDS);
-    expect(prunedState.repliedToTweetIds.size).toBe(config.memoryConfig.MAX_PROCESSED_IDS);
+    expect(prunedState.repliedToTweetIds.size).toBe(0);
   });
 
   it('should maintain other state properties unchanged', () => {
