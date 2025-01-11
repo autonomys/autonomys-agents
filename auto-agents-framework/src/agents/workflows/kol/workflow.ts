@@ -140,20 +140,19 @@ export const createWorkflow = async (nodes: Awaited<ReturnType<typeof createNode
     .addNode('analyzeTrendNode', nodes.analyzeTrendNode)
     .addNode('generateTweetNode', nodes.generateTweetNode)
     .addNode('uploadToDsnNode', nodes.uploadToDsnNode)
-    .addNode('pruneNode', pruneState)  // Add pruning as a node
+    .addNode('pruneNode', pruneState) 
     .addEdge(START, 'collectDataNode')
     .addEdge('collectDataNode', 'summaryNode')
     .addEdge('summaryNode', 'engagementNode')
     .addEdge('engagementNode', 'analyzeTrendNode')
     .addEdge('analyzeTrendNode', 'generateTweetNode')
-    .addEdge('generateTweetNode', 'pruneNode')  // Add edge to pruning
-    .addConditionalEdges('pruneNode', shouldContinue);  // Move conditional edges after pruning
+    .addEdge('generateTweetNode', 'pruneNode') 
+    .addConditionalEdges('pruneNode', shouldContinue); 
 
-  // Only prune at the very end when we have the complete state  
   return workflow;
 };
 
-const pruneState = (state: typeof State.State) => {
+export const pruneState = (state: typeof State.State) => {
   const prunedState = {
     ...state,
     timelineTweets: pruneMemorySet(state.timelineTweets),
@@ -171,6 +170,8 @@ const pruneState = (state: typeof State.State) => {
     prunedMyRecentTweetsSize: prunedState.myRecentTweets.size,
     prunedMyRecentRepliesSize: prunedState.myRecentReplies.size,
     prunedTrendAnalysisTweetsSize: prunedState.trendAnalysisTweets.size,
+    prunedProcessedTweetIdsSize: prunedState.processedTweetIds.size,
+    prunedRepliedToTweetIdsSize: prunedState.repliedToTweetIds.size,
   });
 
   return prunedState;
