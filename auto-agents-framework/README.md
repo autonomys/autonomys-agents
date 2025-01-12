@@ -50,7 +50,7 @@ This means you can:
    twitter:
      NUM_TIMELINE_TWEETS: 10
      NUM_FOLLOWING_RECENT_TWEETS: 10
-     NUM_RANDOM_FOLLOWERS: 5
+     NUM_RANDOM_FOLLOWINGS: 5
      MAX_MENTIONS: 20
      MAX_THREAD_LENGTH: 20
      MAX_MY_RECENT_TWEETS: 10
@@ -207,6 +207,14 @@ yarn dev argumint
 ```
 
 Monitor the agent's activity in the console and configured log files.
+
+## Testing
+
+To run tests:
+
+```bash
+yarn test
+```
 
 ## License
 
