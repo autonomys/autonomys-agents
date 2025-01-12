@@ -128,7 +128,10 @@ const shouldContinue = (state: typeof State.State) => {
   const hasDsnData = state.dsnData && Object.keys(state.dsnData).length > 0;
 
   if (hasDsnData && config.autoDriveConfig.AUTO_DRIVE_UPLOAD) return 'uploadToDsnNode';
-  else return END;
+  else {
+    state.repliedToTweetIds = new Set();
+    return END;
+  }
 };
 
 // Workflow creation function
