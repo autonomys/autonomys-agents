@@ -67,6 +67,7 @@ export const createEngagementNode = (config: WorkflowConfig) => {
         }),
       );
       return {
+        processedTweetIds: processedIds,
         engagementDecisions,
       };
     } catch (error) {
