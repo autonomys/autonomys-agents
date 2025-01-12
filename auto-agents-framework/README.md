@@ -208,6 +208,14 @@ yarn dev argumint
 
 Monitor the agent's activity in the console and configured log files.
 
+## Testing
+
+To run tests:
+
+```bash
+yarn test
+```
+
 ## License
 
 MIT
