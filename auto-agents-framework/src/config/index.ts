@@ -1,13 +1,13 @@
-import { z } from 'zod';
 import dotenv from 'dotenv';
-import { configSchema } from './schema.js';
+import { readFileSync } from 'fs';
+import { mkdir } from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { mkdir } from 'fs/promises';
-import { llmDefaultConfig } from './llm.js';
-import { twitterDefaultConfig } from './twitter.js';
 import yaml from 'yaml';
-import { readFileSync } from 'fs';
+import { z } from 'zod';
+import { llmDefaultConfig } from './llm.js';
+import { configSchema } from './schema.js';
+import { twitterDefaultConfig } from './twitter.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -74,6 +74,10 @@ export const config = (() => {
         RPC_URL: process.env.RPC_URL || undefined,
         CONTRACT_ADDRESS: process.env.CONTRACT_ADDRESS || undefined,
         PRIVATE_KEY: process.env.PRIVATE_KEY || undefined,
+      },
+      slackConfig: {
+        SLACK_APP_TOKEN: process.env.SLACK_APP_TOKEN || '',
+        SLACK_CONVERSATION_ID: process.env.SLACK_CONVERSATION_ID || '',
       },
       SERPAPI_API_KEY: process.env.SERPAPI_API_KEY || '',
       NODE_ENV: process.env.NODE_ENV || 'development',

@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { LLMSize, LLMProvider } from '../services/llm/types.js';
+import { LLMProvider, LLMSize } from '../services/llm/types.js';
 
 const twitterConfigSchema = z.object({
   USERNAME: z.string().min(1, 'Twitter username is required'),
@@ -126,6 +126,11 @@ const blockchainConfigSchema = z.object({
   ]),
 });
 
+const slackConfigSchema = z.object({
+  SLACK_APP_TOKEN: z.string().optional(),
+  SLACK_CONVERSATION_ID: z.string().optional(),
+});
+
 const SERPAPI_API_KEY = z.string().optional();
 
 export const configSchema = z.object({
@@ -133,6 +138,7 @@ export const configSchema = z.object({
   llmConfig: llmConfigSchema,
   autoDriveConfig: autoDriveConfigSchema,
   blockchainConfig: blockchainConfigSchema,
+  slackConfig: slackConfigSchema,
   SERPAPI_API_KEY: SERPAPI_API_KEY,
   NODE_ENV: z.enum(['development', 'production', 'test']),
 });
