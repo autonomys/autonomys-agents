@@ -15,12 +15,9 @@ const logger = createLogger('collect-data-node');
 export const createCollectDataNode =
   (config: WorkflowConfig) => async (state: typeof State.State) => {
     logger.info('Collect Data Node - Collecting fresh data');
-    const { processedTweetIds, repliedToTweetIds } = state;
+    const { processedTweetIds } = state;
 
-    const processedIds = [
-      ...Array.from(processedTweetIds.values()),
-      ...Array.from(repliedToTweetIds.values()),
-    ];
+    const processedIds = [...Array.from(processedTweetIds.values())];
     logger.info('Processed IDs:', { processedIds: processedIds.length });
 
     //////////MY RECENT REPLIES//////////
@@ -36,7 +33,7 @@ export const createCollectDataNode =
       processedIds,
       numTimelineTweets: twitterConfig.NUM_TIMELINE_TWEETS,
       numFollowingRecentTweets: twitterConfig.NUM_FOLLOWING_RECENT_TWEETS,
-      numRandomFollowers: twitterConfig.NUM_RANDOM_FOLLOWERS,
+      numRandomFollowings: twitterConfig.NUM_RANDOM_FOLLOWINGS,
     });
     const timelineContent = JSON.parse(
       timelineToolResponse.messages[timelineToolResponse.messages.length - 1].content,
