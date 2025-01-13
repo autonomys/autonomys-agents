@@ -13,7 +13,7 @@ import { trendSchema, summarySchema } from './schemas.js';
 import { z } from 'zod';
 import { createPrompts } from './prompts.js';
 import { LLMFactory } from '../../../services/llm/factory.js';
-import { pruneMemorySet, pruneProcessedIds } from '../../tools/utils/memoryPruning.js';
+import { pruneProcessedIds } from './memoryPruner.js';
 
 export const logger = createLogger('agent-workflow');
 
@@ -26,42 +26,42 @@ export const State = Annotation.Root({
     default: () => [],
   }),
   timelineTweets: Annotation<ReadonlySet<Tweet>>({
-    default: () => new Set(),
-    reducer: (curr, update) => new Set([...update]),
+    default: () => new Set<Tweet>(),
+    reducer: (_, update) => new Set([...update]),
   }),
   mentionsTweets: Annotation<ReadonlySet<Tweet>>({
     default: () => new Set(),
-    reducer: (curr, update) => new Set([...update]),
+    reducer: (_, update) => new Set([...update]),
   }),
   myRecentTweets: Annotation<ReadonlySet<Tweet>>({
     default: () => new Set(),
-    reducer: (curr, update) => new Set([...update]),
+    reducer: (_, update) => new Set([...update]),
   }),
   myRecentReplies: Annotation<ReadonlySet<Tweet>>({
     default: () => new Set(),
-    reducer: (curr, update) => new Set([...update]),
+    reducer: (_, update) => new Set([...update]),
   }),
   summary: Annotation<Summary>,
   engagementDecisions: Annotation<EngagementDecision[]>({
     default: () => [],
-    reducer: (curr, update) => update,
+    reducer: (_, update) => update,
   }),
   trendAnalysisTweets: Annotation<ReadonlySet<Tweet>>({
     default: () => new Set(),
-    reducer: (curr, update) => new Set([...update]),
+    reducer: (_, update) => new Set([...update]),
   }),
   trendAnalysis: Annotation<TrendAnalysis>,
   dsnData: Annotation<Record<string, any>[]>({
     default: () => [],
-    reducer: (curr, update) => update,
+    reducer: (_, update) => update,
   }),
   processedTweetIds: Annotation<Set<string>>({
     default: () => new Set(),
-    reducer: (curr, update) => new Set([...curr, ...update]),
+    reducer: (curr, update) => pruneProcessedIds(new Set([...curr, ...update])),
   }),
   repliedToTweetIds: Annotation<Set<string>>({
     default: () => new Set(),
-    reducer: (curr, update) => new Set([...curr, ...update]),
+    reducer: (_, update) => new Set([...update]),
   }),
 });
 
@@ -85,40 +85,6 @@ const createWorkflowConfig = async (characterFile: string): Promise<WorkflowConf
       response: LLMFactory.createModel(nodes.response),
     },
   };
-};
-
-export const pruneState = (state: typeof State.State) => {
-  logger.info('Pruning state Started', {
-    timelineTweetsSize: state.timelineTweets.size,
-    mentionsTweetsSize: state.mentionsTweets.size,
-    myRecentTweetsSize: state.myRecentTweets.size,
-    myRecentRepliesSize: state.myRecentReplies.size,
-    trendAnalysisTweetsSize: state.trendAnalysisTweets.size,
-    processedTweetIdsSize: state.processedTweetIds.size,
-    repliedToTweetIdsSize: state.repliedToTweetIds.size,
-  });
-
-  const prunedState = {
-    ...state,
-    timelineTweets: pruneMemorySet(state.timelineTweets),
-    mentionsTweets: pruneMemorySet(state.mentionsTweets),
-    myRecentTweets: pruneMemorySet(state.myRecentTweets),
-    myRecentReplies: pruneMemorySet(state.myRecentReplies),
-    trendAnalysisTweets: pruneMemorySet(state.trendAnalysisTweets),
-    processedTweetIds: pruneProcessedIds(state.processedTweetIds),
-    repliedToTweetIds: new Set(),
-  };
-
-  logger.info('State pruned', {
-    prunedTimelineTweetsSize: prunedState.timelineTweets.size,
-    prunedMentionsTweetsSize: prunedState.mentionsTweets.size,
-    prunedMyRecentTweetsSize: prunedState.myRecentTweets.size,
-    prunedMyRecentRepliesSize: prunedState.myRecentReplies.size,
-    prunedTrendAnalysisTweetsSize: prunedState.trendAnalysisTweets.size,
-    prunedProcessedTweetIdsSize: prunedState.processedTweetIds.size,
-  });
-
-  return prunedState;
 };
 
 export const getWorkflowConfig = (() => {
@@ -162,10 +128,7 @@ const shouldContinue = (state: typeof State.State) => {
   const hasDsnData = state.dsnData && Object.keys(state.dsnData).length > 0;
 
   if (hasDsnData && config.autoDriveConfig.AUTO_DRIVE_UPLOAD) return 'uploadToDsnNode';
-  else {
-    const _prunedState = pruneState(state);
-    return END;
-  }
+  else return END;
 };
 
 // Workflow creation function
