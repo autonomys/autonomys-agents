@@ -10,10 +10,11 @@ export const isValidTweet = (tweet: any): boolean =>
 
 // Pure functions for data extraction
 const extractLegacyData = (tweet: any) => {
-  const legacy = tweet.legacy ||
+  const legacy =
+    tweet.legacy ||
     tweet.quoted_status_result?.result?.legacy ||
     tweet.retweeted_status_result?.result?.legacy;
-  
+
   if (!legacy) {
     return null;
   }
@@ -33,10 +34,10 @@ const extractFullText = (tweet: any): string => {
 // Add depth limit to prevent infinite recursion
 const extractQuotedTweet = (tweet: any, depth: number = 3): Tweet | undefined => {
   if (depth <= 0) return undefined;
-  
+
   const quotedTweet = tweet.quoted_status_result?.result;
   if (!quotedTweet) return undefined;
-  
+
   return convertTimelineTweetToTweet(quotedTweet, depth - 1);
 };
 
@@ -100,7 +101,7 @@ export const convertTimelineTweetToTweet = (tweet: any, depth: number = 3): Twee
     videos: extractVideos(media),
     urls: extractUrls(legacy.entities),
     ...(tweet.thread && { thread: tweet.thread }),
-    ...(quotedTweet && { quotedTweet }),
+    ...(quotedTweet && { quotedStatus: quotedTweet }),
     conversationId: legacy.conversation_id_str,
     inReplyToStatusId: legacy.in_reply_to_status_id_str,
     replyCount: legacy.reply_count,

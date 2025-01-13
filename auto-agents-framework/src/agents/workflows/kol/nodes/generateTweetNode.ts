@@ -57,6 +57,9 @@ const postTweet = async (config: WorkflowConfig, state: typeof State.State) => {
     text: t.text!,
     username: t.username!,
     timeParsed: t.timeParsed!,
+    ...(t.quotedStatus && {
+      quotedStatus: { text: t.quotedStatus.text, username: t.quotedStatus.username },
+    }),
   }));
 
   const lastTweetTime = recentTweets.length > 0 ? recentTweets[0].timeParsed : null;
