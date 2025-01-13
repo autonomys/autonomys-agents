@@ -26,7 +26,7 @@ export const State = Annotation.Root({
     default: () => [],
   }),
   timelineTweets: Annotation<ReadonlySet<Tweet>>({
-    default: () => new Set<Tweet>(),
+    default: () => new Set(),
     reducer: (_, update) => new Set([...update]),
   }),
   mentionsTweets: Annotation<ReadonlySet<Tweet>>({
