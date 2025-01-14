@@ -126,6 +126,10 @@ const blockchainConfigSchema = z.object({
   ]),
 });
 
+const memoryConfigSchema = z.object({
+  MAX_PROCESSED_IDS: z.number().int().positive().default(5000),
+});
+
 const SERPAPI_API_KEY = z.string().optional();
 
 export const configSchema = z.object({
@@ -133,6 +137,7 @@ export const configSchema = z.object({
   llmConfig: llmConfigSchema,
   autoDriveConfig: autoDriveConfigSchema,
   blockchainConfig: blockchainConfigSchema,
+  memoryConfig: memoryConfigSchema,
   SERPAPI_API_KEY: SERPAPI_API_KEY,
   NODE_ENV: z.enum(['development', 'production', 'test']),
 });
