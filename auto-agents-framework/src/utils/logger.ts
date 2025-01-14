@@ -1,6 +1,7 @@
 import winston from 'winston';
 import { config } from '../config/index.js';
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const formatMeta = (meta: any, _useColors: boolean = false) => {
   const cleanMeta = Object.entries(meta)
     .filter(([key]) => !key.startsWith('Symbol(') && key !== 'splat')

@@ -38,40 +38,43 @@ export const createEngagementNode = (config: WorkflowConfig) => {
         ...Array.from(processedTweetIds.values()),
         ...Array.from(repliedToTweetIds.values()),
       ];
-      const tweets = allTweets.filter(tweet => !processedIds.includes(tweet.id!));
+      const tweets = allTweets.filter(tweet => tweet.id && !processedIds.includes(tweet.id));
+
       logger.info('Tweets to evaluate', {
         allTweets: allTweets.length,
         processedTweets: processedIds.length,
         tweets: tweets.length,
       });
+
       const engagementDecisions = await Promise.all(
         tweets.map(async tweet => {
           const decision = await getEngagementDecision(tweet, config);
           logger.info('Engagement Decision', {
-            tweet: tweet.text,
-            thread: tweet.thread && tweet.thread.length > 0 ? tweet.thread[0].text : 'No thread',
+            tweet: tweet.text ?? '',
+            thread: tweet.thread?.[0]?.text ?? 'No thread',
             decision,
           });
+
           return {
             tweet: {
-              id: tweet.id!,
-              text: tweet.text!,
-              username: tweet.username!,
-              timeParsed: tweet.timeParsed!,
+              id: tweet.id,
+              text: tweet.text ?? '',
+              username: tweet.username ?? '',
+              timeParsed: tweet.timeParsed ?? new Date(),
               ...(tweet.thread &&
                 tweet.thread.length > 0 && {
                   thread: tweet.thread.map(t => ({
-                    id: t.id,
-                    text: t.text,
-                    username: t.username,
-                    timeParsed: t.timeParsed,
+                    id: t.id ?? '',
+                    text: t.text ?? '',
+                    username: t.username ?? '',
+                    timeParsed: t.timeParsed ?? new Date(),
                   })),
                 }),
               ...(tweet.quotedStatus && {
                 quotedStatus: {
-                  id: tweet.quotedStatus.id,
-                  text: tweet.quotedStatus.text,
-                  username: tweet.quotedStatus.username,
+                  id: tweet.quotedStatus.id ?? '',
+                  text: tweet.quotedStatus.text ?? '',
+                  username: tweet.quotedStatus.username ?? '',
                 },
               }),
             },
@@ -79,6 +82,7 @@ export const createEngagementNode = (config: WorkflowConfig) => {
           };
         }),
       );
+
       return {
         processedTweetIds: processedIds,
         engagementDecisions,

@@ -50,6 +50,7 @@ export const State = Annotation.Root({
     reducer: (_, update) => new Set([...update]),
   }),
   trendAnalysis: Annotation<TrendAnalysis>,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   dsnData: Annotation<Record<string, any>[]>({
     default: () => [],
     reducer: (_, update) => update,

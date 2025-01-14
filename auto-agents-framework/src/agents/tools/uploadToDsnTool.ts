@@ -17,7 +17,7 @@ export const createUploadToDsnTool = () =>
     func: async ({ data }) => {
       try {
         logger.info('Uploading data to DSN - Received data:', JSON.stringify(data, null, 2));
-        const uploadInfo: any[] = [];
+        const uploadInfo: { success: boolean; cid: string; previousCid: string | null }[] = [];
         for (const d of data) {
           const upload = await uploadToDsn(d);
           uploadInfo.push(upload);
@@ -31,6 +31,7 @@ export const createUploadToDsnTool = () =>
     },
   });
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const invokeUploadToDsnTool = async (toolNode: ToolNode, data: Record<string, any>[]) => {
   logger.info('Invoking upload to DSN tool with data:', JSON.stringify(data, null, 2));
   const toolResponse = await toolNode.invoke({

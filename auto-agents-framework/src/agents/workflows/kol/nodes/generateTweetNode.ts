@@ -60,9 +60,9 @@ const postResponse = async (
 
 const postTweet = async (config: WorkflowConfig, state: typeof State.State) => {
   const recentTweets = Array.from(state.myRecentTweets.values()).map(t => ({
-    text: t.text!,
-    username: t.username!,
-    timeParsed: t.timeParsed!,
+    text: t.text ?? '',
+    username: t.username ?? '',
+    timeParsed: t.timeParsed ?? new Date(),
   }));
 
   const lastTweetTime = recentTweets.length > 0 ? recentTweets[0].timeParsed : null;
