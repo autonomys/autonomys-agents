@@ -7,4 +7,3 @@ config/
 dsn-kol-schemas.json
 memories/
 !src/config/
-
