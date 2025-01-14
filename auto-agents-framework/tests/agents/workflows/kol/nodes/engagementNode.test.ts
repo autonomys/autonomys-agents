@@ -95,7 +95,6 @@ describe('Engagement Node', () => {
         text: testTweet.text,
         username: testTweet.username,
         timeParsed: testTweet.timeParsed,
-        thread: 'No thread',
       },
     });
   });
