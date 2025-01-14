@@ -25,6 +25,12 @@ const postResponse = async (
 ) => {
   const engagementDecision = {
     tweetText: decision.tweet.text,
+    ...(decision.tweet.quotedStatus && {
+      quotedTweet: {
+        text: decision.tweet.quotedStatus.text,
+        username: decision.tweet.quotedStatus.username,
+      },
+    }),
     reason: decision.decision.reason,
   };
   const response = await config.prompts.responsePrompt

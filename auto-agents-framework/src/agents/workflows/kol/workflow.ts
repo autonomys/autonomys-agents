@@ -1,6 +1,5 @@
 import { END, MemorySaver, StateGraph, START, Annotation } from '@langchain/langgraph';
 import { BaseMessage } from '@langchain/core/messages';
-import { ChatOpenAI } from '@langchain/openai';
 import { parseMessageContent } from '../utils.js';
 import { config } from '../../../config/index.js';
 import { createLogger } from '../../../utils/logger.js';
@@ -27,41 +26,44 @@ export const State = Annotation.Root({
   }),
   timelineTweets: Annotation<ReadonlySet<Tweet>>({
     default: () => new Set(),
-    reducer: (curr, update) => new Set([...update]),
+    reducer: (_, update) => new Set([...update]),
   }),
   mentionsTweets: Annotation<ReadonlySet<Tweet>>({
     default: () => new Set(),
-    reducer: (curr, update) => new Set([...update]),
+    reducer: (_, update) => new Set([...update]),
   }),
   myRecentTweets: Annotation<ReadonlySet<Tweet>>({
     default: () => new Set(),
-    reducer: (curr, update) => new Set([...update]),
+    reducer: (_, update) => new Set([...update]),
   }),
   myRecentReplies: Annotation<ReadonlySet<Tweet>>({
     default: () => new Set(),
-    reducer: (curr, update) => new Set([...update]),
+    reducer: (_, update) => new Set([...update]),
   }),
   summary: Annotation<Summary>,
   engagementDecisions: Annotation<EngagementDecision[]>({
     default: () => [],
-    reducer: (curr, update) => update,
+    reducer: (_, update) => update,
   }),
   trendAnalysisTweets: Annotation<ReadonlySet<Tweet>>({
     default: () => new Set(),
-    reducer: (curr, update) => new Set([...update]),
+    reducer: (_, update) => new Set([...update]),
   }),
   trendAnalysis: Annotation<TrendAnalysis>,
   dsnData: Annotation<Record<string, any>[]>({
     default: () => [],
-    reducer: (curr, update) => update,
+    reducer: (_, update) => update,
   }),
   processedTweetIds: Annotation<Set<string>>({
     default: () => new Set(),
-    reducer: (curr, update) => new Set([...curr, ...update]),
+    reducer: (curr, update) => {
+      const newSet = new Set([...curr, ...update]);
+      return new Set(Array.from(newSet).slice(-config.memoryConfig.MAX_PROCESSED_IDS));
+    },
   }),
   repliedToTweetIds: Annotation<Set<string>>({
     default: () => new Set(),
-    reducer: (curr, update) => new Set([...curr, ...update]),
+    reducer: (_, update) => new Set([...update]),
   }),
 });
 
@@ -128,10 +130,7 @@ const shouldContinue = (state: typeof State.State) => {
   const hasDsnData = state.dsnData && Object.keys(state.dsnData).length > 0;
 
   if (hasDsnData && config.autoDriveConfig.AUTO_DRIVE_UPLOAD) return 'uploadToDsnNode';
-  else {
-    state.repliedToTweetIds = new Set();
-    return END;
-  }
+  else return END;
 };
 
 // Workflow creation function
@@ -149,9 +148,9 @@ export const createWorkflow = async (nodes: Awaited<ReturnType<typeof createNode
     .addEdge('engagementNode', 'analyzeTrendNode')
     .addEdge('analyzeTrendNode', 'generateTweetNode')
     .addConditionalEdges('generateTweetNode', shouldContinue);
+
   return workflow;
 };
-
 // Workflow runner type
 type WorkflowRunner = Readonly<{
   runWorkflow: () => Promise<unknown>;
@@ -167,7 +166,6 @@ const createWorkflowRunner = async (characterFile: string): Promise<WorkflowRunn
 
   return {
     runWorkflow: async () => {
-      // Use a fixed thread ID for shared state across runs
       const threadId = 'shared_workflow_state';
       logger.info('Starting tweet response workflow', { threadId });
 

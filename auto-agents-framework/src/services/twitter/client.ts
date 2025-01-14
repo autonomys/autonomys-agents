@@ -215,7 +215,9 @@ export const createTwitterApi = async (
   if (!isLoggedIn) {
     throw new Error('Failed to initialize Twitter Api - not logged in');
   }
+
   const userId = await scraper.getUserIdByScreenName(username);
+
   return {
     scraper,
     username: username,

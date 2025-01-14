@@ -16,7 +16,11 @@
         "manage-character": "tsx src/agents/workflows/kol/cli/characterManager.ts"
         "test": "jest",
         "test:watch": "jest --watch",
-        "test:coverage": "jest --coverage"
+        "test:coverage": "jest --coverage",
+        "lint": "eslint \"src/**/*.{js,ts}\"",
+        "lint:fix": "eslint \"src/**/*.{js,ts}\" --fix",
+        "lint:characters": "eslint \"src/agents/workflows/kol/characters/*.ts\"",
+        "lint:characters:fix": "eslint \"src/agents/workflows/kol/characters/*.ts\" --fix"
     },
     "dependencies": {
         "@autonomys/auto-dag-data": "1.2.1",
@@ -35,16 +39,24 @@
         "zod-to-json-schema": "^3.24.1"
     },
     "devDependencies": {
+        "@eslint/js": "^9.18.0",
         "@tsconfig/node20": "^20.1.4",
+        "@types/jest": "^29.5.12",
         "@types/node": "22.10.0",
         "@types/sqlite3": "^3.1.11",
+        "@typescript-eslint/eslint-plugin": "^8.20.0",
+        "@typescript-eslint/parser": "^8.20.0",
+        "eslint": "^9.18.0",
+        "eslint-config-prettier": "^10.0.1",
+        "eslint-plugin-prettier": "^5.2.1",
+        "glob": "^10.3.10",
+        "globals": "^15.14.0",
+        "jest": "^29.7.0",
+        "memfs": "^4.7.7",
         "prettier": "^3.2.2",
+        "ts-jest": "^29.1.2",
         "tsx": "^4.7.1",
         "typescript": "^5.3.3",
-        "@types/jest": "^29.5.12",
-        "jest": "^29.7.0",
-        "ts-jest": "^29.1.2",
-        "glob": "^10.3.10",
-        "memfs": "^4.7.7"
+        "typescript-eslint": "^8.20.0"
     }
 }

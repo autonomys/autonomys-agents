@@ -12,8 +12,16 @@ const getEngagementDecision = async (tweet: Tweet, config: WorkflowConfig) => {
       ? tweet.thread.map(t => ({ text: t.text, username: t.username }))
       : 'No thread';
 
+  const tweetInfo = {
+    text: tweet.text,
+    username: tweet.username,
+    ...(tweet.quotedStatus && {
+      quotedTweet: { text: tweet.quotedStatus.text, username: tweet.quotedStatus.username },
+    }),
+  };
+
   const formattedPrompt = await config.prompts.engagementPrompt.format({
-    tweet: JSON.stringify({ text: tweet.text, username: tweet.username }),
+    tweet: JSON.stringify(tweetInfo),
     thread: thread,
   });
 
@@ -50,17 +58,22 @@ export const createEngagementNode = (config: WorkflowConfig) => {
               text: tweet.text!,
               username: tweet.username!,
               timeParsed: tweet.timeParsed!,
-              thread:
-                tweet.thread && tweet.thread.length > 0
-                  ? Array.from(
-                      tweet.thread.map(t => ({
-                        id: t.id,
-                        text: t.text,
-                        username: t.username,
-                        timeParsed: t.timeParsed,
-                      })),
-                    )
-                  : 'No thread',
+              ...(tweet.thread &&
+                tweet.thread.length > 0 && {
+                  thread: tweet.thread.map(t => ({
+                    id: t.id,
+                    text: t.text,
+                    username: t.username,
+                    timeParsed: t.timeParsed,
+                  })),
+                }),
+              ...(tweet.quotedStatus && {
+                quotedStatus: {
+                  id: tweet.quotedStatus.id,
+                  text: tweet.quotedStatus.text,
+                  username: tweet.quotedStatus.username,
+                },
+              }),
             },
             decision,
           };

@@ -1,7 +1,12 @@
-import { createWorkflow, getWorkflowConfig } from '../../../../src/agents/workflows/kol/workflow';
+import {
+  createWorkflow,
+  getWorkflowConfig,
+  State,
+} from '../../../../src/agents/workflows/kol/workflow';
 import { createNodes } from '../../../../src/agents/workflows/kol/nodes';
 import { WorkflowConfig } from '../../../../src/agents/workflows/kol/types';
 import { createMockState } from './__fixtures__/mockState';
+import { config } from '../../../../src/config';
 
 jest.mock('../../../../src/services/twitter/client', () => ({
   createTwitterApi: jest.fn().mockResolvedValue({
@@ -78,12 +83,23 @@ describe('KOL Workflow', () => {
   });
 
   // Test State annotations
-  it('should properly handle state annotations', () => {
-    const state = createMockState();
+  describe('State Annotations', () => {
+    it('should properly initialize state', () => {
+      const state = createMockState();
 
-    expect(state.messages).toEqual([]);
-    expect(state.timelineTweets).toBeInstanceOf(Set);
-    expect(state.mentionsTweets).toBeInstanceOf(Set);
-    expect(state.processedTweetIds).toBeInstanceOf(Set);
+      expect(state.messages).toEqual([]);
+      expect(state.timelineTweets).toBeInstanceOf(Set);
+      expect(state.mentionsTweets).toBeInstanceOf(Set);
+      expect(state.processedTweetIds).toBeInstanceOf(Set);
+    });
+
+    it('should prune processed tweet IDs when exceeding limit', () => {
+      const state = createMockState();
+      state.processedTweetIds = new Set(['1', '2', '3']);
+      state.processedTweetIds = new Set(['4', '5']);
+
+      expect(Array.from(state.processedTweetIds)).toEqual(['4', '5']);
+      expect(state.processedTweetIds.size).toBe(config.memoryConfig.MAX_PROCESSED_IDS);
+    });
   });
 });
