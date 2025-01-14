@@ -215,7 +215,9 @@ export const createTwitterApi = async (
   if (!isLoggedIn) {
     throw new Error('Failed to initialize Twitter Api - not logged in');
   }
+
   const userId = await scraper.getUserIdByScreenName(username);
+
   return {
     scraper,
     username: username,
@@ -257,12 +259,18 @@ export const createTwitterApi = async (
 
     getMyTimeline: async (count: number, excludeIds: string[]) => {
       const tweets = await scraper.fetchHomeTimeline(count, excludeIds);
-      return tweets.filter(isValidTweet).map(tweet => convertTimelineTweetToTweet(tweet));
+      return tweets
+        .filter(isValidTweet)
+        .map(tweet => convertTimelineTweetToTweet(tweet))
+        .filter(tweet => tweet !== undefined);
     },
 
     getFollowingTimeline: async (count: number, excludeIds: string[]) => {
       const tweets = await scraper.fetchFollowingTimeline(count, excludeIds);
-      return tweets.filter(isValidTweet).map(tweet => convertTimelineTweetToTweet(tweet));
+      return tweets
+        .filter(isValidTweet)
+        .map(tweet => convertTimelineTweetToTweet(tweet))
+        .filter(tweet => tweet !== undefined);
     },
 
     getMyRecentReplies: (limit: number = 10) => getMyRecentReplies(scraper, username, limit),

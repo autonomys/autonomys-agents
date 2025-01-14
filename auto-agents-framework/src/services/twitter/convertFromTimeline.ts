@@ -74,10 +74,10 @@ const extractUserData = (tweet: any) => {
   };
 };
 
-export const convertTimelineTweetToTweet = (tweet: any): Tweet => {
+export const convertTimelineTweetToTweet = (tweet: any): Tweet | undefined => {
   const legacy = extractLegacyData(tweet);
   if (!legacy) {
-    throw new Error('Invalid tweet data: no legacy data found');
+    return undefined;
   }
 
   const media = legacy.extended_entities?.media || legacy.entities?.media || [];
