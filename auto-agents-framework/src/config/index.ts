@@ -41,7 +41,7 @@ const yamlConfig = (() => {
     const fileContents = readFileSync(configPath, 'utf8');
     return yaml.parse(fileContents);
   } catch (error) {
-    console.info('No YAML config found, falling back to environment variables');
+    console.info('No YAML config found, falling back to environment variables', error);
     return {};
   }
 })();

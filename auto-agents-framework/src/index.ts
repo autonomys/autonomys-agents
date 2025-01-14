@@ -13,7 +13,7 @@ if (!characterFile) {
 
 const startWorkflowPolling = async () => {
   try {
-    const result = await runWorkflow(characterFile);
+    const _result = await runWorkflow(characterFile);
     logger.info('Workflow execution completed successfully');
   } catch (error) {
     logger.error('Error running workflow:', error);

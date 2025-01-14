@@ -31,7 +31,7 @@ const loadCharacter = async (characterFile: string) => {
     const { character } = await import(`./characters/${characterFile}.js`);
     return character;
   } catch (error) {
-    throw new Error(`Failed to load character file: ${characterFile}`);
+    throw new Error(`Failed to load character file: ${characterFile} error: ${error}`);
   }
 };
 

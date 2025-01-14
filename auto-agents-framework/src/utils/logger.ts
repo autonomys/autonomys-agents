@@ -1,7 +1,7 @@
 import winston from 'winston';
 import { config } from '../config/index.js';
 
-const formatMeta = (meta: any, useColors: boolean = false) => {
+const formatMeta = (meta: any, _useColors: boolean = false) => {
   const cleanMeta = Object.entries(meta)
     .filter(([key]) => !key.startsWith('Symbol(') && key !== 'splat')
     .reduce((acc, [key, value]) => ({ ...acc, [key]: value }), {});
