@@ -24,6 +24,9 @@ jest.mock('../src/config/index.js', () => ({
       RPC_URL: 'http://mock-rpc',
       PRIVATE_KEY: '1234567890123456789012345678901234567890123456789012345678901234',
       CONTRACT_ADDRESS: '0x1234567890123456789012345678901234567890'
+    },
+    memoryConfig: {
+      MAX_PROCESSED_IDS: 2,
     }
   }
 }), { virtual: true }); 
