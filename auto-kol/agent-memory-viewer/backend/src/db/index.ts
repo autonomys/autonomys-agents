@@ -145,7 +145,6 @@ export async function getAllDsn(
                             return null;
                     }
                 };
-
                 return {
                     id: record.id,
                     tweet_id: content.tweet?.id || null,
@@ -155,6 +154,7 @@ export async function getAllDsn(
                         (content.type === 'posted' ? config.AGENT_USERNAME : null), 
                     tweet_content: content.tweet?.text || null,
                     thread: content.tweet?.thread || null,
+                    quotedStatus: content.tweet?.quotedStatus || null,
                     response_content: ['rejected', 'approved', 'skipped', 'posted', 'response'].includes(content.type) 
                         ? content.response || content.content || null 
                         : null,

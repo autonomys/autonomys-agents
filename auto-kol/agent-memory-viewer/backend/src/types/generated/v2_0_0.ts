@@ -34,6 +34,11 @@ export interface Tweet {
   username: string;
   timeParsed: string;
   thread?: Tweet[];
+  quotedStatus?: {
+    id: string;
+    text: string;
+    username: string;
+  };
 }
 
 

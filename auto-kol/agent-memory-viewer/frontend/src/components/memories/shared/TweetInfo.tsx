@@ -46,6 +46,40 @@ export function TweetInfo({ tweet }: Props) {
                     <Text as="span" color="white">{tweet.text}</Text>
                 </Text>
             </VStack>
+
+
+            {tweet?.quotedStatus && (
+                <>
+                    <Text fontSize="md" fontWeight="bold" color="purple.400" mb={2}>
+                        Quoted Tweet
+                    </Text>
+                    <VStack align="stretch" mb={4} pl={4}>
+                        <Text>
+                            <Text as="span" color="gray.400">Author:</Text>{' '}
+                            <Link
+                                href={`https://twitter.com/${tweet.quotedStatus.username}`}
+                                isExternal
+                                color="blue.400"
+                                _hover={{ color: 'blue.300' }}
+                            >
+                                @{tweet.quotedStatus.username} <ExternalLinkIcon mx="2px" />
+                            </Link>
+                        </Text>
+                        <Text>
+                            <Text as="span" color="gray.400">Content:</Text>{' '}
+                            <Text as="span" color="white">{tweet.quotedStatus.text}</Text>
+                        </Text>
+                        <Link
+                            href={`https://twitter.com/${tweet.quotedStatus.username}/status/${tweet.quotedStatus.id}`}
+                            isExternal
+                            color="blue.400"
+                            _hover={{ color: 'blue.300' }}
+                        >
+                            View Tweet <ExternalLinkIcon mx="2px" />
+                        </Link>
+                    </VStack>   
+                </>
+            )}
         </>
     )
 } 

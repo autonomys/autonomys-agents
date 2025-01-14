@@ -8,7 +8,8 @@ function transformTweet(tweet: Tweet): any {
         text: tweet.text,
         author_username: tweet.username,
         created_at: tweet.timeParsed,
-        thread: Array.isArray(tweet.thread) ? tweet.thread.map(transformTweet) : undefined
+        thread: Array.isArray(tweet.thread) ? tweet.thread.map(transformTweet) : undefined,
+        quotedStatus: tweet.quotedStatus ? (tweet.quotedStatus) : undefined
     };
 }
 

@@ -59,7 +59,7 @@ router.get('/:cid', async (req, res) => {
   try {
     const { cid } = req.params;        
     let memory = await getMemoryByCid(cid);
-    
+    console.log('memory', memory);
     if (!memory) {
       const memoryData = await downloadMemory(cid);
       if (!memoryData) {
