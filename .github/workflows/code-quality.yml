@@ -1,4 +1,4 @@
-name: Code Formatting Check
+name: Code Quality Check
 
 on:
   pull_request:
@@ -7,12 +7,12 @@ on:
     branches: [main]
 
 jobs:
-  format-check:
-    name: Prettier Check
+  code-quality:
+    name: Lint & Format Check
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: auto-kol/agent
+        working-directory: auto-agents-framework
 
     steps:
       - uses: actions/checkout@v4
@@ -20,12 +20,15 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          cache: 'yarn'
-          cache-dependency-path: 'auto-kol/agent/yarn.lock'
+          node-version: "21"
+          cache: "yarn"
+          cache-dependency-path: "auto-agents-framework/yarn.lock"
 
       - name: Install Dependencies
         run: yarn install --frozen-lockfile
 
       - name: Check Formatting
-        run: yarn prettier --check "src/**/*.ts"
+        run: yarn format:check
+
+      - name: Run ESLint
+        run: yarn lint
