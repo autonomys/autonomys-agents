@@ -6,9 +6,9 @@ import eslintConfigPrettier from "eslint-config-prettier";
 
 /** @type {import('eslint').Linter.Config[]} */
 export default [
-  // Base ESLint configuration
+  // TypeScript files configuration
   {
-    files: ["**/*.{js,mjs,cjs,ts}"],
+    files: ["**/*.ts"],
     languageOptions: {
       ecmaVersion: 2022,
       sourceType: "module",
@@ -18,7 +18,8 @@ export default [
       },
       parser: tseslint.parser,
       parserOptions: {
-        project: "./tsconfig.json"
+        project: "./tsconfig.json",
+        sourceType: "module"
       }
     },
     plugins: {
@@ -35,6 +36,39 @@ export default [
       }],
       "@typescript-eslint/no-non-null-assertion": "warn",
       
+      // General rules
+      "no-console": ["warn", { allow: ["warn", "error", "info"] }],
+      "prettier/prettier": "error",
+      
+      // Character file specific rules
+      "no-template-curly-in-string": "error",
+      "no-multi-str": "error",
+      "prefer-template": "error",
+      "quotes": ["error", "single", { "avoidEscape": true }],
+      
+      // Import rules
+      "sort-imports": ["error", {
+        "ignoreCase": true,
+        "ignoreDeclarationSort": true
+      }]
+    }
+  },
+  
+  // JavaScript files configuration
+  {
+    files: ["**/*.{js,mjs,cjs}"],
+    languageOptions: {
+      ecmaVersion: 2022,
+      sourceType: "module",
+      globals: {
+        ...globals.node,
+        ...globals.browser
+      }
+    },
+    plugins: {
+      prettier: prettier
+    },
+    rules: {
       // General rules
       "no-console": ["warn", { allow: ["warn", "error", "info"] }],
       "prettier/prettier": "error",
