@@ -6,4 +6,3 @@ config/
 .cookies/
 dsn-kol-schemas.json
 memories/
-.yarn
