@@ -13,6 +13,7 @@
         "example:twitter": "tsx examples/twitter.ts",
         "extract-kol-dsn-schemas": "tsx src/agents/workflows/kol/cli/extractDsnSchemas.ts",
         "copy-characters": "cp -r src/agents/workflows/kol/characters dist/agents/workflows/kol/",
+        "manage-character": "tsx src/agents/workflows/kol/cli/characterManager.ts"
         "test": "jest",
         "test:watch": "jest --watch",
         "test:coverage": "jest --coverage",
