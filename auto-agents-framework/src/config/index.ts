@@ -6,6 +6,7 @@ import { fileURLToPath } from 'url';
 import { mkdir } from 'fs/promises';
 import { llmDefaultConfig } from './llm.js';
 import { twitterDefaultConfig } from './twitter.js';
+import { memoryDefaultConfig } from './memory.js';
 import yaml from 'yaml';
 import { readFileSync } from 'fs';
 
@@ -29,7 +30,7 @@ function formatZodError(error: z.ZodError) {
   });
   return `Missing or invalid environment variables:
     \n${missingVars.join('\n')}
-    \nPlease check your .env file and ensure all required variables are set correctly.`;
+    \nPlease check your .env file and config.yaml file and ensure all required variables are set correctly.`;
 }
 
 export const agentVersion = process.env.AGENT_VERSION || '1.0.0';
@@ -75,6 +76,10 @@ export const config = (() => {
         CONTRACT_ADDRESS: process.env.CONTRACT_ADDRESS || undefined,
         PRIVATE_KEY: process.env.PRIVATE_KEY || undefined,
       },
+      memoryConfig: {
+        ...memoryDefaultConfig,
+        ...(yamlConfig.memory || {}),
+      },
       SERPAPI_API_KEY: process.env.SERPAPI_API_KEY || '',
       NODE_ENV: process.env.NODE_ENV || 'development',
     };
@@ -85,7 +90,7 @@ export const config = (() => {
       console.error('\x1b[31m%s\x1b[0m', formatZodError(error));
       console.info(
         '\x1b[36m%s\x1b[0m',
-        '\nTip: Copy .env.sample to .env and fill in the required values.',
+        '\nTip: Copy .env.sample to .env and config.example.yaml to config.yaml and fill/change the required values.',
       );
       process.exit(1);
     }

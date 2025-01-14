@@ -9,10 +9,20 @@ export const createMockState = () => ({
   myRecentTweets: new Set<Tweet>(),
   myRecentReplies: new Set<Tweet>(),
   trendAnalysisTweets: new Set<Tweet>(),
-  dsnData: [],
-  summary: { patterns: [], commonWords: [] },
-  trendAnalysis: { summary: '', trends: [] },
-  engagementDecisions: [],
+  dsnData: [] as Array<{ type: string; data: any }>,
+  summary: { patterns: [] as string[], commonWords: [] as string[] },
+  trendAnalysis: {
+    summary: '',
+    trends: [] as Array<{
+      topic: string;
+      description: string;
+      trendStrength: number;
+    }>,
+  },
+  engagementDecisions: [] as Array<{
+    decision: { shouldEngage: boolean; reason: string };
+    tweet: Tweet;
+  }>,
 });
 
 export const createMockTweet = (overrides = {}): Tweet => ({

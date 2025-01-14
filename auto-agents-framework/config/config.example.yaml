@@ -32,3 +32,6 @@ llm:
     response:
       size: "small"
       temperature: 0.8 
+
+memory:
+  MAX_PROCESSED_IDS: 5000
