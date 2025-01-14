@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { LLMSize, LLMProvider } from '../services/llm/types.js';
+import { LLMProvider, LLMSize } from '../services/llm/types.js';
 
 const twitterConfigSchema = z.object({
   USERNAME: z.string().min(1, 'Twitter username is required'),

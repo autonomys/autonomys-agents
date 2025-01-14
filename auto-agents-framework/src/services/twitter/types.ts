@@ -1,4 +1,4 @@
-import { Scraper, Tweet, Profile } from 'agent-twitter-client';
+import { Profile, Scraper, Tweet } from 'agent-twitter-client';
 export { Tweet, Profile, Scraper } from 'agent-twitter-client';
 
 export interface TwitterApi {

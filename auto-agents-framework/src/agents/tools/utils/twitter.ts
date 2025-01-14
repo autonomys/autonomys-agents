@@ -5,6 +5,7 @@ import { createLogger } from '../../../utils/logger.js';
 
 const logger = createLogger('convert-tweet-messages');
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const convertTweet = (tweet: any): Tweet | null => {
   if (!tweet || typeof tweet !== 'object') {
     logger.warn('Invalid tweet object received:', tweet);
@@ -32,7 +33,7 @@ export const convertMessageContentToTweets = (messageContent: MessageContent): T
     }
 
     return parsedContent.tweets
-      .map((tweet: any) => convertTweet(tweet))
+      .map((tweet: any) => convertTweet(tweet)) // eslint-disable-line @typescript-eslint/no-explicit-any
       .filter((tweet: Tweet | null): tweet is Tweet => tweet !== null);
   } catch (error) {
     logger.error('Error converting message content to tweets:', error);

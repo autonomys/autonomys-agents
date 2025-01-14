@@ -2,9 +2,9 @@ import { StructuredOutputParser } from 'langchain/output_parsers';
 import {
   engagementSchema,
   responseSchema,
+  summarySchema,
   trendSchema,
   trendTweetSchema,
-  summarySchema,
 } from './schemas.js';
 import { ChatPromptTemplate, PromptTemplate } from '@langchain/core/prompts';
 import { SystemMessage } from '@langchain/core/messages';
@@ -31,7 +31,7 @@ const loadCharacter = async (characterFile: string) => {
     const { character } = await import(`./characters/${characterFile}.js`);
     return character;
   } catch (error) {
-    throw new Error(`Failed to load character file: ${characterFile}`);
+    throw new Error(`Failed to load character file: ${characterFile} error: ${error}`);
   }
 };
 

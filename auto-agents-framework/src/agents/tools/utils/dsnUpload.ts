@@ -1,14 +1,14 @@
 import { createLogger } from '../../../utils/logger.js';
 import { hexlify } from 'ethers';
-import { createAutoDriveApi, uploadFile } from '@autonomys/auto-drive';
-import { stringToCid, blake3HashFromCid } from '@autonomys/auto-dag-data';
-import { config, agentVersion } from '../../../config/index.js';
-import { wallet, signMessage } from './agentWallet.js';
-import { setLastMemoryHash, getLastMemoryCid } from './agentMemoryContract.js';
+import { createAutoDriveApi, uploadFile, UploadFileOptions } from '@autonomys/auto-drive';
+import { blake3HashFromCid, stringToCid } from '@autonomys/auto-dag-data';
+import { agentVersion, config } from '../../../config/index.js';
+import { signMessage, wallet } from './agentWallet.js';
+import { getLastMemoryCid, setLastMemoryHash } from './agentMemoryContract.js';
 import { saveHashLocally } from './localHashStorage.js';
 
 const logger = createLogger('dsn-upload-tool');
-const dsnApi = createAutoDriveApi({ apiKey: config.autoDriveConfig.AUTO_DRIVE_API_KEY! });
+const dsnApi = createAutoDriveApi({ apiKey: config.autoDriveConfig.AUTO_DRIVE_API_KEY || '' });
 let currentNonce = await wallet.getNonce();
 
 // New retry utility function
@@ -50,8 +50,8 @@ const withRetry = async <T>(
   return attempt(maxRetries, initialDelayMs);
 };
 
-// Helper function for file upload
-const uploadFileToDsn = async (file: any, options: any) =>
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const uploadFileToDsn = async (file: any, options: UploadFileOptions) =>
   withRetry(() => uploadFile(dsnApi, file, options), { operationName: 'Dsn file upload' });
 
 // Helper function for memory hash

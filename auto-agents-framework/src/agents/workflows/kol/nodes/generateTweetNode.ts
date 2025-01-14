@@ -1,16 +1,16 @@
 import {
   DsnData,
+  DsnDataType,
   DsnGeneratedTweetData,
   DsnResponseData,
   DsnSkippedEngagementData,
   EngagementDecision,
   WorkflowConfig,
-  DsnDataType,
 } from '../types.js';
 import { createLogger } from '../../../../utils/logger.js';
 import { State } from '../workflow.js';
 import { invokePostTweetTool } from '../../../tools/postTweetTool.js';
-import { trendTweetParser, responseParser } from '../prompts.js';
+import { responseParser, trendTweetParser } from '../prompts.js';
 import { AIMessage } from '@langchain/core/messages';
 import { summarySchema } from '../schemas.js';
 import { z } from 'zod';
@@ -60,9 +60,9 @@ const postResponse = async (
 
 const postTweet = async (config: WorkflowConfig, state: typeof State.State) => {
   const recentTweets = Array.from(state.myRecentTweets.values()).map(t => ({
-    text: t.text!,
-    username: t.username!,
-    timeParsed: t.timeParsed!,
+    text: t.text ?? '',
+    username: t.username ?? '',
+    timeParsed: t.timeParsed ?? new Date(),
   }));
 
   const lastTweetTime = recentTweets.length > 0 ? recentTweets[0].timeParsed : null;

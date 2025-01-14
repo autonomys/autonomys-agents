@@ -1,6 +1,6 @@
-import { Scraper, SearchMode, Tweet, Profile } from 'agent-twitter-client';
+import { Scraper, SearchMode, Tweet } from 'agent-twitter-client';
 import { createLogger } from '../../utils/logger.js';
-import { readFileSync, writeFileSync, existsSync } from 'fs';
+import { existsSync, readFileSync, writeFileSync } from 'fs';
 import { isValidTweet } from './convertFromTimeline.js';
 import { convertTimelineTweetToTweet } from './convertFromTimeline.js';
 import { TwitterApi } from './types.js';
@@ -11,8 +11,9 @@ const loadCookies = async (scraper: Scraper, cookiesPath: string): Promise<void>
   const cookies = readFileSync(cookiesPath, 'utf8');
   try {
     const parsedCookies = JSON.parse(cookies).map(
-      (cookie: any) =>
-        `${cookie.key}=${cookie.value}; Domain=${cookie.domain}; Path=${cookie.path}`,
+      (
+        cookie: any, // eslint-disable-line @typescript-eslint/no-explicit-any
+      ) => `${cookie.key}=${cookie.value}; Domain=${cookie.domain}; Path=${cookie.path}`,
     );
     await scraper.setCookies(parsedCookies);
     logger.info('Loaded existing cookies from file');
@@ -129,27 +130,34 @@ const getMyUnrepliedToMentions = async (
   const newMentions: Tweet[] = [];
   const conversations = new Map<string, Tweet[]>();
   for await (const tweet of mentionIterator) {
+    // Skip tweets without an ID
+    if (!tweet.id) continue;
+
     // Stop if we've reached or passed the sinceId
-    if (sinceId && tweet.id && tweet.id <= sinceId) {
+    if (sinceId && tweet.id <= sinceId) {
       break;
     }
 
     // Skip if user has already replied
-    if (repliedToIds.has(tweet.id!)) {
+    if (repliedToIds.has(tweet.id)) {
       logger.info(`Skipping tweet ${tweet.id} (already replied)`);
       continue;
     }
     newMentions.push(tweet);
-    if (!conversations.has(tweet.id!)) {
+
+    // Skip tweets without conversation ID
+    if (!tweet.conversationId) continue;
+
+    if (!conversations.has(tweet.id)) {
       const conversation = await iterateResponse(
         scraper.searchTweets(`conversation_id:${tweet.conversationId}`, 100, SearchMode.Latest),
       );
 
-      const initialTweet = await scraper.getTweet(tweet.conversationId!);
+      const initialTweet = await scraper.getTweet(tweet.conversationId);
       if (initialTweet) {
         conversation.push(initialTweet);
       }
-      conversations.set(tweet.conversationId!, conversation);
+      conversations.set(tweet.conversationId, conversation);
     }
 
     // Stop if we already have enough
@@ -159,7 +167,13 @@ const getMyUnrepliedToMentions = async (
   }
 
   const withThreads = newMentions.map(mention => {
-    const thread = getReplyThread(mention, conversations.get(mention.conversationId!)!);
+    // Skip mentions without conversation ID
+    if (!mention.conversationId) return mention;
+
+    const conversation = conversations.get(mention.conversationId);
+    if (!conversation) return mention;
+
+    const thread = getReplyThread(mention, conversation);
     return {
       ...mention,
       thread,

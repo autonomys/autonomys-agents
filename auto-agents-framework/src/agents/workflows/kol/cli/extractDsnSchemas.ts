@@ -1,9 +1,12 @@
 import { z } from 'zod';
 import { zodToJsonSchema } from 'zod-to-json-schema';
 import { DsnDataType } from '../types.js';
-import { engagementSchema, responseSchema, skippedEngagementSchema, dsnTweet } from '../schemas.js';
+import { dsnTweet, engagementSchema, responseSchema, skippedEngagementSchema } from '../schemas.js';
 import { writeFileSync } from 'fs';
 import { join } from 'path';
+import { createLogger } from '../../../../utils/logger.js';
+
+const logger = createLogger('extractDsnSchemas');
 
 const dsnCommonFields = z.object({
   previousCid: z.string().optional(),
@@ -58,7 +61,7 @@ const main = () => {
 
   const outputPath = join(process.cwd(), 'dsn-kol-schemas.json');
   writeFileSync(outputPath, JSON.stringify(schemas, null, 2));
-  console.log(`Schemas written to ${outputPath}`);
+  logger.info(`Schemas written to ${outputPath}`);
 };
 
 main();

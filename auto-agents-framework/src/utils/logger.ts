@@ -1,7 +1,8 @@
 import winston from 'winston';
 import { config } from '../config/index.js';
 
-const formatMeta = (meta: any, useColors: boolean = false) => {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const formatMeta = (meta: any, _useColors: boolean = false) => {
   const cleanMeta = Object.entries(meta)
     .filter(([key]) => !key.startsWith('Symbol(') && key !== 'splat')
     .reduce((acc, [key, value]) => ({ ...acc, [key]: value }), {});
@@ -12,7 +13,7 @@ const formatMeta = (meta: any, useColors: boolean = false) => {
     Object.assign(cleanMeta, meta[Symbol.for('splat')][0]);
   }
 
-  return Object.keys(cleanMeta).length ? '\n' + JSON.stringify(cleanMeta, null, 2) : '';
+  return Object.keys(cleanMeta).length ? `\n${JSON.stringify(cleanMeta, null, 2)}` : '';
 };
 
 const createFileFormat = () =>
