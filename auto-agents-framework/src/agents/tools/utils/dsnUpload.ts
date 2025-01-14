@@ -1,10 +1,10 @@
 import { createLogger } from '../../../utils/logger.js';
 import { hexlify } from 'ethers';
 import { createAutoDriveApi, uploadFile } from '@autonomys/auto-drive';
-import { stringToCid, blake3HashFromCid } from '@autonomys/auto-dag-data';
-import { config, agentVersion } from '../../../config/index.js';
-import { wallet, signMessage } from './agentWallet.js';
-import { setLastMemoryHash, getLastMemoryCid } from './agentMemoryContract.js';
+import { blake3HashFromCid, stringToCid } from '@autonomys/auto-dag-data';
+import { agentVersion, config } from '../../../config/index.js';
+import { signMessage, wallet } from './agentWallet.js';
+import { getLastMemoryCid, setLastMemoryHash } from './agentMemoryContract.js';
 import { saveHashLocally } from './localHashStorage.js';
 
 const logger = createLogger('dsn-upload-tool');

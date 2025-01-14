@@ -2,9 +2,9 @@ import { StructuredOutputParser } from 'langchain/output_parsers';
 import {
   engagementSchema,
   responseSchema,
+  summarySchema,
   trendSchema,
   trendTweetSchema,
-  summarySchema,
 } from './schemas.js';
 import { ChatPromptTemplate, PromptTemplate } from '@langchain/core/prompts';
 import { SystemMessage } from '@langchain/core/messages';

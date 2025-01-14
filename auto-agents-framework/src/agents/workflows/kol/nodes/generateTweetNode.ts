@@ -1,16 +1,16 @@
 import {
   DsnData,
+  DsnDataType,
   DsnGeneratedTweetData,
   DsnResponseData,
   DsnSkippedEngagementData,
   EngagementDecision,
   WorkflowConfig,
-  DsnDataType,
 } from '../types.js';
 import { createLogger } from '../../../../utils/logger.js';
 import { State } from '../workflow.js';
 import { invokePostTweetTool } from '../../../tools/postTweetTool.js';
-import { trendTweetParser, responseParser } from '../prompts.js';
+import { responseParser, trendTweetParser } from '../prompts.js';
 import { AIMessage } from '@langchain/core/messages';
 import { summarySchema } from '../schemas.js';
 import { z } from 'zod';

@@ -1,4 +1,4 @@
-import { LLMNodeConfiguration, LLMSize, LLMProvider, llmModels } from '../services/llm/types.js';
+import { llmModels, LLMNodeConfiguration, LLMProvider, LLMSize } from '../services/llm/types.js';
 
 export const llmDefaultConfig = {
   configuration: {

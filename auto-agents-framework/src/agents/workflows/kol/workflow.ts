@@ -1,4 +1,4 @@
-import { END, MemorySaver, StateGraph, START, Annotation } from '@langchain/langgraph';
+import { Annotation, END, MemorySaver, START, StateGraph } from '@langchain/langgraph';
 import { BaseMessage } from '@langchain/core/messages';
 import { parseMessageContent } from '../utils.js';
 import { config } from '../../../config/index.js';
@@ -9,7 +9,7 @@ import { ToolNode } from '@langchain/langgraph/prebuilt';
 import { createTwitterApi } from '../../../services/twitter/client.js';
 import { createNodes } from './nodes.js';
 import { Tweet } from '../../../services/twitter/types.js';
-import { trendSchema, summarySchema } from './schemas.js';
+import { summarySchema, trendSchema } from './schemas.js';
 import { z } from 'zod';
 import { createPrompts } from './prompts.js';
 import { LLMFactory } from '../../../services/llm/factory.js';

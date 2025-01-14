@@ -12,7 +12,7 @@ const formatMeta = (meta: any, useColors: boolean = false) => {
     Object.assign(cleanMeta, meta[Symbol.for('splat')][0]);
   }
 
-  return Object.keys(cleanMeta).length ? '\n' + JSON.stringify(cleanMeta, null, 2) : '';
+  return Object.keys(cleanMeta).length ? `\n${JSON.stringify(cleanMeta, null, 2)}` : '';
 };
 
 const createFileFormat = () =>

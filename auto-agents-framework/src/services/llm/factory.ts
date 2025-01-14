@@ -1,7 +1,7 @@
 import { ChatOpenAI } from '@langchain/openai';
 import { ChatAnthropic } from '@langchain/anthropic';
 import { ChatOllama } from '@langchain/ollama';
-import { LLMProvider, LLMConfiguration, LLMNodeConfiguration } from './types.js';
+import { LLMConfiguration, LLMNodeConfiguration, LLMProvider } from './types.js';
 import { config as appConfig } from '../../config/index.js';
 
 export class LLMFactory {

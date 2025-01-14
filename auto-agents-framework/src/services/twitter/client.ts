@@ -1,6 +1,6 @@
-import { Scraper, SearchMode, Tweet, Profile } from 'agent-twitter-client';
+import { Profile, Scraper, SearchMode, Tweet } from 'agent-twitter-client';
 import { createLogger } from '../../utils/logger.js';
-import { readFileSync, writeFileSync, existsSync } from 'fs';
+import { existsSync, readFileSync, writeFileSync } from 'fs';
 import { isValidTweet } from './convertFromTimeline.js';
 import { convertTimelineTweetToTweet } from './convertFromTimeline.js';
 import { TwitterApi } from './types.js';

@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { zodToJsonSchema } from 'zod-to-json-schema';
 import { DsnDataType } from '../types.js';
-import { engagementSchema, responseSchema, skippedEngagementSchema, dsnTweet } from '../schemas.js';
+import { dsnTweet, engagementSchema, responseSchema, skippedEngagementSchema } from '../schemas.js';
 import { writeFileSync } from 'fs';
 import { join } from 'path';
 
