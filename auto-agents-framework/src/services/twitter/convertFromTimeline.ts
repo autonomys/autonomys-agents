@@ -31,14 +31,11 @@ const extractFullText = (tweet: any): string => {
   return legacy?.full_text || legacy?.text || '';
 };
 
-// Add depth limit to prevent infinite recursion
-const extractQuotedTweet = (tweet: any, depth: number = 3): Tweet | undefined => {
-  if (depth <= 0) return undefined;
-
+const extractQuotedTweet = (tweet: any): Tweet | undefined => {
   const quotedTweet = tweet.quoted_status_result?.result;
   if (!quotedTweet) return undefined;
 
-  return convertTimelineTweetToTweet(quotedTweet, depth - 1);
+  return convertTimelineTweetToTweet(quotedTweet);
 };
 
 const extractPhotos = (media: any[] = []) =>
@@ -77,7 +74,7 @@ const extractUserData = (tweet: any) => {
   };
 };
 
-export const convertTimelineTweetToTweet = (tweet: any, depth: number = 3): Tweet => {
+export const convertTimelineTweetToTweet = (tweet: any): Tweet => {
   const legacy = extractLegacyData(tweet);
   if (!legacy) {
     throw new Error('Invalid tweet data: no legacy data found');
@@ -85,7 +82,7 @@ export const convertTimelineTweetToTweet = (tweet: any, depth: number = 3): Twee
 
   const media = legacy.extended_entities?.media || legacy.entities?.media || [];
   const userData = extractUserData(tweet);
-  const quotedTweet = extractQuotedTweet(tweet, depth);
+  const quotedTweet = extractQuotedTweet(tweet);
 
   return {
     id: tweet.rest_id || legacy.id_str,
