@@ -1,9 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
-  <!-- Paper background -->
-  <rect x="10" y="10" width="80" height="80" rx="5" fill="#f0f0f0" stroke="#3498db" stroke-width="5"/>
-  
-  <!-- Wavy lines representing writing -->
-  <path d="M25 30 Q 35 20, 45 30 T 65 30" stroke="#3498db" stroke-width="5" fill="none"/>
-  <path d="M25 50 Q 35 40, 45 50 T 65 50" stroke="#3498db" stroke-width="5" fill="none"/>
-  <path d="M25 70 Q 35 60, 45 70 T 65 70" stroke="#3498db" stroke-width="5" fill="none"/>
-</svg>
