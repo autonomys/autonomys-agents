@@ -13,7 +13,6 @@ import { trendSchema, summarySchema } from './schemas.js';
 import { z } from 'zod';
 import { createPrompts } from './prompts.js';
 import { LLMFactory } from '../../../services/llm/factory.js';
-import { pruneProcessedIds } from './memoryPruner.js';
 
 export const logger = createLogger('agent-workflow');
 
@@ -57,7 +56,10 @@ export const State = Annotation.Root({
   }),
   processedTweetIds: Annotation<Set<string>>({
     default: () => new Set(),
-    reducer: (curr, update) => pruneProcessedIds(new Set([...curr, ...update])),
+    reducer: (curr, update) => {
+      const newSet = new Set([...curr, ...update]);
+      return new Set(Array.from(newSet).slice(-config.memoryConfig.MAX_PROCESSED_IDS));
+    },
   }),
   repliedToTweetIds: Annotation<Set<string>>({
     default: () => new Set(),
