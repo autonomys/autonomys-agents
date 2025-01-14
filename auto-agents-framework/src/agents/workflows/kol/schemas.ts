@@ -6,6 +6,7 @@ export const dsnTweet: z.ZodType = z.object({
   username: z.string(),
   timeParsed: z.string(),
   thread: z.array(z.lazy(() => dsnTweet)).optional(),
+  quotedTweet: z.lazy(() => dsnTweet).optional(),
 });
 
 export const engagementSchema = z.object({
