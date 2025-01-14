@@ -259,18 +259,12 @@ export const createTwitterApi = async (
 
     getMyTimeline: async (count: number, excludeIds: string[]) => {
       const tweets = await scraper.fetchHomeTimeline(count, excludeIds);
-      return tweets
-        .filter(isValidTweet)
-        .map(tweet => convertTimelineTweetToTweet(tweet))
-        .filter(tweet => tweet !== undefined);
+      return tweets.filter(isValidTweet).map(tweet => convertTimelineTweetToTweet(tweet));
     },
 
     getFollowingTimeline: async (count: number, excludeIds: string[]) => {
       const tweets = await scraper.fetchFollowingTimeline(count, excludeIds);
-      return tweets
-        .filter(isValidTweet)
-        .map(tweet => convertTimelineTweetToTweet(tweet))
-        .filter(tweet => tweet !== undefined);
+      return tweets.filter(isValidTweet).map(tweet => convertTimelineTweetToTweet(tweet));
     },
 
     getMyRecentReplies: (limit: number = 10) => getMyRecentReplies(scraper, username, limit),

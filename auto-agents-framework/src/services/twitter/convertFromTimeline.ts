@@ -1,24 +1,35 @@
 import { Tweet } from './types.js';
 
 // Type guards
-export const isValidTweet = (tweet: any): boolean =>
-  tweet &&
-  tweet.__typename === 'Tweet' &&
-  (tweet.legacy ||
-    tweet.quoted_status_result?.result?.legacy ||
-    tweet.retweeted_status_result?.result?.legacy);
+export const isValidTweet = (tweet: any): boolean => {
+  const tweetData = tweet?.tweet || tweet;
+
+  return (
+    tweetData &&
+    (tweetData.__typename === 'Tweet' || tweetData.__typename === 'TweetWithVisibilityResults') &&
+    (tweetData.legacy ||
+      tweetData.quoted_status_result?.result?.legacy ||
+      tweetData.retweeted_status_result?.result?.legacy ||
+      tweetData.note_tweet?.note_tweet_results?.result?.text)
+  );
+};
 
 // Pure functions for data extraction
 const extractLegacyData = (tweet: any) => {
-  const legacy =
-    tweet.legacy ||
-    tweet.quoted_status_result?.result?.legacy ||
-    tweet.retweeted_status_result?.result?.legacy;
+  const tweetData = tweet?.tweet || tweet;
 
-  if (!legacy) {
-    return null;
+  if (tweetData.note_tweet?.note_tweet_results?.result?.text) {
+    return {
+      ...tweetData.legacy,
+      full_text: tweetData.note_tweet.note_tweet_results.result.text,
+    };
   }
-  return legacy;
+
+  return (
+    tweetData.legacy ||
+    tweetData.quoted_status_result?.result?.legacy ||
+    tweetData.retweeted_status_result?.result?.legacy
+  );
 };
 
 const extractFullText = (tweet: any): string => {
@@ -74,11 +85,8 @@ const extractUserData = (tweet: any) => {
   };
 };
 
-export const convertTimelineTweetToTweet = (tweet: any): Tweet | undefined => {
+export const convertTimelineTweetToTweet = (tweet: any): Tweet => {
   const legacy = extractLegacyData(tweet);
-  if (!legacy) {
-    return undefined;
-  }
 
   const media = legacy.extended_entities?.media || legacy.entities?.media || [];
   const userData = extractUserData(tweet);
