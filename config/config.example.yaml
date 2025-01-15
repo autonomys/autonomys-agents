@@ -6,32 +6,35 @@ twitter:
   MAX_THREAD_LENGTH: 20
   MAX_MY_RECENT_TWEETS: 10
   MAX_MY_RECENT_REPLIES: 10
-  RESPONSE_INTERVAL_MS: 3600000
-  POST_INTERVAL_MS: 5400000
+  RESPONSE_INTERVAL_MINUTES: 60
+  POST_INTERVAL_MINUTES: 90
   POST_TWEETS: false
+
+autodrive:
+  upload: false
 
 llm:
   configuration:
     large:
-      provider: "anthropic"
-      model: "claude-3-5-sonnet-latest"
+      provider: 'anthropic'
+      model: 'claude-3-5-sonnet-latest'
     small:
-      provider: "openai"
-      model: "gpt-4o-mini"
+      provider: 'openai'
+      model: 'gpt-4o-mini'
 
   nodes:
     decision:
-      size: "small"
+      size: 'small'
       temperature: 0.2
     analyze:
-      size: "large"
+      size: 'large'
       temperature: 0.5
     generation:
-      size: "large"
+      size: 'large'
       temperature: 0.8
     response:
-      size: "small"
-      temperature: 0.8 
+      size: 'small'
+      temperature: 0.8
 
 memory:
   MAX_PROCESSED_IDS: 5000
