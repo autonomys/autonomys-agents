@@ -30,7 +30,7 @@ interface RawCharacterConfig {
   words_to_avoid: string[];
 }
 
-export function loadCharacter(characterId: string): Character {
+export const loadCharacter = (characterId: string): Character => {
   const cleanCharacterId = characterId.replace(/\.(ya?ml)$/, '').toLowerCase();
   const configPath = join(process.cwd(), 'config', 'characters', `${cleanCharacterId}.yaml`);
 
@@ -50,4 +50,4 @@ export function loadCharacter(characterId: string): Character {
   } catch (error: any) {
     throw new Error(`Failed to load character config for '${cleanCharacterId}': ${error.message}`);
   }
-}
+};

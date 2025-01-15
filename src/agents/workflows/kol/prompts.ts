@@ -9,7 +9,7 @@ import {
 import { ChatPromptTemplate, PromptTemplate } from '@langchain/core/prompts';
 import { SystemMessage } from '@langchain/core/messages';
 import { wallet } from '../../tools/utils/agentWallet.js';
-import { loadCharacter } from './characters/characterLoader.js';
+import { loadCharacter } from '../../../config/characters.js';
 
 const followFormatInstructions = `
   IMPORTANT:
