@@ -9,6 +9,7 @@ import {
 import { ChatPromptTemplate, PromptTemplate } from '@langchain/core/prompts';
 import { SystemMessage } from '@langchain/core/messages';
 import { wallet } from '../../tools/utils/agentWallet.js';
+import { loadCharacter } from './characters/characterLoader.js';
 
 const followFormatInstructions = `
   IMPORTANT:
@@ -26,17 +27,8 @@ export const trendParser = StructuredOutputParser.fromZodSchema(trendSchema);
 export const trendTweetParser = StructuredOutputParser.fromZodSchema(trendTweetSchema);
 export const summaryParser = StructuredOutputParser.fromZodSchema(summarySchema);
 
-const loadCharacter = async (characterFile: string) => {
-  try {
-    const { character } = await import(`./characters/${characterFile}.js`);
-    return character;
-  } catch (error) {
-    throw new Error(`Failed to load character file: ${characterFile} error: ${error}`);
-  }
-};
-
 export const createPrompts = async (characterFile: string) => {
-  const character = await loadCharacter(characterFile);
+  const character = loadCharacter(characterFile);
 
   const engagementSystemPrompt = await PromptTemplate.fromTemplate(
     `Your task is to evaluate tweets and decide whether they warrant a response.
