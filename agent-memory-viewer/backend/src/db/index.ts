@@ -73,20 +73,28 @@ export async function getAllDsn(
         let conditions: string[] = [];
         
         if (type) {
-            conditions.push(`content->>'type' = $${params.length + 1}`);
-            params.push(type);
+            if (type === ResponseStatus.APPROVED) {
+                conditions.push(`(content->>'type' = 'approved' OR content->>'type' = 'response')`);
+            } else {
+                conditions.push(`content->>'type' = $${params.length + 1}`);
+                params.push(type);
+            }
         }
 
         if (searchText) {
             conditions.push(`(
                 content->'tweet'->>'text'::text ILIKE $${params.length + 1} 
                 OR content->>'response'::text ILIKE $${params.length + 1}
+                OR content->>'content'::text ILIKE $${params.length + 1}
             )`);
             params.push(`%${searchText}%`);
         }
 
         if (authorUsername) {
-            conditions.push(`content->'tweet'->>'author_username'::text ILIKE $${params.length + 1}`);
+            conditions.push(`(
+                content->'tweet'->>'username'::text ILIKE $${params.length + 1}
+                OR content->'tweet'->>'author_username'::text ILIKE $${params.length + 1}
+            )`);
             params.push(`%${authorUsername}%`);
         }
 
@@ -110,7 +118,7 @@ export async function getAllDsn(
             query += ' WHERE ' + conditions.join(' AND ');
         }
         
-        query += ` ORDER BY mr.created_at DESC
+        query += ` ORDER BY (content->>'timestamp')::timestamp DESC
                   LIMIT $${params.length + 1} OFFSET $${params.length + 2}`;
 
         const queryParams = [...params, limit, offset];
@@ -129,30 +137,34 @@ export async function getAllDsn(
                             return ResponseStatus.REJECTED;
                         case 'approved':
                             return ResponseStatus.APPROVED;
+                        case 'response':
+                            return ResponseStatus.APPROVED;
                         case 'posted':
                             return ResponseStatus.POSTED;
                         default:
                             return null;
                     }
                 };
-
                 return {
                     id: record.id,
                     tweet_id: content.tweet?.id || null,
                     cid: record.cid,
                     created_at: record.created_at,
-                    author_username: content.tweet?.author_username || null,
+                    author_username: content.tweet?.username || content.tweet?.author_username || 
+                        (content.type === 'posted' ? config.AGENT_USERNAME : null), 
                     tweet_content: content.tweet?.text || null,
                     thread: content.tweet?.thread || null,
-                    response_content: ['rejected', 'approved', 'skipped', 'posted'].includes(content.type) 
-                        ? content.response || null 
+                    quotedStatus: content.tweet?.quotedStatus || null,
+                    response_content: ['rejected', 'approved', 'skipped', 'posted', 'response'].includes(content.type) 
+                        ? content.response || content.content || null 
                         : null,
                     result_type: content.type || 'unknown',
                     skip_reason: content.type === 'skipped' 
-                        ? content.workflowState?.decision?.reason || null 
+                        ? content.workflowState?.decision?.reason || content.decision?.reason || null 
                         : null,
                     response_status: getResponseStatus(content),
-                    auto_feedback: content.workflowState?.autoFeedback || null 
+                    auto_feedback: content.workflowState?.autoFeedback || null,
+                    agent_version: content.agentVersion || null
                 };
             } catch (error) {
                 console.error('Error transforming record:', error, 'Record:', record);

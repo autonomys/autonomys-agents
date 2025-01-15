@@ -12,6 +12,11 @@ export interface Tweet {
     created_at: string;
     mention?: boolean;
     thread?: Array<Tweet>;
+    quotedStatus?: {
+        id: string;
+        text: string;
+        username: string;
+    }
 }
 
 export interface WorkflowDecision {
@@ -47,6 +52,11 @@ export interface BaseMemory {
         author_username: string;
         created_at: string;
         thread?: Array<Tweet>;
+        quotedStatus?: {
+            id: string;
+            text: string;
+            username: string;
+        }
     };
     previousCid: string | null;
     signature: string;
@@ -62,10 +72,12 @@ export interface SkippedMemory extends BaseMemory {
         responseStrategy: null;
     };
     mentions: Tweet[];
+    agentVersion: string;
 }
 
 export interface ApprovedMemory extends BaseMemory {
     type: 'approved';
+    agentVersion: string;
     response: string;
     workflowState: {
         decision: WorkflowDecision;
@@ -85,11 +97,13 @@ export interface RejectedMemory extends BaseMemory {
         autoFeedback: AutoFeedback[];
     };
     mentions: Tweet[];
+    agentVersion: string;
     retry: number;
 }
 
 export interface PostedMemory extends BaseMemory {
     type: 'posted';
+    agentVersion: string;
 }
 
 export type AgentMemory = 
