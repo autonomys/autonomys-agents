@@ -1,3 +1,14 @@
+src/agents/workflows/kol/characters/*.ts
+src/agents/workflows/kol/characters/*.js
+!src/agents/workflows/kol/characters/character.example.ts
+config/*.yaml
+!config/config.example.yaml
+.cookies/
+dsn-kol-schemas.json
+memories/
+!src/config/
+
+
 # Python bytecode
 __pycache__/
 *.py[cod]
