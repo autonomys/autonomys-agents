@@ -28,6 +28,7 @@ import { colors } from '../styles/theme/colors';
 import { useSearchParams } from 'react-router-dom';
 import SearchBar from './SearchBar';
 import StatusFilter from './StatusFilter';
+import { getRelativeTime } from '../utils/timeUtils';
 
 function DSNViewer() {
     const [searchParams, setSearchParams] = useSearchParams();
@@ -95,9 +96,14 @@ function DSNViewer() {
                         >
                             <Card {...cardStyles.baseStyle}>
                                 <CardBody {...cardStyles.bodyStyle}>
-                                    <Text {...textStyles.heading}>
-                                        Tweet by @{item.author_username}
-                                    </Text>
+                                    <HStack justify="space-between" mb={2}>
+                                        <Text {...textStyles.heading}>
+                                            Tweet by @{item.author_username}
+                                        </Text>
+                                        <Text color="gray.400" fontSize="sm">
+                                            {getRelativeTime(item.timestamp)}
+                                        </Text>
+                                    </HStack>
                                     <Text {...textStyles.value} whiteSpace="pre-wrap" mb={4}>
                                         {item.tweet_content}
                                     </Text>
