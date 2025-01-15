@@ -51,39 +51,45 @@ This means you can:
 2. Customize the settings in `config/config.yaml`:
 
    ```yaml
-   twitter:
-     NUM_TIMELINE_TWEETS: 10
-     NUM_FOLLOWING_RECENT_TWEETS: 10
-     NUM_RANDOM_FOLLOWINGS: 5
-     MAX_MENTIONS: 20
-     MAX_THREAD_LENGTH: 20
-     MAX_MY_RECENT_TWEETS: 10
-     MAX_MY_RECENT_REPLIES: 10
-     RESPONSE_INTERVAL_MS: 3600000 # 1 hour
-     POST_INTERVAL_MS: 5400000 # 1.5 hours
-     POST_TWEETS: false
+    twitter:
+      NUM_TIMELINE_TWEETS: 10
+      NUM_FOLLOWING_RECENT_TWEETS: 10
+      NUM_RANDOM_FOLLOWINGS: 5
+      MAX_MENTIONS: 20
+      MAX_THREAD_LENGTH: 20
+      MAX_MY_RECENT_TWEETS: 10
+      MAX_MY_RECENT_REPLIES: 10
+      RESPONSE_INTERVAL_MS: 3600000 # 1 hour
+      POST_INTERVAL_MS: 5400000 # 1.5 hours
+      POST_TWEETS: false
 
-   llm:
-     configuration:
-       large:
-         provider: 'anthropic'
-         model: 'claude-3-5-sonnet-latest'
-       small:
-         provider: 'openai'
-         model: 'gpt-4o-mini'
-     nodes:
-       decision:
-         size: 'small'
-         temperature: 0.2
-       analyze:
-         size: 'large'
-         temperature: 0.5
-       generation:
-         size: 'large'
-         temperature: 0.8
-       response:
-         size: 'small'
-         temperature: 0.8
+    autodrive:
+      upload: false
+
+    llm:
+      configuration:
+        large:
+          provider: 'anthropic'
+          model: 'claude-3-5-sonnet-latest'
+        small:
+          provider: 'openai'
+          model: 'gpt-4o-mini'
+      nodes:
+        decision:
+          size: 'small'
+          temperature: 0.2
+        analyze:
+          size: 'large'
+          temperature: 0.5
+        generation:
+          size: 'large'
+          temperature: 0.8
+        response:
+          size: 'small'
+          temperature: 0.8
+      
+      memory:
+          MAX_PROCESSED_IDS: 5000
    ```
 
 ## Character System
