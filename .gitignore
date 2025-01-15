@@ -1,8 +1,6 @@
-src/agents/workflows/kol/characters/*.ts
-src/agents/workflows/kol/characters/*.js
-!src/agents/workflows/kol/characters/character.example.ts
-config/*.yaml
+config/**/*.yaml
 !config/config.example.yaml
+!config/characters/character.example.yaml
 .cookies/
 dsn-kol-schemas.json
 memories/
