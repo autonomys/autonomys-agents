@@ -10,7 +10,9 @@
     "dev": "NODE_ENV=development tsx watch src/index.ts",
     "lint": "eslint . --ext .ts",
     "test": "jest",
-    "validate:env": "tsx src/scripts/validate-env.ts"
+    "validate:env": "tsx src/scripts/validate-env.ts",
+    "generate-types": "tsx src/types/generateTypes.ts",
+    "sort-memories": "tsx src/scripts/sortMemories.ts"
   },
   "dependencies": {
     "@autonomys/auto-dag-data": "^1.1.2",
@@ -40,6 +42,7 @@
     "@typescript-eslint/parser": "^7.0.0",
     "eslint": "^8.56.0",
     "jest": "^29.7.0",
+    "json-schema-to-typescript": "^15.0.3",
     "nodemon": "^3.1.9",
     "supertest": "^6.3.4",
     "ts-jest": "^29.1.2",
