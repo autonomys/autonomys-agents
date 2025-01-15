@@ -97,6 +97,7 @@ export interface RejectedMemory extends BaseMemory {
         autoFeedback: AutoFeedback[];
     };
     mentions: Tweet[];
+    agentVersion: string;
     retry: number;
 }
 

@@ -2,11 +2,11 @@ import { Card, CardBody, Text, Spinner, VStack, HStack, Button, Link } from '@ch
 import { useParams, useNavigate, Link as RouterLink } from 'react-router-dom'
 import { ArrowBackIcon, ExternalLinkIcon } from '@chakra-ui/icons'
 import { useMemory } from '../api/client'
-import { TweetInfo } from '../components/memoryComponent/shared/TweetInfo'
-import { SkippedMemoryView } from '../components/memoryComponent/SkippedMemory'
-import { ApprovedMemoryView } from '../components/memoryComponent/ApprovedMemory'
-import { RejectedMemoryView } from '../components/memoryComponent/RejectedMemory'
-import { PostedMemoryView } from '../components/memoryComponent/PostedMemory'
+import { TweetInfo } from '../components/memory-views/shared/TweetInfo'
+import { SkippedMemoryView } from '../components/memory-views/SkippedMemory'
+import { ApprovedMemoryView } from '../components/memory-views/ApprovedMemory'
+import { RejectedMemoryView } from '../components/memory-views/RejectedMemory'
+import { PostedMemoryView } from '../components/memory-views/PostedMemory'
 import { ResponseStatus } from '../types/enums'
 
 function MemoryViewer() {
