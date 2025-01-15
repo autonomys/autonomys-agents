@@ -7,7 +7,7 @@ config/*.yaml
 dsn-kol-schemas.json
 memories/
 !src/config/
-
+dsn-kol-schemas.json
 
 # Python bytecode
 __pycache__/
