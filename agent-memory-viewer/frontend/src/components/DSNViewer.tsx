@@ -7,7 +7,8 @@ import {
     Link, 
     Button, 
     HStack, 
-    Select
+    Select,
+    Tooltip,
 } from '@chakra-ui/react';
 import { useState, useEffect } from 'react';
 import { useDSNData } from '../api/client';
@@ -100,9 +101,20 @@ function DSNViewer() {
                                         <Text {...textStyles.heading}>
                                             Tweet by @{item.author_username}
                                         </Text>
-                                        <Text color="gray.400" fontSize="sm">
-                                            {getRelativeTime(item.timestamp)}
-                                        </Text>
+                                        <Tooltip 
+                                            label={new Date(item.timestamp).toLocaleString()} 
+                                            placement="top"
+                                        >
+                                            <Text 
+                                                color="gray.500" 
+                                                fontSize="s" 
+                                                fontStyle="italic"
+                                                _hover={{ color: 'gray.600' }}
+                                                cursor="help"
+                                            >
+                                                {getRelativeTime(item.timestamp)}
+                                            </Text>
+                                        </Tooltip>
                                     </HStack>
                                     <Text {...textStyles.value} whiteSpace="pre-wrap" mb={4}>
                                         {item.tweet_content}
