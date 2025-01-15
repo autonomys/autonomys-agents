@@ -29,7 +29,7 @@ import { colors } from '../styles/theme/colors';
 import { useSearchParams } from 'react-router-dom';
 import SearchBar from './SearchBar';
 import StatusFilter from './StatusFilter';
-import { getRelativeTime } from '../utils/timeUtils';
+import { utcToLocalRelativeTime } from '../utils/timeUtils';
 
 function DSNViewer() {
     const [searchParams, setSearchParams] = useSearchParams();
@@ -112,7 +112,7 @@ function DSNViewer() {
                                                 _hover={{ color: 'gray.600' }}
                                                 cursor="help"
                                             >
-                                                {getRelativeTime(item.timestamp)}
+                                                {utcToLocalRelativeTime(item.timestamp)}
                                             </Text>
                                         </Tooltip>
                                     </HStack>

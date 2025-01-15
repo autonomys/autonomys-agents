@@ -17,6 +17,7 @@
         "@emotion/styled": "^11.11.0",
         "@types/cors": "^2.8.17",
         "axios": "^1.6.7",
+        "dayjs": "^1.11.13",
         "framer-motion": "^11.14.4",
         "lodash": "^4.17.21",
         "react": "19.0.0",

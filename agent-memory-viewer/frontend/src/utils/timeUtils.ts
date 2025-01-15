@@ -1,32 +1,50 @@
-export function getRelativeTime(timestamp: string): string {
-    const date = new Date(timestamp);
-    const now = new Date();
-    const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+import dayjs from 'dayjs'
+import relativeTime from 'dayjs/plugin/relativeTime'
+import utc from 'dayjs/plugin/utc'
 
-    if (diffInSeconds < 60) {
-        return `${diffInSeconds}s ago`;
-    }
+dayjs.extend(relativeTime)
+dayjs.extend(utc)
 
-    const diffInMinutes = Math.floor(diffInSeconds / 60);
-    if (diffInMinutes < 60) {
-        return `${diffInMinutes}m ago`;
-    }
+export const formatSeconds = (seconds: number | bigint): string => {
+  if (typeof seconds === 'number' && seconds < 0) {
+    throw new Error('Seconds cannot be negative')
+  } else if (typeof seconds === 'bigint' && seconds < 0n) {
+    throw new Error('Seconds cannot be negative')
+  }
 
-    const diffInHours = Math.floor(diffInMinutes / 60);
-    if (diffInHours < 24) {
-        return `${diffInHours}h ago`;
-    }
+  const timeUnits = [
+    { unit: 'd', value: 86400n },
+    { unit: 'h', value: 3600n },
+    { unit: 'm', value: 60n },
+    { unit: 's', value: 1n },
+  ]
 
-    const diffInDays = Math.floor(diffInHours / 24);
-    if (diffInDays < 30) {
-        return `${diffInDays}d ago`;
-    }
+  let secondsBigInt = BigInt(seconds)
 
-    const diffInMonths = Math.floor(diffInDays / 30);
-    if (diffInMonths < 12) {
-        return `${diffInMonths}mo ago`;
-    }
+  return (
+    timeUnits
+      .reduce((result, { unit, value }) => {
+        if (secondsBigInt >= value) {
+          const time = secondsBigInt / value
+          secondsBigInt %= value
+          result += `${time}${unit} `
+        }
+        return result
+      }, '')
+      .trim() || '0s'
+  )
+}
 
-    const diffInYears = Math.floor(diffInDays / 365);
-    return `${diffInYears}y ago`;
-} 
+export const utcToLocalRelativeTime = (timestamp: string): string => {
+  const now = dayjs()
+  const time = dayjs.utc(timestamp).local()
+  const diffInSeconds = now.diff(time, 'second')
+
+  if (diffInSeconds < 60) return `${diffInSeconds} seconds ago`
+  return time.fromNow(true) + ' ago'
+}
+
+export const utcToLocalTime = (timestamp: string): string =>
+  dayjs.utc(timestamp).local().format('DD MMM YYYY | HH:mm:ss(Z)')
+
+export const currentYear = (): number => dayjs().year() 
