@@ -69,7 +69,7 @@ export const config = (() => {
       autoDriveConfig: {
         AUTO_DRIVE_API_KEY: process.env.AUTO_DRIVE_API_KEY,
         AUTO_DRIVE_ENCRYPTION_PASSWORD: process.env.AUTO_DRIVE_ENCRYPTION_PASSWORD,
-        AUTO_DRIVE_UPLOAD: process.env.AUTO_DRIVE_UPLOAD === 'true',
+        AUTO_DRIVE_UPLOAD: yamlConfig.autodrive?.upload ?? false,
       },
       blockchainConfig: {
         RPC_URL: process.env.RPC_URL || undefined,

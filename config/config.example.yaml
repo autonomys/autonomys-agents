@@ -10,28 +10,31 @@ twitter:
   POST_INTERVAL_MS: 5400000
   POST_TWEETS: false
 
+autodrive:
+  upload: false
+
 llm:
   configuration:
     large:
-      provider: "anthropic"
-      model: "claude-3-5-sonnet-latest"
+      provider: 'anthropic'
+      model: 'claude-3-5-sonnet-latest'
     small:
-      provider: "openai"
-      model: "gpt-4o-mini"
+      provider: 'openai'
+      model: 'gpt-4o-mini'
 
   nodes:
     decision:
-      size: "small"
+      size: 'small'
       temperature: 0.2
     analyze:
-      size: "large"
+      size: 'large'
       temperature: 0.5
     generation:
-      size: "large"
+      size: 'large'
       temperature: 0.8
     response:
-      size: "small"
-      temperature: 0.8 
+      size: 'small'
+      temperature: 0.8
 
 memory:
   MAX_PROCESSED_IDS: 5000

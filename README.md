@@ -213,7 +213,11 @@ The framework uses the Autonomys Network for permanent storage of agent memory a
 To use this feature:
 
 1. Configure your Autonomys Network credentials in `.env`
-2. Set `AUTO_DRIVE_UPLOAD=true`
+2. Enable autodrive in your `config.yaml`:
+   ```yaml
+   autodrive:
+     upload: true
+   ```
 3. Provide your wallet details and encryption password
 
 ## Workflows
