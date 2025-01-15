@@ -218,13 +218,14 @@ The framework uses the Autonomys Network for permanent storage of agent memory a
 
 To use this feature:
 
-1. Configure your Autonomys Network credentials in `.env`
-2. Enable autodrive in your `config.yaml`:
+1. Configure your AUTO_DRIVE_API_KEY in `.env` (obtain from https://ai3.storage)
+2. Enable Auto Drive uploading in your `config.yaml`:
    ```yaml
    autodrive:
      upload: true
    ```
-3. Provide your wallet details and encryption password
+3. Provide your Taurus EVM wallet details and Agent Memory Contract Address in `config.yaml`
+4. Provide encryption password in `config.yaml` (optional)
 
 ## Workflows
 
