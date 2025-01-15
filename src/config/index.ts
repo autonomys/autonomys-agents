@@ -69,7 +69,7 @@ export const config = (() => {
       autoDriveConfig: {
         AUTO_DRIVE_API_KEY: process.env.AUTO_DRIVE_API_KEY,
         AUTO_DRIVE_ENCRYPTION_PASSWORD: process.env.AUTO_DRIVE_ENCRYPTION_PASSWORD,
-        AUTO_DRIVE_UPLOAD: yamlConfig.autodrive?.upload ?? false,
+        AUTO_DRIVE_UPLOAD: yamlConfig.auto_drive?.upload ?? false,
       },
       blockchainConfig: {
         RPC_URL: process.env.RPC_URL || undefined,
@@ -83,7 +83,6 @@ export const config = (() => {
       SERPAPI_API_KEY: process.env.SERPAPI_API_KEY || '',
       NODE_ENV: process.env.NODE_ENV || 'development',
     };
-
     return configSchema.parse(rawConfig);
   } catch (error) {
     if (error instanceof z.ZodError) {
