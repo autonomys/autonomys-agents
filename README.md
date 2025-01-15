@@ -1,6 +1,6 @@
-# Auto-Agents-Framework: Framework for building AI agents
+# Autonomys Agents: A framework for building autonomous AI agents
 
-Auto-Agents-Framework is an experimental framework for building AI agents that can interact with social networks and maintain permanent memory through the Autonomys Network. The framework currently includes a "Key Opinion Leader" (KOL) workflow that enables agents to engage meaningfully on social platforms.
+Autonomys Agents is an experimental framework for building AI agents. Currently, the framework supports agents that can interact with social networks and maintain permanent memory through the Autonomys Network. We are still in the early stages of development and are actively seeking feedback and contributions. We will be rapidly adding many more workflows and features.
 
 ## Features
 
@@ -51,45 +51,45 @@ This means you can:
 2. Customize the settings in `config/config.yaml`:
 
    ```yaml
-    twitter:
-      NUM_TIMELINE_TWEETS: 10
-      NUM_FOLLOWING_RECENT_TWEETS: 10
-      NUM_RANDOM_FOLLOWINGS: 5
-      MAX_MENTIONS: 20
-      MAX_THREAD_LENGTH: 20
-      MAX_MY_RECENT_TWEETS: 10
-      MAX_MY_RECENT_REPLIES: 10
-      RESPONSE_INTERVAL_MS: 3600000 # 1 hour
-      POST_INTERVAL_MS: 5400000 # 1.5 hours
-      POST_TWEETS: false
+   twitter:
+     NUM_TIMELINE_TWEETS: 10
+     NUM_FOLLOWING_RECENT_TWEETS: 10
+     NUM_RANDOM_FOLLOWINGS: 5
+     MAX_MENTIONS: 20
+     MAX_THREAD_LENGTH: 20
+     MAX_MY_RECENT_TWEETS: 10
+     MAX_MY_RECENT_REPLIES: 10
+     RESPONSE_INTERVAL_MS: 3600000 # 1 hour
+     POST_INTERVAL_MS: 5400000 # 1.5 hours
+     POST_TWEETS: false
 
-    autodrive:
-      upload: false
+   autodrive:
+     upload: false
 
-    llm:
-      configuration:
-        large:
-          provider: 'anthropic'
-          model: 'claude-3-5-sonnet-latest'
-        small:
-          provider: 'openai'
-          model: 'gpt-4o-mini'
-      nodes:
-        decision:
-          size: 'small'
-          temperature: 0.2
-        analyze:
-          size: 'large'
-          temperature: 0.5
-        generation:
-          size: 'large'
-          temperature: 0.8
-        response:
-          size: 'small'
-          temperature: 0.8
-      
-      memory:
-          MAX_PROCESSED_IDS: 5000
+   llm:
+     configuration:
+       large:
+         provider: 'anthropic'
+         model: 'claude-3-5-sonnet-latest'
+       small:
+         provider: 'openai'
+         model: 'gpt-4o-mini'
+     nodes:
+       decision:
+         size: 'small'
+         temperature: 0.2
+       analyze:
+         size: 'large'
+         temperature: 0.5
+       generation:
+         size: 'large'
+         temperature: 0.8
+       response:
+         size: 'small'
+         temperature: 0.8
+
+     memory:
+       MAX_PROCESSED_IDS: 5000
    ```
 
 ## Character System
