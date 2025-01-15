@@ -1,0 +1,52 @@
+name: Build
+
+on: [push, pull_request]
+
+jobs:
+  build-agent-memory-viewer-backend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: agent-memory-viewer/backend
+    name: Run build
+    steps:
+      - name: Checkout 🛎️
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js 📦
+        uses: actions/setup-node@v2
+        with:
+          node-version: "20"
+
+      - name: Enable Corepack 📦
+        run: corepack enable
+
+      - name: Install dependencies 📦
+        run: yarn install
+
+      - name: Build project 🔧
+        run: yarn build
+
+  build-agent-memory-viewer-frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: agent-memory-viewer/frontend
+    name: Run build
+    steps:
+      - name: Checkout 🛎️
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js 📦
+        uses: actions/setup-node@v2
+        with:
+          node-version: "20"
+
+      - name: Enable Corepack 📦
+        run: corepack enable
+
+      - name: Install dependencies 📦
+        run: yarn install
+
+      - name: Build project 🔧
+        run: yarn build
