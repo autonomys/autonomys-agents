@@ -1,5 +1,5 @@
 import { join } from 'path';
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync, unlinkSync } from 'fs';
 import { createLogger } from '../../../utils/logger.js';
 
 const logger = createLogger('local-hash-storage');
@@ -35,5 +35,14 @@ export const getLocalHash = (): string | null => {
   } catch (error) {
     logger.error('Failed to read local hash:', error);
     return null;
+  }
+};
+
+export const deleteLocalHash = (): void => {
+  try {
+    unlinkSync(HASH_FILE);
+    logger.info('Local hash deleted');
+  } catch (error) {
+    logger.error('Failed to delete local hash:', error);
   }
 };

@@ -1,7 +1,7 @@
 import { config } from './config/index.js';
 import { createLogger } from './utils/logger.js';
 import { runWorkflow } from './agents/workflows/kol/workflow.js';
-
+import { deleteLocalHash } from './agents/tools/utils/localHashStorage.js';
 const logger = createLogger('app');
 
 // Get character name from command line args
@@ -25,6 +25,7 @@ const startWorkflowPolling = async () => {
 
 const main = async () => {
   try {
+    deleteLocalHash();
     await startWorkflowPolling();
     setInterval(startWorkflowPolling, config.twitterConfig.RESPONSE_INTERVAL_MS);
 
