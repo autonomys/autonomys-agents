@@ -31,8 +31,11 @@
         "@langchain/ollama": "^0.1.4",
         "@langchain/openai": "0.3.16",
         "agent-twitter-client": "0.0.18",
+        "better-sqlite3": "^11.8.0",
         "dotenv": "^16.3.1",
         "ethers": "^6.13.4",
+        "sqlite3": "^5.1.7",
+        "vectorlite": "^0.2.0",
         "winston": "^3.11.0",
         "zod": "^3.22.4",
         "zod-to-json-schema": "^3.24.1"
@@ -40,6 +43,7 @@
     "devDependencies": {
         "@eslint/js": "^9.18.0",
         "@tsconfig/node20": "^20.1.4",
+        "@types/better-sqlite3": "^7.6.12",
         "@types/jest": "^29.5.12",
         "@types/js-yaml": "^4.0.9",
         "@types/node": "22.10.0",
