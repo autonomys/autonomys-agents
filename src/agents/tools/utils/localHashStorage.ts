@@ -1,5 +1,5 @@
 import { join } from 'path';
-import { existsSync, mkdirSync, readFileSync, writeFileSync, unlinkSync } from 'fs';
+import { existsSync, mkdirSync, readFileSync, unlinkSync, writeFileSync } from 'fs';
 import { createLogger } from '../../../utils/logger.js';
 
 const logger = createLogger('local-hash-storage');
