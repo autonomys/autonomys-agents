@@ -150,6 +150,7 @@ export async function getAllDsn(
                     tweet_id: content.tweet?.id || null,
                     cid: record.cid,
                     created_at: record.created_at,
+                    timestamp: content.timestamp || null,
                     author_username: content.tweet?.username || content.tweet?.author_username || 
                         (content.type === 'posted' ? config.AGENT_USERNAME : null), 
                     tweet_content: content.tweet?.text || null,

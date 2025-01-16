@@ -7,7 +7,8 @@ import {
     Link, 
     Button, 
     HStack, 
-    Select
+    Select,
+    Tooltip,
 } from '@chakra-ui/react';
 import { useState, useEffect } from 'react';
 import { useDSNData } from '../api/client';
@@ -28,6 +29,7 @@ import { colors } from '../styles/theme/colors';
 import { useSearchParams } from 'react-router-dom';
 import SearchBar from './SearchBar';
 import StatusFilter from './StatusFilter';
+import { utcToLocalRelativeTime } from '../utils/timeUtils';
 
 function DSNViewer() {
     const [searchParams, setSearchParams] = useSearchParams();
@@ -95,9 +97,25 @@ function DSNViewer() {
                         >
                             <Card {...cardStyles.baseStyle}>
                                 <CardBody {...cardStyles.bodyStyle}>
-                                    <Text {...textStyles.heading}>
-                                        Tweet by @{item.author_username}
-                                    </Text>
+                                    <HStack justify="space-between" mb={2}>
+                                        <Text {...textStyles.heading}>
+                                            Tweet by @{item.author_username}
+                                        </Text>
+                                        <Tooltip 
+                                            label={new Date(item.timestamp).toLocaleString()} 
+                                            placement="top"
+                                        >
+                                            <Text 
+                                                color="gray.500" 
+                                                fontSize="s" 
+                                                fontStyle="italic"
+                                                _hover={{ color: 'gray.600' }}
+                                                cursor="help"
+                                            >
+                                                {utcToLocalRelativeTime(item.timestamp)}
+                                            </Text>
+                                        </Tooltip>
+                                    </HStack>
                                     <Text {...textStyles.value} whiteSpace="pre-wrap" mb={4}>
                                         {item.tweet_content}
                                     </Text>

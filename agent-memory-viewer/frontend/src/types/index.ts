@@ -133,6 +133,7 @@ export interface DSNData {
     tweet_id: string
     cid: string
     created_at: string
+    timestamp: string
     author_username: string
     tweet_content: string
     response_content: string
