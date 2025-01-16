@@ -226,7 +226,7 @@ To use this feature:
    ```
 3. Provide your Taurus EVM wallet details (PRIVATE_KEY) and Agent Memory Contract Address (CONTRACT_ADDRESS) in .env`
 4. Make sure your Taurus EVM wallet has funds. A faucet can be found at https://subspacefaucet.com/
-5. Provide encryption password in `.env` (optional)
+5. Provide encryption password in `.env` (optional, leave empty to not encrypt the agent memories)
 
 ## Workflows
 
