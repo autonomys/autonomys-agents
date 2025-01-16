@@ -224,8 +224,9 @@ To use this feature:
    autodrive:
      upload: true
    ```
-3. Provide your Taurus EVM wallet details and Agent Memory Contract Address in `config.yaml`
-4. Provide encryption password in `config.yaml` (optional)
+3. Provide your Taurus EVM wallet details (PRIVATE_KEY) and Agent Memory Contract Address (CONTRACT_ADDRESS) in .env`
+4. Make sure your Taurus EVM wallet has funds. A faucet can be found at https://subspacefaucet.com/
+5. Provide encryption password in `.env` (optional)
 
 ## Workflows
 
