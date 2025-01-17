@@ -8,13 +8,6 @@ import { existsSync } from "fs";
 import { mkdirSync } from "fs";
 
 const logger = createLogger('vector-database');
-const DATA_DIR = join(process.cwd(), 'data', 'vector-db');
-const DEFAULT_INDEX_FILE = 'index_file.bin';
-const DEFAULT_DB_FILE = 'vector_store.db';
-
-if (!existsSync(DATA_DIR)) {
-  mkdirSync(DATA_DIR, { recursive: true });
-}
 
 export class VectorDB {
     private db!: Database.Database;
@@ -23,15 +16,26 @@ export class VectorDB {
     private readonly indexFilePath: string;
     private readonly dbFilePath: string;
     private maxElements: number;
+    private static readonly DEFAULT_INDEX_FILE = 'index_file.bin';
+    private static readonly DEFAULT_DB_FILE = 'vector_store.db';
+    private static readonly DEFAULT_DATA_DIR = join(process.cwd(), 'data', 'vector-db');
 
     constructor(
-        indexFilePath: string = DEFAULT_INDEX_FILE, 
-        dbFilePath: string = DEFAULT_DB_FILE
+        dataDir?: string,
+        indexFilePath: string = VectorDB.DEFAULT_INDEX_FILE, 
+        dbFilePath: string = VectorDB.DEFAULT_DB_FILE,
+        maxElements: number = 100000
     ) {
-        this.indexFilePath = join(DATA_DIR, indexFilePath);
-        this.dbFilePath = join(DATA_DIR, dbFilePath);
+        const targetDir = dataDir ? join(process.cwd(), dataDir) : VectorDB.DEFAULT_DATA_DIR;
+        
+        if (!existsSync(targetDir)) {
+            mkdirSync(targetDir, { recursive: true });
+        }
+
+        this.indexFilePath = join(targetDir, indexFilePath);
+        this.dbFilePath = join(targetDir, dbFilePath);
         this.nextRowId = 1;
-        this.maxElements = 100000;
+        this.maxElements = maxElements;
         this.openai = new OpenAI({
             apiKey: config.llmConfig.OPENAI_API_KEY,
         });
@@ -99,7 +103,7 @@ export class VectorDB {
                     this.db.exec(`DELETE FROM embeddings_index WHERE rowid = ${oldestId}`);
                     this.db.exec(`DELETE FROM content_store WHERE rowid = ${oldestId}`);
                 } catch (deleteError) {
-                    console.error("Error during delete:", deleteError);
+                    logger.error("Error during delete:", deleteError);
                     throw deleteError;
                 }
                 
@@ -130,7 +134,7 @@ export class VectorDB {
             this.nextRowId++;
             this.db.exec('COMMIT');
         } catch (error) {
-            console.error("Error during insert:", error);
+            logger.error("Error during insert:", error);
             this.db.exec('ROLLBACK');
             throw error;
         }
