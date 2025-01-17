@@ -4,8 +4,7 @@ import { OpenAI } from 'openai';
 import { config } from '../config/index.js';
 import { createLogger } from '../utils/logger.js';
 import { join } from 'path';
-import { existsSync } from 'fs';
-import { mkdirSync } from 'fs';
+import { existsSync, mkdirSync } from 'fs';
 
 const logger = createLogger('vector-database');
 
