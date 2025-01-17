@@ -20,7 +20,8 @@
         "lint": "eslint \"src/**/*.{js,ts}\"",
         "lint:fix": "eslint \"src/**/*.{js,ts}\" --fix",
         "lint:characters": "eslint \"src/agents/workflows/kol/characters/*.ts\"",
-        "lint:characters:fix": "eslint \"src/agents/workflows/kol/characters/*.ts\" --fix"
+        "lint:characters:fix": "eslint \"src/agents/workflows/kol/characters/*.ts\" --fix",
+        "resurrect": "tsx src/cli/resurrect.ts"
     },
     "dependencies": {
         "@autonomys/auto-dag-data": "1.2.1",
