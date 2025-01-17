@@ -1,17 +1,11 @@
 import { createLogger } from '../utils/logger.js';
 import { getLastMemoryCid } from '../agents/tools/utils/agentMemoryContract.js';
 import { download } from '../agents/tools/utils/dsnDownload.js';
-import { writeFileSync, readFileSync, existsSync } from 'fs';
+import { existsSync, readFileSync, writeFileSync } from 'fs';
 import { join } from 'path';
 
 const logger = createLogger('memory-resurrector');
 const STATE_FILE = join(process.cwd(), 'memories', 'last-processed-cid.json');
-
-interface Memory {
-  cid: string;
-  previousCid: string | null;
-  content: any;
-}
 
 class MemoryResurrector {
   private failedCids: Set<string> = new Set();

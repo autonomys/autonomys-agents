@@ -5,7 +5,14 @@ import { withRetry } from './retry.js';
 
 const logger = createLogger('dsn-download');
 
-export async function download(cid: string): Promise<any> {
+interface BaseMemory {
+  previousCid?: string;
+  timestamp?: string;
+  agentVersion?: string;
+  [key: string]: unknown;
+}
+
+export async function download(cid: string): Promise<BaseMemory> {
   return withRetry(
     async () => {
       const api = createAutoDriveApi({

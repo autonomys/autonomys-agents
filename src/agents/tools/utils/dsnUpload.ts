@@ -1,6 +1,6 @@
 import { createLogger } from '../../../utils/logger.js';
 import { hexlify } from 'ethers';
-import { createAutoDriveApi, uploadFile, UploadFileOptions } from '@autonomys/auto-drive';
+import { createAutoDriveApi, uploadFile } from '@autonomys/auto-drive';
 import { blake3HashFromCid, stringToCid } from '@autonomys/auto-dag-data';
 import { agentVersion, config } from '../../../config/index.js';
 import { signMessage, wallet } from './agentWallet.js';
@@ -8,11 +8,11 @@ import { getLastMemoryCid, setLastMemoryHash } from './agentMemoryContract.js';
 import { withRetry } from './retry.js';
 
 const logger = createLogger('dsn-upload-tool');
-const dsnApi = createAutoDriveApi({ apiKey: config.autoDriveConfig.AUTO_DRIVE_API_KEY! });
+const dsnApi = createAutoDriveApi({ apiKey: config.autoDriveConfig.AUTO_DRIVE_API_KEY || '' });
 
 let currentNonce = await wallet.getNonce();
 
-// Helper function for file upload
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const uploadFileToDsn = async (file: any, options: any) =>
   withRetry(() => uploadFile(dsnApi, file, options), { operationName: 'Dsn file upload' });
 
