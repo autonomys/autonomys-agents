@@ -10,7 +10,7 @@ twitter:
   POST_INTERVAL_MINUTES: 90
   POST_TWEETS: false
 
-autodrive:
+auto_drive:
   upload: false
 
 llm:
