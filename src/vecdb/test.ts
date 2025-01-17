@@ -9,11 +9,9 @@ async function runTests() {
         logger.info('Test 1: Inserting sample documents...');
         await vectorDB.insert(
             "The quick brown fox jumps over the lazy dog",
-            { type: "sample", category: "pangram" }
         );
         await vectorDB.insert(
             "Machine learning is a subset of artificial intelligence",
-            { type: "sample", category: "technology" }
         );
         // Test 2: Search for similar documents
         logger.info('Test 2: Searching for AI-related content...');

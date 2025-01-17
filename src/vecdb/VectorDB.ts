@@ -22,6 +22,7 @@ export class VectorDB {
     private nextRowId!: number;
     private readonly indexFilePath: string;
     private readonly dbFilePath: string;
+    private maxElements: number;
 
     constructor(
         indexFilePath: string = DEFAULT_INDEX_FILE, 
@@ -30,6 +31,7 @@ export class VectorDB {
         this.indexFilePath = join(DATA_DIR, indexFilePath);
         this.dbFilePath = join(DATA_DIR, dbFilePath);
         this.nextRowId = 1;
+        this.maxElements = 100000;
         this.openai = new OpenAI({
             apiKey: config.llmConfig.OPENAI_API_KEY,
         });
@@ -58,7 +60,7 @@ export class VectorDB {
         this.db.exec(`
             CREATE VIRTUAL TABLE IF NOT EXISTS embeddings_index USING vectorlite(
                 embedding_vector float32[1536], 
-                hnsw(max_elements=100000),
+                hnsw(max_elements=${this.maxElements}),
                 '${this.indexFilePath}'
             );
             
@@ -82,11 +84,29 @@ export class VectorDB {
         }
     }
 
-    async insert(content: string, metadata: any = {}): Promise<boolean> {
+    async insert(content: string): Promise<boolean> {
         const embedding = await this.getEmbedding(content);
         
         this.db.exec('BEGIN');
         try {
+            if (this.nextRowId > this.maxElements) {
+                const oldestRowId = this.db.prepare(`
+                    SELECT MIN(rowid) as min_id FROM content_store
+                `).get() as { min_id: number };
+                const oldestId = Number(oldestRowId.min_id);
+
+                try {
+                    this.db.exec(`DELETE FROM embeddings_index WHERE rowid = ${oldestId}`);
+                    this.db.exec(`DELETE FROM content_store WHERE rowid = ${oldestId}`);
+                } catch (deleteError) {
+                    console.error("Error during delete:", deleteError);
+                    throw deleteError;
+                }
+                
+                this.nextRowId = oldestId;
+            }
+
+            const currentRowId = Number(this.nextRowId);
             const vectorStmt = this.db.prepare(`
                 INSERT INTO embeddings_index (rowid, embedding_vector) 
                 VALUES (?, ?)
@@ -98,15 +118,19 @@ export class VectorDB {
             `);
             
             vectorStmt.run(
-                this.nextRowId,
+                currentRowId,
                 Buffer.from(new Float32Array(embedding).buffer)
             );
             
-            contentStmt.run(this.nextRowId, content);
+            contentStmt.run(
+                currentRowId,
+                content
+            );
             
             this.nextRowId++;
             this.db.exec('COMMIT');
         } catch (error) {
+            console.error("Error during insert:", error);
             this.db.exec('ROLLBACK');
             throw error;
         }
