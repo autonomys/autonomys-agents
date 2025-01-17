@@ -4,16 +4,18 @@ import { OpenAI } from "openai";
 import { config } from "../config/index.js";
 import { createLogger } from "../utils/logger.js";
 
-const logger = createLogger('vecdb');
+const logger = createLogger('vector-database');
 
 export class VectorDB {
     private db!: Database.Database;
     private openai!: OpenAI;
     private nextRowId!: number;
     private readonly indexFilePath: string;
+    private readonly dbFilePath: string;
 
-    constructor(indexFilePath: string = "index_file.bin") {
+    constructor(indexFilePath: string = "index_file.bin", dbFilePath: string = "vector_store.db") {
         this.indexFilePath = indexFilePath;
+        this.dbFilePath = dbFilePath;
         this.nextRowId = 1;
         this.openai = new OpenAI({
             apiKey: config.llmConfig.OPENAI_API_KEY,
@@ -26,17 +28,23 @@ export class VectorDB {
         const extensionPath = vectorlite.vectorlitePath();
         logger.info("Vectorlite extension path:", extensionPath);
 
-        this.db = new Database(":memory:");
+        this.db = new Database(this.dbFilePath);
         this.db.loadExtension(extensionPath);
         logger.info("Vectorlite loaded successfully!");
 
         this.createTables();
+        
+        const maxRowIdResult = this.db.prepare(`
+            SELECT MAX(rowid) as maxId FROM content_store
+        `).get() as { maxId: number | null };
+        this.nextRowId = (maxRowIdResult?.maxId || 0) + 1;
+        logger.info(`Initialized with next rowid: ${this.nextRowId}`);
     }
 
     private createTables(): void {
         this.db.exec(`
-            CREATE VIRTUAL TABLE IF NOT EXISTS my_table USING vectorlite(
-                my_embedding float32[1536], 
+            CREATE VIRTUAL TABLE IF NOT EXISTS embeddings_index USING vectorlite(
+                embedding_vector float32[1536], 
                 hnsw(max_elements=100000),
                 '${this.indexFilePath}'
             );
@@ -67,7 +75,7 @@ export class VectorDB {
         this.db.exec('BEGIN');
         try {
             const vectorStmt = this.db.prepare(`
-                INSERT INTO my_table (rowid, my_embedding) 
+                INSERT INTO embeddings_index (rowid, embedding_vector) 
                 VALUES (?, ?)
             `);
             
@@ -103,8 +111,8 @@ export class VectorDB {
             SELECT v.rowid, v.distance, c.content
             FROM (
                 SELECT rowid, distance 
-                FROM my_table 
-                WHERE knn_search(my_embedding, knn_param(?, ${integerLimit}))
+                FROM embeddings_index 
+                WHERE knn_search(embedding_vector, knn_param(?, ${integerLimit}))
             ) v
             JOIN content_store c ON v.rowid = c.rowid
         `);
