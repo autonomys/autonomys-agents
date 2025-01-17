@@ -14,6 +14,7 @@
         "extract-kol-dsn-schemas": "tsx src/agents/workflows/kol/cli/extractDsnSchemas.ts",
         "copy-characters": "cp -r config/characters dist/config/",
         "test": "jest",
+        "test:vecdb": "tsx src/vecdb/test.ts",
         "test:watch": "jest --watch",
         "test:coverage": "jest --coverage",
         "lint": "eslint \"src/**/*.{js,ts}\"",

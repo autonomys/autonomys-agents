@@ -3,8 +3,18 @@ import vectorlite from "vectorlite";
 import { OpenAI } from "openai";
 import { config } from "../config/index.js";
 import { createLogger } from "../utils/logger.js";
+import { join } from 'path';
+import { existsSync } from "fs";
+import { mkdirSync } from "fs";
 
 const logger = createLogger('vector-database');
+const DATA_DIR = join(process.cwd(), 'data', 'vector-db');
+const DEFAULT_INDEX_FILE = 'index_file.bin';
+const DEFAULT_DB_FILE = 'vector_store.db';
+
+if (!existsSync(DATA_DIR)) {
+  mkdirSync(DATA_DIR, { recursive: true });
+}
 
 export class VectorDB {
     private db!: Database.Database;
@@ -13,9 +23,12 @@ export class VectorDB {
     private readonly indexFilePath: string;
     private readonly dbFilePath: string;
 
-    constructor(indexFilePath: string = "index_file.bin", dbFilePath: string = "vector_store.db") {
-        this.indexFilePath = indexFilePath;
-        this.dbFilePath = dbFilePath;
+    constructor(
+        indexFilePath: string = DEFAULT_INDEX_FILE, 
+        dbFilePath: string = DEFAULT_DB_FILE
+    ) {
+        this.indexFilePath = join(DATA_DIR, indexFilePath);
+        this.dbFilePath = join(DATA_DIR, dbFilePath);
         this.nextRowId = 1;
         this.openai = new OpenAI({
             apiKey: config.llmConfig.OPENAI_API_KEY,
