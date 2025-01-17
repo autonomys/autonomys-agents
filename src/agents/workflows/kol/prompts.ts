@@ -8,7 +8,7 @@ import {
 } from './schemas.js';
 import { ChatPromptTemplate, PromptTemplate } from '@langchain/core/prompts';
 import { SystemMessage } from '@langchain/core/messages';
-import { wallet } from '../../tools/utils/agentWallet.js';
+import { wallet } from '../../tools/utils/blockchain/agentWallet.js';
 import { loadCharacter } from '../../../config/characters.js';
 
 const followFormatInstructions = `

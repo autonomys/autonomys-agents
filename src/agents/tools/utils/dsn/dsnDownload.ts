@@ -1,6 +1,6 @@
 import { createAutoDriveApi, downloadFile } from '@autonomys/auto-drive';
-import { config } from '../../../config/index.js';
-import { createLogger } from '../../../utils/logger.js';
+import { config } from '../../../../config/index.js';
+import { createLogger } from '../../../../utils/logger.js';
 import { withRetry } from './retry.js';
 
 const logger = createLogger('dsn-download');

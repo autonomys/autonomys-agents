@@ -1,10 +1,10 @@
 import { ethers } from 'ethers';
-import { MEMORY_ABI } from './abi/memory.js';
-import { config } from '../../../config/index.js';
+import { MEMORY_ABI } from '../abi/memory.js';
+import { config } from '../../../../config/index.js';
 import { wallet } from './agentWallet.js';
 import { cidFromBlakeHash, cidToString } from '@autonomys/auto-dag-data';
-import { getLocalHash, saveHashLocally } from './localHashStorage.js';
-import { createLogger } from '../../../utils/logger.js';
+import { getLocalHash, saveHashLocally } from '../localHashStorage.js';
+import { createLogger } from '../../../../utils/logger.js';
 
 const logger = createLogger('agent-memory-contract');
 const CONTRACT_ADDRESS = config.blockchainConfig.CONTRACT_ADDRESS as `0x${string}`;
