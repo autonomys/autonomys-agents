@@ -56,7 +56,7 @@ export class VectorDB {
     const maxRowIdResult = this.db
       .prepare(
         `
-            SELECT MAX(rowid) as maxId FROM content_store
+        SELECT MAX(rowid) as maxId FROM content_store
         `,
       )
       .get() as { maxId: number | null };
@@ -93,6 +93,10 @@ export class VectorDB {
   }
 
   async insert(content: string): Promise<boolean> {
+    if (!content || content.trim().length === 0) {
+      throw new Error('Content cannot be empty');
+    }
+
     const embedding = await this.getEmbedding(content);
 
     this.db.exec('BEGIN');
@@ -148,6 +152,10 @@ export class VectorDB {
     content: string,
     limit: number = 5,
   ): Promise<Array<{ rowid: number; distance: number; content: string }>> {
+    if (!content || content.trim().length === 0) {
+      throw new Error('Search query cannot be empty');
+    }
+
     const embedding = await this.getEmbedding(content);
 
     const integerLimit = parseInt(limit.toString(), 10);
