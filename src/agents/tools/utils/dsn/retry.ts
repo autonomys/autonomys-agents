@@ -2,7 +2,7 @@ import { createLogger } from '../../../../utils/logger.js';
 
 const logger = createLogger('retry-utility');
 
-export async function withRetry<T>(
+export const withRetry = async <T>(
   operation: () => Promise<T>,
   {
     maxRetries = 5,
@@ -10,7 +10,7 @@ export async function withRetry<T>(
     operationName = 'Operation',
     shouldRetry = (_error: unknown): boolean => true,
   } = {},
-): Promise<T> {
+): Promise<T> => {
   const attempt = async (retriesLeft: number, currentDelay: number): Promise<T> => {
     try {
       return await operation();
@@ -33,4 +33,4 @@ export async function withRetry<T>(
   };
 
   return attempt(maxRetries, initialDelayMs);
-}
+};

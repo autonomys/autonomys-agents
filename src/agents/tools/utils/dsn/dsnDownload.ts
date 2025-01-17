@@ -12,7 +12,7 @@ interface BaseMemory {
   [key: string]: unknown;
 }
 
-export async function download(cid: string): Promise<BaseMemory> {
+export const download = async (cid: string): Promise<BaseMemory> => {
   return withRetry(
     async () => {
       const api = createAutoDriveApi({
@@ -47,4 +47,4 @@ export async function download(cid: string): Promise<BaseMemory> {
       },
     },
   );
-}
+};
