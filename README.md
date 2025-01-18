@@ -153,13 +153,26 @@ engagement_criteria:
 
 Run the agent with a specific character:
 
+You can run the agent with a specific character by providing the character name as an argument.
+
 ```bash
 # Use default character (configured in config.yaml)
-yarn dev  # for development with auto-reload
+yarn dev  # for development with auto-reload - select from list of characters
 # or
-yarn start  # for production build and run
+yarn start  # for production build and run - select from list of characters
+
+
+# Use a specific character (omit .yaml extension)
+yarn dev my-agent  # for development with auto-reload
+# or
+yarn start my-agent  # for production build and run
+
+# Examples:
+# If your character file is named 'techie.yaml':
+yarn dev techie
+# If your character file is named 'my-agent.yaml':
+yarn dev my-agent
 ```
-Then, choose a character from the list of available characters.
 
 Note: When specifying a character file, omit the `.yaml` extension. The system will automatically look for the YAML file in the `config/characters/` directory.
 
@@ -236,8 +249,11 @@ The KOL workflow enables agents to:
 Start the agent with:
 
 ```bash
-# Use example character
+# Use example character or select from list of characters
 yarn dev
+
+# Use specific character
+yarn dev my-agent
 ```
 
 Monitor the agent's activity in the console and configured log files.

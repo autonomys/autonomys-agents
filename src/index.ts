@@ -15,9 +15,15 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
+const characterId = process.argv[2];
+if (!characterId) {
+  logger.error('Please provide a character name as an argument (e.g., yarn dev argumint)');
+  process.exit(1);
+}
+
 const startWorkflowPolling = async () => {
   try {
-    const character = await onboarding();
+    const character = await onboarding(characterId);
     const _result = await runWorkflow(character.character);
     logger.info('Workflow execution completed successfully for character:', character.character);
   } catch (error) {
@@ -26,6 +32,7 @@ const startWorkflowPolling = async () => {
       process.exit(0);
     }
     logger.error('Error running workflow:', error);
+    process.exit(1);
   }
 };
 

@@ -8,8 +8,17 @@ interface UserAnswers {
   character: string;
 }
 
-export const onboarding = async (): Promise<UserAnswers> => {
+export const onboarding = async (preselectedCharacter?: string): Promise<UserAnswers> => {
   const characters = await listAvailableCharacters();
+
+  if (preselectedCharacter) {
+    const character = characters.find(char => char.id === preselectedCharacter);
+    if (character) {
+      logger.info(`Using preselected character: ${character.id}`);
+      return { character: character.id };
+    }
+    throw new Error(`Character "${preselectedCharacter}" not found`);
+  }
 
   const answers: UserAnswers = await inquirer.prompt([
     {
