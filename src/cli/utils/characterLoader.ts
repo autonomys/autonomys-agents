@@ -12,8 +12,7 @@ interface CharacterInfo {
 export const listAvailableCharacters = async (): Promise<CharacterInfo[]> => {
   const charactersPath = join(process.cwd(), 'config', 'characters');
   const files = await readdir(charactersPath);
-  const characterFiles = files
-    .filter(file => file.endsWith('.yaml'))
+  const characterFiles = files.filter(file => file.endsWith('.yaml'));
 
   const characters = await Promise.all(
     characterFiles.map(async file => {

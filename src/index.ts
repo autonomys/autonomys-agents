@@ -19,7 +19,7 @@ const startWorkflowPolling = async () => {
   try {
     const character = await onboarding();
     const _result = await runWorkflow(character.character);
-    logger.info('Workflow execution completed successfully');
+    logger.info('Workflow execution completed successfully for character:', character.character);
   } catch (error) {
     if (error && typeof error === 'object' && 'name' in error && error.name === 'ExitPromptError') {
       logger.info('Process terminated by user');
