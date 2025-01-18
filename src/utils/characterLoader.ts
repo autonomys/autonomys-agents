@@ -2,18 +2,20 @@ import { readdir } from 'fs/promises';
 import { join } from 'path';
 import { loadCharacter } from '../config/characters.js';
 
-export interface CharacterInfo {
+interface CharacterInfo {
   id: string;
   name: string;
   description: string;
   username: string;
 }
 
-export async function listAvailableCharacters(): Promise<CharacterInfo[]> {
+export const listAvailableCharacters = async (): Promise<CharacterInfo[]> => {
   const charactersPath = join(process.cwd(), 'config', 'characters');
   const files = await readdir(charactersPath);
-  const characterFiles = files.filter(file => file.endsWith('.yaml'));
-  
+  const characterFiles = files
+    .filter(file => file.endsWith('.yaml'))
+    .filter(file => !file.includes('.example.'));
+
   const characters = await Promise.all(
     characterFiles.map(async file => {
       const id = file.replace(/\.yaml$/, '');
@@ -22,10 +24,9 @@ export async function listAvailableCharacters(): Promise<CharacterInfo[]> {
         id,
         name: character.name,
         description: character.description,
-        username: character.username
+        username: character.username,
       };
-    })
+    }),
   );
-
   return characters;
-} 
+};
