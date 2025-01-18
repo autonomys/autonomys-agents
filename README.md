@@ -102,7 +102,7 @@ The framework uses a YAML-based character system that allows you to create and r
 2. Create new characters by copying the example:
    ```bash
    # Create a new character
-   cp config/characters/joy_builder.yaml config/characters/my-character.yaml
+   cp config/characters/character.example.yaml config/characters/my-character.yaml
    ```
 
 ### Character Configuration
