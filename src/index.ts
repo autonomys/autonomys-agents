@@ -16,10 +16,6 @@ process.on('SIGTERM', () => {
 });
 
 const characterId = process.argv[2];
-if (!characterId) {
-  logger.error('Please provide a character name as an argument (e.g., yarn dev argumint)');
-  process.exit(1);
-}
 
 const startWorkflowPolling = async () => {
   try {
