@@ -39,9 +39,7 @@ interface RawCharacterConfig {
 }
 
 export const loadCharacter = (characterId: string): Character => {
-  const cleanCharacterId = characterId.replace(/\.(ya?ml)$/, '').toLowerCase();
-  const configPath = join(process.cwd(), 'config', 'characters', `${cleanCharacterId}.yaml`);
-
+  const configPath = join(process.cwd(), 'config', `${characterId}`, `${characterId}.yaml`);
   try {
     const yamlContent = readFileSync(configPath, 'utf8');
     const rawConfig = load(yamlContent) as RawCharacterConfig;
@@ -62,6 +60,6 @@ export const loadCharacter = (characterId: string): Character => {
     };
     //eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (error: any) {
-    throw new Error(`Failed to load character config for '${cleanCharacterId}': ${error.message}`);
+    throw new Error(`Failed to load character config for '${characterId}': ${error.message}`);
   }
 };

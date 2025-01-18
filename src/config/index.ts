@@ -8,7 +8,7 @@ import { llmDefaultConfig } from './llm.js';
 import { twitterDefaultConfig } from './twitter.js';
 import { memoryDefaultConfig } from './memory.js';
 import yaml from 'yaml';
-import { readFileSync } from 'fs';
+import { readFileSync, existsSync } from 'fs';
 import { loadCharacter } from './characters.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -21,8 +21,17 @@ try {
 } catch (error) {
   console.error('Error creating cookies directory:', error);
 }
+const characterId = process.argv[2];
 
-dotenv.config({ path: path.resolve(workspaceRoot, '.env') });
+// Load character-specific .env if it exists, otherwise fall back to root .env
+const characterEnvPath = characterId
+  ? path.resolve(workspaceRoot, 'config', characterId, '.env')
+  : null;
+if (characterEnvPath && existsSync(characterEnvPath)) {
+  dotenv.config({ path: characterEnvPath });
+} else {
+  dotenv.config({ path: path.resolve(workspaceRoot, '.env') });
+}
 
 const formatZodError = (error: z.ZodError) => {
   const missingVars = error.issues.map(issue => {
@@ -34,12 +43,20 @@ const formatZodError = (error: z.ZodError) => {
     \nPlease check your .env file and config.yaml file and ensure all required variables are set correctly.`;
 };
 
-const characterId = process.argv[2];
-
 export const agentVersion = process.env.AGENT_VERSION || '2.0.0';
 
 const yamlConfig = (() => {
   try {
+    // Try to load character-specific config first
+    if (characterId) {
+      const characterConfigPath = path.join(workspaceRoot, 'config', characterId, 'config.yaml');
+      if (existsSync(characterConfigPath)) {
+        const fileContents = readFileSync(characterConfigPath, 'utf8');
+        return yaml.parse(fileContents);
+      }
+    }
+
+    // Fall back to root config.yaml
     const configPath = path.join(workspaceRoot, 'config', 'config.yaml');
     const fileContents = readFileSync(configPath, 'utf8');
     return yaml.parse(fileContents);
