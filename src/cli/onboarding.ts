@@ -1,6 +1,6 @@
 import inquirer from 'inquirer';
 import { createLogger } from '../utils/logger.js';
-import { listAvailableCharacters } from '../utils/characterLoader.js';
+import { listAvailableCharacters } from './utils/characterLoader.js';
 
 const logger = createLogger('onboarding');
 

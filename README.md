@@ -158,18 +158,8 @@ Run the agent with a specific character:
 yarn dev  # for development with auto-reload
 # or
 yarn start  # for production build and run
-
-# Use a specific character (omit .yaml extension)
-yarn dev my-agent  # for development with auto-reload
-# or
-yarn start my-agent  # for production build and run
-
-# Examples:
-# If your character file is named 'techie.yaml':
-yarn dev techie
-# If your character file is named 'my-agent.yaml':
-yarn dev my-agent
 ```
+Then, choose a character from the list of available characters.
 
 Note: When specifying a character file, omit the `.yaml` extension. The system will automatically look for the YAML file in the `config/characters/` directory.
 
@@ -221,7 +211,7 @@ To use this feature:
 1. Configure your AUTO_DRIVE_API_KEY in `.env` (obtain from https://ai3.storage)
 2. Enable Auto Drive uploading in your `config.yaml`:
    ```yaml
-   autodrive:
+   auto_drive:
      upload: true
    ```
 3. Provide your Taurus EVM wallet details (PRIVATE_KEY) and Agent Memory Contract Address (CONTRACT_ADDRESS) in .env`
@@ -246,11 +236,8 @@ The KOL workflow enables agents to:
 Start the agent with:
 
 ```bash
-# Use default character
+# Use example character
 yarn dev
-
-# Use a specific character (without .ts extension)
-yarn dev my-agent
 ```
 
 Monitor the agent's activity in the console and configured log files.
