@@ -233,11 +233,11 @@ To use this feature:
 
 ## Workflows
 
-### KOL (Key Opinion Leader)
+### Twitter
 
-The KOL workflow enables agents to:
+The Twitter workflow enables agents to:
 
-- Monitor social media for relevant discussions
+- Monitor X (formerly Twitter) for relevant discussions
 - Analyze trends and conversations
 - Engage meaningfully with other users
 - Generate original content

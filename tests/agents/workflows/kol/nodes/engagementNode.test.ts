@@ -1,5 +1,5 @@
-import { createEngagementNode } from '../../../../../src/agents/workflows/kol/nodes/engagementNode';
-import { WorkflowConfig } from '../../../../../src/agents/workflows/kol/types';
+import { createEngagementNode } from '../../../../../src/agents/workflows/twitter/nodes/engagementNode';
+import { WorkflowConfig } from '../../../../../src/agents/workflows/twitter/types';
 import { createMockState, createMockTweet } from '../__fixtures__/mockState';
 
 describe('Engagement Node', () => {

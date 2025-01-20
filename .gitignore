@@ -2,10 +2,9 @@ config/**/*.yaml
 !config/config.example.yaml
 !config/characters/character.example.yaml
 .cookies/
-dsn-kol-schemas.json
 memories/
 !src/config/
-dsn-kol-schemas.json
+dsn-twitter-schemas.json
 
 # Python bytecode
 __pycache__/

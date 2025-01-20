@@ -91,7 +91,6 @@ export default [
   
   // Additional configurations for specific file patterns
   {
-    files: ["src/agents/workflows/kol/characters/*.ts"],
     rules: {
       // Character file specific validations
       "@typescript-eslint/naming-convention": [
