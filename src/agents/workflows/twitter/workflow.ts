@@ -3,7 +3,7 @@ import { BaseMessage } from '@langchain/core/messages';
 import { parseMessageContent } from '../utils.js';
 import { config } from '../../../config/index.js';
 import { createLogger } from '../../../utils/logger.js';
-import { EngagementDecision, WorkflowConfig } from './types.js';
+import { EngagementDecision, TwitterWorkflowConfig } from './types.js';
 import { createTools } from './tools.js';
 import { ToolNode } from '@langchain/langgraph/prebuilt';
 import { createTwitterApi } from '../../../services/twitter/client.js';
@@ -68,7 +68,7 @@ export const State = Annotation.Root({
   }),
 });
 
-const createWorkflowConfig = async (characterFile: string): Promise<WorkflowConfig> => {
+const createWorkflowConfig = async (characterFile: string): Promise<TwitterWorkflowConfig> => {
   const { USERNAME, PASSWORD, COOKIES_PATH } = config.twitterConfig;
   const { nodes } = config.llmConfig;
 
@@ -91,10 +91,10 @@ const createWorkflowConfig = async (characterFile: string): Promise<WorkflowConf
 };
 
 export const getWorkflowConfig = (() => {
-  let workflowConfigInstance: WorkflowConfig | null = null;
+  let workflowConfigInstance: TwitterWorkflowConfig | null = null;
   let currentCharacterFile: string | null = null;
 
-  return async (characterFile: string): Promise<WorkflowConfig> => {
+  return async (characterFile: string): Promise<TwitterWorkflowConfig> => {
     if (!workflowConfigInstance || currentCharacterFile !== characterFile) {
       currentCharacterFile = characterFile;
       workflowConfigInstance = await createWorkflowConfig(characterFile);

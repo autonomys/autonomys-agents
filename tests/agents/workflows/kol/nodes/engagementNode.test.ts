@@ -1,9 +1,9 @@
 import { createEngagementNode } from '../../../../../src/agents/workflows/twitter/nodes/engagementNode';
-import { WorkflowConfig } from '../../../../../src/agents/workflows/twitter/types';
+import { TwitterWorkflowConfig } from '../../../../../src/agents/workflows/twitter/types';
 import { createMockState, createMockTweet } from '../__fixtures__/mockState';
 
 describe('Engagement Node', () => {
-  let mockWorkflowConfig: WorkflowConfig;
+  let mockWorkflowConfig: TwitterWorkflowConfig;
   let mockState: ReturnType<typeof createMockState>;
 
   beforeEach(() => {

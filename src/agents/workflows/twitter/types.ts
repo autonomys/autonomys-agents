@@ -7,12 +7,12 @@ import { ChatOllama } from '@langchain/ollama';
 import { dsnTweet, engagementSchema, responseSchema, skippedEngagementSchema } from './schemas.js';
 import { ChatPromptTemplate } from '@langchain/core/prompts';
 
-export enum DsnDataType {
+export enum TwitterDsnDataType {
   RESPONSE = 'response',
   SKIPPED_ENGAGEMENT = 'skipped',
   GENERATED_TWEET = 'posted',
 }
-export type WorkflowConfig = Readonly<{
+export type TwitterWorkflowConfig = Readonly<{
   twitterApi: TwitterApi;
   toolNode: ToolNode;
   llms: Readonly<{
@@ -36,18 +36,18 @@ export type EngagementDecision = {
 };
 
 export type DsnResponseData = {
-  type: DsnDataType.RESPONSE;
+  type: TwitterDsnDataType.RESPONSE;
   tweet: z.infer<typeof dsnTweet>;
   decision: z.infer<typeof engagementSchema>;
 } & z.infer<typeof responseSchema>;
 
 export type DsnSkippedEngagementData = {
-  type: DsnDataType.SKIPPED_ENGAGEMENT;
+  type: TwitterDsnDataType.SKIPPED_ENGAGEMENT;
   tweet: z.infer<typeof dsnTweet>;
 } & z.infer<typeof skippedEngagementSchema>;
 
 export type DsnGeneratedTweetData = {
-  type: DsnDataType.GENERATED_TWEET;
+  type: TwitterDsnDataType.GENERATED_TWEET;
   content: string;
   tweetId: string | null;
 };
