@@ -262,11 +262,18 @@ Monitor the agent's activity in the console and configured log files.
 
 To resurrect memories from the Autonomys Network, run the following command:
 
-```bash
-yarn resurrect -n <number of memories> -o <output directory>
+### Options
 
+- `output-directory`: (Optional) The directory where memories will be saved. Defaults to `./memories`
+- `-n, --number`: (Optional) Number of memories to fetch. If not specified, fetches all memories
+
+Examples:
+
+```bash
 yarn resurrect # will fetch all memories and save to memories/
-yarn resurrect -n 1000 -o memories/my-agent # will fetch 1000 memories and save to memories/my-agent
+yarn resurrect -n 1000 # will fetch 1000 memories and save to memories/
+yarn resurrect -n 1000 ./memories/my-agent # Resurrect all memories to a specific directory:
+
 ```
 
 ## Testing
