@@ -122,19 +122,19 @@ export class VectorDB {
       }
 
       const currentRowId = Number(this.nextRowId);
-      const vectorStmt = this.db.prepare(`
+      const vectorStatement = this.db.prepare(`
                 INSERT INTO embeddings_index (rowid, embedding_vector) 
                 VALUES (?, ?)
             `);
 
-      const contentStmt = this.db.prepare(`
+      const contentStatement = this.db.prepare(`
                 INSERT INTO content_store (rowid, content)
                 VALUES (?, ?)
             `);
 
-      vectorStmt.run(currentRowId, Buffer.from(new Float32Array(embedding).buffer));
+      vectorStatement.run(currentRowId, Buffer.from(new Float32Array(embedding).buffer));
 
-      contentStmt.run(currentRowId, content);
+      contentStatement.run(currentRowId, content);
 
       this.nextRowId++;
       this.db.exec('COMMIT');
@@ -160,7 +160,7 @@ export class VectorDB {
     const integerLimit = parseInt(limit.toString(), 10);
     logger.info(`Searching with limit: ${integerLimit}`);
 
-    const stmt = this.db.prepare(`
+    const statement = this.db.prepare(`
             SELECT v.rowid, v.distance, c.content
             FROM (
                 SELECT rowid, distance 
@@ -170,7 +170,7 @@ export class VectorDB {
             JOIN content_store c ON v.rowid = c.rowid
         `);
 
-    return stmt.all(Buffer.from(new Float32Array(embedding).buffer)) as Array<{
+    return statement.all(Buffer.from(new Float32Array(embedding).buffer)) as Array<{
       rowid: number;
       distance: number;
       content: string;

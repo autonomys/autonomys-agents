@@ -1,5 +1,7 @@
 import { VectorDB } from './VectorDB.js';
 
-const memoryDB = new VectorDB('data/memory', 'my-index.bin', 'my-db.db', 100000);
+// Create VectorDB instances - Placeholder for now
+
+const memoryDB = new VectorDB('data/memory', 'memory-index.bin', 'memory-store.db', 100000);
 
 export { memoryDB };
