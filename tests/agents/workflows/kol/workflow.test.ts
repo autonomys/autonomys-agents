@@ -2,9 +2,9 @@ import {
   createWorkflow,
   getWorkflowConfig,
   State,
-} from '../../../../src/agents/workflows/kol/workflow';
-import { createNodes } from '../../../../src/agents/workflows/kol/nodes';
-import { WorkflowConfig } from '../../../../src/agents/workflows/kol/types';
+} from '../../../../src/agents/workflows/twitter/workflow';
+import { createNodes } from '../../../../src/agents/workflows/twitter/nodes';
+import { WorkflowConfig } from '../../../../src/agents/workflows/twitter/types';
 import { createMockState } from './__fixtures__/mockState';
 import { config } from '../../../../src/config';
 
@@ -27,7 +27,7 @@ jest.mock('../../../../src/services/llm/factory', () => ({
   },
 }));
 
-describe('KOL Workflow', () => {
+describe('Twitter Workflow', () => {
   let workflowConfig: WorkflowConfig;
 
   beforeEach(async () => {

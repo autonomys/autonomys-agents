@@ -54,7 +54,7 @@ jest.mock('../src/agents/tools/utils/dsnUpload.ts', () => ({
   currentNonce: 0
 }), { virtual: true }); 
 
-jest.mock('../src/agents/workflows/kol/prompts.ts', () => ({
+jest.mock('../src/agents/workflows/twitter/prompts.ts', () => ({
   loadCharacter: jest.fn().mockImplementation((characterFile) => Promise.resolve({
     name: `Test ${characterFile}`,
     username: 'test-user',
