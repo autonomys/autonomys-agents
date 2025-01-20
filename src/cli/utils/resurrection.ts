@@ -1,6 +1,6 @@
-import { createLogger } from '../utils/logger.js';
-import { getLastMemoryCid } from '../agents/tools/utils/blockchain/agentMemoryContract.js';
-import { download } from '../agents/tools/utils/dsn/dsnDownload.js';
+import { createLogger } from '../../utils/logger.js';
+import { getLastMemoryCid } from '../../agents/tools/utils/blockchain/agentMemoryContract.js';
+import { download } from '../../agents/tools/utils/dsn/dsnDownload.js';
 import { existsSync, readFileSync, writeFileSync } from 'fs';
 import { join } from 'path';
 
@@ -31,12 +31,14 @@ const saveLastProcessedCid = (cid: string): void => {
 
 const fetchMemoryChain = async (
   currentCid: string,
-  stopAtCid: string | null,
+  memoriesToFetch: number | null,
   outputDir: string,
   failedCids: Set<string> = new Set(),
   processedCount = 0,
 ): Promise<{ processedCount: number; failedCids: Set<string> }> => {
-  if (!currentCid || failedCids.has(currentCid) || currentCid === stopAtCid) {
+  if (!currentCid || 
+      failedCids.has(currentCid) || 
+      (memoriesToFetch !== null && processedCount >= memoriesToFetch)) {
     return { processedCount, failedCids };
   }
 
@@ -49,10 +51,10 @@ const fetchMemoryChain = async (
     processedCount++;
     logger.info(`Successfully fetched and saved memory ${currentCid}`);
 
-    if (content.previousCid && content.previousCid !== stopAtCid) {
+    if (content.previousCid) {
       return fetchMemoryChain(
         content.previousCid,
-        stopAtCid,
+        memoriesToFetch,
         outputDir,
         failedCids,
         processedCount,
@@ -68,6 +70,7 @@ const fetchMemoryChain = async (
 
 const downloadAllMemories = async (
   outputDir: string,
+  memoriesToFetch: number | null = null
 ): Promise<{ processed: number; failed: number }> => {
   const latestCid = await getLastMemoryCid();
   if (!latestCid) {
@@ -81,10 +84,12 @@ const downloadAllMemories = async (
     return { processed: 0, failed: 0 };
   }
 
-  logger.info(`Starting download from ${latestCid} to ${lastProcessedCid || 'genesis'}`);
+  logger.info(
+    `Starting download from ${latestCid}${memoriesToFetch ? ` (max ${memoriesToFetch} memories)` : ' to genesis'}`
+  );
   const { processedCount, failedCids } = await fetchMemoryChain(
     latestCid,
-    lastProcessedCid,
+    memoriesToFetch,
     outputDir,
   );
 
