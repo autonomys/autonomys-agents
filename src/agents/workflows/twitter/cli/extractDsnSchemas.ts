@@ -59,7 +59,7 @@ const main = () => {
     generated_tweet: extractDsnGeneratedTweetSchema(),
   };
 
-  const outputPath = join(process.cwd(), 'dsn-kol-schemas.json');
+  const outputPath = join(process.cwd(), 'dsn-twitter-schemas.json');
   writeFileSync(outputPath, JSON.stringify(schemas, null, 2));
   logger.info(`Schemas written to ${outputPath}`);
 };

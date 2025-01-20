@@ -11,15 +11,13 @@
         "format": "prettier --write \"src/**/*.ts\" \"tests/**/*.ts\"",
         "format:check": "prettier --check \"src/**/*.ts\" \"tests/**/*.ts\"",
         "example:twitter": "tsx examples/twitter.ts",
-        "extract-kol-dsn-schemas": "tsx src/agents/workflows/kol/cli/extractDsnSchemas.ts",
+        "extract-twitter-dsn-schemas": "tsx src/agents/workflows/twitter/cli/extractDsnSchemas.ts",
         "copy-characters": "cp -r config/characters dist/config/",
         "test": "jest",
         "test:watch": "jest --watch",
         "test:coverage": "jest --coverage",
         "lint": "eslint \"src/**/*.{js,ts}\"",
         "lint:fix": "eslint \"src/**/*.{js,ts}\" --fix",
-        "lint:characters": "eslint \"src/agents/workflows/kol/characters/*.ts\"",
-        "lint:characters:fix": "eslint \"src/agents/workflows/kol/characters/*.ts\" --fix",
         "resurrect": "tsx src/cli/resurrect.ts"
     },
     "dependencies": {
