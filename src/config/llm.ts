@@ -28,5 +28,9 @@ export const llmDefaultConfig = {
       size: LLMSize.SMALL,
       temperature: 0.8,
     } as LLMNodeConfiguration,
+    orchestrator: {
+      size: LLMSize.LARGE,
+      temperature: 0.2,
+    } as LLMNodeConfiguration,
   },
 };

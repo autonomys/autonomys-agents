@@ -46,6 +46,10 @@ const llmConfigSchema = z
         size: z.nativeEnum(LLMSize),
         temperature: z.number(),
       }),
+      orchestrator: z.object({
+        size: z.nativeEnum(LLMSize),
+        temperature: z.number(),
+      }),
     }),
     OPENAI_API_KEY: z.string(),
     ANTHROPIC_API_KEY: z.string(),
@@ -63,6 +67,9 @@ const llmConfigSchema = z
         ? data.configuration.large.provider
         : data.configuration.small.provider,
       data.nodes.response.size === LLMSize.LARGE
+        ? data.configuration.large.provider
+        : data.configuration.small.provider,
+      data.nodes.orchestrator.size === LLMSize.LARGE
         ? data.configuration.large.provider
         : data.configuration.small.provider,
     ]);
