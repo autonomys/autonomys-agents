@@ -36,9 +36,11 @@ const fetchMemoryChain = async (
   failedCids: Set<string> = new Set(),
   processedCount = 0,
 ): Promise<{ processedCount: number; failedCids: Set<string> }> => {
-  if (!currentCid || 
-      failedCids.has(currentCid) || 
-      (memoriesToFetch !== null && processedCount >= memoriesToFetch)) {
+  if (
+    !currentCid ||
+    failedCids.has(currentCid) ||
+    (memoriesToFetch !== null && processedCount >= memoriesToFetch)
+  ) {
     return { processedCount, failedCids };
   }
 
@@ -70,7 +72,7 @@ const fetchMemoryChain = async (
 
 const downloadAllMemories = async (
   outputDir: string,
-  memoriesToFetch: number | null = null
+  memoriesToFetch: number | null = null,
 ): Promise<{ processed: number; failed: number }> => {
   const latestCid = await getLastMemoryCid();
   if (!latestCid) {
@@ -85,7 +87,7 @@ const downloadAllMemories = async (
   }
 
   logger.info(
-    `Starting download from ${latestCid}${memoriesToFetch ? ` (max ${memoriesToFetch} memories)` : ' to genesis'}`
+    `Starting download from ${latestCid}${memoriesToFetch ? ` (max ${memoriesToFetch} memories)` : ' to genesis'}`,
   );
   const { processedCount, failedCids } = await fetchMemoryChain(
     latestCid,
