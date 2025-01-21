@@ -278,7 +278,7 @@ yarn resurrect --output ./custom/path            # Fetch all memories to custom 
 yarn resurrect --help                            # Show help menu
 ```
 
-```
+
 
 ## Testing
 
@@ -286,7 +286,9 @@ To run tests:
 
 ```bash
 yarn test
-```## License
+```
+
+## License
 
 MIT
 
