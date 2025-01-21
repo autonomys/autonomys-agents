@@ -18,9 +18,7 @@ export const createWorkflowConfig = async (): Promise<OrchestratorConfig> => {
   return { orchestratorModelWithTools: boundModel, toolNode };
 };
 
-const createOrchestratorWorkflow = async (
-  nodes: Awaited<ReturnType<typeof createNodes>> & { toolNode: ToolNode },
-) => {
+const createOrchestratorWorkflow = async (nodes: Awaited<ReturnType<typeof createNodes>>) => {
   const workflow = new StateGraph(OrchestratorState)
     .addNode('input', nodes.inputNode)
     .addNode('tools', nodes.toolNode)
@@ -37,7 +35,7 @@ type OrchestratorRunner = Readonly<{
 
 const createOrchestratorRunner = async (): Promise<OrchestratorRunner> => {
   const workflowConfig = await createWorkflowConfig();
-  const nodes = { ...(await createNodes(workflowConfig)), toolNode: workflowConfig.toolNode };
+  const nodes = await createNodes(workflowConfig);
   const workflow = await createOrchestratorWorkflow(nodes);
   const memoryStore = new MemorySaver();
   const app = workflow.compile({ checkpointer: memoryStore });
