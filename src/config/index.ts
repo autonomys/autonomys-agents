@@ -10,7 +10,6 @@ import { memoryDefaultConfig } from './memory.js';
 import yaml from 'yaml';
 import { readFileSync } from 'fs';
 import { loadCharacter } from './characters.js';
-import { onboarding } from '../cli/onboarding.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
