@@ -1,6 +1,6 @@
 import { TwitterWorkflowConfig } from '../types.js';
 import { createLogger } from '../../../../utils/logger.js';
-import { State } from '../workflow.js';
+import { State } from '../twitterWorkflow.js';
 import { summaryParser } from '../prompts.js';
 
 const logger = createLogger('summary-node');

@@ -8,7 +8,7 @@ import {
   TwitterWorkflowConfig,
 } from '../types.js';
 import { createLogger } from '../../../../utils/logger.js';
-import { State } from '../workflow.js';
+import { State } from '../twitterWorkflow.js';
 import { invokePostTweetTool } from '../../../tools/postTweetTool.js';
 import { responseParser, trendTweetParser } from '../prompts.js';
 import { AIMessage } from '@langchain/core/messages';

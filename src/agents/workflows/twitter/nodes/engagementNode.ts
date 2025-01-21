@@ -1,6 +1,6 @@
 import { TwitterWorkflowConfig } from '../types.js';
 import { createLogger } from '../../../../utils/logger.js';
-import { State } from '../workflow.js';
+import { State } from '../twitterWorkflow.js';
 import { engagementParser } from '../prompts.js';
 import { Tweet } from '../../../../services/twitter/types.js';
 

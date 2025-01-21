@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { ToolNode } from '@langchain/langgraph/prebuilt';
 import { AIMessage } from '@langchain/core/messages';
 import { createLogger } from '../../../../utils/logger.js';
-import { getWorkflowRunner } from '../../twitter/workflow.js';
+import { getWorkflowRunner } from '../../twitter/twitterWorkflow.js';
 
 const logger = createLogger('twitter-workflow-tool');
 

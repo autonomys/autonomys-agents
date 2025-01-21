@@ -1,6 +1,6 @@
 import { config } from './config/index.js';
 import { createLogger } from './utils/logger.js';
-import { runWorkflow } from './agents/workflows/twitter/workflow.js';
+import { runWorkflow } from './agents/workflows/twitter/twitterWorkflow.js';
 
 const logger = createLogger('app');
 
