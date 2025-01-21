@@ -17,7 +17,8 @@
         "test:watch": "jest --watch",
         "test:coverage": "jest --coverage",
         "lint": "eslint \"src/**/*.{js,ts}\"",
-        "lint:fix": "eslint \"src/**/*.{js,ts}\" --fix"
+        "lint:fix": "eslint \"src/**/*.{js,ts}\" --fix",
+        "resurrect": "tsx src/cli/resurrect.ts"
     },
     "dependencies": {
         "@autonomys/auto-dag-data": "1.2.1",
@@ -29,8 +30,11 @@
         "@langchain/ollama": "^0.1.4",
         "@langchain/openai": "0.3.16",
         "agent-twitter-client": "0.0.18",
+        "better-sqlite3": "^11.8.0",
         "dotenv": "^16.3.1",
         "ethers": "^6.13.4",
+        "sqlite3": "^5.1.7",
+        "vectorlite": "^0.2.0",
         "inquirer": "^10.2.0",
         "winston": "^3.11.0",
         "zod": "^3.22.4",
@@ -39,6 +43,7 @@
     "devDependencies": {
         "@eslint/js": "^9.18.0",
         "@tsconfig/node20": "^20.1.4",
+        "@types/better-sqlite3": "^7.6.12",
         "@types/inquirer": "^9.0.7",
         "@types/jest": "^29.5.12",
         "@types/js-yaml": "^4.0.9",
