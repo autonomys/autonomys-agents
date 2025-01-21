@@ -2,7 +2,6 @@ config/**/*.yaml
 !config/config.example.yaml
 !config/characters/character.example.yaml
 .cookies/
-dsn-kol-schemas.json
 memories/
 !src/config/
 dsn-twitter-schemas.json
@@ -54,3 +53,6 @@ node_modules/
 resources/
 threads.json
 cookies.json
+
+*.bin
+data

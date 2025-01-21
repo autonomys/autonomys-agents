@@ -1,54 +1,16 @@
-import { createLogger } from '../../../utils/logger.js';
+import { createLogger } from '../../../../utils/logger.js';
 import { hexlify } from 'ethers';
 import { createAutoDriveApi, uploadFile, UploadFileOptions } from '@autonomys/auto-drive';
 import { blake3HashFromCid, stringToCid } from '@autonomys/auto-dag-data';
-import { agentVersion, config } from '../../../config/index.js';
-import { signMessage, wallet } from './agentWallet.js';
-import { getLastMemoryCid, setLastMemoryHash } from './agentMemoryContract.js';
-import { saveHashLocally } from './localHashStorage.js';
+import { agentVersion, config } from '../../../../config/index.js';
+import { signMessage, wallet } from '../blockchain/agentWallet.js';
+import { getLastMemoryCid, setLastMemoryHash } from '../blockchain/agentMemoryContract.js';
+import { withRetry } from './retry.js';
 
 const logger = createLogger('dsn-upload-tool');
 const dsnApi = createAutoDriveApi({ apiKey: config.autoDriveConfig.AUTO_DRIVE_API_KEY || '' });
+
 let currentNonce = await wallet.getNonce();
-
-// New retry utility function
-const withRetry = async <T>(
-  operation: () => Promise<T>,
-  {
-    maxRetries = 5,
-    initialDelayMs = 1000,
-    operationName = 'Operation',
-  }: {
-    maxRetries?: number;
-    initialDelayMs?: number;
-    operationName?: string;
-  } = {},
-): Promise<T> => {
-  const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
-
-  const attempt = async (retriesLeft: number, currentDelay: number): Promise<T> => {
-    try {
-      return await operation();
-    } catch (error) {
-      if (retriesLeft <= 0) {
-        logger.error(`${operationName} failed after all retry attempts`, { error });
-        throw error;
-      }
-
-      logger.warn(`${operationName} failed, retrying... (${retriesLeft} attempts left)`, {
-        error,
-        nextDelayMs: currentDelay,
-      });
-      await delay(currentDelay);
-      // Exponential backoff with jitter
-      const jitter = Math.random() * 0.3 + 0.85; // Random value between 0.85 and 1.15
-      const nextDelay = Math.min(currentDelay * 2 * jitter, 30000); // Cap at 30 seconds
-      return attempt(retriesLeft - 1, nextDelay);
-    }
-  };
-
-  return attempt(maxRetries, initialDelayMs);
-};
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const uploadFileToDsn = async (file: any, options: UploadFileOptions) =>
@@ -101,8 +63,6 @@ export async function uploadToDsn(data: object) {
     logger.info('Setting last memory hash', {
       blake3hash: hexlify(blake3hash),
     });
-    // Temporary fix
-    saveHashLocally(hexlify(blake3hash));
 
     const tx = await submitMemoryHash(hexlify(blake3hash), currentNonce++);
     logger.info('Memory hash transaction submitted', {

@@ -31,7 +31,7 @@ jest.mock('../src/config/index.js', () => ({
   }
 }), { virtual: true }); 
 
-jest.mock('../src/agents/tools/utils/agentWallet.ts', () => ({
+jest.mock('../src/agents/tools/utils/blockchain/agentWallet.ts', () => ({
   wallet: {
     getNonce: jest.fn().mockResolvedValue(0),
     signMessage: jest.fn().mockResolvedValue('0xmockedsignature')
@@ -49,7 +49,7 @@ jest.mock('ethers', () => ({
   Contract: jest.fn()
 }), { virtual: true }); 
 
-jest.mock('../src/agents/tools/utils/dsnUpload.ts', () => ({
+jest.mock('../src/agents/tools/utils/dsn/dsnUpload.ts', () => ({
   uploadToDsn: jest.fn().mockResolvedValue('0xmockedtxhash'),
   currentNonce: 0
 }), { virtual: true }); 

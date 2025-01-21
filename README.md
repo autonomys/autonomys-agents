@@ -258,14 +258,36 @@ yarn dev my-agent
 
 Monitor the agent's activity in the console and configured log files.
 
+## Resurrection
+
+To resurrect memories from the Autonomys Network, run the following command:
+
+### Options
+
+- `-o, --output`: (Optional) The directory where memories will be saved. Defaults to `./memories`
+- `-n, --number`: (Optional) Number of memories to fetch. If not specified, fetches all memories
+- `--help`: Show help menu with all available options
+
+Examples:
+
+```bash
+yarn resurrect                                    # Fetch all memories to ./memories/
+yarn resurrect -n 1000                           # Fetch 1000 memories to ./memories/
+yarn resurrect -o ./memories/my-agent -n 1000    # Fetch 1000 memories to specified directory
+yarn resurrect --output ./custom/path            # Fetch all memories to custom directory
+yarn resurrect --help                            # Show help menu
+```
+
+```
+
 ## Testing
 
 To run tests:
 
 ```bash
 yarn test
-```
-
-## License
+```## License
 
 MIT
+
+
