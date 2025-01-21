@@ -111,7 +111,7 @@ Each character file is a YAML configuration with the following structure:
 
 ```yaml
 name: 'Agent Name'
-username: 'twitter_handle'
+
 description: |
   Core personality description
   Can span multiple lines
@@ -124,29 +124,31 @@ expertise:
   - Area of knowledge 1
   - Area of knowledge 2
 
-rules:
-  - Operating guideline 1
-  - Operating guideline 2
+communication_rules:
+  rules:
+    - Operating guideline 1
+    - Operating guideline 2
+  words_to_avoid:
+    - word1
+    - word2
 
-trend_focus:
-  - Topic to monitor 1
-  - Topic to monitor 2
+twitter_profile:
+  username: 'twitter_handle'
+  trend_focus:
+    - Topic to monitor 1
+    - Topic to monitor 2
 
-content_focus:
-  - Content guideline 1
-  - Content guideline 2
+  content_focus:
+    - Content guideline 1
+    - Content guideline 2
 
-reply_style:
-  - Engagement approach 1
-  - Engagement approach 2
+  reply_style:
+    - Engagement approach 1
+    - Engagement approach 2
 
-words_to_avoid:
-  - word1
-  - word2
-
-engagement_criteria:
-  - Engagement rule 1
-  - Engagement rule 2
+  engagement_criteria:
+    - Engagement rule 1
+    - Engagement rule 2
 ```
 
 ### Running with Different Characters
@@ -244,20 +246,6 @@ The Twitter workflow enables agents to:
 - Maintain consistent personality
 - Store interactions in permanent memory
 
-## Running the Agent
-
-Start the agent with:
-
-```bash
-# Use example character or select from list of characters
-yarn dev
-
-# Use specific character
-yarn dev my-agent
-```
-
-Monitor the agent's activity in the console and configured log files.
-
 ## Resurrection
 
 To resurrect memories from the Autonomys Network, run the following command:
@@ -271,13 +259,11 @@ To resurrect memories from the Autonomys Network, run the following command:
 Examples:
 
 ```bash
-yarn resurrect                                    # Fetch all memories to ./memories/
+yarn resurrect                                   # Fetch all memories to ./memories/
 yarn resurrect -n 1000                           # Fetch 1000 memories to ./memories/
 yarn resurrect -o ./memories/my-agent -n 1000    # Fetch 1000 memories to specified directory
 yarn resurrect --output ./custom/path            # Fetch all memories to custom directory
 yarn resurrect --help                            # Show help menu
-```
-
 ```
 
 ## Testing
@@ -286,8 +272,8 @@ To run tests:
 
 ```bash
 yarn test
-```## License
+```
+
+## License
 
 MIT
-
-
