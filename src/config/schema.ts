@@ -133,6 +133,24 @@ const blockchainConfigSchema = z.object({
   ]),
 });
 
+const characterConfigSchema = z.object({
+  name: z.string(),
+  description: z.string(),
+  personality: z.array(z.string()),
+  expertise: z.array(z.string()),
+  communicationRules: z.object({
+    rules: z.array(z.string()),
+    wordsToAvoid: z.array(z.string()),
+  }),
+  twitterProfile: z.object({
+    username: z.string(),
+    trendFocus: z.array(z.string()),
+    contentFocus: z.array(z.string()),
+    engagementCriteria: z.array(z.string()),
+    replyStyle: z.array(z.string()),
+  }),
+});
+
 const memoryConfigSchema = z.object({
   MAX_PROCESSED_IDS: z.number().int().positive().default(5000),
 });
@@ -145,6 +163,7 @@ export const configSchema = z.object({
   autoDriveConfig: autoDriveConfigSchema,
   blockchainConfig: blockchainConfigSchema,
   memoryConfig: memoryConfigSchema,
+  characterConfig: characterConfigSchema,
   SERPAPI_API_KEY: SERPAPI_API_KEY,
   NODE_ENV: z.enum(['development', 'production', 'test']),
 });

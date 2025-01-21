@@ -9,7 +9,7 @@ import {
 import { ChatPromptTemplate, PromptTemplate } from '@langchain/core/prompts';
 import { SystemMessage } from '@langchain/core/messages';
 import { wallet } from '../../tools/utils/agentWallet.js';
-import { loadCharacter } from '../../../config/characters.js';
+import { config } from '../../../config/index.js';
 
 const followFormatInstructions = `
   IMPORTANT:
@@ -27,8 +27,8 @@ export const trendParser = StructuredOutputParser.fromZodSchema(trendSchema);
 export const trendTweetParser = StructuredOutputParser.fromZodSchema(trendTweetSchema);
 export const summaryParser = StructuredOutputParser.fromZodSchema(summarySchema);
 
-export const createPrompts = async (characterFile: string) => {
-  const character = loadCharacter(characterFile);
+export const createPrompts = async () => {
+  const character = config.characterConfig;
   const { communicationRules, twitterProfile } = character;
 
   const engagementSystemPrompt = await PromptTemplate.fromTemplate(

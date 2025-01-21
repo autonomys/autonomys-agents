@@ -12,10 +12,10 @@ export const createTwitterWorkflowTool = () =>
     name: 'twitter_workflow',
     description:
       'Workflow to check twitter for mentions, replies and trends, to respond to tweets and mentions and to post tweets',
-    schema: z.object({ characterFile: z.string() }),
-    func: async ({ characterFile }: { characterFile: string }) => {
+    schema: z.object({}),
+    func: async () => {
       try {
-        const runner = await getWorkflowRunner(characterFile);
+        const runner = await getWorkflowRunner();
         const result = await runner.runWorkflow();
         return result;
       } catch (error) {
@@ -25,7 +25,7 @@ export const createTwitterWorkflowTool = () =>
     },
   });
 
-export const invokeTwitterWorkflow = async (toolNode: ToolNode, characterFile: string) => {
+export const invokeTwitterWorkflow = async (toolNode: ToolNode) => {
   const toolResponse = await toolNode.invoke({
     messages: [
       new AIMessage({
@@ -33,7 +33,7 @@ export const invokeTwitterWorkflow = async (toolNode: ToolNode, characterFile: s
         tool_calls: [
           {
             name: 'twitter_workflow',
-            args: { characterFile },
+            args: {},
             id: 'twitter_workflow_call',
             type: 'tool_call',
           },
