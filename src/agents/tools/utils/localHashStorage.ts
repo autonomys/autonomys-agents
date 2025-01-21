@@ -40,13 +40,12 @@ export const getLocalHash = (): string | null => {
   }
 };
 
-
 export const validateLocalHash = async (): Promise<void> => {
   try {
     if (!existsSync(HASH_FILE)) {
       return;
     }
-    const data = JSON.parse(readFileSync(HASH_FILE, 'utf-8')) as StoredHash;    
+    const data = JSON.parse(readFileSync(HASH_FILE, 'utf-8')) as StoredHash;
     const { timestamp: eventTimestamp, hash: eventHash } = await getLastMemoryHashSetTimestamp();
     const localTimestamp = new Date(data.timestamp).getTime() / 1000;
 
