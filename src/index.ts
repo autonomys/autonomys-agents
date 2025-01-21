@@ -2,6 +2,7 @@ import { config } from './config/index.js';
 import { createLogger } from './utils/logger.js';
 import { runWorkflow } from './agents/workflows/twitter/workflow.js';
 import { onboarding } from './cli/onboarding.js';
+import { getLastMemoryHashSetTimestamp } from './agents/tools/utils/blockchain/agentMemoryContract.js';
 
 const logger = createLogger('app');
 
@@ -34,13 +35,20 @@ const startWorkflowPolling = async () => {
 
 const main = async () => {
   try {
-    await startWorkflowPolling();
-    setInterval(startWorkflowPolling, config.twitterConfig.RESPONSE_INTERVAL_MS);
+    console.log('Starting application...');
+    const timestamp = await getLastMemoryHashSetTimestamp();
+    const date = new Date(timestamp * 1000); // Convert to JavaScript Date object
+    console.log('timestamp', timestamp);
+    console.log(date.toLocaleString());
 
-    logger.info('Application started successfully', {
-      checkInterval: config.twitterConfig.RESPONSE_INTERVAL_MS / 1000 / 60,
-      username: config.twitterConfig.USERNAME,
-    });
+    logger.info('Last memory hash set timestamp:', date);
+    // await startWorkflowPolling();
+    // setInterval(startWorkflowPolling, config.twitterConfig.RESPONSE_INTERVAL_MS);
+
+    // logger.info('Application started successfully', {
+    //   checkInterval: config.twitterConfig.RESPONSE_INTERVAL_MS / 1000 / 60,
+    //   username: config.twitterConfig.USERNAME,
+    // });
   } catch (error) {
     if (error && typeof error === 'object' && 'name' in error && error.name === 'ExitPromptError') {
       logger.info('Process terminated by user');
