@@ -103,7 +103,7 @@ The framework uses a YAML-based character system that allows you to create and r
 
    ```bash
    # Create a new character
-   ./scripts/create_character.sh your_character
+   ./scripts/create-character.sh your_character
 
    ```
 
