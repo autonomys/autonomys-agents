@@ -156,12 +156,6 @@ Run the agent with a specific character:
 You can run the agent with a specific character by providing the character name as an argument.
 
 ```bash
-# Use default character (configured in config.yaml)
-yarn dev  # for development with auto-reload - select from list of characters
-# or
-yarn start  # for production build and run - select from list of characters
-
-
 # Use a specific character (omit .yaml extension)
 yarn dev my-agent  # for development with auto-reload
 # or
@@ -244,20 +238,6 @@ The Twitter workflow enables agents to:
 - Maintain consistent personality
 - Store interactions in permanent memory
 
-## Running the Agent
-
-Start the agent with:
-
-```bash
-# Use example character or select from list of characters
-yarn dev
-
-# Use specific character
-yarn dev my-agent
-```
-
-Monitor the agent's activity in the console and configured log files.
-
 ## Resurrection
 
 To resurrect memories from the Autonomys Network, run the following command:
@@ -278,8 +258,6 @@ yarn resurrect --output ./custom/path            # Fetch all memories to custom 
 yarn resurrect --help                            # Show help menu
 ```
 
-
-
 ## Testing
 
 To run tests:
@@ -291,5 +269,3 @@ yarn test
 ## License
 
 MIT
-
-
