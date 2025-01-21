@@ -6,7 +6,6 @@ import { ToolNode } from '@langchain/langgraph/prebuilt';
 import { createTools } from './tools.js';
 import { createNodes } from './nodes.js';
 import { OrchestratorConfig, OrchestratorState, OrchestratorInput } from './types.js';
-import { BaseMessage } from '@langchain/core/messages';
 
 const logger = createLogger('orchestrator-workflow');
 
@@ -18,11 +17,15 @@ export const createWorkflowConfig = async (): Promise<OrchestratorConfig> => {
   return { orchestratorModelWithTools: boundModel, toolNode };
 };
 
-const createOrchestratorWorkflow = async (nodes: Awaited<ReturnType<typeof createNodes>>) => {
+const createOrchestratorWorkflow = async (
+  nodes: Awaited<ReturnType<typeof createNodes>> & { toolNode: ToolNode },
+) => {
   const workflow = new StateGraph(OrchestratorState)
     .addNode('input', nodes.inputNode)
+    .addNode('tools', nodes.toolNode)
     .addEdge(START, 'input')
-    .addEdge('input', END);
+    .addEdge('input', 'tools')
+    .addEdge('tools', END);
 
   return workflow;
 };
@@ -33,7 +36,7 @@ type OrchestratorRunner = Readonly<{
 
 const createOrchestratorRunner = async (): Promise<OrchestratorRunner> => {
   const workflowConfig = await createWorkflowConfig();
-  const nodes = await createNodes(workflowConfig);
+  const nodes = { ...(await createNodes(workflowConfig)), toolNode: workflowConfig.toolNode };
   const workflow = await createOrchestratorWorkflow(nodes);
   const memoryStore = new MemorySaver();
   const app = workflow.compile({ checkpointer: memoryStore });
@@ -55,12 +58,11 @@ const createOrchestratorRunner = async (): Promise<OrchestratorRunner> => {
       let finalState = {};
 
       for await (const state of stream) {
-        logger.info('Workflow state', { state });
         finalState = state;
       }
 
       logger.info('Workflow completed', { threadId });
-      logger.info('Final state', { finalState });
+
       return finalState;
     },
   };
