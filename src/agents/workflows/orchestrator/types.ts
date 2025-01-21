@@ -10,6 +10,10 @@ export type OrchestratorConfig = {
   toolNode: ToolNode;
 };
 
+export type OrchestratorInput = {
+  messages: BaseMessage[];
+};
+
 // Orchestrator state
 export const OrchestratorState = Annotation.Root({
   messages: Annotation<readonly BaseMessage[]>({

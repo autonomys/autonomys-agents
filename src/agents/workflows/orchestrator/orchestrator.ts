@@ -5,7 +5,8 @@ import { config } from '../../../config/index.js';
 import { ToolNode } from '@langchain/langgraph/prebuilt';
 import { createTools } from './tools.js';
 import { createNodes } from './nodes.js';
-import { OrchestratorConfig, OrchestratorState } from './types.js';
+import { OrchestratorConfig, OrchestratorState, OrchestratorInput } from './types.js';
+import { BaseMessage } from '@langchain/core/messages';
 
 const logger = createLogger('orchestrator-workflow');
 
@@ -27,7 +28,7 @@ const createOrchestratorWorkflow = async (nodes: Awaited<ReturnType<typeof creat
 };
 
 type OrchestratorRunner = Readonly<{
-  runWorkflow: () => Promise<unknown>;
+  runWorkflow: (input?: OrchestratorInput) => Promise<unknown>;
 }>;
 
 const createOrchestratorRunner = async (): Promise<OrchestratorRunner> => {
@@ -38,7 +39,7 @@ const createOrchestratorRunner = async (): Promise<OrchestratorRunner> => {
   const app = workflow.compile({ checkpointer: memoryStore });
 
   return {
-    runWorkflow: async () => {
+    runWorkflow: async (input?: OrchestratorInput) => {
       const threadId = 'orchestrator_workflow_state';
       logger.info('Starting orchestrator workflow', { threadId, input });
 
@@ -49,7 +50,8 @@ const createOrchestratorRunner = async (): Promise<OrchestratorRunner> => {
         },
       };
 
-      const stream = await app.stream({}, config);
+      const initialState = input || { messages: [] };
+      const stream = await app.stream(initialState, config);
       let finalState = {};
 
       for await (const state of stream) {
@@ -63,6 +65,7 @@ const createOrchestratorRunner = async (): Promise<OrchestratorRunner> => {
     },
   };
 };
+
 // Create workflow runner with caching
 export const getOrchestratorRunner = (() => {
   let runnerPromise: Promise<OrchestratorRunner> | null = null;
@@ -75,7 +78,7 @@ export const getOrchestratorRunner = (() => {
   };
 })();
 
-export const runOrchestratorWorkflow = async () => {
+export const runOrchestratorWorkflow = async (input?: OrchestratorInput) => {
   const runner = await getOrchestratorRunner();
-  return runner.runWorkflow();
+  return runner.runWorkflow(input);
 };
