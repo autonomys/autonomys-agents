@@ -1,10 +1,10 @@
 import {
   DsnData,
-  TwitterDsnDataType,
   DsnGeneratedTweetData,
   DsnResponseData,
   DsnSkippedEngagementData,
   EngagementDecision,
+  TwitterDsnDataType,
   TwitterWorkflowConfig,
 } from '../types.js';
 import { createLogger } from '../../../../utils/logger.js';

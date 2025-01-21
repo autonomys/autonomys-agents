@@ -1,3 +1,4 @@
+/*eslint-disable no-template-curly-in-string */
 import { SystemMessage } from '@langchain/core/messages';
 import { createLogger } from '../../../../utils/logger.js';
 import { OrchestratorConfig, OrchestratorState } from '../types.js';
