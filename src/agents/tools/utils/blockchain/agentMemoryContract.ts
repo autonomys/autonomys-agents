@@ -48,29 +48,26 @@ export const setLastMemoryHash = async (hash: string, nonce?: number) => {
   return tx;
 };
 
-export const getLastMemoryHashSetTimestamp = async (): Promise<number> => {
+export const getLastMemoryHashSetTimestamp = async (): Promise<{ timestamp: number; hash: string }> => {
   try {
-    // Get current block number
     const currentBlock = await provider.getBlockNumber();
+    const fromBlock = Math.max(0, currentBlock - 5000);
     
-    // Look back only 10000 blocks (roughly 1.5 days for Ethereum)
-    // Adjust this number based on your chain and needs
-    const fromBlock = Math.max(0, currentBlock - 10000);
-    
-    const filter = contract.filters.LastMemoryHashSet("0x53Dd4b9627eb9691D62B90dDD987a8c8DFC99a12");
+    const filter = contract.filters.LastMemoryHashSet(wallet.address);
     const events = await contract.queryFilter(filter, fromBlock, currentBlock);
     
     if (events.length === 0) {
-      return 0;
+      return { timestamp: 0, hash: '' };
     }
-
-    // Get the last event
     const lastEvent = events[events.length - 1];
     const block = await lastEvent.getBlock();
     
-    return block.timestamp;
+    return {
+      timestamp: block.timestamp,
+      hash: (lastEvent as ethers.EventLog).args.hash
+    };
   } catch (error) {
     logger.error('Failed to get last memory hash set timestamp', { error });
-    return 0;
+    return { timestamp: 0, hash: '' };
   }
 };
