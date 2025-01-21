@@ -6,7 +6,6 @@ interface CharacterInfo {
   id: string;
   name: string;
   description: string;
-  username: string;
 }
 
 export const listAvailableCharacters = async (): Promise<CharacterInfo[]> => {
@@ -22,7 +21,6 @@ export const listAvailableCharacters = async (): Promise<CharacterInfo[]> => {
         id,
         name: character.name,
         description: character.description,
-        username: character.username,
       };
     }),
   );
