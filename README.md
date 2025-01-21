@@ -99,10 +99,12 @@ The framework uses a YAML-based character system that allows you to create and r
 ### Creating Characters
 
 1. Characters are stored in `config/characters/`
-2. Create new characters by copying the example:
+2. Create new characters by running the create_character.sh script:
+
    ```bash
    # Create a new character
-   cp config/characters/character.example.yaml config/characters/my-character.yaml
+   ./scripts/create_character.sh your_character
+
    ```
 
 ### Character Configuration
