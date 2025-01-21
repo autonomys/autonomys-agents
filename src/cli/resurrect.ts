@@ -1,5 +1,7 @@
 import { join } from 'path';
 import { mkdirSync } from 'fs';
+import yargs from 'yargs';
+import { hideBin } from 'yargs/helpers';
 import { createLogger } from '../utils/logger.js';
 import { downloadAllMemories } from './utils/resurrection.js';
 
@@ -10,35 +12,38 @@ interface CliOptions {
   memoriesToFetch: number | null;
 }
 
-const parseArgs = (args: string[]): CliOptions => {
-  const findNumberOption = (args: string[]): number | null => {
-    const numberIndex = args.findIndex(arg => arg === '-n' || arg === '--number');
-    if (numberIndex === -1) return null;
-
-    const numberValue = parseInt(args[numberIndex + 1], 10);
-    if (isNaN(numberValue) || numberValue <= 0) {
-      throw new Error('Number of memories must be a positive integer');
-    }
-    return numberValue;
-  };
-
-  const findOutputDir = (args: string[]): string => {
-    const nonFlagArgs = args.filter(
-      (arg, i) =>
-        arg !== '-n' && arg !== '--number' && args[i - 1] !== '-n' && args[i - 1] !== '--number',
-    );
-    return nonFlagArgs[0] || 'memories';
-  };
+const parseArgs = (): CliOptions => {
+  const argv = yargs(hideBin(process.argv))
+    .option('output', {
+      alias: 'o',
+      type: 'string',
+      description: 'Output directory for memories',
+      default: 'memories',
+    })
+    .option('number', {
+      alias: 'n',
+      type: 'number',
+      description: 'Number of memories to fetch',
+      default: null,
+    })
+    .check(argv => {
+      if (argv.number !== null && (isNaN(argv.number) || argv.number <= 0)) {
+        throw new Error('Number of memories must be a positive integer');
+      }
+      return true;
+    })
+    .help()
+    .parseSync();
 
   return {
-    outputDir: join(process.cwd(), findOutputDir(args)),
-    memoriesToFetch: findNumberOption(args),
+    outputDir: join(process.cwd(), argv.output as string),
+    memoriesToFetch: argv.number as number | null,
   };
 };
 
 const main = async () => {
   try {
-    const options = parseArgs(process.argv.slice(2));
+    const options = parseArgs();
     mkdirSync(options.outputDir, { recursive: true });
 
     logger.info(`Using output directory: ${options.outputDir}`);
