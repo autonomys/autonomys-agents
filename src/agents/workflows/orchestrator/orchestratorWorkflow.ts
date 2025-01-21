@@ -6,6 +6,7 @@ import { ToolNode } from '@langchain/langgraph/prebuilt';
 import { createTools } from './tools.js';
 import { createNodes } from './nodes.js';
 import { OrchestratorConfig, OrchestratorState, OrchestratorInput } from './types.js';
+import { HumanMessage } from '@langchain/core/messages';
 
 const logger = createLogger('orchestrator-workflow');
 
@@ -44,7 +45,7 @@ const createOrchestratorRunner = async (): Promise<OrchestratorRunner> => {
   return {
     runWorkflow: async (input?: OrchestratorInput) => {
       const threadId = 'orchestrator_workflow_state';
-      logger.info('Starting orchestrator workflow', { threadId, input });
+      logger.info('Starting orchestrator workflow', { threadId });
 
       const config = {
         recursionLimit: 50,
@@ -80,7 +81,8 @@ export const getOrchestratorRunner = (() => {
   };
 })();
 
-export const runOrchestratorWorkflow = async (input?: OrchestratorInput) => {
+export const runOrchestratorWorkflow = async (input?: string) => {
+  const messages = [new HumanMessage(input || '')];
   const runner = await getOrchestratorRunner();
-  return runner.runWorkflow(input);
+  return runner.runWorkflow({ messages });
 };

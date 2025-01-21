@@ -8,21 +8,19 @@ const logger = createLogger('orchestrator-input-node');
 export const createInputNode = ({ orchestratorModelWithTools }: OrchestratorConfig) => {
   const runNode = async (state: typeof OrchestratorState.State) => {
     const { messages } = state;
-    logger.info('Messages', { messages });
+    const lastMessage = messages.at(-1);
+    logger.info('Running input node with message:', { lastMessage });
     const prompt = await ChatPromptTemplate.fromMessages([
       new SystemMessage('You are a helpful assistant that can helping orchestrate tasks.'),
       [
         'human',
-        `Based on the following messages, determine what we should do next or just answer to the best of your ability.
-        ${messages.map(m => m.content).join('\n')}
-        `,
+        'Based on the following message, determine what we should do next or just answer to the best of your ability.\n\n${message}',
       ],
     ]).format({
-      messages: messages.map(m => m.content).join('\n'),
+      message: lastMessage?.content,
     });
-    logger.info('Prompt', { prompt });
+
     const result = await orchestratorModelWithTools.invoke(prompt);
-    logger.info('Result', { result });
     return { messages: [result] };
   };
   return runNode;
