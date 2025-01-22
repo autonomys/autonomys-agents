@@ -11,7 +11,7 @@ async function createCharacter(): Promise<void> {
     process.exit(1);
   }
 
-  const targetDir = path.join('config', characterName);
+  const targetDir = path.join('characters', characterName, 'config');
 
   try {
     // Check if target directory already exists
@@ -25,7 +25,9 @@ async function createCharacter(): Promise<void> {
 
     // Copy the example directory
     console.log(`Copying character.example to ${characterName}...`);
-    await fs.cp(path.join('config', 'character.example'), targetDir, { recursive: true });
+    await fs.cp(path.join('characters', 'character.example', 'config'), targetDir, {
+      recursive: true,
+    });
 
     // Rename the files
     console.log('Renaming configuration files...');

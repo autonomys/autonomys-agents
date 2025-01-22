@@ -28,10 +28,10 @@ if (!characterName) {
   // Force immediate exit of the entire process group
   process.kill(0, 'SIGKILL');
 }
-
+const characterConfig = loadCharacter(characterName);
 // Load character-specific .env if it exists, otherwise fall back to root .env
 const characterEnvPath = characterName
-  ? path.resolve(workspaceRoot, 'config', characterName, '.env')
+  ? path.resolve(characterConfig.characterPath, 'config', '.env')
   : null;
 if (characterEnvPath && existsSync(characterEnvPath)) {
   dotenv.config({ path: characterEnvPath });
@@ -53,21 +53,11 @@ export const agentVersion = process.env.AGENT_VERSION || '2.0.0';
 
 const yamlConfig = (() => {
   try {
-    // Try to load character-specific config first
-    if (characterName) {
-      const characterConfigPath = path.join(workspaceRoot, 'config', characterName, 'config.yaml');
-      if (existsSync(characterConfigPath)) {
-        const fileContents = readFileSync(characterConfigPath, 'utf8');
-        return yaml.parse(fileContents);
-      }
-    }
-
-    // Fall back to root config.yaml
-    const configPath = path.join(workspaceRoot, 'config', 'config.yaml');
-    const fileContents = readFileSync(configPath, 'utf8');
+    const characterConfigPath = path.join(characterConfig.characterPath, 'config', 'config.yaml');
+    const fileContents = readFileSync(characterConfigPath, 'utf8');
     return yaml.parse(fileContents);
   } catch (error) {
-    console.info('No YAML config found, falling back to environment variables', error);
+    console.error('No YAML config found for character', characterName, error);
     return {};
   }
 })();
@@ -76,7 +66,6 @@ export const config = (() => {
   try {
     const username = process.env.TWITTER_USERNAME || '';
     const cookiesPath = path.join(cookiesDir, `${username}-cookies.json`);
-    const characterConfig = loadCharacter(characterName);
 
     const rawConfig = {
       twitterConfig: {

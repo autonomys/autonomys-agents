@@ -13,8 +13,8 @@ const copyCharacterFile = async (characterName: string): Promise<void> => {
     process.exit(1);
   }
 
-  const sourceDir = path.join('config', characterName);
-  const destDir = path.join('dist', 'config', characterName);
+  const sourceDir = path.join('characters', characterName, 'config');
+  const destDir = path.join('dist', 'characters', characterName, 'config');
   const fileName = `${characterName}.yaml`;
 
   try {

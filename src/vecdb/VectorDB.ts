@@ -17,7 +17,11 @@ export class VectorDB {
   private maxElements: number;
   private static readonly DEFAULT_INDEX_FILE = 'index_file.bin';
   private static readonly DEFAULT_DB_FILE = 'vector_store.db';
-  private static readonly DEFAULT_DATA_DIR = join(process.cwd(), 'data', 'vector-db');
+  private static readonly DEFAULT_DATA_DIR = join(
+    config.characterConfig.characterPath,
+    'data',
+    'vector-db',
+  );
 
   constructor(
     dataDir?: string,
@@ -25,7 +29,9 @@ export class VectorDB {
     dbFilePath: string = VectorDB.DEFAULT_DB_FILE,
     maxElements: number = 100000,
   ) {
-    const targetDir = dataDir ? join(process.cwd(), dataDir) : VectorDB.DEFAULT_DATA_DIR;
+    const targetDir = dataDir
+      ? join(config.characterConfig.characterPath, dataDir)
+      : VectorDB.DEFAULT_DATA_DIR;
 
     if (!existsSync(targetDir)) {
       mkdirSync(targetDir, { recursive: true });
