@@ -8,7 +8,7 @@ import { llmDefaultConfig } from './llm.js';
 import { twitterDefaultConfig } from './twitter.js';
 import { memoryDefaultConfig } from './memory.js';
 import yaml from 'yaml';
-import { readFileSync, existsSync } from 'fs';
+import { existsSync, readFileSync } from 'fs';
 import { loadCharacter } from './characters.js';
 
 const __filename = fileURLToPath(import.meta.url);
