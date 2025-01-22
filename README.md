@@ -13,84 +13,16 @@ Autonomys Agents is an experimental framework for building AI agents. Currently,
 
 ## Getting Started
 
-1. Install dependencies:
-   `yarn install`
-
-2. Copy the environment file and configure your credentials:
-   `cp .env.sample .env`
-
-3. Configure your `.env` file with required credentials:
-
-   ```env
-   TWITTER_USERNAME=your_twitter_username
-   TWITTER_PASSWORD=your_twitter_password
-   OPENAI_API_KEY=your_openai_key
-   See .env.sample for other configuration options
-   ```
-
-4. The framework supports multiple levels of configuration with the following priority (highest to lowest):
-
-   1. Environment variables (`.env` file)
-   2. YAML configuration (`config/config.yaml`)
-   3. Default values in code
-
-This means you can:
-
-- Use YAML for most settings
-- Override sensitive data (like API keys) using environment variables
-- Fall back to default values if nothing is specified
-
-### YAML Configuration
-
-1. Copy the example configuration file:
-
-   ```bash
-   cp config/config.example.yaml config/config.yaml
-   ```
-
-2. Customize the settings in `config/config.yaml`:
-
-   ```yaml
-   twitter:
-     NUM_TIMELINE_TWEETS: 10
-     NUM_FOLLOWING_RECENT_TWEETS: 10
-     NUM_RANDOM_FOLLOWINGS: 5
-     MAX_MENTIONS: 20
-     MAX_THREAD_LENGTH: 20
-     MAX_MY_RECENT_TWEETS: 10
-     MAX_MY_RECENT_REPLIES: 10
-     RESPONSE_INTERVAL_MS: 3600000 # 1 hour
-     POST_INTERVAL_MS: 5400000 # 1.5 hours
-     POST_TWEETS: false
-
-   autodrive:
-     upload: false
-
-   llm:
-     configuration:
-       large:
-         provider: 'anthropic'
-         model: 'claude-3-5-sonnet-latest'
-       small:
-         provider: 'openai'
-         model: 'gpt-4o-mini'
-     nodes:
-       decision:
-         size: 'small'
-         temperature: 0.2
-       analyze:
-         size: 'large'
-         temperature: 0.5
-       generation:
-         size: 'large'
-         temperature: 0.8
-       response:
-         size: 'small'
-         temperature: 0.8
-
-     memory:
-       MAX_PROCESSED_IDS: 5000
-   ```
+1. Install dependencies: `yarn install`
+2. Create your character config: `yarn create-character <your-character-name>`
+3. Setup character config:
+   - All character configs are stored in `config/{your-character-name}/`
+   - Update .env with applicable environment variables
+   - Update `config.yaml` with applicable configuration
+   - Update `{your-character-name}.yaml` with applicable personality configuration (See Character System below).
+4. Run your character:
+   - For dev purposes in watch mode: `yarn dev <your-character-name>`
+   - For production build and run: `yarn start <your-character-name>`
 
 ## Character System
 
@@ -98,12 +30,12 @@ The framework uses a YAML-based character system that allows you to create and r
 
 ### Creating Characters
 
-1. Characters are stored in `config/characters/`
-2. Create new characters by running the create_character.sh script:
+1. Characters are stored in `config/{your-character-name}/`
+2. Create new characters by running the `create-character.ts` script:
 
    ```bash
    # Create a new character
-   ./scripts/create-character.sh your_character
+   yarn create-character your_character
 
    ```
 
@@ -153,27 +85,6 @@ twitter_profile:
     - Engagement rule 2
 ```
 
-### Running with Different Characters
-
-Run the agent with a specific character:
-
-You can run the agent with a specific character by providing the character name as an argument.
-
-```bash
-# Use a specific character (omit .yaml extension)
-yarn dev my-agent  # for development with auto-reload
-# or
-yarn start my-agent  # for production build and run
-
-# Examples:
-# If your character file is named 'techie.yaml':
-yarn dev techie
-# If your character file is named 'my-agent.yaml':
-yarn dev my-agent
-```
-
-Note: When specifying a character file, omit the `.yaml` extension. The system will automatically look for the YAML file in the `config/characters/` directory.
-
 ### Example Characters
 
 1. Joy Builder (`joy_builder.yaml`):
@@ -208,6 +119,19 @@ Note: When specifying a character file, omit the `.yaml` extension. The system w
    # ... other configuration
    ```
 
+## Workflows
+
+### Twitter
+
+The Twitter workflow enables agents to:
+
+- Monitor X (formerly Twitter) for relevant discussions
+- Analyze trends and conversations
+- Engage meaningfully with other users
+- Generate original content
+- Maintain consistent personality
+- Store interactions in permanent memory
+
 ## Autonomys Network Integration
 
 The framework uses the Autonomys Network for permanent storage of agent memory and interactions. This enables:
@@ -228,19 +152,6 @@ To use this feature:
 3. Provide your Taurus EVM wallet details (PRIVATE_KEY) and Agent Memory Contract Address (CONTRACT_ADDRESS) in .env`
 4. Make sure your Taurus EVM wallet has funds. A faucet can be found at https://subspacefaucet.com/
 5. Provide encryption password in `.env` (optional, leave empty to not encrypt the agent memories)
-
-## Workflows
-
-### Twitter
-
-The Twitter workflow enables agents to:
-
-- Monitor X (formerly Twitter) for relevant discussions
-- Analyze trends and conversations
-- Engage meaningfully with other users
-- Generate original content
-- Maintain consistent personality
-- Store interactions in permanent memory
 
 ## Resurrection
 
