@@ -1,7 +1,7 @@
 import { ethers } from 'ethers';
 import { config } from '../../../../config/index.js';
 
-const provider = new ethers.JsonRpcProvider(config.blockchainConfig.RPC_URL);
+export const provider = new ethers.JsonRpcProvider(config.blockchainConfig.RPC_URL);
 
 export const wallet = new ethers.Wallet(config.blockchainConfig.PRIVATE_KEY as string, provider);
 

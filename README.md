@@ -160,12 +160,6 @@ Run the agent with a specific character:
 You can run the agent with a specific character by providing the character name as an argument.
 
 ```bash
-# Use default character (configured in config.yaml)
-yarn dev  # for development with auto-reload - select from list of characters
-# or
-yarn start  # for production build and run - select from list of characters
-
-
 # Use a specific character (omit .yaml extension)
 yarn dev my-agent  # for development with auto-reload
 # or
