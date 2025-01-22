@@ -21,11 +21,17 @@ try {
 } catch (error) {
   console.error('Error creating cookies directory:', error);
 }
-const characterId = process.argv[2];
+
+const characterName = process.argv[2];
+if (!characterName) {
+  console.error('Please provide a character name');
+  // Force immediate exit of the entire process group
+  process.kill(0, 'SIGKILL');
+}
 
 // Load character-specific .env if it exists, otherwise fall back to root .env
-const characterEnvPath = characterId
-  ? path.resolve(workspaceRoot, 'config', characterId, '.env')
+const characterEnvPath = characterName
+  ? path.resolve(workspaceRoot, 'config', characterName, '.env')
   : null;
 if (characterEnvPath && existsSync(characterEnvPath)) {
   dotenv.config({ path: characterEnvPath });
@@ -48,8 +54,8 @@ export const agentVersion = process.env.AGENT_VERSION || '2.0.0';
 const yamlConfig = (() => {
   try {
     // Try to load character-specific config first
-    if (characterId) {
-      const characterConfigPath = path.join(workspaceRoot, 'config', characterId, 'config.yaml');
+    if (characterName) {
+      const characterConfigPath = path.join(workspaceRoot, 'config', characterName, 'config.yaml');
       if (existsSync(characterConfigPath)) {
         const fileContents = readFileSync(characterConfigPath, 'utf8');
         return yaml.parse(fileContents);
@@ -70,7 +76,7 @@ export const config = (() => {
   try {
     const username = process.env.TWITTER_USERNAME || '';
     const cookiesPath = path.join(cookiesDir, `${username}-cookies.json`);
-    const characterConfig = loadCharacter(characterId);
+    const characterConfig = loadCharacter(characterName);
 
     const rawConfig = {
       twitterConfig: {
