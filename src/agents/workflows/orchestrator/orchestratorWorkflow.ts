@@ -8,11 +8,15 @@ import { createNodes } from './nodes.js';
 import { OrchestratorConfig, OrchestratorInput, OrchestratorState } from './types.js';
 import { createPrompts } from './prompts.js';
 import { HumanMessage } from '@langchain/core/messages';
+import { createTwitterApi } from '../../../services/twitter/client.js';
 
 const logger = createLogger('orchestrator-workflow');
 
 export const createWorkflowConfig = async (): Promise<OrchestratorConfig> => {
-  const { tools } = createTools();
+  const { USERNAME, PASSWORD, COOKIES_PATH } = config.twitterConfig;
+  const twitterApi = await createTwitterApi(USERNAME, PASSWORD, COOKIES_PATH);
+
+  const { tools } = createTools(twitterApi);
   const toolNode = new ToolNode(tools);
   const orchestratorModel = LLMFactory.createModel(config.llmConfig.nodes.orchestrator).bind({
     tools,
