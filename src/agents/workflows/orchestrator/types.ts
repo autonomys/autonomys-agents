@@ -4,10 +4,14 @@ import { Runnable } from '@langchain/core/runnables';
 import { BaseLanguageModelInput } from '@langchain/core/language_models/base';
 import { AIMessageChunk } from '@langchain/core/messages';
 import { ToolNode } from '@langchain/langgraph/prebuilt';
+import { ChatPromptTemplate } from '@langchain/core/prompts';
 
 export type OrchestratorConfig = {
-  orchestratorModelWithTools: Runnable<BaseLanguageModelInput, AIMessageChunk>;
+  orchestratorModel: Runnable<BaseLanguageModelInput, AIMessageChunk>;
   toolNode: ToolNode;
+  prompts: {
+    inputPrompt: ChatPromptTemplate;
+  };
 };
 
 export type OrchestratorInput = {

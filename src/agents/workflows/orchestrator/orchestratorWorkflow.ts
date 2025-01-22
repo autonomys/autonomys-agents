@@ -7,15 +7,18 @@ import { createTools } from './tools.js';
 import { createNodes } from './nodes.js';
 import { OrchestratorConfig, OrchestratorInput, OrchestratorState } from './types.js';
 import { HumanMessage } from '@langchain/core/messages';
+import { createPrompts } from './prompts.js';
 
 const logger = createLogger('orchestrator-workflow');
 
 export const createWorkflowConfig = async (): Promise<OrchestratorConfig> => {
   const { tools } = createTools();
   const toolNode = new ToolNode(tools);
-  const orchestratorModel = LLMFactory.createModel(config.llmConfig.nodes.orchestrator);
-  const boundModel = orchestratorModel.bindTools(tools);
-  return { orchestratorModelWithTools: boundModel, toolNode };
+  const orchestratorModel = LLMFactory.createModel(config.llmConfig.nodes.orchestrator).bind({
+    tools,
+  });
+  const prompts = await createPrompts();
+  return { orchestratorModel, toolNode, prompts };
 };
 
 const createOrchestratorWorkflow = async (nodes: Awaited<ReturnType<typeof createNodes>>) => {
