@@ -1,7 +1,7 @@
 import { MessageContent } from '@langchain/core/messages';
-import { parseMessageContent } from '../../workflows/utils.js';
-import { Tweet } from '../../../services/twitter/types.js';
-import { createLogger } from '../../../utils/logger.js';
+import { parseMessageContent } from '../../../workflows/utils.js';
+import { Tweet } from '../../../../services/twitter/types.js';
+import { createLogger } from '../../../../utils/logger.js';
 
 const logger = createLogger('convert-tweet-messages');
 
