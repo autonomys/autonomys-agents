@@ -6,12 +6,18 @@ const logger = createLogger('orchestrator-input-node');
 export const createInputNode = ({ orchestratorModel, prompts }: OrchestratorConfig) => {
   const runNode = async (state: typeof OrchestratorState.State) => {
     const { messages } = state;
-    const lastMessage = messages.at(-1)?.content;
-    logger.info('Running input node with message:', { lastMessage });
-    const formattedPrompt = await prompts.inputPrompt.format({ message: lastMessage });
+    logger.info('Running input node with messages:', { messages });
 
+    const formattedPrompt = await prompts.inputPrompt.format({
+      messages: messages.map(message => message.content),
+    });
+    logger.info('Formatted prompt:', { formattedPrompt });
     const result = await orchestratorModel.invoke(formattedPrompt);
-    return { messages: [result] };
+    logger.info('Result:', { result });
+
+    return {
+      messages: [result],
+    };
   };
   return runNode;
 };

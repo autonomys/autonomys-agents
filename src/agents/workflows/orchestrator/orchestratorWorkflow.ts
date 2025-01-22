@@ -6,8 +6,8 @@ import { ToolNode } from '@langchain/langgraph/prebuilt';
 import { createTools } from './tools.js';
 import { createNodes } from './nodes.js';
 import { OrchestratorConfig, OrchestratorInput, OrchestratorState } from './types.js';
-import { HumanMessage } from '@langchain/core/messages';
 import { createPrompts } from './prompts.js';
+import { HumanMessage } from '@langchain/core/messages';
 
 const logger = createLogger('orchestrator-workflow');
 
@@ -82,8 +82,8 @@ export const getOrchestratorRunner = (() => {
   };
 })();
 
-export const runOrchestratorWorkflow = async (input?: string) => {
-  const messages = [new HumanMessage(input || '')];
+export const runOrchestratorWorkflow = async (input: string) => {
+  const messages = [new HumanMessage({ content: input })];
   const runner = await getOrchestratorRunner();
   return runner.runWorkflow({ messages });
 };
