@@ -1,13 +1,13 @@
-import { WorkflowConfig } from '../types.js';
+import { TwitterWorkflowConfig } from '../types.js';
 import { createLogger } from '../../../../utils/logger.js';
-import { State } from '../workflow.js';
+import { State } from '../twitterWorkflow.js';
 import { AIMessage } from '@langchain/core/messages';
 import { invokeUploadToDsnTool } from '../../../tools/uploadToDsnTool.js';
 
 const logger = createLogger('upload-to-dsn-node');
 
 export const createUploadToDsnNode =
-  (config: WorkflowConfig) => async (state: typeof State.State) => {
+  (config: TwitterWorkflowConfig) => async (state: typeof State.State) => {
     logger.info('Upload to Dsn Node - Starting upload');
     const { dsnData } = state;
 

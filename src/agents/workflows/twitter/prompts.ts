@@ -8,8 +8,8 @@ import {
 } from './schemas.js';
 import { ChatPromptTemplate, PromptTemplate } from '@langchain/core/prompts';
 import { SystemMessage } from '@langchain/core/messages';
+import { config } from '../../../config/index.js';
 import { wallet } from '../../tools/utils/blockchain/agentWallet.js';
-import { loadCharacter } from '../../../config/characters.js';
 
 const followFormatInstructions = `
   IMPORTANT:
@@ -27,8 +27,9 @@ export const trendParser = StructuredOutputParser.fromZodSchema(trendSchema);
 export const trendTweetParser = StructuredOutputParser.fromZodSchema(trendTweetSchema);
 export const summaryParser = StructuredOutputParser.fromZodSchema(summarySchema);
 
-export const createPrompts = async (characterFile: string) => {
-  const character = loadCharacter(characterFile);
+export const createPrompts = async () => {
+  const character = config.characterConfig;
+  const { communicationRules, twitterProfile } = character;
 
   const engagementSystemPrompt = await PromptTemplate.fromTemplate(
     `Your task is to evaluate tweets and decide whether they warrant a response.
@@ -36,13 +37,13 @@ export const createPrompts = async (characterFile: string) => {
     Personality & Style:
     ${character.description}
     ${character.personality}
-    ${character.replyStyle}
+    ${twitterProfile.replyStyle}
 
     Criteria for engagement:
-    ${character.engagementCriteria}
+    ${twitterProfile.engagementCriteria}
 
     If the tweet is irrelevant or not engaging, or if you lack context, respond with shouldEngage: false.
-    If the tweet references you (@${character.username}):
+    If the tweet references you (@${twitterProfile.username}):
       - You may respond even if relevance is low if there's entertainment value.
       - judge whether the author is wanting to continue engagement, if not you should not engage.
       - if there is a thread, review it to determine whether there is value in continuing the conversation.
@@ -80,7 +81,7 @@ export const createPrompts = async (characterFile: string) => {
     Your task is to analyze tweets and identify emerging trends and discussions.
     
     Focus areas:
-    ${character.trendFocus}
+    ${twitterProfile.trendFocus}
 
     ${followFormatInstructions}
 
@@ -107,16 +108,16 @@ export const createPrompts = async (characterFile: string) => {
     Your task is to craft tweets in response to trending topics.
     
     Focus areas:
-    ${character.trendFocus}
+    ${twitterProfile.trendFocus}
 
     Personality & Style:
     ${character.description}
     ${character.personality}
-    ${character.rules}
-    ${character.contentFocus}
+    ${communicationRules.rules}
+    ${twitterProfile.contentFocus}
 
     Do not use these words:
-    ${character.wordsToAvoid}
+    ${communicationRules.wordsToAvoid}
 
     ${followFormatInstructions}
 
@@ -151,18 +152,18 @@ export const createPrompts = async (characterFile: string) => {
 
     General Info:
     ${character.name}
-    ${character.username}
+    ${twitterProfile.username}
     ${wallet.address}
 
     Personality & Style:
     ${character.description}
     ${character.personality}
-    ${character.rules}
-    ${character.replyStyle}
-    ${character.contentFocus}
+    ${communicationRules.rules}
+    ${twitterProfile.replyStyle}
+    ${twitterProfile.contentFocus}
 
     Do not use these words:
-    ${character.wordsToAvoid}
+    ${communicationRules.wordsToAvoid}
 
     ${followFormatInstructions}
     {format_instructions}`,

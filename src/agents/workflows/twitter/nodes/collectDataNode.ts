@@ -1,6 +1,6 @@
-import { WorkflowConfig } from '../types.js';
+import { TwitterWorkflowConfig } from '../types.js';
 import { createLogger } from '../../../../utils/logger.js';
-import { State } from '../workflow.js';
+import { State } from '../twitterWorkflow.js';
 import { convertMessageContentToTweets } from '../../../tools/utils/twitter.js';
 import { invokeFetchTimelineTool } from '../../../tools/fetchTimelineTool.js';
 import { invokeFetchMentionsTool } from '../../../tools/fetchMentionsTool.js';
@@ -13,7 +13,7 @@ const { twitterConfig } = globalConfig;
 const logger = createLogger('collect-data-node');
 
 export const createCollectDataNode =
-  (config: WorkflowConfig) => async (state: typeof State.State) => {
+  (config: TwitterWorkflowConfig) => async (state: typeof State.State) => {
     logger.info('Collect Data Node - Collecting fresh data');
     const { processedTweetIds } = state;
 

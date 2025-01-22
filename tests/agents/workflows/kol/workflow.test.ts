@@ -4,7 +4,7 @@ import {
   State,
 } from '../../../../src/agents/workflows/twitter/workflow';
 import { createNodes } from '../../../../src/agents/workflows/twitter/nodes';
-import { WorkflowConfig } from '../../../../src/agents/workflows/twitter/types';
+import { TwitterWorkflowConfig } from '../../../../src/agents/workflows/twitter/types';
 import { createMockState } from './__fixtures__/mockState';
 import { config } from '../../../../src/config';
 
@@ -28,7 +28,7 @@ jest.mock('../../../../src/services/llm/factory', () => ({
 }));
 
 describe('Twitter Workflow', () => {
-  let workflowConfig: WorkflowConfig;
+  let workflowConfig: TwitterWorkflowConfig;
 
   beforeEach(async () => {
     jest.clearAllMocks();

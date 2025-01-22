@@ -1,12 +1,12 @@
-import { WorkflowConfig } from '../types.js';
+import { TwitterWorkflowConfig } from '../types.js';
 import { createLogger } from '../../../../utils/logger.js';
-import { State } from '../workflow.js';
+import { State } from '../twitterWorkflow.js';
 import { engagementParser } from '../prompts.js';
 import { Tweet } from '../../../../services/twitter/types.js';
 
 const logger = createLogger('engagement-node');
 
-const getEngagementDecision = async (tweet: Tweet, config: WorkflowConfig) => {
+const getEngagementDecision = async (tweet: Tweet, config: TwitterWorkflowConfig) => {
   const thread =
     tweet.thread && tweet.thread.length > 0
       ? tweet.thread.map(t => ({ text: t.text, username: t.username }))
@@ -28,7 +28,7 @@ const getEngagementDecision = async (tweet: Tweet, config: WorkflowConfig) => {
   return await config.llms.decision.pipe(engagementParser).invoke(formattedPrompt);
 };
 
-export const createEngagementNode = (config: WorkflowConfig) => {
+export const createEngagementNode = (config: TwitterWorkflowConfig) => {
   return async (state: typeof State.State) => {
     logger.info('Engagement Node - Starting evaluation');
     try {

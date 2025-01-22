@@ -9,6 +9,7 @@ import { twitterDefaultConfig } from './twitter.js';
 import { memoryDefaultConfig } from './memory.js';
 import yaml from 'yaml';
 import { readFileSync } from 'fs';
+import { loadCharacter } from './characters.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -23,7 +24,7 @@ try {
 
 dotenv.config({ path: path.resolve(workspaceRoot, '.env') });
 
-function formatZodError(error: z.ZodError) {
+const formatZodError = (error: z.ZodError) => {
   const missingVars = error.issues.map(issue => {
     const path = issue.path.join('.');
     return `- ${path}: ${issue.message}`;
@@ -31,9 +32,11 @@ function formatZodError(error: z.ZodError) {
   return `Missing or invalid environment variables:
     \n${missingVars.join('\n')}
     \nPlease check your .env file and config.yaml file and ensure all required variables are set correctly.`;
-}
+};
 
-export const agentVersion = process.env.AGENT_VERSION || '1.0.0';
+const characterId = process.argv[2];
+
+export const agentVersion = process.env.AGENT_VERSION || '2.0.0';
 
 const yamlConfig = (() => {
   try {
@@ -50,6 +53,7 @@ export const config = (() => {
   try {
     const username = process.env.TWITTER_USERNAME || '';
     const cookiesPath = path.join(cookiesDir, `${username}-cookies.json`);
+    const characterConfig = loadCharacter(characterId);
 
     const rawConfig = {
       twitterConfig: {
@@ -57,6 +61,7 @@ export const config = (() => {
         PASSWORD: process.env.TWITTER_PASSWORD || '',
         COOKIES_PATH: cookiesPath,
         ...twitterDefaultConfig,
+
         ...(yamlConfig.twitter
           ? {
               ...yamlConfig.twitter,
@@ -68,6 +73,7 @@ export const config = (() => {
             }
           : {}),
       },
+      characterConfig,
       llmConfig: {
         ...llmDefaultConfig,
         ...(yamlConfig.llm || {}),

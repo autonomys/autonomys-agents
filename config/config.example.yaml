@@ -35,6 +35,9 @@ llm:
     response:
       size: 'small'
       temperature: 0.8
+    orchestrator:
+      size: 'large'
+      temperature: 0.5
 
 memory:
   MAX_PROCESSED_IDS: 5000

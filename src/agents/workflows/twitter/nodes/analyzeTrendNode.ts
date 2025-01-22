@@ -1,12 +1,12 @@
-import { WorkflowConfig } from '../types.js';
+import { TwitterWorkflowConfig } from '../types.js';
 import { createLogger } from '../../../../utils/logger.js';
-import { State } from '../workflow.js';
+import { State } from '../twitterWorkflow.js';
 import { trendParser } from '../prompts.js';
 
 const logger = createLogger('analyze-timeline-trend-node');
 
 export const createAnalyzeTrendNode =
-  (config: WorkflowConfig) => async (state: typeof State.State) => {
+  (config: TwitterWorkflowConfig) => async (state: typeof State.State) => {
     logger.info('Analyze Trend Node - Analyzing trends');
 
     const tweets = Array.from(state.trendAnalysisTweets.values()).map(({ username, text }) => ({

@@ -1,14 +1,14 @@
 import {
   DsnData,
-  DsnDataType,
   DsnGeneratedTweetData,
   DsnResponseData,
   DsnSkippedEngagementData,
   EngagementDecision,
-  WorkflowConfig,
+  TwitterDsnDataType,
+  TwitterWorkflowConfig,
 } from '../types.js';
 import { createLogger } from '../../../../utils/logger.js';
-import { State } from '../workflow.js';
+import { State } from '../twitterWorkflow.js';
 import { invokePostTweetTool } from '../../../tools/postTweetTool.js';
 import { responseParser, trendTweetParser } from '../prompts.js';
 import { AIMessage } from '@langchain/core/messages';
@@ -19,7 +19,7 @@ import { config as globalConfig } from '../../../../config/index.js';
 const logger = createLogger('generate-tweet-node');
 
 const postResponse = async (
-  config: WorkflowConfig,
+  config: TwitterWorkflowConfig,
   decision: EngagementDecision,
   summary: z.infer<typeof summarySchema>,
 ) => {
@@ -58,7 +58,7 @@ const postResponse = async (
   };
 };
 
-const postTweet = async (config: WorkflowConfig, state: typeof State.State) => {
+const postTweet = async (config: TwitterWorkflowConfig, state: typeof State.State) => {
   const recentTweets = Array.from(state.myRecentTweets.values()).map(t => ({
     text: t.text ?? '',
     username: t.username ?? '',
@@ -88,7 +88,7 @@ const postTweet = async (config: WorkflowConfig, state: typeof State.State) => {
     const tweetReceipt = JSON.parse(postedTweet.messages[0].content);
     const postedTweetId = tweetReceipt.postedTweetId;
     return {
-      type: DsnDataType.GENERATED_TWEET,
+      type: TwitterDsnDataType.GENERATED_TWEET,
       content: generatedTweet.tweet,
       tweetId: postedTweetId || null,
     } as DsnGeneratedTweetData;
@@ -97,7 +97,7 @@ const postTweet = async (config: WorkflowConfig, state: typeof State.State) => {
 };
 
 export const createGenerateTweetNode =
-  (config: WorkflowConfig) => async (state: typeof State.State) => {
+  (config: TwitterWorkflowConfig) => async (state: typeof State.State) => {
     logger.info('Generate Tweet Node - Generating tweets');
 
     if (!state.trendAnalysis || !state.trendAnalysis.trends.length) {
@@ -138,7 +138,7 @@ export const createGenerateTweetNode =
       ...postedResponses.map(
         response =>
           ({
-            type: DsnDataType.RESPONSE,
+            type: TwitterDsnDataType.RESPONSE,
             tweet: response.tweet,
             content: response.content,
             strategy: response.strategy,
@@ -151,7 +151,7 @@ export const createGenerateTweetNode =
       ...shouldNotEngage.map(
         item =>
           ({
-            type: DsnDataType.SKIPPED_ENGAGEMENT,
+            type: TwitterDsnDataType.SKIPPED_ENGAGEMENT,
             decision: item.decision,
             tweet: item.tweet,
           }) as DsnSkippedEngagementData,
