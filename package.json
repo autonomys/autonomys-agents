@@ -5,20 +5,20 @@
     "main": "dist/index.js",
     "type": "module",
     "scripts": {
-        "build": "tsc && yarn copy-characters",
-        "start": "yarn build && node dist/index.js",
+        "build": "tsc",
+        "start": "tsx scripts/start.ts",
         "dev": "NODE_ENV=development tsx --no-cache --watch src/index.ts",
         "format": "prettier --write \"src/**/*.ts\" \"tests/**/*.ts\"",
         "format:check": "prettier --check \"src/**/*.ts\" \"tests/**/*.ts\"",
         "example:twitter": "tsx examples/twitter.ts",
         "extract-twitter-dsn-schemas": "tsx src/agents/workflows/twitter/cli/extractDsnSchemas.ts",
-        "copy-characters": "cp -r config/characters dist/config/",
         "test": "jest",
         "test:watch": "jest --watch",
         "test:coverage": "jest --coverage",
         "lint": "eslint \"src/**/*.{js,ts}\"",
         "lint:fix": "eslint \"src/**/*.{js,ts}\" --fix",
-        "resurrect": "tsx src/cli/resurrect.ts"
+        "resurrect": "tsx src/cli/resurrect.ts",
+        "create-character": "tsx scripts/create-character.ts"
     },
     "dependencies": {
         "@autonomys/auto-dag-data": "1.2.1",
