@@ -2,7 +2,7 @@ import {
   createWorkflow,
   getWorkflowConfig,
   State,
-} from '../../../../src/agents/workflows/twitter/workflow';
+} from '../../../../src/agents/workflows/twitter/twitterWorkflow';
 import { createNodes } from '../../../../src/agents/workflows/twitter/nodes';
 import { TwitterWorkflowConfig } from '../../../../src/agents/workflows/twitter/types';
 import { createMockState } from './__fixtures__/mockState';
@@ -32,7 +32,7 @@ describe('Twitter Workflow', () => {
 
   beforeEach(async () => {
     jest.clearAllMocks();
-    workflowConfig = await getWorkflowConfig('character.example');
+    workflowConfig = await getWorkflowConfig();
   });
 
   it('should create workflow config with correct structure', async () => {
@@ -71,15 +71,6 @@ describe('Twitter Workflow', () => {
     expect(edges).toContainEqual(['summaryNode', 'engagementNode']);
     expect(edges).toContainEqual(['engagementNode', 'analyzeTrendNode']);
     expect(edges).toContainEqual(['analyzeTrendNode', 'generateTweetNode']);
-  });
-
-  it('should maintain workflow config singleton per character', async () => {
-    const config1 = await getWorkflowConfig('character.example');
-    const config2 = await getWorkflowConfig('character.example');
-    const config3 = await getWorkflowConfig('different-character');
-
-    expect(config1).toBe(config2); // Same character should return same instance
-    expect(config1).not.toBe(config3); // Different character should return new instance
   });
 
   // Test State annotations
