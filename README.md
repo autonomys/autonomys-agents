@@ -16,7 +16,7 @@ Autonomys Agents is an experimental framework for building AI agents. Currently,
 1. Install dependencies: `yarn install`
 2. Create your character config: `yarn create-character <your-character-name>`
 3. Setup character config:
-   - All character configs are stored in `config/{your-character-name}/`
+   - All character configs are stored in `characters/{your-character-name}/config`
    - Update .env with applicable environment variables
    - Update `config.yaml` with applicable configuration
    - Update `{your-character-name}.yaml` with applicable personality configuration (See Character System below).
@@ -30,7 +30,7 @@ The framework uses a YAML-based character system that allows you to create and r
 
 ### Creating Characters
 
-1. Characters are stored in `config/{your-character-name}/`
+1. Character related files are stored in `characters/{your-character-name}/`
 2. Create new characters by running the `create-character.ts` script:
 
    ```bash
