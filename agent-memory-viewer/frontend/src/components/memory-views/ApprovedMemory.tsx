@@ -38,7 +38,7 @@ export function ApprovedMemoryView({ memory }: Props) {
             />
             <Signature value={memory.signature} />
             <AgentVersion version={memory.agentVersion} />
-            <ConversationThread items={memory.mentions} />
+            <ConversationThread items={memory.mentions || memory.tweet?.thread} />
         </>
     );
 } 
