@@ -2,18 +2,20 @@ import { join } from 'path';
 import { mkdirSync } from 'fs';
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
-import { createLogger } from '../utils/logger.js';
-import { downloadAllMemories } from './utils/resurrection.js';
 
-const logger = createLogger('resurrect-cli');
+// Only import these if we're not showing help
+let createLogger: any;
+let downloadAllMemories: any;
 
-interface CliOptions {
-  outputDir: string;
-  memoriesToFetch: number | null;
-}
-
-const parseArgs = (): CliOptions => {
-  const argv = yargs(hideBin(process.argv))
+const setupYargs = () =>
+  yargs(hideBin(process.argv))
+    .command('* [character]', 'Resurrect memories for a character', yargs => {
+      yargs.positional('character', {
+        type: 'string',
+        description: 'Character name',
+        demandOption: true,
+      });
+    })
     .option('output', {
       alias: 'o',
       type: 'string',
@@ -26,24 +28,49 @@ const parseArgs = (): CliOptions => {
       description: 'Number of memories to fetch',
       default: null,
     })
-    .check(argv => {
-      if (argv.number !== null && (isNaN(argv.number) || argv.number <= 0)) {
-        throw new Error('Number of memories must be a positive integer');
-      }
-      return true;
-    })
-    .help()
-    .parseSync();
+    .help();
 
-  return {
-    outputDir: join(process.cwd(), argv.output as string),
-    memoriesToFetch: argv.number as number | null,
+// Handle help first, before any other imports or initialization
+if (process.argv.includes('--help') || process.argv.includes('-h')) {
+  setupYargs().showHelp();
+  process.exit(0);
+}
+
+// Only import and run the rest of the code if we're not showing help
+const run = async () => {
+  // Dynamic imports to prevent initialization during help
+  ({ createLogger } = await import('../utils/logger.js'));
+  ({ downloadAllMemories } = await import('./utils/resurrection.js'));
+
+  const logger = createLogger('resurrect-cli');
+
+  interface CliOptions {
+    outputDir: string;
+    memoriesToFetch: number | null;
+  }
+
+  const parseArgs = (): CliOptions => {
+    const argv = setupYargs()
+      .check(argv => {
+        if (!argv.character) {
+          throw new Error('Character name is required');
+        }
+        if (argv.number !== null && (isNaN(argv.number) || argv.number <= 0)) {
+          throw new Error('Number of memories must be a positive integer');
+        }
+        return true;
+      })
+      .parseSync();
+
+    return {
+      outputDir: join(process.cwd(), 'characters', argv.character as string, argv.output as string),
+      memoriesToFetch: argv.number as number | null,
+    };
   };
-};
 
-const main = async () => {
+  const options = parseArgs();
+
   try {
-    const options = parseArgs();
     mkdirSync(options.outputDir, { recursive: true });
 
     logger.info(`Using output directory: ${options.outputDir}`);
@@ -65,4 +92,7 @@ const main = async () => {
   }
 };
 
-main();
+// Only run if we're not showing help
+if (!process.argv.includes('--help') && !process.argv.includes('-h')) {
+  run();
+}

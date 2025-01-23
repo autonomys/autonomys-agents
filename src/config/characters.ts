@@ -4,6 +4,7 @@ import { join } from 'path';
 
 export interface Character {
   name: string;
+  characterPath: string;
   description: string;
   personality: string[];
   expertise: string[];
@@ -39,13 +40,15 @@ interface RawCharacterConfig {
 }
 
 export const loadCharacter = (characterName: string): Character => {
-  const configPath = join(process.cwd(), 'config', `${characterName}`, `${characterName}.yaml`);
+  const characterPath = join(process.cwd(), 'characters', `${characterName}`);
+  const configPath = join(characterPath, 'config', `${characterName}.yaml`);
   try {
     const yamlContent = readFileSync(configPath, 'utf8');
     const rawConfig = load(yamlContent) as RawCharacterConfig;
 
     return {
       ...rawConfig,
+      characterPath,
       communicationRules: {
         ...rawConfig.communication_rules,
         wordsToAvoid: rawConfig.communication_rules.words_to_avoid,

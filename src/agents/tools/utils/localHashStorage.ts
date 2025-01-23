@@ -2,11 +2,12 @@ import { join } from 'path';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs';
 import { createLogger } from '../../../utils/logger.js';
 import { getLastMemoryHashSetTimestamp } from './blockchain/agentMemoryContract.js';
+import { config } from '../../../config/index.js';
 
 const logger = createLogger('local-hash-storage');
-const HASH_FILE = join(process.cwd(), 'memories', 'last-memory-hash.json');
-if (!existsSync(join(process.cwd(), 'memories'))) {
-  mkdirSync(join(process.cwd(), 'memories'));
+const HASH_FILE = join(config.characterConfig.characterPath, 'memories', 'last-memory-hash.json');
+if (!existsSync(join(config.characterConfig.characterPath, 'memories'))) {
+  mkdirSync(join(config.characterConfig.characterPath, 'memories'));
 }
 
 interface StoredHash {

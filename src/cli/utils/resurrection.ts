@@ -3,9 +3,14 @@ import { getLastMemoryCid } from '../../agents/tools/utils/blockchain/agentMemor
 import { download } from '../../agents/tools/utils/dsn/dsnDownload.js';
 import { existsSync, readFileSync, writeFileSync } from 'fs';
 import { join } from 'path';
+import { config } from '../../config/index.js';
 
 const logger = createLogger('memory-resurrector');
-const STATE_FILE = join(process.cwd(), 'memories', 'last-processed-cid.json');
+const STATE_FILE = join(
+  config.characterConfig.characterPath,
+  'memories',
+  'last-processed-cid.json',
+);
 
 const getLastProcessedCid = (): string | null => {
   try {

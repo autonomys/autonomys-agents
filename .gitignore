@@ -1,9 +1,10 @@
-config/**/*.yaml
-!config/character.example/*
+characters/*
+!characters/character.example/
 .cookies/
 memories/
 !src/config/
 dsn-twitter-schemas.json
+
 
 # Python bytecode
 __pycache__/
