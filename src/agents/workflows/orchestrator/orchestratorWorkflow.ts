@@ -38,7 +38,6 @@ const createOrchestratorWorkflow = async (nodes: Awaited<ReturnType<typeof creat
       const lastMessage = state.messages[state.messages.length - 1];
       if (!lastMessage?.content) return 'tools';
 
-      // Extract control block from AI response
       const contentStr = typeof lastMessage.content === 'string' 
         ? lastMessage.content 
         : JSON.stringify(lastMessage.content);
@@ -55,8 +54,6 @@ const createOrchestratorWorkflow = async (nodes: Awaited<ReturnType<typeof creat
         }
       } catch (error) {
         logger.warn('Failed to parse workflow control', { error });
-        await new Promise(resolve => setTimeout(resolve, 1000000));
-
       }
       
       return 'tools';

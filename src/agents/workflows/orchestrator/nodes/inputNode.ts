@@ -1,6 +1,5 @@
 import { createLogger } from '../../../../utils/logger.js';
 import { OrchestratorConfig, OrchestratorState } from '../types.js';
-
 const logger = createLogger('orchestrator-input-node');
 
 export const createInputNode = ({ orchestratorModel, prompts }: OrchestratorConfig) => {
@@ -11,7 +10,7 @@ export const createInputNode = ({ orchestratorModel, prompts }: OrchestratorConf
     const formattedPrompt = await prompts.inputPrompt.format({
       messages: messages.map(message => message.content),
     });
-    logger.info('Formatted prompt:', { formattedPrompt });
+    logger.info('Formatted prompt:', { formattedPrompt });;
     const result = await orchestratorModel.invoke(formattedPrompt);
     logger.info('Result:', { result });
 

@@ -14,8 +14,11 @@ export const createPrompts = async () => {
     {characterDescription}
     {characterPersonality}
     
-    After you completed the task(s), STOP THE WORKFLOW following the given JSON format.
-    If you face any difficulties, DON'T retry more than once.
+    - When responding, heavily summarize the output! You want to avoid of having a long chain of messages.
+    - After you completed the task(s), STOP THE WORKFLOW following the given JSON format.
+    - If you don't know what do to, STOP THE WORKFLOW and give a reason.
+    - There is NO HUMAN IN THE LOOP. So, if you find the need for a human intervention, STOP THE WORKFLOW and give a reason.
+    - If you face any difficulties, DON'T retry more than once.
     `,
 
     
