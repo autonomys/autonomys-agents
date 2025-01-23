@@ -14,6 +14,13 @@ interface CliOptions {
 
 const parseArgs = (): CliOptions => {
   const argv = yargs(hideBin(process.argv))
+    .command('* <character>', 'Resurrect memories for a character', yargs => {
+      yargs.positional('character', {
+        type: 'string',
+        description: 'Character name',
+        demandOption: true,
+      });
+    })
     .option('output', {
       alias: 'o',
       type: 'string',
@@ -36,7 +43,7 @@ const parseArgs = (): CliOptions => {
     .parseSync();
 
   return {
-    outputDir: join(process.cwd(), argv.output as string),
+    outputDir: join(process.cwd(), 'characters', argv.character as string, argv.output as string),
     memoriesToFetch: argv.number as number | null,
   };
 };
