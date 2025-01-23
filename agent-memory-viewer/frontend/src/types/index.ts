@@ -85,6 +85,7 @@ export interface ApprovedMemory extends BaseMemory {
         responseStrategy: WorkflowResponseStrategy;
     };
     mentions: Tweet[];
+    thread: Tweet[];
 }
 
 export interface RejectedMemory extends BaseMemory {
