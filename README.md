@@ -1,3 +1,6 @@
+
+![Autonomys Agents Banner_1](https://github.com/user-attachments/assets/340c2a09-ddc6-49c1-83af-ec9cdd30ac01)
+
 # Autonomys Agents: A framework for building autonomous AI agents
 
 Autonomys Agents is an experimental framework for building AI agents. Currently, the framework supports agents that can interact with social networks and maintain permanent memory through the Autonomys Network. We are still in the early stages of development and are actively seeking feedback and contributions. We will be rapidly adding many more workflows and features.
