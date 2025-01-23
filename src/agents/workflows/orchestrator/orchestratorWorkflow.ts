@@ -9,6 +9,7 @@ import { OrchestratorConfig, OrchestratorInput, OrchestratorState } from './type
 import { createPrompts } from './prompts.js';
 import { HumanMessage } from '@langchain/core/messages';
 import { createTwitterApi } from '../../../services/twitter/client.js';
+import { workflowControlParser } from './prompts.js';
 
 const logger = createLogger('orchestrator-workflow');
 
@@ -30,9 +31,36 @@ const createOrchestratorWorkflow = async (nodes: Awaited<ReturnType<typeof creat
     .addNode('input', nodes.inputNode)
     .addNode('tools', nodes.toolNode)
     .addEdge(START, 'input')
-    .addEdge('input', 'tools')
-    .addEdge('tools', END);
+    .addEdge('tools', 'input')
+    .addConditionalEdges('input', async (state) => {
+      logger.info('State in conditional edge', { state });
+      
+      const lastMessage = state.messages[state.messages.length - 1];
+      if (!lastMessage?.content) return 'tools';
 
+      // Extract control block from AI response
+      const contentStr = typeof lastMessage.content === 'string' 
+        ? lastMessage.content 
+        : JSON.stringify(lastMessage.content);
+      logger.info('Content string', { contentStr });
+
+      try {
+        const match = contentStr.match(/\{[\s\S]*"shouldStop"[\s\S]*\}/);
+        if (match) {
+          const control = workflowControlParser.parse(JSON.parse(match[0]));
+          if (control.shouldStop) {
+            logger.info('Workflow stop requested', { reason: control.reason });
+            return END;
+          }
+        }
+      } catch (error) {
+        logger.warn('Failed to parse workflow control', { error });
+        await new Promise(resolve => setTimeout(resolve, 1000000));
+
+      }
+      
+      return 'tools';
+    });
   return workflow;
 };
 
