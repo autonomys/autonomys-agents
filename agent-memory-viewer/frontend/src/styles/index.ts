@@ -3,4 +3,4 @@ export * from './components/text';
 export * from './components/button';
 export * from './components/link';
 export * from './components/select';
-export * from './theme/colors'; 
+export * from './theme/colors';

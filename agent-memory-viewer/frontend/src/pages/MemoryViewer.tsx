@@ -1,8 +1,9 @@
-import { Card, CardBody, Text, Spinner, VStack, HStack, Button, Link, Box, Badge } from '@chakra-ui/react'
+import { Card, CardBody, Text, Spinner, VStack, HStack, Button, Link, Box, Badge, IconButton, Divider, Tooltip } from '@chakra-ui/react'
 import { useParams, useNavigate, Link as RouterLink } from 'react-router-dom'
-import { ArrowBackIcon, ExternalLinkIcon } from '@chakra-ui/icons'
+import { ArrowBackIcon, ExternalLinkIcon, CopyIcon, TimeIcon } from '@chakra-ui/icons'
 import { useMemory } from '../api/client'
 import ReactJson from 'react-json-view'
+import { utcToLocalRelativeTime } from '../utils/timeUtils'
 
 function MemoryViewer() {
     const { cid } = useParams()
@@ -11,87 +12,134 @@ function MemoryViewer() {
 
     const explorerUrl = `https://astral.autonomys.xyz/taurus/permanent-storage/files/${cid}`
 
-    if (isLoading) return <Spinner color="green.400" />
+    if (isLoading) return <Spinner color="green.400" thickness="4px" size="xl" />
     if (error) return <Text color="red.500">Error loading memory: {error.message}</Text>
     if (!memory) return <Text>No memory found</Text>
 
     return (
-        <VStack spacing={4} align="stretch">
-            <Card>
-                <CardBody>
-                    {/* Header */}
-                    <HStack justify="space-between" mb={4}>
-                        <VStack align="start" spacing={1}>
-                            <HStack>
-                                <Text fontSize="lg" fontWeight="bold" color="green.400">
-                                    Memory CID: {cid}
-                                </Text>
-                                <Badge colorScheme={getTypeColorScheme(memory.type)}>
-                                    {memory.type}
-                                </Badge>
-                            </HStack>
-                            <Text fontSize="sm" color="gray.500">
-                                Agent Version: {memory.agentVersion}
-                            </Text>
-                        </VStack>
-                        <HStack spacing={4}>
-                            <Link
-                                href={explorerUrl}
-                                isExternal
-                                color="blue.400"
-                                _hover={{ color: 'blue.300' }}
-                            >
-                                View in Explorer <ExternalLinkIcon mx="2px" />
-                            </Link>
-                            {memory.previousCid && (
-                                <Link
-                                    as={RouterLink}
-                                    to={`/memory/${memory.previousCid}`}
-                                    color="blue.400"
-                                    _hover={{ color: 'blue.300' }}
-                                >
-                                    Previous CID
-                                </Link>
-                            )}
-                        </HStack>
-                    </HStack>
+        <VStack spacing={6} align="stretch">
+            {/* Navigation Bar */}
+            <HStack justify="space-between" w="full">
+                <Button
+                    leftIcon={<ArrowBackIcon />}
+                    onClick={() => navigate('/')}
+                    variant="outline"
+                    color="green.400"
+                    borderColor="green.400"
+                    _hover={{
+                        bg: 'green.400',
+                        color: 'black'
+                    }}
+                >
+                    Back to Home
+                </Button>
+                <Badge 
+                    colorScheme={getTypeColorScheme(memory.type)}
+                    fontSize="md"
+                    px={3}
+                    py={1}
+                    borderRadius="full"
+                >
+                    {memory.type}
+                </Badge>
+            </HStack>
 
-                    {/* JSON Content */}
-                    <Box 
-                        borderRadius="lg"
-                        overflow="hidden"
-                        bg="blackAlpha.400"
-                        p={4}
-                        mb={4}
-                    >
-                        <ReactJson 
-                            src={memory}
-                            theme="tomorrow"
-                            collapsed={false}
-                            displayDataTypes={false}
-                            name={false}
-                            style={{
-                                backgroundColor: 'transparent',
-                                borderRadius: '0.5rem',
-                                fontSize: '0.9em',
-                            }}
-                            enableClipboard={true}
-                            displayObjectSize={false}
-                        />
-                    </Box>
-                    
-                    {/* Back Button */}
-                    <Button
-                        leftIcon={<ArrowBackIcon />}
-                        onClick={() => navigate('/')}
-                        colorScheme="green"
-                        variant="outline"
-                        size="lg"
-                        width="full"
-                        mt={4}
-                    >
-                        Back to Home
-                    </Button>
+            {/* Main Content Card */}
+            <Card 
+                bg="blackAlpha.400" 
+                borderColor="green.400" 
+                borderWidth="1px"
+                boxShadow="0 0 20px rgba(72, 187, 120, 0.2)"
+            >
+                <CardBody>
+                    {/* Memory Details */}
+                    <VStack align="stretch" spacing={4}>
+                        {/* CID and Version */}
+                        <HStack justify="space-between" wrap="wrap" spacing={4}>
+                            <VStack align="start" spacing={1}>
+                                <Text color="gray.400" fontSize="sm">Memory CID</Text>
+                                <HStack>
+                                    <Text color="green.400" fontFamily="mono" fontSize="lg">
+                                        {cid}
+                                    </Text>
+                                    <IconButton
+                                        aria-label="Copy CID"
+                                        icon={<CopyIcon />}
+                                        size="sm"
+                                        variant="ghost"
+                                        color="green.400"
+                                        onClick={() => navigator.clipboard.writeText(cid || '')}
+                                    />
+                                </HStack>
+                            </VStack>
+                            <VStack align="end" spacing={1}>
+                                <Text color="gray.400" fontSize="sm">Agent Version</Text>
+                                <Text color="green.400" fontFamily="mono">
+                                    v{memory.agentVersion}
+                                </Text>
+                            </VStack>
+                        </HStack>
+
+                        <Divider borderColor="whiteAlpha.200" />
+
+                        {/* Timestamp and Links */}
+                        <HStack justify="space-between" wrap="wrap" spacing={4}>
+                            <Tooltip label={new Date(memory.timestamp).toLocaleString()}>
+                                <HStack color="gray.400">
+                                    <TimeIcon />
+                                    <Text>{utcToLocalRelativeTime(memory.timestamp)}</Text>
+                                </HStack>
+                            </Tooltip>
+                            <HStack spacing={4}>
+                                {memory.previousCid && (
+                                    <Link
+                                        as={RouterLink}
+                                        to={`/memory/${memory.previousCid}`}
+                                        color="green.400"
+                                        _hover={{ color: 'green.300' }}
+                                    >
+                                        <HStack>
+                                            <ArrowBackIcon />
+                                            <Text>Previous Memory</Text>
+                                        </HStack>
+                                    </Link>
+                                )}
+                                <Link
+                                    href={explorerUrl}
+                                    isExternal
+                                    color="green.400"
+                                    _hover={{ color: 'green.300' }}
+                                >
+                                    View in Explorer <ExternalLinkIcon mx="2px" />
+                                </Link>
+                            </HStack>
+                        </HStack>
+
+                        <Divider borderColor="whiteAlpha.200" />
+
+                        {/* JSON Content */}
+                        <Box 
+                            borderRadius="lg"
+                            bg="blackAlpha.500"
+                            p={4}
+                            position="relative"
+                        >
+                            <ReactJson 
+                                src={memory}
+                                theme="tomorrow"
+                                collapsed={1}
+                                displayDataTypes={false}
+                                name={false}
+                                style={{
+                                    backgroundColor: 'transparent',
+                                    borderRadius: '0.5rem',
+                                    fontSize: '0.9em',
+                                }}
+                                enableClipboard={true}
+                                displayObjectSize={false}
+                            />
+                        </Box>
+                    </VStack>
                 </CardBody>
             </Card>
         </VStack>
