@@ -17,7 +17,7 @@ process.on('SIGTERM', () => {
 
 const startWorkflowPolling = async () => {
   try {
-    const _result = await runOrchestratorWorkflow('Run Twitter workflow');
+    const _result = await runOrchestratorWorkflow('Run the twitter workflow');
     logger.info(
       'Workflow execution completed successfully for character:',
       config.characterConfig.name,
