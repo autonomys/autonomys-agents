@@ -29,14 +29,15 @@ if (!characterName) {
   process.kill(0, 'SIGKILL');
 }
 const characterConfig = loadCharacter(characterName);
-// Load character-specific .env if it exists, otherwise fall back to root .env
+// Load root .env
+dotenv.config({ path: path.resolve(workspaceRoot, '.env') });
+
+// Load character-specific .env if it exists, overriding root .env values
 const characterEnvPath = characterName
   ? path.resolve(characterConfig.characterPath, 'config', '.env')
   : null;
 if (characterEnvPath && existsSync(characterEnvPath)) {
   dotenv.config({ path: characterEnvPath });
-} else {
-  dotenv.config({ path: path.resolve(workspaceRoot, '.env') });
 }
 
 const formatZodError = (error: z.ZodError) => {
