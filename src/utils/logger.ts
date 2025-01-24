@@ -1,5 +1,6 @@
 import winston from 'winston';
 import { config } from '../config/index.js';
+import path from 'path';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const formatMeta = (meta: any, _useColors: boolean = false) => {
@@ -77,11 +78,12 @@ export const createLogger = (
   errorLogs: string = 'error.log',
   combinedLogs: string = 'combined.log',
 ) => {
+  const characterFolder = path.join(config.characterConfig.characterPath, folder);
   const logger = winston.createLogger({
     defaultMeta: { context },
     level: 'info',
     format: createFileFormat(),
-    transports: createTransports(folder, errorLogs, combinedLogs),
+    transports: createTransports(characterFolder, errorLogs, combinedLogs),
   });
 
   return addConsoleTransport(logger);
