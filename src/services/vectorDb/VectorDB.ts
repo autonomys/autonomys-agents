@@ -50,7 +50,11 @@ export class VectorDB {
 
   private initializeDatabase(): void {
     const extensionPath = vectorlite.vectorlitePath();
-    logger.info('Vectorlite extension path:', extensionPath);
+    logger.info('Initializing VectorDB', {
+      extensionPath,
+      dbExists: existsSync(this.dbFilePath),
+      indexExists: existsSync(this.indexFilePath),
+    });
 
     this.db = new Database(this.dbFilePath);
     this.db.loadExtension(extensionPath);
@@ -58,12 +62,33 @@ export class VectorDB {
 
     this.createTables();
 
+    if (!existsSync(this.indexFilePath)) {
+      const initialEmbedding = new Array(1536).fill(0);
+      this.db.exec('BEGIN');
+      try {
+        this.db
+          .prepare(
+            `
+                INSERT INTO embeddings_index (rowid, embedding_vector) 
+                VALUES (?, ?)
+            `,
+          )
+          .run(0, Buffer.from(new Float32Array(initialEmbedding).buffer));
+
+        this.db.exec('DELETE FROM embeddings_index WHERE rowid = 0');
+        this.db.exec('COMMIT');
+        this.db.close();
+        this.db = new Database(this.dbFilePath);
+        this.db.loadExtension(extensionPath);
+      } catch (error) {
+        logger.error('Error initializing bin file:', error);
+        this.db.exec('ROLLBACK');
+        throw error;
+      }
+    }
+
     const maxRowIdResult = this.db
-      .prepare(
-        `
-        SELECT MAX(rowid) as maxId FROM content_store
-        `,
-      )
+      .prepare('SELECT MAX(rowid) as maxId FROM content_store')
       .get() as { maxId: number | null };
     this.nextRowId = (maxRowIdResult?.maxId || 0) + 1;
     logger.info(`Initialized with next rowid: ${this.nextRowId}`);
@@ -104,7 +129,7 @@ export class VectorDB {
 
     const embedding = await this.getEmbedding(content);
 
-    this.db.exec('BEGIN');
+    this.db.exec('BEGIN IMMEDIATE');
     try {
       if (this.nextRowId > this.maxElements) {
         const oldestRowId = this.db
@@ -185,5 +210,16 @@ export class VectorDB {
 
   getDatabase(): Database.Database {
     return this.db;
+  }
+
+  public close(): void {
+    logger.info('Closing VectorDB connection');
+    if (this.db) {
+      try {
+        this.db.exec('COMMIT');
+      } catch (e) {}
+      this.db.close();
+      logger.info('VectorDB closed successfully');
+    }
   }
 }

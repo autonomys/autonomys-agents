@@ -7,6 +7,17 @@ import { VectorDB } from '../../services/vectorDb/VectorDB.js';
 
 const logger = createLogger('vector-db-tool');
 
+const extractTextFromJson = (obj: any): string => {
+  if (typeof obj === 'string') return obj;
+  if (Array.isArray(obj)) return obj.map(item => extractTextFromJson(item)).join(' ');
+  if (typeof obj === 'object' && obj !== null) {
+    return Object.values(obj)
+      .map(value => extractTextFromJson(value))
+      .join(' ');
+  }
+  return '';
+};
+
 export const createVectorDbInsertTool = (vectorDb: VectorDB) =>
   new DynamicStructuredTool({
     name: 'vector_db_insert',
@@ -15,7 +26,10 @@ export const createVectorDbInsertTool = (vectorDb: VectorDB) =>
     func: async ({ data }: { data: string }) => {
       try {
         logger.info('Inserting data into vector db', { data });
-        const memories = await vectorDb.insert(data);
+        const parsed = JSON.parse(data);
+        const textToEmbed = extractTextFromJson(parsed);
+        logger.info('Extracted text for embedding', { textToEmbed });
+        const memories = await vectorDb.insert(textToEmbed);
         return memories;
       } catch (error) {
         logger.error('Error in vectorDbTool:', error);
