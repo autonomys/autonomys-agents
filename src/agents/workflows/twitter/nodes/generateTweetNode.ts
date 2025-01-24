@@ -9,7 +9,7 @@ import {
 } from '../types.js';
 import { createLogger } from '../../../../utils/logger.js';
 import { State } from '../twitterWorkflow.js';
-import { invokePostTweetTool } from '../../../tools/postTweetTool.js';
+import { invokePostTweetTool } from '../../../tools/twitter/postTweetTool.js';
 import { responseParser, trendTweetParser } from '../prompts.js';
 import { AIMessage } from '@langchain/core/messages';
 import { summarySchema } from '../schemas.js';

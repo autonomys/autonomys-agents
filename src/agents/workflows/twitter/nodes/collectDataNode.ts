@@ -1,11 +1,11 @@
 import { TwitterWorkflowConfig } from '../types.js';
 import { createLogger } from '../../../../utils/logger.js';
 import { State } from '../twitterWorkflow.js';
-import { convertMessageContentToTweets } from '../../../tools/utils/twitter.js';
-import { invokeFetchTimelineTool } from '../../../tools/fetchTimelineTool.js';
-import { invokeFetchMentionsTool } from '../../../tools/fetchMentionsTool.js';
-import { invokeFetchMyRecentTweetsTool } from '../../../tools/fetchMyRecentTweetsTool.js';
-import { invokeFetchMyRecentRepliesTool } from '../../../tools/fetchMyRecentRepliesTool.js';
+import { convertMessageContentToTweets } from '../../../tools/twitter/utils/twitter.js';
+import { invokeFetchTimelineTool } from '../../../tools/twitter/fetchTimelineTool.js';
+import { invokeFetchMentionsTool } from '../../../tools/twitter/fetchMentionsTool.js';
+import { invokeFetchMyRecentTweetsTool } from '../../../tools/twitter/fetchMyRecentTweetsTool.js';
+import { invokeFetchMyRecentRepliesTool } from '../../../tools/twitter/fetchMyRecentRepliesTool.js';
 import { config as globalConfig } from '../../../../config/index.js';
 
 const { twitterConfig } = globalConfig;

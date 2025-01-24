@@ -4,7 +4,9 @@ import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 
 // Only import these if we're not showing help
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 let createLogger: any;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 let downloadAllMemories: any;
 
 const setupYargs = () =>

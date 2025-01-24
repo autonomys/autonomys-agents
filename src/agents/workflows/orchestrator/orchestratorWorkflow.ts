@@ -1,4 +1,11 @@
-import { END, MemorySaver, START, StateGraph } from '@langchain/langgraph';
+import {
+  BinaryOperatorAggregate,
+  END,
+  MemorySaver,
+  START,
+  StateGraph,
+  StateType,
+} from '@langchain/langgraph';
 import { createLogger } from '../../../utils/logger.js';
 import { LLMFactory } from '../../../services/llm/factory.js';
 import { config } from '../../../config/index.js';
@@ -6,16 +13,58 @@ import { ToolNode } from '@langchain/langgraph/prebuilt';
 import { createTools } from './tools.js';
 import { createNodes } from './nodes.js';
 import { OrchestratorConfig, OrchestratorInput, OrchestratorState } from './types.js';
-import { HumanMessage } from '@langchain/core/messages';
+import { createPrompts } from './prompts.js';
+import { BaseMessage, HumanMessage } from '@langchain/core/messages';
+import { createTwitterApi } from '../../../services/twitter/client.js';
+import { workflowControlParser } from './prompts.js';
 
 const logger = createLogger('orchestrator-workflow');
 
 export const createWorkflowConfig = async (): Promise<OrchestratorConfig> => {
-  const { tools } = createTools();
+  const { USERNAME, PASSWORD, COOKIES_PATH } = config.twitterConfig;
+  const twitterApi = await createTwitterApi(USERNAME, PASSWORD, COOKIES_PATH);
+
+  const { tools } = createTools(twitterApi);
   const toolNode = new ToolNode(tools);
-  const orchestratorModel = LLMFactory.createModel(config.llmConfig.nodes.orchestrator);
-  const boundModel = orchestratorModel.bindTools(tools);
-  return { orchestratorModelWithTools: boundModel, toolNode };
+  const orchestratorModel = LLMFactory.createModel(config.llmConfig.nodes.orchestrator).bind({
+    tools,
+  });
+  const prompts = await createPrompts();
+  return { orchestratorModel, toolNode, prompts };
+};
+
+const handleConditionalEdge = async (
+  state: StateType<{
+    messages: BinaryOperatorAggregate<readonly BaseMessage[], readonly BaseMessage[]>;
+    error: BinaryOperatorAggregate<Error | null, Error | null>;
+  }>,
+) => {
+  logger.info('State in conditional edge', { state });
+
+  const lastMessage = state.messages[state.messages.length - 1];
+  if (!lastMessage?.content) return 'tools';
+
+  const contentStr =
+    typeof lastMessage.content === 'string'
+      ? lastMessage.content
+      : JSON.stringify(lastMessage.content);
+  logger.info('Content string', { contentStr });
+
+  try {
+    const match = contentStr.match(/\{[\s\S]*"shouldStop"[\s\S]*\}/);
+    if (match) {
+      const control = workflowControlParser.parse(JSON.parse(match[0]));
+      if (control.shouldStop) {
+        logger.info('Workflow stop requested', { reason: control.reason });
+        return END;
+      }
+    }
+  } catch (error) {
+    logger.warn('Failed to parse workflow control', { error });
+    return 'END';
+  }
+
+  return 'tools';
 };
 
 const createOrchestratorWorkflow = async (nodes: Awaited<ReturnType<typeof createNodes>>) => {
@@ -23,9 +72,8 @@ const createOrchestratorWorkflow = async (nodes: Awaited<ReturnType<typeof creat
     .addNode('input', nodes.inputNode)
     .addNode('tools', nodes.toolNode)
     .addEdge(START, 'input')
-    .addEdge('input', 'tools')
-    .addEdge('tools', END);
-
+    .addEdge('tools', 'input')
+    .addConditionalEdges('input', handleConditionalEdge);
   return workflow;
 };
 
@@ -79,8 +127,8 @@ export const getOrchestratorRunner = (() => {
   };
 })();
 
-export const runOrchestratorWorkflow = async (input?: string) => {
-  const messages = [new HumanMessage(input || '')];
+export const runOrchestratorWorkflow = async (input: string) => {
+  const messages = [new HumanMessage({ content: input })];
   const runner = await getOrchestratorRunner();
   return runner.runWorkflow({ messages });
 };
