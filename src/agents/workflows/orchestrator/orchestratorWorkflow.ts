@@ -61,6 +61,7 @@ const handleConditionalEdge = async (
     }
   } catch (error) {
     logger.warn('Failed to parse workflow control', { error });
+    return 'END';
   }
 
   return 'tools';
