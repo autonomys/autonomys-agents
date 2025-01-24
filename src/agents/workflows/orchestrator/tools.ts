@@ -7,6 +7,7 @@ import { createFetchMyRecentTweetsTool } from '../../tools/twitter/fetchMyRecent
 import { createVectorDbSearchTool, createVectorDbInsertTool } from '../../tools/vectorDbTools.js';
 import { TwitterApi } from '../../../services/twitter/types.js';
 import { VectorDB } from '../../../services/vectorDb/VectorDB.js';
+import { createSaveExperienceTool } from '../../tools/saveExperienceTool.js';
 
 export const createTools = (twitterApi: TwitterApi, vectorDb: VectorDB) => {
   const twitterWorkflowTool = createTwitterWorkflowTool();
@@ -17,6 +18,7 @@ export const createTools = (twitterApi: TwitterApi, vectorDb: VectorDB) => {
   const fetchMyRecentTweetsTool = createFetchMyRecentTweetsTool(twitterApi);
   const vectorDbSearchTool = createVectorDbSearchTool(vectorDb);
   const vectorDbInsertTool = createVectorDbInsertTool(vectorDb);
+  const saveExperienceTool = createSaveExperienceTool();
 
   return {
     twitterWorkflowTool,
@@ -27,6 +29,7 @@ export const createTools = (twitterApi: TwitterApi, vectorDb: VectorDB) => {
     fetchMyRecentTweetsTool,
     vectorDbSearchTool,
     vectorDbInsertTool,
+    saveExperienceTool,
     tools: [
       twitterWorkflowTool,
       fetchMentionsTool,
@@ -36,6 +39,7 @@ export const createTools = (twitterApi: TwitterApi, vectorDb: VectorDB) => {
       fetchMyRecentTweetsTool,
       vectorDbSearchTool,
       vectorDbInsertTool,
+      saveExperienceTool,
     ],
   };
 };

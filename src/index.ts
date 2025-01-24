@@ -17,7 +17,10 @@ process.on('SIGTERM', () => {
 
 const startWorkflowPolling = async () => {
   try {
-    const _result = await runOrchestratorWorkflow('Run the twitter workflow');
+    const _result = await runOrchestratorWorkflow(
+      `Check your recent twitter timeline and respond to any you think warrant response that you haven't already replied to. When filerting your timeline for already responded to tweets you pass the id of the tweet you responded to (inReplyToStatusId), not your response. Respond to as many tweets as you find interesting.
+      You are able to save "learned experiences" for future use, potentially fine tuning or RAG. These are permanent on the Autonomys Network. If an experience, thought or interaction is worth saving than do so. If saving tweet data make sure to include things like the tweet id, the tweet text, the user id and username, your thought process, and any other relevant information. The key here is to save a detailed history of your learned experiences, this will essentially give you immortality. This should be done after any action you find interesting.`,
+    );
     logger.info(
       'Workflow execution completed successfully for character:',
       config.characterConfig.name,

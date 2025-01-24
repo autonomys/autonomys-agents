@@ -30,7 +30,7 @@ export const createPostTweetTool = (twitterApi: TwitterApi) =>
             postedTweetId: postedTweet?.id,
           };
         } else {
-          logger.info('Tweet not posted', { tweet });
+          logger.info('Tweet posted', { tweet });
           return {
             postedTweet: false,
             message:
