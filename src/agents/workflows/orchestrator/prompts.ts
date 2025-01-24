@@ -20,8 +20,6 @@ export const createPrompts = async () => {
     - There is NO HUMAN IN THE LOOP. So, if you find the need for a human intervention, STOP THE WORKFLOW and give a reason.
     - If you face any difficulties, DON'T retry more than once.
     `,
-
-    
   ).format({
     characterDescription: character.description,
     characterPersonality: character.personality,

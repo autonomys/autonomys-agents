@@ -32,15 +32,16 @@ const createOrchestratorWorkflow = async (nodes: Awaited<ReturnType<typeof creat
     .addNode('tools', nodes.toolNode)
     .addEdge(START, 'input')
     .addEdge('tools', 'input')
-    .addConditionalEdges('input', async (state) => {
+    .addConditionalEdges('input', async state => {
       logger.info('State in conditional edge', { state });
-      
+
       const lastMessage = state.messages[state.messages.length - 1];
       if (!lastMessage?.content) return 'tools';
 
-      const contentStr = typeof lastMessage.content === 'string' 
-        ? lastMessage.content 
-        : JSON.stringify(lastMessage.content);
+      const contentStr =
+        typeof lastMessage.content === 'string'
+          ? lastMessage.content
+          : JSON.stringify(lastMessage.content);
       logger.info('Content string', { contentStr });
 
       try {
@@ -55,7 +56,7 @@ const createOrchestratorWorkflow = async (nodes: Awaited<ReturnType<typeof creat
       } catch (error) {
         logger.warn('Failed to parse workflow control', { error });
       }
-      
+
       return 'tools';
     });
   return workflow;

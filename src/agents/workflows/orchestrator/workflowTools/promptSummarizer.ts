@@ -17,7 +17,7 @@ export const summarizePrompt = async (prompt: string): Promise<string> => {
 
       ${prompt}
       
-      IMPORTANT: Keep your summary focused and concise.`
+      IMPORTANT: Keep your summary focused and concise.`,
     );
 
     const summary = result.content as string;

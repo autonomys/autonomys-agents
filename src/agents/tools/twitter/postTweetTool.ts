@@ -33,7 +33,7 @@ export const createPostTweetTool = (twitterApi: TwitterApi) =>
           logger.info('Tweet not posted', { tweet });
           return {
             postedTweet: false,
-            message: "The posting of tweets is disabled. Please enable it in the config file.",
+            message: 'The posting of tweets is disabled. Please enable it in the config file.',
           };
         }
       } catch (error) {

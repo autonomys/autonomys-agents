@@ -10,7 +10,7 @@ export const createInputNode = ({ orchestratorModel, prompts }: OrchestratorConf
     const formattedPrompt = await prompts.inputPrompt.format({
       messages: messages.map(message => message.content),
     });
-    logger.info('Formatted prompt:', { formattedPrompt });;
+    logger.info('Formatted prompt:', { formattedPrompt });
     const result = await orchestratorModel.invoke(formattedPrompt);
     logger.info('Result:', { result });
 
