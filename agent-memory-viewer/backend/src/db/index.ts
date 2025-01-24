@@ -1,3 +1,5 @@
+/* eslint-disable */
+
 import pkg from 'pg';
 const { Pool } = pkg;
 
@@ -60,18 +62,22 @@ export async function getMemoryByCid(cid: string): Promise<MemoryRecord | null> 
 // New function to analyze content structure using LLM
 async function analyzePaths(searchText: string): Promise<string[]> {
   try {
-    // Sample just one recent record to avoid token limits
+    // Sample 20 random records instead of recent ones
     const sampleResult = await pool.query(
-      'SELECT content FROM memory_records ORDER BY created_at DESC LIMIT 5',
+      'SELECT content FROM memory_records ORDER BY RANDOM() LIMIT 20'
     );
-
+    
     const completion = await openai.chat.completions.create({
-      model: 'gpt-4o',
+      model: 'gpt-4',
       messages: [
         {
           role: 'system',
           content:
-            "You are a SQL expert. Return only PostgreSQL JSONB path expressions using the -> and ->> operators, one per line. Example: content->'tweet'->>'text'",
+            `You are a SQL expert. Return only PostgreSQL JSONB path expressions using the -> and ->> operators, one per line. 
+            Example: content->'tweet'->>'text'
+            or
+            content->'author'->>'username'
+            `
         },
         {
           role: 'user',
@@ -79,16 +85,15 @@ async function analyzePaths(searchText: string): Promise<string[]> {
             sampleResult.rows.map(r => r.content),
             null,
             2,
-          )}, list paths where text and username/author content might be found. Skip the thread inside the tweets.`,
-        },
+          )}, list paths where text and username/author content might be found. Skip the thread inside the tweets.`
+        }
       ],
-      temperature: 0,
+      temperature: 0
     });
-
+    
     const paths = completion.choices[0]?.message?.content?.split('\n').filter(Boolean) || [];
     console.log('LLM generated paths:', paths);
 
-    // Filter and fix paths
     return paths
       .map(path => path.trim())
       .filter(path => path.includes('->'))
@@ -99,13 +104,7 @@ async function analyzePaths(searchText: string): Promise<string[]> {
       })
       .filter(path => path.includes('->>'));
   } catch (error) {
-    console.error('Error analyzing paths:', error);
-    return [
-      "content->>'text'",
-      "content->>'message'",
-      "content->>'content'",
-      "content->'tweet'->>'text'",
-    ];
+    return [];
   }
 }
 
@@ -159,89 +158,23 @@ export async function getAllDsn(
             SELECT 
                 mr.id,
                 mr.cid,
-                mr.previous_cid,
                 mr.content,
-                mr.created_at
+                mr.created_at,
+                content->>'timestamp' as timestamp
             FROM memory_records mr`;
 
     if (conditions.length > 0) {
       query += ' WHERE ' + conditions.join(' AND ');
     }
 
-    query += ` ORDER BY (content->>'timestamp')::timestamp DESC
+    query += ` ORDER BY (content->>'timestamp')::timestamp DESC NULLS LAST
                   LIMIT $${params.length + 1} OFFSET $${params.length + 2}`;
 
     const queryParams = [...params, limit, offset];
     const result = await pool.query(query, queryParams);
 
-    const transformedData = result.rows.map(record => {
-      try {
-        const content = record.content || {};
-
-        // Helper function to determine response status
-        const getResponseStatus = (content: any) => {
-          switch (content.type) {
-            case 'skipped':
-              return ResponseStatus.SKIPPED;
-            case 'rejected':
-              return ResponseStatus.REJECTED;
-            case 'approved':
-              return ResponseStatus.APPROVED;
-            case 'response':
-              return ResponseStatus.APPROVED;
-            case 'posted':
-              return ResponseStatus.POSTED;
-            default:
-              return null;
-          }
-        };
-        return {
-          id: record.id,
-          tweet_id: content.tweet?.id || null,
-          cid: record.cid,
-          created_at: record.created_at,
-          timestamp: content.timestamp || null,
-          author_username:
-            content.tweet?.username ||
-            content.tweet?.author_username ||
-            (content.type === 'posted' ? config.AGENT_USERNAME : null),
-          tweet_content: content.tweet?.text || null,
-          thread: content.tweet?.thread || null,
-          quotedStatus: content.tweet?.quotedStatus || null,
-          response_content: ['rejected', 'approved', 'skipped', 'posted', 'response'].includes(
-            content.type,
-          )
-            ? content.response || content.content || null
-            : null,
-          result_type: content.type || 'unknown',
-          skip_reason:
-            content.type === 'skipped'
-              ? content.workflowState?.decision?.reason || content.decision?.reason || null
-              : null,
-          response_status: getResponseStatus(content),
-          auto_feedback: content.workflowState?.autoFeedback || null,
-          agent_version: content.agentVersion || null,
-        };
-      } catch (error) {
-        console.error('Error transforming record:', error, 'Record:', record);
-        return {
-          id: record.id,
-          tweet_id: null,
-          cid: record.cid,
-          created_at: record.created_at,
-          author_username: null,
-          tweet_content: null,
-          response_content: null,
-          result_type: 'error',
-          skip_reason: 'Error processing record',
-          response_status: null,
-          auto_feedback: null,
-        };
-      }
-    });
-
     return {
-      data: transformedData,
+      data: result.rows,
       pagination: {
         total,
         page,

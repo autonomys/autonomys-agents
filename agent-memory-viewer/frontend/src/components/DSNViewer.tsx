@@ -4,25 +4,26 @@ import {
     Text, 
     Spinner, 
     VStack, 
-    Link, 
     Button, 
     HStack, 
     Select,
     Tooltip,
+    Box,
+    Badge,
+    IconButton,
 } from '@chakra-ui/react';
+import ReactJson from 'react-json-view';
 import { useState, useEffect } from 'react';
 import { useDSNData } from '../api/client';
-import { ExternalLinkIcon } from '@chakra-ui/icons';
+import { ExternalLinkIcon, CopyIcon, ViewIcon } from '@chakra-ui/icons';
 import { Link as RouterLink } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useWebSocket } from '../hooks/useWebSocket';
 import { ResponseStatus } from '../types/enums';
-import { getStatusColor } from '../utils/statusColors';
 import {
     cardStyles,
     textStyles,
     buttonStyles,
-    linkStyles,
     selectStyles,
 } from '../styles';
 import { colors } from '../styles/theme/colors';
@@ -58,6 +59,126 @@ function DSNViewer() {
 
     const { totalPages } = data?.pagination || { totalPages: 0 };
 
+    const renderMemoryCard = (item: any) => (
+        <Card 
+            {...cardStyles.baseStyle}
+            borderLeft="4px solid"
+            borderLeftColor={getTypeColor(item.content.type)}
+            transition="all 0.2s"
+            _hover={{ transform: 'translateY(-2px)', boxShadow: 'xl' }}
+        >
+            <CardBody {...cardStyles.bodyStyle}>
+                {/* Header with Metadata */}
+                <HStack justify="space-between" mb={4}>
+                    <VStack align="start" spacing={1}>
+                        <HStack>
+                            <Text {...textStyles.heading}>
+                                Memory #{item.id}
+                            </Text>
+                            <Badge 
+                                colorScheme={getTypeColorScheme(item.content.type)}
+                                fontSize="xs"
+                            >
+                                LABEL
+                            </Badge>
+                        </HStack>
+                        <Text fontSize="xs" color="gray.500">
+                            CID: {item.cid.substring(0, 8)}...
+                        </Text>
+                    </VStack>
+                    <Tooltip 
+                        label={new Date(item.timestamp).toLocaleString()} 
+                        placement="top"
+                    >
+                        <VStack spacing={0} align="end">
+                            <Text 
+                                color="gray.500" 
+                                fontSize="sm"
+                                cursor="help"
+                            >
+                                {utcToLocalRelativeTime(item.timestamp)}
+                            </Text>
+                            <Text fontSize="xs" color="gray.600">
+                                v{item.content.agentVersion || 'unknown'}
+                            </Text>
+                        </VStack>
+                    </Tooltip>
+                </HStack>
+
+                {/* JSON Viewer */}
+                <Box 
+                    mb={4} 
+                    borderRadius="lg"
+                    overflow="hidden"
+                    bg="blackAlpha.400"
+                    p={4}
+                    position="relative"
+                >
+                    <ReactJson 
+                        src={item.content}
+                        theme="tomorrow"
+                        collapsed={1}
+                        displayDataTypes={false}
+                        name={false}
+                        style={{
+                            backgroundColor: 'transparent',
+                            borderRadius: '0.5rem',
+                            fontSize: '0.9em',
+                        }}
+                        enableClipboard={false}
+                        displayObjectSize={false}
+                    />
+                    <IconButton
+                        aria-label="Copy"
+                        icon={<CopyIcon />}
+                        size="sm"
+                        position="absolute"
+                        top={2}
+                        right={2}
+                        onClick={() => copyToClipboard(JSON.stringify(item.content, null, 2))}
+                    />
+                </Box>
+
+                {/* Actions */}
+                <HStack spacing={4} justify="flex-end">
+                    <Button
+                        leftIcon={<ExternalLinkIcon />}
+                        as={RouterLink}
+                        to={`/memory/${item.cid}`}
+                        variant="outline"
+                        size="sm"
+                        color="green.400"
+                        borderColor="green.400"
+                        _hover={{
+                            bg: 'green.400',
+                            color: 'black',
+                            borderColor: 'green.400'
+                        }}
+                    >
+                        View Details
+                    </Button>
+                    <Button
+                        leftIcon={<ViewIcon />}
+                        as="a"
+                        href={`https://astral.autonomys.xyz/taurus/permanent-storage/files/${item.cid}`}
+                        target="_blank"
+                        variant="outline"
+                        size="sm"
+                        color="green.400"
+                        borderColor="green.400"
+                        _hover={{
+                            bg: 'green.400',
+                            color: 'black',
+                            borderColor: 'green.400'
+                        }}
+                    >
+                        Explorer
+                    </Button>
+                </HStack>
+            </CardBody>
+        </Card>
+    );
+
     return (
         <VStack spacing={4} align="stretch">
             <Card {...cardStyles.baseStyle}>
@@ -77,135 +198,19 @@ function DSNViewer() {
 
             {(!data?.data || data.data.length === 0) ? (
                 <Text {...textStyles.noData}>
-                    No tweets found for the selected filter
+                    No memories found for the selected filter
                 </Text>
             ) : (
                 <AnimatePresence>
                     {data.data.map((item, index) => (
                         <motion.div
                             key={item.id}
-                            initial={{ height: 0, opacity: 0 }}
-                            animate={{ height: "auto", opacity: 1 }}
-                            exit={{ height: 0, opacity: 0 }}
-                            transition={{
-                                type: "spring",
-                                damping: 20,
-                                stiffness: 100,
-                                duration: 0.3,
-                                delay: index * 0.1
-                            }}
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -20 }}
+                            transition={{ duration: 0.2, delay: index * 0.1 }}
                         >
-                            <Card {...cardStyles.baseStyle}>
-                                <CardBody {...cardStyles.bodyStyle}>
-                                    <HStack justify="space-between" mb={2}>
-                                        <Text {...textStyles.heading}>
-                                            Tweet by @{item.author_username}
-                                        </Text>
-                                        <Tooltip 
-                                            label={new Date(item.timestamp).toLocaleString()} 
-                                            placement="top"
-                                        >
-                                            <Text 
-                                                color="gray.500" 
-                                                fontSize="s" 
-                                                fontStyle="italic"
-                                                _hover={{ color: 'gray.600' }}
-                                                cursor="help"
-                                            >
-                                                {utcToLocalRelativeTime(item.timestamp)}
-                                            </Text>
-                                        </Tooltip>
-                                    </HStack>
-                                    <Text {...textStyles.value} whiteSpace="pre-wrap" mb={4}>
-                                        {item.tweet_content}
-                                    </Text>
-                                    
-                                    {item.result_type === 'skipped' ? (
-                                        <>
-                                            <Text {...textStyles.label} color="yellow.500" mb={2}>
-                                                Skipped: {item.skip_reason}
-                                            </Text>
-                                            <HStack spacing={4}>
-                                                <Link
-                                                    as={RouterLink}
-                                                    to={`/memory/${item.cid}`}
-                                                    {...linkStyles.baseStyle}
-                                                >
-                                                    View Memory <ExternalLinkIcon mx="2px" />
-                                                </Link>
-                                                <Link
-                                                    href={`https://astral.autonomys.xyz/taurus/permanent-storage/files/${item.cid}`}
-                                                    isExternal
-                                                    {...linkStyles.baseStyle}
-                                                >
-                                                    View in Explorer <ExternalLinkIcon mx="2px" />
-                                                </Link>
-                                            </HStack>
-                                        </>
-                                    ) : item.result_type === 'rejected' ? (
-                                        <>
-                                            <Text {...textStyles.heading}>Response</Text>
-                                            <Text {...textStyles.value} whiteSpace="pre-wrap" mb={4}>
-                                                {item.response_content}
-                                            </Text>
-                                            
-                                            <Text 
-                                                {...textStyles.label}
-                                                color={getStatusColor(ResponseStatus.REJECTED)} 
-                                                mb={2}
-                                            >
-                                                Status: Rejected
-                                            </Text>
-                                            <HStack spacing={4}>
-                                                <Link
-                                                    as={RouterLink}
-                                                    to={`/memory/${item.cid}`}
-                                                    {...linkStyles.baseStyle}
-                                                >
-                                                    View Memory <ExternalLinkIcon mx="2px" />
-                                                </Link>
-                                                <Link
-                                                    href={`https://astral.autonomys.xyz/taurus/permanent-storage/files/${item.cid}`}
-                                                    isExternal
-                                                    {...linkStyles.baseStyle}
-                                                >
-                                                    View in Explorer <ExternalLinkIcon mx="2px" />
-                                                </Link>
-                                            </HStack>
-                                        </>
-                                    ) : (
-                                        <>
-                                            <Text {...textStyles.heading}>Response:</Text>
-                                            <Text {...textStyles.value} whiteSpace="pre-wrap" mb={4}>
-                                                {item.response_content}
-                                            </Text>
-                                            <Text 
-                                                {...textStyles.label}
-                                                color={getStatusColor(item.response_status)} 
-                                                mb={2}
-                                            >
-                                                Status: {item.response_status || 'N/A'}
-                                            </Text>
-                                            <HStack spacing={4}>
-                                                <Link
-                                                    as={RouterLink}
-                                                    to={`/memory/${item.cid}`}
-                                                    {...linkStyles.baseStyle}
-                                                >
-                                                    View Memory <ExternalLinkIcon mx="2px" />
-                                                </Link>
-                                                <Link
-                                                    href={`https://astral.autonomys.xyz/taurus/permanent-storage/files/${item.cid}`}
-                                                    isExternal
-                                                    {...linkStyles.baseStyle}
-                                                >
-                                                    View in Explorer <ExternalLinkIcon mx="2px" />
-                                                </Link>
-                                            </HStack>
-                                        </>
-                                    )}
-                                </CardBody>
-                            </Card>
+                            {renderMemoryCard(item)}
                         </motion.div>
                     ))}
                 </AnimatePresence>
@@ -253,4 +258,45 @@ function DSNViewer() {
     );
 }
 
-export default DSNViewer; 
+export default DSNViewer;
+
+// Helper functions
+const getTypeColor = (type: string) => {
+    switch (type) {
+        case 'approved':
+        case 'response':
+            return 'green.400';
+        case 'rejected':
+            return 'red.400';
+        case 'skipped':
+            return 'yellow.400';
+        case 'posted':
+            return 'blue.400';
+        default:
+            return 'gray.400';
+    }
+};
+
+const getTypeColorScheme = (type: string | undefined): string => {
+    // Hash the type string to generate consistent colors
+    if (!type) return 'gray';
+    
+    const colorSchemes = [
+        'teal', 'blue', 'cyan', 'purple', 'pink', 
+        'orange', 'yellow', 'green', 'red'
+    ];
+    
+    // Generate a simple hash of the type string
+    const hash = type.split('').reduce((acc, char) => {
+        return char.charCodeAt(0) + ((acc << 5) - acc);
+    }, 0);
+    
+    // Use the hash to select a color scheme
+    const index = Math.abs(hash) % colorSchemes.length;
+    return colorSchemes[index];
+};
+
+const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+    // You might want to add a toast notification here
+}; 
