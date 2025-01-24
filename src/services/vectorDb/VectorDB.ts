@@ -44,13 +44,14 @@ export class VectorDB {
     this.openai = new OpenAI({
       apiKey: config.llmConfig.OPENAI_API_KEY,
     });
-
+    logger.info('indexFilePath', { indexFilePath: this.indexFilePath });
+    logger.info('dbFilePath', { dbFilePath: this.dbFilePath });
     this.initializeDatabase();
   }
 
   private initializeDatabase(): void {
     const extensionPath = vectorlite.vectorlitePath();
-    logger.info('Vectorlite extension path:', extensionPath);
+    logger.info('Vectorlite extension path:', { extensionPath });
 
     this.db = new Database(this.dbFilePath);
     this.db.loadExtension(extensionPath);
@@ -87,7 +88,7 @@ export class VectorDB {
   private async getEmbedding(text: string): Promise<number[]> {
     try {
       const response = await this.openai.embeddings.create({
-        model: 'text-embedding-ada-002',
+        model: 'text-embedding-3-small',
         input: text,
       });
       return response.data[0].embedding;
@@ -126,19 +127,24 @@ export class VectorDB {
 
         this.nextRowId = oldestId;
       }
-
+      logger.info('nextRowId', { nextRowId: this.nextRowId });
       const currentRowId = Number(this.nextRowId);
+      logger.info('currentRowId', { currentRowId });
       const vectorStatement = this.db.prepare(`
                 INSERT INTO embeddings_index (rowid, embedding_vector) 
                 VALUES (?, ?)
             `);
-
+      logger.info('vectorStatement', { vectorStatement });
       const contentStatement = this.db.prepare(`
                 INSERT INTO content_store (rowid, content)
                 VALUES (?, ?)
             `);
 
-      vectorStatement.run(currentRowId, Buffer.from(new Float32Array(embedding).buffer));
+      const vectorInsert = vectorStatement.run(
+        currentRowId,
+        Buffer.from(new Float32Array(embedding).buffer),
+      );
+      logger.info('vectorInsert', { vectorInsert });
 
       contentStatement.run(currentRowId, content);
 

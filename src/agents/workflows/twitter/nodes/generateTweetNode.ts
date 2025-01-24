@@ -15,6 +15,10 @@ import { AIMessage } from '@langchain/core/messages';
 import { summarySchema } from '../schemas.js';
 import { z } from 'zod';
 import { config as globalConfig } from '../../../../config/index.js';
+import {
+  invokeVectorDbInsertTool,
+  invokeVectorDbSearchTool,
+} from '../../../tools/vectorDbTools.js';
 
 const logger = createLogger('generate-tweet-node');
 
@@ -33,6 +37,14 @@ const postResponse = async (
     }),
     reason: decision.decision.reason,
   };
+  const relevantTweetMemories = await invokeVectorDbSearchTool(config.toolNode, {
+    query: JSON.stringify(decision),
+    limit: 5,
+  });
+  logger.info('Searched vector db', {
+    query: JSON.stringify(decision),
+    memories: relevantTweetMemories,
+  });
   const response = await config.prompts.responsePrompt
     .pipe(config.llms.generation)
     .pipe(responseParser)
@@ -41,6 +53,7 @@ const postResponse = async (
       thread: decision.tweet.thread,
       patterns: summary.patterns,
       commonWords: summary.commonWords,
+      relevantTweetMemories,
     });
 
   //TODO: After sending the tweet, we need to get the latest tweet, ensure it is the same as we sent and return it
@@ -50,10 +63,18 @@ const postResponse = async (
     response.content,
     decision.tweet.id,
   );
+  const insertTweetMemory = await invokeVectorDbInsertTool(config.toolNode, {
+    data: JSON.stringify({
+      responseTweet: response.content,
+      decision: decision,
+    }),
+  });
+  logger.info('Inserted tweet memory', { insertTweetMemory });
   return {
     ...response,
     tweet: decision.tweet,
     engagementDecision,
+    relevantTweetMemories,
     //tweetId: tweet ? tweet.id : null
   };
 };
@@ -76,17 +97,29 @@ const postTweet = async (config: TwitterWorkflowConfig, state: typeof State.Stat
   });
 
   if (shouldGenerateTweet) {
+    const relevantTweetMemories = await invokeVectorDbSearchTool(config.toolNode, {
+      query: JSON.stringify(state.trendAnalysis.summary),
+      limit: 5,
+    });
     const generatedTweet = await config.prompts.tweetPrompt
       .pipe(config.llms.generation)
       .pipe(trendTweetParser)
       .invoke({
         trendAnalysis: state.trendAnalysis,
         recentTweets,
+        relevantTweetMemories,
       });
 
     const postedTweet = await invokePostTweetTool(config.toolNode, generatedTweet.tweet);
     const tweetReceipt = JSON.parse(postedTweet.messages[0].content);
     const postedTweetId = tweetReceipt.postedTweetId;
+    const insertTweetMemory = await invokeVectorDbInsertTool(config.toolNode, {
+      data: JSON.stringify({
+        postedTweet: generatedTweet.tweet,
+        trendAnalysis: state.trendAnalysis.summary,
+      }),
+    });
+    logger.info('Inserted tweet memory', { insertTweetMemory });
     return {
       type: TwitterDsnDataType.GENERATED_TWEET,
       content: generatedTweet.tweet,

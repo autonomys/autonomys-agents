@@ -135,6 +135,8 @@ export const createPrompts = async () => {
       The tweet should be well thought out and thought provoking.
       Use your personality and style to make the tweet more engaging.
 
+      Potential relevant tweet memories: {relevantTweetMemories}
+
       IMPORTANT:
       Recent tweets: {recentTweets}
       - Avoid sounding repetitive and touching on the same topics.
@@ -179,6 +181,8 @@ export const createPrompts = async () => {
       Decision: {decision}
       Thread context (most recent tweets first): 
       {thread}
+
+      Potential relevant tweet memories: {relevantTweetMemories}
   
       If there a thread, respond accurately. Review the thread with a focus on the most recent tweets and respond accordingly
     

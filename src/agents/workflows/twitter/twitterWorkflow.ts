@@ -13,6 +13,7 @@ import { summarySchema, trendSchema } from './schemas.js';
 import { z } from 'zod';
 import { createPrompts } from './prompts.js';
 import { LLMFactory } from '../../../services/llm/factory.js';
+import { VectorDB } from '../../../services/vectorDb/VectorDB.js';
 
 export const logger = createLogger('agent-workflow');
 
@@ -70,10 +71,11 @@ export const State = Annotation.Root({
 
 const createWorkflowConfig = async (): Promise<TwitterWorkflowConfig> => {
   const { USERNAME, PASSWORD, COOKIES_PATH } = config.twitterConfig;
+  const twitterApi = await createTwitterApi(USERNAME, PASSWORD, COOKIES_PATH);
+  const twitterVectorDb = new VectorDB('data/twitter');
   const { nodes } = config.llmConfig;
 
-  const twitterApi = await createTwitterApi(USERNAME, PASSWORD, COOKIES_PATH);
-  const { tools } = createTools(twitterApi);
+  const { tools } = createTools(twitterApi, twitterVectorDb);
   const toolNode = new ToolNode(tools);
   const prompts = await createPrompts();
 
