@@ -10,12 +10,18 @@ const envSchema = z.object({
   WS_RPC_URL: z.string().url().default('wss://auto-evm.taurus.autonomys.xyz/ws'),
   AGENT_ADDRESS: z.string().regex(/^0x[a-fA-F0-9]{40}$/),
   DSN_API_KEY: z.string(),
-  CORS_ORIGIN: z.union([
-    z.string().url(),
-    z.string().transform(str => str.split(',')).pipe(z.array(z.string().url())),
-    z.array(z.string().url())
-  ]).default(''),
-  WS_PORT: z.string().transform(Number).default('3011')
+  CORS_ORIGIN: z
+    .union([
+      z.string().url(),
+      z
+        .string()
+        .transform(str => str.split(','))
+        .pipe(z.array(z.string().url())),
+      z.array(z.string().url()),
+    ])
+    .default(''),
+  WS_PORT: z.string().transform(Number).default('3011'),
+  OPENAI_API_KEY: z.string(),
 });
 
 export type EnvConfig = z.infer<typeof envSchema>;
@@ -30,4 +36,4 @@ export function validateEnv(): EnvConfig {
     }
     throw error;
   }
-} 
+}

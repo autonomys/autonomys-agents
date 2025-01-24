@@ -15,4 +15,4 @@ export const requestLogger: RequestHandler = (req, res, next) => {
     });
   });
   next();
-}; 
+};

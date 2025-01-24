@@ -7,4 +7,4 @@ const router = Router();
 router.use('/memories', memoriesRouter);
 router.use('/health', healthRouter);
 
-export default router; 
+export default router;

@@ -17,23 +17,24 @@ router.get('/', async (req, res) => {
     const type = req.query.type as ResponseStatus | undefined;
     const searchText = req.query.search as string | undefined;
     const authorUsername = req.query.author as string | undefined;
-    
+
     if (page < 1 || limit < 1 || limit > 100) {
-      res.status(400).json({ 
-        error: 'Invalid pagination parameters. Page must be >= 1 and limit must be between 1 and 100' 
+      res.status(400).json({
+        error:
+          'Invalid pagination parameters. Page must be >= 1 and limit must be between 1 and 100',
       });
       return;
     }
 
     if (type && !Object.values(ResponseStatus).includes(type)) {
       res.status(400).json({
-        error: `Invalid type parameter. Must be one of: ${Object.values(ResponseStatus).join(', ')}`
+        error: `Invalid type parameter. Must be one of: ${Object.values(ResponseStatus).join(', ')}`,
       });
       return;
     }
 
     const dsnRecords = await getAllDsn(page, limit, type, searchText, authorUsername);
-    
+
     if (!dsnRecords.data || dsnRecords.data.length === 0) {
       res.json({
         data: [],
@@ -41,9 +42,9 @@ router.get('/', async (req, res) => {
           total: 0,
           page: page,
           limit: limit,
-          totalPages: 0
+          totalPages: 0,
         },
-        message: 'No memory found'
+        message: 'No memory found',
       });
       return;
     }
@@ -57,7 +58,7 @@ router.get('/', async (req, res) => {
 
 router.get('/:cid', async (req, res) => {
   try {
-    const { cid } = req.params;        
+    const { cid } = req.params;
     let memory = await getMemoryByCid(cid);
     console.log('memory', memory);
     if (!memory) {
@@ -71,12 +72,12 @@ router.get('/:cid', async (req, res) => {
       memory = await getMemoryByCid(cid);
       processPreviousCids(memoryData?.previousCid);
     }
-     // Transform v2.0.0 memories to match frontend expectations
+    // Transform v2.0.0 memories to match frontend expectations
     if (isMemoryV2_0_0(memory?.content)) {
       const transformedMemory = transformMemoryToLegacy(memory?.content);
       res.json(transformedMemory);
       return;
-    } 
+    }
     res.json(memory?.content);
   } catch (error) {
     logger.error('Error fetching memory:', error);
@@ -84,4 +85,4 @@ router.get('/:cid', async (req, res) => {
   }
 });
 
-export default router; 
+export default router;

@@ -10,6 +10,7 @@
     "dev": "NODE_ENV=development tsx watch src/index.ts",
     "lint": "eslint . --ext .ts",
     "test": "jest",
+    "format": "prettier --write \"src/**/*.ts\"",
     "validate:env": "tsx src/scripts/validate-env.ts",
     "generate-types": "tsx src/types/generateTypes.ts",
     "sort-memories": "tsx src/scripts/sortMemories.ts"

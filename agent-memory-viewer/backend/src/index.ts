@@ -10,72 +10,72 @@ import { createWebSocketServer, closeWebSocketServer } from './websocket.js';
 
 const logger = createLogger('main');
 
-process.on('uncaughtException', async (error) => {
-    logger.error('Uncaught Exception:', error);
-    await closeWebSocketServer();
-    process.exit(1);
+process.on('uncaughtException', async error => {
+  logger.error('Uncaught Exception:', error);
+  await closeWebSocketServer();
+  process.exit(1);
 });
 
 process.on('unhandledRejection', async (reason, promise) => {
-    logger.error('Unhandled Rejection:', { reason, promise });
-    await closeWebSocketServer();
-    process.exit(1);
+  logger.error('Unhandled Rejection:', { reason, promise });
+  await closeWebSocketServer();
+  process.exit(1);
 });
 
 async function main() {
-    try {
-        await initialize();
-        resurrection();
+  try {
+    await initialize();
+    resurrection();
 
-        const memoryWatcher = watchMemoryHashUpdates(async (agent, cid) => {
-            logger.info('New memory hash detected', { agent, cid });
-            
-            downloadMemory(cid)
-                .then(async memory => {
-                    if (memory) {
-                        const savedMemory = await saveMemoryRecord(cid, memory, memory?.previousCid);
-                        logger.info('Memory processed successfully', { 
-                            cid,
-                            isNew: savedMemory.created_at === savedMemory.created_at 
-                        });
-                    }
-                })
-                .catch(error => {
-                    logger.error('Error processing memory update', { 
-                        error,
-                        agent,
-                        cid,
-                        errorType: error instanceof Error ? error.constructor.name : typeof error
-                    });
-                });
+    const memoryWatcher = watchMemoryHashUpdates(async (agent, cid) => {
+      logger.info('New memory hash detected', { agent, cid });
+
+      downloadMemory(cid)
+        .then(async memory => {
+          if (memory) {
+            const savedMemory = await saveMemoryRecord(cid, memory, memory?.previousCid);
+            logger.info('Memory processed successfully', {
+              cid,
+              isNew: savedMemory.created_at === savedMemory.created_at,
+            });
+          }
+        })
+        .catch(error => {
+          logger.error('Error processing memory update', {
+            error,
+            agent,
+            cid,
+            errorType: error instanceof Error ? error.constructor.name : typeof error,
+          });
         });
+    });
 
-        createWebSocketServer();
+    createWebSocketServer();
 
-        const cleanup = async () => {
-            logger.info('Shutting down services');
-            const stopWatcher = await memoryWatcher;
-            await stopWatcher();
-            await closeWebSocketServer();
-            process.exit(0);
-        };
+    const cleanup = async () => {
+      logger.info('Shutting down services');
+      const stopWatcher = await memoryWatcher;
+      await stopWatcher();
+      await closeWebSocketServer();
+      process.exit(0);
+    };
 
-        process.on('SIGINT', cleanup);
-        process.on('SIGTERM', cleanup);
+    process.on('SIGINT', cleanup);
+    process.on('SIGTERM', cleanup);
 
-        const port = config.PORT || 3010;
-        app.listen(port, () => {
-            logger.info(`Server is running on port ${port}`);
-        });
-    } catch (error) {
-        logger.error('Failed to start server', { error });
-        await closeWebSocketServer();
-        process.exit(1);
-    }
-}
-
-main().catch(async (error) => {
-    logger.error('Fatal error:', error);
+    const port = config.PORT || 3010;
+    app.listen(port, () => {
+      logger.info(`Server is running on port ${port}`);
+    });
+  } catch (error) {
+    logger.error('Failed to start server', { error });
     await closeWebSocketServer();
     process.exit(1);
+  }
+}
+
+main().catch(async error => {
+  logger.error('Fatal error:', error);
+  await closeWebSocketServer();
+  process.exit(1);
 });
