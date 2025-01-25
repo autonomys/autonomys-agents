@@ -2,7 +2,7 @@ import { Box } from '@chakra-ui/react'
 import { Routes, Route } from 'react-router-dom'
 import Navbar from './components/Navbar'
 import MemoryViewer from './pages/MemoryViewer'
-import DSNViewer from './components/DSNViewer'
+import DSNViewer from './pages/DSNViewer'
 import Analytics from './components/Analytics'
 
 function App() {

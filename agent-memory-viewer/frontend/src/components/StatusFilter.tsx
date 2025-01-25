@@ -11,7 +11,7 @@ interface StatusFilterProps {
 
 function StatusFilter({ type, onTypeChange }: StatusFilterProps) {
     const filterOptions = [
-        { value: 'all', label: 'All Tweets' },
+        { value: 'all', label: 'All Agents Experiences' },
         { value: ResponseStatus.POSTED, label: 'Posted' },
         { value: ResponseStatus.SKIPPED, label: 'Skipped' },
         { value: ResponseStatus.APPROVED, label: 'Approved' },
@@ -20,7 +20,7 @@ function StatusFilter({ type, onTypeChange }: StatusFilterProps) {
 
     return (
         <HStack spacing={4} minW="300px">
-            <Text {...textStyles.label}>Filter by Status:</Text>
+            <Text {...textStyles.label}>Filter by Agent:</Text>
             <Select
                 value={type}
                 onChange={(e) => onTypeChange(e.target.value as ResponseStatus | 'all')}

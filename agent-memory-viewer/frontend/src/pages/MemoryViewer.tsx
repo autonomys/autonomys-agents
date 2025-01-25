@@ -14,7 +14,7 @@ function MemoryViewer() {
 
     if (isLoading) return <Spinner color="green.400" thickness="4px" size="xl" />
     if (error) return <Text color="red.500">Error loading memory: {error.message}</Text>
-    if (!memory) return <Text>No memory found</Text>
+    if (!memory) return <Text>No Experience found</Text>
 
     return (
         <VStack spacing={6} align="stretch">
@@ -57,7 +57,7 @@ function MemoryViewer() {
                         {/* CID and Version */}
                         <HStack justify="space-between" wrap="wrap" spacing={4}>
                             <VStack align="start" spacing={1}>
-                                <Text color="gray.400" fontSize="sm">Memory CID</Text>
+                                <Text color="gray.400" fontSize="sm">Experience CID</Text>
                                 <HStack>
                                     <Text color="green.400" fontFamily="mono" fontSize="lg">
                                         {cid}
@@ -84,12 +84,6 @@ function MemoryViewer() {
 
                         {/* Timestamp and Links */}
                         <HStack justify="space-between" wrap="wrap" spacing={4}>
-                            <Tooltip label={new Date(memory.timestamp).toLocaleString()}>
-                                <HStack color="gray.400">
-                                    <TimeIcon />
-                                    <Text>{utcToLocalRelativeTime(memory.timestamp)}</Text>
-                                </HStack>
-                            </Tooltip>
                             <HStack spacing={4}>
                                 {memory.previousCid && (
                                     <Link
@@ -100,7 +94,7 @@ function MemoryViewer() {
                                     >
                                         <HStack>
                                             <ArrowBackIcon />
-                                            <Text>Previous Memory</Text>
+                                            <Text>Previous Experience</Text>
                                         </HStack>
                                     </Link>
                                 )}
@@ -113,6 +107,12 @@ function MemoryViewer() {
                                     View in Explorer <ExternalLinkIcon mx="2px" />
                                 </Link>
                             </HStack>
+                            <Tooltip label={new Date(memory.timestamp).toLocaleString()}>
+                                <HStack color="gray.400">
+                                    <TimeIcon />
+                                    <Text>{utcToLocalRelativeTime(memory.timestamp)}</Text>
+                                </HStack>
+                            </Tooltip>
                         </HStack>
 
                         <Divider borderColor="whiteAlpha.200" />
@@ -127,7 +127,7 @@ function MemoryViewer() {
                             <ReactJson 
                                 src={memory}
                                 theme="tomorrow"
-                                collapsed={1}
+                                collapsed={false}
                                 displayDataTypes={false}
                                 name={false}
                                 style={{
@@ -137,6 +137,8 @@ function MemoryViewer() {
                                 }}
                                 enableClipboard={true}
                                 displayObjectSize={false}
+                                quotesOnKeys={false}
+                                indentWidth={2}
                             />
                         </Box>
                     </VStack>
