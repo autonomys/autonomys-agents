@@ -16,6 +16,7 @@ import ReactJson from 'react-json-view';
 import { cardStyles, textStyles } from '../styles';
 import { getTypeColor, getTypeColorScheme } from '../utils/typeUtils'
 import { utcToLocalRelativeTime } from '../utils/timeUtils';
+import { labelStyles } from '../styles/components/label';
 
 interface ExperienceCardProps {
   item: any;
@@ -42,12 +43,6 @@ export const ExperienceCard = ({ item }: ExperienceCardProps) => {
               <Text {...textStyles.heading}>
                 Learned Experience #{item.id}
               </Text>
-              <Badge 
-                colorScheme={getTypeColorScheme(item.content.type)}
-                fontSize="xs"
-              >
-                LABEL
-              </Badge>
             </HStack>
             <Text fontSize="xs" color="gray.500">
               CID: {item.cid.substring(0, 8)}...
@@ -90,7 +85,7 @@ export const ExperienceCard = ({ item }: ExperienceCardProps) => {
             style={{
               backgroundColor: 'transparent',
               borderRadius: '0.5rem',
-              fontSize: '0.9em',
+              fontSize: '1.2em',
             }}
             enableClipboard={false}
             displayObjectSize={false}
@@ -105,6 +100,17 @@ export const ExperienceCard = ({ item }: ExperienceCardProps) => {
             onClick={() => copyToClipboard(JSON.stringify(item.content, null, 2))}
           />
         </Box>
+
+        {/* Labels */}
+        <HStack spacing={2} mb={4} wrap="wrap">
+          <Badge 
+            colorScheme={getTypeColorScheme(item.content.type)}
+            {...labelStyles.baseStyle}
+          >
+            {item.content.type}
+          </Badge>
+          {/* Add more badges here based on your data */}
+        </HStack>
 
         {/* Actions */}
         <HStack spacing={4} justify="flex-end">

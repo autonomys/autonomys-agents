@@ -99,7 +99,13 @@ function DSNViewer() {
                         {...selectStyles.baseStyle}
                         {...selectStyles.paginationWidth}
                         _hover={selectStyles.hoverStyle}
-                        sx={selectStyles.dropdownStyle}
+                        sx={{
+                            ...selectStyles.dropdownStyle,
+                            fontSize: '1.1rem',
+                            '& option': {
+                                fontSize: '1.1rem'
+                            }
+                        }}
                     >
                         <option value={10}>10 per page</option>
                         <option value={25}>25 per page</option>
