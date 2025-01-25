@@ -1,27 +1,29 @@
 import { getObjectMetadata } from '@autonomys/auto-drive';
 import { config } from '../../config/index.js';
 import { createLogger } from '../logger.js';
-import { validateLegacyMemory } from './signature.js';
-import { validateSignature } from './signature.js';
+import { validateMemorySignature } from './signature.js';
 
 const logger = createLogger('memory-validation');
 
-export async function validateMemoryMetadata(api: any, cid: string): Promise<boolean> {
+export async function validateMemoryMetadata(
+  api: any,
+  cid: string,
+): Promise<{ isValid: boolean; agentName?: string }> {
   try {
     const metadata = await getObjectMetadata(api, { cid });
-    
-    // Check if filename contains any of the configured agent usernames
-    const validAgent = config.AGENTS.some(agent => 
-      metadata?.name?.toLowerCase().includes(agent.username.toLowerCase())
+
+    // Find matching agent by username in filename
+    const matchingAgent = config.AGENTS.find(agent =>
+      metadata?.name?.toLowerCase().includes(agent.username.toLowerCase()),
     );
 
-    if (!validAgent) {
+    if (!matchingAgent) {
       logger.warn('Memory rejected: File name does not contain any known agent username', {
         cid,
         filename: metadata.name,
         knownAgents: config.AGENTS.map(a => a.username),
       });
-      return false;
+      return { isValid: false };
     }
 
     const totalSize = Number(metadata.totalSize);
@@ -30,10 +32,10 @@ export async function validateMemoryMetadata(api: any, cid: string): Promise<boo
         cid,
         size: totalSize,
       });
-      return false;
+      return { isValid: false };
     }
 
-    return true;
+    return { isValid: true, agentName: matchingAgent.username };
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     if (errorMessage.includes('Not Found')) {
@@ -41,19 +43,19 @@ export async function validateMemoryMetadata(api: any, cid: string): Promise<boo
         cid,
         error: errorMessage,
       });
-      return false;
+      return { isValid: false };
     }
     throw error;
   }
 }
 
-export async function validateMemoryData(memoryData: any): Promise<boolean> {
+export async function validateMemoryData(memoryData: any, agentAddress: string): Promise<boolean> {
   if (!memoryData || typeof memoryData !== 'object') {
     logger.warn('Memory rejected: Invalid memory data format', {
       type: typeof memoryData,
     });
     return false;
   }
-  logger.info('Memory validated as legacy version');
-  return await validateLegacyMemory(memoryData);
+  logger.info('Verifying experience signature');
+  return await validateMemorySignature(memoryData, agentAddress);
 }

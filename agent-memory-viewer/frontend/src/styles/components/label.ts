@@ -12,7 +12,7 @@ export const labelStyles: { baseStyle: BadgeProps } = {
     boxShadow: 'sm',
     _hover: {
       transform: 'scale(1.05)',
-      transition: 'transform 0.2s'
-    }
-  }
-}; 
+      transition: 'transform 0.2s',
+    },
+  },
+};

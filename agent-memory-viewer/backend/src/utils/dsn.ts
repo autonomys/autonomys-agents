@@ -20,8 +20,8 @@ export async function downloadMemory(cid: string, retryCount = 0): Promise<any> 
       apiKey: config.DSN_API_KEY || '',
     });
 
-    const isValid = await validateMemoryMetadata(api, cid);
-    if (!isValid) {
+    const { isValid, agentName } = await validateMemoryMetadata(api, cid);
+    if (!isValid || !agentName) {
       return null;
     }
     logger.info(`Memory metadata is valid: ${cid}`);
@@ -48,12 +48,12 @@ export async function downloadMemory(cid: string, retryCount = 0): Promise<any> 
     const jsonString = new TextDecoder().decode(decompressed);
     const memoryData = JSON.parse(jsonString);
 
-    const isValidData = await validateMemoryData(memoryData);
+    const isValidData = await validateMemoryData(memoryData, agentName);
     if (!isValidData) {
       return null;
     }
 
-    return memoryData;
+    return { memoryData, agentName };
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
 

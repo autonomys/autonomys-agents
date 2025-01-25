@@ -1,4 +1,3 @@
-
 export const buttonStyles = {
   primary: {
     variant: 'outline',
@@ -16,7 +15,7 @@ export const buttonStyles = {
     _active: {
       bg: 'rgba(0, 255, 0, 0.2)',
       transform: 'translateY(1px)',
-    }
+    },
   },
   pagination: {
     size: 'sm',

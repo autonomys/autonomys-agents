@@ -33,12 +33,14 @@ async function main() {
       downloadMemory(cid)
         .then(async memory => {
           if (memory) {
-            const agentConfig = config.AGENTS.find(a => a.address.toLowerCase() === agent.toLowerCase());
+            const agentConfig = config.AGENTS.find(
+              a => a.address.toLowerCase() === agent.toLowerCase(),
+            );
             const savedMemory = await saveMemoryRecord(
-              cid, 
-              memory, 
+              cid,
+              memory,
               memory?.previousCid,
-              agentConfig?.username || 'unknown_agent'
+              agentConfig?.username || 'unknown_agent',
             );
             logger.info('Memory processed successfully', {
               cid,

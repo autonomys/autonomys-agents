@@ -8,7 +8,7 @@ const logger = createLogger('resurrection');
 
 export async function resurrection() {
   logger.info('Starting resurrection');
-  
+
   // Process resurrection for each configured agent
   for (const agent of config.AGENTS) {
     logger.info(`Starting resurrection for agent: ${agent.username}`);
@@ -63,8 +63,8 @@ async function processResurrection(startHash: string, agentName: string) {
     }
   }
 
-  logger.info('Resurrection complete', { 
+  logger.info('Resurrection complete', {
     agent: agentName,
-    memoriesProcessed: memories.length 
+    memoriesProcessed: memories.length,
   });
 }

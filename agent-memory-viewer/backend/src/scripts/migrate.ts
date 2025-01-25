@@ -12,7 +12,7 @@ async function runMigration() {
   try {
     const migrationPath = path.join(__dirname, '../db/migrations/001_add_agent_name.sql');
     const migration = await fs.readFile(migrationPath, 'utf8');
-    
+
     await pool.query(migration);
     logger.info('Migration completed successfully');
   } catch (error) {
@@ -21,4 +21,4 @@ async function runMigration() {
   }
 }
 
-runMigration().catch(console.error); 
+runMigration().catch(console.error);

@@ -4,7 +4,7 @@ import { createLogger } from './logger.js';
 
 const logger = createLogger('background-processor');
 
-export async function processPreviousCids(startCid: string) {
+export async function processPreviousCids(startCid: string, agentName: string) {
   // Run in next tick to not block the main thread
   process.nextTick(async () => {
     try {
@@ -17,12 +17,20 @@ export async function processPreviousCids(startCid: string) {
         const existingMemory = await getMemoryByCid(currentCid);
         if (!existingMemory) {
           logger.info('Downloading previous memory in background', { cid: currentCid });
-          const memoryData = await downloadMemory(currentCid);
+          const memoryResult = await downloadMemory(currentCid);
 
-          if (memoryData) {
-            await saveMemoryRecord(currentCid, memoryData, memoryData?.previousCid);
-            logger.info('Successfully saved previous memory', { cid: currentCid });
-            currentCid = memoryData?.previousCid;
+          if (memoryResult && memoryResult.data) {
+            await saveMemoryRecord(
+              currentCid,
+              memoryResult.data,
+              memoryResult.data.previousCid,
+              agentName,
+            );
+            logger.info('Successfully saved previous memory', {
+              cid: currentCid,
+              agentName,
+            });
+            currentCid = memoryResult.data.previousCid;
           } else {
             logger.warn('Failed to download previous memory', { cid: currentCid });
             break;

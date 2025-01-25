@@ -53,7 +53,7 @@ function loadAgentsConfig(): AgentConfig[] {
 export function validateEnv(): EnvConfig {
   try {
     const agents = loadAgentsConfig();
-    
+
     return envSchema.parse({
       ...process.env,
       AGENTS: agents,

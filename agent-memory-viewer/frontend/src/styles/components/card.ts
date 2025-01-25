@@ -1,4 +1,3 @@
-
 export const cardStyles = {
   baseStyle: {
     bg: 'rgba(0, 17, 0, 0.7)',
