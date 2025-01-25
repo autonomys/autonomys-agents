@@ -1,6 +1,5 @@
 import axios from 'axios';
 import { useQuery } from 'react-query';
-import { ResponseStatus } from '../types/enums';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
@@ -47,20 +46,20 @@ export const useLatestMemory = (agentId: string) => {
 export const useDSNData = (
   page: number = 1,
   limit: number = 10,
-  type: ResponseStatus | 'all' = 'all',
+  agent: string = 'all',
   search?: string,
   author?: string,
 ) => {
   return useQuery<any, Error>(
-    ['dsn', page, limit, type, search, author],
+    ['dsn', page, limit, agent, search, author],
     async () => {
       const params = new URLSearchParams({
         page: page.toString(),
         limit: limit.toString(),
       });
 
-      if (type !== 'all') {
-        params.append('type', type);
+      if (agent !== 'all') {
+        params.append('agent', agent);
       }
 
       if (search) {
@@ -78,6 +77,20 @@ export const useDSNData = (
       retry: 3,
       retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 30000),
       keepPreviousData: true,
+    },
+  );
+};
+
+export const useAgents = () => {
+  return useQuery<{ username: string; address: string }[], Error>(
+    ['agents'],
+    async () => {
+      const { data } = await api.get('/agents');
+      return data.agents;
+    },
+    {
+      retry: 3,
+      retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 30000),
     },
   );
 };

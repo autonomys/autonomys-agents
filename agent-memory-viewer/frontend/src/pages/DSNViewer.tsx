@@ -11,7 +11,6 @@ import { useState, useEffect } from 'react';
 import { useDSNData } from '../api/client';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useWebSocket } from '../hooks/useWebSocket';
-import { ResponseStatus } from '../types/enums';
 import { cardStyles, textStyles, selectStyles } from '../styles';
 import { colors } from '../styles/theme/colors';
 import { useSearchParams } from 'react-router-dom';
@@ -24,22 +23,22 @@ function DSNViewer() {
     const [searchParams, setSearchParams] = useSearchParams();
     const [page, setPage] = useState(1);
     const [limit, setLimit] = useState(10);
-    const [type, setType] = useState<ResponseStatus | 'all'>('all');
+    const [selectedAgent, setSelectedAgent] = useState<string>('all');
     
     const search = searchParams.get('search') || undefined;
     const author = searchParams.get('author') || undefined;
     
-    const { data, isLoading, error } = useDSNData(page, limit, type, search, author);
+    const { data, isLoading, error } = useDSNData(page, limit, selectedAgent, search, author);
     useWebSocket();
 
-    const handleTypeChange = (newType: ResponseStatus | 'all') => {
-        setType(newType);
+    const handleAgentChange = (newAgent: string) => {
+        setSelectedAgent(newAgent);
         setPage(1);
     };
 
     useEffect(() => {
         setPage(1);
-    }, [search, author, type]);
+    }, [search, author, selectedAgent]);
 
     if (isLoading) return <Spinner color={colors.primary} />;
     if (error) return <Text {...textStyles.noData}>Error loading DSN data: {(error as Error).message}</Text>;
@@ -56,8 +55,8 @@ function DSNViewer() {
                             defaultValue={searchParams.get('search') || searchParams.get('author') ? `@${searchParams.get('author')}` : ''}
                         />
                         <StatusFilter 
-                            type={type}
-                            onTypeChange={handleTypeChange}
+                            selectedAgent={selectedAgent}
+                            onAgentChange={handleAgentChange}
                         />
                     </HStack>
                 </CardBody>

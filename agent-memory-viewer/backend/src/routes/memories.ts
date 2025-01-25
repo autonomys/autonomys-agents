@@ -4,6 +4,7 @@ import { downloadMemory } from '../utils/dsn.js';
 import { createLogger } from '../utils/logger.js';
 import { ResponseStatus } from '../types/enums.js';
 import { processPreviousCids } from '../utils/backgroundProcessor.js';
+import { config } from '../config/index.js';
 
 const router = Router();
 const logger = createLogger('memories-router');
@@ -70,13 +71,14 @@ router.get('/:cid', async (req, res) => {
       memory = await getMemoryByCid(cid);
       processPreviousCids(memoryData?.previousCid, agentName);
     }
-    // Transform v2.0.0 memories to match frontend expectations
-
+    
     res.json(memory?.content);
   } catch (error) {
     logger.error('Error fetching memory:', error);
     res.status(500).json({ error: 'Failed to fetch memory' });
   }
 });
+
+
 
 export default router;
