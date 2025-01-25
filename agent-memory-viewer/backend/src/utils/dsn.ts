@@ -13,7 +13,7 @@ async function delay(ms: number) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-export async function downloadMemory(cid: string, retryCount = 0): Promise<any> {
+export async function downloadMemory(cid: string, retryCount = 0): Promise<{ memoryData: any, agentName: string } | null> {
   logger.info(`Checking memory metadata: ${cid}`);
   try {
     const api = createAutoDriveApi({
@@ -22,7 +22,7 @@ export async function downloadMemory(cid: string, retryCount = 0): Promise<any> 
 
     const { isValid, agentName } = await validateMemoryMetadata(api, cid);
     if (!isValid || !agentName) {
-      return null;
+      return null
     }
     logger.info(`Memory metadata is valid: ${cid}`);
 

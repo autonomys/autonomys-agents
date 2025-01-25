@@ -61,16 +61,16 @@ router.get('/:cid', async (req, res) => {
     const { cid } = req.params;
     let memory = await getMemoryByCid(cid);
     if (!memory) {
-      const { memoryData, agentName } = await downloadMemory(cid);
-      console.log('agentName', agentName);
-      if (!memoryData) {
+      const memoryResult = await downloadMemory(cid);
+      console.log('agentName', memoryResult?.agentName);
+      if (!memoryResult?.memoryData) {
         res.status(404).json({ error: 'Memory not found' });
         return;
       }
       console.log('saving memory record');
-      await saveMemoryRecord(cid, memoryData, memoryData?.previousCid, agentName);
+      await saveMemoryRecord(cid, memoryResult?.memoryData, memoryResult?.memoryData?.previousCid, memoryResult?.agentName);
       memory = await getMemoryByCid(cid);
-      processPreviousCids(memoryData?.previousCid, agentName);
+      processPreviousCids(memoryResult?.memoryData?.previousCid, memoryResult?.agentName);
     }
 
     res.json({

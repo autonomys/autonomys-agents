@@ -9,7 +9,6 @@ function MemoryViewer() {
     const { cid } = useParams()
     const navigate = useNavigate()
     const { data: memory, isLoading, error } = useMemory(cid || '')
-    const { agent_name, ...contentWithoutAgent } = memory
     const explorerUrl = `https://astral.autonomys.xyz/taurus/permanent-storage/files/${cid}`
 
     if (isLoading) return <Spinner color="green.400" thickness="4px" size="xl" />
@@ -139,7 +138,7 @@ function MemoryViewer() {
                             position="relative"
                         >
                             <ReactJson 
-                                src={contentWithoutAgent}
+                                src={memory}
                                 theme="tomorrow"
                                 collapsed={false}
                                 displayDataTypes={false}

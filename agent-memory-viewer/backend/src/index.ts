@@ -38,8 +38,8 @@ async function main() {
             );
             const savedMemory = await saveMemoryRecord(
               cid,
-              memory,
-              memory?.previousCid,
+              memory?.memoryData,
+              memory?.memoryData?.previousCid,
               agentConfig?.username || 'unknown_agent',
             );
             logger.info('Memory processed successfully', {

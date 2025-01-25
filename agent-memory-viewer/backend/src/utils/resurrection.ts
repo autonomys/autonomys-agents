@@ -37,7 +37,7 @@ async function processResurrection(startHash: string, agentName: string) {
       if (!memory) break;
 
       memories.push({ hash, data: memory });
-      hash = memory?.previousCid;
+      hash = memory?.memoryData?.previousCid;
 
       if (!hash) break;
     } catch (error) {
