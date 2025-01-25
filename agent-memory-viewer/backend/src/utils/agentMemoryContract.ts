@@ -16,24 +16,24 @@ function hashToCid(hash: Uint8Array): string {
   return cid.toString();
 }
 
-export async function getLastMemoryHash(): Promise<string> {
-  const hash = await contract.getLastMemoryHash(config.AGENT_ADDRESS);
+export async function getLastMemoryHash(agentAddress: string): Promise<string> {
+  const hash = await contract.getLastMemoryHash(agentAddress);
   return hashToCid(ethers.getBytes(hash));
 }
 
 export async function watchMemoryHashUpdates(callback: (agent: string, cid: string) => void) {
-  const agentAddress = config.AGENT_ADDRESS.toLowerCase();
+  const agentAddresses = config.AGENTS.map(a => a.address.toLowerCase());
   const eventName = 'LastMemoryHashSet';
 
   logger.info('Setting up memory hash watcher with WebSocketProvider', {
-    agentAddress,
+    agentAddresses,
     contractAddress: config.CONTRACT_ADDRESS,
   });
 
   const listener = (agent: string, hash: string) => {
     try {
       const cid = hashToCid(ethers.getBytes(hash));
-      if (agent.toLowerCase() === agentAddress) {
+      if (agentAddresses.includes(agent.toLowerCase())) {
         callback(agent, cid);
       }
     } catch (error) {

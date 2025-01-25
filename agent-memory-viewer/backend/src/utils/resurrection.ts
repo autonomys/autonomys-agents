@@ -2,19 +2,26 @@ import { getLastMemoryHash } from './agentMemoryContract.js';
 import { saveMemoryRecord, getMemoryByCid } from '../db/index.js';
 import { downloadMemory } from './dsn.js';
 import { createLogger } from './logger.js';
+import { config } from '../config/index.js';
 
 const logger = createLogger('resurrection');
 
 export async function resurrection() {
   logger.info('Starting resurrection');
-  let hash = await getLastMemoryHash();
-
-  processResurrection(hash).catch(error => {
-    logger.error('Error during resurrection:', error);
-  });
+  
+  // Process resurrection for each configured agent
+  for (const agent of config.AGENTS) {
+    logger.info(`Starting resurrection for agent: ${agent.username}`);
+    try {
+      const hash = await getLastMemoryHash(agent.address);
+      await processResurrection(hash, agent.username);
+    } catch (error) {
+      logger.error(`Error during resurrection for agent ${agent.username}:`, error);
+    }
+  }
 }
 
-async function processResurrection(startHash: string) {
+async function processResurrection(startHash: string, agentName: string) {
   const memories: { hash: string; data: any }[] = [];
   let hash = startHash;
 
@@ -45,15 +52,19 @@ async function processResurrection(startHash: string) {
   for (let i = memories.length - 1; i >= 0; i--) {
     const { hash, data } = memories[i];
     try {
-      await saveMemoryRecord(hash, data, data?.previousCid);
-      logger.info('Saved memory during resurrection', { cid: hash });
+      await saveMemoryRecord(hash, data, data?.previousCid, agentName);
+      logger.info('Saved memory during resurrection', { cid: hash, agent: agentName });
     } catch (error) {
       logger.error('Failed to save memory during resurrection', {
         cid: hash,
+        agent: agentName,
         error,
       });
     }
   }
 
-  logger.info('Resurrection complete', { memoriesProcessed: memories.length });
+  logger.info('Resurrection complete', { 
+    agent: agentName,
+    memoriesProcessed: memories.length 
+  });
 }

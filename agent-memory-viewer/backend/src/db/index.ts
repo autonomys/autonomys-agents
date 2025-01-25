@@ -4,7 +4,7 @@ const { Pool } = pkg;
 import { config } from '../config/index.js';
 import { broadcastNewMemory } from '../websocket.js';
 import { ResponseStatus } from '../types/enums.js';
-import { openai } from '../services/openai.js';
+import { openai } from '../utils/llm/openai.js';
 
 const parseConnectionString = (url: string) => {
   const regex = /postgresql:\/\/([^:]+):([^@]+)@([^:]+):(\d+)\//;
@@ -16,7 +16,7 @@ const parseConnectionString = (url: string) => {
 
 const { user, password, host, port } = parseConnectionString(config.DATABASE_URL || '');
 
-const pool = new Pool({
+export const pool = new Pool({
   user,
   password,
   host,
@@ -35,11 +35,12 @@ export async function saveMemoryRecord(
   cid: string,
   content: any,
   previous_cid: string,
+  agent_name: string,
 ): Promise<MemoryRecord> {
   try {
     const result = await pool.query(
-      'INSERT INTO memory_records (cid, content, previous_cid) VALUES ($1, $2, $3) RETURNING *',
-      [cid, JSON.stringify(content), previous_cid],
+      'INSERT INTO memory_records (cid, content, previous_cid, agent_name) VALUES ($1, $2, $3, $4) RETURNING *',
+      [cid, JSON.stringify(content), previous_cid, agent_name],
     );
     broadcastNewMemory(result.rows[0]);
     return result.rows[0];

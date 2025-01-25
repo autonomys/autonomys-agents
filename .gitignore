@@ -4,7 +4,7 @@ characters/*
 memories/
 !src/config/
 dsn-twitter-schemas.json
-
+agent-memory-viewer/backend/src/config/agents.yaml
 
 # Python bytecode
 __pycache__/
