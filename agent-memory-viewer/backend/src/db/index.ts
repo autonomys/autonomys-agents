@@ -56,6 +56,7 @@ export async function saveMemoryRecord(
 
 export async function getMemoryByCid(cid: string): Promise<MemoryRecord | null> {
   const result = await pool.query('SELECT * FROM memory_records WHERE cid = $1', [cid]);
+  console.log('result', result.rows[0]);
   return result.rows[0] || null;
 }
 

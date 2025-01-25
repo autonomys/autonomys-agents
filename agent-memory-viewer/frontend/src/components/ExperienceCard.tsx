@@ -45,6 +45,7 @@ export const ExperienceCard = ({ item }: ExperienceCardProps) => {
     navigator.clipboard.writeText(text);
   };
 
+  
   return (
     <Card 
       {...cardStyles.baseStyle}

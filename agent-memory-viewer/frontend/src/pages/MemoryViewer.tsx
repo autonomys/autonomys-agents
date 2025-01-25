@@ -9,7 +9,7 @@ function MemoryViewer() {
     const { cid } = useParams()
     const navigate = useNavigate()
     const { data: memory, isLoading, error } = useMemory(cid || '')
-
+    const { agent_name, ...contentWithoutAgent } = memory
     const explorerUrl = `https://astral.autonomys.xyz/taurus/permanent-storage/files/${cid}`
 
     if (isLoading) return <Spinner color="green.400" thickness="4px" size="xl" />
@@ -43,7 +43,7 @@ function MemoryViewer() {
                     >
                         {memory.agent_name}
                     </Badge>
-                    <Badge 
+                    {/* <Badge 
                         colorScheme={getTypeColorScheme(memory.type)}
                         fontSize="md"
                         px={3}
@@ -51,7 +51,7 @@ function MemoryViewer() {
                         borderRadius="full"
                     >
                         {memory.type}
-                    </Badge>
+                    </Badge> */}
                 </HStack>
             </HStack>
 
@@ -86,9 +86,7 @@ function MemoryViewer() {
                             <VStack align="end" spacing={1}>
                                 <Text color="gray.400" fontSize="sm">Agent Info</Text>
                                 <HStack spacing={2}>
-                                    <Badge colorScheme="purple" fontSize="sm">
-                                        {memory.agent_name}
-                                    </Badge>
+                                   
                                     <Text color="green.400" fontFamily="mono">
                                         v{memory.agentVersion}
                                     </Text>
@@ -141,7 +139,7 @@ function MemoryViewer() {
                             position="relative"
                         >
                             <ReactJson 
-                                src={memory}
+                                src={contentWithoutAgent}
                                 theme="tomorrow"
                                 collapsed={false}
                                 displayDataTypes={false}
@@ -163,13 +161,5 @@ function MemoryViewer() {
         </VStack>
     )
 }
-
-// Helper function from DSNViewer
-const getTypeColorScheme = (type: string | undefined): string => {
-    if (!type) return 'gray';
-    const colorSchemes = ['teal', 'blue', 'cyan', 'purple', 'pink', 'orange', 'yellow', 'green', 'red'];
-    const hash = type.split('').reduce((acc, char) => char.charCodeAt(0) + ((acc << 5) - acc), 0);
-    return colorSchemes[Math.abs(hash) % colorSchemes.length];
-};
 
 export default MemoryViewer 

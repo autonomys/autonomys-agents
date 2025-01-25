@@ -9,7 +9,7 @@ router.get('/agents', async (_, res) => {
   try {
     const agents = config.AGENTS.map(agent => ({
       username: agent.username,
-      address: agent.address
+      address: agent.address,
     }));
     res.json({ agents });
   } catch (error) {

@@ -72,14 +72,15 @@ router.get('/:cid', async (req, res) => {
       memory = await getMemoryByCid(cid);
       processPreviousCids(memoryData?.previousCid, agentName);
     }
-    
-    res.json(memory?.content);
+
+    res.json({
+      ...memory?.content,
+      agent_name: memory?.agent_name,
+    });
   } catch (error) {
     logger.error('Error fetching memory:', error);
     res.status(500).json({ error: 'Failed to fetch memory' });
   }
 });
-
-
 
 export default router;
