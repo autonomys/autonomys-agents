@@ -30,6 +30,15 @@ export class LLMFactory {
           model: config.model,
           temperature,
         });
+      case LLMProvider.DEEPSEEK:
+        return new ChatOpenAI({
+          apiKey: appConfig.llmConfig.DEEPSEEK_API_KEY,
+          configuration: {
+            baseURL: appConfig.llmConfig.DEEPSEEK_URL,
+          },
+          model: config.model,
+          temperature,
+        });
       default:
         throw new Error(`Unsupported LLM provider: ${config.provider}`);
     }

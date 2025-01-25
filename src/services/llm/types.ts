@@ -2,6 +2,7 @@ export enum LLMProvider {
   OPENAI = 'openai',
   ANTHROPIC = 'anthropic',
   OLLAMA = 'ollama',
+  DEEPSEEK = 'deepseek',
 }
 
 export type LLMConfiguration = {
@@ -26,6 +27,10 @@ export const llmModels = {
     },
     anthropic: {
       claude35sonnet: 'claude-3-5-sonnet-latest',
+    },
+    deepseek: {
+      deepseekChat: 'deepseek-chat',
+      deepseekReasoner: 'deepseek-reasoner',
     },
     //placeholder
     ollama: {

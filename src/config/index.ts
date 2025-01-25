@@ -93,6 +93,8 @@ export const config = (() => {
         OPENAI_API_KEY: process.env.OPENAI_API_KEY || '',
         ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY || '',
         LLAMA_API_URL: process.env.LLAMA_API_URL || '',
+        DEEPSEEK_URL: process.env.DEEPSEEK_URL || '',
+        DEEPSEEK_API_KEY: process.env.DEEPSEEK_API_KEY || '',
       },
       autoDriveConfig: {
         AUTO_DRIVE_API_KEY: process.env.AUTO_DRIVE_API_KEY,
