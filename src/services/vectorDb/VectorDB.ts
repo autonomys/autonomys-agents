@@ -217,7 +217,7 @@ export class VectorDB {
     if (this.db) {
       try {
         this.db.exec('COMMIT');
-      } catch (e) {}
+      } catch (_) {}
       this.db.close();
       logger.info('VectorDB closed successfully');
     }

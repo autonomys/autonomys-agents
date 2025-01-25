@@ -4,7 +4,7 @@ import { createFetchTimelineTool } from '../../tools/twitter/fetchTimelineTool.j
 import { createPostTweetTool } from '../../tools/twitter/postTweetTool.js';
 import { createFetchMyRecentRepliesTool } from '../../tools/twitter/fetchMyRecentRepliesTool.js';
 import { createFetchMyRecentTweetsTool } from '../../tools/twitter/fetchMyRecentTweetsTool.js';
-import { createVectorDbSearchTool, createVectorDbInsertTool } from '../../tools/vectorDbTools.js';
+import { createVectorDbInsertTool, createVectorDbSearchTool } from '../../tools/vectorDbTools.js';
 import { TwitterApi } from '../../../services/twitter/types.js';
 import { VectorDB } from '../../../services/vectorDb/VectorDB.js';
 import { createSaveExperienceTool } from '../../tools/saveExperienceTool.js';

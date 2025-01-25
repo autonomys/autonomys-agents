@@ -5,7 +5,6 @@ import { createPostTweetTool } from '../../tools/twitter/postTweetTool.js';
 import { createUploadToDsnTool } from '../../tools/uploadToDsnTool.js';
 import { createFetchMyRecentTweetsTool } from '../../tools/twitter/fetchMyRecentTweetsTool.js';
 import { createFetchMyRecentRepliesTool } from '../../tools/twitter/fetchMyRecentRepliesTool.js';
-import { VectorDB } from '../../../services/vectorDb/VectorDB.js';
 
 export const createTools = (twitterApi: TwitterApi) => {
   const fetchTimelineTool = createFetchTimelineTool(twitterApi);
