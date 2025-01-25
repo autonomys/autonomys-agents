@@ -1,4 +1,4 @@
-import { Box, Flex, Link, Text, HStack, VStack } from '@chakra-ui/react'
+import { Box, Flex, Link, Text, HStack, VStack, Image } from '@chakra-ui/react'
 import { Link as RouterLink } from 'react-router-dom'
 
 function Navbar() {
@@ -50,39 +50,53 @@ function Navbar() {
                         [Agent Memory Viewer]
                     </Text>
                 </Link>
-                <VStack 
-                    spacing={0} 
-                    align="end"
-                >
-                    <Text
-                        color="rgba(0, 255, 0, 0.4)"
-                        fontSize="xs"
-                        fontFamily="Monaco, 'Courier New', monospace"
-                        letterSpacing="2px"
+                <HStack spacing={3} align="center">
+                    <VStack 
+                        spacing={0} 
+                        align="end"
                     >
-                        {'<network>'}
-                    </Text>
-                    <Text
-                        color="#00ff00"
-                        fontSize="md"
-                        fontWeight="bold"
-                        fontFamily="Monaco, 'Courier New', monospace"
-                        letterSpacing="2px"
-                        textShadow="0 0 10px #00ff00"
-                        transform="translateY(-2px)"
-                    >
-                        AUTONOMYS
-                    </Text>
-                    <Text
-                        color="rgba(0, 255, 0, 0.4)"
-                        fontSize="xs"
-                        fontFamily="Monaco, 'Courier New', monospace"
-                        letterSpacing="2px"
-                        transform="translateY(-4px)"
-                    >
-                        {'</network>'}
-                    </Text>
-                </VStack>
+                        <Text
+                            color="rgba(0, 255, 0, 0.4)"
+                            fontSize="xs"
+                            fontFamily="Monaco, 'Courier New', monospace"
+                            letterSpacing="2px"
+                        >
+                            {'<network>'}
+                        </Text>
+                        <Text
+                            color="#00ff00"
+                            fontSize="md"
+                            fontWeight="bold"
+                            fontFamily="Monaco, 'Courier New', monospace"
+                            letterSpacing="2px"
+                            textShadow="0 0 10px #00ff00"
+                            transform="translateY(-2px)"
+                        >
+                            AUTONOMYS
+                        </Text>
+                        <Text
+                            color="rgba(0, 255, 0, 0.4)"
+                            fontSize="xs"
+                            fontFamily="Monaco, 'Courier New', monospace"
+                            letterSpacing="2px"
+                            transform="translateY(-4px)"
+                        >
+                            {'</network>'}
+                        </Text>
+                    </VStack>
+                    <Image
+                        src="/autonomys-logo.png"
+                        alt="Autonomys Logo"
+                        height="40px"
+                        width="40px"
+                        filter="drop-shadow(0 0 8px rgba(0, 255, 0, 0.5))"
+                        transition="all 0.3s ease"
+                        _hover={{
+                            filter: 'drop-shadow(0 0 12px rgba(0, 255, 0, 0.7))',
+                            transform: 'scale(1.05)',
+                        }}
+                    />
+                </HStack>
             </Flex>
         </Box>
     )
