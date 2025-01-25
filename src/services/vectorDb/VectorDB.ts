@@ -166,7 +166,7 @@ export class VectorDB {
       vectorStatement.run(currentRowId, Buffer.from(new Float32Array(embedding).buffer));
 
       contentStatement.run(currentRowId, content);
-
+      logger.info('Inserted content:', { content });
       this.nextRowId++;
       this.db.exec('COMMIT');
     } catch (error) {
