@@ -33,15 +33,26 @@ function MemoryViewer() {
                 >
                     Back to Home
                 </Button>
-                <Badge 
-                    colorScheme={getTypeColorScheme(memory.type)}
-                    fontSize="md"
-                    px={3}
-                    py={1}
-                    borderRadius="full"
-                >
-                    {memory.type}
-                </Badge>
+                <HStack spacing={2}>
+                    <Badge 
+                        colorScheme="purple"
+                        fontSize="md"
+                        px={3}
+                        py={1}
+                        borderRadius="full"
+                    >
+                        {memory.agent_name}
+                    </Badge>
+                    <Badge 
+                        colorScheme={getTypeColorScheme(memory.type)}
+                        fontSize="md"
+                        px={3}
+                        py={1}
+                        borderRadius="full"
+                    >
+                        {memory.type}
+                    </Badge>
+                </HStack>
             </HStack>
 
             {/* Main Content Card */}
@@ -73,10 +84,15 @@ function MemoryViewer() {
                                 </HStack>
                             </VStack>
                             <VStack align="end" spacing={1}>
-                                <Text color="gray.400" fontSize="sm">Agent Version</Text>
-                                <Text color="green.400" fontFamily="mono">
-                                    v{memory.agentVersion}
-                                </Text>
+                                <Text color="gray.400" fontSize="sm">Agent Info</Text>
+                                <HStack spacing={2}>
+                                    <Badge colorScheme="purple" fontSize="sm">
+                                        {memory.agent_name}
+                                    </Badge>
+                                    <Text color="green.400" fontFamily="mono">
+                                        v{memory.agentVersion}
+                                    </Text>
+                                </HStack>
                             </VStack>
                         </HStack>
 

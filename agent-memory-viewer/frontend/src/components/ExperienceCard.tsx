@@ -9,6 +9,7 @@ import {
   Box,
   Badge,
   IconButton,
+  Image,
 } from '@chakra-ui/react';
 import { ExternalLinkIcon, CopyIcon, ViewIcon } from '@chakra-ui/icons';
 import { Link as RouterLink } from 'react-router-dom';
@@ -21,6 +22,23 @@ import { labelStyles } from '../styles/components/label';
 interface ExperienceCardProps {
   item: any;
 }
+
+const AgentBadge = ({ agentName }: { agentName: string }) => (
+    <Image
+        src={`/agents/${agentName}.jpg`} 
+        alt=""
+        height="60px"
+        width="60px"
+        filter="drop-shadow(0 0 8px rgba(147, 112, 219, 0.5))"
+        transition="all 0.3s ease"
+        _hover={{
+            filter: 'drop-shadow(0 0 12px rgba(147, 112, 219, 0.7))',
+            transform: 'scale(1.05)',
+        }}
+        borderRadius="full"
+        mr={2}
+    />
+);
 
 export const ExperienceCard = ({ item }: ExperienceCardProps) => {
   const copyToClipboard = (text: string) => {
@@ -40,19 +58,22 @@ export const ExperienceCard = ({ item }: ExperienceCardProps) => {
         <HStack justify="space-between" mb={4}>
           <VStack align="start" spacing={1}>
             <HStack>
+              <AgentBadge agentName={item.agent_name} />
               <Text {...textStyles.heading}>
                 Learned Experience #{item.id}
               </Text>
             </HStack>
-            <Text fontSize="xs" color="gray.500">
-              CID: {item.cid.substring(0, 8)}...
-            </Text>
+            <HStack margin={1.5}>
+              <Text fontSize="xs" color="gray.500">
+                CID: {item.cid.substring(0, 20)}...
+              </Text>
+            </HStack>
           </VStack>
-          <Tooltip 
-            label={new Date(item.timestamp).toLocaleString()} 
-            placement="top"
-          >
-            <VStack spacing={0} align="end">
+          <VStack spacing={0} align="end">
+            <Tooltip 
+              label={new Date(item.timestamp).toLocaleString()} 
+              placement="top"
+            >
               <Text 
                 color="gray.500" 
                 fontSize="sm"
@@ -60,11 +81,13 @@ export const ExperienceCard = ({ item }: ExperienceCardProps) => {
               >
                 {utcToLocalRelativeTime(item.timestamp)}
               </Text>
+            </Tooltip>
+            <HStack spacing={2}>
               <Text fontSize="xs" color="gray.600">
                 v{item.content.agentVersion || 'unknown'}
               </Text>
-            </VStack>
-          </Tooltip>
+            </HStack>
+          </VStack>
         </HStack>
 
         {/* JSON Viewer */}
@@ -109,7 +132,6 @@ export const ExperienceCard = ({ item }: ExperienceCardProps) => {
           >
             {item.content.type}
           </Badge>
-          {/* Add more badges here based on your data */}
         </HStack>
 
         {/* Actions */}
