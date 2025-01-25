@@ -1,9 +1,9 @@
 import axios from 'axios';
 import { useQuery } from 'react-query';
-import type { AgentMemory, DSNResponse } from '../types';
 import { ResponseStatus } from '../types/enums';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+
 
 export const api = axios.create({
   baseURL: API_URL,
@@ -13,7 +13,7 @@ export const api = axios.create({
 });
 
 export const useMemory = (cid: string) => {
-  return useQuery<AgentMemory, Error>(
+  return useQuery<any, Error>(
     ['memory', cid],
     async () => {
       const { data } = await api.get(`/memories/${cid}`);
@@ -33,7 +33,7 @@ export const useMemory = (cid: string) => {
 };
 
 export const useLatestMemory = (agentId: string) => {
-  return useQuery<AgentMemory, Error>(
+  return useQuery<any, Error>(
     ['latestMemory', agentId],
     async () => {
       const { data } = await api.get(`/agents/${agentId}/memories/latest`);
@@ -52,7 +52,7 @@ export const useDSNData = (
   search?: string,
   author?: string,
 ) => {
-  return useQuery<DSNResponse, Error>(
+  return useQuery<any, Error>(
     ['dsn', page, limit, type, search, author],
     async () => {
       const params = new URLSearchParams({
