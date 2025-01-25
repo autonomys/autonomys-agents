@@ -30,17 +30,20 @@ export async function analyzePaths(searchText: string): Promise<string[]> {
       temperature: 0,
     });
 
-    return completion.choices[0]?.message?.content?.split('\n')
-      .filter(Boolean)
-      .map(path => path.trim())
-      .filter(path => path.includes('->'))
-      .map(path => {
-        if (path.startsWith('content')) return path;
-        const parts = path.split('->');
-        return `content->'${parts[0]}'${parts[1]}`;
-      })
-      .filter(path => path.includes('->>')) || [];
+    return (
+      completion.choices[0]?.message?.content
+        ?.split('\n')
+        .filter(Boolean)
+        .map(path => path.trim())
+        .filter(path => path.includes('->'))
+        .map(path => {
+          if (path.startsWith('content')) return path;
+          const parts = path.split('->');
+          return `content->'${parts[0]}'${parts[1]}`;
+        })
+        .filter(path => path.includes('->>')) || []
+    );
   } catch (error) {
     return [];
   }
-} 
+}

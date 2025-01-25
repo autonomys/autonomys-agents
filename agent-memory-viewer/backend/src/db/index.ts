@@ -72,7 +72,7 @@
 //       messages: [
 //         {
 //           role: 'system',
-//           content: `You are a SQL expert. Return only PostgreSQL JSONB path expressions using the -> and ->> operators, one per line. 
+//           content: `You are a SQL expert. Return only PostgreSQL JSONB path expressions using the -> and ->> operators, one per line.
 //             Example: content->'tweet'->>'text'
 //             or
 //             content->'author'->>'username'
@@ -160,7 +160,7 @@
 //     const total = parseInt(countResult.rows[0].count);
 
 //     let query = `
-//             SELECT 
+//             SELECT
 //                 mr.id,
 //                 mr.cid,
 //                 mr.content,

@@ -68,7 +68,12 @@ router.get('/:cid', async (req, res) => {
         return;
       }
       console.log('saving memory record');
-      await saveMemoryRecord(cid, memoryResult?.memoryData, memoryResult?.memoryData?.previousCid, memoryResult?.agentName);
+      await saveMemoryRecord(
+        cid,
+        memoryResult?.memoryData,
+        memoryResult?.memoryData?.previousCid,
+        memoryResult?.agentName,
+      );
       memory = await getMemoryByCid(cid);
       processPreviousCids(memoryResult?.memoryData?.previousCid, memoryResult?.agentName);
     }

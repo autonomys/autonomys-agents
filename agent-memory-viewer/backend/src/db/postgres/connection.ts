@@ -18,4 +18,4 @@ export const pool = new Pool({
   host,
   port: parseInt(port),
   database: 'agent_memory',
-}); 
+});
