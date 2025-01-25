@@ -69,7 +69,7 @@ function DSNViewer() {
                 </Text>
             ) : (
                 <AnimatePresence>
-                    {data.data.map((item, index) => (
+                    {data.data.map((item: any, index: any) => (
                         <motion.div
                             key={item.id}
                             initial={{ opacity: 0, y: 20 }}

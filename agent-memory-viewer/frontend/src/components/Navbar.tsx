@@ -47,7 +47,7 @@ function Navbar() {
                         fontWeight="bold"
                         letterSpacing="1px"
                     >
-                        [Agent Memory Viewer]
+                        [Agent Experience Viewer]
                     </Text>
                 </Link>
                 <HStack spacing={3} align="center">

@@ -74,6 +74,15 @@ export const Pagination = ({ currentPage, totalPages, onPageChange }: Pagination
       ))}
 
       <Button
+        onClick={() => onPageChange(currentPage + 1)}
+        isDisabled={currentPage === totalPages}
+        {...buttonStyles.primary}
+        size="sm"
+      >
+        Next
+      </Button>
+
+      <Button
         onClick={() => onPageChange(totalPages)}
         isDisabled={currentPage === totalPages}
         {...buttonStyles.primary}
