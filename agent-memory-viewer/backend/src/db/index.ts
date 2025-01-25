@@ -1,5 +1,3 @@
-/* eslint-disable */
-
 import pkg from 'pg';
 const { Pool } = pkg;
 
@@ -97,13 +95,15 @@ async function analyzePaths(searchText: string): Promise<string[]> {
     return paths
       .map(path => path.trim())
       .filter(path => path.includes('->'))
-      .map(path => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .map((path: any) => {
         if (path.startsWith('content')) return path;
         const parts = path.split('->');
         return `content->'${parts[0]}'${parts[1]}`;
       })
       .filter(path => path.includes('->>'));
-  } catch (error) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } catch (error: any) {
     return [];
   }
 }
