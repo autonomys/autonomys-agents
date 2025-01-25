@@ -17,14 +17,16 @@ import { createPrompts } from './prompts.js';
 import { BaseMessage, HumanMessage } from '@langchain/core/messages';
 import { createTwitterApi } from '../../../services/twitter/client.js';
 import { workflowControlParser } from './prompts.js';
+import { VectorDB } from '../../../services/vectorDb/VectorDB.js';
 
 const logger = createLogger('orchestrator-workflow');
 
 export const createWorkflowConfig = async (): Promise<OrchestratorConfig> => {
   const { USERNAME, PASSWORD, COOKIES_PATH } = config.twitterConfig;
   const twitterApi = await createTwitterApi(USERNAME, PASSWORD, COOKIES_PATH);
+  const vectorDb = new VectorDB('data/orchestrator');
 
-  const { tools } = createTools(twitterApi);
+  const { tools } = createTools(twitterApi, vectorDb);
   const toolNode = new ToolNode(tools);
   const orchestratorModel = LLMFactory.createModel(config.llmConfig.nodes.orchestrator).bind({
     tools,
