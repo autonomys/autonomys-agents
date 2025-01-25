@@ -56,9 +56,9 @@ export async function downloadMemory(
       return null;
     }
 
-    return { 
+    return {
       memoryData,
-      agentName 
+      agentName,
     };
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);

@@ -1,8 +1,10 @@
 import { pool } from '../postgres/connection.js';
 import { MemoryRecord, PaginationResult } from '../types/models.js';
 import { broadcastNewMemory } from '../../websocket.js';
-import { ResponseStatus } from '../../types/enums.js';
-import { analyzePaths } from '../services/pathAnalyzer.js';
+import { analyzePaths, recordSearchResults } from '../services/pathAnalyzer.js';
+import { createLogger } from '../../utils/logger.js';
+
+const logger = createLogger('memoryRepository');
 
 export async function saveMemoryRecord(
   cid: string,
@@ -34,7 +36,6 @@ export async function getMemoryByCid(cid: string): Promise<MemoryRecord | null> 
 export async function getAllDsn(
   page: number,
   limit: number,
-  type?: ResponseStatus,
   searchText?: string,
   authorUsername?: string,
   agent?: string,
@@ -46,15 +47,6 @@ export async function getAllDsn(
     let params: any[] = [];
     let conditions: string[] = [];
 
-    if (type) {
-      if (type === ResponseStatus.APPROVED) {
-        conditions.push(`(content->>'type' = 'approved' OR content->>'type' = 'response')`);
-      } else {
-        conditions.push(`content->>'type' = $${params.length + 1}`);
-        params.push(type);
-      }
-    }
-
     if (agent && agent !== 'all') {
       conditions.push(`agent_name = $${params.length + 1}`);
       params.push(agent);
@@ -62,18 +54,47 @@ export async function getAllDsn(
 
     if (searchText) {
       const searchPaths = await analyzePaths(searchText);
-      const pathConditions = searchPaths.map(path => `${path} ILIKE $${params.length + 1}`);
+      const pathResults = new Map<string, boolean>();
 
-      conditions.push(`(${pathConditions.join(' OR ')})`);
       params.push(`%${searchText}%`);
+
+      const pathConditions = searchPaths.map(path => `${path} ILIKE $${params.length}`);
+
+      if (pathConditions.length > 0) {
+        conditions.push(`(${pathConditions.join(' OR ')})`);
+      }
+
+      const pathMatchQuery = searchPaths
+        .map(path => `COUNT(CASE WHEN ${path} ILIKE $1 THEN 1 END) > 0 as "${path}"`)
+        .join(', ');
+
+      if (pathMatchQuery) {
+        const matchResults = await pool.query(
+          `SELECT ${pathMatchQuery} FROM memory_records WHERE content IS NOT NULL`,
+          [`%${searchText}%`],
+        );
+
+        searchPaths.forEach(path => {
+          pathResults.set(path, matchResults.rows[0][path]);
+        });
+
+        recordSearchResults(pathResults).catch(error =>
+          logger.error('Error recording search results:', error),
+        );
+      }
     }
 
     if (authorUsername) {
-      const usernamePaths = await analyzePaths(authorUsername);
-      const usernameConditions = usernamePaths.map(path => `${path} ILIKE $${params.length + 1}`);
-
-      conditions.push(`(${usernameConditions.join(' OR ')})`);
+      const authorPaths = await analyzePaths(authorUsername);
       params.push(`%${authorUsername}%`);
+
+      const authorConditions = authorPaths
+        .filter(path => path.endsWith("->>'username'") || path.endsWith("->>'author'"))
+        .map(path => `${path} ILIKE $${params.length}`);
+
+      if (authorConditions.length > 0) {
+        conditions.push(`(${authorConditions.join(' OR ')})`);
+      }
     }
 
     if (conditions.length > 0) {
@@ -84,21 +105,20 @@ export async function getAllDsn(
     const total = parseInt(countResult.rows[0].count);
 
     let query = `
-            SELECT 
-                mr.id,
-                mr.cid,
-                mr.content,
-                mr.created_at,
-                mr.agent_name,
-                content->>'timestamp' as timestamp
-            FROM memory_records mr`;
-
+        SELECT 
+          id,
+          cid,
+          content,
+          created_at,
+          agent_name,
+          content->>'timestamp' as timestamp
+        FROM memory_records
+    `;
     if (conditions.length > 0) {
       query += ' WHERE ' + conditions.join(' AND ');
     }
 
-    query += ` ORDER BY (content->>'timestamp')::timestamp DESC NULLS LAST
-                  LIMIT $${params.length + 1} OFFSET $${params.length + 2}`;
+    query += ` ORDER BY created_at DESC LIMIT $${params.length + 1} OFFSET $${params.length + 2}`;
 
     const queryParams = [...params, limit, offset];
     const result = await pool.query(query, queryParams);
@@ -113,7 +133,7 @@ export async function getAllDsn(
       },
     };
   } catch (error) {
-    console.error('Error in getAllDsn:', error);
+    logger.error('Error in getAllDsn:', error);
     throw error;
   }
 }

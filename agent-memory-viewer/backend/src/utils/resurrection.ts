@@ -36,14 +36,14 @@ async function processResurrection(startHash: string, agentName: string) {
       const memory = await downloadMemory(hash);
       if (!memory) break;
 
-      memories.push({ 
-        hash, 
+      memories.push({
+        hash,
         data: {
           ...memory.memoryData,
-          agent_name: memory.agentName
-        }
+          agent_name: memory.agentName,
+        },
       });
-      
+
       hash = memory.memoryData?.previousCid;
 
       if (!hash) break;
@@ -59,12 +59,7 @@ async function processResurrection(startHash: string, agentName: string) {
   for (let i = memories.length - 1; i >= 0; i--) {
     const { hash, data } = memories[i];
     try {
-      await saveMemoryRecord(
-        hash,
-        data,
-        data.previousCid,
-        data.agent_name
-      );
+      await saveMemoryRecord(hash, data, data.previousCid, data.agent_name);
       logger.info('Saved memory during resurrection', { cid: hash, agent: agentName });
     } catch (error) {
       logger.error('Failed to save memory during resurrection', {
