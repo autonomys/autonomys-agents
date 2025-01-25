@@ -6,14 +6,12 @@
   "type": "module",
   "scripts": {
     "build": "tsc && cp src/db/schema.sql dist/db/",
-    "start": "node dist/index.js",
+    "start": "NODE_ENV=production node dist/index.js",
     "dev": "NODE_ENV=development tsx watch src/index.ts",
     "lint": "eslint . --ext .ts",
     "test": "jest",
     "format": "prettier --write \"src/**/*.ts\"",
     "validate:env": "tsx src/scripts/validate-env.ts",
-    "generate-types": "tsx src/types/generateTypes.ts",
-    "sort-memories": "tsx src/scripts/sortMemories.ts",
     "migrate": "tsx src/scripts/migrate.ts"
   },
   "dependencies": {
