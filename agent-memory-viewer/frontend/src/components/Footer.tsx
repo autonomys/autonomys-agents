@@ -22,7 +22,7 @@ export const Footer = () => {
             color={colors.primary}
             _hover={{ textDecoration: 'none', textShadow: '0 0 10px #00ff00' }}
           >
-            Network
+            Website
           </Link>
           <Text color={colors.primary}>•</Text>
           <Link
@@ -49,7 +49,7 @@ export const Footer = () => {
           textAlign="center"
           fontFamily="Monaco, 'Courier New', monospace"
         >
-          © {currentYear()} Autonomys Network.
+          © {currentYear()} Autonomys Network
         </Text>
       </VStack>
     </Box>
