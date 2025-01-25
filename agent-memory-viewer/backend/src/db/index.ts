@@ -93,17 +93,15 @@ async function analyzePaths(searchText: string): Promise<string[]> {
     console.log('LLM generated paths:', paths);
 
     return paths
-      .map(path => path.trim())
-      .filter(path => path.includes('->'))
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .map((path: any) => {
+      .map((path: string) => path.trim())
+      .filter((path: string) => path.includes('->'))
+      .map((path: string) => {
         if (path.startsWith('content')) return path;
         const parts = path.split('->');
         return `content->'${parts[0]}'${parts[1]}`;
       })
-      .filter(path => path.includes('->>'));
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  } catch (error: any) {
+      .filter((path: string) => path.includes('->>'));
+  } catch (error) {
     return [];
   }
 }
