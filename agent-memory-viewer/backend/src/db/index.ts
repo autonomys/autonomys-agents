@@ -29,6 +29,7 @@ export interface MemoryRecord {
   cid: string;
   content: any;
   created_at: Date;
+  agent_name: string;
 }
 
 export async function saveMemoryRecord(
@@ -112,6 +113,7 @@ export async function getAllDsn(
   type?: ResponseStatus,
   searchText?: string,
   authorUsername?: string,
+  agent?: string,
 ): Promise<any> {
   const offset = (page - 1) * limit;
 
@@ -127,6 +129,11 @@ export async function getAllDsn(
         conditions.push(`content->>'type' = $${params.length + 1}`);
         params.push(type);
       }
+    }
+
+    if (agent && agent !== 'all') {
+      conditions.push(`agent_name = $${params.length + 1}`);
+      params.push(agent);
     }
 
     if (searchText) {
@@ -158,6 +165,7 @@ export async function getAllDsn(
                 mr.cid,
                 mr.content,
                 mr.created_at,
+                mr.agent_name,
                 content->>'timestamp' as timestamp
             FROM memory_records mr`;
 
