@@ -1,19 +1,25 @@
-import { colors } from '../theme/colors';
-
 export const buttonStyles = {
-    primary: {
-        colorScheme: 'green',
-        variant: 'outline',
-        color: colors.primary,
-        borderColor: colors.primary,
-        _hover: {
-            bg: colors.background.light,
-            boxShadow: `0 0 10px ${colors.primary}`
-        }
+  primary: {
+    variant: 'outline',
+    color: '#00ff00',
+    borderColor: '#00ff00',
+    bg: 'rgba(0, 17, 0, 0.7)',
+    backdropFilter: 'blur(5px)',
+    transition: 'all 0.3s ease',
+    textShadow: '0 0 5px #00ff00',
+    _hover: {
+      bg: 'rgba(0, 255, 0, 0.1)',
+      boxShadow: '0 0 15px #00ff00',
+      transform: 'translateY(-2px)',
     },
-    pagination: {
-        size: 'sm',
-        variant: 'outline',
-        colorScheme: 'green'
-    }
-}; 
+    _active: {
+      bg: 'rgba(0, 255, 0, 0.2)',
+      transform: 'translateY(1px)',
+    },
+  },
+  pagination: {
+    size: 'sm',
+    variant: 'outline',
+    colorScheme: 'green',
+  },
+};

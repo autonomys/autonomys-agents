@@ -1,15 +1,15 @@
-import dayjs from 'dayjs'
-import relativeTime from 'dayjs/plugin/relativeTime'
-import utc from 'dayjs/plugin/utc'
+import dayjs from 'dayjs';
+import relativeTime from 'dayjs/plugin/relativeTime';
+import utc from 'dayjs/plugin/utc';
 
-dayjs.extend(relativeTime)
-dayjs.extend(utc)
+dayjs.extend(relativeTime);
+dayjs.extend(utc);
 
 export const formatSeconds = (seconds: number | bigint): string => {
   if (typeof seconds === 'number' && seconds < 0) {
-    throw new Error('Seconds cannot be negative')
+    throw new Error('Seconds cannot be negative');
   } else if (typeof seconds === 'bigint' && seconds < 0n) {
-    throw new Error('Seconds cannot be negative')
+    throw new Error('Seconds cannot be negative');
   }
 
   const timeUnits = [
@@ -17,34 +17,34 @@ export const formatSeconds = (seconds: number | bigint): string => {
     { unit: 'h', value: 3600n },
     { unit: 'm', value: 60n },
     { unit: 's', value: 1n },
-  ]
+  ];
 
-  let secondsBigInt = BigInt(seconds)
+  let secondsBigInt = BigInt(seconds);
 
   return (
     timeUnits
       .reduce((result, { unit, value }) => {
         if (secondsBigInt >= value) {
-          const time = secondsBigInt / value
-          secondsBigInt %= value
-          result += `${time}${unit} `
+          const time = secondsBigInt / value;
+          secondsBigInt %= value;
+          result += `${time}${unit} `;
         }
-        return result
+        return result;
       }, '')
       .trim() || '0s'
-  )
-}
+  );
+};
 
 export const utcToLocalRelativeTime = (timestamp: string): string => {
-  const now = dayjs()
-  const time = dayjs.utc(timestamp).local()
-  const diffInSeconds = now.diff(time, 'second')
+  const now = dayjs();
+  const time = dayjs.utc(timestamp).local();
+  const diffInSeconds = now.diff(time, 'second');
 
-  if (diffInSeconds < 60) return `${diffInSeconds} seconds ago`
-  return time.fromNow(true) + ' ago'
-}
+  if (diffInSeconds < 60) return `${diffInSeconds} seconds ago`;
+  return time.fromNow(true) + ' ago';
+};
 
 export const utcToLocalTime = (timestamp: string): string =>
-  dayjs.utc(timestamp).local().format('DD MMM YYYY | HH:mm:ss(Z)')
+  dayjs.utc(timestamp).local().format('DD MMM YYYY | HH:mm:ss(Z)');
 
-export const currentYear = (): number => dayjs().year() 
+export const currentYear = (): number => dayjs().year();

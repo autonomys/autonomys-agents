@@ -1,0 +1,5 @@
+agents:
+  - username: "0xargumint"
+    address: "0x518EbE66287140e9378b9F8D00797291A8dfc2bc"
+  - username: "agent2"
+    address: "0x0000000000000000000000000000000000000000" 

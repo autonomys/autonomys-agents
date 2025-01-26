@@ -6,13 +6,13 @@
   "type": "module",
   "scripts": {
     "build": "tsc && cp src/db/schema.sql dist/db/",
-    "start": "node dist/index.js",
+    "start": "NODE_ENV=production node dist/index.js",
     "dev": "NODE_ENV=development tsx watch src/index.ts",
     "lint": "eslint . --ext .ts",
     "test": "jest",
+    "format": "prettier --write \"src/**/*.ts\"",
     "validate:env": "tsx src/scripts/validate-env.ts",
-    "generate-types": "tsx src/types/generateTypes.ts",
-    "sort-memories": "tsx src/scripts/sortMemories.ts"
+    "migrate": "tsx src/scripts/migrate.ts"
   },
   "dependencies": {
     "@autonomys/auto-dag-data": "^1.1.2",
@@ -23,11 +23,14 @@
     "express": "^4.21.2",
     "express-rate-limit": "^7.1.5",
     "helmet": "^7.1.0",
+    "openai": "^4.80.1",
     "pako": "^2.1.0",
     "pg": "^8.13.1",
     "winston": "^3.17.0",
     "ws": "^8.16.0",
-    "zod": "^3.22.4"
+    "zod": "^3.22.4",
+    "js-yaml": "^4.1.0",
+    "@types/js-yaml": "^4.0.9"
   },
   "devDependencies": {
     "@types/cors": "^2.8.17",
