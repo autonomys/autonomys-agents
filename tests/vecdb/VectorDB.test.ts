@@ -1,4 +1,4 @@
-import { VectorDB } from '../../src/vecdb/VectorDB';
+import { VectorDB } from '../../src/services/vectorDb/VectorDB';
 import { join } from 'path';
 import { rmSync, existsSync } from 'fs';
 
