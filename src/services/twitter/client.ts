@@ -227,7 +227,17 @@ export const createTwitterApi = async (
   logger.info(`Login status: ${isLoggedIn}`);
 
   if (!isLoggedIn) {
-    throw new Error('Failed to initialize Twitter Api - not logged in');
+    logger.info(`Previous cookies is likely expired or invalid, logging in again`);
+    try {
+      await login(scraper, username, password, cookiesPath);
+      const isSecondLoginSuccessful = await scraper.isLoggedIn();
+      logger.info(`Login status: ${isSecondLoginSuccessful}`);
+      if (!isSecondLoginSuccessful) {
+        throw new Error('Failed to initialize Twitter Api - not logged in');
+      }
+    } catch (error) {
+      throw new Error('Failed to initialize Twitter Api - not logged in');
+    }
   }
 
   const userId = await scraper.getUserIdByScreenName(username);
