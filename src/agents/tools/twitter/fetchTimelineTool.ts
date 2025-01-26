@@ -35,7 +35,11 @@ export const createFetchTimelineTool = (twitterApi: TwitterApi) =>
           numRandomFollowings,
         );
         const tweets = {
-          timelineTweets: myTimelineTweets,
+          timelineTweets:
+            // the twitter api does not respect the count parameter
+            myTimelineTweets.length > numTimelineTweets
+              ? myTimelineTweets.sort((_a, _b) => Math.random() - 0.5).slice(0, numTimelineTweets)
+              : myTimelineTweets,
           followingRecents: followingRecents,
         };
         logger.info('Timeline tweets:', {
