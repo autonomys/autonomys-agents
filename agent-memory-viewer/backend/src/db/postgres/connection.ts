@@ -12,12 +12,13 @@ export const parseConnectionString = (url: string) => {
 
 const { user, password, host, port } = parseConnectionString(config.DATABASE_URL || '');
 
-export const createPool = (database: string) => new Pool({
-  user,
-  password,
-  host,
-  port: parseInt(port),
-  database,
-});
+export const createPool = (database: string) =>
+  new Pool({
+    user,
+    password,
+    host,
+    port: parseInt(port),
+    database,
+  });
 
 export const pool = createPool('agent_memory');

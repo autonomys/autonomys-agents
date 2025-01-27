@@ -6,7 +6,6 @@ import { config } from '../config/index.js';
 
 const logger = createLogger('resurrection');
 
-
 export async function resurrection() {
   logger.info('Starting resurrection');
 
@@ -66,10 +65,10 @@ async function processResurrection(startHash: string, agentName: string) {
       if (currentBatch.length >= BATCH_SIZE) {
         await saveMemoryBatch(currentBatch, agentName);
         totalProcessed += currentBatch.length;
-        logger.info('Processed memory batch', { 
-          agent: agentName, 
+        logger.info('Processed memory batch', {
+          agent: agentName,
           batchSize: currentBatch.length,
-          totalProcessed 
+          totalProcessed,
         });
         currentBatch = [];
       }
@@ -95,4 +94,3 @@ async function processResurrection(startHash: string, agentName: string) {
     memoriesProcessed: totalProcessed,
   });
 }
-
