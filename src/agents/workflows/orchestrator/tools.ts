@@ -1,9 +1,11 @@
 import { createTwitterWorkflowTool } from './workflowTools/twitterWorkflowTool.js';
-import { createFetchMentionsTool } from '../../tools/twitter/fetchMentionsTool.js';
-import { createFetchTimelineTool } from '../../tools/twitter/fetchTimelineTool.js';
-import { createPostTweetTool } from '../../tools/twitter/postTweetTool.js';
-import { createFetchMyRecentRepliesTool } from '../../tools/twitter/fetchMyRecentRepliesTool.js';
-import { createFetchMyRecentTweetsTool } from '../../tools/twitter/fetchMyRecentTweetsTool.js';
+import {
+  createFetchMentionsTool,
+  createFetchMyRecentRepliesTool,
+  createFetchMyRecentTweetsTool,
+  createFetchTimelineTool,
+  createPostTweetTool,
+} from '../../tools/twitterTools.js';
 import { createVectorDbInsertTool, createVectorDbSearchTool } from '../../tools/vectorDbTools.js';
 import { TwitterApi } from '../../../services/twitter/types.js';
 import { VectorDB } from '../../../services/vectorDb/VectorDB.js';
