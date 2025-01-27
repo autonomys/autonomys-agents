@@ -118,7 +118,7 @@ export async function getAllDsn(
       query += ' WHERE ' + conditions.join(' AND ');
     }
 
-    query += ` ORDER BY created_at DESC LIMIT $${params.length + 1} OFFSET $${params.length + 2}`;
+    query += ` ORDER BY (content->>'timestamp')::timestamp DESC LIMIT $${params.length + 1} OFFSET $${params.length + 2}`;
 
     const queryParams = [...params, limit, offset];
     const result = await pool.query(query, queryParams);
