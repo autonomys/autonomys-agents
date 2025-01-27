@@ -6,6 +6,7 @@ import { config } from '../config/index.js';
 
 const logger = createLogger('resurrection');
 
+
 export async function resurrection() {
   logger.info('Starting resurrection');
 
@@ -21,41 +22,7 @@ export async function resurrection() {
   }
 }
 
-async function processResurrection(startHash: string, agentName: string) {
-  const memories: { hash: string; data: any }[] = [];
-  let hash = startHash;
-
-  while (true) {
-    const existingMemory = await getMemoryByCid(hash);
-    if (existingMemory) {
-      logger.info('Found existing memory, stopping resurrection', { cid: hash });
-      break;
-    }
-
-    try {
-      const memory = await downloadMemory(hash);
-      if (!memory) break;
-
-      memories.push({
-        hash,
-        data: {
-          ...memory.memoryData,
-          agent_name: memory.agentName,
-        },
-      });
-
-      hash = memory.memoryData?.previousCid;
-
-      if (!hash) break;
-    } catch (error) {
-      logger.error('Failed to download memory during resurrection', {
-        cid: hash,
-        error,
-      });
-      break;
-    }
-  }
-
+async function saveMemoryBatch(memories: { hash: string; data: any }[], agentName: string) {
   for (let i = memories.length - 1; i >= 0; i--) {
     const { hash, data } = memories[i];
     try {
@@ -69,9 +36,63 @@ async function processResurrection(startHash: string, agentName: string) {
       });
     }
   }
+}
+
+async function processResurrection(startHash: string, agentName: string) {
+  const BATCH_SIZE = 10;
+  let currentBatch: { hash: string; data: any }[] = [];
+  let hash = startHash;
+  let totalProcessed = 0;
+
+  while (true) {
+    const existingMemory = await getMemoryByCid(hash);
+    if (existingMemory) {
+      logger.info('Found existing memory, stopping resurrection', { cid: hash });
+      break;
+    }
+
+    try {
+      const memory = await downloadMemory(hash);
+      if (!memory) break;
+
+      currentBatch.push({
+        hash,
+        data: {
+          ...memory.memoryData,
+          agent_name: memory.agentName,
+        },
+      });
+
+      if (currentBatch.length >= BATCH_SIZE) {
+        await saveMemoryBatch(currentBatch, agentName);
+        totalProcessed += currentBatch.length;
+        logger.info('Processed memory batch', { 
+          agent: agentName, 
+          batchSize: currentBatch.length,
+          totalProcessed 
+        });
+        currentBatch = [];
+      }
+
+      hash = memory.memoryData?.previousCid;
+      if (!hash) break;
+    } catch (error) {
+      logger.error('Failed to download memory during resurrection', {
+        cid: hash,
+        error,
+      });
+      break;
+    }
+  }
+
+  if (currentBatch.length > 0) {
+    await saveMemoryBatch(currentBatch, agentName);
+    totalProcessed += currentBatch.length;
+  }
 
   logger.info('Resurrection complete', {
     agent: agentName,
-    memoriesProcessed: memories.length,
+    memoriesProcessed: totalProcessed,
   });
 }
+
