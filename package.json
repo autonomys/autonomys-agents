@@ -1,7 +1,7 @@
 {
-    "name": "auto-agents-framework",
-    "version": "0.1.0",
-    "description": "Auto Agents Framework",
+    "name": "autonomys-agents",
+    "version": "0.2.0",
+    "description": "Autonomys Agents",
     "main": "dist/index.js",
     "type": "module",
     "scripts": {
