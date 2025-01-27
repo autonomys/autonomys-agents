@@ -181,3 +181,26 @@ export const createPostTweetTool = (twitterApi: TwitterApi) =>
       }
     },
   });
+
+export const createAllTwitterTools = (twitterApi: TwitterApi) => {
+  const fetchTimelineTool = createFetchTimelineTool(twitterApi);
+  const fetchMyRecentRepliesTool = createFetchMyRecentRepliesTool(twitterApi);
+  const fetchMentionsTool = createFetchMentionsTool(twitterApi);
+  const fetchMyRecentTweetsTool = createFetchMyRecentTweetsTool(twitterApi);
+  const postTweetTool = createPostTweetTool(twitterApi);
+
+  return {
+    fetchTimelineTool,
+    fetchMyRecentRepliesTool,
+    fetchMentionsTool,
+    fetchMyRecentTweetsTool,
+    postTweetTool,
+    tools: [
+      fetchTimelineTool,
+      fetchMyRecentRepliesTool,
+      fetchMentionsTool,
+      fetchMyRecentTweetsTool,
+      postTweetTool,
+    ],
+  };
+};
