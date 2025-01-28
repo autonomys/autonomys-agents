@@ -5,7 +5,7 @@
   "license": "MIT",
   "type": "module",
   "scripts": {
-    "build": "tsc && cp src/db/schema.sql dist/db/",
+    "build": "tsc && cp src/db/schema.sql dist/db/ && (cp src/config/agents.yaml dist/config/ || echo 'Warning: agents.yaml not found, using default configuration')",
     "start": "NODE_ENV=production node dist/index.js",
     "dev": "NODE_ENV=development tsx watch src/index.ts",
     "lint": "eslint . --ext .ts",
