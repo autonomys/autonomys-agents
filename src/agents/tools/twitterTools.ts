@@ -20,7 +20,8 @@ type MinimalTweet = {
 
 const tweetToMinimalTweet = (tweet: Tweet): MinimalTweet => {
   const quotedStatus = tweet.quotedStatus ? tweetToMinimalTweet(tweet.quotedStatus) : undefined;
-  const thread = tweet.thread.map(t => tweetToMinimalTweet(t));
+  const thread = tweet.thread ? tweet.thread.map(t => tweetToMinimalTweet(t)) : undefined;
+
   return {
     id: tweet.id,
     username: tweet.username,

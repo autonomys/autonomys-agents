@@ -14,14 +14,13 @@ export const createTools = (twitterApi: TwitterApi, vectorDb: VectorDB) => {
 
   return {
     ...twitterTools,
-
     twitterWorkflowTool,
     vectorDbSearchTool,
     vectorDbInsertTool,
     saveExperienceTool,
     tools: [
-      twitterWorkflowTool,
       ...twitterTools.tools,
+      twitterWorkflowTool,
       vectorDbSearchTool,
       vectorDbInsertTool,
       saveExperienceTool,
