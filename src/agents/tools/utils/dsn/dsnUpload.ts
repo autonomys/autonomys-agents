@@ -25,6 +25,10 @@ export async function uploadToDsn(data: object) {
   const previousCid = await getLastMemoryCid();
   logger.info('Previous CID', { previousCid });
 
+  if ('timestamp' in data) delete data.timestamp;
+  if ('agentVersion' in data) delete data.agentVersion;
+  if ('previousCid' in data) delete data.previousCid;
+
   try {
     const timestamp = new Date().toISOString();
     const signature = await signMessage({

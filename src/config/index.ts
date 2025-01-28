@@ -50,7 +50,15 @@ const formatZodError = (error: z.ZodError) => {
     \nPlease check your .env file and config.yaml file and ensure all required variables are set correctly.`;
 };
 
-export const agentVersion = process.env.AGENT_VERSION || '2.0.0';
+export const agentVersion = (() => {
+  try {
+    const packageJson = JSON.parse(readFileSync(path.join(workspaceRoot, 'package.json'), 'utf8'));
+    return packageJson.version;
+  } catch (error) {
+    console.error('Error reading package.json version:', error);
+    return '0.0.0';
+  }
+})();
 
 const yamlConfig = (() => {
   try {
