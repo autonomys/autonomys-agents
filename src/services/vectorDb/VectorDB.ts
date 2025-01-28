@@ -217,7 +217,8 @@ export class VectorDB {
     if (this.db) {
       try {
         this.db.exec('COMMIT');
-      } catch (_) {}
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      } catch (error) {}
       this.db.close();
       logger.info('VectorDB closed successfully');
     }
