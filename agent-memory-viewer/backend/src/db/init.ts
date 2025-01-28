@@ -1,7 +1,4 @@
-import pkg from 'pg';
-const { Pool } = pkg;
-
-import { config } from '../config/index.js';
+import { createPool } from './postgres/connection.js';
 import * as fs from 'fs/promises';
 import { createLogger } from '../utils/logger.js';
 import path from 'path';
@@ -9,27 +6,11 @@ import { fileURLToPath } from 'url';
 
 const logger = createLogger('db');
 
-const parseConnectionString = (url: string) => {
-  const regex = /postgresql:\/\/([^:]+):([^@]+)@([^:]+):(\d+)\//;
-  const match = url.match(regex);
-  if (!match) throw new Error('Invalid connection string');
-  const [_, user, password, host, port] = match;
-  return { user, password, host, port };
-};
-
-const { user, password, host, port } = parseConnectionString(config.DATABASE_URL || '');
-
-const initPool = new Pool({
-  user,
-  password,
-  host,
-  port: parseInt(port),
-  database: 'postgres',
-});
-
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const schemaPath = path.join(__dirname, 'schema.sql');
+
+const initPool = createPool('postgres');
 
 async function checkDatabaseExists(): Promise<boolean> {
   try {
@@ -62,13 +43,7 @@ async function initializeDatabase() {
 }
 
 async function initializeTables() {
-  const dbPool = new Pool({
-    user,
-    password,
-    host,
-    port: parseInt(port),
-    database: 'agent_memory',
-  });
+  const dbPool = createPool('agent_memory');
 
   try {
     const schema = await fs.readFile(schemaPath, 'utf8');
@@ -87,13 +62,7 @@ export async function initialize() {
 }
 
 export async function resetDatabase() {
-  const initPool = new Pool({
-    user,
-    password,
-    host,
-    port: parseInt(port),
-    database: 'postgres',
-  });
+  const initPool = createPool('postgres');
 
   try {
     await initPool.query(`
@@ -109,13 +78,7 @@ export async function resetDatabase() {
 
     await new Promise(resolve => setTimeout(resolve, 1000));
 
-    const dbPool = new Pool({
-      user,
-      password,
-      host,
-      port: parseInt(port),
-      database: 'agent_memory',
-    });
+    const dbPool = createPool('agent_memory');
 
     try {
       const schema = await fs.readFile(schemaPath, 'utf8');
