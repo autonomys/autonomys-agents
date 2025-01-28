@@ -18,10 +18,11 @@ process.on('SIGTERM', () => {
 const startWorkflowPolling = async () => {
   try {
     const _result = await runOrchestratorWorkflow(`Run the twitter workflow`);
-    logger.info(
-      'Workflow execution completed successfully for character:',
-      config.characterConfig.name,
-    );
+    logger.info('Workflow execution completed successfully for character:', {
+      charcterName: config.characterConfig.name,
+      runFinished: new Date().toISOString(),
+      nextRun: `${config.twitterConfig.RESPONSE_INTERVAL_MS / 1000 / 60} minutes`,
+    });
   } catch (error) {
     if (error && typeof error === 'object' && 'name' in error && error.name === 'ExitPromptError') {
       logger.info('Process terminated by user');
@@ -37,11 +38,6 @@ const main = async () => {
     await validateLocalHash();
     await startWorkflowPolling();
     setInterval(startWorkflowPolling, config.twitterConfig.RESPONSE_INTERVAL_MS);
-
-    logger.info('Application started successfully', {
-      checkInterval: config.twitterConfig.RESPONSE_INTERVAL_MS / 1000 / 60,
-      username: config.twitterConfig.USERNAME,
-    });
   } catch (error) {
     if (error && typeof error === 'object' && 'name' in error && error.name === 'ExitPromptError') {
       logger.info('Process terminated by user');
