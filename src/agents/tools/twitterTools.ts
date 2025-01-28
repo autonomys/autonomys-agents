@@ -37,7 +37,8 @@ const tweetToMinimalTweet = (tweet: Tweet): MinimalTweet => {
 export const createFetchTimelineTool = (twitterApi: TwitterApi) =>
   new DynamicStructuredTool({
     name: 'fetch_timeline',
-    description: 'Fetch my timeline to get recent tweets',
+    description:
+      'Fetch my timeline to get recent tweets by those I follow or who the algorithm is showing me',
     schema: z.object({
       processedIds: z.array(z.string()),
       numTimelineTweets: z.number(),
@@ -74,34 +75,10 @@ export const createFetchTimelineTool = (twitterApi: TwitterApi) =>
     },
   });
 
-export const createFetchMyRecentRepliesTool = (twitterApi: TwitterApi) =>
-  new DynamicStructuredTool({
-    name: 'fetch_my_recent_replies',
-    description: 'Fetch my recent reply tweets',
-    schema: z.object({
-      maxRecentReplies: z.number(),
-    }),
-    func: async ({ maxRecentReplies }: { maxRecentReplies: number }) => {
-      try {
-        const recentReplies = await twitterApi.getMyRecentReplies(maxRecentReplies);
-        logger.info('Recent replies fetched:', { count: recentReplies.length });
-
-        return {
-          recentReplies: recentReplies.map(t => tweetToMinimalTweet(t)),
-        };
-      } catch (error) {
-        logger.error('Error in fetchMyRecentRepliesTool:', error);
-        return {
-          tweets: [],
-        };
-      }
-    },
-  });
-
 export const createFetchMentionsTool = (twitterApi: TwitterApi) =>
   new DynamicStructuredTool({
     name: 'fetch_mentions',
-    description: 'Fetch my recent mentions',
+    description: 'Fetch recent tweets that mention me',
     schema: z.object({ maxMentions: z.number() }),
     func: async ({ maxMentions }: { maxMentions: number }) => {
       try {
@@ -121,20 +98,28 @@ export const createFetchMentionsTool = (twitterApi: TwitterApi) =>
     },
   });
 
-export const createFetchMyRecentTweetsTool = (twitterApi: TwitterApi) =>
+export const createFetchMyRecentTweetsAndRepliesTool = (twitterApi: TwitterApi) =>
   new DynamicStructuredTool({
-    name: 'fetch_my_recent_tweets',
-    description: 'Fetch my recent tweets (not including replies)',
-    schema: z.object({ maxMyRecentTweets: z.number() }),
-    func: async ({ maxMyRecentTweets }: { maxMyRecentTweets: number }) => {
+    name: 'fetch_my_recent_tweets_and_replies',
+    description: 'Fetch my recent tweets and replies',
+    schema: z.object({ maxMyRecentTweets: z.number(), maxMyRecentReplies: z.number() }),
+    func: async ({
+      maxMyRecentTweets,
+      maxMyRecentReplies,
+    }: {
+      maxMyRecentTweets: number;
+      maxMyRecentReplies: number;
+    }) => {
       try {
         const myRecentTweets = await twitterApi.getMyRecentTweets(maxMyRecentTweets);
+        const myRecentReplies = await twitterApi.getMyRecentReplies(maxMyRecentReplies);
         logger.info('Fetch My Recent Tweets Tool - Result', {
           tweets: myRecentTweets.length,
         });
 
         return {
-          tweets: myRecentTweets.map(t => tweetToMinimalTweet(t)),
+          myTweets: myRecentTweets.map(t => tweetToMinimalTweet(t)),
+          myReplies: myRecentReplies.map(t => tweetToMinimalTweet(t)),
         };
       } catch (error) {
         logger.error('Error in fetchRecentTweetsTool:', error);
@@ -185,23 +170,15 @@ export const createPostTweetTool = (twitterApi: TwitterApi) =>
 
 export const createAllTwitterTools = (twitterApi: TwitterApi) => {
   const fetchTimelineTool = createFetchTimelineTool(twitterApi);
-  const fetchMyRecentRepliesTool = createFetchMyRecentRepliesTool(twitterApi);
   const fetchMentionsTool = createFetchMentionsTool(twitterApi);
-  const fetchMyRecentTweetsTool = createFetchMyRecentTweetsTool(twitterApi);
+  const fetchMyRecentTweetsAndRepliesTool = createFetchMyRecentTweetsAndRepliesTool(twitterApi);
   const postTweetTool = createPostTweetTool(twitterApi);
 
   return {
     fetchTimelineTool,
-    fetchMyRecentRepliesTool,
     fetchMentionsTool,
-    fetchMyRecentTweetsTool,
+    fetchMyRecentTweetsAndRepliesTool,
     postTweetTool,
-    tools: [
-      fetchTimelineTool,
-      fetchMyRecentRepliesTool,
-      fetchMentionsTool,
-      fetchMyRecentTweetsTool,
-      postTweetTool,
-    ],
+    tools: [fetchTimelineTool, fetchMentionsTool, fetchMyRecentTweetsAndRepliesTool, postTweetTool],
   };
 };
