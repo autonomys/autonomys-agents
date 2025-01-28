@@ -1,4 +1,3 @@
-
 ![Autonomys Agents Banner_1](https://github.com/user-attachments/assets/340c2a09-ddc6-49c1-83af-ec9cdd30ac01)
 
 # Autonomys Agents: A framework for building autonomous AI agents
@@ -17,6 +16,7 @@ Autonomys Agents is an experimental framework for building AI agents. Currently,
 ## Getting Started
 
 1. Install dependencies: `yarn install`
+   - Windows users will need to install Visual Studio C++ Redistributable. They can be found here: https://aka.ms/vs/17/release/vc_redist.x64.exe
 2. Create your character config: `yarn create-character <your-character-name>`
 3. Setup character config:
    - All character configs are stored in `characters/{your-character-name}/config`
