@@ -241,6 +241,19 @@ export const createTwitterApi = async (
     }
   }
 
+  const cleanTimelineTweets = (tweets: unknown[], count: number) => {
+    const cleanedTweets = tweets
+      .filter(isValidTweet)
+      .map(tweet => convertTimelineTweetToTweet(tweet));
+
+    // the twitter api does not respect the count parameter so randomly sorting and slicing
+    const trimmedTweets =
+      cleanedTweets.length > count
+        ? cleanedTweets.sort((_a, _b) => Math.random() - 0.5).slice(0, count)
+        : cleanedTweets;
+    return trimmedTweets;
+  };
+
   const userId = await scraper.getUserIdByScreenName(username);
 
   return {
@@ -282,15 +295,11 @@ export const createTwitterApi = async (
     getFollowing: async (userId: string, limit: number = 100) =>
       await iterateResponse(scraper.getFollowing(userId, limit)),
 
-    getMyTimeline: async (count: number, excludeIds: string[]) => {
-      const tweets = await scraper.fetchHomeTimeline(count, excludeIds);
-      return tweets.filter(isValidTweet).map(tweet => convertTimelineTweetToTweet(tweet));
-    },
+    getMyTimeline: async (count: number, excludeIds: string[]) =>
+      cleanTimelineTweets(await scraper.fetchHomeTimeline(count, excludeIds), count),
 
-    getFollowingTimeline: async (count: number, excludeIds: string[]) => {
-      const tweets = await scraper.fetchFollowingTimeline(count, excludeIds);
-      return tweets.filter(isValidTweet).map(tweet => convertTimelineTweetToTweet(tweet));
-    },
+    getFollowingTimeline: async (count: number, excludeIds: string[]) =>
+      cleanTimelineTweets(await scraper.fetchFollowingTimeline(count, excludeIds), count),
 
     getMyRecentReplies: (limit: number = 10) => getMyRecentReplies(scraper, username, limit),
 

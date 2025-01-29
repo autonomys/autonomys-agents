@@ -51,27 +51,39 @@ export const createFetchTimelineTool = (twitterApi: TwitterApi) =>
       numTimelineTweets: number;
     }) => {
       try {
-        const myTimelineTweets = await twitterApi.getMyTimeline(numTimelineTweets, processedIds);
-        const tweets = {
-          timelineTweets:
-            // the twitter api does not respect the count parameter so randomly sorting and slicing
-            (myTimelineTweets.length > numTimelineTweets
-              ? myTimelineTweets.sort((_a, _b) => Math.random() - 0.5).slice(0, numTimelineTweets)
-              : myTimelineTweets
-            ).map(t => tweetToMinimalTweet(t)),
-        };
+        const tweets = (await twitterApi.getMyTimeline(numTimelineTweets, processedIds)).map(t =>
+          tweetToMinimalTweet(t),
+        );
+
         logger.info('Timeline tweets:', {
-          timelineTweets: tweets.timelineTweets.length,
+          timelineTweets: tweets.length,
         });
         return { tweets };
       } catch (error) {
         logger.error('Error in fetchTimelineTool:', error);
         return {
-          tweets: {
-            timelineTweets: [],
-          },
+          tweets: [],
         };
       }
+    },
+  });
+
+export const createFetchFollowingTimelineTool = (twitterApi: TwitterApi) =>
+  new DynamicStructuredTool({
+    name: 'fetch_following_timeline',
+    description: 'Fetch recent tweets only from those I follow',
+    schema: z.object({ numFollowingTimelineTweets: z.number(), processedIds: z.array(z.string()) }),
+    func: async ({
+      numFollowingTimelineTweets,
+      processedIds,
+    }: {
+      numFollowingTimelineTweets: number;
+      processedIds: string[];
+    }) => {
+      const tweets = (
+        await twitterApi.getFollowingTimeline(numFollowingTimelineTweets, processedIds)
+      ).map(t => tweetToMinimalTweet(t));
+      return { tweets };
     },
   });
 
@@ -191,6 +203,7 @@ export const createFollowUserTool = (twitterApi: TwitterApi) =>
 
 export const createAllTwitterTools = (twitterApi: TwitterApi) => {
   const fetchTimelineTool = createFetchTimelineTool(twitterApi);
+  const fetchFollowingTimelineTool = createFetchFollowingTimelineTool(twitterApi);
   const fetchMentionsTool = createFetchMentionsTool(twitterApi);
   const fetchMyRecentTweetsAndRepliesTool = createFetchMyRecentTweetsAndRepliesTool(twitterApi);
   const postTweetTool = createPostTweetTool(twitterApi);
@@ -199,6 +212,7 @@ export const createAllTwitterTools = (twitterApi: TwitterApi) => {
 
   return {
     fetchTimelineTool,
+    fetchFollowingTimelineTool,
     fetchMentionsTool,
     fetchMyRecentTweetsAndRepliesTool,
     postTweetTool,
@@ -206,6 +220,7 @@ export const createAllTwitterTools = (twitterApi: TwitterApi) => {
     followUserTool,
     tools: [
       fetchTimelineTool,
+      fetchFollowingTimelineTool,
       fetchMentionsTool,
       fetchMyRecentTweetsAndRepliesTool,
       postTweetTool,
