@@ -1,8 +1,8 @@
 import { createLogger } from '../../../../utils/logger.js';
 import { OrchestratorConfig, OrchestratorState } from '../types.js';
-import { MemoryVectorStore } from "langchain/vectorstores/memory";
-import { OpenAIEmbeddings } from "@langchain/openai";
-import { Document } from "@langchain/core/documents";
+import { MemoryVectorStore } from 'langchain/vectorstores/memory';
+import { OpenAIEmbeddings } from '@langchain/openai';
+import { Document } from '@langchain/core/documents';
 import { summarizeResults } from '../../../tools/summarizerTool.js';
 import { config as appConfig } from '../../../../config/index.js';
 
@@ -11,10 +11,10 @@ const logger = createLogger('orchestrator-input-node');
 export const createInputNode = ({ orchestratorModel, prompts }: OrchestratorConfig) => {
   const embeddings = new OpenAIEmbeddings({
     openAIApiKey: appConfig.llmConfig.OPENAI_API_KEY,
-    modelName: "text-embedding-3-small"
+    modelName: 'text-embedding-3-small',
   });
   const inMemoryVectorStore = new MemoryVectorStore(embeddings);
-  
+
   const runNode = async (state: typeof OrchestratorState.State) => {
     const { messages } = state;
     logger.info('Running input node with messages:', { messages });
@@ -26,13 +26,13 @@ export const createInputNode = ({ orchestratorModel, prompts }: OrchestratorConf
     const docs = [
       new Document({
         pageContent: JSON.stringify(summarizedMessage),
-        metadata: { 
+        metadata: {
           index: messages.length - 1,
           type: latestMessage._getType(),
-        }
+        },
       }),
     ];
-    
+
     await inMemoryVectorStore.addDocuments(docs);
 
     // Search using the summarized content
@@ -43,10 +43,10 @@ export const createInputNode = ({ orchestratorModel, prompts }: OrchestratorConf
 
     const relevantMessages = relevantDocs.map(doc => ({
       content: JSON.parse(doc.pageContent),
-      type: doc.metadata.type
-    }));  
+      type: doc.metadata.type,
+    }));
 
-    logger.info("relevent messages:", relevantMessages)
+    logger.info('relevent messages:', relevantMessages);
 
     const formattedPrompt = await prompts.inputPrompt.format({
       messages: relevantMessages.map(message => message.content),
@@ -54,14 +54,16 @@ export const createInputNode = ({ orchestratorModel, prompts }: OrchestratorConf
 
     // formattedPrompt:
     logger.info('Formatted prompt:', { formattedPrompt });
-    
-    const result = await orchestratorModel.invoke("Summarzied of previous tool call: " + formattedPrompt);
+
+    const result = await orchestratorModel.invoke(
+      'Summarzied of previous tool call: ' + formattedPrompt,
+    );
     // logger.info('Result:', { result });
 
     return {
       messages: [result],
     };
   };
-  
+
   return runNode;
 };

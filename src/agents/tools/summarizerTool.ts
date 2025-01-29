@@ -4,7 +4,6 @@ import { LLMFactory } from '../../services/llm/factory.js';
 
 const logger = createLogger('summarize-results-tool');
 
-
 export async function summarizeResults(data: any): Promise<{ summary: string }> {
   logger.info('Summarizing results with data:', JSON.stringify(data, null, 2));
   try {
@@ -38,7 +37,7 @@ export async function summarizeResults(data: any): Promise<{ summary: string }> 
         - Maintain chronological order of events
         - Keep all JSON structure requirements
         
-        IMPORTANT: Your summary must be functionally equivalent to the original.`
+        IMPORTANT: Your summary must be functionally equivalent to the original.`,
       );
       const summary = result.content as string;
       logger.info('Summarized results:', { summary });
