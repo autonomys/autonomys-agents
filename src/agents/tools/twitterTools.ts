@@ -133,7 +133,7 @@ export const createFetchMyRecentTweetsAndRepliesTool = (twitterApi: TwitterApi) 
 export const createLikeTweetTool = (twitterApi: TwitterApi) =>
   new DynamicStructuredTool({
     name: 'like_tweet',
-    description: 'Like a tweet that you find interesting but not worth responding to',
+    description: 'Like a tweet that you find interesting and is aligned with your conviction, regardless if you respond to it or not',
     schema: z.object({ tweetId: z.string() }),
     func: async ({ tweetId }: { tweetId: string }) => {
       await twitterApi.scraper.likeTweet(tweetId);
