@@ -8,6 +8,8 @@ import { config as appConfig } from '../../../../config/index.js';
 
 const logger = createLogger('orchestrator-input-node');
 
+const RELEVANT_MESSAGES_COUNT = 3;
+
 // Helper functions
 const determineStatus = (summary: string | undefined): 'COMPLETED' | 'PENDING' | 'UNKNOWN' => {
   if (!summary) return 'UNKNOWN';
@@ -37,7 +39,7 @@ const rankDocumentsByRelevance = (docs: Document[]) => {
 };
 
 const formatRelevantMessages = (docs: Document[]) => {
-  return docs.slice(0, 3).map(doc => ({
+  return docs.slice(0, RELEVANT_MESSAGES_COUNT).map(doc => ({
     content: JSON.parse(doc.pageContent),
     type: doc.metadata.type,
     status: doc.metadata.status,
