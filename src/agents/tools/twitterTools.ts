@@ -130,6 +130,16 @@ export const createFetchMyRecentTweetsAndRepliesTool = (twitterApi: TwitterApi) 
     },
   });
 
+export const createLikeTweetTool = (twitterApi: TwitterApi) =>
+  new DynamicStructuredTool({
+    name: 'like_tweet',
+    description: 'Like a tweet that you find interesting but not worth responding to',
+    schema: z.object({ tweetId: z.string() }),
+    func: async ({ tweetId }: { tweetId: string }) => {
+      await twitterApi.scraper.likeTweet(tweetId);
+    },
+  });
+
 export const createPostTweetTool = (twitterApi: TwitterApi) =>
   new DynamicStructuredTool({
     name: 'post_tweet',
@@ -168,17 +178,38 @@ export const createPostTweetTool = (twitterApi: TwitterApi) =>
     },
   });
 
+export const createFollowUserTool = (twitterApi: TwitterApi) =>
+  new DynamicStructuredTool({
+    name: 'follow_user',
+    description: 'Follow a user that you find worthy of following and engaging with.',
+    schema: z.object({ userId: z.string() }),
+    func: async ({ userId }: { userId: string }) => {
+      await twitterApi.scraper.followUser(userId);
+    },
+  });
+
 export const createAllTwitterTools = (twitterApi: TwitterApi) => {
   const fetchTimelineTool = createFetchTimelineTool(twitterApi);
   const fetchMentionsTool = createFetchMentionsTool(twitterApi);
   const fetchMyRecentTweetsAndRepliesTool = createFetchMyRecentTweetsAndRepliesTool(twitterApi);
   const postTweetTool = createPostTweetTool(twitterApi);
+  const likeTweetTool = createLikeTweetTool(twitterApi);
+  const followUserTool = createFollowUserTool(twitterApi);
 
   return {
     fetchTimelineTool,
     fetchMentionsTool,
     fetchMyRecentTweetsAndRepliesTool,
     postTweetTool,
-    tools: [fetchTimelineTool, fetchMentionsTool, fetchMyRecentTweetsAndRepliesTool, postTweetTool],
+    likeTweetTool,
+    followUserTool,
+    tools: [
+      fetchTimelineTool,
+      fetchMentionsTool,
+      fetchMyRecentTweetsAndRepliesTool,
+      postTweetTool,
+      likeTweetTool,
+      followUserTool,
+    ],
   };
 };
