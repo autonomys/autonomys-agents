@@ -16,7 +16,6 @@ export const createSaveExperienceTool = () =>
     USE THIS WHEN:  
     - You complete a major action (e.g., posted tweet ID:123).  
     - You make a strategic decision (e.g., "Why I chose strategy X over Y").  
-    - You 
     FORMAT: Include full context, reasoning, timestamps (don't call them timestamps though!), and IDs.`,
     schema: z.object({
       data: z.record(z.any()),
