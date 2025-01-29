@@ -183,7 +183,7 @@ const createWorkflowRunner = async (): Promise<WorkflowRunner> => {
       }
 
       logger.info('Workflow completed', { threadId });
-      return finalState;
+      return { completionTime: new Date().toISOString(), completionSuccess: true };
     },
   };
 };
