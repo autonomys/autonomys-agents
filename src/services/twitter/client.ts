@@ -235,8 +235,7 @@ export const createTwitterApi = async (
       if (!isSecondLoginSuccessful) {
         throw new Error('Failed to initialize Twitter Api - not logged in');
       }
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    } catch (error) {
+    } catch {
       throw new Error('Failed to initialize Twitter Api - not logged in');
     }
   }
