@@ -41,7 +41,6 @@ const handleConditionalEdge = async (
     error: BinaryOperatorAggregate<Error | null, Error | null>;
   }>,
 ) => {
-  logger.info('State in conditional edge', { state });
 
   const lastMessage = state.messages[state.messages.length - 1];
   if (!lastMessage?.content) return 'tools';
