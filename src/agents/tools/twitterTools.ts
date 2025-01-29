@@ -51,27 +51,39 @@ export const createFetchTimelineTool = (twitterApi: TwitterApi) =>
       numTimelineTweets: number;
     }) => {
       try {
-        const myTimelineTweets = await twitterApi.getMyTimeline(numTimelineTweets, processedIds);
-        const tweets = {
-          timelineTweets:
-            // the twitter api does not respect the count parameter so randomly sorting and slicing
-            (myTimelineTweets.length > numTimelineTweets
-              ? myTimelineTweets.sort((_a, _b) => Math.random() - 0.5).slice(0, numTimelineTweets)
-              : myTimelineTweets
-            ).map(t => tweetToMinimalTweet(t)),
-        };
+        const tweets = (await twitterApi.getMyTimeline(numTimelineTweets, processedIds)).map(t =>
+          tweetToMinimalTweet(t),
+        );
+
         logger.info('Timeline tweets:', {
-          timelineTweets: tweets.timelineTweets.length,
+          timelineTweets: tweets.length,
         });
         return { tweets };
       } catch (error) {
         logger.error('Error in fetchTimelineTool:', error);
         return {
-          tweets: {
-            timelineTweets: [],
-          },
+          tweets: [],
         };
       }
+    },
+  });
+
+export const createFetchFollowingTimelineTool = (twitterApi: TwitterApi) =>
+  new DynamicStructuredTool({
+    name: 'fetch_following_timeline',
+    description: 'Fetch recent tweets only from those I follow',
+    schema: z.object({ numFollowingTimelineTweets: z.number(), processedIds: z.array(z.string()) }),
+    func: async ({
+      numFollowingTimelineTweets,
+      processedIds,
+    }: {
+      numFollowingTimelineTweets: number;
+      processedIds: string[];
+    }) => {
+      const tweets = (
+        await twitterApi.getFollowingTimeline(numFollowingTimelineTweets, processedIds)
+      ).map(t => tweetToMinimalTweet(t));
+      return { tweets };
     },
   });
 
@@ -130,6 +142,17 @@ export const createFetchMyRecentTweetsAndRepliesTool = (twitterApi: TwitterApi) 
     },
   });
 
+export const createLikeTweetTool = (twitterApi: TwitterApi) =>
+  new DynamicStructuredTool({
+    name: 'like_tweet',
+    description:
+      'Like a tweet that you find interesting and is aligned with your conviction, regardless if you respond to it or not',
+    schema: z.object({ tweetId: z.string() }),
+    func: async ({ tweetId }: { tweetId: string }) => {
+      await twitterApi.likeTweet(tweetId);
+    },
+  });
+
 export const createPostTweetTool = (twitterApi: TwitterApi) =>
   new DynamicStructuredTool({
     name: 'post_tweet',
@@ -168,17 +191,41 @@ export const createPostTweetTool = (twitterApi: TwitterApi) =>
     },
   });
 
+export const createFollowUserTool = (twitterApi: TwitterApi) =>
+  new DynamicStructuredTool({
+    name: 'follow_user',
+    description: 'Follow a user that you find worthy of following and engaging with.',
+    schema: z.object({ userId: z.string() }),
+    func: async ({ userId }: { userId: string }) => {
+      await twitterApi.followUser(userId);
+    },
+  });
+
 export const createAllTwitterTools = (twitterApi: TwitterApi) => {
   const fetchTimelineTool = createFetchTimelineTool(twitterApi);
+  const fetchFollowingTimelineTool = createFetchFollowingTimelineTool(twitterApi);
   const fetchMentionsTool = createFetchMentionsTool(twitterApi);
   const fetchMyRecentTweetsAndRepliesTool = createFetchMyRecentTweetsAndRepliesTool(twitterApi);
   const postTweetTool = createPostTweetTool(twitterApi);
+  const likeTweetTool = createLikeTweetTool(twitterApi);
+  const followUserTool = createFollowUserTool(twitterApi);
 
   return {
     fetchTimelineTool,
+    fetchFollowingTimelineTool,
     fetchMentionsTool,
     fetchMyRecentTweetsAndRepliesTool,
     postTweetTool,
-    tools: [fetchTimelineTool, fetchMentionsTool, fetchMyRecentTweetsAndRepliesTool, postTweetTool],
+    likeTweetTool,
+    followUserTool,
+    tools: [
+      fetchTimelineTool,
+      fetchFollowingTimelineTool,
+      fetchMentionsTool,
+      fetchMyRecentTweetsAndRepliesTool,
+      postTweetTool,
+      likeTweetTool,
+      followUserTool,
+    ],
   };
 };
