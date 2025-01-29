@@ -79,7 +79,7 @@ export const createInputNode = ({ orchestratorModel, prompts }: OrchestratorConf
       messages: relevantMessages.map(m => ({
         status: m.status,
         type: m.type,
-        contentPreview: JSON.stringify(m.content).slice(0, 100) + '...',
+        contentPreview: `${JSON.stringify(m.content).slice(0, 100)}...`,
       })),
     });
 
@@ -93,7 +93,7 @@ export const createInputNode = ({ orchestratorModel, prompts }: OrchestratorConf
     logger.info('Formatted prompt:', { formattedPrompt });
 
     const result = await orchestratorModel.invoke(
-      'Summarized of previous tool call: ' + formattedPrompt,
+      `Summarized of previous tool call: ${formattedPrompt}`,
     );
 
     return { messages: [result] };
