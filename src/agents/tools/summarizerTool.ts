@@ -15,29 +15,29 @@ export async function summarizeResults(data: any): Promise<{ summary: string }> 
     try {
       const result = await llm.invoke(
         `
-        You are a helpful assistant that summarizes the results of a tool call.
-        Keep the purpose of the tool call in mind.
-        Summarize the following content while strictly preserving:
-        1. All numerical values and IDs
-        2. Key action items and decisions
-        3. Status updates and outcomes
-        4. Error messages or warnings
-        5. User requests and commands
-        6. Tool names and their parameters
-        7. Response formats and requirements
+        Summarize the following content in a structured format:
 
-        Original content:
-        ${JSON.stringify(data, null, 2)}
+        Input: ${JSON.stringify(data, null, 2)}
         
-        Rules for summarization:
-        - Keep all technical details intact
-        - Maintain data structure references
-        - Preserve error states and conditions
-        - Keep tool invocation details
-        - Maintain chronological order of events
-        - Keep all JSON structure requirements
+        Requirements:
+        - Provide a comprehensive info on what was the goal/task, and what was the outcome. (e.g. "TASK: fetching mentioned tweets")
+        - A task is completed if you can see the outcome. Otherwise, it's pending.
+        - Start with "STATUS: COMPLETED" or "STATUS: PENDING" as first line
+        - Directly address the key information
+        - IDs are IMPORTANT. Include them in the summary.
+        - Use bullet points and clear headers
+        - No narrative framing (avoid phrases like "This appears to be" or "I found")
+        - Group similar information together
+        - Preserve all:
+          * Numerical values and IDs
+          * Technical details and data structures
+          * Error states and conditions
+          * Chronological order
+          * Tool parameters and requirements
         
-        IMPORTANT: Your summary must be functionally equivalent to the original.`,
+        IMPORTANT: Your summary must be functionally equivalent to the original.
+        
+        Format your response as a structured summary with clear sections.`,
       );
       const summary = result.content as string;
       logger.info('Summarized results:', { summary });
