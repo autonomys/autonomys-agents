@@ -41,7 +41,7 @@ const handleConditionalEdge = async (
     error: BinaryOperatorAggregate<Error | null, Error | null>;
   }>,
 ) => {
-  logger.info('State in conditional edge', { state });
+  logger.debug('State in conditional edge', { state });
 
   const lastMessage = state.messages[state.messages.length - 1];
   if (!lastMessage?.content) return 'tools';
@@ -50,7 +50,6 @@ const handleConditionalEdge = async (
     typeof lastMessage.content === 'string'
       ? lastMessage.content
       : JSON.stringify(lastMessage.content);
-  logger.info('Content string', { contentStr });
 
   try {
     const match = contentStr.match(/\{[\s\S]*"shouldStop"[\s\S]*\}/);

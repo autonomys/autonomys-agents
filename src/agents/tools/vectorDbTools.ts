@@ -10,7 +10,12 @@ const logger = createLogger('vector-db-tool');
 export const createVectorDbInsertTool = (vectorDb: VectorDB) =>
   new DynamicStructuredTool({
     name: 'vector_db_insert',
-    description: 'Insert data into the vector database for future recall',
+    description: `
+    Save SHORT and MEDIUM-TERM, CONTEXTUAL data to the vector database for future recall.  
+    USE THIS WHEN:  
+    - Starting/updating a task (e.g., "User asked me to draft a tweet about X").  
+    - Needing to remember recent chats or actions (e.g., "User prefers tea over coffee").  
+    FORMAT: Include timestamps, keywords, and action summaries.  `,
     schema: z.object({ data: z.string() }),
     func: async ({ data }: { data: string }) => {
       try {
@@ -47,7 +52,13 @@ export const invokeVectorDbInsertTool = async (toolNode: ToolNode, { data }: { d
 export const createVectorDbSearchTool = (vectorDb: VectorDB) =>
   new DynamicStructuredTool({
     name: 'vector_db_search',
-    description: 'Search the vector database for useful and contextual information',
+    description: `
+    Search the vector database for RECENT, CONTEXTUAL data to answer questions or continue workflows.  
+    USE THIS WHEN:  
+    - The user references past 3 days (e.g., "What did I ask you to do yesterday?").  
+    - You need to resume a task (e.g., "Continue drafting the tweet about X").  
+    - The query is vague (e.g., "Explain this again" -> search chat history).  
+    OUTPUT: Return timestamps and matched keywords.`,
     schema: z.object({ query: z.string(), limit: z.number().optional() }),
     func: async ({ query, limit }: { query: string; limit?: number }) => {
       const memories = await vectorDb.search(query, limit);
