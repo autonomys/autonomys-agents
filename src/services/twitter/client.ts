@@ -303,5 +303,11 @@ export const createTwitterApi = async (
       logger.info('Tweet sent', { tweet, inReplyTo });
       getMyRecentReplies;
     },
+    likeTweet: async (tweetId: string) => {
+      await scraper.likeTweet(tweetId);
+    },
+    followUser: async (userId: string) => {
+      await scraper.followUser(userId);
+    },
   };
 };

@@ -133,10 +133,11 @@ export const createFetchMyRecentTweetsAndRepliesTool = (twitterApi: TwitterApi) 
 export const createLikeTweetTool = (twitterApi: TwitterApi) =>
   new DynamicStructuredTool({
     name: 'like_tweet',
-    description: 'Like a tweet that you find interesting and is aligned with your conviction, regardless if you respond to it or not',
+    description:
+      'Like a tweet that you find interesting and is aligned with your conviction, regardless if you respond to it or not',
     schema: z.object({ tweetId: z.string() }),
     func: async ({ tweetId }: { tweetId: string }) => {
-      await twitterApi.scraper.likeTweet(tweetId);
+      await twitterApi.likeTweet(tweetId);
     },
   });
 
@@ -184,7 +185,7 @@ export const createFollowUserTool = (twitterApi: TwitterApi) =>
     description: 'Follow a user that you find worthy of following and engaging with.',
     schema: z.object({ userId: z.string() }),
     func: async ({ userId }: { userId: string }) => {
-      await twitterApi.scraper.followUser(userId);
+      await twitterApi.followUser(userId);
     },
   });
 

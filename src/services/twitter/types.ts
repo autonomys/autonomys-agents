@@ -19,4 +19,6 @@ export interface TwitterApi {
   getMyTimeline: (count: number, excludeIds: string[]) => Promise<Tweet[]>;
   getFollowingTimeline: (count: number, excludeIds: string[]) => Promise<Tweet[]>;
   sendTweet: (tweet: string, inReplyTo?: string) => Promise<void>;
+  likeTweet: (tweetId: string) => Promise<void>;
+  followUser: (userId: string) => Promise<void>;
 }
