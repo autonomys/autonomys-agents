@@ -37,7 +37,8 @@ const tweetToMinimalTweet = (tweet: Tweet): MinimalTweet => {
 export const createFetchTimelineTool = (twitterApi: TwitterApi) =>
   new DynamicStructuredTool({
     name: 'fetch_timeline',
-    description: 'Fetch my timeline to get recent tweets',
+    description:
+      'Fetch my timeline to get recent tweets by those I follow or who the algorithm is showing me',
     schema: z.object({
       processedIds: z.array(z.string()),
       numTimelineTweets: z.number(),
@@ -50,47 +51,16 @@ export const createFetchTimelineTool = (twitterApi: TwitterApi) =>
       numTimelineTweets: number;
     }) => {
       try {
-        const myTimelineTweets = await twitterApi.getMyTimeline(numTimelineTweets, processedIds);
-        const tweets = {
-          timelineTweets:
-            // the twitter api does not respect the count parameter so randomly sorting and slicing
-            (myTimelineTweets.length > numTimelineTweets
-              ? myTimelineTweets.sort((_a, _b) => Math.random() - 0.5).slice(0, numTimelineTweets)
-              : myTimelineTweets
-            ).map(t => tweetToMinimalTweet(t)),
-        };
+        const tweets = (await twitterApi.getMyTimeline(numTimelineTweets, processedIds)).map(t =>
+          tweetToMinimalTweet(t),
+        );
+
         logger.info('Timeline tweets:', {
-          timelineTweets: tweets.timelineTweets.length,
+          timelineTweets: tweets.length,
         });
         return { tweets };
       } catch (error) {
         logger.error('Error in fetchTimelineTool:', error);
-        return {
-          tweets: {
-            timelineTweets: [],
-          },
-        };
-      }
-    },
-  });
-
-export const createFetchMyRecentRepliesTool = (twitterApi: TwitterApi) =>
-  new DynamicStructuredTool({
-    name: 'fetch_my_recent_replies',
-    description: 'Fetch my recent reply tweets',
-    schema: z.object({
-      maxRecentReplies: z.number(),
-    }),
-    func: async ({ maxRecentReplies }: { maxRecentReplies: number }) => {
-      try {
-        const recentReplies = await twitterApi.getMyRecentReplies(maxRecentReplies);
-        logger.info('Recent replies fetched:', { count: recentReplies.length });
-
-        return {
-          recentReplies: recentReplies.map(t => tweetToMinimalTweet(t)),
-        };
-      } catch (error) {
-        logger.error('Error in fetchMyRecentRepliesTool:', error);
         return {
           tweets: [],
         };
@@ -98,10 +68,29 @@ export const createFetchMyRecentRepliesTool = (twitterApi: TwitterApi) =>
     },
   });
 
+export const createFetchFollowingTimelineTool = (twitterApi: TwitterApi) =>
+  new DynamicStructuredTool({
+    name: 'fetch_following_timeline',
+    description: 'Fetch recent tweets only from those I follow',
+    schema: z.object({ numFollowingTimelineTweets: z.number(), processedIds: z.array(z.string()) }),
+    func: async ({
+      numFollowingTimelineTweets,
+      processedIds,
+    }: {
+      numFollowingTimelineTweets: number;
+      processedIds: string[];
+    }) => {
+      const tweets = (
+        await twitterApi.getFollowingTimeline(numFollowingTimelineTweets, processedIds)
+      ).map(t => tweetToMinimalTweet(t));
+      return { tweets };
+    },
+  });
+
 export const createFetchMentionsTool = (twitterApi: TwitterApi) =>
   new DynamicStructuredTool({
     name: 'fetch_mentions',
-    description: 'Fetch my recent mentions',
+    description: 'Fetch recent tweets that mention me',
     schema: z.object({ maxMentions: z.number() }),
     func: async ({ maxMentions }: { maxMentions: number }) => {
       try {
@@ -121,20 +110,28 @@ export const createFetchMentionsTool = (twitterApi: TwitterApi) =>
     },
   });
 
-export const createFetchMyRecentTweetsTool = (twitterApi: TwitterApi) =>
+export const createFetchMyRecentTweetsAndRepliesTool = (twitterApi: TwitterApi) =>
   new DynamicStructuredTool({
-    name: 'fetch_my_recent_tweets',
-    description: 'Fetch my recent tweets (not including replies)',
-    schema: z.object({ maxMyRecentTweets: z.number() }),
-    func: async ({ maxMyRecentTweets }: { maxMyRecentTweets: number }) => {
+    name: 'fetch_my_recent_tweets_and_replies',
+    description: 'Fetch my recent tweets and replies',
+    schema: z.object({ maxMyRecentTweets: z.number(), maxMyRecentReplies: z.number() }),
+    func: async ({
+      maxMyRecentTweets,
+      maxMyRecentReplies,
+    }: {
+      maxMyRecentTweets: number;
+      maxMyRecentReplies: number;
+    }) => {
       try {
         const myRecentTweets = await twitterApi.getMyRecentTweets(maxMyRecentTweets);
+        const myRecentReplies = await twitterApi.getMyRecentReplies(maxMyRecentReplies);
         logger.info('Fetch My Recent Tweets Tool - Result', {
           tweets: myRecentTweets.length,
         });
 
         return {
-          tweets: myRecentTweets.map(t => tweetToMinimalTweet(t)),
+          myTweets: myRecentTweets.map(t => tweetToMinimalTweet(t)),
+          myReplies: myRecentReplies.map(t => tweetToMinimalTweet(t)),
         };
       } catch (error) {
         logger.error('Error in fetchRecentTweetsTool:', error);
@@ -142,6 +139,17 @@ export const createFetchMyRecentTweetsTool = (twitterApi: TwitterApi) =>
           tweets: [],
         };
       }
+    },
+  });
+
+export const createLikeTweetTool = (twitterApi: TwitterApi) =>
+  new DynamicStructuredTool({
+    name: 'like_tweet',
+    description:
+      'Like a tweet that you find interesting and is aligned with your conviction, regardless if you respond to it or not',
+    schema: z.object({ tweetId: z.string() }),
+    func: async ({ tweetId }: { tweetId: string }) => {
+      await twitterApi.likeTweet(tweetId);
     },
   });
 
@@ -183,25 +191,41 @@ export const createPostTweetTool = (twitterApi: TwitterApi) =>
     },
   });
 
+export const createFollowUserTool = (twitterApi: TwitterApi) =>
+  new DynamicStructuredTool({
+    name: 'follow_user',
+    description: 'Follow a user that you find worthy of following and engaging with.',
+    schema: z.object({ userId: z.string() }),
+    func: async ({ userId }: { userId: string }) => {
+      await twitterApi.followUser(userId);
+    },
+  });
+
 export const createAllTwitterTools = (twitterApi: TwitterApi) => {
   const fetchTimelineTool = createFetchTimelineTool(twitterApi);
-  const fetchMyRecentRepliesTool = createFetchMyRecentRepliesTool(twitterApi);
+  const fetchFollowingTimelineTool = createFetchFollowingTimelineTool(twitterApi);
   const fetchMentionsTool = createFetchMentionsTool(twitterApi);
-  const fetchMyRecentTweetsTool = createFetchMyRecentTweetsTool(twitterApi);
+  const fetchMyRecentTweetsAndRepliesTool = createFetchMyRecentTweetsAndRepliesTool(twitterApi);
   const postTweetTool = createPostTweetTool(twitterApi);
+  const likeTweetTool = createLikeTweetTool(twitterApi);
+  const followUserTool = createFollowUserTool(twitterApi);
 
   return {
     fetchTimelineTool,
-    fetchMyRecentRepliesTool,
+    fetchFollowingTimelineTool,
     fetchMentionsTool,
-    fetchMyRecentTweetsTool,
+    fetchMyRecentTweetsAndRepliesTool,
     postTweetTool,
+    likeTweetTool,
+    followUserTool,
     tools: [
       fetchTimelineTool,
-      fetchMyRecentRepliesTool,
+      fetchFollowingTimelineTool,
       fetchMentionsTool,
-      fetchMyRecentTweetsTool,
+      fetchMyRecentTweetsAndRepliesTool,
       postTweetTool,
+      likeTweetTool,
+      followUserTool,
     ],
   };
 };

@@ -55,7 +55,9 @@ export const createInputNode = ({ orchestratorModel, prompts }: OrchestratorConf
 
   const runNode = async (state: typeof OrchestratorState.State) => {
     const { messages } = state;
-    logger.info('Running input node with messages:', { messages });
+    logger.info('Running input node with messages:', {
+      messages: messages.map(message => message.content),
+    });
 
     const initialRequest = messages[0];
     const latestMessage = messages[messages.length - 1];

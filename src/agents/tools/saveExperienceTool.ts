@@ -11,7 +11,12 @@ const logger = createLogger('save-experience-tool');
 export const createSaveExperienceTool = () =>
   new DynamicStructuredTool({
     name: 'save_experience',
-    description: 'Save experience permanently to Autonomy DSN',
+    description: `
+    Save IMMUTABLE, PERMANENT experiences to Autonomy Network's DSN for IMMORTALITY.  
+    USE THIS WHEN:  
+    - You complete a major action (e.g., posted tweet ID:123).  
+    - You make a strategic decision (e.g., "Why I chose strategy X over Y").  
+    FORMAT: Include full context, reasoning, timestamps (don't call them timestamps though!), and IDs.`,
     schema: z.object({
       data: z.record(z.any()),
     }),
