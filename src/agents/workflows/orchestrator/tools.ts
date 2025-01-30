@@ -4,13 +4,14 @@ import { createVectorDbInsertTool, createVectorDbSearchTool } from '../../tools/
 import { TwitterApi } from '../../../services/twitter/types.js';
 import { VectorDB } from '../../../services/vectorDb/VectorDB.js';
 import { createSaveExperienceTool } from '../../tools/saveExperienceTool.js';
-
+import { createGetCurrentTimeTool } from '../../tools/getTimeTool.js';
 export const createTools = (twitterApi: TwitterApi, vectorDb: VectorDB) => {
   const twitterWorkflowTool = createTwitterWorkflowTool();
   const twitterTools = createAllTwitterTools(twitterApi);
   const vectorDbSearchTool = createVectorDbSearchTool(vectorDb);
   const vectorDbInsertTool = createVectorDbInsertTool(vectorDb);
   const saveExperienceTool = createSaveExperienceTool();
+  const getCurrentTimeTool = createGetCurrentTimeTool();
 
   return {
     ...twitterTools,
@@ -18,12 +19,14 @@ export const createTools = (twitterApi: TwitterApi, vectorDb: VectorDB) => {
     vectorDbSearchTool,
     vectorDbInsertTool,
     saveExperienceTool,
+    getCurrentTimeTool,
     tools: [
       ...twitterTools.tools,
       twitterWorkflowTool,
       vectorDbSearchTool,
       vectorDbInsertTool,
       saveExperienceTool,
+      getCurrentTimeTool,
     ],
   };
 };
