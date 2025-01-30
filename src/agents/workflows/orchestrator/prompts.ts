@@ -1,5 +1,5 @@
 import { ChatPromptTemplate, PromptTemplate } from '@langchain/core/prompts';
-import { SystemMessage } from '@langchain/core/messages';
+import { SystemMessage, AIMessage } from '@langchain/core/messages';
 import { config } from '../../../config/index.js';
 import { z } from 'zod';
 
@@ -70,7 +70,27 @@ export const createPrompts = async () => {
     ],
   ]);
 
-  return { inputPrompt };
+  const summaryPrompt = ChatPromptTemplate.fromMessages([
+    new SystemMessage(`You are a helpful assistant that summarizes AI-to-AI conversations.
+      Maintain the key points and context while being concise.
+      Focus on:
+      - Main tasks and workflows executed
+      - Key decisions made by AI agents
+      - Important data exchanged between AI systems
+      
+      Format the summary in a clear, bulleted structure.`),
+    new AIMessage(`Previous summary: {prevSummary}
+      
+      New AI messages to incorporate:
+      {newMessages}
+      
+      Create an updated summary of the AI conversation flow.`),
+  ]);
+
+  return { 
+    inputPrompt,
+    summaryPrompt 
+  };
 };
 
 export const workflowControlParser = z.object({

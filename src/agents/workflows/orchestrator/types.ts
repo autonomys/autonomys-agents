@@ -11,6 +11,7 @@ export type OrchestratorConfig = {
   toolNode: ToolNode;
   prompts: {
     inputPrompt: ChatPromptTemplate;
+    summaryPrompt: ChatPromptTemplate;
   };
 };
 
