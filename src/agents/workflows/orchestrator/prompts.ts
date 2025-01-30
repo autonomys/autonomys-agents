@@ -1,5 +1,5 @@
 import { ChatPromptTemplate, PromptTemplate } from '@langchain/core/prompts';
-import { SystemMessage, AIMessage } from '@langchain/core/messages';
+import { AIMessage, SystemMessage } from '@langchain/core/messages';
 import { config } from '../../../config/index.js';
 import { z } from 'zod';
 
@@ -87,9 +87,9 @@ export const createPrompts = async () => {
       Create an updated summary of the AI conversation flow.`),
   ]);
 
-  return { 
+  return {
     inputPrompt,
-    summaryPrompt 
+    summaryPrompt,
   };
 };
 
