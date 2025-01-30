@@ -142,6 +142,28 @@ export const createFetchMyRecentTweetsAndRepliesTool = (twitterApi: TwitterApi) 
     },
   });
 
+export const createFetchFollowingTool = (twitterApi: TwitterApi) =>
+  new DynamicStructuredTool({
+    name: 'fetch_following',
+    description: 'Fetch the following of a given Twitter user',
+    schema: z.object({ username: z.string(), numFollowing: z.number() }),
+    func: async ({ username, numFollowing }: { username: string; numFollowing: number }) => {
+      const following = await twitterApi.getFollowing(username, numFollowing);
+      return { following };
+    },
+  });
+
+export const createFetchProfileTool = (twitterApi: TwitterApi) =>
+  new DynamicStructuredTool({
+    name: 'fetch_profile',
+    description: 'Fetch the profile of a given Twitter user',
+    schema: z.object({ username: z.string() }),
+    func: async ({ username }: { username: string }) => {
+      const profile = await twitterApi.getProfile(username);
+      return { profile };
+    },
+  });
+
 export const createLikeTweetTool = (twitterApi: TwitterApi) =>
   new DynamicStructuredTool({
     name: 'like_tweet',
@@ -209,12 +231,16 @@ export const createAllTwitterTools = (twitterApi: TwitterApi) => {
   const postTweetTool = createPostTweetTool(twitterApi);
   const likeTweetTool = createLikeTweetTool(twitterApi);
   const followUserTool = createFollowUserTool(twitterApi);
+  const fetchProfileTool = createFetchProfileTool(twitterApi);
+  const fetchFollowingTool = createFetchFollowingTool(twitterApi);
 
   return {
     fetchTimelineTool,
     fetchFollowingTimelineTool,
     fetchMentionsTool,
     fetchMyRecentTweetsAndRepliesTool,
+    fetchProfileTool,
+    fetchFollowingTool,
     postTweetTool,
     likeTweetTool,
     followUserTool,
@@ -223,6 +249,8 @@ export const createAllTwitterTools = (twitterApi: TwitterApi) => {
       fetchFollowingTimelineTool,
       fetchMentionsTool,
       fetchMyRecentTweetsAndRepliesTool,
+      fetchProfileTool,
+      fetchFollowingTool,
       postTweetTool,
       likeTweetTool,
       followUserTool,
