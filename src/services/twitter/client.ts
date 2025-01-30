@@ -291,8 +291,10 @@ export const createTwitterApi = async (
 
     getMyRepliedToIds: async () => Array.from(await getUserReplyIds(scraper, username, 100)),
 
-    getFollowing: async (userId: string, limit: number = 100) =>
-      await iterateResponse(scraper.getFollowing(userId, limit)),
+    getFollowing: async (username: string, limit: number = 100) => {
+      const userId = await scraper.getUserIdByScreenName(username);
+      return await iterateResponse(scraper.getFollowing(userId, limit));
+    },
 
     getMyTimeline: async (count: number, excludeIds: string[]) =>
       cleanTimelineTweets(await scraper.fetchHomeTimeline(count, excludeIds), count),
