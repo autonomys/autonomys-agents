@@ -32,7 +32,7 @@ export const createSummaryNode = ({ orchestratorModel, prompts }: OrchestratorCo
 
       return {
         messages: [
-          new AIMessage({ content: 'Summary of conversation earlier: ' + newSummary.content }),
+          new AIMessage({ content: `Summary of conversation earlier: ${newSummary.content}` }),
         ],
       };
     }
