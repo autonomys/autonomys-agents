@@ -7,13 +7,15 @@ import { ToolNode } from '@langchain/langgraph/prebuilt';
 import { ChatPromptTemplate } from '@langchain/core/prompts';
 import { config } from '../../../config/index.js';
 
+export type OrchestratorPrompts = {
+  inputPrompt: ChatPromptTemplate;
+  summaryPrompt: ChatPromptTemplate;
+};
+
 export type OrchestratorConfig = {
   orchestratorModel: Runnable<BaseLanguageModelInput, AIMessageChunk>;
   toolNode: ToolNode;
-  prompts: {
-    inputPrompt: ChatPromptTemplate;
-    summaryPrompt: ChatPromptTemplate;
-  };
+  prompts: OrchestratorPrompts;
 };
 
 export type OrchestratorInput = {
