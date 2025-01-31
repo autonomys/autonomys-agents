@@ -9,9 +9,12 @@ export const createSummaryNode = ({ orchestratorModel, prompts }: OrchestratorCo
     logger.info('Summary Node');
     logger.info('State size:', { size: state.messages.length });
 
-    if (state.messages.length > config.orchestratorConfig.MAX_WINDOW_SUMMARY) {
+    if (state.messages.length > config.orchestratorConfig.MAX_QUEUE_SIZE) {
       const prevSummary = state.messages[1]?.content || 'No previous summary';
-      const messagesToSummarize = state.messages.slice(1);
+      const messagesToSummarize = state.messages.slice(
+        1,
+        config.orchestratorConfig.MAX_WINDOW_SUMMARY,
+      );
 
       const newMessages = messagesToSummarize
         .map(msg => {

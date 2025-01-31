@@ -44,3 +44,4 @@ memory:
 
 orchestrator:
   MAX_WINDOW_SUMMARY: 20
+  MAX_QUEUE_SIZE: 50

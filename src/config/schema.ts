@@ -159,7 +159,8 @@ const memoryConfigSchema = z.object({
 });
 
 const orchestratorConfigSchema = z.object({
-  MAX_WINDOW_SUMMARY: z.number().int().positive().default(3),
+  MAX_WINDOW_SUMMARY: z.number().int().positive().default(20),
+  MAX_QUEUE_SIZE: z.number().int().positive().default(50),
 });
 
 const SERPAPI_API_KEY = z.string().optional();

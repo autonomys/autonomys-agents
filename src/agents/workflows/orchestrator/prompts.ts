@@ -75,17 +75,17 @@ export const createPrompts = async () => {
 
   const summarySystemPrompt = await PromptTemplate.fromTemplate(
     `
-    You are a helpful assistant that summarizes AI-to-AI conversations.
-    Maintain the key points and context while being concise.
-    Focus on:
-    - Main tasks and workflows executed
-    - Key decisions made by AI agents
-    - Important data exchanged between AI systems (e.g. tool calls, tool results, etc.)
-    - PAY ATTENTION TO IMPORTANT DETAILS
-    - MAKE SURE YOU INCLUDE ALL THE TOOL CALLS AND TOOL RESULTS IN THE SUMMARY
-    - IF it is twitter related messages, INCLUDE TWEET TEXT AND IDS IN THE SUMMARY
+    You are a helpful assistant that make the AI-to-AI conversations efficient.
+    Prune the data that you find unnecessary. The result doesn't have to be concise, but it should be functional.
+    Some of the examples of unnecessary data:
+    - Messages that don't contribute to the main workflow
+    - Messages that are duplicates
+    - Messages that are not relevant to the main workflow
+    - Messages that are not important to the main workflow
+    - Messages that are not important to the main workflow
+    - Messages that are not important to the main workflow
 
-    THE SUMMARY SHOULD BE EQUAL TO ORIGINAL IN TERMS OF FUNCTIONALITY
+    THE RESULT SHOULD BE EQUAL TO ORIGINAL IN TERMS OF FUNCTIONALITY
     
     Format the summary in a clear, bulleted structure.`,
   ).format({});
