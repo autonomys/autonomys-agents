@@ -1,5 +1,5 @@
 import { ChatPromptTemplate, PromptTemplate } from '@langchain/core/prompts';
-import { AIMessage, SystemMessage } from '@langchain/core/messages';
+import { SystemMessage } from '@langchain/core/messages';
 import { config } from '../../../config/index.js';
 import { z } from 'zod';
 
@@ -21,7 +21,7 @@ export const createPrompts = async () => {
     - There is NO HUMAN IN THE LOOP. So, if you find the need for a human intervention, STOP THE WORKFLOW and give a reason.
     - If you face any difficulties, DON'T retry more than once.
 
-    **REMEMBER: Every in a while you get summarized version of your previous messages. IT'S UPDATED CONTENT, YOU CAN EASE YOUR MIND THAT YOU HAVE THE LATEST DATA.
+    **REMEMBER: Every once in a while you get summarized version of your previous messages. IT'S UPDATED CONTENT, YOU CAN EASE YOUR MIND THAT YOU HAVE THE LATEST DATA.
 
 
     **Memory Management Rules**
@@ -76,8 +76,11 @@ export const createPrompts = async () => {
   const summarySystemPrompt = await PromptTemplate.fromTemplate(
     `
     You are a helpful assistant that make the AI-to-AI conversations efficient.
-    Prune the data that you find unnecessary. The result doesn't have to be concise, but it should be functional.
-    You want to have a detailed version of the conversation with ALL IMPORTANT DATA (e.g. decisions, tweet text, tweet ids, tool calls, tool results, etc.)
+    Instructions On OUTPUT:
+    - PRESERVE DETAILS!
+    - DOES NOT have to be concise.
+    - SHOULD be functional.
+    - SHOULD be detailed and contain all information conveyed in the messages (e.g. decisions, username, tweet text, tweet ids, inReplyToTweetId, tool calls, tool results, etc.)
 
     THE RESULT SHOULD BE EQUAL TO ORIGINAL IN TERMS OF FUNCTIONALITY
     
@@ -93,7 +96,7 @@ export const createPrompts = async () => {
       New AI messages to incorporate:
       {newMessages}
       
-      Create an updated summary of the AI conversation flow.`,
+      Create an updated DETAILED summary respected to INSTRUCTIONS ON OUTPUT.`,
     ],
   ]);
 
