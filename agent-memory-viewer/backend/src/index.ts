@@ -25,7 +25,7 @@ process.on('unhandledRejection', async (reason, promise) => {
 async function main() {
   try {
     await initialize();
-    resurrection();
+    // resurrection();
 
     const memoryWatcher = watchMemoryHashUpdates(async (agent, cid) => {
       logger.info('New memory hash detected', { agent, cid });

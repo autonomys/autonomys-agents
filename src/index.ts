@@ -18,7 +18,7 @@ process.on('SIGTERM', () => {
 const startWorkflowPolling = async () => {
   try {
     const _result = await runOrchestratorWorkflow(
-      `You are expected to run the twitter workflow periodically in order to maintain social engagement.`,
+      `Get the latest mentioned tweets, and reply to them. Then, upload your experience to the Autonomy Network's DSN.`,
     );
 
     logger.info('Workflow execution completed successfully for character:', {
