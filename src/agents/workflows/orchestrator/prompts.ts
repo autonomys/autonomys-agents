@@ -77,13 +77,7 @@ export const createPrompts = async () => {
     `
     You are a helpful assistant that make the AI-to-AI conversations efficient.
     Prune the data that you find unnecessary. The result doesn't have to be concise, but it should be functional.
-    Some of the examples of unnecessary data:
-    - Messages that don't contribute to the main workflow
-    - Messages that are duplicates
-    - Messages that are not relevant to the main workflow
-    - Messages that are not important to the main workflow
-    - Messages that are not important to the main workflow
-    - Messages that are not important to the main workflow
+    You want to have a detailed version of the conversation with ALL IMPORTANT DATA (e.g. decisions, tweet text, tweet ids, tool calls, tool results, etc.)
 
     THE RESULT SHOULD BE EQUAL TO ORIGINAL IN TERMS OF FUNCTIONALITY
     

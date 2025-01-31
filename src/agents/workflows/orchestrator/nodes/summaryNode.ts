@@ -33,9 +33,14 @@ export const createSummaryNode = ({ orchestratorModel, prompts }: OrchestratorCo
       const newSummary = await orchestratorModel.invoke(formattedPrompt);
       logger.info('New Summary Result:', { newSummary });
 
+      const summaryContent =
+        typeof newSummary.content === 'string'
+          ? newSummary.content
+          : JSON.stringify(newSummary.content, null, 2);
+
       return {
         messages: [
-          new AIMessage({ content: `Summary of conversation earlier: ${newSummary.content}` }),
+          new AIMessage({ content: `Summary of conversation earlier: ${summaryContent}` }),
         ],
       };
     }

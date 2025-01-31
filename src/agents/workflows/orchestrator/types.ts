@@ -23,11 +23,13 @@ export type OrchestratorInput = {
 export const OrchestratorState = Annotation.Root({
   messages: Annotation<readonly BaseMessage[]>({
     reducer: (curr, update) => {
-      if (
-        update.length === 1 &&
-        update[0].content.toString().startsWith('Summary of conversation earlier:')
-      ) {
-        return [curr[0], update[0], ...curr.slice(config.orchestratorConfig.MAX_WINDOW_SUMMARY)];
+      if (Array.isArray(update) && update.length > 0 && update[0]?.content) {
+        if (
+          typeof update[0].content === 'string' &&
+          update[0].content.startsWith('Summary of conversation earlier:')
+        ) {
+          return [curr[0], update[0], ...curr.slice(config.orchestratorConfig.MAX_WINDOW_SUMMARY)];
+        }
       }
       return [...curr, ...update];
     },
