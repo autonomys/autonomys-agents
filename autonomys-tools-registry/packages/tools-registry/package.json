@@ -1,0 +1,31 @@
+{
+  "name": "@autonomys/tools-registry",
+  "version": "0.1.0",
+  "description": "Registry for Autonomys tools",
+  "main": "dist/index.js",
+  "type": "module",
+  "bin": {
+    "autonomy": "./dist/index.js"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx watch src/index.ts"
+  },
+  "dependencies": {
+    "chalk": "^5.4.1",
+    "commander": "^11.0.0",
+    "fs-extra": "^11.2.0",
+    "inquirer": "^9.2.12",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "@types/fs-extra": "^11.0.4",
+    "@types/inquirer": "^9.0.7",
+    "@types/node": "^20.11.16",
+    "tsx": "^4.7.0",
+    "typescript": "^5.3.3"
+  }
+}
