@@ -1,9 +1,12 @@
 import { config } from './config/index.js';
 import { createLogger } from './utils/logger.js';
-import { runOrchestratorWorkflow } from './agents/workflows/orchestrator/orchestratorWorkflow.js';
+import { getOrchestratorRunner } from './agents/workflows/orchestrator/orchestratorWorkflow.js';
 import { validateLocalHash } from './agents/tools/utils/localHashStorage.js';
-
-const logger = createLogger('app');
+import { createTools } from './agents/workflows/orchestrator/tools.js';
+import { createPrompts } from './agents/workflows/orchestrator/prompts.js';
+import { createTwitterApi } from './services/twitter/client.js';
+import { HumanMessage } from '@langchain/core/messages';
+export const logger = createLogger('app');
 
 process.on('SIGINT', () => {
   logger.info('Received SIGINT. Gracefully shutting down...');
@@ -15,11 +18,24 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
+export const orchestatorConfig = async () => {
+  const { USERNAME, PASSWORD, COOKIES_PATH } = config.twitterConfig;
+  const twitterApi = await createTwitterApi(USERNAME, PASSWORD, COOKIES_PATH);
+  const { tools } = createTools(twitterApi);
+
+  const prompts = await createPrompts();
+  return { prompts, tools };
+};
+const orchestratorConfig = await orchestatorConfig();
+const orchestratorRunner = await getOrchestratorRunner(orchestratorConfig);
+
 const startWorkflowPolling = async () => {
   try {
-    const _result = await runOrchestratorWorkflow(
-      `You are expected to run the twitter workflow periodically in order to maintain social engagement.`,
-    );
+    const initalMessage = new HumanMessage(`
+      You are expected to run the twitter workflow periodically in order to maintain social engagement.
+    `);
+
+    const result = await orchestratorRunner.runWorkflow({ messages: [initalMessage] });
 
     logger.info('Workflow execution completed successfully for character:', {
       charcterName: config.characterConfig.name,
