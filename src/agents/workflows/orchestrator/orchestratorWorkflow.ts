@@ -21,6 +21,8 @@ import { VectorDB } from '../../../services/vectorDb/VectorDB.js';
 
 const logger = createLogger('orchestrator-workflow');
 
+export const MAX_WINDOW = 5;
+
 export const createWorkflowConfig = async (): Promise<OrchestratorConfig> => {
   const { USERNAME, PASSWORD, COOKIES_PATH } = config.twitterConfig;
   const twitterApi = await createTwitterApi(USERNAME, PASSWORD, COOKIES_PATH);

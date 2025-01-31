@@ -70,21 +70,32 @@ export const createPrompts = async () => {
     ],
   ]);
 
+  const summarySystemPrompt = await PromptTemplate.fromTemplate(
+    `
+    You are a helpful assistant that summarizes AI-to-AI conversations.
+    Maintain the key points and context while being concise.
+    Focus on:
+    - Main tasks and workflows executed
+    - Key decisions made by AI agents
+    - Important data exchanged between AI systems (e.g. tool calls, tool results, etc.)
+    - MAKE SURE YOU INCLUDE ALL THE TOOL CALLS AND TOOL RESULTS IN THE SUMMARY
+
+    THE SUMMARY SHOULD BE EQUAL TO ORIGINAL IN TERMS OF FUNCTIONALITY
+    
+    Format the summary in a clear, bulleted structure.`,
+  ).format({});
+
   const summaryPrompt = ChatPromptTemplate.fromMessages([
-    new SystemMessage(`You are a helpful assistant that summarizes AI-to-AI conversations.
-      Maintain the key points and context while being concise.
-      Focus on:
-      - Main tasks and workflows executed
-      - Key decisions made by AI agents
-      - Important data exchanged between AI systems
-      
-      Format the summary in a clear, bulleted structure.`),
-    new AIMessage(`Previous summary: {prevSummary}
+    new SystemMessage(summarySystemPrompt),
+    [
+      'ai',
+      `Previous summary: {prevSummary}
       
       New AI messages to incorporate:
       {newMessages}
       
-      Create an updated summary of the AI conversation flow.`),
+      Create an updated summary of the AI conversation flow.`,
+    ],
   ]);
 
   return {

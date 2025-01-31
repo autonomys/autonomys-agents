@@ -5,6 +5,7 @@ import { BaseLanguageModelInput } from '@langchain/core/language_models/base';
 import { AIMessageChunk } from '@langchain/core/messages';
 import { ToolNode } from '@langchain/langgraph/prebuilt';
 import { ChatPromptTemplate } from '@langchain/core/prompts';
+import { MAX_WINDOW } from './orchestratorWorkflow.js';
 
 export type OrchestratorConfig = {
   orchestratorModel: Runnable<BaseLanguageModelInput, AIMessageChunk>;
@@ -19,10 +20,14 @@ export type OrchestratorInput = {
   messages: BaseMessage[];
 };
 
-// Orchestrator state
 export const OrchestratorState = Annotation.Root({
   messages: Annotation<readonly BaseMessage[]>({
-    reducer: (curr, update) => [...curr, ...update],
+    reducer: (curr, update) => {
+      if (curr.length === 0) return update;
+      const summary = curr[0];
+      const allMessages = [...curr.slice(1), ...update];
+      return [summary, ...allMessages.slice(-MAX_WINDOW)];
+    },
     default: () => [],
   }),
   error: Annotation<Error | null>({
