@@ -6,12 +6,14 @@ import { AIMessageChunk } from '@langchain/core/messages';
 import { ToolNode } from '@langchain/langgraph/prebuilt';
 import { ChatPromptTemplate } from '@langchain/core/prompts';
 
+export type OrchestratorPrompts = {
+  inputPrompt: ChatPromptTemplate;
+};
+
 export type OrchestratorConfig = {
   orchestratorModel: Runnable<BaseLanguageModelInput, AIMessageChunk>;
   toolNode: ToolNode;
-  prompts: {
-    inputPrompt: ChatPromptTemplate;
-  };
+  prompts: OrchestratorPrompts;
 };
 
 export type OrchestratorInput = {
