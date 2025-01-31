@@ -1,7 +1,7 @@
 import { AIMessage } from '@langchain/core/messages';
 import { createLogger } from '../../../../utils/logger.js';
 import { OrchestratorConfig, OrchestratorState } from '../types.js';
-import { MAX_WINDOW } from '../orchestratorWorkflow.js';
+import { config } from '../../../../config/index.js';
 const logger = createLogger('summary-node');
 
 export const createSummaryNode = ({ orchestratorModel, prompts }: OrchestratorConfig) => {
@@ -9,7 +9,7 @@ export const createSummaryNode = ({ orchestratorModel, prompts }: OrchestratorCo
     logger.info('Summary Node');
     logger.info('State size:', { size: state.messages.length });
 
-    if (state.messages.length <= MAX_WINDOW) {
+    if (state.messages.length <= config.orchestratorConfig.MAX_WINDOW_SUMMARY) {
       logger.info('Not summarizing, not enough messages');
       return { messages: state.messages };
     }
@@ -29,12 +29,6 @@ export const createSummaryNode = ({ orchestratorModel, prompts }: OrchestratorCo
       })
       .join('\n');
 
-    logger.info('Summary Node - Input values:', {
-      prevSummary: state.messages[0]?.content || 'No previous summary',
-      newMessages,
-      messageCount: messagesToSummarize.length,
-    });
-
     const formattedPrompt = await prompts.summaryPrompt.format({
       prevSummary: state.messages[0]?.content || 'No previous summary',
       newMessages,
@@ -47,7 +41,7 @@ export const createSummaryNode = ({ orchestratorModel, prompts }: OrchestratorCo
     return {
       messages: [
         new AIMessage({ content: newSummary.content }),
-        ...state.messages.slice(-(MAX_WINDOW - 1)),
+        ...state.messages.slice(-(config.orchestratorConfig.MAX_WINDOW_SUMMARY - 1)),
       ],
     };
   };
