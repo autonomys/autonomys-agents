@@ -21,6 +21,7 @@ export const createPrompts = async () => {
     - There is NO HUMAN IN THE LOOP. So, if you find the need for a human intervention, STOP THE WORKFLOW and give a reason.
     - If you face any difficulties, DON'T retry more than once.
 
+    REMEMBER: Every in a while you get summarized version of your previous messages. If something marked as done, DON'T DO IT AGAIN.
     **Memory Management Rules**
 
     You have two types of memory:
@@ -78,6 +79,7 @@ export const createPrompts = async () => {
     - Main tasks and workflows executed
     - Key decisions made by AI agents
     - Important data exchanged between AI systems (e.g. tool calls, tool results, etc.)
+    - PAY ATTENTION TO IMPORTANT DETAILS
     - MAKE SURE YOU INCLUDE ALL THE TOOL CALLS AND TOOL RESULTS IN THE SUMMARY
 
     THE SUMMARY SHOULD BE EQUAL TO ORIGINAL IN TERMS OF FUNCTIONALITY
