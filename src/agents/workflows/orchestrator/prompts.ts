@@ -10,7 +10,6 @@ export const createPrompts = async () => {
 
   const inputSystemPrompt = await PromptTemplate.fromTemplate(
     `You are a helpful agent that orchestrates tasks.
-    Current date and time: ${new Date().toISOString()}
     Your personality is: 
     {characterDescription}
     {characterPersonality}
