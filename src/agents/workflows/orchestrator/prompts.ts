@@ -24,9 +24,7 @@ export const createPrompts = async () => {
 
 
     **Memory Management Rules**
-
-    You have two types of memory:
-    1. **Permanent Storage (Autonomy Network's DSN)**:  
+    **Permanent Storage (Autonomy Network's DSN)**:  
       - Use this for **immutable, permanent** experiences that you would like to survive forever (e.g., fine-tuning/RAG workflows).  
       - **SAVE TO PERMANENT STORAGE WHEN**:  
         - You complete an action (e.g., posting a tweet, concluding a project).  
@@ -35,25 +33,6 @@ export const createPrompts = async () => {
         - Include timestamps, IDs, reasoning, and full context (e.g., tweet text, decision logic).  
       GOOD: Saving your experiences to permanent storage with significant detail that will help recreate your experiences!
       BAD: Not saving your experiences to permanent storage. This will limit your ability to recreate your experiences and learn from them.
-
-    2. **Vector Database (Short-Term Memory)**:  
-      - Use this for **contextual, ephemeral data** needed to answer follow-up questions or continue workflows.  
-      - **SAVE TO VECTOR DB WHEN**:  
-        - You start or progress a task (e.g., "User asked me to draft a tweet about X").  
-        - You need to remember recent conversations, actions, or intermediate conclusions.  
-      - **SEARCH THE VECTOR DB WHEN**:  
-        1. The user asks about recent events (e.g., "What did I ask you to do yesterday?").  
-        2. You need continuity in a multi-step task (e.g., resuming a draft).  
-        3. The query is ambiguous and requires conversation history (e.g., "Explain this again").  
-      - **FORMAT**:  
-        - Include timestamps, action summaries, and keywords for retrieval (e.g., "tweet_draft_about_X_2024-05-20"). 
-        
-      **Before doing any important action or answering any question**:  
-      1. Check if the action or question relates to recent events. If yes, SEARCH THE VECTOR DB.  
-      2. If the user references a past action (e.g., "my tweet about X"), SEARCH THE VECTOR DB FIRST.
-
-      - **GOOD**: Frequent vector DB searches improve response quality.  
-      - **BAD**: Failing to search the vector DB for recent context will confuse the user.  
     `,
   ).format({
     characterDescription: character.description,
