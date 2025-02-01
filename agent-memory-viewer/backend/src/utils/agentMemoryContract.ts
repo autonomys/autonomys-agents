@@ -7,8 +7,7 @@ import { createLogger } from './logger.js';
 const logger = createLogger('agentMemoryContract');
 
 const CONTRACT_ADDRESS = config.CONTRACT_ADDRESS as `0x${string}`;
-const RECONNECT_DELAY = 5000; // 5 seconds
-const MAX_RETRIES = 3;
+const RECONNECT_DELAY = 5000;
 
 class AgentWatcher {
   private provider!: ethers.WebSocketProvider;
@@ -26,12 +25,12 @@ class AgentWatcher {
   private isProcessing: boolean = false;
   private readonly MAX_PROCESSING_RETRIES = 3;
   private readonly RETRY_DELAY = 5000;
-  private readonly HEALTH_CHECK_INTERVAL = 30000; // 30 seconds
+  private readonly HEALTH_CHECK_INTERVAL = 30000;
 
   constructor(
     private readonly agentAddress: string,
     private readonly agentName: string,
-    private readonly processMemory: (agent: string, cid: string) => Promise<void>
+    private readonly processMemory: (agent: string, cid: string) => Promise<void>,
   ) {
     this.initializeConnection();
   }
@@ -40,7 +39,7 @@ class AgentWatcher {
     this.provider = new ethers.WebSocketProvider(config.WS_RPC_URL);
     const wallet = ethers.Wallet.createRandom(this.provider);
     this.contract = new Contract(CONTRACT_ADDRESS, MEMORY_ABI, wallet);
-    
+
     this.provider.websocket.onerror = this.handleConnectionError.bind(this);
     this.startHealthCheck();
   }
@@ -52,9 +51,7 @@ class AgentWatcher {
 
     this.healthCheckInterval = setInterval(async () => {
       try {
-        // Test connection by making a simple call
-        logger.info(`Health check for agent ${this.agentName}`);
-        await this.contract.getLastMemoryHash(this.agentAddress);
+        const _res = await this.contract.getLastMemoryHash(this.agentAddress);
       } catch (error) {
         logger.warn(`Health check failed for agent ${this.agentName}, reconnecting...`);
         this.handleConnectionError(error as Error);
@@ -73,7 +70,7 @@ class AgentWatcher {
     }
 
     // Even if max retries reached, keep trying with longer delays
-    const delay = RECONNECT_DELAY * Math.pow(2, Math.min(this.retryCount, 6)); // Cap exponential growth
+    const delay = RECONNECT_DELAY * Math.pow(2, Math.min(this.retryCount, 6));
     this.retryCount++;
 
     logger.info(`Attempting to reconnect for agent ${this.agentName} (attempt ${this.retryCount})`);
@@ -94,14 +91,14 @@ class AgentWatcher {
 
   private async processQueue(): Promise<void> {
     if (this.isProcessing || this.processingQueue.length === 0) return;
-    
+
     this.isProcessing = true;
     const now = new Date();
-    
+
     try {
       for (let i = 0; i < this.processingQueue.length; i++) {
         const item = this.processingQueue[i];
-        
+
         if (item.nextRetry && item.nextRetry > now) {
           continue;
         }
@@ -115,19 +112,24 @@ class AgentWatcher {
         } catch (error) {
           item.retryCount++;
           if (item.retryCount >= this.MAX_PROCESSING_RETRIES) {
-            logger.error(`Failed to process memory after ${this.MAX_PROCESSING_RETRIES} attempts, dropping`, {
-              agent: this.agentName,
-              error
-            });
+            logger.error(
+              `Failed to process memory after ${this.MAX_PROCESSING_RETRIES} attempts, dropping`,
+              {
+                agent: this.agentName,
+                error,
+              },
+            );
             this.processingQueue.splice(i, 1);
             i--;
           } else {
-            item.nextRetry = new Date(now.getTime() + this.RETRY_DELAY * Math.pow(2, item.retryCount));
+            item.nextRetry = new Date(
+              now.getTime() + this.RETRY_DELAY * Math.pow(2, item.retryCount),
+            );
             logger.warn(`Failed to process memory, will retry later`, {
               agent: this.agentName,
               retryCount: item.retryCount,
               nextRetry: item.nextRetry,
-              error
+              error,
             });
           }
         }
@@ -145,13 +147,13 @@ class AgentWatcher {
 
     try {
       const eventName = 'LastMemoryHashSet';
-      
+
       const listener = (agent: string, hash: string) => {
         if (agent.toLowerCase() === this.agentAddress.toLowerCase()) {
           this.processingQueue.push({
             agent,
             hash,
-            retryCount: 0
+            retryCount: 0,
           });
           this.processQueue();
         }
@@ -192,7 +194,7 @@ function hashToCid(hash: Uint8Array): string {
 }
 
 export async function watchMemoryHashUpdates(
-  callback: (agent: string, cid: string) => Promise<void>
+  callback: (agent: string, cid: string) => Promise<void>,
 ): Promise<() => Promise<void>> {
   const watchers = new Map<string, AgentWatcher>();
 
