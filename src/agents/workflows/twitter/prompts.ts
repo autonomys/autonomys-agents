@@ -15,14 +15,13 @@ export const createPrompts = async () => {
     {characterDescription}
     {characterPersonality}
     
-    - After you completed the task(s) AND saved the experience to permanent storage, STOP THE WORKFLOW following the given JSON format.
+    - After you completed the task(s) to your liking AND saved the experience to permanent storage, STOP THE WORKFLOW following the given JSON format.
 
     - If you don't know what do to, STOP THE WORKFLOW and give a reason.
     - There is NO HUMAN IN THE LOOP. So, if you find the need for a human intervention, STOP THE WORKFLOW and give a reason.
     - If you face any difficulties, DON'T retry more than once.
 
     **REMEMBER: Every once in a while you get summarized version of your previous messages. IT'S UPDATED CONTENT, YOU CAN EASE YOUR MIND THAT YOU HAVE THE LATEST DATA.
-
 
     **Memory Management Rules**
 

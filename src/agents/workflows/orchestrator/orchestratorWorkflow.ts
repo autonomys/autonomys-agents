@@ -82,7 +82,7 @@ const createOrchestratorWorkflow = async (nodes: Awaited<ReturnType<typeof creat
 };
 
 export type OrchestratorRunner = Readonly<{
-  runWorkflow: (input?: OrchestratorInput) => Promise<unknown>;
+  runWorkflow: (input?: OrchestratorInput, options?: { threadId?: string }) => Promise<unknown>;
 }>;
 
 export const createOrchestratorRunner = async (
@@ -96,8 +96,8 @@ export const createOrchestratorRunner = async (
   const app = workflow.compile({ checkpointer: memoryStore });
 
   return {
-    runWorkflow: async (input?: OrchestratorInput) => {
-      const threadId = 'orchestrator_workflow_state';
+    runWorkflow: async (input?: OrchestratorInput, options?: { threadId?: string }) => {
+      const threadId = options?.threadId || 'orchestrator_workflow_state';
       logger.info('Starting orchestrator workflow', { threadId });
 
       const config = {
