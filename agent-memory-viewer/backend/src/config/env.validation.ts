@@ -12,6 +12,11 @@ const agentConfigSchema = z.object({
   address: z.string().regex(/^0x[a-fA-F0-9]{40}$/),
 });
 
+const agentsYamlSchema = z.object({
+  agents: z.array(agentConfigSchema),
+  contractAddress: z.string().regex(/^0x[a-fA-F0-9]{40}$/),
+});
+
 const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
   PORT: z.string().transform(Number).default('3010'),
@@ -37,13 +42,14 @@ const envSchema = z.object({
 
 export type EnvConfig = z.infer<typeof envSchema>;
 export type AgentConfig = z.infer<typeof agentConfigSchema>;
+export type YamlConfig = z.infer<typeof agentsYamlSchema>;
 
-function loadAgentsConfig(): AgentConfig[] {
+function loadAgentsConfig(): { agents: AgentConfig[]; contractAddress: string } {
   try {
     const configPath = path.join(__dirname, './agents.yaml');
     const fileContents = fs.readFileSync(configPath, 'utf8');
-    const config = yaml.load(fileContents) as { agents: AgentConfig[] };
-    return config.agents;
+    const config = yaml.load(fileContents) as YamlConfig;
+    return agentsYamlSchema.parse(config);
   } catch (error) {
     console.error('Failed to load agents config:', error);
     throw new Error('Failed to load agents configuration');
@@ -52,11 +58,12 @@ function loadAgentsConfig(): AgentConfig[] {
 
 export function validateEnv(): EnvConfig {
   try {
-    const agents = loadAgentsConfig();
+    const { agents, contractAddress } = loadAgentsConfig();
 
     return envSchema.parse({
       ...process.env,
       AGENTS: agents,
+      CONTRACT_ADDRESS: contractAddress,
     });
   } catch (error) {
     if (error instanceof z.ZodError) {
