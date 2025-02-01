@@ -40,6 +40,7 @@ export const llmModels = {
   small: {
     openai: {
       gpt_4o_mini: 'gpt-4o-mini',
+      gpt_o3_mini: 'o3-mini',
     },
     anthropic: {
       claude35haiku: 'claude-3-5-haiku-latest',
