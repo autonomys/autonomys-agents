@@ -53,7 +53,7 @@ const handleConditionalEdge = async (
         ? lastMessage.content
         : (lastMessage.content as any).kwargs?.content || JSON.stringify(lastMessage.content);
 
-    const match = contentStr.match(/\{[\s\S]*"shouldStop"[\s\S]*\}/);
+    const match = contentStr.match(/(\{[\s\S]*?"shouldStop":[\s\S]*?\})/);
     if (match) {
       const control = workflowControlParser.parse(JSON.parse(match[0]));
       if (control.shouldStop) {
