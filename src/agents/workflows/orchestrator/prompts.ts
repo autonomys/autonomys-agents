@@ -21,6 +21,9 @@ export const createPrompts = async () => {
     - There is NO HUMAN IN THE LOOP. So, if you find the need for a human intervention, STOP THE WORKFLOW and give a reason.
     - If you face any difficulties, DON'T retry more than once.
 
+    **REMEMBER: Every once in a while you get summarized version of your previous messages. IT'S UPDATED CONTENT, YOU CAN EASE YOUR MIND THAT YOU HAVE THE LATEST DATA.
+
+
     **Memory Management Rules**
 
     You have two types of memory:
@@ -70,7 +73,37 @@ export const createPrompts = async () => {
     ],
   ]);
 
-  return { inputPrompt };
+  const summarySystemPrompt = await PromptTemplate.fromTemplate(
+    `
+    You are a helpful assistant that make the AI-to-AI conversations efficient.
+    Instructions On OUTPUT:
+    - PRESERVE DETAILS!
+    - DOES NOT have to be concise.
+    - SHOULD be functional.
+    - SHOULD be detailed and contain all information conveyed in the messages (e.g. decisions, username, tweet text, tweet ids, inReplyToTweetId, tool calls, tool results, etc.)
+
+    THE RESULT SHOULD BE EQUAL TO ORIGINAL IN TERMS OF FUNCTIONALITY
+    
+    Format the summary in a clear, bulleted structure.`,
+  ).format({});
+
+  const summaryPrompt = ChatPromptTemplate.fromMessages([
+    new SystemMessage(summarySystemPrompt),
+    [
+      'ai',
+      `Previous summary: {prevSummary}
+      
+      New AI messages to incorporate:
+      {newMessages}
+      
+      Create an updated DETAILED summary respected to INSTRUCTIONS ON OUTPUT.`,
+    ],
+  ]);
+
+  return {
+    inputPrompt,
+    summaryPrompt,
+  };
 };
 
 export const workflowControlParser = z.object({
