@@ -15,6 +15,7 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
+const runner = await orchestratorRunner();
 const startWorkflowPolling = async () => {
   try {
     const initalMessage = new HumanMessage(`
@@ -28,7 +29,7 @@ const startWorkflowPolling = async () => {
       - Post a new tweet.
     `);
 
-    const result = await orchestratorRunner.runWorkflow({ messages: [initalMessage] });
+    const result = await runner.runWorkflow({ messages: [initalMessage] });
 
     logger.info('Workflow execution completed successfully for character:', {
       charcterName: config.characterConfig.name,

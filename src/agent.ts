@@ -1,4 +1,7 @@
-import { getOrchestratorRunner } from './agents/workflows/orchestrator/orchestratorWorkflow.js';
+import {
+  createOrchestratorRunner,
+  OrchestratorRunner,
+} from './agents/workflows/orchestrator/orchestratorWorkflow.js';
 import { createPrompts } from './agents/workflows/orchestrator/prompts.js';
 import { createTools } from './agents/workflows/orchestrator/tools.js';
 import { createTwitterAgentTool } from './agents/workflows/twitter/twitterAgentTool.js';
@@ -14,5 +17,14 @@ const orchestatorConfig = async () => {
   const orchestratorPrompts = await createPrompts();
   return { prompts: orchestratorPrompts, tools: [...tools, twitterAgent] };
 };
+
 const orchestratorConfig = await orchestatorConfig();
-export const orchestratorRunner = await getOrchestratorRunner(orchestratorConfig);
+export const orchestratorRunner = (() => {
+  let runnerPromise: Promise<OrchestratorRunner> | undefined = undefined;
+  return async () => {
+    if (!runnerPromise) {
+      runnerPromise = createOrchestratorRunner(orchestratorConfig);
+    }
+    return runnerPromise;
+  };
+})();
