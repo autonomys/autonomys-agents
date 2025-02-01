@@ -13,11 +13,17 @@ export class LLMFactory {
   static createModelFromConfig(config: LLMConfiguration, temperature: number) {
     switch (config.provider) {
       case LLMProvider.OPENAI:
-        return new ChatOpenAI({
+        const baseConfig = {
           apiKey: appConfig.llmConfig.OPENAI_API_KEY,
           model: config.model,
-          temperature,
-        });
+        };
+        if (!config.model.includes('o3-mini')) {
+          return new ChatOpenAI({
+            ...baseConfig,
+            temperature,
+          });
+        }
+        return new ChatOpenAI(baseConfig);
       case LLMProvider.ANTHROPIC:
         return new ChatAnthropic({
           apiKey: appConfig.llmConfig.ANTHROPIC_API_KEY,
