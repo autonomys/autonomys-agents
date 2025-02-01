@@ -41,3 +41,7 @@ llm:
 
 memory:
   MAX_PROCESSED_IDS: 5000
+
+orchestrator:
+  MAX_WINDOW_SUMMARY: 20
+  MAX_QUEUE_SIZE: 50

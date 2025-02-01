@@ -158,6 +158,11 @@ const memoryConfigSchema = z.object({
   MAX_PROCESSED_IDS: z.number().int().positive().default(5000),
 });
 
+const orchestratorConfigSchema = z.object({
+  MAX_WINDOW_SUMMARY: z.number().int().positive().default(20),
+  MAX_QUEUE_SIZE: z.number().int().positive().default(50),
+});
+
 const SERPAPI_API_KEY = z.string().optional();
 
 export const configSchema = z.object({
@@ -167,6 +172,7 @@ export const configSchema = z.object({
   blockchainConfig: blockchainConfigSchema,
   memoryConfig: memoryConfigSchema,
   characterConfig: characterConfigSchema,
+  orchestratorConfig: orchestratorConfigSchema,
   SERPAPI_API_KEY: SERPAPI_API_KEY,
   NODE_ENV: z.enum(['development', 'production', 'test']),
 });

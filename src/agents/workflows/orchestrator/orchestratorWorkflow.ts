@@ -46,12 +46,13 @@ const handleConditionalEdge = async (
   const lastMessage = state.messages[state.messages.length - 1];
   if (!lastMessage?.content) return 'tools';
 
-  const contentStr =
-    typeof lastMessage.content === 'string'
-      ? lastMessage.content
-      : JSON.stringify(lastMessage.content);
-
   try {
+    // Handle both string and object content
+    const contentStr =
+      typeof lastMessage.content === 'string'
+        ? lastMessage.content
+        : (lastMessage.content as any).kwargs?.content || JSON.stringify(lastMessage.content);
+
     const match = contentStr.match(/\{[\s\S]*"shouldStop"[\s\S]*\}/);
     if (match) {
       const control = workflowControlParser.parse(JSON.parse(match[0]));
@@ -60,21 +61,23 @@ const handleConditionalEdge = async (
         return END;
       }
     }
+    return 'tools';
   } catch (error) {
-    logger.warn('Failed to parse workflow control', { error });
-    return 'END';
+    logger.warn('Failed to parse workflow control', { error, content: lastMessage.content });
+    return END;
   }
-
-  return 'tools';
 };
 
 const createOrchestratorWorkflow = async (nodes: Awaited<ReturnType<typeof createNodes>>) => {
   const workflow = new StateGraph(OrchestratorState)
     .addNode('input', nodes.inputNode)
+    .addNode('summarize', nodes.summaryNode)
     .addNode('tools', nodes.toolNode)
     .addEdge(START, 'input')
-    .addEdge('tools', 'input')
-    .addConditionalEdges('input', handleConditionalEdge);
+    .addConditionalEdges('input', handleConditionalEdge)
+    .addEdge('tools', 'summarize')
+    .addEdge('summarize', 'input');
+
   return workflow;
 };
 
