@@ -52,7 +52,8 @@ const handleConditionalEdge = async (
     const contentStr =
       typeof lastMessage.content === 'string'
         ? lastMessage.content
-        : (lastMessage.content as any).kwargs?.content || JSON.stringify(lastMessage.content);
+        : // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (lastMessage.content as any).kwargs?.content || JSON.stringify(lastMessage.content);
 
     // Try to parse the entire content as JSON first
     try {

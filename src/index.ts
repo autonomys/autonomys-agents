@@ -29,7 +29,7 @@ const startWorkflowPolling = async () => {
       - Post a new tweet.
     `);
 
-    const result = await runner.runWorkflow({ messages: [initalMessage] });
+    const _result = await runner.runWorkflow({ messages: [initalMessage] });
 
     logger.info('Workflow execution completed successfully for character:', {
       charcterName: config.characterConfig.name,
