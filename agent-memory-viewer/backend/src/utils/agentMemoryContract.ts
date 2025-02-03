@@ -51,9 +51,18 @@ class AgentWatcher {
 
     this.healthCheckInterval = setInterval(async () => {
       try {
-        const _res = await this.contract.getLastMemoryHash(this.agentAddress);
+        const timeoutPromise = new Promise((_, reject) => {
+          setTimeout(() => reject(new Error('Health check timeout')), 5000);
+        });
+        
+        const healthCheckPromise = this.contract.getLastMemoryHash(this.agentAddress);
+        
+        await Promise.race([healthCheckPromise, timeoutPromise]);
+        logger.info(`Health check passed for agent ${this.agentName}`);
       } catch (error) {
-        logger.warn(`Health check failed for agent ${this.agentName}, reconnecting...`);
+        logger.warn(`Health check failed for agent ${this.agentName}, reconnecting...`, {
+          error: error instanceof Error ? error.message : String(error)
+        });
         this.handleConnectionError(error as Error);
       }
     }, this.HEALTH_CHECK_INTERVAL);
@@ -69,22 +78,41 @@ class AgentWatcher {
       clearTimeout(this.reconnectTimeout);
     }
 
-    // Even if max retries reached, keep trying with longer delays
-    const delay = RECONNECT_DELAY * Math.pow(2, Math.min(this.retryCount, 6));
+    // Cap the retry count to prevent excessive delays while still maintaining exponential backoff
+    const MAX_RETRY_COUNT = 10;
+    const currentRetryCount = Math.min(this.retryCount, MAX_RETRY_COUNT);
+    const delay = Math.min(
+      RECONNECT_DELAY * Math.pow(2, currentRetryCount),
+      60000 // Max 1 minute delay
+    );
+    
     this.retryCount++;
 
-    logger.info(`Attempting to reconnect for agent ${this.agentName} (attempt ${this.retryCount})`);
+    logger.info(`Attempting to reconnect for agent ${this.agentName} (attempt ${this.retryCount}, delay: ${delay}ms)`);
 
     this.reconnectTimeout = setTimeout(async () => {
       try {
         await this.stop();
+        
+        // Clear any existing state
+        if (this.healthCheckInterval) {
+          clearInterval(this.healthCheckInterval);
+          this.healthCheckInterval = undefined;
+        }
+        
+        // Reinitialize everything
         await this.initializeConnection();
         await this.start();
+        
         this.retryCount = 0; // Reset retry count on successful reconnection
         logger.info(`Successfully reconnected for agent ${this.agentName}`);
       } catch (error) {
         logger.error(`Reconnection failed for agent ${this.agentName}:`, error);
-        this.reconnect(); // Always try to reconnect
+        // Ensure we're in a clean state before trying again
+        await this.stop().catch(stopError => 
+          logger.error(`Error stopping during reconnection for ${this.agentName}:`, stopError)
+        );
+        this.reconnect(); // Schedule next reconnection attempt
       }
     }, delay);
   }
