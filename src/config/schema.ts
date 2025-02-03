@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { LLMProvider, LLMSize } from '../services/llm/types.js';
+import { LLMProvider } from '../services/llm/types.js';
 
 const twitterConfigSchema = z.object({
   USERNAME: z.string().min(1, 'Twitter username is required'),
@@ -19,35 +19,30 @@ const twitterConfigSchema = z.object({
 
 const llmConfigSchema = z
   .object({
-    configuration: z.object({
-      large: z.object({
-        provider: z.nativeEnum(LLMProvider),
-        model: z.string(),
-      }),
-      small: z.object({
-        provider: z.nativeEnum(LLMProvider),
-        model: z.string(),
-      }),
-    }),
     nodes: z.object({
       decision: z.object({
-        size: z.nativeEnum(LLMSize),
+        provider: z.nativeEnum(LLMProvider),
+        model: z.string(),
         temperature: z.number(),
       }),
       analyze: z.object({
-        size: z.nativeEnum(LLMSize),
+        provider: z.nativeEnum(LLMProvider),
+        model: z.string(),
         temperature: z.number(),
       }),
       generation: z.object({
-        size: z.nativeEnum(LLMSize),
+        provider: z.nativeEnum(LLMProvider),
+        model: z.string(),
         temperature: z.number(),
       }),
       response: z.object({
-        size: z.nativeEnum(LLMSize),
+        provider: z.nativeEnum(LLMProvider),
+        model: z.string(),
         temperature: z.number(),
       }),
       orchestrator: z.object({
-        size: z.nativeEnum(LLMSize),
+        provider: z.nativeEnum(LLMProvider),
+        model: z.string(),
         temperature: z.number(),
       }),
     }),
@@ -59,21 +54,11 @@ const llmConfigSchema = z
   })
   .superRefine((data, ctx) => {
     const providers = new Set([
-      data.nodes.decision.size === LLMSize.LARGE
-        ? data.configuration.large.provider
-        : data.configuration.small.provider,
-      data.nodes.analyze.size === LLMSize.LARGE
-        ? data.configuration.large.provider
-        : data.configuration.small.provider,
-      data.nodes.generation.size === LLMSize.LARGE
-        ? data.configuration.large.provider
-        : data.configuration.small.provider,
-      data.nodes.response.size === LLMSize.LARGE
-        ? data.configuration.large.provider
-        : data.configuration.small.provider,
-      data.nodes.orchestrator.size === LLMSize.LARGE
-        ? data.configuration.large.provider
-        : data.configuration.small.provider,
+      data.nodes.decision.provider,
+      data.nodes.analyze.provider,
+      data.nodes.generation.provider,
+      data.nodes.response.provider,
+      data.nodes.orchestrator.provider,
     ]);
 
     const missingConfigs = [];
