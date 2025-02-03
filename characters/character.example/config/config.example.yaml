@@ -35,6 +35,10 @@ llm:
       provider: 'anthropic'
       model: 'claude-3-5-sonnet-latest'
       temperature: 0.5
+    prompt_summarizer:
+      provider: 'openai'
+      model: 'gpt-4o-mini'
+      temperature: 0.2
 
 memory:
   MAX_PROCESSED_IDS: 5000

@@ -27,5 +27,10 @@ export const llmDefaultConfig = {
       model: llmModels.anthropic.claude35sonnet,
       temperature: 0.2,
     } as LLMNodeConfiguration,
+    prompt_summarizer: {
+      provider: LLMProvider.OPENAI,
+      model: llmModels.openai.gpt4o_mini,
+      temperature: 0.2,
+    } as LLMNodeConfiguration,
   },
 };

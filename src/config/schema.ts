@@ -45,6 +45,11 @@ const llmConfigSchema = z
         model: z.string(),
         temperature: z.number(),
       }),
+      prompt_summarizer: z.object({
+        provider: z.nativeEnum(LLMProvider),
+        model: z.string(),
+        temperature: z.number(),
+      }),
     }),
     OPENAI_API_KEY: z.string(),
     ANTHROPIC_API_KEY: z.string(),
@@ -59,6 +64,7 @@ const llmConfigSchema = z
       data.nodes.generation.provider,
       data.nodes.response.provider,
       data.nodes.orchestrator.provider,
+      data.nodes.prompt_summarizer.provider,
     ]);
 
     const missingConfigs = [];
@@ -71,6 +77,12 @@ const llmConfigSchema = z
     }
     if (providers.has(LLMProvider.OLLAMA) && !data.LLAMA_API_URL) {
       missingConfigs.push('Llama API URL');
+    }
+    if (providers.has(LLMProvider.DEEPSEEK) && !data.DEEPSEEK_URL) {
+      missingConfigs.push('DeepSeek URL');
+    }
+    if (providers.has(LLMProvider.DEEPSEEK) && !data.DEEPSEEK_API_KEY) {
+      missingConfigs.push('DeepSeek API key');
     }
 
     if (missingConfigs.length > 0) {

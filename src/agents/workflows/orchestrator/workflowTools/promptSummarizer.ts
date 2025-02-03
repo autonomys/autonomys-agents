@@ -1,15 +1,11 @@
 import { LLMFactory } from '../../../../services/llm/factory.js';
 import { createLogger } from '../../../../utils/logger.js';
-import { LLMProvider } from '../../../../services/llm/types.js';
+import { config } from '../../../../config/index.js';
 
 const logger = createLogger('prompt-summarizer');
 
 export const summarizePrompt = async (prompt: string): Promise<string> => {
-  const llm = LLMFactory.createModel({
-    provider: LLMProvider.OPENAI,
-    model: 'gpt-4o-mini',
-    temperature: 0.2,
-  });
+  const llm = LLMFactory.createModel(config.llmConfig.nodes.prompt_summarizer);
 
   try {
     const result = await llm.invoke(
