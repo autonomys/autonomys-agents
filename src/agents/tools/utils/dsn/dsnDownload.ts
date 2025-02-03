@@ -1,4 +1,5 @@
 import { createAutoDriveApi, downloadFile } from '@autonomys/auto-drive';
+import { NetworkId } from '@autonomys/auto-utils';
 import { config } from '../../../../config/index.js';
 import { createLogger } from '../../../../utils/logger.js';
 import { withRetry } from './retry.js';
@@ -17,6 +18,7 @@ export const download = async (cid: string): Promise<BaseMemory> => {
     async () => {
       const api = createAutoDriveApi({
         apiKey: config.autoDriveConfig.AUTO_DRIVE_API_KEY || '',
+        network: NetworkId.TAURUS,
       });
       logger.info(`Downloading file: ${cid}`);
       const stream = await downloadFile(api, cid);
