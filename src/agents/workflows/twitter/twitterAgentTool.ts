@@ -24,6 +24,7 @@ export const createTwitterAgentTool = (twitterApi: TwitterApi) =>
           { messages },
           { threadId: 'twitter_workflow_state' },
         );
+        logger.info('Twitter workflow result:', { result });
         return result;
       } catch (error) {
         logger.error('Twitter workflow error:', error);
