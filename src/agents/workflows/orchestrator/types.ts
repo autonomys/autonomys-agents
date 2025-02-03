@@ -25,15 +25,30 @@ export type OrchestratorInput = {
 export const OrchestratorState = Annotation.Root({
   messages: Annotation<readonly BaseMessage[]>({
     reducer: (curr, update) => {
-      if (Array.isArray(update) && update.length > 0 && update[0]?.content) {
-        if (
-          typeof update[0].content === 'string' &&
-          update[0].content.startsWith('Summary of conversation earlier:')
-        ) {
-          return [curr[0], update[0], ...curr.slice(config.orchestratorConfig.MAX_WINDOW_SUMMARY)];
+      let combined: BaseMessage[];
+      if (
+        Array.isArray(update) &&
+        update.length > 0 &&
+        update[0]?.content &&
+        typeof update[0].content === 'string' &&
+        update[0].content.startsWith('Summary of conversation earlier:')
+      ) {
+        combined = [
+          curr[0],
+          update[0],
+          ...curr.slice(config.orchestratorConfig.MAX_WINDOW_SUMMARY),
+        ];
+      } else {
+        combined = [...curr, ...update];
+      }
+
+      const unique: BaseMessage[] = [];
+      for (const msg of combined) {
+        if (!unique.some(existing => JSON.stringify(existing) === JSON.stringify(msg))) {
+          unique.push(msg);
         }
       }
-      return [...curr, ...update];
+      return unique;
     },
     default: () => [],
   }),
