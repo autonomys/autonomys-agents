@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { LLMProvider } from '../services/llm/types.js';
+import { NetworkId } from '@autonomys/auto-utils';
 
 const twitterConfigSchema = z.object({
   USERNAME: z.string().min(1, 'Twitter username is required'),
@@ -98,6 +99,10 @@ const autoDriveConfigSchema = z.object({
   AUTO_DRIVE_API_KEY: z.string().optional(),
   AUTO_DRIVE_ENCRYPTION_PASSWORD: z.string().optional(),
   AUTO_DRIVE_UPLOAD: z.boolean(),
+  AUTO_DRIVE_NETWORK: z
+    .enum(['mainnet', 'taurus'])
+    .transform(val => NetworkId[val.toUpperCase() as 'MAINNET' | 'TAURUS'])
+    .default('taurus'),
 });
 
 const blockchainConfigSchema = z.object({

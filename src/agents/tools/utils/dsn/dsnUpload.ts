@@ -6,13 +6,9 @@ import { agentVersion, config } from '../../../../config/index.js';
 import { signMessage, wallet } from '../blockchain/agentWallet.js';
 import { getLastMemoryCid, setLastMemoryHash } from '../blockchain/agentMemoryContract.js';
 import { withRetry } from './retry.js';
-import { NetworkId } from '@autonomys/auto-utils';
+import { dsnApi } from './api.js';
 
 const logger = createLogger('dsn-upload-tool');
-const dsnApi = createAutoDriveApi({
-  apiKey: config.autoDriveConfig.AUTO_DRIVE_API_KEY || '',
-  network: NetworkId.TAURUS,
-});
 
 let currentNonce = await wallet.getNonce();
 

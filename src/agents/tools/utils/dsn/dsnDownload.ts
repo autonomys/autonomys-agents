@@ -1,6 +1,5 @@
-import { createAutoDriveApi, downloadFile } from '@autonomys/auto-drive';
-import { NetworkId } from '@autonomys/auto-utils';
-import { config } from '../../../../config/index.js';
+import { downloadFile } from '@autonomys/auto-drive';
+import { dsnApi } from './api.js';
 import { createLogger } from '../../../../utils/logger.js';
 import { withRetry } from './retry.js';
 
@@ -16,12 +15,8 @@ interface BaseMemory {
 export const download = async (cid: string): Promise<BaseMemory> => {
   return withRetry(
     async () => {
-      const api = createAutoDriveApi({
-        apiKey: config.autoDriveConfig.AUTO_DRIVE_API_KEY || '',
-        network: NetworkId.TAURUS,
-      });
       logger.info(`Downloading file: ${cid}`);
-      const stream = await downloadFile(api, cid);
+      const stream = await downloadFile(dsnApi, cid);
 
       const chunks: Uint8Array[] = [];
       for await (const chunk of stream) {

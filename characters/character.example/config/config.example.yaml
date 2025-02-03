@@ -12,6 +12,7 @@ twitter:
 
 auto_drive:
   upload: false
+  network: 'taurus' # or 'mainnet'
 
 llm:
   nodes:
