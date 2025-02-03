@@ -92,7 +92,6 @@ class AgentWatcher {
 
     this.reconnectTimeout = setTimeout(async () => {
       try {
-        // Ensure we're fully stopped before attempting to reconnect
         await this.stop();
         
         // Clear any existing state
