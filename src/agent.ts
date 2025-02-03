@@ -23,7 +23,10 @@ export const orchestratorRunner = (() => {
   let runnerPromise: Promise<OrchestratorRunner> | undefined = undefined;
   return async () => {
     if (!runnerPromise) {
-      runnerPromise = createOrchestratorRunner(orchestratorConfig);
+      runnerPromise = createOrchestratorRunner(
+        orchestratorConfig.tools,
+        orchestratorConfig.prompts,
+      );
     }
     return runnerPromise;
   };
