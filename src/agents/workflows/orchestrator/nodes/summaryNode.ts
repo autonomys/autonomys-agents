@@ -46,7 +46,7 @@ export const createSummaryNode = ({ orchestratorModel, prompts }: OrchestratorCo
     }
 
     logger.info('Not summarizing, not enough messages');
-    return { messages: state.messages };
+    return { messages: [] };
   };
   return runNode;
 };
