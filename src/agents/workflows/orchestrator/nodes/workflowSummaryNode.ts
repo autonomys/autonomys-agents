@@ -6,7 +6,6 @@ const logger = createLogger('workflow-summary-node');
 export const createWorkflowSummaryNode = ({ orchestratorModel }: OrchestratorConfig) => {
   const runNode = async (state: typeof OrchestratorState.State) => {
     logger.info('Workflow Summary Node');
-    logger.info('State size:', { size: state.messages.length });
 
     const messages = state.messages
       .map(msg => {

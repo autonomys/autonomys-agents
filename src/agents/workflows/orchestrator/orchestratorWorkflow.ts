@@ -88,13 +88,13 @@ const handleConditionalEdge = async (
 const createOrchestratorWorkflow = async (nodes: Awaited<ReturnType<typeof createNodes>>) => {
   const workflow = new StateGraph(OrchestratorState)
     .addNode('input', nodes.inputNode)
-    .addNode('summarize', nodes.summaryNode)
+    .addNode('messageSummary', nodes.messageSummaryNode)
     .addNode('workflowSummary', nodes.workflowSummaryNode)
     .addNode('tools', nodes.toolNode)
     .addEdge(START, 'input')
     .addConditionalEdges('input', handleConditionalEdge)
-    .addEdge('tools', 'summarize')
-    .addEdge('summarize', 'input')
+    .addEdge('tools', 'messageSummary')
+    .addEdge('messageSummary', 'input')
     .addEdge('workflowSummary', END);
 
   return workflow;
