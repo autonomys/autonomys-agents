@@ -14,30 +14,31 @@ auto_drive:
   upload: false
 
 llm:
-  configuration:
-    large:
-      provider: 'anthropic'
-      model: 'claude-3-5-sonnet-latest'
-    small:
-      provider: 'openai'
-      model: 'gpt-4o-mini'
-
   nodes:
     decision:
-      size: 'small'
+      provider: 'anthropic'
+      model: 'claude-3-5-sonnet-latest'
       temperature: 0.2
     analyze:
-      size: 'large'
+      provider: 'anthropic'
+      model: 'claude-3-5-sonnet-latest'
       temperature: 0.5
     generation:
-      size: 'large'
+      provider: 'anthropic'
+      model: 'claude-3-5-sonnet-latest'
       temperature: 0.8
     response:
-      size: 'small'
+      provider: 'openai'
+      model: 'gpt-4o-mini'
       temperature: 0.8
     orchestrator:
-      size: 'large'
+      provider: 'anthropic'
+      model: 'claude-3-5-sonnet-latest'
       temperature: 0.5
+    prompt_summarizer:
+      provider: 'openai'
+      model: 'gpt-4o-mini'
+      temperature: 0.2
 
 memory:
   MAX_PROCESSED_IDS: 5000
