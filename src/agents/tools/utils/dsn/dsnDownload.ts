@@ -1,5 +1,5 @@
 import { downloadFile } from '@autonomys/auto-drive';
-import { dsnApi } from './api.js';
+import { autoDriveApi } from './autoDriveApi.js';
 import { createLogger } from '../../../../utils/logger.js';
 import { withRetry } from './retry.js';
 
@@ -16,7 +16,7 @@ export const download = async (cid: string): Promise<BaseMemory> => {
   return withRetry(
     async () => {
       logger.info(`Downloading file: ${cid}`);
-      const stream = await downloadFile(dsnApi, cid);
+      const stream = await downloadFile(autoDriveApi, cid);
 
       const chunks: Uint8Array[] = [];
       for await (const chunk of stream) {

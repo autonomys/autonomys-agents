@@ -6,7 +6,7 @@ import { agentVersion, config } from '../../../../config/index.js';
 import { signMessage, wallet } from '../blockchain/agentWallet.js';
 import { getLastMemoryCid, setLastMemoryHash } from '../blockchain/agentMemoryContract.js';
 import { withRetry } from './retry.js';
-import { dsnApi } from './api.js';
+import { autoDriveApi } from './autoDriveApi.js';
 
 const logger = createLogger('dsn-upload-tool');
 
@@ -14,7 +14,7 @@ let currentNonce = await wallet.getNonce();
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const uploadFileToDsn = async (file: any, options: UploadFileOptions) =>
-  withRetry(() => uploadFile(dsnApi, file, options), { operationName: 'Dsn file upload' });
+  withRetry(() => uploadFile(autoDriveApi, file, options), { operationName: 'Dsn file upload' });
 
 // Helper function for memory hash
 const submitMemoryHash = async (hash: string, nonce: number) =>
