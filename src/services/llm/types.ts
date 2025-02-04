@@ -10,44 +10,8 @@ export type LLMConfiguration = {
   model: string;
 };
 
-export enum LLMSize {
-  SMALL = 'small',
-  LARGE = 'large',
-}
-
 export type LLMNodeConfiguration = {
-  size: LLMSize;
+  provider: LLMProvider;
+  model: string;
   temperature: number;
-};
-
-export const llmModels = {
-  large: {
-    openai: {
-      gpt4o: 'gpt-4o',
-    },
-    anthropic: {
-      claude35sonnet: 'claude-3-5-sonnet-latest',
-    },
-    deepseek: {
-      deepseekChat: 'deepseek-chat',
-      deepseekReasoner: 'deepseek-reasoner',
-    },
-    //placeholder
-    ollama: {
-      llama3: 'llama3.1',
-    },
-  },
-  small: {
-    openai: {
-      gpt_4o_mini: 'gpt-4o-mini',
-      o3_mini: 'o3-mini',
-    },
-    anthropic: {
-      claude35haiku: 'claude-3-5-haiku-latest',
-    },
-    //placeholder
-    ollama: {
-      llama3: 'llama3.1',
-    },
-  },
 };

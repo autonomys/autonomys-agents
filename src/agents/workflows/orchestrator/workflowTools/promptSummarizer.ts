@@ -1,14 +1,11 @@
 import { LLMFactory } from '../../../../services/llm/factory.js';
 import { createLogger } from '../../../../utils/logger.js';
-import { LLMSize } from '../../../../services/llm/types.js';
+import { config } from '../../../../config/index.js';
 
 const logger = createLogger('prompt-summarizer');
 
 export const summarizePrompt = async (prompt: string): Promise<string> => {
-  const llm = LLMFactory.createModel({
-    size: LLMSize.SMALL,
-    temperature: 0.2,
-  });
+  const llm = LLMFactory.createModel(config.llmConfig.nodes.prompt_summarizer);
 
   try {
     const result = await llm.invoke(
