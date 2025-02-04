@@ -17,7 +17,7 @@ export const createWorkflowSummaryNode = ({ orchestratorModel }: OrchestratorCon
       .join('\n');
     logger.info('Summarizing messages:', { messages });
     const result = await orchestratorModel.invoke(
-      `Summarize the following mesages in detail. This is being returned as a report to what was accomplished during the execution of the workflow. This workflow is ending at ${new Date().toISOString()}.
+      `Summarize the following mesages in detail. This is being returned as a report to what was accomplished during the execution of the workflow. This workflow is ending at ${new Date().toISOString()}. DO NOT recommend tool usage, just summarize the messages!
 
       Messages:
       ${messages}`,
