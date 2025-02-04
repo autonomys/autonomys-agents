@@ -1,235 +1,96 @@
-import { StructuredOutputParser } from 'langchain/output_parsers';
-import {
-  engagementSchema,
-  responseSchema,
-  summarySchema,
-  trendSchema,
-  trendTweetSchema,
-} from './schemas.js';
 import { ChatPromptTemplate, PromptTemplate } from '@langchain/core/prompts';
 import { SystemMessage } from '@langchain/core/messages';
 import { config } from '../../../config/index.js';
-import { wallet } from '../../tools/utils/blockchain/agentWallet.js';
+import { z } from 'zod';
 
-const followFormatInstructions = `
-  IMPORTANT:
-  - Return ONLY the raw JSON data
-  - DO NOT include any markdown formatting, code blocks, or backticks
-  - DO NOT wrap response in code block markers
-  - Do not include any additional text or explanations
-  - The response should NOT start with \`\`\`json and end with \`\`\`
-  - The response should start and end with curly braces
-`;
-
-export const engagementParser = StructuredOutputParser.fromZodSchema(engagementSchema);
-export const responseParser = StructuredOutputParser.fromZodSchema(responseSchema);
-export const trendParser = StructuredOutputParser.fromZodSchema(trendSchema);
-export const trendTweetParser = StructuredOutputParser.fromZodSchema(trendTweetSchema);
-export const summaryParser = StructuredOutputParser.fromZodSchema(summarySchema);
+// Define schema for workflow control
+export type WorkflowControl = z.infer<typeof workflowControlParser>;
 
 export const createPrompts = async () => {
   const character = config.characterConfig;
-  const { communicationRules, twitterProfile } = character;
 
-  const engagementSystemPrompt = await PromptTemplate.fromTemplate(
-    `Your task is to evaluate tweets and decide whether they warrant a response.
+  const inputSystemPrompt = await PromptTemplate.fromTemplate(
+    `You are a twitter agent, an expert social media manager.
+    Your personality is: 
+    {characterDescription}
+    {characterPersonality}
 
-    Personality & Style:
-    ${character.description}
-    ${character.personality}
-    ${twitterProfile.replyStyle}
+    When posting or replying to a tweet leave out the hashtages and try to keep them short (less than 230 characters).
+    Do not be repetitive, use different phrases and words with each post.
+    
+    - After you completed the task(s) to your liking AND saved the experience to permanent storage, STOP THE WORKFLOW following the given JSON format.
 
-    Criteria for engagement:
-    ${twitterProfile.engagementCriteria}
+    - If you don't know what do to, STOP THE WORKFLOW and give a reason.
+    - There is NO HUMAN IN THE LOOP. So, if you find the need for a human intervention, STOP THE WORKFLOW and give a reason.
+    - If you face any difficulties, DON'T retry more than once.
 
-    If the tweet is irrelevant or not engaging, or if you lack context, respond with shouldEngage: false.
-    If the tweet references you (@${twitterProfile.username}):
-      - You may respond even if relevance is low if there's entertainment value.
-      - judge whether the author is wanting to continue engagement, if not you should not engage.
-      - if there is a thread, review it to determine whether there is value in continuing the conversation.
+    **REMEMBER: Every once in a while you get summarized version of your previous messages. IT'S UPDATED CONTENT, YOU CAN EASE YOUR MIND THAT YOU HAVE THE LATEST DATA.
 
-    If the tweet has a link, ignore the link. We only care about the tweet text.
-    If there's insufficient content for a proper assessment, return shouldEngage: false.
+    **Memory Management Rules**
 
-    ${followFormatInstructions}
-
-    {format_instructions}`,
+     **Memory Management Rules**
+    **Permanent Storage (Autonomy Network's DSN)**:  
+      - Use this for **immutable, permanent** experiences that you would like to survive forever (e.g., fine-tuning/RAG workflows).  
+      - **SAVE TO PERMANENT STORAGE WHEN**:  
+        - After you complete a significant action (e.g., posting a tweet, skipping interacting with a tweet with an interesting reason, following a user, etc.). 
+        - Save detailed information about the action (e.g., tweet text, tweet id, user details).
+        - You learn a critical lesson or make a strategic decision (include reasoning and metadata like IDs/timestamps).  
+      - **FORMAT**:  
+        - Include timestamps, IDs, reasoning, and full context (e.g., tweet text, decision logic).  
+      GOOD: Saving your experiences to permanent storage with significant detail that will help recreate your experiences!
+      BAD: Not saving your experiences to permanent storage. This will limit your ability to recreate your experiences and learn from them. 
+    `,
   ).format({
-    format_instructions: engagementParser.getFormatInstructions(),
+    characterDescription: character.description,
+    characterPersonality: character.personality,
   });
 
-  const engagementPrompt = ChatPromptTemplate.fromMessages([
-    new SystemMessage(engagementSystemPrompt),
+  const inputPrompt = ChatPromptTemplate.fromMessages([
+    new SystemMessage(inputSystemPrompt),
     [
       'human',
-      `Evaluate this tweet and provide your structured decision:
-          Tweet: {tweet}
-          Thread context (most recent tweets first): 
-          {thread}
+      `Based on the following messages, determine what should be done next or just answer to the best of your ability.
+      Format your response as a JSON object with shouldStop (boolean) and reason (string).
 
-          If there is no thread context, evaluate the tweet on its own.
-          If there is a thread, review the thread to determine whether there is value in continuing the conversation. 
-          If the thread is repetitive or getting excessively long, reject further engagement. 
-          As the thread gets longer, the value of the conversation decreases exponentially.`,
-    ],
-  ]);
-
-  const trendSystemPrompt = await PromptTemplate.fromTemplate(
-    `You are an expert in:
-    ${character.expertise}
-    
-    Your task is to analyze tweets and identify emerging trends and discussions.
-    
-    Focus areas:
-    ${twitterProfile.trendFocus}
-
-    ${followFormatInstructions}
-
-    {format_instructions}`,
-  ).format({
-    format_instructions: trendParser.getFormatInstructions(),
-  });
-
-  const trendPrompt = ChatPromptTemplate.fromMessages([
-    new SystemMessage(trendSystemPrompt),
-    [
-      'human',
-      `Tweets: {tweets}
-      Analyze these tweets for the top trending narrative.
-      Give a 2-3 paragraph, detailed summary to be used as the source of inspiration for a future tweet.
-      `,
-    ],
-  ]);
-
-  const tweetSystemPrompt = await PromptTemplate.fromTemplate(
-    `You are an expert in:
-    ${character.expertise}
-    
-    Your task is to craft tweets in response to trending topics.
-    
-    Focus areas:
-    ${twitterProfile.trendFocus}
-
-    Personality & Style:
-    ${character.description}
-    ${character.personality}
-    ${communicationRules.rules}
-    ${twitterProfile.contentFocus}
-
-    Do not use these words:
-    ${communicationRules.wordsToAvoid}
-
-    ${followFormatInstructions}
-
-    {format_instructions}`,
-  ).format({
-    format_instructions: trendTweetParser.getFormatInstructions(),
-  });
-
-  const tweetPrompt = ChatPromptTemplate.fromMessages([
-    new SystemMessage(tweetSystemPrompt),
-    [
-      'human',
-      `Trend analysis: {trendAnalysis}
-      Craft an entertaining and engaging tweet in response to this trend. 
-      The tweet should be well thought out and thought provoking.
-      Use your personality and style to make the tweet more engaging.
-
-      IMPORTANT:
-      Recent tweets: {recentTweets}
-      - Avoid sounding repetitive and touching on the same topics.
-      - DO NOT use similar opening phrases as your recent tweets.
-      - Stay in character but mix up your language and style.
-      `,
-    ],
-  ]);
-
-  const responseSystemPrompt = await PromptTemplate.fromTemplate(
-    `You are an expert in:
-    ${character.expertise}
-    
-    Your task is to respond to tweets and engage with the author. 
-
-    General Info:
-    ${character.name}
-    ${twitterProfile.username}
-    ${wallet.address}
-
-    Personality & Style:
-    ${character.description}
-    ${character.personality}
-    ${communicationRules.rules}
-    ${twitterProfile.replyStyle}
-    ${twitterProfile.contentFocus}
-
-    Do not use these words:
-    ${communicationRules.wordsToAvoid}
-
-    ${followFormatInstructions}
-    {format_instructions}`,
-  ).format({
-    format_instructions: responseParser.getFormatInstructions(),
-  });
-
-  const responsePrompt = ChatPromptTemplate.fromMessages([
-    new SystemMessage(responseSystemPrompt),
-    [
-      'human',
-      `A decision has been made to engage with this tweet. Respond and engage with the author. 
-      Decision: {decision}
-      Thread context (most recent tweets first): 
-      {thread}
-  
-      If there a thread, respond accurately. Review the thread with a focus on the most recent tweets and respond accordingly
-    
-      CRITICAL PATTERN ANALYSIS - YOU MUST AVOID THESE PATTERNS:
-      1. DO NOT use these detected patterns in your response:
-      {patterns}
-  
-      2. BANNED PHRASES - DO NOT USE:
-      {commonWords}    
+      Messages: {messages}
       `,
     ],
   ]);
 
   const summarySystemPrompt = await PromptTemplate.fromTemplate(
-    `You are an analytics expert focusing on identifying specific patterns in tech commentary.
+    `
+    You are a helpful assistant that make the AI-to-AI conversations efficient.
+    Instructions On OUTPUT:
+    - PRESERVE DETAILS!
+    - DOES NOT have to be concise.
+    - SHOULD be functional.
+    - SHOULD be detailed and contain all information conveyed in the messages (e.g. decisions, username, tweet text, tweet ids, inReplyToTweetId, tool calls, tool results, etc.)
+
+    THE RESULT SHOULD BE EQUAL TO ORIGINAL IN TERMS OF FUNCTIONALITY
     
-    Your task is to analyze tweets and describe their pattern at a conceptual level.
-    Do NOT list specific examples. Instead, explain:
-  
-    1. The abstract structural pattern of responses:
-      - How sentences are constructed
-      - What format they follow
-      - How ideas are connected
-  
-    2. The linguistic devices used:
-      - Common opening phrases
-      - Transition words
-      - How references are incorporated
-  
-    ${followFormatInstructions}
-  
-    {format_instructions}`,
-  ).format({
-    format_instructions: summaryParser.getFormatInstructions(),
-  });
+    Format the summary in a clear, bulleted structure.`,
+  ).format({});
 
   const summaryPrompt = ChatPromptTemplate.fromMessages([
     new SystemMessage(summarySystemPrompt),
     [
-      'human',
-      `Review these tweets texts and provide a detailed analysis:
-      Tweets: {tweets}
+      'ai',
+      `Previous summary: {prevSummary}
       
-      This analysis will be used to improve response variety`,
+      New AI messages to incorporate:
+      {newMessages}
+      
+      Create an updated DETAILED summary respected to INSTRUCTIONS ON OUTPUT.`,
     ],
   ]);
+
   return {
-    engagementPrompt,
-    trendPrompt,
-    tweetPrompt,
-    responsePrompt,
+    inputPrompt,
     summaryPrompt,
   };
 };
+
+export const workflowControlParser = z.object({
+  shouldStop: z.boolean(),
+  reason: z.string(),
+});

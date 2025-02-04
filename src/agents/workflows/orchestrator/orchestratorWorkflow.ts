@@ -47,18 +47,35 @@ const handleConditionalEdge = async (
   if (!lastMessage?.content) return 'tools';
 
   try {
+    // TODO: Revisit this process, this is quite hacky
     // Handle both string and object content
     const contentStr =
       typeof lastMessage.content === 'string'
         ? lastMessage.content
-        : (lastMessage.content as any).kwargs?.content || JSON.stringify(lastMessage.content);
+        : // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (lastMessage.content as any).kwargs?.content || JSON.stringify(lastMessage.content);
 
-    const match = contentStr.match(/\{[\s\S]*"shouldStop"[\s\S]*\}/);
-    if (match) {
-      const control = workflowControlParser.parse(JSON.parse(match[0]));
-      if (control.shouldStop) {
-        logger.info('Workflow stop requested', { reason: control.reason });
-        return END;
+    // Try to parse the entire content as JSON first
+    try {
+      const parsedContent = JSON.parse(contentStr);
+      if ('shouldStop' in parsedContent) {
+        const control = workflowControlParser.parse(parsedContent);
+        logger.info('Parsed control', { control });
+        if (control.shouldStop) {
+          logger.info('Workflow stop requested', { reason: control.reason });
+          return 'workflowSummary';
+        }
+      }
+    } catch {
+      // If direct parsing fails, try to find JSON object in the string
+      const match = contentStr.match(/(\{[\s\S]*?"shouldStop":[\s\S]*?\})/);
+      if (match) {
+        const control = workflowControlParser.parse(JSON.parse(match[0]));
+        logger.info('Parsed control', { control });
+        if (control.shouldStop) {
+          logger.info('Workflow stop requested', { reason: control.reason });
+          return 'workflowSummary';
+        }
       }
     }
     return 'tools';
@@ -71,18 +88,20 @@ const handleConditionalEdge = async (
 const createOrchestratorWorkflow = async (nodes: Awaited<ReturnType<typeof createNodes>>) => {
   const workflow = new StateGraph(OrchestratorState)
     .addNode('input', nodes.inputNode)
-    .addNode('summarize', nodes.summaryNode)
+    .addNode('messageSummary', nodes.messageSummaryNode)
+    .addNode('workflowSummary', nodes.workflowSummaryNode)
     .addNode('tools', nodes.toolNode)
     .addEdge(START, 'input')
     .addConditionalEdges('input', handleConditionalEdge)
-    .addEdge('tools', 'summarize')
-    .addEdge('summarize', 'input');
+    .addEdge('tools', 'messageSummary')
+    .addEdge('messageSummary', 'input')
+    .addEdge('workflowSummary', END);
 
   return workflow;
 };
 
 export type OrchestratorRunner = Readonly<{
-  runWorkflow: (input?: OrchestratorInput) => Promise<unknown>;
+  runWorkflow: (input?: OrchestratorInput, options?: { threadId?: string }) => Promise<unknown>;
 }>;
 
 export const createOrchestratorRunner = async (
@@ -96,8 +115,8 @@ export const createOrchestratorRunner = async (
   const app = workflow.compile({ checkpointer: memoryStore });
 
   return {
-    runWorkflow: async (input?: OrchestratorInput) => {
-      const threadId = 'orchestrator_workflow_state';
+    runWorkflow: async (input?: OrchestratorInput, options?: { threadId?: string }) => {
+      const threadId = options?.threadId || 'orchestrator_workflow_state';
       logger.info('Starting orchestrator workflow', { threadId });
 
       const config = {
