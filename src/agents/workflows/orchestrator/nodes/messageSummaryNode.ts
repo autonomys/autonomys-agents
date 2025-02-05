@@ -2,9 +2,10 @@ import { AIMessage } from '@langchain/core/messages';
 import { createLogger } from '../../../../utils/logger.js';
 import { OrchestratorConfig, OrchestratorState } from '../types.js';
 import { config } from '../../../../config/index.js';
+import { VectorDB } from '../../../../services/vectorDb/VectorDB.js';
 const logger = createLogger('message-summary-node');
 
-export const createMessageSummaryNode = ({ orchestratorModel, prompts }: OrchestratorConfig) => {
+export const createMessageSummaryNode = ({ orchestratorModel, prompts }: OrchestratorConfig, vectorStore: VectorDB) => {
   const runNode = async (state: typeof OrchestratorState.State) => {
     logger.info('MessageSummary Node');
     logger.info('State size:', { size: state.messages.length });
@@ -36,6 +37,8 @@ export const createMessageSummaryNode = ({ orchestratorModel, prompts }: Orchest
         typeof newSummary.content === 'string'
           ? newSummary.content
           : JSON.stringify(newSummary.content, null, 2);
+
+      await vectorStore.insert(summaryContent);
 
       return {
         messages: [

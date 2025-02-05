@@ -1,9 +1,10 @@
 import { AIMessage } from '@langchain/core/messages';
 import { createLogger } from '../../../../utils/logger.js';
 import { OrchestratorConfig, OrchestratorState } from '../types.js';
+import { VectorDB } from '../../../../services/vectorDb/VectorDB.js';
 const logger = createLogger('workflow-summary-node');
 
-export const createWorkflowSummaryNode = ({ orchestratorModel }: OrchestratorConfig) => {
+export const createWorkflowSummaryNode = ({ orchestratorModel }: OrchestratorConfig, vectorStore: VectorDB) => {
   const runNode = async (state: typeof OrchestratorState.State) => {
     logger.info('Workflow Summary Node');
 
@@ -26,7 +27,7 @@ export const createWorkflowSummaryNode = ({ orchestratorModel }: OrchestratorCon
       typeof result.content === 'string' ? result.content : JSON.stringify(result.content, null, 2);
 
     logger.info('Workflow summary:', { summary });
-
+    await vectorStore.insert(summary);
     return {
       messages: [new AIMessage({ content: `Workflow summary: ${summary}` })],
     };
