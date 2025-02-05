@@ -8,7 +8,6 @@ import {
 } from '@langchain/langgraph';
 import { createLogger } from '../../../utils/logger.js';
 import { LLMFactory } from '../../../services/llm/factory.js';
-import { config } from '../../../config/index.js';
 import { ToolNode } from '@langchain/langgraph/prebuilt';
 import { createNodes } from './nodes.js';
 import {
@@ -23,14 +22,16 @@ import { StructuredToolInterface } from '@langchain/core/tools';
 import { RunnableToolLike } from '@langchain/core/runnables';
 import { VectorDB } from '../../../services/vectorDb/VectorDB.js';
 import { join } from 'path';
+import { LLMNodeConfiguration } from '../../../services/llm/types.js';
 const logger = createLogger('orchestrator-workflow');
 
 const createWorkflowConfig = async (
   tools: (StructuredToolInterface | RunnableToolLike)[],
   prompts: OrchestratorPrompts,
+  model: LLMNodeConfiguration,
 ): Promise<OrchestratorConfig> => {
   const toolNode = new ToolNode(tools);
-  const orchestratorModel = LLMFactory.createModel(config.llmConfig.nodes.orchestrator).bind({
+  const orchestratorModel = LLMFactory.createModel(model).bind({
     tools,
   });
   return { orchestratorModel, toolNode, prompts };
@@ -108,9 +109,10 @@ export type OrchestratorRunner = Readonly<{
 export const createOrchestratorRunner = async (
   tools: (StructuredToolInterface | RunnableToolLike)[],
   prompts: OrchestratorPrompts,
+  model: LLMNodeConfiguration,
   namespace: string,
 ): Promise<OrchestratorRunner> => {
-  const workflowConfig = await createWorkflowConfig(tools, prompts);
+  const workflowConfig = await createWorkflowConfig(tools, prompts, model);
 
   const vectorStore = new VectorDB(
     join('data', namespace),
@@ -156,14 +158,16 @@ export const getOrchestratorRunner = (() => {
   return ({
     prompts,
     tools,
+    model,
     namespace,
   }: {
     prompts: OrchestratorPrompts;
     tools: (StructuredToolInterface | RunnableToolLike)[];
+    model: LLMNodeConfiguration;
     namespace: string;
   }) => {
     if (!runnerPromise) {
-      runnerPromise = createOrchestratorRunner(tools, prompts, namespace);
+      runnerPromise = createOrchestratorRunner(tools, prompts, model, namespace);
     }
     return runnerPromise;
   };
