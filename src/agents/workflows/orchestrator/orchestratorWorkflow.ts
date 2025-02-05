@@ -18,7 +18,7 @@ import {
   OrchestratorState,
 } from './types.js';
 import { BaseMessage } from '@langchain/core/messages';
-import { workflowControlParser } from './prompts.js';
+import { workflowControlParser } from './nodes/inputPrompt.js';
 import { StructuredToolInterface } from '@langchain/core/tools';
 import { RunnableToolLike } from '@langchain/core/runnables';
 

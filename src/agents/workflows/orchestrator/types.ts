@@ -9,7 +9,8 @@ import { config } from '../../../config/index.js';
 
 export type OrchestratorPrompts = {
   inputPrompt: ChatPromptTemplate;
-  summaryPrompt: ChatPromptTemplate;
+  messageSummaryPrompt: ChatPromptTemplate;
+  workflowSummaryPrompt: ChatPromptTemplate;
 };
 
 export type OrchestratorConfig = {
