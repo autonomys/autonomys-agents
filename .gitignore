@@ -1,6 +1,7 @@
 characters/*
 !characters/character.example/
 .cookies/
+.google/
 memories/
 !src/config/
 dsn-twitter-schemas.json
