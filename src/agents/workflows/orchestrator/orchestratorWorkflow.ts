@@ -1,11 +1,4 @@
-import {
-  BinaryOperatorAggregate,
-  END,
-  MemorySaver,
-  START,
-  StateGraph,
-  StateType,
-} from '@langchain/langgraph';
+import { END, MemorySaver, START, StateGraph } from '@langchain/langgraph';
 import { createLogger } from '../../../utils/logger.js';
 import { LLMFactory } from '../../../services/llm/factory.js';
 import { ToolNode } from '@langchain/langgraph/prebuilt';
@@ -16,8 +9,6 @@ import {
   OrchestratorPrompts,
   OrchestratorState,
 } from './types.js';
-import { BaseMessage } from '@langchain/core/messages';
-import { workflowControlParser } from './nodes/inputPrompt.js';
 import { StructuredToolInterface } from '@langchain/core/tools';
 import { RunnableToolLike } from '@langchain/core/runnables';
 import { VectorDB } from '../../../services/vectorDb/VectorDB.js';
@@ -37,54 +28,15 @@ const createWorkflowConfig = async (
   return { orchestratorModel, toolNode, prompts };
 };
 
-const handleConditionalEdge = async (
-  state: StateType<{
-    messages: BinaryOperatorAggregate<readonly BaseMessage[], readonly BaseMessage[]>;
-    error: BinaryOperatorAggregate<Error | null, Error | null>;
-  }>,
-) => {
+const handleConditionalEdge = async (state: typeof OrchestratorState.State) => {
   logger.debug('State in conditional edge', { state });
 
-  const lastMessage = state.messages[state.messages.length - 1];
-  if (!lastMessage?.content) return 'tools';
-
-  try {
-    // TODO: Revisit this process, this is quite hacky
-    // Handle both string and object content
-    const contentStr =
-      typeof lastMessage.content === 'string'
-        ? lastMessage.content
-        : // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          (lastMessage.content as any).kwargs?.content || JSON.stringify(lastMessage.content);
-
-    // Try to parse the entire content as JSON first
-    try {
-      const parsedContent = JSON.parse(contentStr);
-      if ('shouldStop' in parsedContent) {
-        const control = workflowControlParser.parse(parsedContent);
-        logger.info('Parsed control', { control });
-        if (control.shouldStop) {
-          logger.info('Workflow stop requested', { reason: control.reason });
-          return 'workflowSummary';
-        }
-      }
-    } catch {
-      // If direct parsing fails, try to find JSON object in the string
-      const match = contentStr.match(/(\{[\s\S]*?"shouldStop":[\s\S]*?\})/);
-      if (match) {
-        const control = workflowControlParser.parse(JSON.parse(match[0]));
-        logger.info('Parsed control', { control });
-        if (control.shouldStop) {
-          logger.info('Workflow stop requested', { reason: control.reason });
-          return 'workflowSummary';
-        }
-      }
-    }
-    return 'tools';
-  } catch (error) {
-    logger.warn('Failed to parse workflow control', { error, content: lastMessage.content });
-    return END;
+  if (state.workflowControl && state.workflowControl.shouldStop) {
+    logger.info('Workflow stop requested', { reason: state.workflowControl.reason });
+    return 'workflowSummary';
   }
+
+  return 'tools';
 };
 
 const createOrchestratorWorkflow = async (nodes: Awaited<ReturnType<typeof createNodes>>) => {
