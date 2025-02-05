@@ -1,8 +1,5 @@
 import { BaseMessage } from '@langchain/core/messages';
 import { Annotation } from '@langchain/langgraph/web';
-import { Runnable } from '@langchain/core/runnables';
-import { BaseLanguageModelInput } from '@langchain/core/language_models/base';
-import { AIMessageChunk } from '@langchain/core/messages';
 import { ToolNode } from '@langchain/langgraph/prebuilt';
 import { ChatPromptTemplate } from '@langchain/core/prompts';
 import { config } from '../../../config/index.js';
@@ -12,7 +9,7 @@ import { LLMModelType } from '../../../services/llm/factory.js';
 export type OrchestratorPrompts = {
   inputPrompt: ChatPromptTemplate;
   messageSummaryPrompt: ChatPromptTemplate;
-  workflowSummaryPrompt: ChatPromptTemplate;
+  finishWorkflowPrompt: ChatPromptTemplate;
 };
 
 export type OrchestratorConfig = {

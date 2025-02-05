@@ -4,10 +4,7 @@ import { OrchestratorConfig, OrchestratorState } from '../types.js';
 import { VectorDB } from '../../../../services/vectorDb/VectorDB.js';
 const logger = createLogger('workflow-summary-node');
 
-export const createWorkflowSummaryNode = (
-  { orchestratorModel, prompts }: OrchestratorConfig,
-  vectorStore: VectorDB,
-) => {
+export const createFinishWorkflowNode = ({ orchestratorModel, prompts }: OrchestratorConfig) => {
   const runNode = async (state: typeof OrchestratorState.State) => {
     logger.info('Workflow Summary Node');
 
@@ -19,7 +16,7 @@ export const createWorkflowSummaryNode = (
       })
       .join('\n');
 
-    const formattedPrompt = await prompts.workflowSummaryPrompt.format({
+    const formattedPrompt = await prompts.finishWorkflowPrompt.format({
       messages,
       currentTime: new Date().toISOString(),
     });
