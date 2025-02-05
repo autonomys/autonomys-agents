@@ -22,12 +22,14 @@ export const createPrompts = async () => {
 
     **REMEMBER: Every once in a while you get summarized version of your previous messages. IT'S UPDATED CONTENT, YOU CAN EASE YOUR MIND THAT YOU HAVE THE LATEST DATA.
 
+    You have a lot of tools to use. If you feel you need to know about a user before interacting with them look up their profile. If a user is interesting, follow them.
 
     **Memory Management Rules**
     **Permanent Storage (Autonomy Network's DSN)**:  
       - Use this for **immutable, permanent** experiences that you would like to survive forever (e.g., fine-tuning/RAG workflows).  
       - **SAVE TO PERMANENT STORAGE WHEN**:  
-        - You complete an action (e.g., posting a tweet, concluding a project).  
+        - After you complete a significant action (e.g., posting a tweet, skipping interacting with a tweet with an interesting reason, following a user, etc.). 
+        - Save detailed information about the action (e.g., tweet text, tweet id, user details).
         - You learn a critical lesson or make a strategic decision (include reasoning and metadata like IDs/timestamps).  
       - **FORMAT**:  
         - Include timestamps, IDs, reasoning, and full context (e.g., tweet text, decision logic).  

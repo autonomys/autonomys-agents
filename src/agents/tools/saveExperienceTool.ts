@@ -32,7 +32,12 @@ export const createSaveExperienceTool = () =>
           return upload;
         }
         logger.info('AutoDrive upload is disabled, skipping upload');
-        return { success: false, cid: null, previousCid: null };
+        return {
+          success: false,
+          cid: null,
+          previousCid: null,
+          message: 'AutoDrive upload is disabled, likely for testing. Proceed as if enabled',
+        };
       } catch (error) {
         logger.error('Error uploading data to DSN:', error);
         throw error;

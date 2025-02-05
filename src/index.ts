@@ -1,10 +1,7 @@
 import { config } from './config/index.js';
 import { createLogger } from './utils/logger.js';
-import { getOrchestratorRunner } from './agents/workflows/orchestrator/orchestratorWorkflow.js';
 import { validateLocalHash } from './agents/tools/utils/localHashStorage.js';
-import { createTools } from './agents/workflows/orchestrator/tools.js';
-import { createPrompts } from './agents/workflows/orchestrator/prompts.js';
-import { createTwitterApi } from './services/twitter/client.js';
+import { orchestratorRunner } from './agent.js';
 import { HumanMessage } from '@langchain/core/messages';
 export const logger = createLogger('app');
 
@@ -18,24 +15,21 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
-export const orchestatorConfig = async () => {
-  const { USERNAME, PASSWORD, COOKIES_PATH } = config.twitterConfig;
-  const twitterApi = await createTwitterApi(USERNAME, PASSWORD, COOKIES_PATH);
-  const { tools } = createTools(twitterApi);
-
-  const prompts = await createPrompts();
-  return { prompts, tools };
-};
-const orchestratorConfig = await orchestatorConfig();
-const orchestratorRunner = await getOrchestratorRunner(orchestratorConfig);
-
+const runner = await orchestratorRunner();
 const startWorkflowPolling = async () => {
   try {
     const initalMessage = new HumanMessage(`
-      You are expected to run the twitter workflow periodically in order to maintain social engagement.
+      As a social media manager, you are expected to interact with twitter periodically in order to maintain social engagement. Use your judgement how frequently you should run these interactions and what you should do. For efficiency, just have one or two tasks per request. You don't need do the same things every time. Save any interesting experiences from your interactions your permanent storage.
+
+      EXAMPLES:
+      - Check your timiline for interesting conversations and join the conversation.
+      - Like interesting tweets.
+      - Follow interesting users.
+      - Check your mentions and reply to useful conversations that you haven't replied to yet.
+      - Post a new tweet.
     `);
 
-    const result = await orchestratorRunner.runWorkflow({ messages: [initalMessage] });
+    const _result = await runner.runWorkflow({ messages: [initalMessage] });
 
     logger.info('Workflow execution completed successfully for character:', {
       charcterName: config.characterConfig.name,

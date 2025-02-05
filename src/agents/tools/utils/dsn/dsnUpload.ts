@@ -1,6 +1,6 @@
 import { createLogger } from '../../../../utils/logger.js';
 import { hexlify } from 'ethers';
-import { createAutoDriveApi, uploadFile, UploadFileOptions } from '@autonomys/auto-drive';
+import { uploadFile, UploadFileOptions } from '@autonomys/auto-drive';
 import { blake3HashFromCid, stringToCid } from '@autonomys/auto-dag-data';
 import { agentVersion, config } from '../../../../config/index.js';
 import { signMessage, wallet } from '../blockchain/agentWallet.js';

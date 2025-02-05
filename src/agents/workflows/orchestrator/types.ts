@@ -25,15 +25,18 @@ export type OrchestratorInput = {
 export const OrchestratorState = Annotation.Root({
   messages: Annotation<readonly BaseMessage[]>({
     reducer: (curr, update) => {
-      if (Array.isArray(update) && update.length > 0 && update[0]?.content) {
-        if (
-          typeof update[0].content === 'string' &&
-          update[0].content.startsWith('Summary of conversation earlier:')
-        ) {
-          return [curr[0], update[0], ...curr.slice(config.orchestratorConfig.MAX_WINDOW_SUMMARY)];
-        }
+      if (
+        //TODO: Revisit this process, this is quite messy. Maybe we should add state for summary messages?
+        Array.isArray(update) &&
+        update.length > 0 &&
+        update[0]?.content &&
+        typeof update[0].content === 'string' &&
+        update[0].content.startsWith('Summary of conversation earlier:')
+      ) {
+        return [curr[0], update[0], ...curr.slice(config.orchestratorConfig.MAX_WINDOW_SUMMARY)];
+      } else {
+        return [...curr, ...update];
       }
-      return [...curr, ...update];
     },
     default: () => [],
   }),

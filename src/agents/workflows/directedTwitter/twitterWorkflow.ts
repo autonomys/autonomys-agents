@@ -176,10 +176,10 @@ const createWorkflowRunner = async (): Promise<WorkflowRunner> => {
       };
 
       const stream = await app.stream({}, config);
-      let finalState = {};
+      let _finalState = {};
 
       for await (const state of stream) {
-        finalState = state;
+        _finalState = state;
       }
 
       logger.info('Workflow completed', { threadId });

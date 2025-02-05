@@ -2,11 +2,11 @@ import { AIMessage } from '@langchain/core/messages';
 import { createLogger } from '../../../../utils/logger.js';
 import { OrchestratorConfig, OrchestratorState } from '../types.js';
 import { config } from '../../../../config/index.js';
-const logger = createLogger('summary-node');
+const logger = createLogger('message-summary-node');
 
-export const createSummaryNode = ({ orchestratorModel, prompts }: OrchestratorConfig) => {
+export const createMessageSummaryNode = ({ orchestratorModel, prompts }: OrchestratorConfig) => {
   const runNode = async (state: typeof OrchestratorState.State) => {
-    logger.info('Summary Node');
+    logger.info('MessageSummary Node');
     logger.info('State size:', { size: state.messages.length });
 
     if (state.messages.length > config.orchestratorConfig.MAX_QUEUE_SIZE) {
@@ -29,7 +29,6 @@ export const createSummaryNode = ({ orchestratorModel, prompts }: OrchestratorCo
         newMessages,
       });
 
-      logger.info('Formatted prompt:', { formattedPrompt });
       const newSummary = await orchestratorModel.invoke(formattedPrompt);
       logger.info('New Summary Result:', { newSummary });
 
@@ -46,7 +45,7 @@ export const createSummaryNode = ({ orchestratorModel, prompts }: OrchestratorCo
     }
 
     logger.info('Not summarizing, not enough messages');
-    return { messages: state.messages };
+    return { messages: [] };
   };
   return runNode;
 };
