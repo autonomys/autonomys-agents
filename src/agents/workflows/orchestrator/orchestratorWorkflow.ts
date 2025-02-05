@@ -8,7 +8,7 @@ import {
 } from '@langchain/langgraph';
 import { createLogger } from '../../../utils/logger.js';
 import { LLMFactory } from '../../../services/llm/factory.js';
-import { config, characterName } from '../../../config/index.js';
+import { config } from '../../../config/index.js';
 import { ToolNode } from '@langchain/langgraph/prebuilt';
 import { createNodes } from './nodes.js';
 import {
@@ -119,12 +119,11 @@ export const createOrchestratorRunner = async (
     100000,
   );
 
-
   const nodes = await createNodes(workflowConfig, vectorStore);
   const workflow = await createOrchestratorWorkflow(nodes);
   const memoryStore = new MemorySaver();
   const app = workflow.compile({ checkpointer: memoryStore });
-  
+
   return {
     runWorkflow: async (input?: OrchestratorInput, options?: { threadId?: string }) => {
       const threadId = options?.threadId || 'orchestrator_workflow_state';

@@ -4,7 +4,10 @@ import { OrchestratorConfig, OrchestratorState } from '../types.js';
 import { VectorDB } from '../../../../services/vectorDb/VectorDB.js';
 const logger = createLogger('workflow-summary-node');
 
-export const createWorkflowSummaryNode = ({ orchestratorModel }: OrchestratorConfig, vectorStore: VectorDB) => {
+export const createWorkflowSummaryNode = (
+  { orchestratorModel }: OrchestratorConfig,
+  vectorStore: VectorDB,
+) => {
   const runNode = async (state: typeof OrchestratorState.State) => {
     logger.info('Workflow Summary Node');
 

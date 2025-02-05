@@ -5,7 +5,10 @@ import { config } from '../../../../config/index.js';
 import { VectorDB } from '../../../../services/vectorDb/VectorDB.js';
 const logger = createLogger('message-summary-node');
 
-export const createMessageSummaryNode = ({ orchestratorModel, prompts }: OrchestratorConfig, vectorStore: VectorDB) => {
+export const createMessageSummaryNode = (
+  { orchestratorModel, prompts }: OrchestratorConfig,
+  vectorStore: VectorDB,
+) => {
   const runNode = async (state: typeof OrchestratorState.State) => {
     logger.info('MessageSummary Node');
     logger.info('State size:', { size: state.messages.length });

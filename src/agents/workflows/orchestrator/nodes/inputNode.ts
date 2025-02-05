@@ -3,7 +3,10 @@ import { OrchestratorConfig, OrchestratorState } from '../types.js';
 import { VectorDB } from '../../../../services/vectorDb/VectorDB.js';
 const logger = createLogger('orchestrator-input-node');
 
-export const createInputNode = ({ orchestratorModel, prompts }: OrchestratorConfig, vectorStore: VectorDB) => {
+export const createInputNode = (
+  { orchestratorModel, prompts }: OrchestratorConfig,
+  vectorStore: VectorDB,
+) => {
   const runNode = async (state: typeof OrchestratorState.State) => {
     const { messages } = state;
     logger.info('Running input node with messages:', {
@@ -15,7 +18,7 @@ export const createInputNode = ({ orchestratorModel, prompts }: OrchestratorConf
     });
     logger.debug('Formatted prompt:', { formattedPrompt });
     const result = await orchestratorModel.invoke(formattedPrompt);
-    
+
     const usage = result.additional_kwargs?.usage as
       | { input_tokens: number; output_tokens: number }
       | undefined;

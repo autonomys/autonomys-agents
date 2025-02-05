@@ -4,7 +4,6 @@ import { createWorkflowSummaryNode } from './nodes/workflowSummaryNode.js';
 import { OrchestratorConfig } from './types.js';
 import { VectorDB } from '../../../services/vectorDb/VectorDB.js';
 
-
 export const createNodes = async (config: OrchestratorConfig, vectorStore: VectorDB) => {
   const inputNode = createInputNode(config, vectorStore);
   const messageSummaryNode = createMessageSummaryNode(config, vectorStore);
