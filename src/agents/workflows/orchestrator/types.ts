@@ -6,6 +6,7 @@ import { AIMessageChunk } from '@langchain/core/messages';
 import { ToolNode } from '@langchain/langgraph/prebuilt';
 import { ChatPromptTemplate } from '@langchain/core/prompts';
 import { config } from '../../../config/index.js';
+import { WorkflowControl } from './nodes/inputPrompt.js';
 
 export type OrchestratorPrompts = {
   inputPrompt: ChatPromptTemplate;
@@ -42,6 +43,10 @@ export const OrchestratorState = Annotation.Root({
     default: () => [],
   }),
   error: Annotation<Error | null>({
+    default: () => null,
+    reducer: (_, update) => update,
+  }),
+  workflowControl: Annotation<WorkflowControl | null>({
     default: () => null,
     reducer: (_, update) => update,
   }),

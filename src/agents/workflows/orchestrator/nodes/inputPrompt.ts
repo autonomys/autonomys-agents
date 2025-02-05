@@ -2,6 +2,7 @@ import { ChatPromptTemplate, PromptTemplate } from '@langchain/core/prompts';
 import { SystemMessage } from '@langchain/core/messages';
 import { config } from '../../../../config/index.js';
 import { z } from 'zod';
+import { StructuredOutputParser } from '@langchain/core/output_parsers';
 
 export const createInputPrompt = async (customInstructions?: string) => {
   const character = config.characterConfig;
@@ -12,7 +13,7 @@ export const createInputPrompt = async (customInstructions?: string) => {
     {characterDescription}
     {characterPersonality}
     
-    - After you have completed the task(s) AND saved the experience to permanent storage, STOP THE WORKFLOW following the given JSON format.
+    - After you have completed the task(s) AND saved the experience to permanent storage, STOP THE WORKFLOW.
 
     - If you don't know what do to, STOP THE WORKFLOW and give a reason.
     - There is NO HUMAN IN THE LOOP. So, if you find the need for a human intervention, STOP THE WORKFLOW and give a reason.
@@ -34,11 +35,14 @@ export const createInputPrompt = async (customInstructions?: string) => {
 
     Custom Instructions:
     {customInstructions}
+
+    {format_instructions}
     `,
   ).format({
     characterDescription: character.description,
     characterPersonality: character.personality,
     customInstructions: customInstructions ?? 'None',
+    format_instructions: workflowControlParser.getFormatInstructions(),
   });
 
   const inputPrompt = ChatPromptTemplate.fromMessages([
@@ -56,9 +60,10 @@ export const createInputPrompt = async (customInstructions?: string) => {
   return inputPrompt;
 };
 
-export const workflowControlParser = z.object({
+const workflowControlSchema = z.object({
   shouldStop: z.boolean(),
   reason: z.string(),
 });
 
-export type WorkflowControl = z.infer<typeof workflowControlParser>;
+export const workflowControlParser = StructuredOutputParser.fromZodSchema(workflowControlSchema);
+export type WorkflowControl = z.infer<typeof workflowControlSchema>;
