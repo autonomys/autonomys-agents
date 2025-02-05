@@ -1,5 +1,6 @@
 import { z } from 'zod';
-import { LLMProvider, LLMSize } from '../services/llm/types.js';
+import { LLMProvider } from '../services/llm/types.js';
+import { NetworkId } from '@autonomys/auto-utils';
 
 const twitterConfigSchema = z.object({
   USERNAME: z.string().min(1, 'Twitter username is required'),
@@ -19,35 +20,35 @@ const twitterConfigSchema = z.object({
 
 const llmConfigSchema = z
   .object({
-    configuration: z.object({
-      large: z.object({
-        provider: z.nativeEnum(LLMProvider),
-        model: z.string(),
-      }),
-      small: z.object({
-        provider: z.nativeEnum(LLMProvider),
-        model: z.string(),
-      }),
-    }),
     nodes: z.object({
       decision: z.object({
-        size: z.nativeEnum(LLMSize),
+        provider: z.nativeEnum(LLMProvider),
+        model: z.string(),
         temperature: z.number(),
       }),
       analyze: z.object({
-        size: z.nativeEnum(LLMSize),
+        provider: z.nativeEnum(LLMProvider),
+        model: z.string(),
         temperature: z.number(),
       }),
       generation: z.object({
-        size: z.nativeEnum(LLMSize),
+        provider: z.nativeEnum(LLMProvider),
+        model: z.string(),
         temperature: z.number(),
       }),
       response: z.object({
-        size: z.nativeEnum(LLMSize),
+        provider: z.nativeEnum(LLMProvider),
+        model: z.string(),
         temperature: z.number(),
       }),
       orchestrator: z.object({
-        size: z.nativeEnum(LLMSize),
+        provider: z.nativeEnum(LLMProvider),
+        model: z.string(),
+        temperature: z.number(),
+      }),
+      prompt_summarizer: z.object({
+        provider: z.nativeEnum(LLMProvider),
+        model: z.string(),
         temperature: z.number(),
       }),
     }),
@@ -59,21 +60,12 @@ const llmConfigSchema = z
   })
   .superRefine((data, ctx) => {
     const providers = new Set([
-      data.nodes.decision.size === LLMSize.LARGE
-        ? data.configuration.large.provider
-        : data.configuration.small.provider,
-      data.nodes.analyze.size === LLMSize.LARGE
-        ? data.configuration.large.provider
-        : data.configuration.small.provider,
-      data.nodes.generation.size === LLMSize.LARGE
-        ? data.configuration.large.provider
-        : data.configuration.small.provider,
-      data.nodes.response.size === LLMSize.LARGE
-        ? data.configuration.large.provider
-        : data.configuration.small.provider,
-      data.nodes.orchestrator.size === LLMSize.LARGE
-        ? data.configuration.large.provider
-        : data.configuration.small.provider,
+      data.nodes.decision.provider,
+      data.nodes.analyze.provider,
+      data.nodes.generation.provider,
+      data.nodes.response.provider,
+      data.nodes.orchestrator.provider,
+      data.nodes.prompt_summarizer.provider,
     ]);
 
     const missingConfigs = [];
@@ -86,6 +78,12 @@ const llmConfigSchema = z
     }
     if (providers.has(LLMProvider.OLLAMA) && !data.LLAMA_API_URL) {
       missingConfigs.push('Llama API URL');
+    }
+    if (providers.has(LLMProvider.DEEPSEEK) && !data.DEEPSEEK_URL) {
+      missingConfigs.push('DeepSeek URL');
+    }
+    if (providers.has(LLMProvider.DEEPSEEK) && !data.DEEPSEEK_API_KEY) {
+      missingConfigs.push('DeepSeek API key');
     }
 
     if (missingConfigs.length > 0) {
@@ -101,6 +99,10 @@ const autoDriveConfigSchema = z.object({
   AUTO_DRIVE_API_KEY: z.string().optional(),
   AUTO_DRIVE_ENCRYPTION_PASSWORD: z.string().optional(),
   AUTO_DRIVE_UPLOAD: z.boolean(),
+  AUTO_DRIVE_NETWORK: z
+    .enum(['mainnet', 'taurus'])
+    .transform(val => NetworkId[val.toUpperCase() as 'MAINNET' | 'TAURUS'])
+    .default('taurus'),
 });
 
 const blockchainConfigSchema = z.object({
@@ -158,6 +160,11 @@ const memoryConfigSchema = z.object({
   MAX_PROCESSED_IDS: z.number().int().positive().default(5000),
 });
 
+const orchestratorConfigSchema = z.object({
+  MAX_WINDOW_SUMMARY: z.number().int().positive().default(20),
+  MAX_QUEUE_SIZE: z.number().int().positive().default(50),
+});
+
 const SERPAPI_API_KEY = z.string().optional();
 
 export const configSchema = z.object({
@@ -167,6 +174,7 @@ export const configSchema = z.object({
   blockchainConfig: blockchainConfigSchema,
   memoryConfig: memoryConfigSchema,
   characterConfig: characterConfigSchema,
+  orchestratorConfig: orchestratorConfigSchema,
   SERPAPI_API_KEY: SERPAPI_API_KEY,
   NODE_ENV: z.enum(['development', 'production', 'test']),
 });

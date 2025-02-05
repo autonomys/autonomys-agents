@@ -14,7 +14,15 @@ export const createInputNode = ({ orchestratorModel, prompts }: OrchestratorConf
     });
     logger.debug('Formatted prompt:', { formattedPrompt });
     const result = await orchestratorModel.invoke(formattedPrompt);
-    logger.info('Result:', { result });
+
+    const usage = result.additional_kwargs?.usage as
+      | { input_tokens: number; output_tokens: number }
+      | undefined;
+    logger.info('Result:', {
+      content: result.content,
+      inputTokens: usage?.input_tokens,
+      outputTokens: usage?.output_tokens,
+    });
 
     return {
       messages: [result],

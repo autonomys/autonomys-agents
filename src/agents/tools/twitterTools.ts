@@ -171,7 +171,18 @@ export const createLikeTweetTool = (twitterApi: TwitterApi) =>
       'Like a tweet that you find interesting and is aligned with your conviction, regardless if you respond to it or not',
     schema: z.object({ tweetId: z.string() }),
     func: async ({ tweetId }: { tweetId: string }) => {
-      await twitterApi.likeTweet(tweetId);
+      try {
+        await twitterApi.likeTweet(tweetId);
+        return {
+          liked: true,
+        };
+      } catch (error) {
+        logger.error('Error liking tweet:', error);
+        return {
+          liked: false,
+          error: error instanceof Error ? error.message : 'Unknown error',
+        };
+      }
     },
   });
 
@@ -219,7 +230,18 @@ export const createFollowUserTool = (twitterApi: TwitterApi) =>
     description: 'Follow a user that you find worthy of following and engaging with.',
     schema: z.object({ userId: z.string() }),
     func: async ({ userId }: { userId: string }) => {
-      await twitterApi.followUser(userId);
+      try {
+        await twitterApi.followUser(userId);
+        return {
+          followed: true,
+        };
+      } catch (error) {
+        logger.error('Error following user:', error);
+        return {
+          followed: false,
+          error: error instanceof Error ? error.message : 'Unknown error',
+        };
+      }
     },
   });
 
