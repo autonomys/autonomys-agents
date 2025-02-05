@@ -7,7 +7,7 @@ import { createTwitterAgentTool } from './agents/workflows/twitter/twitterAgentT
 import { config } from './config/index.js';
 import { createTwitterApi } from './services/twitter/client.js';
 import { createPrompts } from './agents/workflows/orchestrator/prompts.js';
-
+import { LLMNodeConfiguration, LLMProvider } from './services/llm/types.js';
 const orchestatorConfig = async () => {
   const { USERNAME, PASSWORD, COOKIES_PATH } = config.twitterConfig;
   const twitterApi = await createTwitterApi(USERNAME, PASSWORD, COOKIES_PATH);
@@ -15,8 +15,13 @@ const orchestatorConfig = async () => {
   const namespace = 'orchestrator';
   const { tools } = createTools();
   const prompts = await createPrompts();
+  const model: LLMNodeConfiguration = {
+    provider: LLMProvider.ANTHROPIC,
+    model: 'claude-3-5-sonnet-latest',
+    temperature: 0,
+  };
 
-  return { prompts, tools: [...tools, twitterAgent], namespace };
+  return { prompts, tools: [...tools, twitterAgent], model, namespace };
 };
 
 const orchestratorConfig = await orchestatorConfig();
@@ -25,6 +30,7 @@ export const orchestratorRunner = (() => {
   return async () => {
     if (!runnerPromise) {
       runnerPromise = createOrchestratorRunner(
+        orchestratorConfig.model,
         orchestratorConfig.tools,
         orchestratorConfig.prompts,
         orchestratorConfig.namespace,

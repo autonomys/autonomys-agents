@@ -26,9 +26,9 @@ import { LLMNodeConfiguration } from '../../../services/llm/types.js';
 const logger = createLogger('orchestrator-workflow');
 
 const createWorkflowConfig = async (
+  model: LLMNodeConfiguration,
   tools: (StructuredToolInterface | RunnableToolLike)[],
   prompts: OrchestratorPrompts,
-  model: LLMNodeConfiguration,
 ): Promise<OrchestratorConfig> => {
   const toolNode = new ToolNode(tools);
   const orchestratorModel = LLMFactory.createModel(model).bind({
@@ -107,12 +107,12 @@ export type OrchestratorRunner = Readonly<{
 }>;
 
 export const createOrchestratorRunner = async (
+  model: LLMNodeConfiguration,
   tools: (StructuredToolInterface | RunnableToolLike)[],
   prompts: OrchestratorPrompts,
-  model: LLMNodeConfiguration,
   namespace: string,
 ): Promise<OrchestratorRunner> => {
-  const workflowConfig = await createWorkflowConfig(tools, prompts, model);
+  const workflowConfig = await createWorkflowConfig(model, tools, prompts);
 
   const vectorStore = new VectorDB(
     join('data', namespace),
@@ -156,18 +156,18 @@ export const createOrchestratorRunner = async (
 export const getOrchestratorRunner = (() => {
   let runnerPromise: Promise<OrchestratorRunner> | undefined = undefined;
   return ({
+    model,
     prompts,
     tools,
-    model,
     namespace,
   }: {
+    model: LLMNodeConfiguration;
     prompts: OrchestratorPrompts;
     tools: (StructuredToolInterface | RunnableToolLike)[];
-    model: LLMNodeConfiguration;
     namespace: string;
   }) => {
     if (!runnerPromise) {
-      runnerPromise = createOrchestratorRunner(tools, prompts, model, namespace);
+      runnerPromise = createOrchestratorRunner(model, tools, prompts, namespace);
     }
     return runnerPromise;
   };
