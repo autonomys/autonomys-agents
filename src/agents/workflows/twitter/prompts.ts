@@ -11,7 +11,7 @@ export const createTwitterPrompts = async () => {
     - Summarize the actions taken in detail. Include reasoning and metadata like tweet IDs/timestamps.
     - Try to capture high level reasoning for actions`;
 
-  const customWorkflowSummaryInstructions = `
+  const customFinishWorkflowInstructions = `
     - Summarize the actions taken in detail. Include reasoning and metadata like tweet IDs/timestamps.
     - Try to capture high level reasoning for actions taken.
     - Report should include what you think went well and what you think could be improved.
@@ -20,6 +20,6 @@ export const createTwitterPrompts = async () => {
   return await createPrompts({
     inputInstructions: customInputInstructions,
     messageSummaryInstructions: customMessageSummaryInstructions,
-    workflowSummaryInstructions: customWorkflowSummaryInstructions,
+    finishWorkflowInstructions: customFinishWorkflowInstructions,
   });
 };

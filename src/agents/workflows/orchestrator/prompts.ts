@@ -1,23 +1,23 @@
 import { createInputPrompt } from './nodes/inputPrompt.js';
 import { createMessageSummaryPrompt } from './nodes/messageSummaryPrompt.js';
-import { createWorkflowSummaryPrompt } from './nodes/workflowSummaryPrompt.js';
+import { createFinishWorkflowPrompt } from './nodes/finishWorkflowPrompt.js';
 import { OrchestratorPrompts } from './types.js';
 export const createPrompts = async (customInstructions?: {
   inputInstructions?: string;
   messageSummaryInstructions?: string;
-  workflowSummaryInstructions?: string;
+  finishWorkflowInstructions?: string;
 }): Promise<OrchestratorPrompts> => {
   const inputPrompt = await createInputPrompt(customInstructions?.inputInstructions);
   const messageSummaryPrompt = await createMessageSummaryPrompt(
     customInstructions?.messageSummaryInstructions,
   );
-  const workflowSummaryPrompt = await createWorkflowSummaryPrompt(
-    customInstructions?.workflowSummaryInstructions,
+  const finishWorkflowPrompt = await createFinishWorkflowPrompt(
+    customInstructions?.finishWorkflowInstructions,
   );
 
   return {
     inputPrompt,
     messageSummaryPrompt,
-    workflowSummaryPrompt,
+    finishWorkflowPrompt,
   };
 };

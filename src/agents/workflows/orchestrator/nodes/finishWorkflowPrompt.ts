@@ -2,7 +2,7 @@ import { ChatPromptTemplate, PromptTemplate } from '@langchain/core/prompts';
 import { SystemMessage } from '@langchain/core/messages';
 import { config } from '../../../../config/index.js';
 
-export const createWorkflowSummaryPrompt = async (customInstructions?: string) => {
+export const createFinishWorkflowPrompt = async (customInstructions?: string) => {
   const character = config.characterConfig;
 
   const workflowSummarySystemPrompt = await PromptTemplate.fromTemplate(

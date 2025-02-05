@@ -8,7 +8,7 @@ import { VectorDB } from '../../../services/vectorDb/VectorDB.js';
 export type OrchestratorPrompts = {
   inputPrompt: ChatPromptTemplate;
   messageSummaryPrompt: ChatPromptTemplate;
-  workflowSummaryPrompt: ChatPromptTemplate;
+  finishWorkflowPrompt: ChatPromptTemplate;
 };
 
 export type OrchestratorConfig = {

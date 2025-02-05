@@ -45,7 +45,7 @@ const handleConditionalEdge = async (state: OrchestratorStateType) => {
 
   if (state.workflowControl && state.workflowControl.shouldStop) {
     logger.info('Workflow stop requested', { reason: state.workflowControl.reason });
-    return 'workflowSummary';
+    return 'finishWorkflow';
   }
 
   return 'tools';
@@ -58,13 +58,13 @@ const createOrchestratorWorkflow = async (
   const workflow = new StateGraph(OrchestratorState(pruningParameters))
     .addNode('input', nodes.inputNode)
     .addNode('messageSummary', nodes.messageSummaryNode)
-    .addNode('workflowSummary', nodes.workflowSummaryNode)
+    .addNode('finishWorkflow', nodes.finishWorkflowNode)
     .addNode('tools', nodes.toolNode)
     .addEdge(START, 'input')
     .addConditionalEdges('input', handleConditionalEdge)
     .addEdge('tools', 'messageSummary')
     .addEdge('messageSummary', 'input')
-    .addEdge('workflowSummary', END);
+    .addEdge('finishWorkflow', END);
 
   return workflow;
 };

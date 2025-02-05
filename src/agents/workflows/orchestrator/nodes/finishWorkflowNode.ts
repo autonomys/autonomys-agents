@@ -4,7 +4,7 @@ import { OrchestratorConfig, OrchestratorStateType } from '../types.js';
 
 const logger = createLogger('workflow-summary-node');
 
-export const createWorkflowSummaryNode = ({
+export const createFinishWorkflowNode = ({
   orchestratorModel,
   prompts,
   vectorStore,
@@ -20,7 +20,7 @@ export const createWorkflowSummaryNode = ({
       })
       .join('\n');
 
-    const formattedPrompt = await prompts.workflowSummaryPrompt.format({
+    const formattedPrompt = await prompts.finishWorkflowPrompt.format({
       messages,
       currentTime: new Date().toISOString(),
     });
