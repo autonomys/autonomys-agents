@@ -1,7 +1,6 @@
 import { ChatPromptTemplate, PromptTemplate } from '@langchain/core/prompts';
 import { SystemMessage } from '@langchain/core/messages';
 import { config } from '../../../../config/index.js';
-import { z } from 'zod';
 
 export const createWorkflowSummaryPrompt = async (customInstructions?: string) => {
   const character = config.characterConfig;
