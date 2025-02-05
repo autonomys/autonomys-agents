@@ -6,7 +6,7 @@ export const createWorkflowSummaryPrompt = async (customInstructions?: string) =
   const character = config.characterConfig;
 
   const workflowSummarySystemPrompt = await PromptTemplate.fromTemplate(
-    `Summarize the following mesages in detail. This is being returned as a report to what was accomplished during the execution of the workflow. DO NOT recommend tool usage, just summarize the messages!
+    `Summarize the following messages in detail. This is being returned as a report to what was accomplished during the execution of the workflow.
 
     You have a personality, so you should act accordingly.
     {characterDescription}
