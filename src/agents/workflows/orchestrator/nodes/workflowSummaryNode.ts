@@ -3,7 +3,7 @@ import { createLogger } from '../../../../utils/logger.js';
 import { OrchestratorConfig, OrchestratorState } from '../types.js';
 const logger = createLogger('workflow-summary-node');
 
-export const createWorkflowSummaryNode = ({ orchestratorModel }: OrchestratorConfig) => {
+export const createWorkflowSummaryNode = ({ orchestratorModel, prompts }: OrchestratorConfig) => {
   const runNode = async (state: typeof OrchestratorState.State) => {
     logger.info('Workflow Summary Node');
 
@@ -14,13 +14,14 @@ export const createWorkflowSummaryNode = ({ orchestratorModel }: OrchestratorCon
         return `${msg.getType()}: ${content}`;
       })
       .join('\n');
-    logger.info('Summarizing messages:', { messages });
-    const result = await orchestratorModel.invoke(
-      `Summarize the following mesages in detail. This is being returned as a report to what was accomplished during the execution of the workflow. This workflow is ending at ${new Date().toISOString()}. DO NOT recommend tool usage, just summarize the messages!
 
-      Messages:
-      ${messages}`,
-    );
+    const formattedPrompt = await prompts.workflowSummaryPrompt.format({
+      messages,
+      currentTime: new Date().toISOString(),
+    });
+    logger.info('Summarizing messages:', { messages });
+
+    const result = await orchestratorModel.invoke(formattedPrompt);
 
     const summary =
       typeof result.content === 'string' ? result.content : JSON.stringify(result.content, null, 2);
