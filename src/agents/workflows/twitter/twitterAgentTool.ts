@@ -19,7 +19,8 @@ export const createTwitterAgentTool = (twitterApi: TwitterApi) =>
         const messages = [new HumanMessage(instructions)];
         const { tools } = createTools(twitterApi);
         const prompts = await createPrompts();
-        const runner = await getOrchestratorRunner({ tools, prompts });
+        const namespace = 'twitter';
+        const runner = await getOrchestratorRunner({ tools, prompts, namespace });
         const result = await runner.runWorkflow(
           { messages },
           { threadId: 'twitter_workflow_state' },
