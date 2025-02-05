@@ -21,7 +21,8 @@ import { BaseMessage } from '@langchain/core/messages';
 import { workflowControlParser } from './nodes/inputPrompt.js';
 import { StructuredToolInterface } from '@langchain/core/tools';
 import { RunnableToolLike } from '@langchain/core/runnables';
-
+import { VectorDB } from '../../../services/vectorDb/VectorDB.js';
+import { join } from 'path';
 const logger = createLogger('orchestrator-workflow');
 
 const createWorkflowConfig = async (
@@ -107,9 +108,18 @@ export type OrchestratorRunner = Readonly<{
 export const createOrchestratorRunner = async (
   tools: (StructuredToolInterface | RunnableToolLike)[],
   prompts: OrchestratorPrompts,
+  namespace: string,
 ): Promise<OrchestratorRunner> => {
   const workflowConfig = await createWorkflowConfig(tools, prompts);
-  const nodes = await createNodes(workflowConfig);
+
+  const vectorStore = new VectorDB(
+    join('data', namespace),
+    `${namespace}-index.bin`,
+    `${namespace}-store.db`,
+    100000,
+  );
+
+  const nodes = await createNodes(workflowConfig, vectorStore);
   const workflow = await createOrchestratorWorkflow(nodes);
   const memoryStore = new MemorySaver();
   const app = workflow.compile({ checkpointer: memoryStore });
@@ -135,7 +145,7 @@ export const createOrchestratorRunner = async (
       }
 
       logger.info('Workflow completed', { threadId });
-
+      vectorStore.close();
       return finalState;
     },
   };
@@ -146,12 +156,14 @@ export const getOrchestratorRunner = (() => {
   return ({
     prompts,
     tools,
+    namespace,
   }: {
     prompts: OrchestratorPrompts;
     tools: (StructuredToolInterface | RunnableToolLike)[];
+    namespace: string;
   }) => {
     if (!runnerPromise) {
-      runnerPromise = createOrchestratorRunner(tools, prompts);
+      runnerPromise = createOrchestratorRunner(tools, prompts, namespace);
     }
     return runnerPromise;
   };

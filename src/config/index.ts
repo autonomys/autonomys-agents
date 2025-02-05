@@ -22,12 +22,13 @@ try {
   console.error('Error creating cookies directory:', error);
 }
 
-const characterName = process.argv[2];
+export const characterName = process.argv[2];
 if (!characterName) {
   console.error('Please provide a character name');
   // Force immediate exit of the entire process group
   process.kill(0, 'SIGKILL');
 }
+
 const characterConfig = loadCharacter(characterName);
 // Load root .env
 dotenv.config({ path: path.resolve(workspaceRoot, '.env') });
