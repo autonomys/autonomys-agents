@@ -113,7 +113,8 @@ export const createFetchMentionsTool = (twitterApi: TwitterApi) =>
 export const createFetchMyRecentTweetsAndRepliesTool = (twitterApi: TwitterApi) =>
   new DynamicStructuredTool({
     name: 'fetch_my_recent_tweets_and_replies',
-    description: 'Fetch my recent tweets and replies',
+    description:
+      'Fetch recent tweets and replies you have posted. This is useful to gain context on what you have recently been discussing.',
     schema: z.object({ maxMyRecentTweets: z.number(), maxMyRecentReplies: z.number() }),
     func: async ({
       maxMyRecentTweets,

@@ -1,7 +1,7 @@
 import { DynamicStructuredTool } from '@langchain/core/tools';
 import { z } from 'zod';
 import { getOrchestratorRunner } from '../orchestrator/orchestratorWorkflow.js';
-import { createPrompts } from './prompts.js';
+import { createTwitterPrompts } from './prompts.js';
 import { createTools } from './tools.js';
 import { createLogger } from '../../../utils/logger.js';
 import { TwitterApi } from '../../../services/twitter/types.js';
@@ -18,8 +18,8 @@ export const createTwitterAgentTool = (twitterApi: TwitterApi) =>
       try {
         const messages = [new HumanMessage(instructions)];
         const { tools } = createTools(twitterApi);
-        const prompts = await createPrompts();
         const namespace = 'twitter';
+        const prompts = await createTwitterPrompts();
         const runner = await getOrchestratorRunner({ tools, prompts, namespace });
         const result = await runner.runWorkflow(
           { messages },

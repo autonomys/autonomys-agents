@@ -5,7 +5,7 @@ import { VectorDB } from '../../../../services/vectorDb/VectorDB.js';
 const logger = createLogger('workflow-summary-node');
 
 export const createWorkflowSummaryNode = (
-  { orchestratorModel }: OrchestratorConfig,
+  { orchestratorModel, prompts }: OrchestratorConfig,
   vectorStore: VectorDB,
 ) => {
   const runNode = async (state: typeof OrchestratorState.State) => {
@@ -18,13 +18,14 @@ export const createWorkflowSummaryNode = (
         return `${msg.getType()}: ${content}`;
       })
       .join('\n');
-    logger.info('Summarizing messages:', { messages });
-    const result = await orchestratorModel.invoke(
-      `Summarize the following mesages in detail. This is being returned as a report to what was accomplished during the execution of the workflow. This workflow is ending at ${new Date().toISOString()}. DO NOT recommend tool usage, just summarize the messages!
 
-      Messages:
-      ${messages}`,
-    );
+    const formattedPrompt = await prompts.workflowSummaryPrompt.format({
+      messages,
+      currentTime: new Date().toISOString(),
+    });
+    logger.info('Summarizing messages:', { messages });
+
+    const result = await orchestratorModel.invoke(formattedPrompt);
 
     const summary =
       typeof result.content === 'string' ? result.content : JSON.stringify(result.content, null, 2);

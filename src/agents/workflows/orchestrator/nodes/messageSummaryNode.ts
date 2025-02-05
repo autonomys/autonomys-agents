@@ -28,7 +28,7 @@ export const createMessageSummaryNode = (
         })
         .join('\n');
 
-      const formattedPrompt = await prompts.summaryPrompt.format({
+      const formattedPrompt = await prompts.messageSummaryPrompt.format({
         prevSummary,
         newMessages,
       });
