@@ -30,14 +30,9 @@ export const createTwitterAgentTool = (twitterApi: TwitterApi) =>
           model: 'claude-3-5-sonnet-latest',
           temperature: 0,
         };
-        const namespace = 'twitter';
+        const namespace = 'twitter';  
         const prompts = await createTwitterPrompts();
-        const vectorStore = new VectorDB(
-          join('data', namespace),
-          `${namespace}-index.bin`,
-          `${namespace}-store.db`,
-          100000,
-        );
+        const vectorStore = new VectorDB(namespace);
         const runner = await getOrchestratorRunner({ model, tools, prompts, namespace, vectorStore });
         const result = await runner.runWorkflow(
           { messages },
