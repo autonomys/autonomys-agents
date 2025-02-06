@@ -50,7 +50,6 @@ export const createInputPrompt = async (customInstructions?: string) => {
     [
       'human',
       `Based on the following messages, determine what actions should be taken.
-      Format your response as a JSON object with shouldStop (boolean) and reason (string).
 
       Messages: {messages}
       `,
@@ -61,8 +60,8 @@ export const createInputPrompt = async (customInstructions?: string) => {
 };
 
 const workflowControlSchema = z.object({
-  shouldStop: z.boolean(),
-  reason: z.string(),
+  shouldStop: z.boolean().describe('Whether the workflow should stop.'),
+  reason: z.string().describe('The reason for stopping the workflow.'),
 });
 
 export const workflowControlParser = StructuredOutputParser.fromZodSchema(workflowControlSchema);

@@ -5,7 +5,7 @@ import { ChatPromptTemplate } from '@langchain/core/prompts';
 import { config } from '../../../config/index.js';
 import { WorkflowControl } from './nodes/inputPrompt.js';
 import { LLMModelType } from '../../../services/llm/factory.js';
-
+import { FinishedWorkflow } from './nodes/finishWorkflowPrompt.js';
 export type OrchestratorPrompts = {
   inputPrompt: ChatPromptTemplate;
   messageSummaryPrompt: ChatPromptTemplate;
@@ -45,6 +45,10 @@ export const OrchestratorState = Annotation.Root({
     reducer: (_, update) => update,
   }),
   workflowControl: Annotation<WorkflowControl | null>({
+    default: () => null,
+    reducer: (_, update) => update,
+  }),
+  finishedWorkflow: Annotation<FinishedWorkflow | null>({
     default: () => null,
     reducer: (_, update) => update,
   }),
