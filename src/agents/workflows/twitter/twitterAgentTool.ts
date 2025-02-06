@@ -23,7 +23,7 @@ export const createTwitterAgentTool = (twitterApi: TwitterApi) =>
       try {
         const messages = [new HumanMessage(instructions)];
         const { tools } = createTools(twitterApi);
-        const model: LLMNodeConfiguration = {
+        const model = {
           provider: LLMProvider.ANTHROPIC,
           model: 'claude-3-5-sonnet-latest',
           temperature: 0,

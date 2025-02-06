@@ -20,12 +20,12 @@ import { config } from '../../../config/index.js';
 
 const logger = createLogger('orchestrator-workflow');
 
-const createWorkflowConfig = async (
+const createWorkflowConfig =  (
   model: LLMNodeConfiguration,
   tools: (StructuredToolInterface | RunnableToolLike)[],
   prompts: OrchestratorPrompts,
   pruningParameters?: PruningParameters,
-): Promise<OrchestratorConfig> => {
+) => {
   const toolNode = new ToolNode(tools);
   const orchestratorModel = LLMFactory.createModel(model);
   if (!pruningParameters) {
@@ -77,7 +77,7 @@ export const createOrchestratorRunner = async (
   namespace: string,
   pruningParameters?: PruningParameters,
 ): Promise<OrchestratorRunner> => {
-  const workflowConfig = await createWorkflowConfig(model, tools, prompts, pruningParameters);
+  const workflowConfig = createWorkflowConfig(model, tools, prompts, pruningParameters);
 
   const vectorStore = new VectorDB(
     join('data', namespace),
