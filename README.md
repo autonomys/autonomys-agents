@@ -135,6 +135,33 @@ The Twitter workflow enables agents to:
 - Maintain consistent personality
 - Store interactions in permanent memory
 
+### Context Size Management
+
+The orchestrator helps manage the LLM's context window size through pruning parameters. These parameters control message summarization and retention. Configure them in two ways:
+
+1. Default configuration in `config.yaml`:
+   ```yaml
+   orchestrator_config:
+     max_window_summary: 10  # End index for message slice after summary
+     max_queue_size: 50      # Message threshold to trigger summarization
+   ```
+
+2. Dynamic configuration when creating the orchestrator:
+   ```typescript
+   const runner = await getOrchestratorRunner({
+     model,                   // model to use for the agent
+     prompts,                 // prompts for the agent
+     tools,                   // tools available to the agent
+     namespace,               // name of the agent
+     pruningParameters: PruningParameters{
+       maxWindowSummary: 10,  // End index for message slice
+       maxQueueSize: 50       // Trigger summarization threshold
+     }
+   });
+   ```
+
+When messages exceed `maxQueueSize`, a summary is created. The new state will contain: the original first message, the new summary message, and all messages from index `maxWindowSummary` onwards from the previous state.
+
 ## Autonomys Network Integration
 
 The framework uses the Autonomys Network for permanent storage of agent memory and interactions. This enables:
@@ -151,6 +178,7 @@ To use this feature:
    ```yaml
    auto_drive:
      upload: true
+     network: 'taurus' # or 'mainnet'
    ```
 3. Provide your Taurus EVM wallet details (PRIVATE_KEY) and Agent Memory Contract Address (CONTRACT_ADDRESS) in .env`
 4. Make sure your Taurus EVM wallet has funds. A faucet can be found at https://subspacefaucet.com/
