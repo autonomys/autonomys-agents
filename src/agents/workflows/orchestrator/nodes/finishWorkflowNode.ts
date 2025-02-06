@@ -1,8 +1,25 @@
-import { AIMessage } from '@langchain/core/messages';
 import { createLogger } from '../../../../utils/logger.js';
 import { OrchestratorConfig, OrchestratorStateType } from '../types.js';
+import { finishedWorkflowParser } from './finishWorkflowPrompt.js';
+import { AIMessage } from '@langchain/core/messages';
 
-const logger = createLogger('workflow-summary-node');
+const logger = createLogger('finish-workflow-node');
+
+const parseFinishWorkflow = async (content: unknown) => {
+  const contentString = typeof content === 'string' ? content : JSON.stringify(content, null, 2);
+  if (typeof contentString === 'string') {
+    try {
+      return await finishedWorkflowParser.parse(contentString);
+    } catch (error) {
+      logger.error('Failed to parse workflow control. Applying fallback termination.', {
+        error,
+        content,
+      });
+      return { workflowSummary: 'Failed to parse workflow content' };
+    }
+  }
+  return { workflowSummary: 'Failed to parse workflow content' };
+};
 
 export const createFinishWorkflowNode = ({
   orchestratorModel,
@@ -27,14 +44,15 @@ export const createFinishWorkflowNode = ({
     logger.info('Summarizing messages:', { messages });
 
     const result = await orchestratorModel.invoke(formattedPrompt);
+    const finishedWorkflow = await parseFinishWorkflow(result.content);
 
-    const summary =
-      typeof result.content === 'string' ? result.content : JSON.stringify(result.content, null, 2);
+    logger.info('Finished Workflow:', { finishedWorkflow });
 
-    logger.info('Workflow summary:', { summary });
-    await vectorStore.insert(summary);
+    await vectorStore.insert(JSON.stringify(finishedWorkflow));
+
     return {
-      messages: [new AIMessage({ content: `Workflow summary: ${summary}` })],
+      messages: [new AIMessage({ content: result.content })],
+      ...finishedWorkflow,
     };
   };
   return runNode;
