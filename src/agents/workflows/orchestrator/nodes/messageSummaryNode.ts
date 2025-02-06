@@ -1,13 +1,15 @@
 import { AIMessage } from '@langchain/core/messages';
 import { createLogger } from '../../../../utils/logger.js';
 import { OrchestratorConfig, OrchestratorStateType } from '../types.js';
-import { VectorDB } from '../../../../services/vectorDb/VectorDB.js';
 
 const logger = createLogger('message-summary-node');
 
-export const createMessageSummaryNode = (
-  { orchestratorModel, prompts, pruningParameters, vectorStore }: OrchestratorConfig,
-) => {
+export const createMessageSummaryNode = ({
+  orchestratorModel,
+  prompts,
+  pruningParameters,
+  vectorStore,
+}: OrchestratorConfig) => {
   const runNode = async (state: OrchestratorStateType) => {
     logger.info('MessageSummary Node');
     logger.info('State size:', { size: state.messages.length });

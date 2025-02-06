@@ -29,7 +29,14 @@ const orchestatorConfig = async () => {
     temperature: 0,
   };
 
-  return { model, namespace, tools: [...tools, twitterAgent], prompts, pruningParameters, vectorStore };
+  return {
+    model,
+    namespace,
+    tools: [...tools, twitterAgent],
+    prompts,
+    pruningParameters,
+    vectorStore,
+  };
 };
 
 const orchestratorConfig = await orchestatorConfig();

@@ -8,7 +8,6 @@ import { TwitterApi } from '../../../services/twitter/types.js';
 import { HumanMessage } from '@langchain/core/messages';
 import { LLMProvider } from '../../../services/llm/types.js';
 import { VectorDB } from '../../../services/vectorDb/VectorDB.js';
-import { join } from 'path';
 
 const logger = createLogger('twitter-workflow');
 
@@ -30,10 +29,16 @@ export const createTwitterAgentTool = (twitterApi: TwitterApi) =>
           model: 'claude-3-5-sonnet-latest',
           temperature: 0,
         };
-        const namespace = 'twitter';  
+        const namespace = 'twitter';
         const prompts = await createTwitterPrompts();
         const vectorStore = new VectorDB(namespace);
-        const runner = await getOrchestratorRunner({ model, tools, prompts, namespace, vectorStore });
+        const runner = await getOrchestratorRunner({
+          model,
+          tools,
+          prompts,
+          namespace,
+          vectorStore,
+        });
         const result = await runner.runWorkflow(
           { messages },
           { threadId: 'twitter_workflow_state' },

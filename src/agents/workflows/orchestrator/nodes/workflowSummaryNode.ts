@@ -4,9 +4,11 @@ import { OrchestratorConfig, OrchestratorStateType } from '../types.js';
 
 const logger = createLogger('workflow-summary-node');
 
-export const createWorkflowSummaryNode = (
-  { orchestratorModel, prompts, vectorStore }: OrchestratorConfig,
-) => {
+export const createWorkflowSummaryNode = ({
+  orchestratorModel,
+  prompts,
+  vectorStore,
+}: OrchestratorConfig) => {
   const runNode = async (state: OrchestratorStateType) => {
     logger.info('Workflow Summary Node');
 

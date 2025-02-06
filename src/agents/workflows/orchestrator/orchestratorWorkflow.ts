@@ -14,13 +14,12 @@ import { OrchestratorState } from './state.js';
 import { StructuredToolInterface } from '@langchain/core/tools';
 import { RunnableToolLike } from '@langchain/core/runnables';
 import { VectorDB } from '../../../services/vectorDb/VectorDB.js';
-import { join } from 'path';
 import { LLMNodeConfiguration } from '../../../services/llm/types.js';
 import { config } from '../../../config/index.js';
 
 const logger = createLogger('orchestrator-workflow');
 
-const createWorkflowConfig =  (
+const createWorkflowConfig = (
   model: LLMNodeConfiguration,
   tools: (StructuredToolInterface | RunnableToolLike)[],
   prompts: OrchestratorPrompts,
@@ -37,7 +36,7 @@ const createWorkflowConfig =  (
     };
   }
 
-  return { orchestratorModel, toolNode, prompts, pruningParameters, namespace, vectorStore};
+  return { orchestratorModel, toolNode, prompts, pruningParameters, namespace, vectorStore };
 };
 
 const handleConditionalEdge = async (state: OrchestratorStateType) => {
@@ -81,7 +80,14 @@ export const createOrchestratorRunner = async (
   vectorStore: VectorDB,
   pruningParameters?: PruningParameters,
 ): Promise<OrchestratorRunner> => {
-  const workflowConfig = createWorkflowConfig(model, tools, prompts, namespace, vectorStore, pruningParameters);
+  const workflowConfig = createWorkflowConfig(
+    model,
+    tools,
+    prompts,
+    namespace,
+    vectorStore,
+    pruningParameters,
+  );
 
   const nodes = await createNodes(workflowConfig);
   const workflow = await createOrchestratorWorkflow(nodes, workflowConfig.pruningParameters);
@@ -134,7 +140,14 @@ export const getOrchestratorRunner = (() => {
     pruningParameters?: PruningParameters;
   }) => {
     if (!runnerPromise) {
-      runnerPromise = createOrchestratorRunner(model, tools, prompts, namespace, vectorStore, pruningParameters);
+      runnerPromise = createOrchestratorRunner(
+        model,
+        tools,
+        prompts,
+        namespace,
+        vectorStore,
+        pruningParameters,
+      );
     }
     return runnerPromise;
   };
