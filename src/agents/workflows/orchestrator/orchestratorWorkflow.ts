@@ -1,6 +1,6 @@
 import { END, MemorySaver, START, StateGraph } from '@langchain/langgraph';
 import { createLogger } from '../../../utils/logger.js';
-import { LLMFactory, LLMModelType } from '../../../services/llm/factory.js';
+import { LLMModelType } from '../../../services/llm/factory.js';
 import { ToolNode } from '@langchain/langgraph/prebuilt';
 import { createNodes } from './nodes.js';
 import {
@@ -14,7 +14,6 @@ import { OrchestratorState } from './state.js';
 import { StructuredToolInterface } from '@langchain/core/tools';
 import { RunnableToolLike } from '@langchain/core/runnables';
 import { VectorDB } from '../../../services/vectorDb/VectorDB.js';
-import { LLMNodeConfiguration } from '../../../services/llm/types.js';
 import { config } from '../../../config/index.js';
 
 const logger = createLogger('orchestrator-workflow');

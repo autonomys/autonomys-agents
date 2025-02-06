@@ -7,9 +7,8 @@ import { createTwitterAgentTool } from './agents/workflows/twitter/twitterAgentT
 import { config } from './config/index.js';
 import { createTwitterApi } from './services/twitter/client.js';
 import { createPrompts } from './agents/workflows/orchestrator/prompts.js';
-import { LLMNodeConfiguration, LLMProvider } from './services/llm/types.js';
+import { LLMProvider } from './services/llm/types.js';
 import { PruningParameters } from './agents/workflows/orchestrator/types.js';
-import { VectorDB } from './services/vectorDb/VectorDB.js';
 import { LLMFactory } from './services/llm/factory.js';
 
 const orchestatorConfig = async () => {
