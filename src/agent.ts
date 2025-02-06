@@ -27,7 +27,7 @@ const orchestatorConfig = async () => {
     temperature: 0,
   };
 
-  return { prompts, tools: [...tools, twitterAgent], model, namespace, pruningParameters };
+  return { model, namespace, tools: [...tools, twitterAgent], prompts, pruningParameters };
 };
 
 const orchestratorConfig = await orchestatorConfig();
