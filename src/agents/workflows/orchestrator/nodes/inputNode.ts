@@ -20,8 +20,7 @@ const parseWorkflowControl = async (content: unknown) => {
 };
 
 export const createInputNode = (
-  { orchestratorModel, prompts, toolNode }: OrchestratorConfig,
-  vectorStore: VectorDB,
+  { orchestratorModel, prompts, toolNode, vectorStore }: OrchestratorConfig,
 ) => {
   const runNode = async (state: OrchestratorStateType) => {
     const { messages } = state;

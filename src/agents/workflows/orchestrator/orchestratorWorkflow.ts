@@ -24,8 +24,10 @@ const createWorkflowConfig =  (
   model: LLMNodeConfiguration,
   tools: (StructuredToolInterface | RunnableToolLike)[],
   prompts: OrchestratorPrompts,
+  namespace: string,
+  vectorStore: VectorDB,
   pruningParameters?: PruningParameters,
-) => {
+): OrchestratorConfig => {
   const toolNode = new ToolNode(tools);
   const orchestratorModel = LLMFactory.createModel(model);
   if (!pruningParameters) {
@@ -34,7 +36,8 @@ const createWorkflowConfig =  (
       maxQueueSize: config.orchestratorConfig.MAX_QUEUE_SIZE,
     };
   }
-  return { orchestratorModel, toolNode, prompts, pruningParameters };
+
+  return { orchestratorModel, toolNode, prompts, pruningParameters, namespace, vectorStore};
 };
 
 const handleConditionalEdge = async (state: OrchestratorStateType) => {
@@ -75,18 +78,12 @@ export const createOrchestratorRunner = async (
   tools: (StructuredToolInterface | RunnableToolLike)[],
   prompts: OrchestratorPrompts,
   namespace: string,
+  vectorStore: VectorDB,
   pruningParameters?: PruningParameters,
 ): Promise<OrchestratorRunner> => {
-  const workflowConfig = createWorkflowConfig(model, tools, prompts, pruningParameters);
+  const workflowConfig = createWorkflowConfig(model, tools, prompts, namespace, vectorStore, pruningParameters);
 
-  const vectorStore = new VectorDB(
-    join('data', namespace),
-    `${namespace}-index.bin`,
-    `${namespace}-store.db`,
-    100000,
-  );
-
-  const nodes = await createNodes(workflowConfig, vectorStore);
+  const nodes = await createNodes(workflowConfig);
   const workflow = await createOrchestratorWorkflow(nodes, workflowConfig.pruningParameters);
   const memoryStore = new MemorySaver();
   const app = workflow.compile({ checkpointer: memoryStore });
@@ -126,16 +123,18 @@ export const getOrchestratorRunner = (() => {
     prompts,
     tools,
     namespace,
+    vectorStore,
     pruningParameters,
   }: {
     model: LLMNodeConfiguration;
     prompts: OrchestratorPrompts;
     tools: (StructuredToolInterface | RunnableToolLike)[];
     namespace: string;
+    vectorStore: VectorDB;
     pruningParameters?: PruningParameters;
   }) => {
     if (!runnerPromise) {
-      runnerPromise = createOrchestratorRunner(model, tools, prompts, namespace, pruningParameters);
+      runnerPromise = createOrchestratorRunner(model, tools, prompts, namespace, vectorStore, pruningParameters);
     }
     return runnerPromise;
   };

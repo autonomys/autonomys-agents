@@ -6,8 +6,7 @@ import { VectorDB } from '../../../../services/vectorDb/VectorDB.js';
 const logger = createLogger('message-summary-node');
 
 export const createMessageSummaryNode = (
-  { orchestratorModel, prompts, pruningParameters }: OrchestratorConfig,
-  vectorStore: VectorDB,
+  { orchestratorModel, prompts, pruningParameters, vectorStore }: OrchestratorConfig,
 ) => {
   const runNode = async (state: OrchestratorStateType) => {
     logger.info('MessageSummary Node');
