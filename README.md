@@ -141,9 +141,9 @@ The orchestrator helps manage the LLM's context window size through pruning para
 
 1. Default configuration in `config.yaml`:
    ```yaml
-   orchestrator_config:
-     max_window_summary: 10  # End index for message slice after summary
-     max_queue_size: 50      # Message threshold to trigger summarization
+   orchestrator:
+     MAX_WINDOW_SUMMARY: 20  // End index for message slice
+     MAX_QUEUE_SIZE: 50      // Trigger summarization threshold
    ```
 
 2. Dynamic configuration when creating the orchestrator:
@@ -161,6 +161,9 @@ The orchestrator helps manage the LLM's context window size through pruning para
    ```
 
 When messages exceed `maxQueueSize`, a summary is created. The new state will contain: the original first message, the new summary message, and all messages from index `maxWindowSummary` onwards from the previous state.
+
+
+
 
 ## Autonomys Network Integration
 
