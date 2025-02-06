@@ -41,16 +41,6 @@ const llmConfigSchema = z
         model: z.string(),
         temperature: z.number(),
       }),
-      orchestrator: z.object({
-        provider: z.nativeEnum(LLMProvider),
-        model: z.string(),
-        temperature: z.number(),
-      }),
-      prompt_summarizer: z.object({
-        provider: z.nativeEnum(LLMProvider),
-        model: z.string(),
-        temperature: z.number(),
-      }),
     }),
     OPENAI_API_KEY: z.string(),
     ANTHROPIC_API_KEY: z.string(),
@@ -64,8 +54,6 @@ const llmConfigSchema = z
       data.nodes.analyze.provider,
       data.nodes.generation.provider,
       data.nodes.response.provider,
-      data.nodes.orchestrator.provider,
-      data.nodes.prompt_summarizer.provider,
     ]);
 
     const missingConfigs = [];

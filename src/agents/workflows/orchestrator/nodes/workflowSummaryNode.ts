@@ -1,14 +1,15 @@
 import { AIMessage } from '@langchain/core/messages';
 import { createLogger } from '../../../../utils/logger.js';
-import { OrchestratorConfig, OrchestratorState } from '../types.js';
-import { VectorDB } from '../../../../services/vectorDb/VectorDB.js';
+import { OrchestratorConfig, OrchestratorStateType } from '../types.js';
+
 const logger = createLogger('workflow-summary-node');
 
-export const createWorkflowSummaryNode = (
-  { orchestratorModel, prompts }: OrchestratorConfig,
-  vectorStore: VectorDB,
-) => {
-  const runNode = async (state: typeof OrchestratorState.State) => {
+export const createWorkflowSummaryNode = ({
+  orchestratorModel,
+  prompts,
+  vectorStore,
+}: OrchestratorConfig) => {
+  const runNode = async (state: OrchestratorStateType) => {
     logger.info('Workflow Summary Node');
 
     const messages = state.messages

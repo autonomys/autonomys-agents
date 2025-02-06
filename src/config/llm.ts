@@ -22,15 +22,5 @@ export const llmDefaultConfig = {
       model: 'gpt-4o-mini',
       temperature: 0.8,
     } as LLMNodeConfiguration,
-    orchestrator: {
-      provider: LLMProvider.ANTHROPIC,
-      model: 'claude-3-5-sonnet-latest',
-      temperature: 0.2,
-    } as LLMNodeConfiguration,
-    prompt_summarizer: {
-      provider: LLMProvider.OPENAI,
-      model: 'gpt-4o-mini',
-      temperature: 0.2,
-    } as LLMNodeConfiguration,
   },
 };

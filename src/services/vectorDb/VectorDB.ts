@@ -15,32 +15,19 @@ export class VectorDB {
   private readonly indexFilePath: string;
   private readonly dbFilePath: string;
   private maxElements: number;
-  private static readonly DEFAULT_INDEX_FILE = 'index_file.bin';
-  private static readonly DEFAULT_DB_FILE = 'vector_store.db';
-  private static readonly DEFAULT_DATA_DIR = join(
-    config.characterConfig.characterPath,
-    'data',
-    'vector-db',
-  );
+  private static readonly DEFAULT_MAX_ELEMENTS = 100000;
 
-  constructor(
-    dataDir?: string,
-    indexFilePath: string = VectorDB.DEFAULT_INDEX_FILE,
-    dbFilePath: string = VectorDB.DEFAULT_DB_FILE,
-    maxElements: number = 100000,
-  ) {
-    const targetDir = dataDir
-      ? join(config.characterConfig.characterPath, dataDir)
-      : VectorDB.DEFAULT_DATA_DIR;
+  constructor(namespace: string, maxElements?: number) {
+    const targetDir = join(config.characterConfig.characterPath, 'data', namespace);
 
     if (!existsSync(targetDir)) {
       mkdirSync(targetDir, { recursive: true });
     }
 
-    this.indexFilePath = join(targetDir, indexFilePath);
-    this.dbFilePath = join(targetDir, dbFilePath);
+    this.indexFilePath = join(targetDir, `${namespace}-index.bin`);
+    this.dbFilePath = join(targetDir, `${namespace}-store.db`);
     this.nextRowId = 1;
-    this.maxElements = maxElements;
+    this.maxElements = maxElements ?? VectorDB.DEFAULT_MAX_ELEMENTS;
     this.openai = new OpenAI({
       apiKey: config.llmConfig.OPENAI_API_KEY,
     });
