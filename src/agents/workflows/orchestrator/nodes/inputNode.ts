@@ -20,7 +20,7 @@ const parseWorkflowControl = async (content: unknown) => {
 };
 
 export const createInputNode = (
-  { orchestratorModel, prompts }: OrchestratorConfig,
+  { orchestratorModel, prompts, toolNode }: OrchestratorConfig,
   vectorStore: VectorDB,
 ) => {
   const runNode = async (state: OrchestratorStateType) => {
@@ -28,10 +28,12 @@ export const createInputNode = (
     logger.info('Running input node with messages:', {
       messages: messages.map(message => message.content),
     });
+
     const formattedPrompt = await prompts.inputPrompt.format({
       messages: messages.map(message => message.content),
     });
-    const result = await orchestratorModel.invoke(formattedPrompt);
+
+    const result = await orchestratorModel.bind({ tools: toolNode.tools }).invoke(formattedPrompt);
 
     const usage = result.additional_kwargs?.usage as
       | { input_tokens: number; output_tokens: number }

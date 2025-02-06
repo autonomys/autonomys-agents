@@ -1,10 +1,8 @@
 import { BaseMessage } from '@langchain/core/messages';
-import { Runnable } from '@langchain/core/runnables';
-import { BaseLanguageModelInput } from '@langchain/core/language_models/base';
-import { AIMessageChunk } from '@langchain/core/messages';
 import { ToolNode } from '@langchain/langgraph/prebuilt';
 import { ChatPromptTemplate } from '@langchain/core/prompts';
 import { WorkflowControl } from './nodes/inputPrompt.js';
+import { LLMModelType } from '../../../services/llm/factory.js';
 
 export type OrchestratorPrompts = {
   inputPrompt: ChatPromptTemplate;
@@ -13,7 +11,7 @@ export type OrchestratorPrompts = {
 };
 
 export type OrchestratorConfig = {
-  orchestratorModel: Runnable<BaseLanguageModelInput, AIMessageChunk>;
+  orchestratorModel: LLMModelType;
   toolNode: ToolNode;
   prompts: OrchestratorPrompts;
   pruningParameters: PruningParameters;

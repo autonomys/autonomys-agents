@@ -49,3 +49,5 @@ export class LLMFactory {
     }
   }
 }
+
+export type LLMModelType = ReturnType<typeof LLMFactory.createModelFromConfig>;

@@ -27,10 +27,8 @@ const createWorkflowConfig = async (
   pruningParameters?: PruningParameters,
 ): Promise<OrchestratorConfig> => {
   const toolNode = new ToolNode(tools);
-  const orchestratorModel = LLMFactory.createModel(model).bind({
-    tools,
-  });
-  if (pruningParameters === undefined) {
+  const orchestratorModel = LLMFactory.createModel(model);
+  if (!pruningParameters) {
     pruningParameters = {
       maxWindowSummary: config.orchestratorConfig.MAX_WINDOW_SUMMARY,
       maxQueueSize: config.orchestratorConfig.MAX_QUEUE_SIZE,

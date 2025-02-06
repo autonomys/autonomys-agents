@@ -8,6 +8,8 @@ export const OrchestratorState = (pruningParameters: PruningParameters) =>
     messages: Annotation<readonly BaseMessage[]>({
       reducer: (curr, update) => {
         if (
+          //TODO: Revisit this process, this is quite messy. Maybe we should add state for summary messages?
+
           Array.isArray(update) &&
           update.length > 0 &&
           update[0]?.content &&
