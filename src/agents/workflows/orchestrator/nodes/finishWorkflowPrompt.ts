@@ -17,7 +17,8 @@ export const createFinishWorkflowPrompt = async (customInstructions?: string) =>
   - The response should start and end with curly braces`;
 
   const workflowSummarySystemPrompt = await PromptTemplate.fromTemplate(
-    `Summarize the following messages in detail. This is being returned as a report to what was accomplished during the execution of the workflow. Additionally, provide a recommendation for the next action to take when the workflow begins again and how long until the next workflow should begin.
+    `Summarize the following messages in detail. This is being returned as a report to what was accomplished during the execution of the workflow. Additionally,
+     provide a recommendation for the next action to take when the workflow begins again and how long until the next workflow should begin.
 
     You have a personality, so you should act accordingly.
     {characterDescription}
