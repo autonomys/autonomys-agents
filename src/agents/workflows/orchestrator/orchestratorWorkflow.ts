@@ -7,28 +7,39 @@ import {
   OrchestratorConfig,
   OrchestratorInput,
   OrchestratorPrompts,
-  OrchestratorState,
+  OrchestratorStateType,
+  PruningParameters,
 } from './types.js';
+import { OrchestratorState } from './state.js';
 import { StructuredToolInterface } from '@langchain/core/tools';
 import { RunnableToolLike } from '@langchain/core/runnables';
 import { VectorDB } from '../../../services/vectorDb/VectorDB.js';
 import { join } from 'path';
 import { LLMNodeConfiguration } from '../../../services/llm/types.js';
+import { config } from '../../../config/index.js';
+
 const logger = createLogger('orchestrator-workflow');
 
 const createWorkflowConfig = async (
   model: LLMNodeConfiguration,
   tools: (StructuredToolInterface | RunnableToolLike)[],
   prompts: OrchestratorPrompts,
+  pruningParameters?: PruningParameters,
 ): Promise<OrchestratorConfig> => {
   const toolNode = new ToolNode(tools);
   const orchestratorModel = LLMFactory.createModel(model).bind({
     tools,
   });
-  return { orchestratorModel, toolNode, prompts };
+  if (pruningParameters === undefined) {
+    pruningParameters = {
+      maxWindowSummary: config.orchestratorConfig.MAX_WINDOW_SUMMARY,
+      maxQueueSize: config.orchestratorConfig.MAX_QUEUE_SIZE,
+    };
+  }
+  return { orchestratorModel, toolNode, prompts, pruningParameters };
 };
 
-const handleConditionalEdge = async (state: typeof OrchestratorState.State) => {
+const handleConditionalEdge = async (state: OrchestratorStateType) => {
   logger.debug('State in conditional edge', { state });
 
   if (state.workflowControl && state.workflowControl.shouldStop) {
@@ -39,8 +50,11 @@ const handleConditionalEdge = async (state: typeof OrchestratorState.State) => {
   return 'tools';
 };
 
-const createOrchestratorWorkflow = async (nodes: Awaited<ReturnType<typeof createNodes>>) => {
-  const workflow = new StateGraph(OrchestratorState)
+const createOrchestratorWorkflow = async (
+  nodes: Awaited<ReturnType<typeof createNodes>>,
+  pruningParameters: PruningParameters
+) => {
+  const workflow = new StateGraph(OrchestratorState(pruningParameters))
     .addNode('input', nodes.inputNode)
     .addNode('messageSummary', nodes.messageSummaryNode)
     .addNode('workflowSummary', nodes.workflowSummaryNode)
@@ -63,8 +77,9 @@ export const createOrchestratorRunner = async (
   tools: (StructuredToolInterface | RunnableToolLike)[],
   prompts: OrchestratorPrompts,
   namespace: string,
+  pruningParameters?: PruningParameters,
 ): Promise<OrchestratorRunner> => {
-  const workflowConfig = await createWorkflowConfig(model, tools, prompts);
+  const workflowConfig = await createWorkflowConfig(model, tools, prompts, pruningParameters);
 
   const vectorStore = new VectorDB(
     join('data', namespace),
@@ -74,7 +89,7 @@ export const createOrchestratorRunner = async (
   );
 
   const nodes = await createNodes(workflowConfig, vectorStore);
-  const workflow = await createOrchestratorWorkflow(nodes);
+  const workflow = await createOrchestratorWorkflow(nodes, workflowConfig.pruningParameters);
   const memoryStore = new MemorySaver();
   const app = workflow.compile({ checkpointer: memoryStore });
 
@@ -86,6 +101,7 @@ export const createOrchestratorRunner = async (
       const config = {
         recursionLimit: 50,
         configurable: {
+          ...workflowConfig.pruningParameters,
           thread_id: threadId,
         },
       };
@@ -112,14 +128,16 @@ export const getOrchestratorRunner = (() => {
     prompts,
     tools,
     namespace,
+    pruningParameters,
   }: {
     model: LLMNodeConfiguration;
     prompts: OrchestratorPrompts;
     tools: (StructuredToolInterface | RunnableToolLike)[];
     namespace: string;
+    pruningParameters?: PruningParameters;
   }) => {
     if (!runnerPromise) {
-      runnerPromise = createOrchestratorRunner(model, tools, prompts, namespace);
+      runnerPromise = createOrchestratorRunner(model, tools, prompts, namespace, pruningParameters);
     }
     return runnerPromise;
   };

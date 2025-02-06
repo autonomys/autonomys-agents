@@ -1,23 +1,23 @@
 import { AIMessage } from '@langchain/core/messages';
 import { createLogger } from '../../../../utils/logger.js';
-import { OrchestratorConfig, OrchestratorState } from '../types.js';
-import { config } from '../../../../config/index.js';
+import { OrchestratorConfig, OrchestratorStateType } from '../types.js';
 import { VectorDB } from '../../../../services/vectorDb/VectorDB.js';
+
 const logger = createLogger('message-summary-node');
 
 export const createMessageSummaryNode = (
-  { orchestratorModel, prompts }: OrchestratorConfig,
+  { orchestratorModel, prompts, pruningParameters }: OrchestratorConfig,
   vectorStore: VectorDB,
 ) => {
-  const runNode = async (state: typeof OrchestratorState.State) => {
+  const runNode = async (state: OrchestratorStateType) => {
     logger.info('MessageSummary Node');
     logger.info('State size:', { size: state.messages.length });
 
-    if (state.messages.length > config.orchestratorConfig.MAX_QUEUE_SIZE) {
+    if (state.messages.length > pruningParameters.maxQueueSize) {
       const prevSummary = state.messages[1]?.content || 'No previous summary';
       const messagesToSummarize = state.messages.slice(
         1,
-        config.orchestratorConfig.MAX_WINDOW_SUMMARY,
+        pruningParameters.maxWindowSummary,
       );
 
       const newMessages = messagesToSummarize
