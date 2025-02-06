@@ -10,7 +10,6 @@ import { createPrompts } from './agents/workflows/orchestrator/prompts.js';
 import { LLMNodeConfiguration, LLMProvider } from './services/llm/types.js';
 import { PruningParameters } from './agents/workflows/orchestrator/types.js';
 
-
 const orchestatorConfig = async () => {
   const { USERNAME, PASSWORD, COOKIES_PATH } = config.twitterConfig;
   const twitterApi = await createTwitterApi(USERNAME, PASSWORD, COOKIES_PATH);

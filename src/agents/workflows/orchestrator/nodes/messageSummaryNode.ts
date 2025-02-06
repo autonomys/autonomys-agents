@@ -15,10 +15,7 @@ export const createMessageSummaryNode = (
 
     if (state.messages.length > pruningParameters.maxQueueSize) {
       const prevSummary = state.messages[1]?.content || 'No previous summary';
-      const messagesToSummarize = state.messages.slice(
-        1,
-        pruningParameters.maxWindowSummary,
-      );
+      const messagesToSummarize = state.messages.slice(1, pruningParameters.maxWindowSummary);
 
       const newMessages = messagesToSummarize
         .map(msg => {

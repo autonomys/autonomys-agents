@@ -1,9 +1,10 @@
-import { Annotation } from "@langchain/langgraph/web";
-import { WorkflowControl } from "./nodes/inputPrompt.js";
-import { PruningParameters } from "./types.js";
-import { BaseMessage } from "@langchain/core/messages";
+import { Annotation } from '@langchain/langgraph/web';
+import { WorkflowControl } from './nodes/inputPrompt.js';
+import { PruningParameters } from './types.js';
+import { BaseMessage } from '@langchain/core/messages';
 
-export const OrchestratorState = (pruningParameters: PruningParameters) => Annotation.Root({
+export const OrchestratorState = (pruningParameters: PruningParameters) =>
+  Annotation.Root({
     messages: Annotation<readonly BaseMessage[]>({
       reducer: (curr, update) => {
         if (
@@ -28,4 +29,4 @@ export const OrchestratorState = (pruningParameters: PruningParameters) => Annot
       default: () => null,
       reducer: (_, update) => update,
     }),
-  });       
+  });

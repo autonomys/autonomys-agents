@@ -23,7 +23,7 @@ export const createInputNode = (
   { orchestratorModel, prompts }: OrchestratorConfig,
   vectorStore: VectorDB,
 ) => {
-    const runNode = async (state: OrchestratorStateType) => {
+  const runNode = async (state: OrchestratorStateType) => {
     const { messages } = state;
     logger.info('Running input node with messages:', {
       messages: messages.map(message => message.content),

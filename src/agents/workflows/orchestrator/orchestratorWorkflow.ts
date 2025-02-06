@@ -52,7 +52,7 @@ const handleConditionalEdge = async (state: OrchestratorStateType) => {
 
 const createOrchestratorWorkflow = async (
   nodes: Awaited<ReturnType<typeof createNodes>>,
-  pruningParameters: PruningParameters
+  pruningParameters: PruningParameters,
 ) => {
   const workflow = new StateGraph(OrchestratorState(pruningParameters))
     .addNode('input', nodes.inputNode)

@@ -30,7 +30,7 @@ export const createTwitterAgentTool = (twitterApi: TwitterApi) =>
         };
         const namespace = 'twitter';
         const prompts = await createTwitterPrompts();
-        const runner = await getOrchestratorRunner({model, tools, prompts, namespace});
+        const runner = await getOrchestratorRunner({ model, tools, prompts, namespace });
         const result = await runner.runWorkflow(
           { messages },
           { threadId: 'twitter_workflow_state' },
