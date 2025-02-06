@@ -153,6 +153,7 @@ The orchestrator helps manage the LLM's context window size through pruning para
      prompts,                 // prompts for the agent
      tools,                   // tools available to the agent
      namespace,               // name of the agent
+     vectorStore,             // vector store for the agent
      pruningParameters: PruningParameters{
        maxWindowSummary: 10,  // End index for message slice
        maxQueueSize: 50       // Trigger summarization threshold
