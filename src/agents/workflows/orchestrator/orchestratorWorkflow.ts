@@ -1,6 +1,6 @@
 import { END, MemorySaver, START, StateGraph } from '@langchain/langgraph';
 import { createLogger } from '../../../utils/logger.js';
-import { LLMFactory } from '../../../services/llm/factory.js';
+import { LLMFactory, LLMModelType } from '../../../services/llm/factory.js';
 import { ToolNode } from '@langchain/langgraph/prebuilt';
 import { createNodes } from './nodes.js';
 import {
@@ -20,20 +20,22 @@ import { config } from '../../../config/index.js';
 const logger = createLogger('orchestrator-workflow');
 
 const createWorkflowConfig = (
-  model: LLMNodeConfiguration,
+  orchestratorModel: LLMModelType,
   tools: (StructuredToolInterface | RunnableToolLike)[],
   prompts: OrchestratorPrompts,
   namespace: string,
-  vectorStore: VectorDB,
   pruningParameters?: PruningParameters,
+  vectorStore?: VectorDB,
 ): OrchestratorConfig => {
   const toolNode = new ToolNode(tools);
-  const orchestratorModel = LLMFactory.createModel(model);
   if (!pruningParameters) {
     pruningParameters = {
       maxWindowSummary: config.orchestratorConfig.MAX_WINDOW_SUMMARY,
       maxQueueSize: config.orchestratorConfig.MAX_QUEUE_SIZE,
     };
+  }
+  if (!vectorStore) {
+    vectorStore = new VectorDB(namespace);
   }
 
   return { orchestratorModel, toolNode, prompts, pruningParameters, namespace, vectorStore };
@@ -73,20 +75,20 @@ export type OrchestratorRunner = Readonly<{
 }>;
 
 export const createOrchestratorRunner = async (
-  model: LLMNodeConfiguration,
+  model: LLMModelType,
   tools: (StructuredToolInterface | RunnableToolLike)[],
   prompts: OrchestratorPrompts,
   namespace: string,
-  vectorStore: VectorDB,
   pruningParameters?: PruningParameters,
+  vectorStore?: VectorDB,
 ): Promise<OrchestratorRunner> => {
   const workflowConfig = createWorkflowConfig(
     model,
     tools,
     prompts,
     namespace,
-    vectorStore,
     pruningParameters,
+    vectorStore,
   );
 
   const nodes = await createNodes(workflowConfig);
@@ -116,7 +118,7 @@ export const createOrchestratorRunner = async (
       }
 
       logger.info('Workflow completed', { threadId });
-      vectorStore.close();
+      workflowConfig.vectorStore.close();
       return finalState;
     },
   };
@@ -132,7 +134,7 @@ export const getOrchestratorRunner = (() => {
     vectorStore,
     pruningParameters,
   }: {
-    model: LLMNodeConfiguration;
+    model: LLMModelType;
     prompts: OrchestratorPrompts;
     tools: (StructuredToolInterface | RunnableToolLike)[];
     namespace: string;
@@ -145,8 +147,8 @@ export const getOrchestratorRunner = (() => {
         tools,
         prompts,
         namespace,
-        vectorStore,
         pruningParameters,
+        vectorStore,
       );
     }
     return runnerPromise;

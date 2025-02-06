@@ -8,6 +8,7 @@ import { TwitterApi } from '../../../services/twitter/types.js';
 import { HumanMessage } from '@langchain/core/messages';
 import { LLMProvider } from '../../../services/llm/types.js';
 import { VectorDB } from '../../../services/vectorDb/VectorDB.js';
+import { LLMFactory } from '../../../services/llm/factory.js';
 
 const logger = createLogger('twitter-workflow');
 
@@ -24,11 +25,11 @@ export const createTwitterAgentTool = (twitterApi: TwitterApi) =>
       try {
         const messages = [new HumanMessage(instructions)];
         const { tools } = createTools(twitterApi);
-        const model = {
+        const model = LLMFactory.createModel({
           provider: LLMProvider.ANTHROPIC,
           model: 'claude-3-5-sonnet-latest',
           temperature: 0,
-        };
+        });
         const namespace = 'twitter';
         const prompts = await createTwitterPrompts();
         const vectorStore = new VectorDB(namespace);

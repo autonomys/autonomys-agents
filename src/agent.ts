@@ -10,32 +10,30 @@ import { createPrompts } from './agents/workflows/orchestrator/prompts.js';
 import { LLMNodeConfiguration, LLMProvider } from './services/llm/types.js';
 import { PruningParameters } from './agents/workflows/orchestrator/types.js';
 import { VectorDB } from './services/vectorDb/VectorDB.js';
+import { LLMFactory } from './services/llm/factory.js';
 
 const orchestatorConfig = async () => {
   const { USERNAME, PASSWORD, COOKIES_PATH } = config.twitterConfig;
   const twitterApi = await createTwitterApi(USERNAME, PASSWORD, COOKIES_PATH);
   const twitterAgent = createTwitterAgentTool(twitterApi);
   const namespace = 'orchestrator';
-  const vectorStore = new VectorDB(namespace);
   const { tools } = createTools();
   const prompts = await createPrompts();
   const pruningParameters: PruningParameters = {
     maxWindowSummary: 30,
     maxQueueSize: 50,
   };
-  const model: LLMNodeConfiguration = {
+  const model = LLMFactory.createModel({
     provider: LLMProvider.ANTHROPIC,
     model: 'claude-3-5-sonnet-latest',
     temperature: 0,
-  };
-
+  });
   return {
     model,
     namespace,
     tools: [...tools, twitterAgent],
     prompts,
     pruningParameters,
-    vectorStore,
   };
 };
 
@@ -49,7 +47,6 @@ export const orchestratorRunner = (() => {
         orchestratorConfig.tools,
         orchestratorConfig.prompts,
         orchestratorConfig.namespace,
-        orchestratorConfig.vectorStore,
         orchestratorConfig.pruningParameters,
       );
     }

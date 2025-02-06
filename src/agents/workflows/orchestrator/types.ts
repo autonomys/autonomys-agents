@@ -4,6 +4,7 @@ import { ChatPromptTemplate } from '@langchain/core/prompts';
 import { WorkflowControl } from './nodes/inputPrompt.js';
 import { LLMModelType } from '../../../services/llm/factory.js';
 import { VectorDB } from '../../../services/vectorDb/VectorDB.js';
+
 export type OrchestratorPrompts = {
   inputPrompt: ChatPromptTemplate;
   messageSummaryPrompt: ChatPromptTemplate;
