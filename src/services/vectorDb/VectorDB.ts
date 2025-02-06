@@ -212,6 +212,18 @@ export class VectorDB {
     return this.db;
   }
 
+  public isOpen(): boolean {
+    return this.db && !this.db.open === false;
+  }
+
+  public async open(): Promise<void> {
+    if (!this.isOpen()) {
+      logger.info('Opening VectorDB connection');
+      this.initializeDatabase();
+      logger.info('VectorDB opened successfully');
+    }
+  }
+
   public close(): void {
     logger.info('Closing VectorDB connection');
     if (this.db) {

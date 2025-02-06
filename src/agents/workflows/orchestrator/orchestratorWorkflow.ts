@@ -79,6 +79,11 @@ export const createOrchestratorRunner = async (
       const threadId = options?.threadId || 'orchestrator_workflow_state';
       logger.info('Starting orchestrator workflow', { threadId });
 
+      if (!vectorStore.isOpen()) {
+        logger.info('Opening vector store connection for new workflow run');
+        await vectorStore.open();
+      }
+
       const config = {
         recursionLimit: 50,
         configurable: {
