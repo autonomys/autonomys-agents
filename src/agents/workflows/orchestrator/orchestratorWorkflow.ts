@@ -14,8 +14,8 @@ import { OrchestratorState } from './state.js';
 import { StructuredToolInterface } from '@langchain/core/tools';
 import { RunnableToolLike } from '@langchain/core/runnables';
 import { VectorDB } from '../../../services/vectorDb/VectorDB.js';
-import { config } from '../../../config/index.js';
-
+import { FinishedWorkflow } from './nodes/finishWorkflowPrompt.js';
+import { parseFinishedWorkflow } from './nodes/finishWorkflowNode.js';
 const logger = createLogger('orchestrator-workflow');
 
 const createWorkflowConfig = (
@@ -70,7 +70,10 @@ const createOrchestratorWorkflow = async (
 };
 
 export type OrchestratorRunner = Readonly<{
-  runWorkflow: (input?: OrchestratorInput, options?: { threadId?: string }) => Promise<unknown>;
+  runWorkflow: (
+    input?: OrchestratorInput,
+    options?: { threadId?: string },
+  ) => Promise<FinishedWorkflow>;
 }>;
 
 export const createOrchestratorRunner = async (
@@ -96,14 +99,12 @@ export const createOrchestratorRunner = async (
   const app = workflow.compile({ checkpointer: memoryStore });
 
   return {
-    runWorkflow: async (input?: OrchestratorInput, options?: { threadId?: string }) => {
-      const threadId = options?.threadId || 'orchestrator_workflow_state';
+    runWorkflow: async (
+      input?: OrchestratorInput,
+      options?: { threadId?: string },
+    ): Promise<FinishedWorkflow> => {
+      const threadId = `${options?.threadId || 'orchestrator'}-${Date.now()}`;
       logger.info('Starting orchestrator workflow', { threadId });
-
-      if (!vectorStore.isOpen()) {
-        logger.info('Opening vector store connection for new workflow run');
-        await vectorStore.open();
-      }
 
       const config = {
         recursionLimit: 50,
@@ -115,15 +116,26 @@ export const createOrchestratorRunner = async (
 
       const initialState = input || { messages: [] };
       const stream = await app.stream(initialState, config);
-      let finalState = {};
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      let finalState = {} as any;
 
       for await (const state of stream) {
         finalState = state;
       }
 
-      logger.info('Workflow completed', { threadId });
-      workflowConfig.vectorStore.close();
-      return finalState;
+      logger.info('Workflow completed', {
+        threadId,
+      });
+
+      if (finalState?.finishWorkflow?.messages?.[0]?.content) {
+        return await parseFinishedWorkflow(finalState.finishWorkflow.messages[0].content);
+      } else {
+        logger.error('Workflow completed but no finished workflow data found', {
+          finalState,
+          content: finalState?.finishWorkflow?.content,
+        });
+        return { workflowSummary: 'Extracting workflow data failed' };
+      }
     },
   };
 };

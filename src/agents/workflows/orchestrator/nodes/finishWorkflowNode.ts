@@ -5,7 +5,7 @@ import { AIMessage } from '@langchain/core/messages';
 
 const logger = createLogger('finish-workflow-node');
 
-const parseFinishWorkflow = async (content: unknown) => {
+export const parseFinishedWorkflow = async (content: unknown) => {
   const contentString = typeof content === 'string' ? content : JSON.stringify(content, null, 2);
   if (typeof contentString === 'string') {
     try {
@@ -41,10 +41,9 @@ export const createFinishWorkflowNode = ({
       messages,
       currentTime: new Date().toISOString(),
     });
-    logger.info('Summarizing messages:', { messages });
 
-    const result = await orchestratorModel.invoke(formattedPrompt);
-    const finishedWorkflow = await parseFinishWorkflow(result.content);
+    const result = await orchestratorModel.bind({ tools: [] }).invoke(formattedPrompt);
+    const finishedWorkflow = await parseFinishedWorkflow(result.content);
 
     logger.info('Finished Workflow:', { finishedWorkflow });
 
@@ -52,7 +51,7 @@ export const createFinishWorkflowNode = ({
 
     return {
       messages: [new AIMessage({ content: result.content })],
-      ...finishedWorkflow,
+      finishedWorkflow,
     };
   };
   return runNode;

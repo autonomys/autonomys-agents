@@ -16,41 +16,37 @@ process.on('SIGTERM', () => {
 });
 
 const runner = await orchestratorRunner();
-const startWorkflowPolling = async () => {
-  try {
-    const initalMessage = new HumanMessage(`
-      As a social media manager, you are expected to interact with twitter periodically in order to maintain social engagement. Use your judgement how frequently you should run these interactions and what you should do. For efficiency, just have one or two tasks per request. You don't need do the same things every time. Save any interesting experiences from your interactions your permanent storage.
+const initalMessage = `As a social media manager, you are expected to interact with twitter periodically in order to maintain social engagement. Use your judgement how frequently you should run these interactions and what you should do. You don't need do the same things every time. Save any interesting experiences from your interactions your permanent storage.
 
-      EXAMPLES:
-      - Check your timiline for interesting conversations and join the conversation.
-      - Like interesting tweets.
-      - Follow interesting users.
-      - Check your mentions and reply to useful conversations that you haven't replied to yet.
-      - Post a new tweet.
-    `);
-
-    const _result = await runner.runWorkflow({ messages: [initalMessage] });
-
-    logger.info('Workflow execution completed successfully for character:', {
-      charcterName: config.characterConfig.name,
-      runFinished: new Date().toISOString(),
-      nextRun: `${config.twitterConfig.RESPONSE_INTERVAL_MS / 1000 / 60} minutes`,
-    });
-  } catch (error) {
-    if (error && typeof error === 'object' && 'name' in error && error.name === 'ExitPromptError') {
-      logger.info('Process terminated by user');
-      process.exit(0);
-    }
-    logger.error('Error running workflow:', error);
-    process.exit(1);
-  }
-};
+  EXAMPLES:
+  - Check your timiline for interesting conversations and join the conversation.
+  - Like interesting tweets.
+  - Follow interesting users.
+  - Check your mentions and reply to useful conversations that you haven't replied to yet.
+  - Post a new tweet.
+`;
 
 const main = async () => {
   try {
     await validateLocalHash();
-    await startWorkflowPolling();
-    setInterval(startWorkflowPolling, config.twitterConfig.RESPONSE_INTERVAL_MS);
+
+    let message = initalMessage;
+    while (true) {
+      const result = await runner.runWorkflow({ messages: [new HumanMessage(message)] });
+      message = `Previous workflow summary ran at ${new Date().toISOString()}: ${result.workflowSummary}
+        Instructions: ${result.nextRecommendedAction}`;
+
+      logger.info('Workflow execution result:', { result });
+
+      const nextDelaySeconds =
+        result.secondsUntilNextWorkflow ?? config.twitterConfig.RESPONSE_INTERVAL_MS / 1000;
+      logger.info('Workflow execution completed successfully for character:', {
+        charcterName: config.characterConfig.name,
+        runFinished: new Date().toISOString(),
+        nextRun: `${nextDelaySeconds / 60} minutes`,
+      });
+      await new Promise(resolve => setTimeout(resolve, nextDelaySeconds * 1000));
+    }
   } catch (error) {
     if (error && typeof error === 'object' && 'name' in error && error.name === 'ExitPromptError') {
       logger.info('Process terminated by user');
