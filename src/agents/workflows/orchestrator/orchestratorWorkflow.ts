@@ -21,9 +21,7 @@ const createWorkflowConfig = async (
   prompts: OrchestratorPrompts,
 ): Promise<OrchestratorConfig> => {
   const toolNode = new ToolNode(tools);
-  const orchestratorModel = LLMFactory.createModel(config.llmConfig.nodes.orchestrator).bind({
-    tools,
-  });
+  const orchestratorModel = LLMFactory.createModel(config.llmConfig.nodes.orchestrator);
   return { orchestratorModel, toolNode, prompts };
 };
 
