@@ -1,23 +1,73 @@
 import { config } from '../../src/config/index.js';
 import { createLogger } from '../../src/utils/logger.js';
 import { validateLocalHash } from '../../src/agents/tools/utils/localHashStorage.js';
-import { orchestratorRunner } from './agent.js';
+import {
+  createOrchestratorRunner,
+  OrchestratorRunner,
+} from '../../src/agents/workflows/orchestrator/orchestratorWorkflow.js';
+import { createTools } from '../../src/agents/workflows/orchestrator/tools.js';
+import { createTwitterAgentTool } from '../../src/agents/workflows/twitter/twitterAgentTool.js';
+import { createPrompts } from '../../src/agents/workflows/orchestrator/prompts.js';
+import { LLMProvider } from '../../src/services/llm/types.js';
+import { PruningParameters } from '../../src/agents/workflows/orchestrator/types.js';
+import { LLMFactory } from '../../src/services/llm/factory.js';
+import { createTwitterApi } from '../../src/services/twitter/client.js';
 import { HumanMessage } from '@langchain/core/messages';
 
-export const logger = createLogger('directed-twitter-agent');
+const logger = createLogger('autonomous-twitter-agent');
 
-const runner = await orchestratorRunner();
-const initalMessage = `As a social media manager, you are expected to interact with twitter periodically in order to maintain social engagement. Use your judgement how frequently you should run these interactions and what you should do. You don't need do the same things every time. Save any interesting experiences from your interactions your permanent storage.
+const orchestatorConfig = async () => {
+  const { USERNAME, PASSWORD, COOKIES_PATH } = config.twitterConfig;
+  const twitterApi = await createTwitterApi(USERNAME, PASSWORD, COOKIES_PATH);
+  const twitterAgent = createTwitterAgentTool(twitterApi);
+  const namespace = 'orchestrator';
+  const { tools } = createTools();
+  const prompts = await createPrompts({ selfSchedule: true });
+  const pruningParameters: PruningParameters = {
+    maxWindowSummary: 30,
+    maxQueueSize: 50,
+  };
+  const model = LLMFactory.createModel({
+    provider: LLMProvider.ANTHROPIC,
+    model: 'claude-3-5-sonnet-latest',
+    temperature: 0,
+  });
+  return {
+    model,
+    namespace,
+    tools: [...tools, twitterAgent],
+    prompts,
+    pruningParameters,
+  };
+};
+
+const orchestratorConfig = await orchestatorConfig();
+const orchestratorRunner = (() => {
+  let runnerPromise: Promise<OrchestratorRunner> | undefined = undefined;
+  return async () => {
+    if (!runnerPromise) {
+      runnerPromise = createOrchestratorRunner(
+        orchestratorConfig.model,
+        orchestratorConfig.tools,
+        orchestratorConfig.prompts,
+        orchestratorConfig.namespace,
+        orchestratorConfig.pruningParameters,
+      );
+    }
+    return runnerPromise;
+  };
+})();
+
+const main = async () => {
+  const runner = await orchestratorRunner();
+  const initalMessage = `As a social media manager, you are expected to interact with twitter periodically in order to maintain social engagement. Use your judgement how frequently you should run these interactions and what you should do. You don't need do the same things every time. Save any interesting experiences from your interactions to your permanent storage.
 
   EXAMPLES:
-  - Check your timiline for interesting conversations and join the conversation.
+  - Check your timeline for interesting conversations and join the conversation.
   - Like interesting tweets.
   - Follow interesting users.
   - Check your mentions and reply to useful conversations that you haven't replied to yet.
-  - Post a new tweet.
-`;
-
-const main = async () => {
+  - Post a new tweet.`;
   try {
     await validateLocalHash();
 
