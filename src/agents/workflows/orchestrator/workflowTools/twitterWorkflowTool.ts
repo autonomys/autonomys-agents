@@ -5,9 +5,9 @@ import { AIMessage } from '@langchain/core/messages';
 import { createLogger } from '../../../../utils/logger.js';
 import { getWorkflowRunner } from '../../directedTwitter/twitterWorkflow.js';
 
-const logger = createLogger('twitter-workflow-tool');
+const logger = createLogger('directed-twitter-workflow-tool');
 
-export const createTwitterWorkflowTool = () =>
+export const createDirectedTwitterWorkflowTool = () =>
   new DynamicStructuredTool({
     name: 'twitter_workflow',
     description:
@@ -24,22 +24,3 @@ export const createTwitterWorkflowTool = () =>
       }
     },
   });
-
-export const invokeTwitterWorkflow = async (toolNode: ToolNode) => {
-  const toolResponse = await toolNode.invoke({
-    messages: [
-      new AIMessage({
-        content: '',
-        tool_calls: [
-          {
-            name: 'twitter_workflow',
-            args: {},
-            id: 'twitter_workflow_call',
-            type: 'tool_call',
-          },
-        ],
-      }),
-    ],
-  });
-  return toolResponse;
-};
