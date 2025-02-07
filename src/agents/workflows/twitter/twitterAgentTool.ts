@@ -9,13 +9,10 @@ import { HumanMessage } from '@langchain/core/messages';
 import { LLMProvider } from '../../../services/llm/types.js';
 import { VectorDB } from '../../../services/vectorDb/VectorDB.js';
 import { LLMFactory } from '../../../services/llm/factory.js';
-
+import { Tools } from '../orchestrator/types.js';
 const logger = createLogger('twitter-workflow');
 
-export const createTwitterAgentTool = (
-  twitterApi: TwitterApi,
-  optionalTools: DynamicStructuredTool<any>[] = [],
-) =>
+export const createTwitterAgentTool = (twitterApi: TwitterApi, optionalTools: Tools = []) =>
   new DynamicStructuredTool({
     name: 'twitter_workflow',
     description: `

@@ -9,10 +9,9 @@ import {
   OrchestratorPrompts,
   OrchestratorStateType,
   PruningParameters,
+  Tools,
 } from './types.js';
 import { OrchestratorState } from './state.js';
-import { StructuredToolInterface } from '@langchain/core/tools';
-import { RunnableToolLike } from '@langchain/core/runnables';
 import { VectorDB } from '../../../services/vectorDb/VectorDB.js';
 import { FinishedWorkflow } from './nodes/finishWorkflowPrompt.js';
 import { parseFinishedWorkflow } from './nodes/finishWorkflowNode.js';
@@ -22,7 +21,7 @@ const logger = createLogger('orchestrator-workflow');
 
 const createWorkflowConfig = (
   orchestratorModel: LLMModelType,
-  tools: (StructuredToolInterface | RunnableToolLike)[],
+  tools: Tools,
   prompts: OrchestratorPrompts,
   namespace: string,
   pruningParameters?: PruningParameters,
@@ -80,7 +79,7 @@ export type OrchestratorRunner = Readonly<{
 
 export const createOrchestratorRunner = async (
   model: LLMModelType,
-  tools: (StructuredToolInterface | RunnableToolLike)[],
+  tools: Tools,
   prompts: OrchestratorPrompts,
   namespace: string,
   pruningParameters?: PruningParameters,
@@ -163,7 +162,7 @@ export const getOrchestratorRunner = (() => {
   }: {
     model: LLMModelType;
     prompts: OrchestratorPrompts;
-    tools: (StructuredToolInterface | RunnableToolLike)[];
+    tools: Tools;
     namespace: string;
     vectorStore: VectorDB;
     pruningParameters?: PruningParameters;

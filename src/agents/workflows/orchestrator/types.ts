@@ -34,3 +34,5 @@ export type PruningParameters = {
   maxWindowSummary: number;
   maxQueueSize: number;
 };
+
+export type Tools = ToolNode['tools'];
