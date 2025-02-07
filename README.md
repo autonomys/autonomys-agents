@@ -2,13 +2,13 @@
 
 # Autonomys Agents: A framework for building autonomous AI agents
 
-Autonomys Agents is an experimental framework for building AI agents. Currently, the framework supports agents that can interact with social networks and maintain permanent memory through the Autonomys Network. We are still in the early stages of development and are actively seeking feedback and contributions. We will be rapidly adding many more workflows and features.
+Autonomys Agents is an **EXPERIMENTAL** framework for building AI agents. Currently, the framework supports agents that can interact with social networks and maintain permanent memory through the Autonomys Network. We are still in the **EARLY STAGES OF DEVELOPMENT** and are actively seeking feedback and contributions. We will be rapidly adding many more workflows and features.
 
 ## Features
 
 - 🤖 Autonomous social media engagement
 - 🧠 Permanent agent memory storage via Autonomys Network
-- 🔄 Built-in workflow system
+- 🔄 Built-in orchestration system
 - 🐦 Twitter integration (with more platforms planned)
 - 🎭 Customizable agent personalities
 - 🛠️ Extensible tool system
@@ -26,6 +26,13 @@ Autonomys Agents is an experimental framework for building AI agents. Currently,
 4. Run your character:
    - For dev purposes in watch mode: `yarn dev <your-character-name>`
    - For production build and run: `yarn start <your-character-name>`
+
+## Examples
+
+The following examples demonstrate the use of the framework and are available:
+
+- [Directed Twitter Agent](examples/directedTwitterAgent/README.md)
+- [Autonomous Twitter Agent](examples/autonomousTwitterAgent/README.md)
 
 ## Character System
 
@@ -122,24 +129,12 @@ twitter_profile:
    # ... other configuration
    ```
 
-## Workflows
-
-### Twitter
-
-The Twitter workflow enables agents to:
-
-- Monitor X (formerly Twitter) for relevant discussions
-- Analyze trends and conversations
-- Engage meaningfully with other users
-- Generate original content
-- Maintain consistent personality
-- Store interactions in permanent memory
-
-### Context Size Management
+## Context Size Management
 
 The orchestrator helps manage the LLM's context window size through pruning parameters. These parameters control message summarization and retention. Configure them in two ways:
 
 1. Default configuration in `config.yaml`:
+
    ```yaml
    orchestrator:
      MAX_WINDOW_SUMMARY: 20  // End index for message slice
@@ -162,9 +157,6 @@ The orchestrator helps manage the LLM's context window size through pruning para
    ```
 
 When messages exceed `maxQueueSize`, a summary is created. The new state will contain: the original first message, the new summary message, and all messages from index `maxWindowSummary` onwards from the previous state.
-
-
-
 
 ## Autonomys Network Integration
 
