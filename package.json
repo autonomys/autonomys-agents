@@ -11,6 +11,7 @@
         "format": "prettier --write \"src/**/*.ts\" \"tests/**/*.ts\"",
         "format:check": "prettier --check \"src/**/*.ts\" \"tests/**/*.ts\"",
         "example:directed-twitter": "tsx examples/directedTwitterAgent/index.ts",
+        "example:autonomous-twitter": "tsx examples/autonomousTwitterAgent/index.ts",
         "extract-twitter-dsn-schemas": "tsx src/agents/workflows/twitter/cli/extractDsnSchemas.ts",
         "test": "jest",
         "test:watch": "jest --watch",
