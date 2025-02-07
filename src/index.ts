@@ -30,7 +30,7 @@ const main = async () => {
   try {
     await validateLocalHash();
 
-    let message = initalMessage; //'what time is it?';
+    let message = initalMessage;
     while (true) {
       const result = await runner.runWorkflow({ messages: [new HumanMessage(message)] });
 

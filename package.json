@@ -1,6 +1,6 @@
 {
     "name": "autonomys-agents",
-    "version": "0.2.1",
+    "version": "0.2.2",
     "description": "Autonomys Agents",
     "main": "dist/index.js",
     "type": "module",
@@ -10,8 +10,8 @@
         "dev": "NODE_ENV=development tsx --no-cache --watch src/index.ts",
         "format": "prettier --write \"src/**/*.ts\" \"tests/**/*.ts\"",
         "format:check": "prettier --check \"src/**/*.ts\" \"tests/**/*.ts\"",
-        "example:twitter": "tsx examples/twitter.ts",
-        "extract-twitter-dsn-schemas": "tsx src/agents/workflows/twitter/cli/extractDsnSchemas.ts",
+        "example:directed-twitter": "tsx examples/directedTwitterAgent/index.ts",
+        "example:autonomous-twitter": "tsx examples/autonomousTwitterAgent/index.ts",
         "test": "jest",
         "test:watch": "jest --watch",
         "test:coverage": "jest --coverage",
