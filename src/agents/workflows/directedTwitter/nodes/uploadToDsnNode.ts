@@ -2,7 +2,7 @@ import { TwitterWorkflowConfig } from '../types.js';
 import { createLogger } from '../../../../utils/logger.js';
 import { State } from '../twitterWorkflow.js';
 import { AIMessage } from '@langchain/core/messages';
-import { invokeUploadToDsnTool } from '../../../tools/uploadToDsnTool.js';
+import { invokeUploadToDsnTool } from '../tools/uploadToDsnTool.js';
 
 const logger = createLogger('upload-to-dsn-node');
 
