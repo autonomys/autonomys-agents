@@ -1,29 +1,13 @@
-import { config } from './config/index.js';
-import { createLogger } from './utils/logger.js';
-import { validateLocalHash } from './agents/tools/utils/localHashStorage.js';
+import { config } from '../../src/config/index.js';
+import { createLogger } from '../../src/utils/logger.js';
+import { validateLocalHash } from '../../src/agents/tools/utils/localHashStorage.js';
 import { orchestratorRunner } from './agent.js';
 import { HumanMessage } from '@langchain/core/messages';
-export const logger = createLogger('app');
 
-process.on('SIGINT', () => {
-  logger.info('Received SIGINT. Gracefully shutting down...');
-  process.exit(0);
-});
-
-process.on('SIGTERM', () => {
-  logger.info('Received SIGTERM. Gracefully shutting down...');
-  process.exit(0);
-});
+export const logger = createLogger('directed-twitter-agent');
 
 const runner = await orchestratorRunner();
-const initalMessage = `As a social media manager, you are expected to interact with twitter periodically in order to maintain social engagement. Use your judgement how frequently you should run these interactions and what you should do. You don't need do the same things every time. Save any interesting experiences from your interactions your permanent storage.
-
-  EXAMPLES:
-  - Check your timiline for interesting conversations and join the conversation.
-  - Like interesting tweets.
-  - Follow interesting users.
-  - Check your mentions and reply to useful conversations that you haven't replied to yet.
-  - Post a new tweet.
+const initalMessage = `As a social media manager, you are expected to interact with twitter periodically in order to maintain social engagement. Use your judgement how frequently you should run these interactions. Run the twitter workflow to handle twitter related tasks.
 `;
 
 const main = async () => {
@@ -57,5 +41,15 @@ const main = async () => {
     process.exit(1);
   }
 };
+
+process.on('SIGINT', () => {
+  logger.info('Received SIGINT. Gracefully shutting down...');
+  process.exit(0);
+});
+
+process.on('SIGTERM', () => {
+  logger.info('Received SIGTERM. Gracefully shutting down...');
+  process.exit(0);
+});
 
 main();
