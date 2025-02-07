@@ -14,6 +14,8 @@ import { OrchestratorState } from './state.js';
 import { StructuredToolInterface } from '@langchain/core/tools';
 import { RunnableToolLike } from '@langchain/core/runnables';
 import { VectorDB } from '../../../services/vectorDb/VectorDB.js';
+import { FinishedWorkflow } from './nodes/finishWorkflowPrompt.js';
+import { parseFinishedWorkflow } from './nodes/finishWorkflowNode.js';
 import { config } from '../../../config/index.js';
 
 const logger = createLogger('orchestrator-workflow');
@@ -45,7 +47,7 @@ const handleConditionalEdge = async (state: OrchestratorStateType) => {
 
   if (state.workflowControl && state.workflowControl.shouldStop) {
     logger.info('Workflow stop requested', { reason: state.workflowControl.reason });
-    return 'workflowSummary';
+    return 'finishWorkflow';
   }
 
   return 'tools';
@@ -58,19 +60,22 @@ const createOrchestratorWorkflow = async (
   const workflow = new StateGraph(OrchestratorState(pruningParameters))
     .addNode('input', nodes.inputNode)
     .addNode('messageSummary', nodes.messageSummaryNode)
-    .addNode('workflowSummary', nodes.workflowSummaryNode)
+    .addNode('finishWorkflow', nodes.finishWorkflowNode)
     .addNode('tools', nodes.toolNode)
     .addEdge(START, 'input')
     .addConditionalEdges('input', handleConditionalEdge)
     .addEdge('tools', 'messageSummary')
     .addEdge('messageSummary', 'input')
-    .addEdge('workflowSummary', END);
+    .addEdge('finishWorkflow', END);
 
   return workflow;
 };
 
 export type OrchestratorRunner = Readonly<{
-  runWorkflow: (input?: OrchestratorInput, options?: { threadId?: string }) => Promise<unknown>;
+  runWorkflow: (
+    input?: OrchestratorInput,
+    options?: { threadId?: string },
+  ) => Promise<FinishedWorkflow>;
 }>;
 
 export const createOrchestratorRunner = async (
@@ -96,8 +101,11 @@ export const createOrchestratorRunner = async (
   const app = workflow.compile({ checkpointer: memoryStore });
 
   return {
-    runWorkflow: async (input?: OrchestratorInput, options?: { threadId?: string }) => {
-      const threadId = options?.threadId || 'orchestrator_workflow_state';
+    runWorkflow: async (
+      input?: OrchestratorInput,
+      options?: { threadId?: string },
+    ): Promise<FinishedWorkflow> => {
+      const threadId = `${options?.threadId || 'orchestrator'}-${Date.now()}`;
       logger.info('Starting orchestrator workflow', { threadId });
 
       const config = {
@@ -110,15 +118,35 @@ export const createOrchestratorRunner = async (
 
       const initialState = input || { messages: [] };
       const stream = await app.stream(initialState, config);
-      let finalState = {};
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      let finalState = {} as any;
 
       for await (const state of stream) {
         finalState = state;
       }
 
-      logger.info('Workflow completed', { threadId });
-      workflowConfig.vectorStore.close();
-      return finalState;
+      logger.info('Workflow completed', {
+        threadId,
+      });
+
+      if (finalState?.finishWorkflow?.messages?.[0]?.content) {
+        const workflowData = await parseFinishedWorkflow(
+          finalState.finishWorkflow.messages[0].content,
+        );
+
+        const workflowSummary = `Previous workflow summary finished running at ${new Date().toISOString()}. Workflow summary: ${workflowData.workflowSummary}`;
+        const nextWorkflowPrompt =
+          workflowData.nextWorkflowPrompt &&
+          `Instructions for this workflow: ${workflowData.nextWorkflowPrompt}`;
+
+        return { ...workflowData, workflowSummary, nextWorkflowPrompt };
+      } else {
+        logger.error('Workflow completed but no finished workflow data found', {
+          finalState,
+          content: finalState?.finishWorkflow?.content,
+        });
+        return { workflowSummary: 'Extracting workflow data failed' };
+      }
     },
   };
 };

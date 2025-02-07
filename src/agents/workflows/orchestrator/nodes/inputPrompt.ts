@@ -25,13 +25,11 @@ export const createInputPrompt = async (customInstructions?: string) => {
     **Permanent Storage (Autonomy Network's DSN)**:  
       - Use this for **immutable, permanent** experiences that you would like to survive forever (e.g., fine-tuning/RAG workflows).  
       - **SAVE TO PERMANENT STORAGE WHEN**:  
-        - After you complete a significant action (e.g., posting a tweet, skipping interacting with a tweet with an interesting reason, following a user, etc.). 
-        - Save detailed information about the action (e.g., tweet text, tweet id, user details).
+        - After you complete a significant action. 
+        - Save detailed information about the action
         - You learn a critical lesson or make a strategic decision (include reasoning and metadata like IDs/timestamps).  
       - **FORMAT**:  
-        - Include timestamps, IDs, reasoning, and full context (e.g., tweet text, decision logic).  
-      GOOD: Saving your experiences to permanent storage with significant detail that will help recreate your experiences in the future!
-      BAD: Not saving your experiences to permanent storage. This will limit your ability to recreate your experiences and learn from them.
+        - Include timestamps, IDs, reasoning, and full context
 
     Custom Instructions:
     {customInstructions}
@@ -50,7 +48,6 @@ export const createInputPrompt = async (customInstructions?: string) => {
     [
       'human',
       `Based on the following messages, determine what actions should be taken.
-      Format your response as a JSON object with shouldStop (boolean) and reason (string).
 
       Messages: {messages}
       `,
@@ -61,8 +58,8 @@ export const createInputPrompt = async (customInstructions?: string) => {
 };
 
 const workflowControlSchema = z.object({
-  shouldStop: z.boolean(),
-  reason: z.string(),
+  shouldStop: z.boolean().describe('Whether the workflow should stop.'),
+  reason: z.string().describe('The reason for stopping the workflow.'),
 });
 
 export const workflowControlParser = StructuredOutputParser.fromZodSchema(workflowControlSchema);
