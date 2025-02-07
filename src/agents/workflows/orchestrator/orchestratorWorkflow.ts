@@ -128,7 +128,16 @@ export const createOrchestratorRunner = async (
       });
 
       if (finalState?.finishWorkflow?.messages?.[0]?.content) {
-        return await parseFinishedWorkflow(finalState.finishWorkflow.messages[0].content);
+        const workflowData = await parseFinishedWorkflow(
+          finalState.finishWorkflow.messages[0].content,
+        );
+
+        const workflowSummary = `Previous workflow summary finished running at ${new Date().toISOString()}. Workflow summary: ${workflowData.workflowSummary}`;
+        const nextWorkflowPrompt =
+          workflowData.nextWorkflowPrompt &&
+          `Instructions for this workflow: ${workflowData.nextWorkflowPrompt}`;
+
+        return { ...workflowData, workflowSummary, nextWorkflowPrompt };
       } else {
         logger.error('Workflow completed but no finished workflow data found', {
           finalState,

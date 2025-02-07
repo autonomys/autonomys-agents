@@ -4,7 +4,10 @@ import { config } from '../../../../config/index.js';
 import { StructuredOutputParser } from '@langchain/core/output_parsers';
 import { z } from 'zod';
 
-export const createFinishWorkflowPrompt = async (customInstructions?: string) => {
+export const createFinishWorkflowPrompt = async (
+  customInstructions?: string,
+  selfSchedule?: boolean,
+) => {
   const character = config.characterConfig;
 
   const followFormatInstructions = `
@@ -19,7 +22,13 @@ export const createFinishWorkflowPrompt = async (customInstructions?: string) =>
   const workflowSummarySystemPrompt = await PromptTemplate.fromTemplate(
     `
     Summarize the following messages in detail. This is being returned as a report to what was accomplished during the execution of the workflow.
-    Additionally,provide a recommendation for the next action to take when the workflow begins again and how long until the next workflow should begin.
+    
+    self-schedule:{selfSchedule} 
+    If self-schedule:true 
+    - Provide a recommendation for the next prompt for when the workflow begins again in the nextWorkflowPrompt field.
+    - Provide a recommendation for how long until the next workflow should begin in the secondsUntilNextWorkflow field.
+    If self-schedule:false 
+    - Do not include any values in the nextWorkflowPrompt or secondsUntilNextWorkflow fields.
 
     You have a personality, so you should act accordingly.
     {characterDescription}
@@ -37,6 +46,7 @@ export const createFinishWorkflowPrompt = async (customInstructions?: string) =>
     customInstructions: customInstructions ?? 'None',
     formatInstructions: finishedWorkflowParser.getFormatInstructions(),
     followFormatInstructions,
+    selfSchedule: selfSchedule ? 'true' : 'false',
   });
 
   const workflowSummaryPrompt = ChatPromptTemplate.fromMessages([
@@ -53,18 +63,18 @@ export const createFinishWorkflowPrompt = async (customInstructions?: string) =>
 };
 
 const finishedWorkflowSchema = z.object({
-  workflowSummary: z.string().describe('A summary of the workflow.'),
-  nextRecommendedAction: z
+  workflowSummary: z.string().describe('A detailedsummary of the workflow.'),
+  nextWorkflowPrompt: z
     .string()
     .optional()
     .describe(
-      'Given what was accomplished during the workflow and our overall goal,the next recommended action when the workflow begins again',
+      'If self-scheduling is enabled, this field will be the input prompt for the next workflow. Be thoughtful about what you want to accomplish in the next workflow and write this as a prompt.',
     ),
   secondsUntilNextWorkflow: z
     .number()
     .optional()
     .describe(
-      'Given what was accomplished during the workflow and our overall goal, the recommended number of seconds until the workflow should begin again.',
+      'If self-scheduling is enabled, this field will be the recommended number of seconds until the workflow should begin again.',
     ),
 });
 

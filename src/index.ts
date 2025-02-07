@@ -30,11 +30,11 @@ const main = async () => {
   try {
     await validateLocalHash();
 
-    let message = initalMessage;
+    let message = initalMessage; //'what time is it?';
     while (true) {
       const result = await runner.runWorkflow({ messages: [new HumanMessage(message)] });
-      message = `Previous workflow summary ran at ${new Date().toISOString()}: ${result.workflowSummary}
-        Instructions: ${result.nextRecommendedAction}`;
+
+      message = `${result.workflowSummary}\n${result.nextWorkflowPrompt ?? message}`;
 
       logger.info('Workflow execution result:', { result });
 
@@ -44,6 +44,7 @@ const main = async () => {
         charcterName: config.characterConfig.name,
         runFinished: new Date().toISOString(),
         nextRun: `${nextDelaySeconds / 60} minutes`,
+        nextWorkflowPrompt: message,
       });
       await new Promise(resolve => setTimeout(resolve, nextDelaySeconds * 1000));
     }

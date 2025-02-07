@@ -17,7 +17,7 @@ const orchestatorConfig = async () => {
   const twitterAgent = createTwitterAgentTool(twitterApi);
   const namespace = 'orchestrator';
   const { tools } = createTools();
-  const prompts = await createPrompts();
+  const prompts = await createPrompts({ selfSchedule: true });
   const pruningParameters: PruningParameters = {
     maxWindowSummary: 30,
     maxQueueSize: 50,
