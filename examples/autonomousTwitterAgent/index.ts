@@ -13,13 +13,16 @@ import { PruningParameters } from '../../src/agents/workflows/orchestrator/types
 import { LLMFactory } from '../../src/services/llm/factory.js';
 import { createTwitterApi } from '../../src/services/twitter/client.js';
 import { HumanMessage } from '@langchain/core/messages';
+import { createWebSearchTool } from '../../src/agents/tools/webSearchTool.js';
 
 const logger = createLogger('autonomous-twitter-agent');
 
 const orchestatorConfig = async () => {
   const { USERNAME, PASSWORD, COOKIES_PATH } = config.twitterConfig;
   const twitterApi = await createTwitterApi(USERNAME, PASSWORD, COOKIES_PATH);
-  const twitterAgent = createTwitterAgentTool(twitterApi);
+  const webSearchTool = createWebSearchTool();
+  const twitterAgent = createTwitterAgentTool(twitterApi, [webSearchTool]);
+
   const namespace = 'orchestrator';
   const { tools } = createTools();
   const prompts = await createPrompts({ selfSchedule: true });
@@ -35,7 +38,7 @@ const orchestatorConfig = async () => {
   return {
     model,
     namespace,
-    tools: [...tools, twitterAgent],
+    tools: [...tools, twitterAgent, webSearchTool],
     prompts,
     pruningParameters,
   };
@@ -60,14 +63,19 @@ const orchestratorRunner = (() => {
 
 const main = async () => {
   const runner = await orchestratorRunner();
-  const initalMessage = `As a social media manager, you are expected to interact with twitter periodically in order to maintain social engagement. Use your judgement how frequently you should run these interactions and what you should do. You don't need do the same things every time. Save any interesting experiences from your interactions to your permanent storage.
+  const initalMessage = `As a social media manager, you are expected to interact with twitter periodically in order to maintain social engagement. Use your judgement how frequently you should run these interactions and what you should do. You don't need do the same things every time. Save any interesting experiences from your interactions your permanent storage. 
+
+  **RESEARCH**
+  Feel free to conduct research on a topic using the web search tool. This could be used to augment your knowledge or to get more information about a topic before posting a new tweet or to validate the information in a tweet before liking or retweeting it. Or use it to research a topic in preparation for your next workflow run.
 
   EXAMPLES:
   - Check your timeline for interesting conversations and join the conversation.
   - Like interesting tweets.
   - Follow interesting users.
   - Check your mentions and reply to useful conversations that you haven't replied to yet.
-  - Post a new tweet.`;
+  - Post a new tweet.
+  - Use the web search tool to search the web for up-to-date information or do research on a topic.
+`;
   try {
     await validateLocalHash();
 
