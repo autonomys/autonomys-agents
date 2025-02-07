@@ -2,8 +2,8 @@ import { DynamicStructuredTool } from '@langchain/core/tools';
 import { z } from 'zod';
 import { ToolNode } from '@langchain/langgraph/prebuilt';
 import { AIMessage } from '@langchain/core/messages';
-import { createLogger } from '../../../../utils/logger.js';
-import { getWorkflowRunner } from '../../directedTwitter/twitterWorkflow.js';
+import { createLogger } from '../../../utils/logger.js';
+import { getWorkflowRunner } from './twitterWorkflow.js';
 
 const logger = createLogger('directed-twitter-workflow-tool');
 
