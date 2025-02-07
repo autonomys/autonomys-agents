@@ -16,6 +16,8 @@ import { RunnableToolLike } from '@langchain/core/runnables';
 import { VectorDB } from '../../../services/vectorDb/VectorDB.js';
 import { FinishedWorkflow } from './nodes/finishWorkflowPrompt.js';
 import { parseFinishedWorkflow } from './nodes/finishWorkflowNode.js';
+import { config } from '../../../config/index.js';
+
 const logger = createLogger('orchestrator-workflow');
 
 const createWorkflowConfig = (
