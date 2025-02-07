@@ -12,7 +12,10 @@ import { LLMFactory } from '../../../services/llm/factory.js';
 
 const logger = createLogger('twitter-workflow');
 
-export const createTwitterAgentTool = (twitterApi: TwitterApi) =>
+export const createTwitterAgentTool = (
+  twitterApi: TwitterApi,
+  optionalTools: DynamicStructuredTool<any>[] = [],
+) =>
   new DynamicStructuredTool({
     name: 'twitter_workflow',
     description: `
@@ -35,7 +38,7 @@ export const createTwitterAgentTool = (twitterApi: TwitterApi) =>
         const vectorStore = new VectorDB(namespace);
         const runner = await getOrchestratorRunner({
           model,
-          tools,
+          tools: [...tools, ...optionalTools],
           prompts,
           namespace,
           vectorStore,
