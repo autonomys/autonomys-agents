@@ -14,7 +14,7 @@ const logger = createLogger('twitter-workflow');
 
 export const createTwitterAgentTool = (twitterApi: TwitterApi, optionalTools: Tools = []) =>
   new DynamicStructuredTool({
-    name: 'twitter_workflow',
+    name: 'twitter_agent',
     description: `
     With this tool you can perform all necessary actions you would like to do on twitter.
     It is an agentic workflow that will execute many actions to meet your needs.
