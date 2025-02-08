@@ -2,7 +2,6 @@ import { DynamicStructuredTool } from '@langchain/core/tools';
 import { z } from 'zod';
 import { createLogger } from '../../utils/logger.js';
 import { Tweet, TwitterApi } from '../../services/twitter/types.js';
-import { cleanTweetForCircularReferences } from './twitter/utils/twitter.js';
 import { config } from '../../config/index.js';
 
 const logger = createLogger('fetch-timeline-tool');
@@ -33,6 +32,21 @@ const tweetToMinimalTweet = (tweet: Tweet): MinimalTweet => {
     quotedStatus,
   };
 };
+
+const cleanTweetForCircularReferences = (tweet: Tweet): Tweet => ({
+  ...tweet,
+  thread: tweet.thread
+    ?.filter(t => t.id !== tweet.id)
+    .map(t => ({
+      id: t.id,
+      text: t.text,
+      username: t.username,
+      timeParsed: t.timeParsed,
+    })) as Tweet[],
+  inReplyToStatus: undefined,
+  quotedStatus: undefined,
+  retweetedStatus: undefined,
+});
 
 export const createFetchTimelineTool = (twitterApi: TwitterApi) =>
   new DynamicStructuredTool({
