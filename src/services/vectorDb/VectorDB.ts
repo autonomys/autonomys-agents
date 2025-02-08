@@ -124,7 +124,7 @@ export class VectorDB {
           .prepare(
             `
                     SELECT MIN(rowid) as min_id FROM content_store
-                `
+                `,
           )
           .get() as { min_id: number };
         const oldestId = Number(oldestRowId.min_id);
@@ -198,13 +198,15 @@ export class VectorDB {
   async searchWithMetadata(
     query: string,
     metadataFilter: string,
-    limit: number = 5
+    limit: number = 5,
   ): Promise<Array<{ rowid: number; distance: number; content: string }>> {
     if (!query || query.trim().length === 0) {
       throw new Error('Search query cannot be empty');
     }
 
-    const candidateStmt = this.db.prepare(`SELECT rowid FROM content_store WHERE ${metadataFilter}`);
+    const candidateStmt = this.db.prepare(
+      `SELECT rowid FROM content_store WHERE ${metadataFilter}`,
+    );
     const candidateRows = candidateStmt.all();
 
     if (candidateRows.length === 0) {
