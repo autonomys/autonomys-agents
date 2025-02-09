@@ -1,5 +1,5 @@
 import { Annotation } from '@langchain/langgraph/web';
-import { WorkflowControl } from './nodes/inputPrompt.js';
+import { DecisionControl } from './nodes/decisionPrompt.js';
 import { PruningParameters } from './types.js';
 import { BaseMessage } from '@langchain/core/messages';
 
@@ -9,7 +9,6 @@ export const OrchestratorState = (pruningParameters: PruningParameters) =>
       reducer: (curr, update) => {
         if (
           //TODO: Revisit this process, this is quite messy. Maybe we should add state for summary messages?
-
           Array.isArray(update) &&
           update.length > 0 &&
           update[0]?.content &&
@@ -27,7 +26,7 @@ export const OrchestratorState = (pruningParameters: PruningParameters) =>
       default: () => null,
       reducer: (_, update) => update,
     }),
-    workflowControl: Annotation<WorkflowControl | null>({
+    decisionControl: Annotation<DecisionControl | null>({
       default: () => null,
       reducer: (_, update) => update,
     }),

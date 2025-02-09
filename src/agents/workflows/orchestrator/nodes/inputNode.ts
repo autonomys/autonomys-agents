@@ -1,22 +1,6 @@
 import { createLogger } from '../../../../utils/logger.js';
 import { OrchestratorConfig, OrchestratorStateType } from '../types.js';
-import { workflowControlParser } from './inputPrompt.js';
 const logger = createLogger('orchestrator-input-node');
-
-const parseWorkflowControl = async (content: unknown) => {
-  if (typeof content === 'string') {
-    try {
-      return await workflowControlParser.parse(content);
-    } catch (error) {
-      logger.error('Failed to parse workflow control. Applying fallback termination.', {
-        error,
-        content,
-      });
-      return { shouldStop: true, reason: 'Failed to parse control message' };
-    }
-  }
-  return undefined;
-};
 
 export const createInputNode = ({
   orchestratorModel,
@@ -46,13 +30,7 @@ export const createInputNode = ({
     });
     await vectorStore.insert(JSON.stringify(result.content));
 
-    const workflowControl = await parseWorkflowControl(result.content);
-
-    const newMessage = { messages: [result] };
-    if (workflowControl) {
-      return { ...newMessage, workflowControl };
-    }
-    return newMessage;
+    return { messages: [result] };
   };
   return runNode;
 };

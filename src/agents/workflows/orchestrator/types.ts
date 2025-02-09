@@ -1,13 +1,14 @@
 import { BaseMessage } from '@langchain/core/messages';
 import { ToolNode } from '@langchain/langgraph/prebuilt';
 import { ChatPromptTemplate } from '@langchain/core/prompts';
-import { WorkflowControl } from './nodes/inputPrompt.js';
 import { LLMModelType } from '../../../services/llm/factory.js';
 import { VectorDB } from '../../../services/vectorDb/VectorDB.js';
+import { DecisionControl } from './nodes/decisionPrompt.js';
 
 export type OrchestratorPrompts = {
   inputPrompt: ChatPromptTemplate;
   messageSummaryPrompt: ChatPromptTemplate;
+  decisionPrompt: ChatPromptTemplate;
   finishWorkflowPrompt: ChatPromptTemplate;
 };
 
@@ -27,7 +28,7 @@ export type OrchestratorInput = {
 export type OrchestratorStateType = {
   messages: readonly BaseMessage[];
   error: Error | null;
-  workflowControl: WorkflowControl | null;
+  decisionControl: DecisionControl | null;
 };
 
 export type PruningParameters = {

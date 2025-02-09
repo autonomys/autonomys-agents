@@ -13,14 +13,6 @@ export const createInputPrompt = async (customInstructions?: string) => {
     {characterDescription}
     {characterPersonality}
     
-    - After you have completed the task(s) AND saved the experience to permanent storage, STOP THE WORKFLOW.
-
-    - If you don't know what do to, STOP THE WORKFLOW and give a reason.
-    - There is NO HUMAN IN THE LOOP. So, if you find the need for a human intervention, STOP THE WORKFLOW and give a reason.
-    - If you face any difficulties, DON'T retry more than once.
-
-    **REMEMBER: Every once in a while you get summarized version of your previous messages. IT'S UPDATED CONTENT, YOU CAN EASE YOUR MIND THAT YOU HAVE THE LATEST DATA.
-
     **Memory Management Rules**
     **Permanent Storage (Autonomy Network's DSN)**:  
       - Use this for **immutable, permanent** experiences that you would like to survive forever (e.g., fine-tuning/RAG workflows).  
@@ -32,15 +24,11 @@ export const createInputPrompt = async (customInstructions?: string) => {
         - Include timestamps, IDs, reasoning, and full context
 
     Custom Instructions:
-    {customInstructions}
-
-    {format_instructions}
-    `,
+    {customInstructions}`,
   ).format({
     characterDescription: character.description,
     characterPersonality: character.personality,
     customInstructions: customInstructions ?? 'None',
-    format_instructions: workflowControlParser.getFormatInstructions(),
   });
 
   const inputPrompt = ChatPromptTemplate.fromMessages([
@@ -56,11 +44,3 @@ export const createInputPrompt = async (customInstructions?: string) => {
 
   return inputPrompt;
 };
-
-const workflowControlSchema = z.object({
-  shouldStop: z.boolean().describe('Whether the workflow should stop.'),
-  reason: z.string().describe('The reason for stopping the workflow.'),
-});
-
-export const workflowControlParser = StructuredOutputParser.fromZodSchema(workflowControlSchema);
-export type WorkflowControl = z.infer<typeof workflowControlSchema>;
