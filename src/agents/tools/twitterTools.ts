@@ -179,6 +179,28 @@ export const createFetchProfileTool = (twitterApi: TwitterApi) =>
     },
   });
 
+export const createFetchTweetTool = (twitterApi: TwitterApi) =>
+  new DynamicStructuredTool({
+    name: 'fetch_tweet',
+    description: 'Fetch a tweet by its ID',
+    schema: z.object({ tweetId: z.string() }),
+    func: async ({ tweetId }: { tweetId: string }) => {
+      const tweet = await twitterApi.getTweet(tweetId);
+      return { tweet };
+    },
+  });
+
+export const createSearchTweetsTool = (twitterApi: TwitterApi) =>
+  new DynamicStructuredTool({
+    name: 'search_tweets',
+    description: 'Search for tweets by a given query',
+    schema: z.object({ query: z.string(), count: z.number() }),
+    func: async ({ query, count }: { query: string; count: number }) => {
+      const tweets = await twitterApi.searchTweets(query, count);
+      return { tweets };
+    },
+  });
+
 export const createLikeTweetTool = (twitterApi: TwitterApi) =>
   new DynamicStructuredTool({
     name: 'like_tweet',
