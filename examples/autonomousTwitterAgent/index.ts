@@ -63,7 +63,7 @@ const orchestratorRunner = (() => {
 
 const main = async () => {
   const runner = await orchestratorRunner();
-  const initalMessage = `As a social media manager, you are expected to interact with twitter periodically in order to maintain social engagement. Use your judgement how frequently you should run these interactions and what you should do. You don't need do the same things every time. Save any interesting experiences from your interactions your permanent storage. 
+  const initalMessage = `As a social media manager, you are expected to interact with twitter periodically in order to maintain social engagement. Save any interesting experiences from your interactions your permanent storage. 
 
   EXAMPLES:
   - Check your timeline and ENGAGE IN INTERESTING CONVERSATIONS.
@@ -80,7 +80,7 @@ const main = async () => {
     while (true) {
       const result = await runner.runWorkflow({ messages: [new HumanMessage(message)] });
 
-      message = `${result.workflowSummary}
+      message = `${result.summary}
       Overarching instructions: ${initalMessage}
       ${result.nextWorkflowPrompt ?? message}`;
 

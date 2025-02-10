@@ -57,7 +57,7 @@ const orchestratorRunner = (() => {
 
 const main = async () => {
   const runner = await orchestratorRunner();
-  const initalMessage = `As a social media manager, you are expected to interact with twitter periodically in order to maintain social engagement. Use your judgement how frequently you should run these interactions. Run the twitter workflow to handle twitter related tasks.`;
+  const initalMessage = `As a social media manager, you are expected to interact with twitter periodically in order to maintain social engagement. Run the twitter workflow to handle twitter related tasks.`;
 
   try {
     await validateLocalHash();
@@ -66,7 +66,7 @@ const main = async () => {
     while (true) {
       const result = await runner.runWorkflow({ messages: [new HumanMessage(message)] });
 
-      message = `${result.workflowSummary}\n${result.nextWorkflowPrompt ?? message}`;
+      message = `${result.summary}\n${result.nextWorkflowPrompt ?? message}`;
 
       logger.info('Workflow execution result:', { result });
 
