@@ -71,7 +71,7 @@ const main = async () => {
   - Post a new tweet.
   - Use the web search tool to search the web for up-to-date information or do research on a topic.
 
-  DO NOT NEGLECT ANY OF THE ABOVE EXAMPLES
+  DO NOT NEGLECT ANY OF THE ABOVE EXAMPLES PLEASE
 `;
   try {
     await validateLocalHash();
