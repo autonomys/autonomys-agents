@@ -54,7 +54,7 @@ export const createFinishWorkflowPrompt = async (
     [
       'human',
       `This workflow is ending at {currentTime}. 
-      Messages:
+      Summarize these messages:
       {messages}`,
     ],
   ]);
@@ -63,7 +63,7 @@ export const createFinishWorkflowPrompt = async (
 };
 
 const finishedWorkflowSchema = z.object({
-  workflowSummary: z.string().describe('A detailedsummary of the workflow.'),
+  summary: z.string().describe('A detailed summary of the actions performed.'),
   nextWorkflowPrompt: z
     .string()
     .optional()
