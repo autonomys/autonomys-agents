@@ -133,18 +133,18 @@ export const createOrchestratorRunner = async (
           finalState.finishWorkflow.messages[0].content,
         );
 
-        const workflowSummary = `Previous workflow summary finished running at ${new Date().toISOString()}. Workflow summary: ${workflowData.workflowSummary}`;
+        const summary = `This action finished running at ${new Date().toISOString()}. Action summary: ${workflowData.summary}`;
         const nextWorkflowPrompt =
           workflowData.nextWorkflowPrompt &&
           `Instructions for this workflow: ${workflowData.nextWorkflowPrompt}`;
 
-        return { ...workflowData, workflowSummary, nextWorkflowPrompt };
+        return { ...workflowData, summary, nextWorkflowPrompt };
       } else {
         logger.error('Workflow completed but no finished workflow data found', {
           finalState,
           content: finalState?.finishWorkflow?.content,
         });
-        return { workflowSummary: 'Extracting workflow data failed' };
+        return { summary: 'Extracting workflow data failed' };
       }
     },
   };

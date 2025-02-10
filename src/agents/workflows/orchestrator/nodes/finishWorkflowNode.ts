@@ -15,10 +15,10 @@ export const parseFinishedWorkflow = async (content: unknown) => {
         error,
         content,
       });
-      return { workflowSummary: 'Failed to parse workflow content' };
+      return { summary: 'Failed to parse workflow content' };
     }
   }
-  return { workflowSummary: 'Failed to parse workflow content' };
+  return { summary: 'Failed to parse workflow content' };
 };
 
 export const createFinishWorkflowNode = ({
