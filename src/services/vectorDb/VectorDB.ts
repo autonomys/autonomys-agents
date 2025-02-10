@@ -204,10 +204,10 @@ export class VectorDB {
       throw new Error('Search query cannot be empty');
     }
 
-    const candidateStmt = this.db.prepare(
+    const candidateStatement = this.db.prepare(
       `SELECT rowid FROM content_store WHERE ${metadataFilter}`,
     );
-    const candidateRows = candidateStmt.all();
+    const candidateRows = candidateStatement.all();
 
     if (candidateRows.length === 0) {
       return [];
