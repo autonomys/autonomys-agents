@@ -41,7 +41,7 @@ if (process.argv.includes('--help') || process.argv.includes('-h')) {
 // Only import and run the rest of the code if we're not showing help
 const run = async () => {
   // Dynamic imports to prevent initialization during help
-  ({ createLogger } = await import('../utils/logger.js'));
+  ({ createLogger } = await import('../src/utils/logger.js'));
   ({ downloadAllMemories } = await import('./utils/resurrection.js'));
 
   const logger = createLogger('resurrect-cli');

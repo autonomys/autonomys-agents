@@ -1,9 +1,9 @@
-import { createLogger } from '../../utils/logger.js';
-import { getLastMemoryCid } from '../../agents/tools/utils/blockchain/agentMemoryContract.js';
-import { download } from '../../agents/tools/utils/dsn/dsnDownload.js';
+import { createLogger } from '../../src/utils/logger.js';
+import { getLastMemoryCid } from '../../src/agents/tools/utils/blockchain/agentMemoryContract.js';
+import { download } from '../../src/agents/tools/utils/dsn/dsnDownload.js';
 import { existsSync, readFileSync, writeFileSync } from 'fs';
 import { join } from 'path';
-import { config } from '../../config/index.js';
+import { config } from '../../src/config/index.js';
 
 const logger = createLogger('memory-resurrector');
 const STATE_FILE = join(
