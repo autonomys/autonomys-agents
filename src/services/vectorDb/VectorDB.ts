@@ -110,7 +110,7 @@ export class VectorDB {
     }
   }
 
-  async insert(content: string): Promise<boolean> {
+  async insert(content: string, timestamp?: string): Promise<boolean> {
     if (!content || content.trim().length === 0) {
       throw new Error('Content cannot be empty');
     }
@@ -152,7 +152,7 @@ export class VectorDB {
             `);
 
       vectorStatement.run(currentRowId, Buffer.from(new Float32Array(embedding).buffer));
-      contentStatement.run(currentRowId, content, new Date().toISOString());
+      contentStatement.run(currentRowId, content, timestamp ?? new Date().toISOString());
       logger.info('Inserted content:', { content });
       this.nextRowId++;
       this.db.exec('COMMIT');
@@ -207,13 +207,13 @@ export class VectorDB {
     const candidateStatement = this.db.prepare(
       `SELECT rowid FROM content_store WHERE ${metadataFilter}`,
     );
-    const candidateRows = candidateStatement.all();
+    const candidateRows = candidateStatement.all() as Array<{ rowid: number }>;
 
     if (candidateRows.length === 0) {
       return [];
     }
 
-    const candidateIds = candidateRows.map((row: any) => row.rowid);
+    const candidateIds = candidateRows.map(row => row.rowid);
     const candidateListStr = candidateIds.join(',');
 
     const embedding = await this.getEmbedding(query);
