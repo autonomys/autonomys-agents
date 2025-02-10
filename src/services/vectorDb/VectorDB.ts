@@ -91,7 +91,8 @@ export class VectorDB {
             
             CREATE TABLE IF NOT EXISTS content_store (
                 rowid INTEGER PRIMARY KEY,
-                content TEXT
+                content TEXT,
+                created_at TEXT
             );
         `);
   }
@@ -109,7 +110,7 @@ export class VectorDB {
     }
   }
 
-  async insert(content: string): Promise<boolean> {
+  async insert(content: string, timestamp?: string): Promise<boolean> {
     if (!content || content.trim().length === 0) {
       throw new Error('Content cannot be empty');
     }
@@ -146,13 +147,12 @@ export class VectorDB {
             `);
 
       const contentStatement = this.db.prepare(`
-                INSERT INTO content_store (rowid, content)
-                VALUES (?, ?)
+                INSERT INTO content_store (rowid, content, created_at)
+                VALUES (?, ?, ?)
             `);
 
       vectorStatement.run(currentRowId, Buffer.from(new Float32Array(embedding).buffer));
-
-      contentStatement.run(currentRowId, content);
+      contentStatement.run(currentRowId, content, timestamp ?? new Date().toISOString());
       logger.info('Inserted content:', { content });
       this.nextRowId++;
       this.db.exec('COMMIT');
@@ -188,6 +188,50 @@ export class VectorDB {
             JOIN content_store c ON v.rowid = c.rowid
         `);
 
+    return statement.all(Buffer.from(new Float32Array(embedding).buffer)) as Array<{
+      rowid: number;
+      distance: number;
+      content: string;
+    }>;
+  }
+
+  async searchWithMetadata(
+    query: string,
+    metadataFilter: string,
+    limit: number = 5,
+  ): Promise<Array<{ rowid: number; distance: number; content: string }>> {
+    if (!query || query.trim().length === 0) {
+      throw new Error('Search query cannot be empty');
+    }
+
+    const candidateStatement = this.db.prepare(
+      `SELECT rowid FROM content_store WHERE ${metadataFilter}`,
+    );
+    const candidateRows = candidateStatement.all() as Array<{ rowid: number }>;
+
+    if (candidateRows.length === 0) {
+      return [];
+    }
+
+    const candidateIds = candidateRows.map(row => row.rowid);
+    const candidateListStr = candidateIds.join(',');
+
+    const embedding = await this.getEmbedding(query);
+    const integerLimit = parseInt(limit.toString(), 10);
+    logger.info(`Searching with metadata filter with limit: ${integerLimit}`);
+
+    const queryString = `
+            SELECT v.rowid, v.distance, c.content
+            FROM (
+                SELECT rowid, distance 
+                FROM embeddings_index 
+                WHERE knn_search(embedding_vector, knn_param(?, ${integerLimit}))
+            ) v
+            JOIN content_store c ON v.rowid = c.rowid
+            WHERE c.rowid IN (${candidateListStr})
+      `;
+
+    const statement = this.db.prepare(queryString);
     return statement.all(Buffer.from(new Float32Array(embedding).buffer)) as Array<{
       rowid: number;
       distance: number;
