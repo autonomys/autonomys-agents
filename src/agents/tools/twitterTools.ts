@@ -2,7 +2,6 @@ import { DynamicStructuredTool } from '@langchain/core/tools';
 import { z } from 'zod';
 import { createLogger } from '../../utils/logger.js';
 import { Tweet, TwitterApi } from '../../services/twitter/types.js';
-import { cleanTweetForCircularReferences } from './twitter/utils/twitter.js';
 import { config } from '../../config/index.js';
 
 const logger = createLogger('fetch-timeline-tool');
@@ -33,6 +32,21 @@ const tweetToMinimalTweet = (tweet: Tweet): MinimalTweet => {
     quotedStatus,
   };
 };
+
+const cleanTweetForCircularReferences = (tweet: Tweet): Tweet => ({
+  ...tweet,
+  thread: tweet.thread
+    ?.filter(t => t.id !== tweet.id)
+    .map(t => ({
+      id: t.id,
+      text: t.text,
+      username: t.username,
+      timeParsed: t.timeParsed,
+    })) as Tweet[],
+  inReplyToStatus: undefined,
+  quotedStatus: undefined,
+  retweetedStatus: undefined,
+});
 
 export const createFetchTimelineTool = (twitterApi: TwitterApi) =>
   new DynamicStructuredTool({
@@ -162,6 +176,28 @@ export const createFetchProfileTool = (twitterApi: TwitterApi) =>
     func: async ({ username }: { username: string }) => {
       const profile = await twitterApi.getProfile(username);
       return { profile };
+    },
+  });
+
+export const createFetchTweetTool = (twitterApi: TwitterApi) =>
+  new DynamicStructuredTool({
+    name: 'fetch_tweet',
+    description: 'Fetch a tweet by its ID',
+    schema: z.object({ tweetId: z.string() }),
+    func: async ({ tweetId }: { tweetId: string }) => {
+      const tweet = await twitterApi.getTweet(tweetId);
+      return { tweet };
+    },
+  });
+
+export const createSearchTweetsTool = (twitterApi: TwitterApi) =>
+  new DynamicStructuredTool({
+    name: 'search_tweets',
+    description: 'Search for tweets by a given query',
+    schema: z.object({ query: z.string(), count: z.number() }),
+    func: async ({ query, count }: { query: string; count: number }) => {
+      const tweets = await twitterApi.searchTweets(query, count);
+      return { tweets };
     },
   });
 

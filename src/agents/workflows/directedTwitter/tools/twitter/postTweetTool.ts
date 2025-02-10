@@ -1,10 +1,10 @@
 import { DynamicStructuredTool } from '@langchain/core/tools';
 import { z } from 'zod';
-import { createLogger } from '../../../utils/logger.js';
-import { TwitterApi } from '../../../services/twitter/types.js';
+import { createLogger } from '../../../../../utils/logger.js';
+import { TwitterApi } from '../../../../../services/twitter/types.js';
 import { ToolNode } from '@langchain/langgraph/prebuilt';
 import { AIMessage } from '@langchain/core/messages';
-import { config } from '../../../config/index.js';
+import { config } from '../../../../../config/index.js';
 
 const logger = createLogger('post-tweet-tool');
 

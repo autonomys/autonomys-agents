@@ -304,6 +304,9 @@ export const createTwitterApi = async (
 
     getMyRecentReplies: (limit: number = 10) => getMyRecentReplies(scraper, username, limit),
 
+    searchTweets: async (query: string, count: number = 25) =>
+      await iterateResponse(scraper.searchTweets(query, count, SearchMode.Latest)),
+
     //TODO: After sending the tweet, we need to get the latest tweet, ensure it is the same as we sent and return it
     //This has not been working as expected, so we need to investigate this later
     sendTweet: async (tweet: string, inReplyTo?: string) => {
