@@ -2,7 +2,8 @@ import { ChatOpenAI } from '@langchain/openai';
 import { ChatAnthropic } from '@langchain/anthropic';
 import { ChatOllama } from '@langchain/ollama';
 import { LLMConfiguration } from './types.js';
-import { config as appConfig } from '../../config/index.js';
+import { ChatGoogleGenerativeAI } from '@langchain/google-genai';
+import { config as appConfig, config } from '../../config/index.js';
 import { ChatGroq } from '@langchain/groq';
 export class LLMFactory {
   static createModel(node: LLMConfiguration) {
@@ -49,6 +50,12 @@ export class LLMFactory {
           apiKey: appConfig.llmConfig.GROQ_API_KEY,
           model,
           temperature,
+        });
+      case 'google':
+        return new ChatGoogleGenerativeAI({
+          apiKey: appConfig.llmConfig.GEMINI_API_KEY,
+          model: model,
+          temperature: temperature,
         });
       default:
         throw new Error(`Unsupported LLM provider: ${provider}`);
