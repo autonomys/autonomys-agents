@@ -90,7 +90,7 @@ import { Mutex } from 'async-mutex';
           const dueTasks = state.scheduledTasks.filter(task => task.time <= now);
           if (dueTasks.length > 0 && !state.isProcessing) {
             state.isProcessing = true;
-            const task = dueTasks[0];  // Process one task at a time
+            const task = dueTasks[0]; // Process one task at a time
             // Remove task from list
             state.scheduledTasks = state.scheduledTasks.filter(t => t !== task);
             try {
