@@ -31,6 +31,7 @@
         "@langchain/langgraph": "0.2.36",
         "@langchain/ollama": "^0.1.4",
         "@langchain/openai": "0.3.16",
+        "@types/blessed": "^0.1.25",
         "agent-twitter-client": "0.0.18",
         "axios": "^1.7.9",
         "better-sqlite3": "^11.8.0",

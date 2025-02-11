@@ -1857,6 +1857,13 @@
   dependencies:
     "@types/node" "*"
 
+"@types/blessed@^0.1.25":
+  version "0.1.25"
+  resolved "https://registry.yarnpkg.com/@types/blessed/-/blessed-0.1.25.tgz#ab415f4c81f1dab8bf1e4fb98146c7f0f4e4e181"
+  integrity sha512-kQsjBgtsbJLmG6CJA+Z6Nujj+tq1fcSE3UIowbDvzQI4wWmoTV7djUDhSo5lDjgwpIN0oRvks0SA5mMdKE5eFg==
+  dependencies:
+    "@types/node" "*"
+
 "@types/bn.js@^5.1.6":
   version "5.1.6"
   resolved "https://registry.yarnpkg.com/@types/bn.js/-/bn.js-5.1.6.tgz#9ba818eec0c85e4d3c679518428afdf611d03203"
