@@ -129,11 +129,31 @@ const createUI = () => {
     mouse: true,
   });
 
+  const scheduledTasksBox = blessed.list({
+    top: '80%',
+    left: '0%',
+    width: '100%',
+    height: '10%',
+    label: 'Scheduled Tasks',
+    border: { type: 'line' },
+    style: {
+      border: { fg: 'magenta' },
+      selected: { bg: 'blue' },
+      item: { hover: { bg: 'blue' } },
+    },
+    mouse: true,
+    keys: true,
+    vi: true,
+    items: [], // Initial empty list
+    scrollable: true,
+    scrollbar: { ch: ' ', inverse: true },
+  });
+
   const inputBox = blessed.textbox({
     bottom: 0,
     left: '0%',
     width: '100%',
-    height: '20%',
+    height: '10%', // Reduced height to accommodate scheduledTasksBox
     label: 'Input - Type message and press Enter (F2 to focus)',
     border: { type: 'line' },
     style: {
@@ -145,9 +165,10 @@ const createUI = () => {
 
   screen.append(outputLog);
   screen.append(statusBox);
+  screen.append(scheduledTasksBox);
   screen.append(inputBox);
 
-  return { screen, outputLog, statusBox, inputBox };
+  return { screen, outputLog, statusBox, scheduledTasksBox, inputBox };
 };
 
 const runWorkflow = async (
@@ -189,7 +210,7 @@ const runWorkflow = async (
   try {
     await validateLocalHash();
     const runner = await orchestratorRunner();
-    const { screen, outputLog, statusBox, inputBox } = createUI();
+    const { screen, outputLog, statusBox, scheduledTasksBox, inputBox } = createUI();
     const state = {
       value: '', // Changed from currentMessage to value
       isProcessing: false,
