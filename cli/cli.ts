@@ -61,14 +61,19 @@ import { AppState } from './types/types.js';
         const now = new Date();
         const dueTasks = state.scheduledTasks.filter(task => task.time <= now);
 
-        // Update clock with colored time
+        // Update clock with colored time and date
         const timeStr = now.toLocaleTimeString('en-US', {
           hour12: false,
           hour: '2-digit',
           minute: '2-digit',
           second: '2-digit',
         });
-        ui.clockBox.setContent(timeStr);
+        const dateStr = now.toLocaleDateString('en-US', {
+          month: 'short',
+          day: 'numeric',
+          year: 'numeric'
+        });
+        ui.clockBox.setContent(`${dateStr}\n${timeStr}`);
         ui.screen.render();
 
         for (const task of dueTasks) {

@@ -34,8 +34,8 @@ export const createClockBox = () => {
     top: 0,
     right: 0,
     width: '20%',
-    height: 3,
-    label: ' Time ',
+    height: 5,
+    label: ' Date & Time ',
     content: '',
     padding: {
       top: 0,
@@ -58,10 +58,10 @@ export const createClockBox = () => {
 
 export const createOutputLog = () => {
   return blessed.log({
-    top: 7,
+    top: 8,
     left: '0%',
     width: '100%',
-    height: '63%',
+    height: '62%',
     label: 'Workflow Output (F2 to focus input)',
     border: { type: 'line' },
     style: {
@@ -156,14 +156,14 @@ export const createCharacterBox = (characterDirName: string) => {
     top: 0,
     left: 0,
     width: '20%',
-    height: 3,
+    height: 5,
     label: ' Character ',
-    content: displayName,
+    content: `${displayName}`,
     padding: {
       top: 0,
       right: 1,
-      bottom: 0,
-      left: 1,
+      bottom: 1,
+      left: 1
     },
     border: { type: 'line' },
     style: {
