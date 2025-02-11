@@ -43,10 +43,11 @@ Features:
 - Live output logging
 
 Keyboard Shortcuts:
-- F2: Focus input box
-- F6: Send message/command
-- Up/Down: Scroll output log
-- PageUp/PageDown: Scroll output log by page
+- Enter: Send message/command
+- Ctrl+n: Insert new line in input
+- Ctrl+i: Focus input box
+- Ctrl+b/Ctrl+f: Scroll output log by page
+- Ctrl+p/Ctrl+n: Scroll output log by line
 - Escape/q/Ctrl+C: Quit
 
 The interface provides a user-friendly way to interact with your agent, monitor its activities, and manage scheduled tasks, all within a terminal environment.

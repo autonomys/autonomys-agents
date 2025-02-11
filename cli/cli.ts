@@ -20,8 +20,15 @@ import { Mutex } from 'async-mutex';
 
     setupKeyBindings(ui, state);
 
-    // Handle F6 for submission
-    ui.inputBox.key(['f6'], async () => {
+    // Handle new line with Ctrl+n
+    ui.inputBox.key(['C-n'], () => {
+      const currentValue = ui.inputBox.getValue();
+      ui.inputBox.setValue(currentValue + '\n');
+      ui.screen.render();
+    });
+
+    // Handle submission with Enter
+    ui.inputBox.key(['return'], async () => {
       const value = ui.inputBox.getValue();
       if (value.trim()) {
         const release = await state.mutex.acquire();
