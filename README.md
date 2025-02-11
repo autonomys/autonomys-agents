@@ -31,7 +31,7 @@ Autonomys Agents is an **EXPERIMENTAL** framework for building AI agents. Curren
 
 The following examples demonstrate the use of the framework and are available:
 
-- [Autonomous Twitter Agent](examples/autonomousTwitterAgent/README.md)
+- [Twitter Agent](examples/twitterAgent/README.md)
 
 ## Character System
 
