@@ -71,7 +71,7 @@ import { AppState } from './types/types.js';
         const dateStr = now.toLocaleDateString('en-US', {
           month: 'short',
           day: 'numeric',
-          year: 'numeric'
+          year: 'numeric',
         });
         ui.clockBox.setContent(`${dateStr}\n${timeStr}`);
         ui.screen.render();

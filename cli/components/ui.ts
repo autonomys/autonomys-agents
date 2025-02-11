@@ -163,7 +163,7 @@ export const createCharacterBox = (characterDirName: string) => {
       top: 0,
       right: 1,
       bottom: 1,
-      left: 1
+      left: 1,
     },
     border: { type: 'line' },
     style: {
@@ -202,5 +202,14 @@ export const createUI = (): UIComponents => {
   screen.append(clockBox);
   screen.append(characterBox);
 
-  return { screen, outputLog, statusBox, scheduledTasksBox, inputBox, clockBox, logoBox, characterBox };
+  return {
+    screen,
+    outputLog,
+    statusBox,
+    scheduledTasksBox,
+    inputBox,
+    clockBox,
+    logoBox,
+    characterBox,
+  };
 };
