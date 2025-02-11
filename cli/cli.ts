@@ -33,7 +33,14 @@ import { Mutex } from 'async-mutex';
               time: nextRunTime,
               description: value,
             });
-            const formattedTime = nextRunTime.toLocaleTimeString();
+            const formattedTime = nextRunTime.toLocaleString('en-US', {
+              month: 'short',
+              day: '2-digit',
+              hour: '2-digit',
+              minute: '2-digit',
+              second: '2-digit',
+              hour12: false,
+            });
             ui.scheduledTasksBox.addItem(`${formattedTime} - ${value}`);
             ui.scheduledTasksBox.scrollTo(Number((ui.scheduledTasksBox as any).ritems.length - 1));
             ui.statusBox.setContent('System busy - Task added to queue');
@@ -115,14 +122,26 @@ import { Mutex } from 'async-mutex';
               // Log if task is overdue
               const delayMinutes = Math.floor((now.getTime() - task.time.getTime()) / (1000 * 60));
               if (delayMinutes > 0) {
-                ui.outputLog.log(`{yellow-fg}Task was scheduled for ${task.time.toLocaleTimeString()} (${delayMinutes} minutes ago){/yellow-fg}`);
+                const scheduledTime = task.time.toLocaleString('en-US', {
+                  month: 'short',
+                  day: '2-digit',
+                  hour: '2-digit',
+                  minute: '2-digit',
+                  second: '2-digit',
+                  hour12: false,
+                });
+                ui.outputLog.log(`{yellow-fg}Task was scheduled for ${scheduledTime} (${delayMinutes} minutes ago){/yellow-fg}`);
               }
               
               try {
                 ui.outputLog.log('{cyan-fg}Starting scheduled task...{/cyan-fg}');
+                ui.statusBox.setContent(`Executing scheduled task: ${task.description}`);
+                ui.screen.render();
                 await runWorkflow(task.description, runner, ui, state);
               } catch (error: any) {
                 ui.outputLog.log('\n{red-fg}Scheduled task error:{/red-fg} ' + error.message);
+                ui.statusBox.setContent('Error occurred in scheduled task. Check log for details.');
+                ui.screen.render();
               } finally {
                 state.isProcessing = false;
               }
@@ -132,12 +151,14 @@ import { Mutex } from 'async-mutex';
           release();
         }
 
-        // Update clock with colored time
-        const timeStr = now.toLocaleTimeString('en-US', {
-          hour12: false,
+        // Update clock with colored time and date
+        const timeStr = now.toLocaleString('en-US', {
+          month: 'short',
+          day: '2-digit',
           hour: '2-digit',
           minute: '2-digit',
           second: '2-digit',
+          hour12: false,
         });
         ui.clockBox.setContent(timeStr);
         ui.screen.render();
