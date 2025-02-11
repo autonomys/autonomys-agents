@@ -8,6 +8,7 @@ export interface UIComponents {
   inputBox: blessed.Widgets.TextareaElement;
   clockBox: blessed.Widgets.BoxElement;
   logoBox: blessed.Widgets.BoxElement;
+  characterBox: blessed.Widgets.BoxElement;
 }
 
 export interface AppState {

@@ -1,5 +1,6 @@
 import blessed from 'blessed';
 import { UIComponents } from '../types/types.js';
+import { loadCharacter } from '../../src/config/characters.js';
 
 export const createLogoBox = () => {
   const logoArt = `{cyan-fg}    _         _                                        
@@ -142,6 +143,41 @@ export const createInputBox = () => {
   });
 };
 
+export const createCharacterBox = (characterDirName: string) => {
+  let displayName = characterDirName;
+  try {
+    const character = loadCharacter(characterDirName);
+    displayName = character.name;
+  } catch (error) {
+    console.error('Failed to load character name:', error);
+  }
+
+  return blessed.box({
+    top: 0,
+    left: 0,
+    width: '20%',
+    height: 3,
+    label: ' Character ',
+    content: displayName,
+    padding: {
+      top: 0,
+      right: 1,
+      bottom: 0,
+      left: 1,
+    },
+    border: { type: 'line' },
+    style: {
+      border: { fg: 'cyan' },
+      fg: 'white',
+      bg: 'red',
+      bold: true,
+    },
+    align: 'center',
+    valign: 'middle',
+    tags: true,
+  });
+};
+
 export const createUI = (): UIComponents => {
   const screen = blessed.screen({
     smartCSR: true,
@@ -156,6 +192,7 @@ export const createUI = (): UIComponents => {
   const inputBox = createInputBox();
   const clockBox = createClockBox();
   const logoBox = createLogoBox();
+  const characterBox = createCharacterBox(process.argv[2] || 'Unknown');
 
   screen.append(logoBox);
   screen.append(outputLog);
@@ -163,6 +200,7 @@ export const createUI = (): UIComponents => {
   screen.append(scheduledTasksBox);
   screen.append(inputBox);
   screen.append(clockBox);
+  screen.append(characterBox);
 
-  return { screen, outputLog, statusBox, scheduledTasksBox, inputBox, clockBox, logoBox };
+  return { screen, outputLog, statusBox, scheduledTasksBox, inputBox, clockBox, logoBox, characterBox };
 };
