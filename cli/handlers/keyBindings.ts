@@ -8,28 +8,28 @@ export const setupKeyBindings = (ui: UIComponents, state: AppState) => {
   screen.key(['escape', 'q', 'C-c'], () => process.exit(0));
 
   // Input focus binding
-  screen.key('f2', () => {
+  screen.key(['C-i'], () => {
     inputBox.focus();
     screen.render();
   });
 
   // Scroll bindings
-  screen.key(['pageup'], () => {
+  screen.key(['C-b'], () => {
     outputLog.scroll(-Number(outputLog.height));
     screen.render();
   });
 
-  screen.key(['pagedown'], () => {
+  screen.key(['C-f'], () => {
     outputLog.scroll(Number(outputLog.height));
     screen.render();
   });
 
-  screen.key(['up'], () => {
+  screen.key(['C-p'], () => {
     outputLog.scroll(-1);
     screen.render();
   });
 
-  screen.key(['down'], () => {
+  screen.key(['C-n'], () => {
     outputLog.scroll(1);
     screen.render();
   });
