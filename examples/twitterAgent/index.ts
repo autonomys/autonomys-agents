@@ -90,7 +90,7 @@ const main = async () => {
   try {
     await validateLocalHash();
 
-    let message = initialMessage;
+    let message = 'what time is it?';
     while (true) {
       const result = await runner.runWorkflow({ messages: [new HumanMessage(message)] });
 
