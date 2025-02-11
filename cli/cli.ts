@@ -26,57 +26,69 @@ import { Mutex } from 'async-mutex';
       if (value.trim()) {
         const release = await state.mutex.acquire();
         try {
-          if (state.isProcessing) {
-            // If system is busy, add to scheduled tasks queue
-            const nextRunTime = new Date(); // Schedule for immediate execution when possible
+          // If a workflow is already processing or there are tasks in the queue, add to scheduled tasks
+          if (state.isProcessing || state.scheduledTasks.length > 0) {
+            const nextRunTime = new Date();
             state.scheduledTasks.push({
               time: nextRunTime,
               description: value,
             });
-            // Update UI to show task was queued
             const formattedTime = nextRunTime.toLocaleTimeString();
             ui.scheduledTasksBox.addItem(`${formattedTime} - ${value}`);
             ui.scheduledTasksBox.scrollTo(Number((ui.scheduledTasksBox as any).ritems.length - 1));
             ui.statusBox.setContent('System busy - Task added to queue');
+            ui.outputLog.log('{yellow-fg}Task queued for later execution{/yellow-fg}');
           } else {
-            // Process immediately if system is free
             state.value = value;
             ui.statusBox.setContent('Current Message: ' + value);
-            state.isProcessing = false;
+            ui.outputLog.log('{cyan-fg}Starting new task...{/cyan-fg}');
           }
         } finally {
           release();
         }
+        ui.inputBox.clearValue();
+        ui.inputBox.focus();
+        ui.screen.render();
       }
-      ui.inputBox.clearValue();
-      ui.inputBox.focus();
-      ui.screen.render();
     });
 
     // Run the workflow loop in parallel
     (async () => {
       while (true) {
+        let valueToProcess = '';
+        
+        // First, check if we have a new task to start
         const release = await state.mutex.acquire();
         try {
           if (state.value && !state.isProcessing) {
             state.isProcessing = true;
-            try {
-              await runWorkflow(state.value, runner, ui, state);
-              state.value = '';
-            } catch (error: any) {
-              ui.outputLog.log('\n{red-fg}Error:{/red-fg} ' + error.message);
-              ui.statusBox.setContent('Error occurred. Enter new message to retry.');
-              ui.screen.render();
-              ui.inputBox.focus();
-              await new Promise(res => setTimeout(res, 5000));
-              state.value = '';
-            } finally {
-              state.isProcessing = false;
-            }
+            valueToProcess = state.value;  // Store value before clearing
+            state.value = '';  // Clear value before releasing mutex
           }
         } finally {
           release();
         }
+
+        // Then run the workflow outside the mutex if we have something to process
+        if (valueToProcess) {
+          try {
+            await runWorkflow(valueToProcess, runner, ui, state);
+          } catch (error: any) {
+            ui.outputLog.log('\n{red-fg}Error:{/red-fg} ' + error.message);
+            ui.statusBox.setContent('Error occurred. Enter new message to retry.');
+            ui.screen.render();
+            ui.inputBox.focus();
+          } finally {
+            // Clear processing flag after workflow completes
+            const release = await state.mutex.acquire();
+            try {
+              state.isProcessing = false;
+            } finally {
+              release();
+            }
+          }
+        }
+
         await new Promise(res => setTimeout(res, 1000));
       }
     })();
@@ -84,21 +96,36 @@ import { Mutex } from 'async-mutex';
     // Run the scheduler loop in parallel
     (async () => {
       while (true) {
+        await new Promise(res => setTimeout(res, 1000));
+        
         const now = new Date();
         const release = await state.mutex.acquire();
         try {
-          const dueTasks = state.scheduledTasks.filter(task => task.time <= now);
-          if (dueTasks.length > 0 && !state.isProcessing) {
-            state.isProcessing = true;
-            const task = dueTasks[0]; // Process one task at a time
-            // Remove task from list
-            state.scheduledTasks = state.scheduledTasks.filter(t => t !== task);
-            try {
-              await runWorkflow(task.description, runner, ui, state);
-            } catch (error: any) {
-              ui.outputLog.log('\n{red-fg}Scheduled task error:{/red-fg} ' + error.message);
-            } finally {
-              state.isProcessing = false;
+          if (!state.isProcessing && state.scheduledTasks.length > 0) {
+            // Sort tasks by scheduled time and get all tasks that were due
+            const dueTasks = state.scheduledTasks
+              .sort((a, b) => a.time.getTime() - b.time.getTime())
+              .filter(task => task.time <= now);
+
+            if (dueTasks.length > 0) {
+              const task = dueTasks[0];  // Get the earliest scheduled task
+              state.scheduledTasks = state.scheduledTasks.filter(t => t !== task);
+              state.isProcessing = true;
+              
+              // Log if task is overdue
+              const delayMinutes = Math.floor((now.getTime() - task.time.getTime()) / (1000 * 60));
+              if (delayMinutes > 0) {
+                ui.outputLog.log(`{yellow-fg}Task was scheduled for ${task.time.toLocaleTimeString()} (${delayMinutes} minutes ago){/yellow-fg}`);
+              }
+              
+              try {
+                ui.outputLog.log('{cyan-fg}Starting scheduled task...{/cyan-fg}');
+                await runWorkflow(task.description, runner, ui, state);
+              } catch (error: any) {
+                ui.outputLog.log('\n{red-fg}Scheduled task error:{/red-fg} ' + error.message);
+              } finally {
+                state.isProcessing = false;
+              }
             }
           }
         } finally {
@@ -114,8 +141,6 @@ import { Mutex } from 'async-mutex';
         });
         ui.clockBox.setContent(timeStr);
         ui.screen.render();
-
-        await new Promise(res => setTimeout(res, 1000));
       }
     })();
 
