@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { z } from 'zod';
 import { DynamicStructuredTool } from '@langchain/core/tools';
 import { createLogger } from '../../utils/logger.js';

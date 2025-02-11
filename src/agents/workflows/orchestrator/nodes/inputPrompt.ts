@@ -21,6 +21,8 @@ export const createInputPrompt = async (customInstructions?: string) => {
 
     **REMEMBER: Every once in a while you get summarized version of your previous messages. IT'S UPDATED CONTENT, YOU CAN EASE YOUR MIND THAT YOU HAVE THE LATEST DATA.
 
+  **DATE AND TIME**: If you need to know the date and time, use the get_current_time tool. THIS IS RELIABLE.
+
     **Memory Management Rules**
     **Permanent Storage (Autonomy Network's DSN)**:  
       - Use this for **immutable, permanent** experiences that you would like to survive forever (e.g., fine-tuning/RAG workflows).  

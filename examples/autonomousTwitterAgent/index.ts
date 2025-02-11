@@ -63,18 +63,15 @@ const orchestratorRunner = (() => {
 
 const main = async () => {
   const runner = await orchestratorRunner();
-  const initalMessage = `As a social media manager, you are expected to interact with twitter periodically in order to maintain social engagement. Use your judgement how frequently you should run these interactions and what you should do. You don't need do the same things every time. Save any interesting experiences from your interactions your permanent storage. 
-
-  **RESEARCH**
-  Feel free to conduct research on a topic using the web search tool. This could be used to augment your knowledge or to get more information about a topic before posting a new tweet or to validate the information in a tweet before liking or retweeting it. Or use it to research a topic in preparation for your next workflow run.
+  const initalMessage = `As a social media manager, you are expected to interact with twitter periodically in order to maintain social engagement. Save any interesting experiences from your interactions your permanent storage. 
 
   EXAMPLES:
-  - Check your timeline for interesting conversations and join the conversation.
-  - Like interesting tweets.
-  - Follow interesting users.
-  - Check your mentions and reply to useful conversations that you haven't replied to yet.
+  - Check your timeline and ENGAGE IN INTERESTING CONVERSATIONS.
+  - DO NOT NEGLECT CHECKING MENTIONS AND ENGAGING IN CONVERSATIONS.
   - Post a new tweet.
   - Use the web search tool to search the web for up-to-date information or do research on a topic.
+
+  DO NOT NEGLECT ANY OF THE ABOVE EXAMPLES PLEASE
 `;
   try {
     await validateLocalHash();
@@ -83,7 +80,9 @@ const main = async () => {
     while (true) {
       const result = await runner.runWorkflow({ messages: [new HumanMessage(message)] });
 
-      message = `${result.workflowSummary}\n${result.nextWorkflowPrompt ?? message}`;
+      message = `${result.summary}
+      Overarching instructions: ${initalMessage}
+      ${result.nextWorkflowPrompt ?? message}`;
 
       logger.info('Workflow execution result:', { result });
 
