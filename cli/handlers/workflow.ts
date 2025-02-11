@@ -53,18 +53,15 @@ export const runWorkflow = async (
     global.console = originalConsole;
     outputLog.log('\n{bold}Workflow completed{/bold}');
 
-    // Add the next scheduled task to the list if provided by workflow
     if (result.nextWorkflowPrompt && result.secondsUntilNextWorkflow) {
       const nextDelaySeconds = result.secondsUntilNextWorkflow;
       const nextRunTime = new Date(Date.now() + nextDelaySeconds * 1000);
 
-      // Update state with new scheduled task
       state.scheduledTasks.push({
         time: nextRunTime,
         description: result.nextWorkflowPrompt,
       });
 
-      // Update UI
       const formattedTime = nextRunTime.toLocaleTimeString();
       scheduledTasksBox.addItem(`${formattedTime} - ${result.nextWorkflowPrompt}`);
       scheduledTasksBox.scrollTo(Number((scheduledTasksBox as any).ritems.length - 1));
