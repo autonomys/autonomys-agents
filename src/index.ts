@@ -34,7 +34,7 @@ const main = async () => {
     while (true) {
       const result = await runner.runWorkflow({ messages: [new HumanMessage(message)] });
 
-      message = `${result.workflowSummary}\n${result.nextWorkflowPrompt ?? message}`;
+      message = `${result.summary}\n${result.nextWorkflowPrompt ?? message}`;
 
       logger.info('Workflow execution result:', { result });
 
