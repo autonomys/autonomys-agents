@@ -4,6 +4,7 @@ export enum LLMProvider {
   OLLAMA = 'ollama',
   DEEPSEEK = 'deepseek',
   GROQ = 'groq',
+  GOOGLE = 'google',
 }
 
 export type LLMConfiguration = {

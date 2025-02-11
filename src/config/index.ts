@@ -91,6 +91,7 @@ export const config = (() => {
         DEEPSEEK_URL: process.env.DEEPSEEK_URL || '',
         DEEPSEEK_API_KEY: process.env.DEEPSEEK_API_KEY || '',
         GROQ_API_KEY: process.env.GROQ_API_KEY || '',
+        GEMINI_API_KEY: process.env.GEMINI_API_KEY || '',
       },
 
       autoDriveConfig: {
