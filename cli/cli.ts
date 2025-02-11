@@ -159,7 +159,7 @@ import { Mutex } from 'async-mutex';
           minute: '2-digit',
           second: '2-digit',
         });
-        
+
         const dateStr = now.toLocaleDateString('en-US', {
           month: 'short',
           day: 'numeric',
