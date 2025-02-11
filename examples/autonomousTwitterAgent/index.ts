@@ -17,7 +17,7 @@ import { createWebSearchTool } from '../../src/agents/tools/webSearchTool.js';
 
 const logger = createLogger('autonomous-twitter-agent');
 
-const orchestatorConfig = async () => {
+const orchestratorConfig = async () => {
   const { USERNAME, PASSWORD, COOKIES_PATH } = config.twitterConfig;
   const twitterApi = await createTwitterApi(USERNAME, PASSWORD, COOKIES_PATH);
   const webSearchTool = createWebSearchTool();
@@ -44,17 +44,17 @@ const orchestatorConfig = async () => {
   };
 };
 
-const orchestratorConfig = await orchestatorConfig();
+const orchestrationConfig = await orchestratorConfig();
 const orchestratorRunner = (() => {
   let runnerPromise: Promise<OrchestratorRunner> | undefined = undefined;
   return async () => {
     if (!runnerPromise) {
       runnerPromise = createOrchestratorRunner(
-        orchestratorConfig.model,
-        orchestratorConfig.tools,
-        orchestratorConfig.prompts,
-        orchestratorConfig.namespace,
-        orchestratorConfig.pruningParameters,
+        orchestrationConfig.model,
+        orchestrationConfig.tools,
+        orchestrationConfig.prompts,
+        orchestrationConfig.namespace,
+        orchestrationConfig.pruningParameters,
       );
     }
     return runnerPromise;
@@ -63,7 +63,7 @@ const orchestratorRunner = (() => {
 
 const main = async () => {
   const runner = await orchestratorRunner();
-  const initalMessage = `As a social media manager, you are expected to interact with twitter periodically in order to maintain social engagement. Save any interesting experiences from your interactions your permanent storage. 
+  const initialMessage = `As a social media manager, you are expected to interact with twitter periodically in order to maintain social engagement. Save any interesting experiences from your interactions your permanent storage. 
 
   EXAMPLES:
   - Check your timeline and ENGAGE IN INTERESTING CONVERSATIONS.
@@ -76,12 +76,12 @@ const main = async () => {
   try {
     await validateLocalHash();
 
-    let message = initalMessage;
+    let message = initialMessage;
     while (true) {
       const result = await runner.runWorkflow({ messages: [new HumanMessage(message)] });
 
       message = `${result.summary}
-      Overarching instructions: ${initalMessage}
+      Overarching instructions: ${initialMessage}
       ${result.nextWorkflowPrompt ?? message}`;
 
       logger.info('Workflow execution result:', { result });
@@ -89,7 +89,7 @@ const main = async () => {
       const nextDelaySeconds =
         result.secondsUntilNextWorkflow ?? config.twitterConfig.RESPONSE_INTERVAL_MS / 1000;
       logger.info('Workflow execution completed successfully for character:', {
-        charcterName: config.characterConfig.name,
+        characterName: config.characterConfig.name,
         runFinished: new Date().toISOString(),
         nextRun: `${nextDelaySeconds / 60} minutes`,
         nextWorkflowPrompt: message,
