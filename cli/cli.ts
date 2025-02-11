@@ -152,16 +152,20 @@ import { Mutex } from 'async-mutex';
         } finally {
           release();
         }
-
-        const timeStr = now.toLocaleString('en-US', {
-          month: 'short',
-          day: '2-digit',
+        // Update clock with colored time and date
+        const timeStr = now.toLocaleTimeString('en-US', {
+          hour12: false,
           hour: '2-digit',
           minute: '2-digit',
           second: '2-digit',
-          hour12: false,
         });
-        ui.clockBox.setContent(timeStr);
+        
+        const dateStr = now.toLocaleDateString('en-US', {
+          month: 'short',
+          day: 'numeric',
+          year: 'numeric',
+        });
+        ui.clockBox.setContent(`${dateStr}\n${timeStr}`);
         ui.screen.render();
       }
     })();

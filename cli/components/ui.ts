@@ -1,5 +1,6 @@
 import blessed from 'blessed';
 import { UIComponents } from '../types/types.js';
+import { loadCharacter } from '../../src/config/characters.js';
 
 export const createLogoBox = () => {
   const logoArt = `{cyan-fg}    _         _                                        
@@ -33,8 +34,8 @@ export const createClockBox = () => {
     top: 0,
     right: 0,
     width: '20%',
-    height: 3,
-    label: ' Time ',
+    height: 5,
+    label: ' Date & Time ',
     content: '',
     padding: {
       top: 0,
@@ -57,10 +58,10 @@ export const createClockBox = () => {
 
 export const createOutputLog = () => {
   return blessed.log({
-    top: 7,
+    top: 8,
     left: '0%',
     width: '100%',
-    height: '63%',
+    height: '62%',
     label: 'Workflow Output (F2 to focus input)',
     border: { type: 'line' },
     style: {
@@ -142,6 +143,41 @@ export const createInputBox = () => {
   });
 };
 
+export const createCharacterBox = (characterDirName: string) => {
+  let displayName = characterDirName;
+  try {
+    const character = loadCharacter(characterDirName);
+    displayName = character.name;
+  } catch (error) {
+    console.error('Failed to load character name:', error);
+  }
+
+  return blessed.box({
+    top: 0,
+    left: 0,
+    width: '20%',
+    height: 5,
+    label: ' Character ',
+    content: `${displayName}`,
+    padding: {
+      top: 0,
+      right: 1,
+      bottom: 1,
+      left: 1,
+    },
+    border: { type: 'line' },
+    style: {
+      border: { fg: 'cyan' },
+      fg: 'white',
+      bg: 'red',
+      bold: true,
+    },
+    align: 'center',
+    valign: 'middle',
+    tags: true,
+  });
+};
+
 export const createUI = (): UIComponents => {
   const screen = blessed.screen({
     smartCSR: true,
@@ -156,6 +192,7 @@ export const createUI = (): UIComponents => {
   const inputBox = createInputBox();
   const clockBox = createClockBox();
   const logoBox = createLogoBox();
+  const characterBox = createCharacterBox(process.argv[2] || 'Unknown');
 
   screen.append(logoBox);
   screen.append(outputLog);
@@ -163,6 +200,16 @@ export const createUI = (): UIComponents => {
   screen.append(scheduledTasksBox);
   screen.append(inputBox);
   screen.append(clockBox);
+  screen.append(characterBox);
 
-  return { screen, outputLog, statusBox, scheduledTasksBox, inputBox, clockBox, logoBox };
+  return {
+    screen,
+    outputLog,
+    statusBox,
+    scheduledTasksBox,
+    inputBox,
+    clockBox,
+    logoBox,
+    characterBox,
+  };
 };
