@@ -120,18 +120,25 @@ export const createScheduledTasksBox = () => {
 };
 
 export const createInputBox = () => {
-  return blessed.textbox({
+  return blessed.textarea({
     bottom: 0,
     left: '0%',
     width: '100%',
     height: '10%',
-    label: 'Input - Type message and press Enter (F2 to focus)',
+    label: 'Input - Type message (Ctrl+Enter to send, F2 to focus)',
     border: { type: 'line' },
     style: {
       border: { fg: 'yellow' },
       focus: { border: { fg: 'white' } },
     },
+    keys: true,
+    vi: true,
+    mouse: true,
     inputOnFocus: true,
+    padding: {
+      left: 1,
+      right: 1,
+    },
   });
 };
 

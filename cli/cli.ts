@@ -18,7 +18,9 @@ import { AppState } from './types/types.js';
 
     setupKeyBindings(ui, state);
 
-    ui.inputBox.on('submit', (value: string) => {
+    // Handle Ctrl+Enter for submission
+    ui.inputBox.key(['C-enter'], () => {
+      const value = ui.inputBox.getValue();
       if (value.trim()) {
         state.value = value;
         ui.statusBox.setContent('Current Message: ' + value);

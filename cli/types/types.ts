@@ -5,7 +5,7 @@ export interface UIComponents {
   outputLog: blessed.Widgets.Log;
   statusBox: blessed.Widgets.BoxElement;
   scheduledTasksBox: blessed.Widgets.ListElement;
-  inputBox: blessed.Widgets.TextboxElement;
+  inputBox: blessed.Widgets.TextareaElement;
   clockBox: blessed.Widgets.BoxElement;
   logoBox: blessed.Widgets.BoxElement;
 }
