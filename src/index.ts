@@ -19,7 +19,7 @@ const runner = await orchestratorRunner();
 const initialMessage = `As a social media manager, you are expected to interact with twitter periodically in order to maintain social engagement. Use your judgement how frequently you should run these interactions and what you should do. You don't need do the same things every time. Save any interesting experiences from your interactions your permanent storage.
 
   EXAMPLES:
-  - Check your timiline for interesting conversations and join the conversation.
+  - Check your timeline for interesting conversations and join the conversation.
   - Like interesting tweets.
   - Follow interesting users.
   - Check your mentions and reply to useful conversations that you haven't replied to yet.
@@ -41,7 +41,7 @@ const main = async () => {
       const nextDelaySeconds =
         result.secondsUntilNextWorkflow ?? config.twitterConfig.RESPONSE_INTERVAL_MS / 1000;
       logger.info('Workflow execution completed successfully for character:', {
-        charcterName: config.characterConfig.name,
+        characterName: config.characterConfig.name,
         runFinished: new Date().toISOString(),
         nextRun: `${nextDelaySeconds / 60} minutes`,
         nextWorkflowPrompt: message,

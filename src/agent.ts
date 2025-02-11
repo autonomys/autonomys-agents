@@ -11,7 +11,7 @@ import { LLMProvider } from './services/llm/types.js';
 import { PruningParameters } from './agents/workflows/orchestrator/types.js';
 import { LLMFactory } from './services/llm/factory.js';
 
-const orchestatorConfig = async () => {
+const orchestratorConfig = async () => {
   const { USERNAME, PASSWORD, COOKIES_PATH } = config.twitterConfig;
   const twitterApi = await createTwitterApi(USERNAME, PASSWORD, COOKIES_PATH);
   const twitterAgent = createTwitterAgentTool(twitterApi);
@@ -36,17 +36,17 @@ const orchestatorConfig = async () => {
   };
 };
 
-const orchestratorConfig = await orchestatorConfig();
+const orchestrationConfig = await orchestratorConfig();
 export const orchestratorRunner = (() => {
   let runnerPromise: Promise<OrchestratorRunner> | undefined = undefined;
   return async () => {
     if (!runnerPromise) {
       runnerPromise = createOrchestratorRunner(
-        orchestratorConfig.model,
-        orchestratorConfig.tools,
-        orchestratorConfig.prompts,
-        orchestratorConfig.namespace,
-        orchestratorConfig.pruningParameters,
+        orchestrationConfig.model,
+        orchestrationConfig.tools,
+        orchestrationConfig.prompts,
+        orchestrationConfig.namespace,
+        orchestrationConfig.pruningParameters,
       );
     }
     return runnerPromise;
