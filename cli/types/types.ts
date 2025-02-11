@@ -6,6 +6,8 @@ export interface UIComponents {
   statusBox: blessed.Widgets.BoxElement;
   scheduledTasksBox: blessed.Widgets.ListElement;
   inputBox: blessed.Widgets.TextboxElement;
+  clockBox: blessed.Widgets.BoxElement;
+  logoBox: blessed.Widgets.BoxElement;
 }
 
 export interface AppState {
