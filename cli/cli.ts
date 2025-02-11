@@ -18,8 +18,8 @@ import { AppState } from './types/types.js';
 
     setupKeyBindings(ui, state);
 
-    // Handle Ctrl+Enter for submission
-    ui.inputBox.key(['C-enter'], () => {
+    // Handle F6 for submission
+    ui.inputBox.key(['f6'], () => {
       const value = ui.inputBox.getValue();
       if (value.trim()) {
         state.value = value;

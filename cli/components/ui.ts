@@ -125,7 +125,7 @@ export const createInputBox = () => {
     left: '0%',
     width: '100%',
     height: '10%',
-    label: 'Input - Type message (Ctrl+Enter to send, F2 to focus)',
+    label: 'Input - Type message (F6 to send, F2 to focus)',
     border: { type: 'line' },
     style: {
       border: { fg: 'yellow' },
