@@ -17,7 +17,12 @@ export const createSaveExperienceTool = (uploadEnabled: boolean = false) =>
     - You make a strategic decision (e.g., "Why I chose strategy X over Y").  
     FORMAT: Include full context, reasoning, timestamps, content and IDs. THE MORE DETAIL THE BETTER.`,
     schema: z.object({
-      data: z.record(z.any()),
+      data: z
+        .object({
+          // A dummy field so that properties is not empty.
+          placeholder: z.string().optional(),
+        })
+        .passthrough(),
     }),
     func: async ({ data }) => {
       try {
