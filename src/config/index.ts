@@ -4,7 +4,6 @@ import { configSchema } from './schema.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { mkdir } from 'fs/promises';
-import { llmDefaultConfig } from './llm.js';
 import { twitterDefaultConfig } from './twitter.js';
 import { memoryDefaultConfig } from './memory.js';
 import yaml from 'yaml';
@@ -97,8 +96,6 @@ export const config = (() => {
       },
       characterConfig,
       llmConfig: {
-        ...llmDefaultConfig,
-        ...(yamlConfig.llm || {}),
         OPENAI_API_KEY: process.env.OPENAI_API_KEY || '',
         ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY || '',
         LLAMA_API_URL: process.env.LLAMA_API_URL || '',
