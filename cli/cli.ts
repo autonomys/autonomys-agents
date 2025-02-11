@@ -63,14 +63,14 @@ import { Mutex } from 'async-mutex';
     (async () => {
       while (true) {
         let valueToProcess = '';
-        
+
         // First, check if we have a new task to start
         const release = await state.mutex.acquire();
         try {
           if (state.value && !state.isProcessing) {
             state.isProcessing = true;
-            valueToProcess = state.value;  // Store value before clearing
-            state.value = '';  // Clear value before releasing mutex
+            valueToProcess = state.value; // Store value before clearing
+            state.value = ''; // Clear value before releasing mutex
           }
         } finally {
           release();
@@ -104,7 +104,7 @@ import { Mutex } from 'async-mutex';
     (async () => {
       while (true) {
         await new Promise(res => setTimeout(res, 1000));
-        
+
         const now = new Date();
         const release = await state.mutex.acquire();
         try {
@@ -115,10 +115,10 @@ import { Mutex } from 'async-mutex';
               .filter(task => task.time <= now);
 
             if (dueTasks.length > 0) {
-              const task = dueTasks[0];  // Get the earliest scheduled task
+              const task = dueTasks[0]; // Get the earliest scheduled task
               state.scheduledTasks = state.scheduledTasks.filter(t => t !== task);
               state.isProcessing = true;
-              
+
               // Log if task is overdue
               const delayMinutes = Math.floor((now.getTime() - task.time.getTime()) / (1000 * 60));
               if (delayMinutes > 0) {
@@ -130,9 +130,11 @@ import { Mutex } from 'async-mutex';
                   second: '2-digit',
                   hour12: false,
                 });
-                ui.outputLog.log(`{yellow-fg}Task was scheduled for ${scheduledTime} (${delayMinutes} minutes ago){/yellow-fg}`);
+                ui.outputLog.log(
+                  `{yellow-fg}Task was scheduled for ${scheduledTime} (${delayMinutes} minutes ago){/yellow-fg}`,
+                );
               }
-              
+
               try {
                 ui.outputLog.log('{cyan-fg}Starting scheduled task...{/cyan-fg}');
                 ui.statusBox.setContent(`Executing scheduled task: ${task.description}`);
@@ -151,7 +153,6 @@ import { Mutex } from 'async-mutex';
           release();
         }
 
-        // Update clock with colored time and date
         const timeStr = now.toLocaleString('en-US', {
           month: 'short',
           day: '2-digit',
