@@ -22,9 +22,24 @@ import { AppState } from './types/types.js';
     ui.inputBox.key(['C-enter'], () => {
       const value = ui.inputBox.getValue();
       if (value.trim()) {
-        state.value = value;
-        ui.statusBox.setContent('Current Message: ' + value);
-        state.isProcessing = false;
+        if (state.isProcessing) {
+          // If system is busy, add to scheduled tasks queue
+          const nextRunTime = new Date(); // Schedule for immediate execution when possible
+          state.scheduledTasks.push({
+            time: nextRunTime,
+            description: value,
+          });
+          // Update UI to show task was queued
+          const formattedTime = nextRunTime.toLocaleTimeString();
+          ui.scheduledTasksBox.addItem(`${formattedTime} - ${value}`);
+          ui.scheduledTasksBox.scrollTo(Number((ui.scheduledTasksBox as any).ritems.length - 1));
+          ui.statusBox.setContent('System busy - Task added to queue');
+        } else {
+          // Process immediately if system is free
+          state.value = value;
+          ui.statusBox.setContent('Current Message: ' + value);
+          state.isProcessing = false;
+        }
       }
       ui.inputBox.clearValue();
       ui.inputBox.focus();
