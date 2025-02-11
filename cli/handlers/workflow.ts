@@ -66,7 +66,7 @@ export const runWorkflow = async (
 
     // Update UI
     const formattedTime = nextRunTime.toLocaleTimeString();
-    scheduledTasksBox.addItem(`${formattedTime} - ${taskDescription.slice(0, 50)}...`);
+    scheduledTasksBox.addItem(`${formattedTime} - ${taskDescription}`);
     scheduledTasksBox.scrollTo(Number((scheduledTasksBox as any).ritems.length - 1));
 
     statusBox.setContent('Workflow completed. Enter new message to start another.');
