@@ -53,6 +53,31 @@ import { AppState } from './types/types.js';
       }
     })();
 
+    // Run the scheduler loop in parallel
+    (async () => {
+      while (true) {
+        const now = new Date();
+        const dueTasks = state.scheduledTasks.filter(task => task.time <= now);
+
+        for (const task of dueTasks) {
+          if (!state.isProcessing) {
+            state.isProcessing = true;
+            try {
+              // Remove task from list
+              state.scheduledTasks = state.scheduledTasks.filter(t => t !== task);
+              // Execute the task
+              await runWorkflow(task.description, runner, ui, state);
+            } catch (error: any) {
+              ui.outputLog.log('\n{red-fg}Scheduled task error:{/red-fg} ' + error.message);
+            } finally {
+              state.isProcessing = false;
+            }
+          }
+        }
+        await new Promise(res => setTimeout(res, 1000));
+      }
+    })();
+
     ui.inputBox.focus();
     ui.screen.render();
   } catch (error: any) {

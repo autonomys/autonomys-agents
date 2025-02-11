@@ -20,7 +20,7 @@
         "lint:fix": "eslint \"src/**/*.{js,ts}\" --fix",
         "resurrect": "tsx cli/resurrect.ts",
         "create-character": "tsx scripts/create-character.ts",
-        "interactive": "tsx cli/interactive.ts"
+        "cli": "tsx cli/cli.ts"
     },
     "dependencies": {
         "@autonomys/auto-dag-data": "1.2.1",
