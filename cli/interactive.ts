@@ -178,6 +178,7 @@ const runWorkflow = async (
   statusBox: blessed.Widgets.BoxElement,
   screen: blessed.Widgets.Screen,
   inputBox: blessed.Widgets.TextboxElement,
+  scheduledTasksBox: blessed.Widgets.ListElement,
 ) => {
   outputLog.setContent('');
   outputLog.log('{bold}Starting new workflow...{/bold}\n');
@@ -196,6 +197,16 @@ const runWorkflow = async (
 
     global.console = originalConsole;
     outputLog.log('\n{bold}Workflow completed{/bold}');
+
+    // Add the next scheduled task to the list
+    const nextDelaySeconds = result.secondsUntilNextWorkflow ?? 300; // Default to 5 minutes if not specified
+    const nextRunTime = new Date(Date.now() + nextDelaySeconds * 1000);
+    const formattedTime = nextRunTime.toLocaleTimeString();
+
+    const taskDescription = result.nextWorkflowPrompt ?? currentMessage;
+    scheduledTasksBox.addItem(`${formattedTime} - ${taskDescription.slice(0, 50)}...`);
+    scheduledTasksBox.scrollTo(scheduledTasksBox.items.length);
+
     statusBox.setContent('Workflow completed. Enter new message to start another.');
   } catch (error) {
     global.console = originalConsole;
@@ -214,13 +225,14 @@ const runWorkflow = async (
     const state = {
       value: '', // Changed from currentMessage to value
       isProcessing: false,
+      scheduledTasks: [], // Track scheduled tasks
     };
 
     setupKeyBindings(screen, outputLog, inputBox, statusBox, state);
 
     inputBox.on('submit', (value: string) => {
       if (value.trim()) {
-        state.value = value; // Using value instead of currentMessage
+        state.value = value;
         statusBox.setContent('Current Message: ' + value);
         state.isProcessing = false;
       }
@@ -235,8 +247,16 @@ const runWorkflow = async (
         if (state.value && !state.isProcessing) {
           state.isProcessing = true;
           try {
-            await runWorkflow(state.value, runner, outputLog, statusBox, screen, inputBox);
-            state.value = ''; // Using value instead of currentMessage
+            await runWorkflow(
+              state.value,
+              runner,
+              outputLog,
+              statusBox,
+              screen,
+              inputBox,
+              scheduledTasksBox,
+            );
+            state.value = '';
             state.isProcessing = false;
           } catch (error: any) {
             outputLog.log('\n{red-fg}Error:{/red-fg} ' + error.message);
@@ -244,7 +264,7 @@ const runWorkflow = async (
             screen.render();
             inputBox.focus();
             await new Promise(res => setTimeout(res, 5000));
-            state.value = ''; // Using value instead of currentMessage
+            state.value = '';
             state.isProcessing = false;
           }
         } else {
