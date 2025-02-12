@@ -1,12 +1,10 @@
 import { DynamicStructuredTool } from '@langchain/core/tools';
 import { z } from 'zod';
-import { createLogger } from '../../../utils/logger.js';
 import { ToolNode } from '@langchain/langgraph/prebuilt';
 import { AIMessage } from '@langchain/core/messages';
 import { uploadToDsn } from '../../../utils/dsn/dsnUpload.js';
-import { config } from '../../../config/index.js';
-
-const logger = createLogger('save-experience-tool');
+import { autoDriveConfig } from './config/autoDriveConfig.js';
+import { logger } from './utils/utils.js';
 
 export const createSaveExperienceTool = () =>
   new DynamicStructuredTool({
@@ -25,7 +23,7 @@ export const createSaveExperienceTool = () =>
         logger.info('Uploading data to DSN - Received data:', {
           data: JSON.stringify(data, null, 2),
         });
-        if (config.autoDriveConfig.AUTO_DRIVE_UPLOAD) {
+        if (autoDriveConfig.auto_drive.upload) {
           const upload: { success: boolean; cid: string; previousCid: string | null } =
             await uploadToDsn(data);
           logger.info('Uploading data to DSN - Upload info:', JSON.stringify(upload, null, 2));
