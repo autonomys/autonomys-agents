@@ -2,9 +2,7 @@ import { z } from 'zod';
 import yaml from 'js-yaml';
 import fs from 'fs';
 import path from 'path';
-import { createLogger } from '../../../../utils/logger.js';
-
-const logger = createLogger('twitter-config-tool');
+import { logger } from '../utils/utils.js';
 
 const configSchema = z.object({
   post_tweets: z.boolean(),

@@ -1,52 +1,9 @@
 import { DynamicStructuredTool } from '@langchain/core/tools';
 import { z } from 'zod';
-import { createLogger } from '../../../utils/logger.js';
-import { Tweet, TwitterApi } from '../../../services/twitter/types.js';
+import { TwitterApi } from '../../../services/twitter/types.js';
 import { twitterConfig } from './config/twitterConfig.js';
+import { tweetToMinimalTweet, cleanTweetForCircularReferences, logger } from './utils/utils.js';
 
-const logger = createLogger('fetch-timeline-tool');
-
-type MinimalTweet = {
-  id?: string;
-  username?: string;
-  text?: string;
-  createdAt?: string;
-  inReplyToStatusId?: string;
-  thread?: MinimalTweet[];
-  quotedStatusId?: string;
-  quotedStatus?: MinimalTweet;
-};
-
-const tweetToMinimalTweet = (tweet: Tweet): MinimalTweet => {
-  const quotedStatus = tweet.quotedStatus ? tweetToMinimalTweet(tweet.quotedStatus) : undefined;
-  const thread = tweet.thread ? tweet.thread.map(t => tweetToMinimalTweet(t)) : undefined;
-
-  return {
-    id: tweet.id,
-    username: tweet.username,
-    text: tweet.text,
-    createdAt: tweet.timeParsed?.toString(),
-    inReplyToStatusId: tweet.inReplyToStatusId,
-    thread,
-    quotedStatusId: tweet.quotedStatusId,
-    quotedStatus,
-  };
-};
-
-const cleanTweetForCircularReferences = (tweet: Tweet): Tweet => ({
-  ...tweet,
-  thread: tweet.thread
-    ?.filter(t => t.id !== tweet.id)
-    .map(t => ({
-      id: t.id,
-      text: t.text,
-      username: t.username,
-      timeParsed: t.timeParsed,
-    })) as Tweet[],
-  inReplyToStatus: undefined,
-  quotedStatus: undefined,
-  retweetedStatus: undefined,
-});
 
 export const createFetchTimelineTool = (twitterApi: TwitterApi) =>
   new DynamicStructuredTool({
