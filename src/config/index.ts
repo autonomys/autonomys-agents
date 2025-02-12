@@ -82,17 +82,6 @@ export const config = (() => {
         PASSWORD: process.env.TWITTER_PASSWORD || '',
         COOKIES_PATH: cookiesPath,
         ...twitterDefaultConfig,
-
-        ...(yamlConfig.twitter
-          ? {
-              ...yamlConfig.twitter,
-              RESPONSE_INTERVAL_MS:
-                (yamlConfig.twitter.RESPONSE_INTERVAL_MINUTES || 60) * 60 * 1000,
-              POST_INTERVAL_MS: (yamlConfig.twitter.POST_INTERVAL_MINUTES || 60) * 60 * 1000,
-              RESPONSE_INTERVAL_MINUTES: undefined,
-              POST_INTERVAL_MINUTES: undefined,
-            }
-          : {}),
       },
       characterConfig,
       llmConfig: {
