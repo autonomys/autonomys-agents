@@ -56,8 +56,7 @@ The interface provides a user-friendly way to interact with your agent, monitor 
 
 The following examples demonstrate the use of the framework and are available:
 
-- [Directed Twitter Agent](examples/directedTwitterAgent/README.md)
-- [Autonomous Twitter Agent](examples/autonomousTwitterAgent/README.md)
+- [Twitter Agent](examples/twitterAgent/README.md)
 
 ## Character System
 

@@ -4,7 +4,6 @@ import { configSchema } from './schema.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { mkdir } from 'fs/promises';
-import { llmDefaultConfig } from './llm.js';
 import { twitterDefaultConfig } from './twitter.js';
 import { memoryDefaultConfig } from './memory.js';
 import yaml from 'yaml';
@@ -83,22 +82,9 @@ export const config = (() => {
         PASSWORD: process.env.TWITTER_PASSWORD || '',
         COOKIES_PATH: cookiesPath,
         ...twitterDefaultConfig,
-
-        ...(yamlConfig.twitter
-          ? {
-              ...yamlConfig.twitter,
-              RESPONSE_INTERVAL_MS:
-                (yamlConfig.twitter.RESPONSE_INTERVAL_MINUTES || 60) * 60 * 1000,
-              POST_INTERVAL_MS: (yamlConfig.twitter.POST_INTERVAL_MINUTES || 60) * 60 * 1000,
-              RESPONSE_INTERVAL_MINUTES: undefined,
-              POST_INTERVAL_MINUTES: undefined,
-            }
-          : {}),
       },
       characterConfig,
       llmConfig: {
-        ...llmDefaultConfig,
-        ...(yamlConfig.llm || {}),
         OPENAI_API_KEY: process.env.OPENAI_API_KEY || '',
         ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY || '',
         LLAMA_API_URL: process.env.LLAMA_API_URL || '',

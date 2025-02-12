@@ -1,40 +1,9 @@
 twitter:
-  NUM_TIMELINE_TWEETS: 10
-  NUM_FOLLOWING_RECENT_TWEETS: 10
-  NUM_RANDOM_FOLLOWINGS: 5
-  MAX_MENTIONS: 20
-  MAX_THREAD_LENGTH: 20
-  MAX_MY_RECENT_TWEETS: 10
-  MAX_MY_RECENT_REPLIES: 10
-  RESPONSE_INTERVAL_MINUTES: 60
-  POST_INTERVAL_MINUTES: 90
   POST_TWEETS: false
 
 auto_drive:
   upload: false
   network: 'taurus' # or 'mainnet'
-
-llm:
-  nodes:
-    decision:
-      provider: 'anthropic'
-      model: 'claude-3-5-sonnet-latest'
-      temperature: 0.2
-    analyze:
-      provider: 'anthropic'
-      model: 'claude-3-5-sonnet-latest'
-      temperature: 0.5
-    generation:
-      provider: 'anthropic'
-      model: 'claude-3-5-sonnet-latest'
-      temperature: 0.8
-    response:
-      provider: 'openai'
-      model: 'gpt-4o-mini'
-      temperature: 0.8
-
-memory:
-  MAX_PROCESSED_IDS: 5000
 
 orchestrator:
   MAX_WINDOW_SUMMARY: 20
