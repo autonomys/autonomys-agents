@@ -117,14 +117,15 @@ import { Mutex } from 'async-mutex';
             if (dueTasks.length > 0) {
               const task = dueTasks[0]; // Get the earliest scheduled task
               state.scheduledTasks = state.scheduledTasks.filter(t => t !== task);
-              
+
               const taskIndex = (ui.scheduledTasksBox as any).ritems.findIndex(
-                (item: string) => item.includes(task.time.toISOString()) && item.includes(task.description)
+                (item: string) =>
+                  item.includes(task.time.toISOString()) && item.includes(task.description),
               );
               if (taskIndex !== -1) {
                 ui.scheduledTasksBox.removeItem(taskIndex);
               }
-              
+
               state.isProcessing = true;
 
               // Log if task is overdue
