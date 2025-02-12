@@ -62,7 +62,7 @@ export const runWorkflow = async (
         description: result.nextWorkflowPrompt,
       });
 
-      const formattedTime = nextRunTime.toLocaleTimeString();
+      const formattedTime = nextRunTime.toISOString();
       scheduledTasksBox.addItem(`${formattedTime} - ${result.nextWorkflowPrompt}`);
       scheduledTasksBox.scrollTo(Number((scheduledTasksBox as any).ritems.length - 1));
       statusBox.setContent('Workflow completed. Next task scheduled.');
