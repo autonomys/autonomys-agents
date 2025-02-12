@@ -14,7 +14,7 @@ export const createLogoBox = () => {
     top: 0,
     left: 'center',
     width: '60%',
-    height: 7,
+    height: 10,
     content: logoArt,
     tags: true,
     align: 'center',

@@ -2,6 +2,11 @@ import winston from 'winston';
 import { config } from '../config/index.js';
 import path from 'path';
 
+// Strip ANSI escape sequences
+const stripAnsi = (str: string) => {
+  return str.replace(/\u001b\[\d+m/g, '');
+};
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const formatMeta = (meta: any, _useColors: boolean = false) => {
   const cleanMeta = Object.entries(meta)
@@ -35,11 +40,10 @@ const createConsoleFormat = () =>
     winston.format.timestamp({
       format: 'YYYY-MM-DD HH:mm:ss.SSS',
     }),
-    winston.format.colorize({ level: true }),
     winston.format.printf(({ level, message, context, timestamp, ...meta }) => {
       const metaStr = formatMeta(meta, true);
-      const paddedLevel = level.toUpperCase().padEnd(7);
-      return `${timestamp} | ${paddedLevel} | [${context}] | ${message}${metaStr}`;
+      const paddedLevel = stripAnsi(level.toUpperCase().padEnd(7));
+      return `${timestamp} | ${paddedLevel} | [${context}] | ${stripAnsi(String(message))}${metaStr}`;
     }),
   );
 
