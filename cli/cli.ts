@@ -40,14 +40,7 @@ import { Mutex } from 'async-mutex';
               time: nextRunTime,
               description: value,
             });
-            const formattedTime = nextRunTime.toLocaleString('en-US', {
-              month: 'short',
-              day: '2-digit',
-              hour: '2-digit',
-              minute: '2-digit',
-              second: '2-digit',
-              hour12: false,
-            });
+            const formattedTime = nextRunTime.toISOString();
             ui.scheduledTasksBox.addItem(`${formattedTime} - ${value}`);
             ui.scheduledTasksBox.scrollTo(Number((ui.scheduledTasksBox as any).ritems.length - 1));
             ui.statusBox.setContent('System busy - Task added to queue');
@@ -129,14 +122,7 @@ import { Mutex } from 'async-mutex';
               // Log if task is overdue
               const delayMinutes = Math.floor((now.getTime() - task.time.getTime()) / (1000 * 60));
               if (delayMinutes > 0) {
-                const scheduledTime = task.time.toLocaleString('en-US', {
-                  month: 'short',
-                  day: '2-digit',
-                  hour: '2-digit',
-                  minute: '2-digit',
-                  second: '2-digit',
-                  hour12: false,
-                });
+                const scheduledTime = task.time.toISOString();
                 ui.outputLog.log(
                   `{yellow-fg}Task was scheduled for ${scheduledTime} (${delayMinutes} minutes ago){/yellow-fg}`,
                 );
@@ -159,20 +145,9 @@ import { Mutex } from 'async-mutex';
         } finally {
           release();
         }
-        // Update clock with colored time and date
-        const timeStr = now.toLocaleTimeString('en-US', {
-          hour12: false,
-          hour: '2-digit',
-          minute: '2-digit',
-          second: '2-digit',
-        });
-
-        const dateStr = now.toLocaleDateString('en-US', {
-          month: 'short',
-          day: 'numeric',
-          year: 'numeric',
-        });
-        ui.clockBox.setContent(`${dateStr}\n${timeStr}`);
+        // Update clock with ISO format time and date
+        const timeStr = now.toISOString();
+        ui.clockBox.setContent(timeStr);
         ui.screen.render();
       }
     })();
