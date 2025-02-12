@@ -4,7 +4,6 @@ import { TwitterApi } from '../../../services/twitter/types.js';
 import { twitterConfig } from './config/twitterConfig.js';
 import { tweetToMinimalTweet, cleanTweetForCircularReferences, logger } from './utils/utils.js';
 
-
 export const createFetchTimelineTool = (twitterApi: TwitterApi) =>
   new DynamicStructuredTool({
     name: 'fetch_timeline',
@@ -22,12 +21,12 @@ export const createFetchTimelineTool = (twitterApi: TwitterApi) =>
       numTimelineTweets?: number;
     }) => {
       try {
-        const tweets = (await twitterApi.getMyTimeline(
-          numTimelineTweets ?? twitterConfig.timeline.num_timeline_tweets,
-          processedIds,
-        )).map(t =>
-          tweetToMinimalTweet(t),
-        );
+        const tweets = (
+          await twitterApi.getMyTimeline(
+            numTimelineTweets ?? twitterConfig.timeline.num_timeline_tweets,
+            processedIds,
+          )
+        ).map(t => tweetToMinimalTweet(t));
 
         logger.info('Timeline tweets:', {
           timelineTweets: tweets.length,
