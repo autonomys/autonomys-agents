@@ -1,12 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { z } from 'zod';
 import { DynamicStructuredTool } from '@langchain/core/tools';
-import { createLogger } from '../../../utils/logger.js';
 import axios from 'axios';
 import { load } from 'cheerio';
-import { config } from '../../../config/index.js';
-
-const logger = createLogger('web-search-tool');
+import { webSearchConfig } from './config/webSearchConfig.js';
+import { logger } from './utils/utils.js';
 
 export const createWebSearchTool = () =>
   new DynamicStructuredTool({
@@ -14,10 +12,18 @@ export const createWebSearchTool = () =>
     description: 'Perform a web search for up-to-date information or to do research on a topic.',
     schema: z.object({
       query: z.string().describe('The search query string.'),
-      num: z.string().describe('The number of results to return.'),
+      num: z.string().optional(),
     }),
-    func: async ({ query, num }: { query: string; num: string }) => {
-      const API_KEY = config.SERPAPI_API_KEY;
+    func: async ({ 
+      query, 
+      num 
+    }: { 
+      query: string; 
+      num?: string 
+    }) => {
+      const numResults = num ?? webSearchConfig.web_search.default_results;
+
+      const API_KEY = webSearchConfig.web_search.api.api_key;
       if (!API_KEY) {
         logger.error('SERPAPI_API_KEY is not set.');
         return 'Error: SERPAPI_API_KEY is not set.';
@@ -25,15 +31,17 @@ export const createWebSearchTool = () =>
       logger.info('Performing web search for query:', { query });
       const params = new URLSearchParams({
         api_key: API_KEY,
-        engine: 'google',
+        engine: webSearchConfig.web_search.engine,
         q: query,
-        num,
+        num: numResults.toString(),
       });
 
       const url = `https://serpapi.com/search?${params.toString()}`;
 
       try {
-        const response = await axios.get(url);
+        const response = await axios.get(url, { 
+          timeout: webSearchConfig.web_search.api.timeout_ms 
+        });
         const data = response.data;
         const results = data.organic_results || [];
 

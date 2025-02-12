@@ -1,0 +1,17 @@
+# Web Search Configuration
+
+web_search:
+  # Default number of search results to return
+  default_results: 5
+  
+  # Search engine settings
+  engine: 'google'
+  
+  # API settings
+  api:
+    # SERP API Key
+    api_key: 'YOUR_SERP_API_KEY'
+    # Whether to enable real API calls (false for testing)
+    enabled: true
+    # Timeout for API calls in milliseconds
+    timeout_ms: 10000 
