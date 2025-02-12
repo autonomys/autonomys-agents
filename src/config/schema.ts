@@ -5,7 +5,6 @@ const twitterConfigSchema = z.object({
   USERNAME: z.string().min(1, 'Twitter username is required'),
   PASSWORD: z.string().min(1, 'Twitter password is required'),
   COOKIES_PATH: z.string(),
-  POST_TWEETS: z.boolean(),
 });
 
 const llmConfigSchema = z.object({
@@ -79,7 +78,6 @@ const orchestratorConfigSchema = z.object({
   MAX_QUEUE_SIZE: z.number().int().positive().default(50),
 });
 
-const SERPAPI_API_KEY = z.string().optional();
 
 export const configSchema = z.object({
   twitterConfig: twitterConfigSchema,
@@ -89,6 +87,5 @@ export const configSchema = z.object({
   memoryConfig: memoryConfigSchema,
   characterConfig: characterConfigSchema,
   orchestratorConfig: orchestratorConfigSchema,
-  SERPAPI_API_KEY: SERPAPI_API_KEY,
   NODE_ENV: z.enum(['development', 'production', 'test']),
 });

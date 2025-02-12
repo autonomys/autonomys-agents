@@ -1,6 +1,3 @@
-twitter:
-  POST_TWEETS: false
-
 auto_drive:
   upload: false
   network: 'taurus' # or 'mainnet'

@@ -80,7 +80,6 @@ export const config = (() => {
         USERNAME: username,
         PASSWORD: process.env.TWITTER_PASSWORD || '',
         COOKIES_PATH: cookiesPath,
-        ...(yamlConfig.twitter || { POST_TWEETS: false }),
       },
       characterConfig,
       llmConfig: {
@@ -105,7 +104,6 @@ export const config = (() => {
         ...memoryDefaultConfig,
         ...(yamlConfig.memory || {}),
       },
-      SERPAPI_API_KEY: process.env.SERPAPI_API_KEY || '',
       NODE_ENV: process.env.NODE_ENV || 'development',
       orchestratorConfig: {
         ...(yamlConfig.orchestrator || {}),
