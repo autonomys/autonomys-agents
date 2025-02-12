@@ -16,7 +16,6 @@ const configSchema = z.object({
   }),
 });
 
-
 const defaultConfig = {
   web_search: {
     default_results: 5,
@@ -28,7 +27,6 @@ const defaultConfig = {
     },
   },
 };
-
 
 function loadConfig() {
   try {
@@ -42,4 +40,4 @@ function loadConfig() {
   }
 }
 
-export const webSearchConfig = loadConfig(); 
+export const webSearchConfig = loadConfig();

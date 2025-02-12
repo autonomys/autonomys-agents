@@ -14,13 +14,7 @@ export const createWebSearchTool = () =>
       query: z.string().describe('The search query string.'),
       num: z.string().optional(),
     }),
-    func: async ({ 
-      query, 
-      num 
-    }: { 
-      query: string; 
-      num?: string 
-    }) => {
+    func: async ({ query, num }: { query: string; num?: string }) => {
       const numResults = num ?? webSearchConfig.web_search.default_results;
 
       const API_KEY = webSearchConfig.web_search.api.api_key;
@@ -39,8 +33,8 @@ export const createWebSearchTool = () =>
       const url = `https://serpapi.com/search?${params.toString()}`;
 
       try {
-        const response = await axios.get(url, { 
-          timeout: webSearchConfig.web_search.api.timeout_ms 
+        const response = await axios.get(url, {
+          timeout: webSearchConfig.web_search.api.timeout_ms,
         });
         const data = response.data;
         const results = data.organic_results || [];

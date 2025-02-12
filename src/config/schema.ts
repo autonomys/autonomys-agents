@@ -78,7 +78,6 @@ const orchestratorConfigSchema = z.object({
   MAX_QUEUE_SIZE: z.number().int().positive().default(50),
 });
 
-
 export const configSchema = z.object({
   twitterConfig: twitterConfigSchema,
   llmConfig: llmConfigSchema,
