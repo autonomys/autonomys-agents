@@ -25,7 +25,7 @@ const orchestratorConfig = async () => {
   const model = LLMFactory.createModel({
     provider: LLMProvider.ANTHROPIC,
     model: 'claude-3-5-sonnet-latest',
-    temperature: 0,
+    temperature: 0.8,
   });
   return {
     model,
