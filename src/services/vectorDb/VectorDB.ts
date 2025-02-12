@@ -179,7 +179,7 @@ export class VectorDB {
     logger.info(`Searching with limit: ${integerLimit}`);
 
     const statement = this.db.prepare(`
-            SELECT v.rowid, v.distance, c.content
+            SELECT v.rowid, v.distance, c.content, c.created_at
             FROM (
                 SELECT rowid, distance 
                 FROM embeddings_index 
@@ -192,6 +192,7 @@ export class VectorDB {
       rowid: number;
       distance: number;
       content: string;
+      created_at: string;
     }>;
   }
 
@@ -221,7 +222,7 @@ export class VectorDB {
     logger.info(`Searching with metadata filter with limit: ${integerLimit}`);
 
     const queryString = `
-            SELECT v.rowid, v.distance, c.content
+            SELECT v.rowid, v.distance, c.content, c.created_at
             FROM (
                 SELECT rowid, distance 
                 FROM embeddings_index 
@@ -236,6 +237,7 @@ export class VectorDB {
       rowid: number;
       distance: number;
       content: string;
+      created_at: string;
     }>;
   }
 
