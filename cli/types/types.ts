@@ -1,4 +1,5 @@
 import blessed from 'blessed';
+import { Mutex } from 'async-mutex';
 
 export interface UIComponents {
   screen: blessed.Widgets.Screen;
@@ -18,6 +19,7 @@ export interface AppState {
     time: Date;
     description: string;
   }>;
+  mutex: Mutex;
 }
 
 export interface WorkflowResult {

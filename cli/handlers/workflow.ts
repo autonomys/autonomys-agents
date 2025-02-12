@@ -53,23 +53,22 @@ export const runWorkflow = async (
     global.console = originalConsole;
     outputLog.log('\n{bold}Workflow completed{/bold}');
 
-    // Add the next scheduled task to the list
-    const nextDelaySeconds = result.secondsUntilNextWorkflow ?? 300;
-    const nextRunTime = new Date(Date.now() + nextDelaySeconds * 1000);
-    const taskDescription = result.nextWorkflowPrompt ?? currentMessage;
+    if (result.nextWorkflowPrompt && result.secondsUntilNextWorkflow) {
+      const nextDelaySeconds = result.secondsUntilNextWorkflow;
+      const nextRunTime = new Date(Date.now() + nextDelaySeconds * 1000);
 
-    // Update state with new scheduled task
-    state.scheduledTasks.push({
-      time: nextRunTime,
-      description: taskDescription,
-    });
+      state.scheduledTasks.push({
+        time: nextRunTime,
+        description: result.nextWorkflowPrompt,
+      });
 
-    // Update UI
-    const formattedTime = nextRunTime.toLocaleTimeString();
-    scheduledTasksBox.addItem(`${formattedTime} - ${taskDescription}`);
-    scheduledTasksBox.scrollTo(Number((scheduledTasksBox as any).ritems.length - 1));
-
-    statusBox.setContent('Workflow completed. Enter new message to start another.');
+      const formattedTime = nextRunTime.toISOString();
+      scheduledTasksBox.addItem(`${formattedTime} - ${result.nextWorkflowPrompt}`);
+      scheduledTasksBox.scrollTo(Number((scheduledTasksBox as any).ritems.length - 1));
+      statusBox.setContent('Workflow completed. Next task scheduled.');
+    } else {
+      statusBox.setContent('Workflow completed. Enter new message to start another.');
+    }
   } catch (error) {
     global.console = originalConsole;
     throw error;
