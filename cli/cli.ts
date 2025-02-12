@@ -1,5 +1,5 @@
 import { orchestratorRunner } from '../src/agent.js';
-import { validateLocalHash } from '../src/agents/tools/utils/localHashStorage.js';
+import { validateLocalHash } from '../src/utils/localHashStorage.js';
 import { createUI } from './components/ui.js';
 import { setupKeyBindings } from './handlers/keyBindings.js';
 import { runWorkflow } from './handlers/workflow.js';

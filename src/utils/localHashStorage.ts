@@ -1,8 +1,8 @@
 import { join } from 'path';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs';
-import { createLogger } from '../../../utils/logger.js';
+import { createLogger } from './logger.js';
 import { getLastMemoryHashSetTimestamp } from './blockchain/agentMemoryContract.js';
-import { config } from '../../../config/index.js';
+import { config } from '../config/index.js';
 
 const logger = createLogger('local-hash-storage');
 const HASH_FILE = join(config.characterConfig.characterPath, 'memories', 'last-memory-hash.json');

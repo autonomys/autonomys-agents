@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { createLogger } from '../../utils/logger.js';
 import { ToolNode } from '@langchain/langgraph/prebuilt';
 import { AIMessage } from '@langchain/core/messages';
-import { uploadToDsn } from './utils/dsn/dsnUpload.js';
+import { uploadToDsn } from '../../utils/dsn/dsnUpload.js';
 import { config } from '../../config/index.js';
 
 const logger = createLogger('save-experience-tool');
