@@ -1,4 +1,5 @@
-# Web Search Configuration
+# Web Search Configuration Example
+# Copy this file to webSearch.config.yaml and modify as needed
 
 web_search:
   # Default number of search results to return
@@ -9,9 +10,11 @@ web_search:
   
   # API settings
   api:
-    # SERP API Key
-    api_key: 'YOUR_SERP_API_KEY'
+    # Your SERP API key
+    api_key: 'your-api-key-here'
+    
     # Whether to enable real API calls (false for testing)
     enabled: true
+    
     # Timeout for API calls in milliseconds
-    timeout_ms: 10000 
+    timeout_ms: 10000

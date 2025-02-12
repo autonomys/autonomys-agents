@@ -19,7 +19,8 @@
         "lint:fix": "eslint \"src/**/*.{js,ts}\" --fix",
         "resurrect": "tsx cli/resurrect.ts",
         "create-character": "tsx scripts/create-character.ts",
-        "cli": "tsx cli/cli.ts"
+        "cli": "tsx cli/cli.ts",
+        "generate-configs": "tsx scripts/generate-configs.ts"
     },
     "dependencies": {
         "@autonomys/auto-dag-data": "1.2.1",
