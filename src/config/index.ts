@@ -4,7 +4,6 @@ import { configSchema } from './schema.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { mkdir } from 'fs/promises';
-import { twitterDefaultConfig } from './twitter.js';
 import { memoryDefaultConfig } from './memory.js';
 import yaml from 'yaml';
 import { existsSync, readFileSync } from 'fs';
@@ -81,7 +80,7 @@ export const config = (() => {
         USERNAME: username,
         PASSWORD: process.env.TWITTER_PASSWORD || '',
         COOKIES_PATH: cookiesPath,
-        ...twitterDefaultConfig,
+        ...(yamlConfig.twitter || { POST_TWEETS: false }),
       },
       characterConfig,
       llmConfig: {
