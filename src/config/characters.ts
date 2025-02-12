@@ -12,13 +12,6 @@ export interface Character {
     rules: string[];
     wordsToAvoid: string[];
   };
-  twitterProfile: {
-    username: string;
-    trendFocus: string[];
-    contentFocus: string[];
-    engagementCriteria: string[];
-    replyStyle: string[];
-  };
 }
 
 interface RawCharacterConfig {
@@ -29,13 +22,6 @@ interface RawCharacterConfig {
   communication_rules: {
     rules: string[];
     words_to_avoid: string[];
-  };
-  twitter_profile: {
-    username: string;
-    trend_focus: string[];
-    content_focus: string[];
-    engagement_criteria: string[];
-    reply_style: string[];
   };
 }
 
@@ -52,13 +38,6 @@ export const loadCharacter = (characterName: string): Character => {
       communicationRules: {
         ...rawConfig.communication_rules,
         wordsToAvoid: rawConfig.communication_rules.words_to_avoid,
-      },
-      twitterProfile: {
-        ...rawConfig.twitter_profile,
-        trendFocus: rawConfig.twitter_profile.trend_focus,
-        contentFocus: rawConfig.twitter_profile.content_focus,
-        engagementCriteria: rawConfig.twitter_profile.engagement_criteria,
-        replyStyle: rawConfig.twitter_profile.reply_style,
       },
     };
     //eslint-disable-next-line @typescript-eslint/no-explicit-any

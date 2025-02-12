@@ -38,8 +38,7 @@ const main = async () => {
 
       logger.info('Workflow execution result:', { result });
 
-      const nextDelaySeconds =
-        result.secondsUntilNextWorkflow ?? config.twitterConfig.RESPONSE_INTERVAL_MS / 1000;
+      const nextDelaySeconds = result.secondsUntilNextWorkflow ?? 3600;
       logger.info('Workflow execution completed successfully for character:', {
         characterName: config.characterConfig.name,
         runFinished: new Date().toISOString(),
