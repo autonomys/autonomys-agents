@@ -197,7 +197,7 @@ export const createSearchTweetsTool = (twitterApi: TwitterApi) =>
     schema: z.object({ query: z.string(), count: z.number() }),
     func: async ({ query, count }: { query: string; count: number }) => {
       const tweets = await twitterApi.searchTweets(query, count);
-      return { tweets };
+      return { tweets: tweets.map(t => tweetToMinimalTweet(t)) };
     },
   });
 
@@ -265,10 +265,10 @@ export const createFollowUserTool = (twitterApi: TwitterApi) =>
   new DynamicStructuredTool({
     name: 'follow_user',
     description: 'Follow a user that you find worthy of following and engaging with.',
-    schema: z.object({ userId: z.string() }),
-    func: async ({ userId }: { userId: string }) => {
+    schema: z.object({ username: z.string() }),
+    func: async ({ username }: { username: string }) => {
       try {
-        await twitterApi.followUser(userId);
+        await twitterApi.followUser(username);
         return {
           followed: true,
         };

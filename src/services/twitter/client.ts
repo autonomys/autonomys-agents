@@ -319,8 +319,9 @@ export const createTwitterApi = async (
     likeTweet: async (tweetId: string) => {
       await scraper.likeTweet(tweetId);
     },
-    followUser: async (userId: string) => {
-      await scraper.followUser(userId);
+    followUser: async (username: string) => {
+      //TODO: agent-twitter-client has misleading param documentation, username should be used
+      await scraper.followUser(username);
     },
   };
 };

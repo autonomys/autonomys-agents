@@ -21,5 +21,5 @@ export interface TwitterApi {
   searchTweets: (query: string, count: number) => Promise<Tweet[]>;
   sendTweet: (tweet: string, inReplyTo?: string) => Promise<void>;
   likeTweet: (tweetId: string) => Promise<void>;
-  followUser: (userId: string) => Promise<void>;
+  followUser: (username: string) => Promise<void>;
 }
