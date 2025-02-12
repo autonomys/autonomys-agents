@@ -2,7 +2,7 @@ import { DynamicStructuredTool } from '@langchain/core/tools';
 import { z } from 'zod';
 import { TwitterApi } from '../../../services/twitter/types.js';
 import { twitterConfig } from './config/twitterConfig.js';
-import { tweetToMinimalTweet, cleanTweetForCircularReferences, logger } from './utils/utils.js';
+import { cleanTweetForCircularReferences, logger, tweetToMinimalTweet } from './utils/utils.js';
 
 export const createFetchTimelineTool = (twitterApi: TwitterApi) =>
   new DynamicStructuredTool({

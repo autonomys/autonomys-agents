@@ -52,7 +52,7 @@ function loadConfig() {
     const parsed = yaml.load(fileContents);
     return configSchema.parse(parsed);
   } catch (error) {
-    logger.warn('Using default Twitter config');
+    logger.warn('Using default Twitter config', { error });
     return defaultConfig;
   }
 }
