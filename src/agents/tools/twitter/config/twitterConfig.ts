@@ -2,8 +2,12 @@ import { z } from 'zod';
 import yaml from 'js-yaml';
 import fs from 'fs';
 import path from 'path';
+import { createLogger } from '../../../../utils/logger.js';
+
+const logger = createLogger('twitter-config-tool');
 
 const configSchema = z.object({
+  post_tweets: z.boolean(),
   timeline: z.object({
     num_timeline_tweets: z.number(),
     num_following_tweets: z.number(),
@@ -23,6 +27,26 @@ const configSchema = z.object({
   }),
 });
 
+const defaultConfig = {
+  post_tweets: false,
+  timeline: {
+    num_timeline_tweets: 20,
+    num_following_tweets: 20,
+  },
+  mentions: {
+    max_mentions: 10,
+  },
+  my_tweets: {
+    max_recent_tweets: 20,
+    max_recent_replies: 20,
+  },
+  search: {
+    default_count: 30,
+  },
+  following: {
+    num_following: 50,
+  },
+};
 function loadConfig() {
   try {
     const configPath = path.join(__dirname, 'twitter.config.yaml');
@@ -30,8 +54,9 @@ function loadConfig() {
     const parsed = yaml.load(fileContents);
     return configSchema.parse(parsed);
   } catch (error) {
-    console.warn('Using default Twitter config');
+    logger.warn('Using default Twitter config');
+    return defaultConfig;
   }
 }
 
-export const twitterConfig = loadConfig(); 
+export const twitterConfig = loadConfig();

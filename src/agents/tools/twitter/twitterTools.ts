@@ -2,7 +2,7 @@ import { DynamicStructuredTool } from '@langchain/core/tools';
 import { z } from 'zod';
 import { createLogger } from '../../../utils/logger.js';
 import { Tweet, TwitterApi } from '../../../services/twitter/types.js';
-import { config } from '../../../config/index.js';
+import { twitterConfig } from './config/twitterConfig.js';
 
 const logger = createLogger('fetch-timeline-tool');
 
@@ -194,9 +194,12 @@ export const createSearchTweetsTool = (twitterApi: TwitterApi) =>
   new DynamicStructuredTool({
     name: 'search_tweets',
     description: 'Search for tweets by a given query',
-    schema: z.object({ query: z.string(), count: z.number() }),
-    func: async ({ query, count }: { query: string; count: number }) => {
-      const tweets = await twitterApi.searchTweets(query, count);
+    schema: z.object({ query: z.string(), count: z.number().optional() }),
+    func: async ({ query, count }: { query: string; count?: number }) => {
+      const tweets = await twitterApi.searchTweets(
+        query,
+        count ?? twitterConfig.search.default_count,
+      );
       return { tweets: tweets.map(t => tweetToMinimalTweet(t)) };
     },
   });
@@ -230,7 +233,7 @@ export const createPostTweetTool = (twitterApi: TwitterApi) =>
     schema: z.object({ tweet: z.string(), inReplyTo: z.string().optional() }),
     func: async ({ tweet, inReplyTo }: { tweet: string; inReplyTo?: string }) => {
       try {
-        if (config.twitterConfig.POST_TWEETS) {
+        if (twitterConfig.post_tweets) {
           const postedTweet = await twitterApi
             .sendTweet(tweet, inReplyTo)
             .then(_ =>

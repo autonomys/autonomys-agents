@@ -1,3 +1,6 @@
+# Posting tweets
+post_tweets: false
+
 # Timeline Settings
 timeline:
   num_timeline_tweets: 20        # Number of tweets to fetch from timeline
