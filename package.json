@@ -8,7 +8,7 @@
         "build": "tsc",
         "start": "tsx scripts/start.ts",
         "dev": "NODE_ENV=development tsx --no-cache --watch src/index.ts",
-        "format": "prettier --write \"src/**/*.ts\" \"tests/**/*.ts\"",
+        "format": "prettier --write \"src/**/*.ts\" \"tests/**/*.ts\" \"cli/**/*.ts\"",
         "format:check": "prettier --check \"src/**/*.ts\" \"tests/**/*.ts\"",
         "example:directed-twitter": "tsx examples/directedTwitterAgent/index.ts",
         "example:autonomous-twitter": "tsx examples/autonomousTwitterAgent/index.ts",
@@ -18,8 +18,9 @@
         "test:coverage": "jest --coverage",
         "lint": "eslint \"src/**/*.{js,ts}\"",
         "lint:fix": "eslint \"src/**/*.{js,ts}\" --fix",
-        "resurrect": "tsx src/cli/resurrect.ts",
-        "create-character": "tsx scripts/create-character.ts"
+        "resurrect": "tsx cli/resurrect.ts",
+        "create-character": "tsx scripts/create-character.ts",
+        "cli": "tsx cli/cli.ts"
     },
     "dependencies": {
         "@autonomys/auto-dag-data": "1.2.1",
@@ -31,9 +32,11 @@
         "@langchain/langgraph": "0.2.36",
         "@langchain/ollama": "^0.1.4",
         "@langchain/openai": "0.3.16",
+        "@types/blessed": "^0.1.25",
         "agent-twitter-client": "0.0.18",
         "axios": "^1.7.9",
         "better-sqlite3": "^11.8.0",
+        "blessed": "^0.1.81",
         "cheerio": "^1.0.0",
         "dotenv": "^16.3.1",
         "ethers": "^6.13.4",
