@@ -1,5 +1,5 @@
-import { createSaveExperienceTool } from '../../tools/dsn/saveExperienceTool.js';
-import { createGetCurrentTimeTool } from '../../tools/time/getTimeTool.js';
+import { createSaveExperienceTool } from '../../tools/dsn/index.js';
+import { createGetCurrentTimeTool } from '../../tools/time/index.js';
 export const createTools = () => {
   const saveExperienceTool = createSaveExperienceTool();
   const getCurrentTimeTool = createGetCurrentTimeTool();

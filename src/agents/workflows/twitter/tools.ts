@@ -1,7 +1,7 @@
 import { createAllTwitterTools } from '../../tools/twitter/index.js';
 import { TwitterApi } from '../../../services/twitter/types.js';
-import { createSaveExperienceTool } from '../../tools/dsn/saveExperienceTool.js';
-import { createGetCurrentTimeTool } from '../../tools/time/getTimeTool.js';
+import { createSaveExperienceTool } from '../../tools/dsn/index.js';
+import { createGetCurrentTimeTool } from '../../tools/time/index.js';
 export const createTools = (twitterApi: TwitterApi) => {
   const twitterTools = createAllTwitterTools(twitterApi);
   const saveExperienceTool = createSaveExperienceTool();
