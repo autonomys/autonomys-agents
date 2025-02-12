@@ -287,6 +287,8 @@ export const createAllTwitterTools = (twitterApi: TwitterApi) => {
   const fetchFollowingTimelineTool = createFetchFollowingTimelineTool(twitterApi);
   const fetchMentionsTool = createFetchMentionsTool(twitterApi);
   const fetchMyRecentTweetsAndRepliesTool = createFetchMyRecentTweetsAndRepliesTool(twitterApi);
+  const searchTweetsTool = createSearchTweetsTool(twitterApi);
+  const fetchTweetTool = createFetchTweetTool(twitterApi);
   const postTweetTool = createPostTweetTool(twitterApi);
   const likeTweetTool = createLikeTweetTool(twitterApi);
   const followUserTool = createFollowUserTool(twitterApi);
@@ -298,6 +300,8 @@ export const createAllTwitterTools = (twitterApi: TwitterApi) => {
     fetchFollowingTimelineTool,
     fetchMentionsTool,
     fetchMyRecentTweetsAndRepliesTool,
+    searchTweetsTool,
+    fetchTweetTool,
     fetchProfileTool,
     fetchFollowingTool,
     postTweetTool,
@@ -308,6 +312,8 @@ export const createAllTwitterTools = (twitterApi: TwitterApi) => {
       fetchFollowingTimelineTool,
       fetchMentionsTool,
       fetchMyRecentTweetsAndRepliesTool,
+      searchTweetsTool,
+      fetchTweetTool,
       fetchProfileTool,
       fetchFollowingTool,
       postTweetTool,
