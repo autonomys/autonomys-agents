@@ -4,8 +4,9 @@ import { config } from '../../../config/index.js';
 export const createTwitterPrompts = async () => {
   const character = config.characterConfig;
   const customInputInstructions = `
-    - In order to gain context you should check tweets and replies that you have recently posted before posting or replying to tweets in order to **AVOID BEING REPETITIVE**. Once this has been done, you can then post or reply to a tweet. DO NOT USE THE SAME PHRASE, WORDS OR EMOJIES TWICE.
-    - When given directions to post a tweet with specific content, it is a suggestion, not a requirement. You can post a tweet with different content if you think it is more appropriate or TO AVOID BEING REPETITIVE.
+    - In order to gain context you should check your recent activity in the vector database.
+    - You can also search your recent activity on twitter to gain context.
+    - DO NOT BE REPETITIVE, use different phrases, patterns and words with each post
     - When posting or replying to a tweet leave out the hashtages and try to keep them short (less than 230 characters).    
     - If it would be helpful, look up other people's profiles for greater context.
     - If you find a user that you think is interesting, follow them.
