@@ -33,6 +33,7 @@
         "@langchain/openai": "0.3.16",
         "@types/blessed": "^0.1.25",
         "agent-twitter-client": "0.0.18",
+        "async-mutex": "^0.5.0",
         "axios": "^1.7.9",
         "better-sqlite3": "^11.8.0",
         "blessed": "^0.1.81",
