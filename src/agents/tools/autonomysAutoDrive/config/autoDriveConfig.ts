@@ -11,14 +11,12 @@ const configSchema = z.object({
   }),
 });
 
-
 const defaultConfig = {
   auto_drive: {
     upload: false,
     network: 'taurus' as const,
   },
 };
-
 
 function loadConfig() {
   try {
