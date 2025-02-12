@@ -1,10 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { z } from 'zod';
 import { DynamicStructuredTool } from '@langchain/core/tools';
-import { createLogger } from '../../utils/logger.js';
+import { createLogger } from '../../../utils/logger.js';
 import axios from 'axios';
 import { load } from 'cheerio';
-import { config } from '../../config/index.js';
+import { config } from '../../../config/index.js';
 
 const logger = createLogger('web-search-tool');
 

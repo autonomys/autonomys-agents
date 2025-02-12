@@ -1,0 +1,22 @@
+# Timeline Settings
+timeline:
+  num_timeline_tweets: 20        # Number of tweets to fetch from timeline
+  num_following_tweets: 20       # Number of tweets to fetch from following timeline
+  processed_ids_limit: 100       # Maximum number of processed tweet IDs to store
+
+# Mentions Settings
+mentions:
+  max_mentions: 10               # Maximum number of mentions to fetch at once
+
+# My Tweets Settings
+my_tweets:
+  max_recent_tweets: 20          # Maximum number of my recent tweets to fetch
+  max_recent_replies: 20         # Maximum number of my recent replies to fetch
+
+# Search Settings
+search:
+  default_count: 30              # Default number of tweets to return in search results
+
+# Following Settings
+following:
+  num_following: 50              # Default number of following users to fetch 

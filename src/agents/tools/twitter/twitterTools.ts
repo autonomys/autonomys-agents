@@ -1,8 +1,8 @@
 import { DynamicStructuredTool } from '@langchain/core/tools';
 import { z } from 'zod';
-import { createLogger } from '../../utils/logger.js';
-import { Tweet, TwitterApi } from '../../services/twitter/types.js';
-import { config } from '../../config/index.js';
+import { createLogger } from '../../../utils/logger.js';
+import { Tweet, TwitterApi } from '../../../services/twitter/types.js';
+import { config } from '../../../config/index.js';
 
 const logger = createLogger('fetch-timeline-tool');
 
