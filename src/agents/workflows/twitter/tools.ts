@@ -15,6 +15,6 @@ export const createTools = (twitterApi: TwitterApi, vectorDb: VectorDB) => {
     saveExperienceTool,
     getCurrentTimeTool,
     vectorDbSearchTool,
-    tools: [...twitterTools.tools, saveExperienceTool, getCurrentTimeTool, vectorDbSearchTool],
+    tools: [...twitterTools, saveExperienceTool, getCurrentTimeTool, vectorDbSearchTool],
   };
 };

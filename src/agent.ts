@@ -23,7 +23,7 @@ const orchestratorConfig = async () => {
 
   //Orchestrator config
   const namespace = 'orchestrator';
-  const { tools } = createTools();
+  const tools = createTools();
   const prompts = await createPrompts({ selfSchedule: true });
   const pruningParameters: PruningParameters = {
     maxWindowSummary: 30,

@@ -290,7 +290,7 @@ export const createAllTwitterTools = (twitterApi: TwitterApi) => {
   const fetchProfileTool = createFetchProfileTool(twitterApi);
   const fetchFollowingTool = createFetchFollowingTool(twitterApi);
 
-  return {
+  return [
     fetchTimelineTool,
     fetchFollowingTimelineTool,
     fetchMentionsTool,
@@ -302,18 +302,5 @@ export const createAllTwitterTools = (twitterApi: TwitterApi) => {
     postTweetTool,
     likeTweetTool,
     followUserTool,
-    tools: [
-      fetchTimelineTool,
-      fetchFollowingTimelineTool,
-      fetchMentionsTool,
-      fetchMyRecentTweetsAndRepliesTool,
-      searchTweetsTool,
-      fetchTweetTool,
-      fetchProfileTool,
-      fetchFollowingTool,
-      postTweetTool,
-      likeTweetTool,
-      followUserTool,
-    ],
-  };
+  ];
 };
