@@ -58,7 +58,6 @@ export const agentVersion = (() => {
   }
 })();
 
-
 const yamlConfig = (() => {
   try {
     const characterConfigPath = path.join(characterConfig.characterPath, 'config', 'config.yaml');
