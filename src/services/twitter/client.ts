@@ -307,14 +307,17 @@ export const createTwitterApi = async (
     searchTweets: async (query: string, count: number = 25) =>
       await iterateResponse(scraper.searchTweets(query, count, SearchMode.Latest)),
 
-    //TODO: After sending the tweet, we need to get the latest tweet, ensure it is the same as we sent and return it
-    //This has not been working as expected, so we need to investigate this later
-    sendTweet: async (tweet: string, inReplyTo?: string) => {
-      tweet.length > 280
-        ? await scraper.sendLongTweet(tweet, inReplyTo)
-        : await scraper.sendTweet(tweet, inReplyTo);
-      logger.info('Tweet sent', { tweet, inReplyTo });
-      getMyRecentReplies;
+    sendTweet: async (text: string, inReplyTo?: string) => {
+      text.length > 280
+        ? await scraper.sendLongTweet(text, inReplyTo)
+        : await scraper.sendTweet(text, inReplyTo);
+      // Timeout is necessary to ensure the tweet was posted before retrieving it
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      const latestTweet = (
+        await iterateResponse(scraper.searchTweets(`from:${username}`, 1, SearchMode.Latest))
+      )[0];
+      logger.info('Tweet sent', { text, inReplyTo, id: latestTweet.id });
+      return latestTweet.id ?? '';
     },
     likeTweet: async (tweetId: string) => {
       await scraper.likeTweet(tweetId);
