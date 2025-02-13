@@ -18,7 +18,6 @@ const llmConfigSchema = z.object({
 const autoDriveConfigSchema = z.object({
   AUTO_DRIVE_API_KEY: z.string().optional(),
   AUTO_DRIVE_ENCRYPTION_PASSWORD: z.string().optional(),
-  AUTO_DRIVE_UPLOAD: z.boolean(),
   AUTO_DRIVE_NETWORK: z
     .enum(['mainnet', 'taurus'])
     .transform(val => NetworkId[val.toUpperCase() as 'MAINNET' | 'TAURUS'])
@@ -78,6 +77,8 @@ const orchestratorConfigSchema = z.object({
   MAX_QUEUE_SIZE: z.number().int().positive().default(50),
 });
 
+const SERPAPI_API_KEY = z.string().optional();
+
 export const configSchema = z.object({
   twitterConfig: twitterConfigSchema,
   llmConfig: llmConfigSchema,
@@ -86,5 +87,6 @@ export const configSchema = z.object({
   memoryConfig: memoryConfigSchema,
   characterConfig: characterConfigSchema,
   orchestratorConfig: orchestratorConfigSchema,
+  SERPAPI_API_KEY: SERPAPI_API_KEY,
   NODE_ENV: z.enum(['development', 'production', 'test']),
 });

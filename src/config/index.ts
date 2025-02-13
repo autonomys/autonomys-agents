@@ -4,8 +4,6 @@ import { configSchema } from './schema.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { mkdir } from 'fs/promises';
-import { memoryDefaultConfig } from './memory.js';
-import yaml from 'yaml';
 import { existsSync, readFileSync } from 'fs';
 import { loadCharacter } from './characters.js';
 
@@ -59,18 +57,7 @@ export const agentVersion = (() => {
   }
 })();
 
-const yamlConfig = (() => {
-  try {
-    const characterConfigPath = path.join(characterConfig.characterPath, 'config', 'config.yaml');
-    const fileContents = readFileSync(characterConfigPath, 'utf8');
-    return yaml.parse(fileContents);
-  } catch (error) {
-    console.error('No YAML config found for character', characterName, error);
-    return {};
-  }
-})();
-
-export const config = (() => {
+export const config = ((autoDriveNetwork?: string) => {
   try {
     const username = process.env.TWITTER_USERNAME || '';
     const cookiesPath = path.join(cookiesDir, `${username}-cookies.json`);
@@ -81,7 +68,9 @@ export const config = (() => {
         PASSWORD: process.env.TWITTER_PASSWORD || '',
         COOKIES_PATH: cookiesPath,
       },
+
       characterConfig,
+
       llmConfig: {
         OPENAI_API_KEY: process.env.OPENAI_API_KEY || '',
         ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY || '',
@@ -89,25 +78,31 @@ export const config = (() => {
         DEEPSEEK_URL: process.env.DEEPSEEK_URL || '',
         DEEPSEEK_API_KEY: process.env.DEEPSEEK_API_KEY || '',
       },
+
       autoDriveConfig: {
         AUTO_DRIVE_API_KEY: process.env.AUTO_DRIVE_API_KEY,
         AUTO_DRIVE_ENCRYPTION_PASSWORD: process.env.AUTO_DRIVE_ENCRYPTION_PASSWORD,
-        AUTO_DRIVE_UPLOAD: yamlConfig.auto_drive.upload ?? false,
-        AUTO_DRIVE_NETWORK: yamlConfig.auto_drive.network,
+        AUTO_DRIVE_NETWORK: autoDriveNetwork,
       },
+
       blockchainConfig: {
         RPC_URL: process.env.RPC_URL || undefined,
         CONTRACT_ADDRESS: process.env.CONTRACT_ADDRESS || undefined,
         PRIVATE_KEY: process.env.PRIVATE_KEY || undefined,
       },
+
       memoryConfig: {
-        ...memoryDefaultConfig,
-        ...(yamlConfig.memory || {}),
+        MAX_PROCESSED_IDS: 5000,
       },
-      NODE_ENV: process.env.NODE_ENV || 'development',
+
       orchestratorConfig: {
-        ...(yamlConfig.orchestrator || {}),
+        MAX_WINDOW_SUMMARY: 20,
+        MAX_QUEUE_SIZE: 50,
       },
+
+      NODE_ENV: process.env.NODE_ENV || 'development',
+
+      SERPAPI_API_KEY: process.env.SERPAPI_API_KEY || '',
     };
     return configSchema.parse(rawConfig);
   } catch (error) {
@@ -115,7 +110,7 @@ export const config = (() => {
       console.error('\x1b[31m%s\x1b[0m', formatZodError(error));
       console.info(
         '\x1b[36m%s\x1b[0m',
-        '\nTip: Copy .env.sample to .env and config.example.yaml to config.yaml and fill/change the required values.',
+        '\nTip: Copy .env.sample to .env and fill/change the required values.',
       );
       process.exit(1);
     }

@@ -1,7 +1,4 @@
 import { Tweet } from '../../../../services/twitter/types.js';
-import { createLogger } from '../../../../utils/logger.js';
-
-export const logger = createLogger('twitter-tools');
 
 export type MinimalTweet = {
   id?: string;

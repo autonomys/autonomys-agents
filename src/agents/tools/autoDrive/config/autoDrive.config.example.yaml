@@ -1,9 +1,0 @@
-# Autonomys Auto Drive Configuration
-
-auto_drive:
-  # Whether to upload data to the network
-  upload: false
-  
-  # Target network for operations
-  # Possible values: 'taurus' or 'mainnet'
-  network: 'taurus'

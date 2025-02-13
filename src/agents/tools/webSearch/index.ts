@@ -3,21 +3,32 @@ import { z } from 'zod';
 import { DynamicStructuredTool } from '@langchain/core/tools';
 import axios from 'axios';
 import { load } from 'cheerio';
-import { webSearchConfig } from './config/webSearchConfig.js';
-import { logger } from './utils/utils.js';
+import { createLogger } from '../../../utils/logger.js';
+import { config } from '../../../config/index.js';
+export const logger = createLogger('web-search-tools');
 
-export const createWebSearchTool = () =>
+export const createWebSearchTool = (engine: string = 'google') =>
   new DynamicStructuredTool({
     name: 'web_search',
     description: 'Perform a web search for up-to-date information or to do research on a topic.',
     schema: z.object({
       query: z.string().describe('The search query string.'),
-      num: z.string().optional(),
+      num: z.string().default('10'),
+      engine: z.string().default(engine),
+      timeout: z.number().default(10000),
     }),
-    func: async ({ query, num }: { query: string; num?: string }) => {
-      const numResults = num ?? webSearchConfig.web_search.default_results;
-
-      const API_KEY = webSearchConfig.web_search.api.api_key;
+    func: async ({
+      query,
+      num,
+      engine,
+      timeout,
+    }: {
+      query: string;
+      num: string;
+      engine: string;
+      timeout: number;
+    }) => {
+      const API_KEY = config.SERPAPI_API_KEY;
       if (!API_KEY) {
         logger.error('SERPAPI_API_KEY is not set.');
         return 'Error: SERPAPI_API_KEY is not set.';
@@ -25,16 +36,16 @@ export const createWebSearchTool = () =>
       logger.info('Performing web search for query:', { query });
       const params = new URLSearchParams({
         api_key: API_KEY,
-        engine: webSearchConfig.web_search.engine,
+        engine,
         q: query,
-        num: numResults.toString(),
+        num,
       });
 
       const url = `https://serpapi.com/search?${params.toString()}`;
 
       try {
         const response = await axios.get(url, {
-          timeout: webSearchConfig.web_search.api.timeout_ms,
+          timeout,
         });
         const data = response.data;
         const results = data.organic_results || [];
