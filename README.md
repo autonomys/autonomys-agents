@@ -21,6 +21,7 @@ Autonomys Agents is an **EXPERIMENTAL** framework for building AI agents. Curren
 3. Setup character config:
    - All character configs are stored in `characters/{your-character-name}/config`
    - Update .env with applicable environment variables
+   - Update `config.yaml` with applicable configuration
    - Update `{your-character-name}.yaml` with applicable personality configuration (See Character System below).
 4. Run your character:
    - For dev purposes in watch mode: `yarn dev <your-character-name>`

@@ -6,6 +6,7 @@ import { fileURLToPath } from 'url';
 import { mkdir } from 'fs/promises';
 import { existsSync, readFileSync } from 'fs';
 import { loadCharacter } from './characters.js';
+import yaml from 'yaml';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -57,7 +58,11 @@ export const agentVersion = (() => {
   }
 })();
 
-export const config = ((autoDriveNetwork?: string) => {
+const configYaml = yaml.parse(
+  readFileSync(path.join(characterConfig.characterPath, 'config', 'config.yaml'), 'utf8'),
+);
+
+export const config = (() => {
   try {
     const username = process.env.TWITTER_USERNAME || '';
     const cookiesPath = path.join(cookiesDir, `${username}-cookies.json`);
@@ -67,6 +72,7 @@ export const config = ((autoDriveNetwork?: string) => {
         USERNAME: username,
         PASSWORD: process.env.TWITTER_PASSWORD || '',
         COOKIES_PATH: cookiesPath,
+        POST_TWEETS: configYaml.twitter.post_tweets,
       },
 
       characterConfig,
@@ -82,7 +88,8 @@ export const config = ((autoDriveNetwork?: string) => {
       autoDriveConfig: {
         AUTO_DRIVE_API_KEY: process.env.AUTO_DRIVE_API_KEY,
         AUTO_DRIVE_ENCRYPTION_PASSWORD: process.env.AUTO_DRIVE_ENCRYPTION_PASSWORD,
-        AUTO_DRIVE_NETWORK: autoDriveNetwork,
+        AUTO_DRIVE_NETWORK: configYaml.auto_drive.network,
+        AUTO_DRIVE_UPLOAD: configYaml.auto_drive.upload,
       },
 
       blockchainConfig: {

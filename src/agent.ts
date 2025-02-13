@@ -10,11 +10,18 @@ import { createPrompts } from './agents/workflows/orchestrator/prompts.js';
 import { LLMProvider } from './services/llm/types.js';
 import { PruningParameters } from './agents/workflows/orchestrator/types.js';
 import { LLMFactory } from './services/llm/factory.js';
+import { createWebSearchTool } from './agents/tools/webSearch/index.js';
+import { VectorDB } from './services/vectorDb/VectorDB.js';
+import { createVectorDbSearchTool } from './agents/tools/vector/index.js';
 
 const orchestratorConfig = async () => {
+  //Twitter agent config
   const { USERNAME, PASSWORD, COOKIES_PATH } = config.twitterConfig;
   const twitterApi = await createTwitterApi(USERNAME, PASSWORD, COOKIES_PATH);
-  const twitterAgent = createTwitterAgentTool(twitterApi);
+  const webSearchTool = createWebSearchTool();
+  const twitterAgent = createTwitterAgentTool(twitterApi, [webSearchTool]);
+
+  //Orchestrator config
   const namespace = 'orchestrator';
   const { tools } = createTools();
   const prompts = await createPrompts({ selfSchedule: true });
@@ -27,12 +34,15 @@ const orchestratorConfig = async () => {
     model: 'claude-3-5-sonnet-latest',
     temperature: 0.8,
   });
+  const orchestratorVectorStore = new VectorDB(namespace);
+  const orchestratorVectorDbSearchTool = createVectorDbSearchTool(orchestratorVectorStore);
   return {
     model,
     namespace,
-    tools: [...tools, twitterAgent],
+    tools: [...tools, twitterAgent, webSearchTool, orchestratorVectorDbSearchTool],
     prompts,
     pruningParameters,
+    vectorStore: orchestratorVectorStore,
   };
 };
 

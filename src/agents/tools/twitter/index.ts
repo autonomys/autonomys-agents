@@ -249,14 +249,14 @@ export const createFollowUserTool = (twitterApi: TwitterApi) =>
     },
   });
 
-export const createAllTwitterTools = (twitterApi: TwitterApi) => {
+export const createAllTwitterTools = (twitterApi: TwitterApi, postTweets: boolean = false) => {
   const fetchTimelineTool = createFetchTimelineTool(twitterApi);
   const fetchFollowingTimelineTool = createFetchFollowingTimelineTool(twitterApi);
   const fetchMentionsTool = createFetchMentionsTool(twitterApi);
   const fetchMyRecentTweetsAndRepliesTool = createFetchMyRecentTweetsAndRepliesTool(twitterApi);
   const searchTweetsTool = createSearchTweetsTool(twitterApi);
   const fetchTweetTool = createFetchTweetTool(twitterApi);
-  const postTweetTool = createPostTweetTool(twitterApi);
+  const postTweetTool = createPostTweetTool(twitterApi, postTweets);
   const likeTweetTool = createLikeTweetTool(twitterApi);
   const followUserTool = createFollowUserTool(twitterApi);
   const fetchProfileTool = createFetchProfileTool(twitterApi);

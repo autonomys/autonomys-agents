@@ -1,0 +1,6 @@
+twitter:
+  post_tweets: true
+
+auto_drive:
+  upload: true
+  network: 'taurus' # or 'mainnet'
