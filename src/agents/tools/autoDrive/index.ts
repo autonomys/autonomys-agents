@@ -7,7 +7,7 @@ import { createLogger } from '../../../utils/logger.js';
 
 export const logger = createLogger('auto-drive-tools');
 
-export const createSaveExperienceTool = (upload: boolean = false) =>
+export const createSaveExperienceTool = (upload: boolean = true) =>
   new DynamicStructuredTool({
     name: 'save_experience',
     description: `

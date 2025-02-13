@@ -21,7 +21,6 @@ Autonomys Agents is an **EXPERIMENTAL** framework for building AI agents. Curren
 3. Setup character config:
    - All character configs are stored in `characters/{your-character-name}/config`
    - Update .env with applicable environment variables
-   - Update `config.yaml` with applicable configuration
    - Update `{your-character-name}.yaml` with applicable personality configuration (See Character System below).
 4. Run your character:
    - For dev purposes in watch mode: `yarn dev <your-character-name>`
@@ -157,15 +156,7 @@ twitter_profile:
 
 The orchestrator helps manage the LLM's context window size through pruning parameters. These parameters control message summarization and retention. Configure them in two ways:
 
-1. Default configuration in `config.yaml`:
-
-   ```yaml
-   orchestrator:
-     MAX_WINDOW_SUMMARY: 20  // End index for message slice
-     MAX_QUEUE_SIZE: 50      // Trigger summarization threshold
-   ```
-
-2. Dynamic configuration when creating the orchestrator:
+1. Dynamic configuration when creating the orchestrator:
    ```typescript
    const runner = await getOrchestratorRunner({
      model,                   // model to use for the agent
@@ -194,12 +185,12 @@ The framework uses the Autonomys Network for permanent storage of agent memory a
 To use this feature:
 
 1. Configure your AUTO_DRIVE_API_KEY in `.env` (obtain from https://ai3.storage)
-2. Enable Auto Drive uploading in your `config.yaml`:
-   ```yaml
-   auto_drive:
-     upload: true
-     network: 'taurus' # or 'mainnet'
+2. Enable Auto Drive uploading when initializing the tool:
+
+   ```typescript
+   const autoDriveTool = createSaveExperienceTool(upload: true);
    ```
+
 3. Provide your Taurus EVM wallet details (PRIVATE_KEY) and Agent Memory Contract Address (CONTRACT_ADDRESS) in .env`
 4. Make sure your Taurus EVM wallet has funds. A faucet can be found at https://subspacefaucet.com/
 5. Provide encryption password in `.env` (optional, leave empty to not encrypt the agent memories)
