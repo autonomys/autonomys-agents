@@ -308,20 +308,40 @@ export const createTwitterApi = async (
       await iterateResponse(scraper.searchTweets(query, count, SearchMode.Latest)),
 
     sendTweet: async (text: string, inReplyTo?: string) => {
-      text.length > 280
-        ? await scraper.sendLongTweet(text, inReplyTo)
-        : await scraper.sendTweet(text, inReplyTo);
-      // Timeout is necessary to ensure the tweet was posted before retrieving it
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      const latestTweet = (
-        await iterateResponse(scraper.searchTweets(`from:${username}`, 1, SearchMode.Latest))
-      )[0];
-      logger.info('Tweet sent', { text, inReplyTo, id: latestTweet.id });
-      return latestTweet.id ?? '';
+      // Send the tweet and wait for it to complete
+      if (text.length > 280) {
+        await scraper.sendLongTweet(text, inReplyTo);
+      } else {
+        await scraper.sendTweet(text, inReplyTo);
+      }
+
+      // Retry strategy to get the tweet ID
+      const maxRetries = 3;
+      const retryDelay = 1000; // 1 second
+
+      for (let i = 0; i < maxRetries; i++) {
+        await new Promise(resolve => setTimeout(resolve, retryDelay));
+
+        const recentTweets = await iterateResponse(
+          scraper.searchTweets(`from:${username}`, 5, SearchMode.Latest),
+        );
+
+        // Find the tweet that matches our text (in case multiple tweets were sent simultaneously)
+        const sentTweet = recentTweets.find(tweet => tweet.text?.includes(text));
+        if (sentTweet?.id) {
+          logger.info('Tweet sent and confirmed', { text, inReplyTo, id: sentTweet.id });
+          return sentTweet.id;
+        }
+      }
+
+      logger.warn('Tweet sent but ID could not be confirmed', { text, inReplyTo });
+      return '';
     },
+
     likeTweet: async (tweetId: string) => {
       await scraper.likeTweet(tweetId);
     },
+
     followUser: async (username: string) => {
       //TODO: agent-twitter-client has misleading param documentation, username should be used
       await scraper.followUser(username);
