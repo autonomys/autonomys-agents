@@ -107,6 +107,10 @@ export const createOrchestratorRunner = async (
       const threadId = `${options?.threadId || 'orchestrator'}-${Date.now()}`;
       logger.info('Starting orchestrator workflow', { threadId });
 
+      if (!workflowConfig.vectorStore.isOpen()) {
+        await workflowConfig.vectorStore.open();
+      }
+
       const config = {
         recursionLimit: 50,
         configurable: {
@@ -117,6 +121,7 @@ export const createOrchestratorRunner = async (
 
       const initialState = input || { messages: [] };
       const stream = await app.stream(initialState, config);
+
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       let finalState = {} as any;
 
@@ -137,13 +142,14 @@ export const createOrchestratorRunner = async (
         const nextWorkflowPrompt =
           workflowData.nextWorkflowPrompt &&
           `Instructions for this workflow: ${workflowData.nextWorkflowPrompt}`;
-
+        workflowConfig.vectorStore.close();
         return { ...workflowData, summary, nextWorkflowPrompt };
       } else {
         logger.error('Workflow completed but no finished workflow data found', {
           finalState,
           content: finalState?.finishWorkflow?.content,
         });
+        workflowConfig.vectorStore.close();
         return { summary: 'Extracting workflow data failed' };
       }
     },

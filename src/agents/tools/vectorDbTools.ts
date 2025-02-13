@@ -1,8 +1,6 @@
 import { DynamicStructuredTool } from '@langchain/core/tools';
 import { z } from 'zod';
 import { createLogger } from '../../utils/logger.js';
-import { ToolNode } from '@langchain/langgraph/prebuilt';
-import { AIMessage } from '@langchain/core/messages';
 import { VectorDB } from '../../services/vectorDb/VectorDB.js';
 
 const logger = createLogger('vector-db-tool');
@@ -30,25 +28,6 @@ export const createVectorDbInsertTool = (vectorDb: VectorDB) =>
     },
   });
 
-export const invokeVectorDbInsertTool = async (toolNode: ToolNode, { data }: { data: string }) => {
-  const toolResponse = await toolNode.invoke({
-    messages: [
-      new AIMessage({
-        content: '',
-        tool_calls: [
-          {
-            name: 'vector_db_insert',
-            args: { data },
-            id: 'vector_db_insert_call',
-            type: 'tool_call',
-          },
-        ],
-      }),
-    ],
-  });
-  return toolResponse;
-};
-
 export const createVectorDbSearchTool = (vectorDb: VectorDB) =>
   new DynamicStructuredTool({
     name: 'vector_db_search',
@@ -59,32 +38,33 @@ export const createVectorDbSearchTool = (vectorDb: VectorDB) =>
     - You need to resume a task (e.g., "Continue drafting the tweet about X").  
     - The query is vague (e.g., "Explain this again" -> search chat history).  
     OUTPUT: Return timestamps and matched keywords.`,
-    schema: z.object({ query: z.string(), limit: z.number().optional() }),
-    func: async ({ query, limit }: { query: string; limit?: number }) => {
-      const memories = await vectorDb.search(query, limit);
-      logger.info('Searched vector db', { query, memories });
+    schema: z.object({
+      query: z.string().describe(
+        `Query text to find semantically similar content. The query will be embedded and compared using cosine similarity:
+          - Focus on key concepts rather than exact phrases' +
+          - Include relevant context terms`,
+      ),
+      metadataFilter: z.string().describe(
+        `Filter the search by metadata. Metadata filter examples: 
+          - based on range: created_at >= datetime('now', '-1 hour')
+          - before time: created_at <= "2025-02-12 09:00:00"' +
+          - after time: created_at >= "2025-02-11 14:30:00"`,
+      ),
+      limit: z.number().optional(),
+    }),
+    func: async ({
+      query,
+      metadataFilter,
+      limit,
+    }: {
+      query: string;
+      metadataFilter?: string;
+      limit?: number;
+    }) => {
+      const memories = !metadataFilter
+        ? await vectorDb.search(query, limit)
+        : await vectorDb.searchWithMetadata(query, metadataFilter, limit);
+      logger.info('Searched vector db', { query, metadataFilter, memories });
       return memories;
     },
   });
-
-export const invokeVectorDbSearchTool = async (
-  toolNode: ToolNode,
-  { query, limit }: { query: string; limit?: number },
-) => {
-  const toolResponse = await toolNode.invoke({
-    messages: [
-      new AIMessage({
-        content: '',
-        tool_calls: [
-          {
-            name: 'vector_db_search',
-            args: { query, limit },
-            id: 'vector_db_search_call',
-            type: 'tool_call',
-          },
-        ],
-      }),
-    ],
-  });
-  return toolResponse;
-};
