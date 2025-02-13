@@ -186,12 +186,7 @@ The framework uses the Autonomys Network for permanent storage of agent memory a
 To use this feature:
 
 1. Configure your AUTO_DRIVE_API_KEY in `.env` (obtain from https://ai3.storage)
-2. Enable Auto Drive uploading when initializing the tool:
-
-   ```typescript
-   const autoDriveTool = createSaveExperienceTool(upload: true);
-   ```
-
+2. Enable Auto Drive uploading in `config.yaml`
 3. Provide your Taurus EVM wallet details (PRIVATE_KEY) and Agent Memory Contract Address (CONTRACT_ADDRESS) in .env`
 4. Make sure your Taurus EVM wallet has funds. A faucet can be found at https://subspacefaucet.com/
 5. Provide encryption password in `.env` (optional, leave empty to not encrypt the agent memories)

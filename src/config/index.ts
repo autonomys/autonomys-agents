@@ -58,9 +58,17 @@ export const agentVersion = (() => {
   }
 })();
 
-const configYaml = yaml.parse(
-  readFileSync(path.join(characterConfig.characterPath, 'config', 'config.yaml'), 'utf8'),
-);
+
+const yamlConfig = (() => {
+  try {
+    const characterConfigPath = path.join(characterConfig.characterPath, 'config', 'config.yaml');
+    const fileContents = readFileSync(characterConfigPath, 'utf8');
+    return yaml.parse(fileContents);
+  } catch (error) {
+    console.error('No YAML config found for character', characterName, error);
+    return {};
+  }
+})();
 
 export const config = (() => {
   try {
@@ -72,7 +80,7 @@ export const config = (() => {
         USERNAME: username,
         PASSWORD: process.env.TWITTER_PASSWORD || '',
         COOKIES_PATH: cookiesPath,
-        POST_TWEETS: configYaml.twitter.post_tweets,
+        POST_TWEETS: yamlConfig.twitter.post_tweets,
       },
 
       characterConfig,
@@ -88,8 +96,8 @@ export const config = (() => {
       autoDriveConfig: {
         AUTO_DRIVE_API_KEY: process.env.AUTO_DRIVE_API_KEY,
         AUTO_DRIVE_ENCRYPTION_PASSWORD: process.env.AUTO_DRIVE_ENCRYPTION_PASSWORD,
-        AUTO_DRIVE_NETWORK: configYaml.auto_drive.network,
-        AUTO_DRIVE_UPLOAD: configYaml.auto_drive.upload,
+        AUTO_DRIVE_NETWORK: yamlConfig.auto_drive.network ?? 'taurus',
+        AUTO_DRIVE_UPLOAD: yamlConfig.auto_drive.upload ?? true,
       },
 
       blockchainConfig: {

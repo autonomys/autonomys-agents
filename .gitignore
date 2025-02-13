@@ -4,7 +4,6 @@ characters/*
 .google/
 memories/
 !src/config/
-dsn-twitter-schemas.json
 # Python bytecode
 __pycache__/
 *.py[cod]
@@ -55,7 +54,3 @@ cookies.json
 
 *.bin
 data
-
-# Ignore actual config files but allow example configs
-src/agents/tools/**/*.config.yaml
-!src/agents/tools/**/*.config.example.yaml
