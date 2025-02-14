@@ -2,21 +2,21 @@ import { Contract } from 'ethers';
 import { config } from '../../../config/index.js';
 import { createLogger } from '../../../utils/logger.js';
 import { FAUCET_ABI } from './abi/faucet.js';
-import { wallet } from './agentWallet.js';
+import { wallet } from './blockchain/agentWallet.js';
 
 const logger = createLogger('faucet-tool');
 const FAUCET_CONTRACT_ADDRESS = '0x2296dbb90C714c1355Ff9cbcB70D5AB29060b454';
-
-interface FaucetRequestData {
-  address: string;
-}
 
 export async function requestTokens(address: string) {
   logger.info('Sending faucet request - Starting requestTokens');
 
   if (!config.blockchainConfig.PRIVATE_KEY) {
     logger.error('Private key is not set');
-    return;
+    return {
+      success: false,
+      txHash: null,
+      message: 'Private key is not set',
+    };
   }
 
   try {
@@ -25,15 +25,21 @@ export async function requestTokens(address: string) {
     const tx = await faucet.requestTokens(address);
 
     logger.info('Faucet request transaction submitted', {
+      success: true,
       txHash: tx.hash,
     });
 
     return {
-      message: 'Success',
+      success: true,
       txHash: tx.hash,
+      message: 'Success',
     };
   } catch (error) {
     logger.error('Error requesting tokens:', error);
-    throw error;
+    return {
+      success: false,
+      txHash: null,
+      message: 'Error requesting tokens',
+    };
   }
 }
