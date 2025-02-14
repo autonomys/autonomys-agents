@@ -1,9 +1,0 @@
-characters/
-!characters/character.example.ts
-*.yaml
-config/
-!config/config.example.yaml
-.cookies/
-dsn-kol-schemas.json
-memories/
-

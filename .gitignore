@@ -1,3 +1,11 @@
+characters/*
+!characters/character.example/
+.cookies/
+.google/
+memories/
+!src/config/
+dsn-twitter-schemas.json
+
 # Python bytecode
 __pycache__/
 *.py[cod]
@@ -45,3 +53,6 @@ node_modules/
 resources/
 threads.json
 cookies.json
+
+*.bin
+data
