@@ -58,20 +58,22 @@ export const createClockBox = () => {
 
 export const createOutputLog = () => {
   return blessed.log({
-    top: 8,
+    top: 6, // Just below the header area
     left: '0%',
     width: '100%',
-    height: '62%',
-    label: 'Workflow Output (F2 to focus input)',
+    height: '75%', // Give more space to the main content
+    label: 'Workflow Output',
     border: { type: 'line' },
     style: {
       border: { fg: 'cyan' },
-      scrollbar: { bg: 'blue' },
     },
     scrollable: true,
     alwaysScroll: true,
     scrollbar: {
       ch: ' ',
+      track: {
+        bg: 'blue',
+      },
       style: { inverse: true },
     },
     keys: true,
@@ -81,65 +83,13 @@ export const createOutputLog = () => {
   });
 };
 
-export const createStatusBox = () => {
+export const createHeaderArea = () => {
   return blessed.box({
-    top: '70%',
-    left: '0%',
+    top: 0,
+    left: 0,
     width: '100%',
-    height: '10%',
-    label: 'Status',
-    content: 'Enter a message in the input below.',
-    border: { type: 'line' },
-    style: { border: { fg: 'green' } },
-    mouse: true,
-  });
-};
-
-export const createScheduledTasksBox = () => {
-  return blessed.list({
-    top: '80%',
-    left: '0%',
-    width: '100%',
-    height: '10%',
-    label: 'Scheduled Tasks',
-    border: { type: 'line' },
-    style: {
-      border: { fg: 'magenta' },
-      selected: { bg: 'blue' },
-      item: { hover: { bg: 'blue' } },
-    },
-    mouse: true,
-    keys: true,
-    vi: true,
-    items: [],
-    scrollable: true,
-    scrollbar: {
-      ch: ' ',
-      style: { inverse: true },
-    },
-  });
-};
-
-export const createInputBox = () => {
-  return blessed.textarea({
-    bottom: 0,
-    left: '0%',
-    width: '100%',
-    height: '10%',
-    label: 'Input - Type message (Enter to send, Ctrl+n for new line, Ctrl+i to focus)',
-    border: { type: 'line' },
-    style: {
-      border: { fg: 'yellow' },
-      focus: { border: { fg: 'white' } },
-    },
-    keys: true,
-    vi: true,
-    mouse: true,
-    inputOnFocus: true,
-    padding: {
-      left: 1,
-      right: 1,
-    },
+    height: 6,
+    children: [createLogoBox(), createCharacterBox(process.argv[2] || 'Unknown'), createClockBox()],
   });
 };
 
@@ -162,7 +112,7 @@ export const createCharacterBox = (characterDirName: string) => {
     padding: {
       top: 0,
       right: 1,
-      bottom: 1,
+      bottom: 0,
       left: 1,
     },
     border: { type: 'line' },
@@ -178,38 +128,210 @@ export const createCharacterBox = (characterDirName: string) => {
   });
 };
 
+export const createBottomArea = () => {
+  const container = blessed.box({
+    bottom: 0,
+    left: 0,
+    width: '100%',
+    height: '25%',
+  });
+
+  // Split into left and right sections
+  const leftSection = blessed.box({
+    top: 0,
+    left: 0,
+    width: '70%',
+    height: '100%',
+  });
+
+  const rightSection = blessed.box({
+    top: 0,
+    right: 0,
+    width: '30%',
+    height: '100%',
+  });
+
+  // Create components
+  const inputBox = blessed.textarea({
+    bottom: 0,
+    left: 0,
+    width: '100%',
+    height: '50%',
+    label: 'Input (Enter: send, Ctrl+N: new line)',
+    border: { type: 'line' },
+    style: {
+      border: { fg: 'yellow' },
+      focus: { border: { fg: 'white' } },
+    },
+    keys: true,
+    vi: false,
+    mouse: true,
+    inputOnFocus: false,
+    padding: {
+      left: 1,
+      right: 1,
+    },
+  });
+
+  const statusBox = blessed.box({
+    top: 0,
+    left: 0,
+    width: '100%',
+    height: '50%',
+    label: 'Status',
+    border: { type: 'line' },
+    style: {
+      border: { fg: 'green' },
+      fg: 'white',
+    },
+    padding: {
+      left: 1,
+      right: 1,
+    },
+  });
+
+  const scheduledTasksBox = blessed.list({
+    top: 0,
+    left: 0,
+    width: '100%',
+    height: '100%',
+    label: 'Scheduled Tasks',
+    border: { type: 'line' },
+    style: {
+      border: { fg: 'magenta' },
+      selected: { bg: 'blue' },
+      item: { hover: { bg: 'blue' } },
+    },
+    scrollable: true,
+    scrollbar: {
+      ch: ' ',
+      style: { inverse: true },
+    },
+    padding: {
+      left: 1,
+      right: 1,
+    },
+    mouse: true,
+    keys: true,
+    vi: true,
+    items: [],
+  });
+
+  // Append components to their sections
+  leftSection.append(statusBox);
+  leftSection.append(inputBox);
+  rightSection.append(scheduledTasksBox);
+
+  // Append sections to container
+  container.append(leftSection);
+  container.append(rightSection);
+
+  return {
+    container,
+    inputBox,
+    statusBox,
+    scheduledTasksBox,
+  };
+};
+
+export const createSearchBox = () => {
+  return blessed.textbox({
+    bottom: 0,
+    left: 0,
+    width: '100%',
+    height: 3,
+    border: 'line',
+    style: {
+      fg: 'white',
+      bg: 'blue',
+      border: {
+        fg: 'white',
+      },
+    },
+    hidden: true,
+    mouse: true,
+    inputOnFocus: true,
+    padding: {
+      left: 1,
+      right: 1,
+    },
+  });
+};
+
 export const createUI = (): UIComponents => {
   const screen = blessed.screen({
     smartCSR: true,
-    title: 'Interactive CLI',
+    title: 'Autonomys CLI',
     autoPadding: true,
     warnings: true,
+    fullUnicode: true,
+    input: process.stdin,
+    output: process.stdout,
+    terminal: 'xterm-256color',
   });
 
+  // Create main layout areas
+  const headerArea = createHeaderArea();
   const outputLog = createOutputLog();
-  const statusBox = createStatusBox();
-  const scheduledTasksBox = createScheduledTasksBox();
-  const inputBox = createInputBox();
-  const clockBox = createClockBox();
-  const logoBox = createLogoBox();
-  const characterBox = createCharacterBox(process.argv[2] || 'Unknown');
+  const bottomArea = createBottomArea();
+  const searchBox = createSearchBox();
 
-  screen.append(logoBox);
+  // Variable to suppress the first key in searchBox
+  let suppressNextSearchKey = false;
+
+  // When a key is pressed in the searchBox, if suppression is active, ignore it
+  searchBox.on('keypress', (ch, key) => {
+    if (suppressNextSearchKey) {
+      suppressNextSearchKey = false;
+      return false; // prevent duplicate character
+    }
+  });
+
+  // Append everything in the correct order
+  screen.append(headerArea);
   screen.append(outputLog);
-  screen.append(statusBox);
-  screen.append(scheduledTasksBox);
-  screen.append(inputBox);
-  screen.append(clockBox);
-  screen.append(characterBox);
+  screen.append(bottomArea.container);
+  screen.append(searchBox);
+
+  // Handle Ctrl+F using low-level keypress event with delayed focus
+  screen.program.on('keypress', (ch, key) => {
+    if (key && key.ctrl && key.name === 'f') {
+      bottomArea.inputBox.cancel();
+      searchBox.show();
+      searchBox.clearValue();
+      suppressNextSearchKey = true; // suppress the key that triggered Ctrl+F
+      setTimeout(() => {
+        searchBox.focus();
+      }, 100);
+      screen.render();
+      return false;
+    }
+  });
+
+  // Bind 'enter' on the searchBox to emit submit event
+  searchBox.key('enter', () => {
+    searchBox.emit('submit');
+  });
+
+  // Bind 'escape' on the searchBox to cancel search and refocus inputBox
+  searchBox.key('escape', () => {
+    searchBox.hide();
+    bottomArea.inputBox.focus();
+    screen.render();
+  });
+
+  // Focus input box by default
+  bottomArea.inputBox.focus();
 
   return {
     screen,
     outputLog,
-    statusBox,
-    scheduledTasksBox,
-    inputBox,
-    clockBox,
-    logoBox,
-    characterBox,
+    statusBox: bottomArea.statusBox,
+    scheduledTasksBox: bottomArea.scheduledTasksBox,
+    inputBox: bottomArea.inputBox,
+    clockBox: headerArea.children[2] as blessed.Widgets.BoxElement,
+    logoBox: headerArea.children[0] as blessed.Widgets.BoxElement,
+    characterBox: headerArea.children[1] as blessed.Widgets.BoxElement,
+    searchBox,
   };
 };
