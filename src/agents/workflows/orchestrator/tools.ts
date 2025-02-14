@@ -4,9 +4,5 @@ export const createTools = () => {
   const saveExperienceTool = createSaveExperienceTool();
   const getCurrentTimeTool = createGetCurrentTimeTool();
 
-  return {
-    saveExperienceTool,
-    getCurrentTimeTool,
-    tools: [saveExperienceTool, getCurrentTimeTool],
-  };
+  return [saveExperienceTool, getCurrentTimeTool];
 };

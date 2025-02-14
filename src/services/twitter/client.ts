@@ -307,18 +307,41 @@ export const createTwitterApi = async (
     searchTweets: async (query: string, count: number = 25) =>
       await iterateResponse(scraper.searchTweets(query, count, SearchMode.Latest)),
 
-    //TODO: After sending the tweet, we need to get the latest tweet, ensure it is the same as we sent and return it
-    //This has not been working as expected, so we need to investigate this later
-    sendTweet: async (tweet: string, inReplyTo?: string) => {
-      tweet.length > 280
-        ? await scraper.sendLongTweet(tweet, inReplyTo)
-        : await scraper.sendTweet(tweet, inReplyTo);
-      logger.info('Tweet sent', { tweet, inReplyTo });
-      getMyRecentReplies;
+    sendTweet: async (text: string, inReplyTo?: string) => {
+      // Send the tweet and wait for it to complete
+      if (text.length > 280) {
+        await scraper.sendLongTweet(text, inReplyTo);
+      } else {
+        await scraper.sendTweet(text, inReplyTo);
+      }
+
+      // Retry strategy to get the tweet ID
+      const maxRetries = 3;
+      const retryDelay = 1000; // 1 second
+
+      for (let i = 0; i < maxRetries; i++) {
+        await new Promise(resolve => setTimeout(resolve, retryDelay));
+
+        const recentTweets = await iterateResponse(
+          scraper.searchTweets(`from:${username}`, 5, SearchMode.Latest),
+        );
+
+        // Find the tweet that matches our text (in case multiple tweets were sent simultaneously)
+        const sentTweet = recentTweets.find(tweet => tweet.text?.includes(text));
+        if (sentTweet?.id) {
+          logger.info('Tweet sent and confirmed', { text, inReplyTo, id: sentTweet.id });
+          return sentTweet.id;
+        }
+      }
+
+      logger.warn('Tweet sent but ID could not be confirmed', { text, inReplyTo });
+      return '';
     },
+
     likeTweet: async (tweetId: string) => {
       await scraper.likeTweet(tweetId);
     },
+
     followUser: async (username: string) => {
       //TODO: agent-twitter-client has misleading param documentation, username should be used
       await scraper.followUser(username);

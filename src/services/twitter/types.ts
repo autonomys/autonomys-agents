@@ -19,7 +19,7 @@ export interface TwitterApi {
   getMyTimeline: (count: number, excludeIds: string[]) => Promise<Tweet[]>;
   getFollowingTimeline: (count: number, excludeIds: string[]) => Promise<Tweet[]>;
   searchTweets: (query: string, count: number) => Promise<Tweet[]>;
-  sendTweet: (tweet: string, inReplyTo?: string) => Promise<void>;
+  sendTweet: (tweet: string, inReplyTo?: string) => Promise<string>;
   likeTweet: (tweetId: string) => Promise<void>;
   followUser: (username: string) => Promise<void>;
 }

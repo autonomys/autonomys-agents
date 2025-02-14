@@ -24,7 +24,7 @@ const orchestratorConfig = async () => {
   const twitterAgent = createTwitterAgentTool(twitterApi, [webSearchTool]);
 
   const namespace = 'orchestrator';
-  const { tools } = createTools();
+  const tools = createTools();
   const prompts = await createPrompts({ selfSchedule: true });
   const pruningParameters: PruningParameters = {
     maxWindowSummary: 30,
