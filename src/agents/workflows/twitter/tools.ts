@@ -10,11 +10,5 @@ export const createTools = (twitterApi: TwitterApi, vectorDb: VectorDB) => {
   const saveExperienceTool = createSaveExperienceTool(config.autoDriveConfig.AUTO_DRIVE_UPLOAD);
   const getCurrentTimeTool = createGetCurrentTimeTool();
   const vectorDbSearchTool = createVectorDbSearchTool(vectorDb);
-  return {
-    ...twitterTools,
-    saveExperienceTool,
-    getCurrentTimeTool,
-    vectorDbSearchTool,
-    tools: [...twitterTools.tools, saveExperienceTool, getCurrentTimeTool, vectorDbSearchTool],
-  };
+  return [...twitterTools, saveExperienceTool, getCurrentTimeTool, vectorDbSearchTool];
 };

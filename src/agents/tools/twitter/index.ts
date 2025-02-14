@@ -191,28 +191,20 @@ export const createPostTweetTool = (twitterApi: TwitterApi, postTweets: boolean 
   new DynamicStructuredTool({
     name: 'post_tweet',
     description: 'Post a tweet',
-    schema: z.object({
-      tweet: z.string(),
-      inReplyTo: z.string().optional(),
-    }),
-    func: async ({ tweet, inReplyTo }: { tweet: string; inReplyTo?: string }) => {
+    schema: z.object({ text: z.string(), inReplyTo: z.string().optional() }),
+    func: async ({ text, inReplyTo }: { text: string; inReplyTo?: string }) => {
       try {
         if (postTweets) {
-          const postedTweet = await twitterApi
-            .sendTweet(tweet, inReplyTo)
-            .then(_ =>
-              !inReplyTo ? twitterApi.scraper.getLatestTweet(twitterApi.username) : undefined,
-            );
-
+          const postedTweetId = await twitterApi.sendTweet(text, inReplyTo);
           logger.info('Tweet posted successfully', {
-            postedTweet: { id: postedTweet?.id, text: postedTweet?.text },
+            postedTweet: { postedTweetId, text },
           });
           return {
             postedTweet: true,
-            postedTweetId: postedTweet?.id,
+            postedTweetId,
           };
         } else {
-          logger.info('Tweet not posted', { tweet });
+          logger.info('Tweet not posted', { text });
           return {
             postedTweet: false,
             message:
@@ -262,7 +254,7 @@ export const createAllTwitterTools = (twitterApi: TwitterApi, postTweets: boolea
   const fetchProfileTool = createFetchProfileTool(twitterApi);
   const fetchFollowingTool = createFetchFollowingTool(twitterApi);
 
-  return {
+  return [
     fetchTimelineTool,
     fetchFollowingTimelineTool,
     fetchMentionsTool,
@@ -274,18 +266,5 @@ export const createAllTwitterTools = (twitterApi: TwitterApi, postTweets: boolea
     postTweetTool,
     likeTweetTool,
     followUserTool,
-    tools: [
-      fetchTimelineTool,
-      fetchFollowingTimelineTool,
-      fetchMentionsTool,
-      fetchMyRecentTweetsAndRepliesTool,
-      searchTweetsTool,
-      fetchTweetTool,
-      fetchProfileTool,
-      fetchFollowingTool,
-      postTweetTool,
-      likeTweetTool,
-      followUserTool,
-    ],
-  };
+  ];
 };
