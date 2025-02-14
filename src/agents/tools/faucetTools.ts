@@ -12,7 +12,7 @@ export const createFaucetLockTimeTool = () =>
   new DynamicStructuredTool({
     name: 'faucet_lock_time',
     description: `
-    Get the lock time for the faucet contract on the Auto EVM Autonomy Network.
+    Get the lock time for the faucet contract on the Auto EVM Autonomys Network.
     USE THIS WHEN:
     - You need to know the standard lock time between requests.
     `,
@@ -27,7 +27,7 @@ export const createFaucetNextAccessTimeTool = () =>
   new DynamicStructuredTool({
     name: 'faucet_next_access_time',
     description: `
-    Get the next access time for the faucet contract on the Auto EVM Autonomy Network for a specific wallet.
+    Get the next access time for the faucet contract on the Auto EVM Autonomys Network for a specific wallet.
     USE THIS WHEN:
     - You need to know when the faucet will be unlocked for a specific wallet.
     `,
@@ -42,7 +42,7 @@ export const createFaucetIsMinterTool = () =>
   new DynamicStructuredTool({
     name: 'faucet_is_minter',
     description: `
-    Get the isMinter status for the faucet contract on the Auto EVM Autonomy Network for a specific wallet.
+    Get the isMinter status for the faucet contract on the Auto EVM Autonomys Network for a specific wallet.
     USE THIS WHEN:
     - You need to know if the wallet is a minter for the faucet contract on the Auto EVM Autonomy Network.
     This allow you to verify if the wallet you are using to send the request is actually allowed to do so.
@@ -58,7 +58,7 @@ export const createFaucetWithdrawalAmountTool = () =>
   new DynamicStructuredTool({
     name: 'faucet_withdrawal_amount',
     description: `
-    Get the withdrawal amount for the faucet contract on the Auto EVM Autonomy Network.
+    Get the withdrawal amount for the faucet contract on the Auto EVM Autonomys Network.
     USE THIS WHEN:
     - You need to know the amount of tokens the faucet is set to dispatch.
     `,
@@ -73,7 +73,7 @@ export const createFaucetRequestTokensTool = () =>
   new DynamicStructuredTool({
     name: 'faucet_request_tokens',
     description: `
-    Send a token request to the faucet contract on the Auto EVM Autonomy Network.
+    Send a token request to the faucet contract on the Auto EVM Autonomys Network.
     USE THIS WHEN:
     - You need to request tokens for your wallet.
     - You need to request tokens for a different wallet.
