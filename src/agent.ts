@@ -12,7 +12,7 @@ import { PruningParameters } from './agents/workflows/orchestrator/types.js';
 import { LLMFactory } from './services/llm/factory.js';
 import { createWebSearchTool } from './agents/tools/webSearchTool.js';
 import { VectorDB } from './services/vectorDb/VectorDB.js';
-import { createVectorDbSearchTool } from './agents/tools/vectorDbTools.js';
+import { createVectorDbSearchTool, createMemoryVectorDbSearchTool } from './agents/tools/vectorDbTools.js';
 
 const orchestratorConfig = async () => {
   //Twitter agent config
@@ -35,11 +35,13 @@ const orchestratorConfig = async () => {
     temperature: 0.8,
   });
   const orchestratorVectorStore = new VectorDB(namespace);
+  const memoryVectorStore = new VectorDB('dsn');
   const orchestratorVectorDbSearchTool = createVectorDbSearchTool(orchestratorVectorStore);
+  const memoryVectorDbSearchTool = createMemoryVectorDbSearchTool(memoryVectorStore);
   return {
     model,
     namespace,
-    tools: [...tools, twitterAgent, webSearchTool, orchestratorVectorDbSearchTool],
+    tools: [...tools, twitterAgent, webSearchTool, orchestratorVectorDbSearchTool, memoryVectorDbSearchTool],
     prompts,
     pruningParameters,
     vectorStore: orchestratorVectorStore,

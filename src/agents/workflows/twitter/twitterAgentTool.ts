@@ -27,7 +27,8 @@ export const createTwitterAgentTool = (twitterApi: TwitterApi, optionalTools: To
         const namespace = 'twitter';
 
         const vectorStore = new VectorDB(namespace);
-        const tools = createTools(twitterApi, vectorStore);
+        const memoryVectorStore = new VectorDB('dsn');
+        const tools = createTools(twitterApi, vectorStore, memoryVectorStore);
         const model = LLMFactory.createModel({
           provider: LLMProvider.ANTHROPIC,
           model: 'claude-3-5-sonnet-latest',
