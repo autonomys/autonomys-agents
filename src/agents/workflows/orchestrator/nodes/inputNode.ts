@@ -44,7 +44,10 @@ export const createInputNode = ({
       inputTokens: usage?.input_tokens,
       outputTokens: usage?.output_tokens,
     });
-    await vectorStore.insert(JSON.stringify(result.content));
+
+    if (!JSON.stringify(result.content).includes('learned_experience_vector_db_search')) {
+      const _insertData = await vectorStore.insert(JSON.stringify(result.content));
+    }
 
     const workflowControl = await parseWorkflowControl(result.content);
 
