@@ -2,7 +2,7 @@ import { DynamicStructuredTool } from '@langchain/core/tools';
 import { z } from 'zod';
 import { ToolNode } from '@langchain/langgraph/prebuilt';
 import { AIMessage } from '@langchain/core/messages';
-import { uploadToDsn } from '../../../utils/dsn/dsnUpload.js';
+import { uploadToDsn } from '../../../blockchain/autoDrive/autoDriveUpload.js';
 import { createLogger } from '../../../utils/logger.js';
 
 export const logger = createLogger('auto-drive-tools');

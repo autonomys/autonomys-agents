@@ -1,4 +1,4 @@
-import { createLogger } from '../logger.js';
+import { createLogger } from '../../utils/logger.js';
 
 const logger = createLogger('retry-utility');
 

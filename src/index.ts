@@ -1,6 +1,6 @@
 import { config } from './config/index.js';
 import { createLogger } from './utils/logger.js';
-import { validateLocalHash } from './utils/localHashStorage.js';
+import { validateLocalHash } from './blockchain/localHashStorage.js';
 import { orchestratorRunner } from './agent.js';
 import { HumanMessage } from '@langchain/core/messages';
 export const logger = createLogger('app');

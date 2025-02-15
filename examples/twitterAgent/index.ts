@@ -1,6 +1,6 @@
 import { config } from '../../src/config/index.js';
 import { createLogger } from '../../src/utils/logger.js';
-import { validateLocalHash } from '../../src/agents/tools/utils/localHashStorage.js';
+import { validateLocalHash } from '../../src/blockchain/localHashStorage.js';
 import {
   createOrchestratorRunner,
   OrchestratorRunner,
@@ -13,14 +13,13 @@ import { PruningParameters } from '../../src/agents/workflows/orchestrator/types
 import { LLMFactory } from '../../src/services/llm/factory.js';
 import { createTwitterApi } from '../../src/services/twitter/client.js';
 import { HumanMessage } from '@langchain/core/messages';
-import { createWebSearchTool } from '../../src/agents/tools/webSearchTool.js';
-
+import { createWebSearchTool } from '../../src/agents/tools/webSearch/index.js';
 const logger = createLogger('autonomous-twitter-agent');
 
 const orchestratorConfig = async () => {
   const { USERNAME, PASSWORD, COOKIES_PATH } = config.twitterConfig;
   const twitterApi = await createTwitterApi(USERNAME, PASSWORD, COOKIES_PATH);
-  const webSearchTool = createWebSearchTool(config.SERPAPI_API_KEY);
+  const webSearchTool = createWebSearchTool(config.SERPAPI_API_KEY || '');
   const twitterAgent = createTwitterAgentTool(twitterApi, [webSearchTool]);
 
   const namespace = 'orchestrator';

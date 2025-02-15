@@ -1,6 +1,6 @@
 import { createLogger } from '../../src/utils/logger.js';
-import { getLastMemoryCid } from '../../src/utils/blockchain/agentMemoryContract.js';
-import { download } from '../../src/utils/dsn/dsnDownload.js';
+import { getLastMemoryCid } from '../../src/blockchain/autoEvm/agentMemoryContract.js';
+import { download } from '../../src/blockchain/autoDrive/autoDriveDownload.js';
 import { existsSync, readFileSync, writeFileSync } from 'fs';
 import { join } from 'path';
 import { config } from '../../src/config/index.js';

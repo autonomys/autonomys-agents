@@ -4,7 +4,7 @@ import { config } from '../../config/index.js';
 import { provider, wallet } from './agentWallet.js';
 import { cidFromBlakeHash, cidToString } from '@autonomys/auto-dag-data';
 import { getLocalHash, saveHashLocally } from '../localHashStorage.js';
-import { createLogger } from '../logger.js';
+import { createLogger } from '../../utils/logger.js';
 
 const logger = createLogger('agent-memory-contract');
 const CONTRACT_ADDRESS = config.blockchainConfig.CONTRACT_ADDRESS as `0x${string}`;
