@@ -121,12 +121,12 @@ export const createFetchMyRecentTweetsAndRepliesTool = (twitterApi: TwitterApi) 
     },
   });
 
-export const createFetchFollowingTool = (twitterApi: TwitterApi, numFollowing: number = 10) =>
+export const createFetchFollowingTool = (twitterApi: TwitterApi) =>
   new DynamicStructuredTool({
     name: 'fetch_following',
     description: 'Fetch the following of a given Twitter user',
-    schema: z.object({ username: z.string() }),
-    func: async ({ username }: { username: string }) => {
+    schema: z.object({ username: z.string(), numFollowing: z.number().default(10) }),
+    func: async ({ username, numFollowing }: { username: string; numFollowing: number }) => {
       const following = await twitterApi.getFollowing(username, numFollowing);
       return { following };
     },
@@ -154,12 +154,12 @@ export const createFetchTweetTool = (twitterApi: TwitterApi) =>
     },
   });
 
-export const createSearchTweetsTool = (twitterApi: TwitterApi, count: number = 10) =>
+export const createSearchTweetsTool = (twitterApi: TwitterApi) =>
   new DynamicStructuredTool({
     name: 'search_tweets',
     description: 'Search for tweets by a given query',
-    schema: z.object({ query: z.string() }),
-    func: async ({ query }: { query: string }) => {
+    schema: z.object({ query: z.string(), count: z.number().default(10) }),
+    func: async ({ query, count }: { query: string; count: number }) => {
       const tweets = await twitterApi.searchTweets(query, count);
       return { tweets: tweets.map(t => tweetToMinimalTweet(t)) };
     },

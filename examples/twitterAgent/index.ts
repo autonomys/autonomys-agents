@@ -20,7 +20,7 @@ const logger = createLogger('autonomous-twitter-agent');
 const orchestratorConfig = async () => {
   const { USERNAME, PASSWORD, COOKIES_PATH } = config.twitterConfig;
   const twitterApi = await createTwitterApi(USERNAME, PASSWORD, COOKIES_PATH);
-  const webSearchTool = createWebSearchTool();
+  const webSearchTool = createWebSearchTool(config.SERPAPI_API_KEY);
   const twitterAgent = createTwitterAgentTool(twitterApi, [webSearchTool]);
 
   const namespace = 'orchestrator';

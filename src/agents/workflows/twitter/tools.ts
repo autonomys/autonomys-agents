@@ -3,7 +3,7 @@ import { TwitterApi } from '../../../services/twitter/types.js';
 import { createSaveExperienceTool } from '../../tools/autoDrive/index.js';
 import { createGetCurrentTimeTool } from '../../tools/time/index.js';
 import { VectorDB } from '../../../services/vectorDb/VectorDB.js';
-import { createVectorDbSearchTool } from '../../tools/vector/index.js';
+import { createVectorDbSearchTool } from '../../tools/vectorDb/index.js';
 import { config } from '../../../config/index.js';
 export const createTools = (twitterApi: TwitterApi, vectorDb: VectorDB) => {
   const twitterTools = createAllTwitterTools(twitterApi, config.twitterConfig.POST_TWEETS);

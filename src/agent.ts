@@ -12,13 +12,13 @@ import { PruningParameters } from './agents/workflows/orchestrator/types.js';
 import { LLMFactory } from './services/llm/factory.js';
 import { createWebSearchTool } from './agents/tools/webSearch/index.js';
 import { VectorDB } from './services/vectorDb/VectorDB.js';
-import { createVectorDbSearchTool } from './agents/tools/vector/index.js';
+import { createVectorDbSearchTool } from './agents/tools/vectorDb/index.js';
 
 const orchestratorConfig = async () => {
   //Twitter agent config
   const { USERNAME, PASSWORD, COOKIES_PATH } = config.twitterConfig;
   const twitterApi = await createTwitterApi(USERNAME, PASSWORD, COOKIES_PATH);
-  const webSearchTool = createWebSearchTool();
+  const webSearchTool = createWebSearchTool(config.SERPAPI_API_KEY || '');
   const twitterAgent = createTwitterAgentTool(twitterApi, [webSearchTool]);
 
   //Orchestrator config
