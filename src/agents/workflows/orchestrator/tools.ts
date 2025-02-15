@@ -1,5 +1,5 @@
-import { createSaveExperienceTool } from '../../tools/saveExperienceTool.js';
-import { createGetCurrentTimeTool } from '../../tools/getTimeTool.js';
+import { createSaveExperienceTool } from '../../tools/autoDrive/index.js';
+import { createGetCurrentTimeTool } from '../../tools/time/index.js';
 export const createTools = () => {
   const saveExperienceTool = createSaveExperienceTool();
   const getCurrentTimeTool = createGetCurrentTimeTool();

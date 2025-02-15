@@ -1,5 +1,5 @@
 import { ethers } from 'ethers';
-import { config } from '../../../../config/index.js';
+import { config } from '../../config/index.js';
 
 export const provider = new ethers.JsonRpcProvider(config.blockchainConfig.RPC_URL);
 

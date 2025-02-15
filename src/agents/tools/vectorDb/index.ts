@@ -1,7 +1,7 @@
 import { DynamicStructuredTool } from '@langchain/core/tools';
 import { z } from 'zod';
-import { createLogger } from '../../utils/logger.js';
-import { VectorDB } from '../../services/vectorDb/VectorDB.js';
+import { createLogger } from '../../../utils/logger.js';
+import { VectorDB } from '../../../services/vectorDb/VectorDB.js';
 
 const logger = createLogger('vector-db-tool');
 
