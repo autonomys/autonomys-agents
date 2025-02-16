@@ -19,7 +19,9 @@ const orchestratorConfig = async () => {
   const { USERNAME, PASSWORD, COOKIES_PATH } = config.twitterConfig;
   const twitterApi = await createTwitterApi(USERNAME, PASSWORD, COOKIES_PATH);
   const webSearchTool = createWebSearchTool(config.SERPAPI_API_KEY || '');
-  const twitterAgent = createTwitterAgentTool(twitterApi, [webSearchTool]);
+  const twitterAgentTool = createTwitterAgentTool(twitterApi, {
+    tools: [webSearchTool],
+  });
 
   //Orchestrator config
   const namespace = 'orchestrator';
@@ -39,7 +41,7 @@ const orchestratorConfig = async () => {
   return {
     model,
     namespace,
-    tools: [...tools, twitterAgent, webSearchTool, orchestratorVectorDbSearchTool],
+    tools: [...tools, twitterAgentTool, webSearchTool, orchestratorVectorDbSearchTool],
     prompts,
     pruningParameters,
     vectorStore: orchestratorVectorStore,

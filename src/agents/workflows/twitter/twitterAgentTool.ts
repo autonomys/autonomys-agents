@@ -8,11 +8,29 @@ import { TwitterApi } from '../../../services/twitter/types.js';
 import { HumanMessage } from '@langchain/core/messages';
 import { LLMProvider } from '../../../services/llm/types.js';
 import { VectorDB } from '../../../services/vectorDb/VectorDB.js';
-import { LLMFactory } from '../../../services/llm/factory.js';
+import { LLMFactory, LLMModelType } from '../../../services/llm/factory.js';
 import { Tools } from '../orchestrator/types.js';
 const logger = createLogger('twitter-workflow');
 
-export const createTwitterAgentTool = (twitterApi: TwitterApi, optionalTools: Tools = []) =>
+export type TwitterAgentOptions = {
+  tools?: Tools;
+  model?: LLMModelType;
+};
+
+const defaultOptions = {
+  tools: [],
+  model: LLMFactory.createModel({
+    provider: LLMProvider.ANTHROPIC,
+    model: 'claude-3-5-sonnet-latest',
+    temperature: 1,
+  }),
+};
+
+const getOptions = (options?: TwitterAgentOptions) => {
+  return { ...defaultOptions, ...options };
+};
+
+export const createTwitterAgentTool = (twitterApi: TwitterApi, options?: TwitterAgentOptions) =>
   new DynamicStructuredTool({
     name: 'twitter_agent',
     description: `
@@ -23,20 +41,17 @@ export const createTwitterAgentTool = (twitterApi: TwitterApi, optionalTools: To
     schema: z.object({ instructions: z.string().describe('Instructions for the workflow') }),
     func: async ({ instructions }: { instructions: string }) => {
       try {
+        const { tools, model } = getOptions(options);
+
         const messages = [new HumanMessage(instructions)];
         const namespace = 'twitter';
 
         const vectorStore = new VectorDB(namespace);
-        const tools = createTools(twitterApi, vectorStore);
-        const model = LLMFactory.createModel({
-          provider: LLMProvider.ANTHROPIC,
-          model: 'claude-3-5-sonnet-latest',
-          temperature: 0,
-        });
+        const twitterTools = createTools(twitterApi, vectorStore);
         const prompts = await createTwitterPrompts();
         const runner = await getOrchestratorRunner({
           model,
-          tools: [...tools, ...optionalTools],
+          tools: [...twitterTools, ...tools],
           prompts,
           namespace,
           vectorStore,

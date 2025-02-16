@@ -1,6 +1,6 @@
 import { END, MemorySaver, START, StateGraph } from '@langchain/langgraph';
 import { createLogger } from '../../../utils/logger.js';
-import { LLMModelType } from '../../../services/llm/factory.js';
+import { LLMFactory, LLMModelType } from '../../../services/llm/factory.js';
 import { ToolNode } from '@langchain/langgraph/prebuilt';
 import { createNodes } from './nodes.js';
 import {
@@ -16,6 +16,8 @@ import { VectorDB } from '../../../services/vectorDb/VectorDB.js';
 import { FinishedWorkflow } from './nodes/finishWorkflowPrompt.js';
 import { parseFinishedWorkflow } from './nodes/finishWorkflowNode.js';
 import { config } from '../../../config/index.js';
+import { LLMProvider } from '../../../services/llm/types.js';
+import { createPrompts } from './prompts.js';
 
 const logger = createLogger('orchestrator-workflow');
 
@@ -76,6 +78,35 @@ export type OrchestratorRunner = Readonly<{
     options?: { threadId?: string },
   ) => Promise<FinishedWorkflow>;
 }>;
+
+export type OrchestratorRunnerOptions = {
+  model?: LLMModelType;
+  tools?: Tools;
+  prompts?: OrchestratorPrompts;
+  namespace?: string;
+  pruningParameters?: PruningParameters;
+  vectorStore?: VectorDB;
+};
+
+const defaultOptions = {
+  model: LLMFactory.createModel({
+    provider: LLMProvider.ANTHROPIC,
+    model: 'claude-3-5-sonnet-latest',
+    temperature: 0.8,
+  }),
+  tools: [],
+  prompts: await createPrompts(),
+  namespace: 'orchestrator',
+  pruningParameters: {
+    maxWindowSummary: 30,
+    maxQueueSize: 50,
+  },
+  vectorStore: new VectorDB('orchestrator'),
+};
+
+const getOptions = (options?: OrchestratorRunnerOptions) => {
+  return { ...defaultOptions, ...options };
+};
 
 export const createOrchestratorRunner = async (
   model: LLMModelType,
