@@ -4,8 +4,6 @@ characters/*
 .google/
 memories/
 !src/config/
-dsn-twitter-schemas.json
-
 # Python bytecode
 __pycache__/
 *.py[cod]

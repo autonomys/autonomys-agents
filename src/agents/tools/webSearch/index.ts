@@ -1,31 +1,47 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { z } from 'zod';
 import { DynamicStructuredTool } from '@langchain/core/tools';
-import { createLogger } from '../../utils/logger.js';
 import axios from 'axios';
 import { load } from 'cheerio';
-import { config } from '../../config/index.js';
+import { createLogger } from '../../../utils/logger.js';
+export const logger = createLogger('web-search-tools');
 
-const logger = createLogger('web-search-tool');
+const DEFAULT_ENGINES = ['google', 'google_news'] as const;
 
-export const createWebSearchTool = () =>
+export const createWebSearchTool = (apiKey: string, engines: readonly string[] = DEFAULT_ENGINES) =>
   new DynamicStructuredTool({
     name: 'web_search',
     description: 'Perform a web search for up-to-date information or to do research on a topic.',
     schema: z.object({
       query: z.string().describe('The search query string.'),
-      num: z.string().describe('The number of results to return.'),
+      num: z.string().default('10'),
+      engine: z
+        .string()
+        .default('google')
+        .describe(
+          `Search engine to use - supported: ${engines.join(', ')}, or custom engine string`,
+        ),
+      timeout: z.number().default(10000),
     }),
-    func: async ({ query, num }: { query: string; num: string }) => {
-      const API_KEY = config.SERPAPI_API_KEY;
-      if (!API_KEY) {
+    func: async ({
+      query,
+      num,
+      engine,
+      timeout,
+    }: {
+      query: string;
+      num: string;
+      engine: string;
+      timeout: number;
+    }) => {
+      if (!apiKey) {
         logger.error('SERPAPI_API_KEY is not set.');
         return 'Error: SERPAPI_API_KEY is not set.';
       }
       logger.info('Performing web search for query:', { query });
       const params = new URLSearchParams({
-        api_key: API_KEY,
-        engine: 'google',
+        api_key: apiKey,
+        engine,
         q: query,
         num,
       });
@@ -33,7 +49,9 @@ export const createWebSearchTool = () =>
       const url = `https://serpapi.com/search?${params.toString()}`;
 
       try {
-        const response = await axios.get(url);
+        const response = await axios.get(url, {
+          timeout,
+        });
         const data = response.data;
         const results = data.organic_results || [];
 
