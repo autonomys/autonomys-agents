@@ -2,19 +2,19 @@ import { DynamicStructuredTool } from '@langchain/core/tools';
 import { z } from 'zod';
 import { getOrchestratorRunner } from '../orchestrator/orchestratorWorkflow.js';
 import { createTwitterPrompts } from './prompts.js';
-import { createTools } from './tools.js';
 import { createLogger } from '../../../utils/logger.js';
 import { TwitterApi } from '../../../services/twitter/types.js';
 import { HumanMessage } from '@langchain/core/messages';
-import { LLMProvider } from '../../../services/llm/types.js';
+import { LLMConfiguration, LLMProvider } from '../../../services/llm/types.js';
 import { VectorDB } from '../../../services/vectorDb/VectorDB.js';
-import { LLMModelType } from '../../../services/llm/factory.js';
 import { Tools } from '../orchestrator/types.js';
+import { createAllTwitterTools } from '../../tools/twitter/index.js';
 const logger = createLogger('twitter-workflow');
 
 export type TwitterAgentOptions = {
   tools?: Tools;
-  model?: LLMModelType;
+  modelConfig?: LLMConfiguration;
+  postTweets?: boolean;
 };
 
 const defaultOptions = {
@@ -24,6 +24,7 @@ const defaultOptions = {
     model: 'claude-3-5-sonnet-latest',
     temperature: 1,
   },
+  postTweets: false,
 };
 
 const createTwitterAgentOptions = (options?: TwitterAgentOptions) => {
@@ -41,13 +42,13 @@ export const createTwitterAgentTool = (twitterApi: TwitterApi, options?: Twitter
     schema: z.object({ instructions: z.string().describe('Instructions for the workflow') }),
     func: async ({ instructions }: { instructions: string }) => {
       try {
-        const { tools, modelConfig } = createTwitterAgentOptions(options);
+        const { tools, modelConfig, postTweets } = createTwitterAgentOptions(options);
 
         const messages = [new HumanMessage(instructions)];
         const namespace = 'twitter';
 
         const vectorStore = new VectorDB(namespace);
-        const twitterTools = createTools(twitterApi, vectorStore);
+        const twitterTools = createAllTwitterTools(twitterApi, postTweets);
         const prompts = await createTwitterPrompts();
         const runner = await getOrchestratorRunner({
           modelConfig,
