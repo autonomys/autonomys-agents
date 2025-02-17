@@ -5,7 +5,7 @@ import {
   createOrchestratorRunner,
   OrchestratorRunner,
 } from '../../src/agents/workflows/orchestrator/orchestratorWorkflow.js';
-import { createTwitterAgentTool } from '../../src/agents/workflows/twitter/twitterAgent.js';
+import { createTwitterAgent } from '../../src/agents/workflows/twitter/twitterAgent.js';
 import { createPrompts } from '../../src/agents/workflows/orchestrator/prompts.js';
 import { LLMProvider } from '../../src/services/llm/types.js';
 import { createTwitterApi } from '../../src/services/twitter/client.js';
@@ -21,7 +21,7 @@ const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
   const twitterApi = await createTwitterApi(USERNAME, PASSWORD, COOKIES_PATH);
   const webSearchTool = createWebSearchTool(config.SERPAPI_API_KEY || '');
   const autoDriveUploadEnabled = config.autoDriveConfig.AUTO_DRIVE_UPLOAD;
-  const twitterAgentTool = createTwitterAgentTool(twitterApi, {
+  const twitterAgentTool = createTwitterAgent(twitterApi, {
     tools: [webSearchTool],
     postTweets: config.twitterConfig.POST_TWEETS,
     autoDriveUploadEnabled,
