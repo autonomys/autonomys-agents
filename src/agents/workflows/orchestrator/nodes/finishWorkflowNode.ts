@@ -1,7 +1,11 @@
+import { ChatPromptTemplate } from '@langchain/core/prompts';
+import { VectorDB } from '../../../../services/vectorDb/VectorDB.js';
+import { LLMFactory } from '../../../../services/llm/factory.js';
 import { createLogger } from '../../../../utils/logger.js';
-import { OrchestratorConfig, OrchestratorStateType } from '../types.js';
+import { OrchestratorStateType } from '../types.js';
 import { finishedWorkflowParser } from './finishWorkflowPrompt.js';
 import { AIMessage } from '@langchain/core/messages';
+import { LLMConfiguration } from '../../../../services/llm/types.js';
 
 const logger = createLogger('finish-workflow-node');
 
@@ -22,10 +26,14 @@ export const parseFinishedWorkflow = async (content: unknown) => {
 };
 
 export const createFinishWorkflowNode = ({
-  orchestratorModel,
-  prompts,
+  modelConfig,
+  finishWorkflowPrompt,
   vectorStore,
-}: OrchestratorConfig) => {
+}: {
+  modelConfig: LLMConfiguration;
+  finishWorkflowPrompt: ChatPromptTemplate;
+  vectorStore: VectorDB;
+}) => {
   const runNode = async (state: OrchestratorStateType) => {
     logger.info('Workflow Summary Node');
 
@@ -37,12 +45,12 @@ export const createFinishWorkflowNode = ({
       })
       .join('\n');
 
-    const formattedPrompt = await prompts.finishWorkflowPrompt.format({
+    const formattedPrompt = await finishWorkflowPrompt.format({
       messages,
       currentTime: new Date().toISOString(),
     });
 
-    const result = await orchestratorModel.bind({ tools: [] }).invoke(formattedPrompt);
+    const result = await LLMFactory.createModelFromConfig(modelConfig).invoke(formattedPrompt);
     const finishedWorkflow = await parseFinishedWorkflow(result.content);
 
     logger.info('Finished Workflow:', { finishedWorkflow });

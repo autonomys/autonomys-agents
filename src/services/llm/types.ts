@@ -8,10 +8,5 @@ export enum LLMProvider {
 export type LLMConfiguration = {
   provider: LLMProvider;
   model: string;
-};
-
-export type LLMNodeConfiguration = {
-  provider: LLMProvider;
-  model: string;
-  temperature: number;
+  temperature?: number;
 };

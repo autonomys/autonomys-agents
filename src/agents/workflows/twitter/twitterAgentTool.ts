@@ -8,7 +8,7 @@ import { TwitterApi } from '../../../services/twitter/types.js';
 import { HumanMessage } from '@langchain/core/messages';
 import { LLMProvider } from '../../../services/llm/types.js';
 import { VectorDB } from '../../../services/vectorDb/VectorDB.js';
-import { LLMFactory, LLMModelType } from '../../../services/llm/factory.js';
+import { LLMModelType } from '../../../services/llm/factory.js';
 import { Tools } from '../orchestrator/types.js';
 const logger = createLogger('twitter-workflow');
 
@@ -19,14 +19,14 @@ export type TwitterAgentOptions = {
 
 const defaultOptions = {
   tools: [],
-  model: LLMFactory.createModel({
+  modelConfig: {
     provider: LLMProvider.ANTHROPIC,
     model: 'claude-3-5-sonnet-latest',
     temperature: 1,
-  }),
+  },
 };
 
-const getOptions = (options?: TwitterAgentOptions) => {
+const createTwitterAgentOptions = (options?: TwitterAgentOptions) => {
   return { ...defaultOptions, ...options };
 };
 
@@ -41,7 +41,7 @@ export const createTwitterAgentTool = (twitterApi: TwitterApi, options?: Twitter
     schema: z.object({ instructions: z.string().describe('Instructions for the workflow') }),
     func: async ({ instructions }: { instructions: string }) => {
       try {
-        const { tools, model } = getOptions(options);
+        const { tools, modelConfig } = createTwitterAgentOptions(options);
 
         const messages = [new HumanMessage(instructions)];
         const namespace = 'twitter';
@@ -50,7 +50,7 @@ export const createTwitterAgentTool = (twitterApi: TwitterApi, options?: Twitter
         const twitterTools = createTools(twitterApi, vectorStore);
         const prompts = await createTwitterPrompts();
         const runner = await getOrchestratorRunner({
-          model,
+          modelConfig,
           tools: [...twitterTools, ...tools],
           prompts,
           namespace,
