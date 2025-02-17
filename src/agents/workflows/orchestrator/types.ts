@@ -18,6 +18,7 @@ export type OrchestratorRunnerOptions = {
   namespace?: string;
   pruningParameters?: PruningParameters;
   vectorStore?: VectorDB;
+  autoDriveUploadEnabled?: boolean;
 };
 
 export type OrchestratorConfig = {
@@ -27,6 +28,7 @@ export type OrchestratorConfig = {
   namespace: string;
   pruningParameters: PruningParameters;
   vectorStore: VectorDB;
+  autoDriveUploadEnabled: boolean;
 };
 
 export type OrchestratorInput = {

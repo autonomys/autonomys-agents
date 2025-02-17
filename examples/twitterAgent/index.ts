@@ -20,8 +20,11 @@ const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
   const { USERNAME, PASSWORD, COOKIES_PATH } = config.twitterConfig;
   const twitterApi = await createTwitterApi(USERNAME, PASSWORD, COOKIES_PATH);
   const webSearchTool = createWebSearchTool(config.SERPAPI_API_KEY || '');
+  const autoDriveUploadEnabled = config.autoDriveConfig.AUTO_DRIVE_UPLOAD;
   const twitterAgentTool = createTwitterAgentTool(twitterApi, {
     tools: [webSearchTool],
+    postTweets: config.twitterConfig.POST_TWEETS,
+    autoDriveUploadEnabled,
   });
 
   //Orchestrator config
@@ -35,6 +38,7 @@ const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
     modelConfig,
     tools: [twitterAgentTool, webSearchTool],
     prompts,
+    autoDriveUploadEnabled,
   };
 };
 

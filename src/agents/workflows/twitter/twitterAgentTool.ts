@@ -15,6 +15,7 @@ export type TwitterAgentOptions = {
   tools?: Tools;
   modelConfig?: LLMConfiguration;
   postTweets?: boolean;
+  autoDriveUploadEnabled?: boolean;
 };
 
 const defaultOptions = {
@@ -25,6 +26,7 @@ const defaultOptions = {
     temperature: 1,
   },
   postTweets: false,
+  autoDriveUploadEnabled: false,
 };
 
 const createTwitterAgentOptions = (options?: TwitterAgentOptions) => {
@@ -42,7 +44,8 @@ export const createTwitterAgentTool = (twitterApi: TwitterApi, options?: Twitter
     schema: z.object({ instructions: z.string().describe('Instructions for the workflow') }),
     func: async ({ instructions }: { instructions: string }) => {
       try {
-        const { tools, modelConfig, postTweets } = createTwitterAgentOptions(options);
+        const { tools, modelConfig, postTweets, autoDriveUploadEnabled } =
+          createTwitterAgentOptions(options);
 
         const messages = [new HumanMessage(instructions)];
         const namespace = 'twitter';
@@ -56,6 +59,7 @@ export const createTwitterAgentTool = (twitterApi: TwitterApi, options?: Twitter
           prompts,
           namespace,
           vectorStore,
+          autoDriveUploadEnabled,
         });
         const result = await runner.runWorkflow(
           { messages },

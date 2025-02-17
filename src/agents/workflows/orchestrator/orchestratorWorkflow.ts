@@ -64,12 +64,16 @@ const defaultOptions = {
     maxWindowSummary: 30,
     maxQueueSize: 50,
   },
+  autoDriveUploadEnabled: false,
 };
 
 const createOrchestratorRunnerOptions = async (options?: OrchestratorRunnerOptions) => {
   const mergedOptions = { ...defaultOptions, ...options };
   const vectorStore = options?.vectorStore || new VectorDB(mergedOptions.namespace);
-  const tools = [...(options?.tools || []), ...createDefaultOrchestratorTools(vectorStore)];
+  const tools = [
+    ...(options?.tools || []),
+    ...createDefaultOrchestratorTools(vectorStore, mergedOptions.autoDriveUploadEnabled),
+  ];
   return {
     ...mergedOptions,
     vectorStore,
