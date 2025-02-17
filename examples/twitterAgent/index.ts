@@ -5,7 +5,7 @@ import {
   createOrchestratorRunner,
   OrchestratorRunner,
 } from '../../src/agents/workflows/orchestrator/orchestratorWorkflow.js';
-import { createTwitterAgentTool } from '../../src/agents/workflows/twitter/twitterAgentTool.js';
+import { createTwitterAgentTool } from '../../src/agents/workflows/twitter/twitterAgent.js';
 import { createPrompts } from '../../src/agents/workflows/orchestrator/prompts.js';
 import { LLMProvider } from '../../src/services/llm/types.js';
 import { createTwitterApi } from '../../src/services/twitter/client.js';
