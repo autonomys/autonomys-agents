@@ -29,11 +29,11 @@ const defaultOptions = {
   autoDriveUploadEnabled: false,
 };
 
-const createTwitterAgentOptions = (options?: TwitterAgentOptions) => {
+const createTwitterAgentConfig = (options?: TwitterAgentOptions) => {
   return { ...defaultOptions, ...options };
 };
 
-export const createTwitterAgentTool = (twitterApi: TwitterApi, options?: TwitterAgentOptions) =>
+export const createTwitterAgent = (twitterApi: TwitterApi, options?: TwitterAgentOptions) =>
   new DynamicStructuredTool({
     name: 'twitter_agent',
     description: `
@@ -45,7 +45,7 @@ export const createTwitterAgentTool = (twitterApi: TwitterApi, options?: Twitter
     func: async ({ instructions }: { instructions: string }) => {
       try {
         const { tools, modelConfig, postTweets, autoDriveUploadEnabled } =
-          createTwitterAgentOptions(options);
+          createTwitterAgentConfig(options);
 
         const messages = [new HumanMessage(instructions)];
         const namespace = 'twitter';
