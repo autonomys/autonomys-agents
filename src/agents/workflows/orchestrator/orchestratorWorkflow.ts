@@ -13,6 +13,7 @@ import { FinishedWorkflow } from './nodes/finishWorkflowPrompt.js';
 import { parseFinishedWorkflow } from './nodes/finishWorkflowNode.js';
 import { LLMProvider } from '../../../services/llm/types.js';
 import { createPrompts } from './prompts.js';
+import { createDefaultOrchestratorTools } from './tools.js';
 
 const logger = createLogger('orchestrator-workflow');
 
@@ -58,7 +59,6 @@ const defaultOptions = {
     model: 'claude-3-5-sonnet-latest',
     temperature: 0.8,
   },
-  tools: [],
   namespace: 'orchestrator',
   pruningParameters: {
     maxWindowSummary: 30,
@@ -68,9 +68,12 @@ const defaultOptions = {
 
 const createOrchestratorRunnerOptions = async (options?: OrchestratorRunnerOptions) => {
   const mergedOptions = { ...defaultOptions, ...options };
+  const vectorStore = options?.vectorStore || new VectorDB(mergedOptions.namespace);
+  const tools = [...(options?.tools || []), ...createDefaultOrchestratorTools(vectorStore)];
   return {
     ...mergedOptions,
-    vectorStore: options?.vectorStore || new VectorDB(mergedOptions.namespace),
+    vectorStore,
+    tools,
     prompts: options?.prompts || (await createPrompts()),
   };
 };
