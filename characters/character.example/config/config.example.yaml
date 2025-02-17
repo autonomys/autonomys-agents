@@ -1,10 +1,6 @@
 twitter:
-  POST_TWEETS: false
+  post_tweets: true
 
 auto_drive:
-  upload: false
+  upload: true
   network: 'taurus' # or 'mainnet'
-
-orchestrator:
-  MAX_WINDOW_SUMMARY: 20
-  MAX_QUEUE_SIZE: 50
