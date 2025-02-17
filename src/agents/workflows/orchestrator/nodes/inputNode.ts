@@ -1,6 +1,10 @@
+import { LLMFactory } from '../../../../services/llm/factory.js';
 import { createLogger } from '../../../../utils/logger.js';
-import { OrchestratorConfig, OrchestratorStateType } from '../types.js';
+import { OrchestratorStateType, Tools } from '../types.js';
 import { workflowControlParser } from './inputPrompt.js';
+import { VectorDB } from '../../../../services/vectorDb/VectorDB.js';
+import { LLMConfiguration } from '../../../../services/llm/types.js';
+import { ChatPromptTemplate } from '@langchain/core/prompts';
 const logger = createLogger('orchestrator-input-node');
 
 const parseWorkflowControl = async (content: unknown) => {
@@ -19,22 +23,29 @@ const parseWorkflowControl = async (content: unknown) => {
 };
 
 export const createInputNode = ({
-  orchestratorModel,
-  prompts,
-  toolNode,
+  modelConfig,
+  inputPrompt,
+  tools,
   vectorStore,
-}: OrchestratorConfig) => {
+}: {
+  modelConfig: LLMConfiguration;
+  inputPrompt: ChatPromptTemplate;
+  tools: Tools;
+  vectorStore: VectorDB;
+}) => {
   const runNode = async (state: OrchestratorStateType) => {
     const { messages } = state;
     logger.info('Running input node with messages:', {
       messages: messages.map(message => message.content),
     });
 
-    const formattedPrompt = await prompts.inputPrompt.format({
+    const formattedPrompt = await inputPrompt.format({
       messages: messages.map(message => message.content),
     });
 
-    const result = await orchestratorModel.bind({ tools: toolNode.tools }).invoke(formattedPrompt);
+    const result = await LLMFactory.createModel(modelConfig)
+      .bind({ tools })
+      .invoke(formattedPrompt);
 
     const usage = result.additional_kwargs?.usage as
       | { input_tokens: number; output_tokens: number }

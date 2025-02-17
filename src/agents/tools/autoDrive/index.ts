@@ -7,7 +7,7 @@ import { createLogger } from '../../../utils/logger.js';
 
 export const logger = createLogger('auto-drive-tools');
 
-export const createSaveExperienceTool = (upload: boolean = true) =>
+export const createSaveExperienceTool = (uploadEnabled: boolean = false) =>
   new DynamicStructuredTool({
     name: 'save_experience',
     description: `
@@ -24,7 +24,7 @@ export const createSaveExperienceTool = (upload: boolean = true) =>
         logger.info('Uploading data to DSN - Received data:', {
           data: JSON.stringify(data, null, 2),
         });
-        if (upload) {
+        if (uploadEnabled) {
           const upload: { success: boolean; cid: string; previousCid: string | null } =
             await uploadToDsn(data);
           logger.info('Uploading data to DSN - Upload info:', JSON.stringify(upload, null, 2));

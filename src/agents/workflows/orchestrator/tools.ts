@@ -1,8 +1,15 @@
+import { VectorDB } from '../../../services/vectorDb/VectorDB.js';
 import { createSaveExperienceTool } from '../../tools/autoDrive/index.js';
 import { createGetCurrentTimeTool } from '../../tools/time/index.js';
-export const createTools = () => {
-  const saveExperienceTool = createSaveExperienceTool();
-  const getCurrentTimeTool = createGetCurrentTimeTool();
+import { createVectorDbSearchTool } from '../../tools/vectorDb/index.js';
 
-  return [saveExperienceTool, getCurrentTimeTool];
+export const createDefaultOrchestratorTools = (
+  vectorDb: VectorDB,
+  uploadEnabled: boolean = false,
+) => {
+  const saveExperienceTool = createSaveExperienceTool(uploadEnabled);
+  const getCurrentTimeTool = createGetCurrentTimeTool();
+  const vectorDbSearchTool = createVectorDbSearchTool(vectorDb);
+
+  return [saveExperienceTool, getCurrentTimeTool, vectorDbSearchTool];
 };
