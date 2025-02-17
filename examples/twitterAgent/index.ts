@@ -5,56 +5,45 @@ import {
   createOrchestratorRunner,
   OrchestratorRunner,
 } from '../../src/agents/workflows/orchestrator/orchestratorWorkflow.js';
-import { createTools } from '../../src/agents/workflows/orchestrator/tools.js';
 import { createTwitterAgentTool } from '../../src/agents/workflows/twitter/twitterAgentTool.js';
 import { createPrompts } from '../../src/agents/workflows/orchestrator/prompts.js';
 import { LLMProvider } from '../../src/services/llm/types.js';
-import { PruningParameters } from '../../src/agents/workflows/orchestrator/types.js';
-import { LLMFactory } from '../../src/services/llm/factory.js';
 import { createTwitterApi } from '../../src/services/twitter/client.js';
 import { HumanMessage } from '@langchain/core/messages';
 import { createWebSearchTool } from '../../src/agents/tools/webSearch/index.js';
+import { OrchestratorRunnerOptions } from '../../src/agents/workflows/orchestrator/types.js';
+
 const logger = createLogger('autonomous-twitter-agent');
 
-const orchestratorConfig = async () => {
+const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
+  //Twitter agent config
   const { USERNAME, PASSWORD, COOKIES_PATH } = config.twitterConfig;
   const twitterApi = await createTwitterApi(USERNAME, PASSWORD, COOKIES_PATH);
   const webSearchTool = createWebSearchTool(config.SERPAPI_API_KEY || '');
-  const twitterAgent = createTwitterAgentTool(twitterApi, [webSearchTool]);
+  const twitterAgentTool = createTwitterAgentTool(twitterApi, {
+    tools: [webSearchTool],
+  });
 
-  const namespace = 'orchestrator';
-  const tools = createTools();
+  //Orchestrator config
   const prompts = await createPrompts({ selfSchedule: true });
-  const pruningParameters: PruningParameters = {
-    maxWindowSummary: 30,
-    maxQueueSize: 50,
-  };
-  const model = LLMFactory.createModel({
+  const modelConfig = {
     provider: LLMProvider.ANTHROPIC,
     model: 'claude-3-5-sonnet-latest',
     temperature: 0.8,
-  });
+  };
   return {
-    model,
-    namespace,
-    tools: [...tools, twitterAgent, webSearchTool],
+    modelConfig,
+    tools: [twitterAgentTool, webSearchTool],
     prompts,
-    pruningParameters,
   };
 };
 
 const orchestrationConfig = await orchestratorConfig();
-const orchestratorRunner = (() => {
+export const orchestratorRunner = (() => {
   let runnerPromise: Promise<OrchestratorRunner> | undefined = undefined;
   return async () => {
     if (!runnerPromise) {
-      runnerPromise = createOrchestratorRunner(
-        orchestrationConfig.model,
-        orchestrationConfig.tools,
-        orchestrationConfig.prompts,
-        orchestrationConfig.namespace,
-        orchestrationConfig.pruningParameters,
-      );
+      runnerPromise = createOrchestratorRunner(orchestrationConfig);
     }
     return runnerPromise;
   };
