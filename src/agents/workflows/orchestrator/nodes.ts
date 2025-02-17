@@ -5,27 +5,29 @@ import { OrchestratorConfig } from './orchestratorWorkflow.js';
 import { ToolNode } from '@langchain/langgraph/prebuilt';
 
 export const createNodes = async ({
-  modelConfig,
+  modelConfigurations,
   tools,
   prompts,
   pruningParameters,
   vectorStore,
 }: OrchestratorConfig) => {
   const { inputPrompt, messageSummaryPrompt, finishWorkflowPrompt } = prompts;
+  const { inputModelConfig, messageSummaryModelConfig, finishWorkflowModelConfig } =
+    modelConfigurations;
   const inputNode = createInputNode({
-    modelConfig,
+    modelConfig: inputModelConfig,
     inputPrompt,
     tools,
     vectorStore,
   });
   const messageSummaryNode = createMessageSummaryNode({
-    modelConfig,
+    modelConfig: messageSummaryModelConfig,
     messageSummaryPrompt,
     pruningParameters,
     vectorStore,
   });
   const finishWorkflowNode = createFinishWorkflowNode({
-    modelConfig,
+    modelConfig: finishWorkflowModelConfig,
     finishWorkflowPrompt,
     vectorStore,
   });

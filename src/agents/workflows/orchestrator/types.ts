@@ -11,8 +11,14 @@ export type OrchestratorPrompts = {
   finishWorkflowPrompt: ChatPromptTemplate;
 };
 
+export type ModelConfigurations = {
+  inputModelConfig: LLMConfiguration;
+  messageSummaryModelConfig: LLMConfiguration;
+  finishWorkflowModelConfig: LLMConfiguration;
+};
+
 export type OrchestratorRunnerOptions = {
-  modelConfig?: LLMConfiguration;
+  modelConfigurations?: ModelConfigurations;
   tools?: Tools;
   prompts?: OrchestratorPrompts;
   namespace?: string;
@@ -22,7 +28,7 @@ export type OrchestratorRunnerOptions = {
 };
 
 export type OrchestratorConfig = {
-  modelConfig: LLMConfiguration;
+  modelConfigurations: ModelConfigurations;
   tools: Tools;
   prompts: OrchestratorPrompts;
   namespace: string;
