@@ -10,20 +10,22 @@ import { LLMProvider } from './services/llm/types.js';
 import { OrchestratorRunnerOptions } from './agents/workflows/orchestrator/types.js';
 import { createWebSearchTool } from './agents/tools/webSearch/index.js';
 
+const character = config.characterConfig;
 const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
   //Twitter agent config
   const { USERNAME, PASSWORD, COOKIES_PATH } = config.twitterConfig;
   const twitterApi = await createTwitterApi(USERNAME, PASSWORD, COOKIES_PATH);
   const webSearchTool = createWebSearchTool(config.SERPAPI_API_KEY || '');
   const autoDriveUploadEnabled = config.autoDriveConfig.AUTO_DRIVE_UPLOAD;
-  const twitterAgentTool = createTwitterAgentTool(twitterApi, {
+
+  const twitterAgentTool = createTwitterAgentTool(twitterApi, character, {
     tools: [webSearchTool],
     postTweets: config.twitterConfig.POST_TWEETS,
     autoDriveUploadEnabled,
   });
 
   //Orchestrator config
-  const prompts = await createPrompts({ selfSchedule: true });
+  const prompts = await createPrompts(character, { selfSchedule: true });
   const modelConfigurations = {
     inputModelConfig: {
       provider: LLMProvider.ANTHROPIC,
@@ -54,7 +56,7 @@ export const orchestratorRunner = (() => {
   let runnerPromise: Promise<OrchestratorRunner> | undefined = undefined;
   return async () => {
     if (!runnerPromise) {
-      runnerPromise = createOrchestratorRunner(orchestrationConfig);
+      runnerPromise = createOrchestratorRunner(character, orchestrationConfig);
     }
     return runnerPromise;
   };

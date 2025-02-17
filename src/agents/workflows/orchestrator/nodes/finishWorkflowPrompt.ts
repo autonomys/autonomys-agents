@@ -1,15 +1,14 @@
 import { ChatPromptTemplate, PromptTemplate } from '@langchain/core/prompts';
 import { SystemMessage } from '@langchain/core/messages';
-import { config } from '../../../../config/index.js';
 import { StructuredOutputParser } from '@langchain/core/output_parsers';
 import { z } from 'zod';
+import { Character } from '../../../../config/characters.js';
 
 export const createFinishWorkflowPrompt = async (
+  character: Character,
   customInstructions?: string,
   selfSchedule?: boolean,
 ) => {
-  const character = config.characterConfig;
-
   const followFormatInstructions = `
   IMPORTANT:
   - Return ONLY the raw JSON data

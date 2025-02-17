@@ -1,10 +1,11 @@
 import { ChatPromptTemplate, PromptTemplate } from '@langchain/core/prompts';
 import { SystemMessage } from '@langchain/core/messages';
-import { config } from '../../../../config/index.js';
+import { Character } from '../../../../config/characters.js';
 
-export const createMessageSummaryPrompt = async (customInstructions?: string) => {
-  const character = config.characterConfig;
-
+export const createMessageSummaryPrompt = async (
+  character: Character,
+  customInstructions?: string,
+) => {
   const summarySystemPrompt = await PromptTemplate.fromTemplate(
     `You are a helpful assistant that summarizes conversations in order to efficiently manage context window in AI model communication. You also have goals, personality, and expertise.
 

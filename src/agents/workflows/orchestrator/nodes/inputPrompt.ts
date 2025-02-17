@@ -1,12 +1,10 @@
 import { ChatPromptTemplate, PromptTemplate } from '@langchain/core/prompts';
 import { SystemMessage } from '@langchain/core/messages';
-import { config } from '../../../../config/index.js';
 import { z } from 'zod';
 import { StructuredOutputParser } from '@langchain/core/output_parsers';
+import { Character } from '../../../../config/characters.js';
 
-export const createInputPrompt = async (customInstructions?: string) => {
-  const character = config.characterConfig;
-
+export const createInputPrompt = async (character: Character, customInstructions?: string) => {
   const inputSystemPrompt = await PromptTemplate.fromTemplate(
     `You are a helpful agent that orchestrates tasks. You act according to your goals, personality and expertise.
 
