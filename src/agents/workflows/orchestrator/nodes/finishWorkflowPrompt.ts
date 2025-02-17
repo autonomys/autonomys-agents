@@ -30,20 +30,18 @@ export const createFinishWorkflowPrompt = async (
     If self-schedule:false 
     - Do not include any values in the nextWorkflowPrompt or secondsUntilNextWorkflow fields.
 
-    You have a personality, so you should act accordingly.
-    {characterDescription}
+    You have a personality, so you should act accordingly. 
     {characterPersonality}
+ 
 
-    Custom Instructions:
     {customInstructions}
     
     {followFormatInstructions}
     Format Instructions:
     {formatInstructions}`,
   ).format({
-    characterDescription: character.description,
     characterPersonality: character.personality,
-    customInstructions: customInstructions ?? 'None',
+    customInstructions: customInstructions ? `Custom Instructions: ${customInstructions}` : '',
     formatInstructions: finishedWorkflowParser.getFormatInstructions(),
     followFormatInstructions,
     selfSchedule: selfSchedule ? 'true' : 'false',
