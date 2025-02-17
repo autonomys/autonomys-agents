@@ -7,7 +7,7 @@ import { TwitterApi } from '../../../services/twitter/types.js';
 import { HumanMessage } from '@langchain/core/messages';
 import { LLMProvider } from '../../../services/llm/types.js';
 import { VectorDB } from '../../../services/vectorDb/VectorDB.js';
-import { Tools, ModelConfigurations } from '../orchestrator/types.js';
+import { ModelConfigurations, Tools } from '../orchestrator/types.js';
 import { createAllTwitterTools } from '../../tools/twitter/index.js';
 const logger = createLogger('twitter-workflow');
 
