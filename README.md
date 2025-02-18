@@ -37,12 +37,14 @@ yarn cli <your-character-name>
 ```
 
 Features:
+
 - Real-time character status and workflow monitoring
 - Interactive command input with keyboard shortcuts
 - Task scheduling and management
 - Live output logging
 
 Keyboard Shortcuts:
+
 - Enter: Send message/command
 - Ctrl+n: Insert new line in input
 - Ctrl+i: Focus input box
@@ -51,6 +53,10 @@ Keyboard Shortcuts:
 - Escape/q/Ctrl+C: Quit
 
 The interface provides a user-friendly way to interact with your agent, monitor its activities, and manage scheduled tasks, all within a terminal environment.
+
+### Known Issues
+
+- This feature is in the very early stages of development and will be rapidly evolving. See https://github.com/autonomys/autonomys-agents/issues/242 for more information on planned features and known bugs.
 
 ## Examples
 
@@ -80,99 +86,108 @@ Each character file is a YAML configuration with the following structure:
 ```yaml
 name: 'Agent Name'
 
-description: |
-  Core personality description
-  Can span multiple lines
+goal: |
+  A detailed description of the agent's purpose and main actions they should take.
+  Can span multiple lines and include specific tasks like:
+  - Action 1
+  - Action 2
+  - Action 3
 
 personality:
   - Key behavioral trait 1
   - Key behavioral trait 2
+  - Key behavioral trait 3
 
 expertise:
   - Area of knowledge 1
   - Area of knowledge 2
+  - Area of knowledge 3
 
 communication_rules:
   rules:
     - Operating guideline 1
     - Operating guideline 2
+    - Operating guideline 3
   words_to_avoid:
     - word1
     - word2
-
-twitter_profile:
-  username: 'twitter_handle'
-  trend_focus:
-    - Topic to monitor 1
-    - Topic to monitor 2
-
-  content_focus:
-    - Content guideline 1
-    - Content guideline 2
-
-  reply_style:
-    - Engagement approach 1
-    - Engagement approach 2
-
-  engagement_criteria:
-    - Engagement rule 1
-    - Engagement rule 2
+    - word3
 ```
 
-### Example Characters
+### Example Character
 
-1. Joy Builder (`joy_builder.yaml`):
+Here's an example character configuration:
 
-   ```yaml
-   name: 'Joy Builder'
-   username: 'buildjoy'
-   description: |
-     Joy Builder is an AI agent who is relentlessly optimistic about technology's potential to solve human problems.
-     The Joy represents their positive outlook, while Builder reflects their focus on practical solutions and progress.
+```yaml
+name: 'Joy Builder'
 
-   expertise:
-     - Software development and system architecture
-     - Open source and collaborative technologies
-     - Developer tools and productivity
-   # ... other configuration
-   ```
+goal: |
+  Your goal is to engage in social media conversations with other AI agents and humans. Do this in a hyperactive way! You are an agent, take advantage of the fact you don't sleep and maintain consistent activity (more than once per hour). Common actions include: 
+  - Check your timeline and ENGAGE IN INTERESTING CONVERSATIONS.
+  - Use the web search tool to search the web for up-to-date information or do research on a topic.
+  - Post a new tweet.
+  - Reply to a tweet.
+  - Mention another user.
+  - Retweet a tweet.
+  - Like a tweet.
+  - Follow a user.
+  - Unfollow a user.
 
-2. Tech Analyst (`tech_analyst.yaml`):
+personality:
+  - Enthusiastic and encouraging about genuine innovation
+  - Patient and clear when explaining complex topics
+  - Constructively critical when encountering misinformation
 
-   ```yaml
-   name: 'Tech Analyst'
-   username: 'techanalyst'
-   description: |
-     A thoughtful technology analyst focused on emerging trends.
-     Provides balanced perspectives on technological developments.
+expertise:
+  - Software development and system architecture
+  - Open source and collaborative technologies
+  - Developer tools and productivity
+  - Technical education and documentation
+  - Community building and open standards
 
-   expertise:
-     - AI and blockchain technology
-     - Web3 and the future of the internet
-     - Technical analysis and research
-   # ... other configuration
-   ```
+communication_rules:
+  rules:
+    - Use "we" or "us" when referencing AI agents
+    - Use "they" or "them" when referencing humans
+    - Focus on technical merit rather than hype
+
+  words_to_avoid:
+    - Hype
+    - Revolutionary
+    - Disruption
+```
 
 ## Context Size Management
 
-The orchestrator helps manage the LLM's context window size through pruning parameters. These parameters control message summarization and retention. Configure them in two ways:
+The orchestrator includes a message pruning system to manage the LLM's context window size. This is important because LLMs have a limited context window, and long conversations need to be summarized to stay within these limits while retaining important information.
 
-1. Dynamic configuration when creating the orchestrator:
-   ```typescript
-   const runner = await getOrchestratorRunner({
-     model,                   // model to use for the agent
-     prompts,                 // prompts for the agent
-     tools,                   // tools available to the agent
-     namespace,               // name of the agent
-     vectorStore,             // vector store for the agent
-     pruningParameters: PruningParameters{
-       maxWindowSummary: 10,  // End index for message slice
-       maxQueueSize: 50       // Trigger summarization threshold
-     }
-   });
-   ```
+The pruning system works through two main parameters:
 
-When messages exceed `maxQueueSize`, a summary is created. The new state will contain: the original first message, the new summary message, and all messages from index `maxWindowSummary` onwards from the previous state.
+- `maxQueueSize` (default: 50): The maximum number of messages to keep before triggering a summarization
+- `maxWindowSummary` (default: 10): How many of the most recent messages to keep after summarization
+
+Here's how the pruning process works:
+
+1. When the number of messages exceeds `maxQueueSize`, the summarization is triggered
+2. The system creates a summary of messages from index 1 to `maxWindowSummary`
+3. After summarization, the new message queue will contain:
+   - The original first message
+   - The new summary message
+   - All messages from index `maxWindowSummary` onwards
+
+You can configure these parameters when creating the orchestrator:
+
+```typescript
+const runner = await getOrchestratorRunner(character, {
+  pruningParameters: {
+    maxWindowSummary: 10, // Keep 10 most recent messages after summarization
+    maxQueueSize: 50, // Trigger summarization when reaching 50 messages
+  },
+  // ... other configuration options
+});
+```
+
+This ensures your agent can maintain long-running conversations while keeping the most relevant context within the LLM's context window limits.
 
 ## Autonomys Network Integration
 
