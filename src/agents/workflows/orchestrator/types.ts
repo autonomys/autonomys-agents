@@ -2,8 +2,8 @@ import { BaseMessage } from '@langchain/core/messages';
 import { ToolNode } from '@langchain/langgraph/prebuilt';
 import { ChatPromptTemplate } from '@langchain/core/prompts';
 import { WorkflowControl } from './nodes/inputPrompt.js';
-import { LLMModelType } from '../../../services/llm/factory.js';
 import { VectorDB } from '../../../services/vectorDb/VectorDB.js';
+import { LLMConfiguration } from '../../../services/llm/types.js';
 
 export type OrchestratorPrompts = {
   inputPrompt: ChatPromptTemplate;
@@ -11,13 +11,30 @@ export type OrchestratorPrompts = {
   finishWorkflowPrompt: ChatPromptTemplate;
 };
 
+export type ModelConfigurations = {
+  inputModelConfig: LLMConfiguration;
+  messageSummaryModelConfig: LLMConfiguration;
+  finishWorkflowModelConfig: LLMConfiguration;
+};
+
+export type OrchestratorRunnerOptions = {
+  modelConfigurations?: ModelConfigurations;
+  tools?: Tools;
+  prompts?: OrchestratorPrompts;
+  namespace?: string;
+  pruningParameters?: PruningParameters;
+  vectorStore?: VectorDB;
+  autoDriveUploadEnabled?: boolean;
+};
+
 export type OrchestratorConfig = {
-  orchestratorModel: LLMModelType;
-  toolNode: ToolNode;
+  modelConfigurations: ModelConfigurations;
+  tools: Tools;
   prompts: OrchestratorPrompts;
-  pruningParameters: PruningParameters;
   namespace: string;
+  pruningParameters: PruningParameters;
   vectorStore: VectorDB;
+  autoDriveUploadEnabled: boolean;
 };
 
 export type OrchestratorInput = {
