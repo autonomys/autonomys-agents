@@ -1,73 +1,13 @@
 import { DynamicStructuredTool } from '@langchain/core/tools';
 import { z } from 'zod';
+import { isAddress } from 'ethers';
 import {
   isMinter,
-  lockTime,
   nextAccessTime,
   requestTokens,
+  verifyFaucetBalance,
   withdrawalAmount,
 } from '../../../blockchain/autoEvm/taurusFaucet.js';
-
-export const createFaucetLockTimeTool = () =>
-  new DynamicStructuredTool({
-    name: 'faucet_lock_time',
-    description: `
-    Get the lock time for the faucet contract on the Auto EVM Autonomys Network.
-    USE THIS WHEN:
-    - You need to know the standard lock time between requests.
-    `,
-    schema: z.object({}),
-    func: async () => {
-      const result = await lockTime();
-      return result;
-    },
-  });
-
-export const createFaucetNextAccessTimeTool = () =>
-  new DynamicStructuredTool({
-    name: 'faucet_next_access_time',
-    description: `
-    Get the next access time for the faucet contract on the Auto EVM Autonomys Network for a specific wallet.
-    USE THIS WHEN:
-    - You need to know when the faucet will be unlocked for a specific wallet.
-    `,
-    schema: z.object({ address: z.string() }),
-    func: async ({ address }) => {
-      const result = await nextAccessTime(address);
-      return result;
-    },
-  });
-
-export const createFaucetIsMinterTool = () =>
-  new DynamicStructuredTool({
-    name: 'faucet_is_minter',
-    description: `
-    Get the isMinter status for the faucet contract on the Auto EVM Autonomys Network for a specific wallet.
-    USE THIS WHEN:
-    - You need to know if the wallet is a minter for the faucet contract on the Auto EVM Autonomy Network.
-    This allow you to verify if the wallet you are using to send the request is actually allowed to do so.
-    `,
-    schema: z.object({ address: z.string() }),
-    func: async ({ address }) => {
-      const result = await isMinter(address);
-      return result;
-    },
-  });
-
-export const createFaucetWithdrawalAmountTool = () =>
-  new DynamicStructuredTool({
-    name: 'faucet_withdrawal_amount',
-    description: `
-    Get the withdrawal amount for the faucet contract on the Auto EVM Autonomys Network.
-    USE THIS WHEN:
-    - You need to know the amount of tokens the faucet is set to dispatch.
-    `,
-    schema: z.object({}),
-    func: async () => {
-      const result = await withdrawalAmount();
-      return result;
-    },
-  });
 
 export const createFaucetRequestTokensTool = () =>
   new DynamicStructuredTool({
@@ -80,23 +20,48 @@ export const createFaucetRequestTokensTool = () =>
     `,
     schema: z.object({ address: z.string() }),
     func: async ({ address }) => {
-      const result = await requestTokens(address);
-      return result;
+      if (!address)
+        return {
+          success: false,
+          message: `You need to provide an address to request tokens.`,
+        };
+      if (!isAddress(address))
+        return {
+          success: false,
+          message: `The provided address is not a valid Ethereum address.`,
+        };
+
+      const currentTime = BigInt(Math.floor(Date.now() / 1000));
+
+      const [faucetBalance, nextAccessTimeForAddress, isMinterForAddress, currentWithdrawalAmount] =
+        await Promise.all([
+          verifyFaucetBalance(),
+          nextAccessTime(address),
+          isMinter(),
+          withdrawalAmount(),
+        ]);
+
+      if (currentTime <= nextAccessTimeForAddress) {
+        if (!isMinterForAddress)
+          return {
+            success: false,
+            message: `You are not a minter for the faucet contract on the Auto EVM Autonomys Network.`,
+          };
+
+        if (faucetBalance < currentWithdrawalAmount)
+          return {
+            success: false,
+            message: `Faucet balance is too low, please wait for refill`,
+          };
+
+        return await requestTokens(address);
+      } else {
+        const timeToWait = nextAccessTimeForAddress - currentTime;
+        const formattedTime = timeToWait.toString();
+        return {
+          success: false,
+          message: `You have to wait ${formattedTime} seconds before requesting tokens again.`,
+        };
+      }
     },
   });
-
-export const createAllFaucetTools = () => {
-  const faucetLockTimeTool = createFaucetLockTimeTool();
-  const faucetNextAccessTimeTool = createFaucetNextAccessTimeTool();
-  const faucetIsMinterTool = createFaucetIsMinterTool();
-  const faucetWithdrawalAmountTool = createFaucetWithdrawalAmountTool();
-  const faucetRequestTokensTool = createFaucetRequestTokensTool();
-
-  return [
-    faucetLockTimeTool,
-    faucetNextAccessTimeTool,
-    faucetIsMinterTool,
-    faucetWithdrawalAmountTool,
-    faucetRequestTokensTool,
-  ];
-};
