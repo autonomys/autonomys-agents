@@ -1,45 +1,21 @@
 import { END, MemorySaver, START, StateGraph } from '@langchain/langgraph';
 import { createLogger } from '../../../utils/logger.js';
-import { LLMModelType } from '../../../services/llm/factory.js';
-import { ToolNode } from '@langchain/langgraph/prebuilt';
 import { createNodes } from './nodes.js';
 import {
-  OrchestratorConfig,
   OrchestratorInput,
-  OrchestratorPrompts,
+  OrchestratorRunnerOptions,
   OrchestratorStateType,
   PruningParameters,
-  Tools,
 } from './types.js';
 import { OrchestratorState } from './state.js';
 import { VectorDB } from '../../../services/vectorDb/VectorDB.js';
 import { FinishedWorkflow } from './nodes/finishWorkflowPrompt.js';
 import { parseFinishedWorkflow } from './nodes/finishWorkflowNode.js';
-import { config } from '../../../config/index.js';
+import { LLMProvider } from '../../../services/llm/types.js';
+import { createPrompts } from './prompts.js';
+import { createDefaultOrchestratorTools } from './tools.js';
 
 const logger = createLogger('orchestrator-workflow');
-
-const createWorkflowConfig = (
-  orchestratorModel: LLMModelType,
-  tools: Tools,
-  prompts: OrchestratorPrompts,
-  namespace: string,
-  pruningParameters?: PruningParameters,
-  vectorStore?: VectorDB,
-): OrchestratorConfig => {
-  const toolNode = new ToolNode(tools);
-  if (!pruningParameters) {
-    pruningParameters = {
-      maxWindowSummary: config.orchestratorConfig.MAX_WINDOW_SUMMARY,
-      maxQueueSize: config.orchestratorConfig.MAX_QUEUE_SIZE,
-    };
-  }
-  if (!vectorStore) {
-    vectorStore = new VectorDB(namespace);
-  }
-
-  return { orchestratorModel, toolNode, prompts, pruningParameters, namespace, vectorStore };
-};
 
 const handleConditionalEdge = async (state: OrchestratorStateType) => {
   logger.debug('State in conditional edge', { state });
@@ -77,25 +53,44 @@ export type OrchestratorRunner = Readonly<{
   ) => Promise<FinishedWorkflow>;
 }>;
 
-export const createOrchestratorRunner = async (
-  model: LLMModelType,
-  tools: Tools,
-  prompts: OrchestratorPrompts,
-  namespace: string,
-  pruningParameters?: PruningParameters,
-  vectorStore?: VectorDB,
-): Promise<OrchestratorRunner> => {
-  const workflowConfig = createWorkflowConfig(
-    model,
-    tools,
-    prompts,
-    namespace,
-    pruningParameters,
-    vectorStore,
-  );
+const defaultOptions = {
+  modelConfig: {
+    provider: LLMProvider.ANTHROPIC,
+    model: 'claude-3-5-sonnet-latest',
+    temperature: 0.8,
+  },
+  namespace: 'orchestrator',
+  pruningParameters: {
+    maxWindowSummary: 30,
+    maxQueueSize: 50,
+  },
+  autoDriveUploadEnabled: false,
+};
 
-  const nodes = await createNodes(workflowConfig);
-  const workflow = await createOrchestratorWorkflow(nodes, workflowConfig.pruningParameters);
+const createOrchestratorRunnerOptions = async (options?: OrchestratorRunnerOptions) => {
+  const mergedOptions = { ...defaultOptions, ...options };
+  const vectorStore = options?.vectorStore || new VectorDB(mergedOptions.namespace);
+  const tools = [
+    ...(options?.tools || []),
+    ...createDefaultOrchestratorTools(vectorStore, mergedOptions.autoDriveUploadEnabled),
+  ];
+  return {
+    ...mergedOptions,
+    vectorStore,
+    tools,
+    prompts: options?.prompts || (await createPrompts()),
+  };
+};
+
+export type OrchestratorConfig = Awaited<ReturnType<typeof createOrchestratorRunnerOptions>>;
+
+export const createOrchestratorRunner = async (
+  options?: OrchestratorRunnerOptions,
+): Promise<OrchestratorRunner> => {
+  const runnerOptions = await createOrchestratorRunnerOptions(options);
+
+  const nodes = await createNodes(runnerOptions);
+  const workflow = await createOrchestratorWorkflow(nodes, runnerOptions.pruningParameters);
   const memoryStore = new MemorySaver();
   const app = workflow.compile({ checkpointer: memoryStore });
 
@@ -107,14 +102,14 @@ export const createOrchestratorRunner = async (
       const threadId = `${options?.threadId || 'orchestrator'}-${Date.now()}`;
       logger.info('Starting orchestrator workflow', { threadId });
 
-      if (!workflowConfig.vectorStore.isOpen()) {
-        await workflowConfig.vectorStore.open();
+      if (!runnerOptions.vectorStore.isOpen()) {
+        await runnerOptions.vectorStore.open();
       }
 
       const config = {
         recursionLimit: 50,
         configurable: {
-          ...workflowConfig.pruningParameters,
+          ...runnerOptions.pruningParameters,
           thread_id: threadId,
         },
       };
@@ -142,14 +137,14 @@ export const createOrchestratorRunner = async (
         const nextWorkflowPrompt =
           workflowData.nextWorkflowPrompt &&
           `Instructions for this workflow: ${workflowData.nextWorkflowPrompt}`;
-        workflowConfig.vectorStore.close();
+        runnerOptions.vectorStore.close();
         return { ...workflowData, summary, nextWorkflowPrompt };
       } else {
         logger.error('Workflow completed but no finished workflow data found', {
           finalState,
           content: finalState?.finishWorkflow?.content,
         });
-        workflowConfig.vectorStore.close();
+        runnerOptions.vectorStore.close();
         return { summary: 'Extracting workflow data failed' };
       }
     },
@@ -158,30 +153,9 @@ export const createOrchestratorRunner = async (
 
 export const getOrchestratorRunner = (() => {
   let runnerPromise: Promise<OrchestratorRunner> | undefined = undefined;
-  return ({
-    model,
-    prompts,
-    tools,
-    namespace,
-    vectorStore,
-    pruningParameters,
-  }: {
-    model: LLMModelType;
-    prompts: OrchestratorPrompts;
-    tools: Tools;
-    namespace: string;
-    vectorStore: VectorDB;
-    pruningParameters?: PruningParameters;
-  }) => {
+  return (runnerOptions: OrchestratorRunnerOptions) => {
     if (!runnerPromise) {
-      runnerPromise = createOrchestratorRunner(
-        model,
-        tools,
-        prompts,
-        namespace,
-        pruningParameters,
-        vectorStore,
-      );
+      runnerPromise = createOrchestratorRunner(runnerOptions);
     }
     return runnerPromise;
   };

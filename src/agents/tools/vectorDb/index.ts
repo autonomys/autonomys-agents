@@ -69,9 +69,9 @@ export const createVectorDbSearchTool = (vectorDb: VectorDB) =>
     },
   });
 
-export const createLearnedExpVectorDbSearchTool = (vectorDb: VectorDB) =>
+export const createExperienceVectorDbSearchTool = (vectorDb: VectorDB) =>
   new DynamicStructuredTool({
-    name: 'learned_experience_vector_db_search',
+    name: 'experience_vector_db_search',
     description: `
       Search the vector database for CONTEXTUAL data that you previously produced as your memory.  
       Sometimes it is necessary to see your long ago experiences to enhance your performance. So, don't be afraid of choosing long time ago as metadata filter.

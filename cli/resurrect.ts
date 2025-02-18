@@ -2,8 +2,8 @@ import { join } from 'path';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs';
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
-import { getLastMemoryCid } from '../src/agents/tools/utils/blockchain/agentMemoryContract.js';
-import { download } from '../src/agents/tools/utils/dsn/dsnDownload.js';
+import { getLastMemoryCid } from '../src/blockchain/autoEvm/agentMemoryContract.js';
+import { download } from '../src/blockchain/autoDrive/autoDriveDownload.js';
 import { config } from '../src/config/index.js';
 import { createLogger } from '../src/utils/logger.js';
 import { VectorDB } from '../src/services/vectorDb/VectorDB.js';
@@ -11,7 +11,7 @@ import { VectorDB } from '../src/services/vectorDb/VectorDB.js';
 const logger = createLogger('resurrect-cli');
 let vectorDb: VectorDB | null = null;
 
-const cleanup = async (signal?: string) => {
+const cleanupOnApplicationClose = async (signal?: string) => {
   if (signal) {
     logger.info(`Received ${signal} signal`);
   }
@@ -23,9 +23,9 @@ const cleanup = async (signal?: string) => {
   process.exit(0);
 };
 
-process.on('SIGINT', () => cleanup('SIGINT'));
-process.on('SIGTERM', () => cleanup('SIGTERM'));
-process.on('SIGUSR2', () => cleanup('SIGUSR2'));
+process.on('SIGINT', () => cleanupOnApplicationClose('SIGINT'));
+process.on('SIGTERM', () => cleanupOnApplicationClose('SIGTERM'));
+process.on('SIGUSR2', () => cleanupOnApplicationClose('SIGUSR2'));
 
 const setupYargs = () =>
   yargs(hideBin(process.argv))
@@ -55,21 +55,21 @@ if (process.argv.includes('--help') || process.argv.includes('-h')) {
   process.exit(0);
 }
 
-const getLastProcessedCid = (stateFile: string): string | null => {
+const getLastProcessedCid = (cidTrackingFile: string): string | null => {
   try {
-    if (!existsSync(stateFile)) {
+    if (!existsSync(cidTrackingFile)) {
       return null;
     }
-    const data = JSON.parse(readFileSync(stateFile, 'utf-8'));
+    const data = JSON.parse(readFileSync(cidTrackingFile, 'utf-8'));
     return data.lastProcessedCid;
   } catch (error) {
     return null;
   }
 };
 
-const saveLastProcessedCid = (stateFile: string, cid: string): void => {
+const saveLastProcessedCid = (cidTrackingFile: string, cid: string): void => {
   try {
-    writeFileSync(stateFile, JSON.stringify({ lastProcessedCid: cid }, null, 2));
+    writeFileSync(cidTrackingFile, JSON.stringify({ lastProcessedCid: cid }, null, 2));
     logger.info(`Saved last processed CID: ${cid}`);
   } catch (error) {
     logger.error('Failed to save last processed CID:', error);
@@ -159,7 +159,7 @@ const run = async () => {
   };
 
   const options = parseArgs();
-  const stateFile = join(
+  const cidTrackingFile = join(
     config.characterConfig.characterPath,
     'memories',
     'last-processed-cid.json',
@@ -181,13 +181,13 @@ const run = async () => {
       return;
     }
 
-    const lastProcessedCid = getLastProcessedCid(stateFile);
+    const lastProcessedCid = getLastProcessedCid(cidTrackingFile);
     if (lastProcessedCid === latestCid) {
       logger.info('Already up to date with latest CID');
       return;
     }
 
-    vectorDb = new VectorDB('dsn');
+    vectorDb = new VectorDB('experiences');
     await vectorDb.open();
 
     logger.info(
@@ -203,17 +203,17 @@ const run = async () => {
       vectorDb,
     );
 
-    saveLastProcessedCid(stateFile, latestCid);
-    await cleanup();
+    saveLastProcessedCid(cidTrackingFile, latestCid);
+    await cleanupOnApplicationClose();
 
     logger.info(
       `Memory resurrection complete. Processed: ${processedCount}, Failed: ${failedCids.size}`,
     );
     logger.info(`Memories saved to ${options.outputDir}`);
-    await cleanup();
+    await cleanupOnApplicationClose();
   } catch (error) {
     logger.error('Failed to resurrect memories:', error);
-    await cleanup();
+    await cleanupOnApplicationClose();
     process.exit(1);
   }
 };
@@ -222,7 +222,7 @@ const run = async () => {
 if (!process.argv.includes('--help') && !process.argv.includes('-h')) {
   run().catch(async error => {
     logger.error('Unhandled error:', error);
-    await cleanup();
+    await cleanupOnApplicationClose();
     process.exit(1);
   });
 }
