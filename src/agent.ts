@@ -24,14 +24,25 @@ const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
 
   //Orchestrator config
   const prompts = await createPrompts({ selfSchedule: true });
-  const modelConfig = {
-    provider: LLMProvider.ANTHROPIC,
-    model: 'claude-3-5-sonnet-latest',
-    temperature: 0.8,
+  const modelConfigurations = {
+    inputModelConfig: {
+      provider: LLMProvider.ANTHROPIC,
+      model: 'claude-3-5-sonnet-latest',
+      temperature: 0.8,
+    },
+    messageSummaryModelConfig: {
+      provider: LLMProvider.OPENAI,
+      model: 'gpt-4o',
+      temperature: 0.8,
+    },
+    finishWorkflowModelConfig: {
+      provider: LLMProvider.OPENAI,
+      model: 'gpt-4o-mini',
+      temperature: 0.8,
+    },
   };
-
   return {
-    modelConfig,
+    modelConfigurations,
     tools: [twitterAgentTool, webSearchTool],
     prompts,
     autoDriveUploadEnabled,

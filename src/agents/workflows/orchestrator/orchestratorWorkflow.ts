@@ -11,7 +11,7 @@ import { OrchestratorState } from './state.js';
 import { VectorDB } from '../../../services/vectorDb/VectorDB.js';
 import { FinishedWorkflow } from './nodes/finishWorkflowPrompt.js';
 import { parseFinishedWorkflow } from './nodes/finishWorkflowNode.js';
-import { LLMProvider } from '../../../services/llm/types.js';
+import { LLMConfiguration, LLMProvider } from '../../../services/llm/types.js';
 import { createPrompts } from './prompts.js';
 import { createDefaultOrchestratorTools } from './tools.js';
 
@@ -53,11 +53,17 @@ export type OrchestratorRunner = Readonly<{
   ) => Promise<FinishedWorkflow>;
 }>;
 
+const defaultModelConfiguration: LLMConfiguration = {
+  provider: LLMProvider.ANTHROPIC,
+  model: 'claude-3-5-sonnet-latest',
+  temperature: 0.8,
+};
+
 const defaultOptions = {
-  modelConfig: {
-    provider: LLMProvider.ANTHROPIC,
-    model: 'claude-3-5-sonnet-latest',
-    temperature: 0.8,
+  modelConfigurations: {
+    inputModelConfig: defaultModelConfiguration,
+    messageSummaryModelConfig: defaultModelConfiguration,
+    finishWorkflowModelConfig: defaultModelConfiguration,
   },
   namespace: 'orchestrator',
   pruningParameters: {
@@ -69,6 +75,7 @@ const defaultOptions = {
 
 const createOrchestratorRunnerOptions = async (options?: OrchestratorRunnerOptions) => {
   const mergedOptions = { ...defaultOptions, ...options };
+
   const vectorStore = options?.vectorStore || new VectorDB(mergedOptions.namespace);
   const tools = [
     ...(options?.tools || []),
