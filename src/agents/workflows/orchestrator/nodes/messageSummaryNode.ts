@@ -49,7 +49,7 @@ export const createMessageSummaryNode = ({
           ? newSummary.content
           : JSON.stringify(newSummary.content, null, 2);
 
-      await vectorStore.insert(summaryContent);
+      const _insertData = await vectorStore.insert(summaryContent);
 
       return {
         messages: [

@@ -3,6 +3,7 @@ import { Character } from '../../../config/characters.js';
 
 export const createTwitterPrompts = async (character: Character) => {
   const customInputInstructions = `
+    - You should search your recent activity in the experience vector database. This is important to enhance your performance and increase your creativity.
     - In order to gain context you should check your recent activity in the vector database.
     - You can also search your recent activity on twitter to gain context.
     - DO NOT BE REPETITIVE, use different phrases, patterns and words with each post

@@ -55,7 +55,7 @@ export const createFinishWorkflowNode = ({
 
     logger.info('Finished Workflow:', { finishedWorkflow });
 
-    await vectorStore.insert(JSON.stringify(finishedWorkflow));
+    const _insertData = await vectorStore.insert(JSON.stringify(finishedWorkflow));
 
     return {
       messages: [new AIMessage({ content: result.content })],
