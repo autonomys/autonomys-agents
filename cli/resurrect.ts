@@ -32,7 +32,7 @@ const setupYargs = () =>
     .command('* [character]', 'Resurrect memories for a character', yargs => {
       yargs.positional('character', {
         type: 'string',
-        description: 'Character name',
+        description: 'Name of the character to resurrect memories for',
         demandOption: true,
       });
     })
@@ -63,6 +63,7 @@ const getLastProcessedCid = (cidTrackingFile: string): string | null => {
     const data = JSON.parse(readFileSync(cidTrackingFile, 'utf-8'));
     return data.lastProcessedCid;
   } catch (error) {
+    logger.error('Failed to get last processed CID:', error);
     return null;
   }
 };
@@ -82,15 +83,16 @@ const processMemory = async (
   outputDir: string,
   vectorDb: VectorDB,
 ): Promise<void> => {
-  const filename = `${cid}.json`;
-  const filepath = join(outputDir, filename);
-  writeFileSync(filepath, JSON.stringify(memory, null, 2));
-
   try {
     await vectorDb.insert(JSON.stringify(memory), memory.timestamp);
+    const filename = `${cid}.json`;
+    const filepath = join(outputDir, filename);
+    writeFileSync(filepath, JSON.stringify(memory, null, 2));
+
     logger.info(`Processed memory ${cid}: Saved to file and vector database`);
   } catch (error) {
     logger.error(`Failed to store memory in vector database: ${cid}`, error);
+    throw error;
   }
 };
 
@@ -99,15 +101,15 @@ const fetchMemoryChain = async (
   memoriesToFetch: number | null,
   outputDir: string,
   vectorDb: VectorDB,
-  failedCids: Set<string> = new Set(),
+  failedCid: Set<string> = new Set(),
   processedCount = 0,
-): Promise<{ processedCount: number; failedCids: Set<string> }> => {
+): Promise<{ processedCount: number; failedCid: Set<string> }> => {
   if (
     !currentCid ||
-    failedCids.has(currentCid) ||
+    failedCid.has(currentCid) ||
     (memoriesToFetch !== null && processedCount >= memoriesToFetch)
   ) {
-    return { processedCount, failedCids };
+    return { processedCount, failedCid };
   }
 
   try {
@@ -121,16 +123,16 @@ const fetchMemoryChain = async (
         memoriesToFetch,
         outputDir,
         vectorDb,
-        failedCids,
+        failedCid,
         processedCount,
       );
     }
   } catch (error) {
-    logger.error(`Failed to fetch memory ${currentCid}:`, error);
-    failedCids.add(currentCid);
+    logger.error(`Failed to fetch or write memory ${currentCid}:`, error);
+    failedCid.add(currentCid);
   }
 
-  return { processedCount, failedCids };
+  return { processedCount, failedCid };
 };
 
 const run = async () => {
@@ -191,12 +193,12 @@ const run = async () => {
     await vectorDb.open();
 
     logger.info(
-      `Starting download from ${latestCid}${
+      `Starting downloading memories from ${latestCid}${
         options.memoriesToFetch ? ` (max ${options.memoriesToFetch} memories)` : ' to genesis'
       }`,
     );
 
-    const { processedCount, failedCids } = await fetchMemoryChain(
+    const { processedCount, failedCid } = await fetchMemoryChain(
       latestCid,
       options.memoriesToFetch,
       options.outputDir,
@@ -204,17 +206,14 @@ const run = async () => {
     );
 
     saveLastProcessedCid(cidTrackingFile, latestCid);
-    await cleanupOnApplicationClose();
-
     logger.info(
-      `Memory resurrection complete. Processed: ${processedCount}, Failed: ${failedCids.size}`,
+      `Memory resurrection complete. Processed: ${processedCount}, Failed: ${failedCid.size}`,
     );
     logger.info(`Memories saved to ${options.outputDir}`);
     await cleanupOnApplicationClose();
   } catch (error) {
     logger.error('Failed to resurrect memories:', error);
     await cleanupOnApplicationClose();
-    process.exit(1);
   }
 };
 
@@ -223,6 +222,5 @@ if (!process.argv.includes('--help') && !process.argv.includes('-h')) {
   run().catch(async error => {
     logger.error('Unhandled error:', error);
     await cleanupOnApplicationClose();
-    process.exit(1);
   });
 }
