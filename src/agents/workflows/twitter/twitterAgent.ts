@@ -5,25 +5,29 @@ import { createTwitterPrompts } from './prompts.js';
 import { createLogger } from '../../../utils/logger.js';
 import { TwitterApi } from '../../../services/twitter/types.js';
 import { HumanMessage } from '@langchain/core/messages';
-import { LLMConfiguration, LLMProvider } from '../../../services/llm/types.js';
+import { LLMProvider } from '../../../services/llm/types.js';
 import { VectorDB } from '../../../services/vectorDb/VectorDB.js';
-import { Tools } from '../orchestrator/types.js';
+import { ModelConfigurations, Tools } from '../orchestrator/types.js';
 import { createAllTwitterTools } from '../../tools/twitter/index.js';
 const logger = createLogger('twitter-workflow');
 
 export type TwitterAgentOptions = {
   tools?: Tools;
-  modelConfig?: LLMConfiguration;
+  modelConfig?: ModelConfigurations;
   postTweets?: boolean;
   autoDriveUploadEnabled?: boolean;
 };
-
+const defaultModelConfig = {
+  provider: LLMProvider.ANTHROPIC,
+  model: 'claude-3-5-sonnet-latest',
+  temperature: 1,
+};
 const defaultOptions = {
   tools: [],
-  modelConfig: {
-    provider: LLMProvider.ANTHROPIC,
-    model: 'claude-3-5-sonnet-latest',
-    temperature: 1,
+  modelConfigurations: {
+    inputModelConfig: defaultModelConfig,
+    messageSummaryModelConfig: defaultModelConfig,
+    finishWorkflowModelConfig: defaultModelConfig,
   },
   postTweets: false,
   autoDriveUploadEnabled: false,
@@ -44,7 +48,7 @@ export const createTwitterAgent = (twitterApi: TwitterApi, options?: TwitterAgen
     schema: z.object({ instructions: z.string().describe('Instructions for the workflow') }),
     func: async ({ instructions }: { instructions: string }) => {
       try {
-        const { tools, modelConfig, postTweets, autoDriveUploadEnabled } =
+        const { tools, modelConfigurations, postTweets, autoDriveUploadEnabled } =
           createTwitterAgentConfig(options);
 
         const messages = [new HumanMessage(instructions)];
@@ -54,7 +58,7 @@ export const createTwitterAgent = (twitterApi: TwitterApi, options?: TwitterAgen
         const twitterTools = createAllTwitterTools(twitterApi, postTweets);
         const prompts = await createTwitterPrompts();
         const runner = await getOrchestratorRunner({
-          modelConfig,
+          modelConfigurations,
           tools: [...twitterTools, ...tools],
           prompts,
           namespace,
