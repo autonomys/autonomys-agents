@@ -7,7 +7,7 @@ import { TwitterApi } from '../../../services/twitter/types.js';
 import { HumanMessage } from '@langchain/core/messages';
 import { LLMProvider } from '../../../services/llm/types.js';
 import { VectorDB } from '../../../services/vectorDb/VectorDB.js';
-import { Tools, ModelConfigurations } from '../orchestrator/types.js';
+import { ModelConfigurations, Tools } from '../orchestrator/types.js';
 import { createAllTwitterTools } from '../../tools/twitter/index.js';
 import { Character } from '../../../config/characters.js';
 
@@ -35,11 +35,11 @@ const defaultOptions = {
   autoDriveUploadEnabled: false,
 };
 
-const createTwitterAgentOptions = (options?: TwitterAgentOptions) => {
+const createTwitterAgentConfig = (options?: TwitterAgentOptions) => {
   return { ...defaultOptions, ...options };
 };
 
-export const createTwitterAgentTool = (
+export const createTwitterAgent = (
   twitterApi: TwitterApi,
   character: Character,
   options?: TwitterAgentOptions,
@@ -55,7 +55,7 @@ export const createTwitterAgentTool = (
     func: async ({ instructions }: { instructions: string }) => {
       try {
         const { tools, modelConfigurations, postTweets, autoDriveUploadEnabled } =
-          createTwitterAgentOptions(options);
+          createTwitterAgentConfig(options);
 
         const messages = [new HumanMessage(instructions)];
         const namespace = 'twitter';

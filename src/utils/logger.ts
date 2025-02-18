@@ -1,11 +1,15 @@
 import winston from 'winston';
-import { config } from '../config/index.js';
 import path from 'path';
 
-// Strip ANSI escape sequences
-const stripAnsi = (str: string) => {
-  return str.replace(/\u001b\[\d+m/g, '');
+const getCharacterPath = () => {
+  const characterName = process.argv[2];
+  if (!characterName) {
+    return process.cwd();
+  }
+  return path.join(process.cwd(), 'characters', characterName);
 };
+
+const stripAnsi = (str: string) => str.replace(/\u001b\[\d+m/g, '');
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const formatMeta = (meta: any, _useColors: boolean = false) => {
@@ -49,7 +53,7 @@ const createConsoleFormat = () =>
 
 const createTransports = (folder: string, errorLogs: string, combinedLogs: string) => [
   new winston.transports.File({
-    filename: `${folder}/${errorLogs}`,
+    filename: path.join(folder, errorLogs),
     level: 'error',
     format: createFileFormat(),
     maxsize: 5242880,
@@ -57,7 +61,7 @@ const createTransports = (folder: string, errorLogs: string, combinedLogs: strin
     tailable: true,
   }),
   new winston.transports.File({
-    filename: `${folder}/${combinedLogs}`,
+    filename: path.join(folder, combinedLogs),
     format: createFileFormat(),
     maxsize: 5242880,
     maxFiles: 5,
@@ -65,30 +69,66 @@ const createTransports = (folder: string, errorLogs: string, combinedLogs: strin
   }),
 ];
 
-const addConsoleTransport = (logger: winston.Logger): winston.Logger => {
-  if (config.NODE_ENV !== 'production') {
+interface LoggerOptions {
+  context: string;
+  folder?: string;
+  errorLogs?: string;
+  combinedLogs?: string;
+  isProduction?: boolean;
+  basePath?: string;
+}
+
+type LoggerParams = [LoggerOptions] | [string, string?, string?, string?];
+
+export const createLogger = (...args: LoggerParams): winston.Logger => {
+  const defaultBasePath = getCharacterPath();
+  const isProduction = process.env.NODE_ENV === 'production';
+
+  if (typeof args[0] === 'object') {
+    const {
+      context,
+      folder = 'logs',
+      errorLogs = 'error.log',
+      combinedLogs = 'combined.log',
+      isProduction: optionsIsProduction = isProduction,
+      basePath = defaultBasePath,
+    } = args[0];
+
+    const logFolder = path.join(basePath, folder);
+    const logger = winston.createLogger({
+      defaultMeta: { context },
+      level: 'info',
+      format: createFileFormat(),
+      transports: createTransports(logFolder, errorLogs, combinedLogs),
+    });
+
+    if (!optionsIsProduction) {
+      logger.add(
+        new winston.transports.Console({
+          format: createConsoleFormat(),
+        }),
+      );
+    }
+
+    return logger;
+  }
+
+  const [context, folder = 'logs', errorLogs = 'error.log', combinedLogs = 'combined.log'] = args;
+  const logFolder = path.join(defaultBasePath, folder);
+  const logger = winston.createLogger({
+    defaultMeta: { context },
+    level: 'info',
+    format: createFileFormat(),
+    transports: createTransports(logFolder, errorLogs, combinedLogs),
+  });
+
+  if (!isProduction) {
     logger.add(
       new winston.transports.Console({
         format: createConsoleFormat(),
       }),
     );
   }
+
   return logger;
-};
-
-export const createLogger = (
-  context: string,
-  folder: string = 'logs',
-  errorLogs: string = 'error.log',
-  combinedLogs: string = 'combined.log',
-) => {
-  const characterFolder = path.join(config.characterConfig.characterPath, folder);
-  const logger = winston.createLogger({
-    defaultMeta: { context },
-    level: 'info',
-    format: createFileFormat(),
-    transports: createTransports(characterFolder, errorLogs, combinedLogs),
-  });
-
-  return addConsoleTransport(logger);
 };

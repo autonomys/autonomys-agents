@@ -2,7 +2,7 @@ import {
   createOrchestratorRunner,
   OrchestratorRunner,
 } from './agents/workflows/orchestrator/orchestratorWorkflow.js';
-import { createTwitterAgentTool } from './agents/workflows/twitter/twitterAgentTool.js';
+import { createTwitterAgent } from './agents/workflows/twitter/twitterAgent.js';
 import { config } from './config/index.js';
 import { createTwitterApi } from './services/twitter/client.js';
 import { createPrompts } from './agents/workflows/orchestrator/prompts.js';
@@ -18,7 +18,7 @@ const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
   const webSearchTool = createWebSearchTool(config.SERPAPI_API_KEY || '');
   const autoDriveUploadEnabled = config.autoDriveConfig.AUTO_DRIVE_UPLOAD;
 
-  const twitterAgentTool = createTwitterAgentTool(twitterApi, character, {
+  const twitterAgentTool = createTwitterAgent(twitterApi, character, {
     tools: [webSearchTool],
     postTweets: config.twitterConfig.POST_TWEETS,
     autoDriveUploadEnabled,
