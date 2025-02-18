@@ -1,7 +1,7 @@
 import { Contract } from 'ethers';
-import { createLogger } from '../../../utils/logger.js';
-import { FAUCET_ABI } from './abi/faucet.js';
-import { wallet } from './blockchain/agentWallet.js';
+import { createLogger } from '../../utils/logger.js';
+import { FAUCET_ABI } from '../abi/faucet.js';
+import { wallet } from './agentWallet.js';
 
 const logger = createLogger('faucet-tools');
 const FAUCET_CONTRACT_ADDRESS = '0x2296dbb90C714c1355Ff9cbcB70D5AB29060b454';

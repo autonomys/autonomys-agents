@@ -6,7 +6,7 @@ import {
   nextAccessTime,
   requestTokens,
   withdrawalAmount,
-} from './utils/faucet.js';
+} from '../../../blockchain/autoEvm/taurusFaucet.js';
 
 export const createFaucetLockTimeTool = () =>
   new DynamicStructuredTool({
