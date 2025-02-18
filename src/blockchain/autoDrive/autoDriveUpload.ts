@@ -1,10 +1,10 @@
-import { createLogger } from '../../../../utils/logger.js';
+import { createLogger } from '../../utils/logger.js';
 import { hexlify } from 'ethers';
 import { uploadFile, UploadFileOptions } from '@autonomys/auto-drive';
 import { blake3HashFromCid, stringToCid } from '@autonomys/auto-dag-data';
-import { agentVersion, config } from '../../../../config/index.js';
-import { signMessage, wallet } from '../blockchain/agentWallet.js';
-import { getLastMemoryCid, setLastMemoryHash } from '../blockchain/agentMemoryContract.js';
+import { agentVersion, config } from '../../config/index.js';
+import { signMessage, wallet } from '../autoEvm/agentWallet.js';
+import { getLastMemoryCid, setLastMemoryHash } from '../autoEvm/agentMemoryContract.js';
 import { withRetry } from './retry.js';
 import { autoDriveApi } from './autoDriveApi.js';
 

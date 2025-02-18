@@ -1,15 +1,25 @@
 import { AIMessage } from '@langchain/core/messages';
 import { createLogger } from '../../../../utils/logger.js';
-import { OrchestratorConfig, OrchestratorStateType } from '../types.js';
+import { OrchestratorStateType } from '../types.js';
+import { LLMFactory } from '../../../../services/llm/factory.js';
+import { LLMConfiguration } from '../../../../services/llm/types.js';
+import { VectorDB } from '../../../../services/vectorDb/VectorDB.js';
+import { PruningParameters } from '../types.js';
+import { ChatPromptTemplate } from '@langchain/core/prompts';
 
 const logger = createLogger('message-summary-node');
 
 export const createMessageSummaryNode = ({
-  orchestratorModel,
-  prompts,
+  modelConfig,
+  messageSummaryPrompt,
   pruningParameters,
   vectorStore,
-}: OrchestratorConfig) => {
+}: {
+  modelConfig: LLMConfiguration;
+  messageSummaryPrompt: ChatPromptTemplate;
+  pruningParameters: PruningParameters;
+  vectorStore: VectorDB;
+}) => {
   const runNode = async (state: OrchestratorStateType) => {
     logger.info('MessageSummary Node');
     logger.info('State size:', { size: state.messages.length });
@@ -26,12 +36,12 @@ export const createMessageSummaryNode = ({
         })
         .join('\n');
 
-      const formattedPrompt = await prompts.messageSummaryPrompt.format({
+      const formattedPrompt = await messageSummaryPrompt.format({
         prevSummary,
         newMessages,
       });
 
-      const newSummary = await orchestratorModel.invoke(formattedPrompt);
+      const newSummary = await LLMFactory.createModel(modelConfig).invoke(formattedPrompt);
       logger.info('New Summary Result:', { newSummary });
 
       const summaryContent =
@@ -39,7 +49,7 @@ export const createMessageSummaryNode = ({
           ? newSummary.content
           : JSON.stringify(newSummary.content, null, 2);
 
-      await vectorStore.insert(summaryContent);
+      const _insertData = await vectorStore.insert(summaryContent);
 
       return {
         messages: [

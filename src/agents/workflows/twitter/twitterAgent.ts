@@ -2,17 +2,48 @@ import { DynamicStructuredTool } from '@langchain/core/tools';
 import { z } from 'zod';
 import { getOrchestratorRunner } from '../orchestrator/orchestratorWorkflow.js';
 import { createTwitterPrompts } from './prompts.js';
-import { createTools } from './tools.js';
 import { createLogger } from '../../../utils/logger.js';
 import { TwitterApi } from '../../../services/twitter/types.js';
 import { HumanMessage } from '@langchain/core/messages';
 import { LLMProvider } from '../../../services/llm/types.js';
 import { VectorDB } from '../../../services/vectorDb/VectorDB.js';
-import { LLMFactory } from '../../../services/llm/factory.js';
-import { Tools } from '../orchestrator/types.js';
+import { ModelConfigurations, Tools } from '../orchestrator/types.js';
+import { createAllTwitterTools } from '../../tools/twitter/index.js';
+import { Character } from '../../../config/characters.js';
+
 const logger = createLogger('twitter-workflow');
 
-export const createTwitterAgentTool = (twitterApi: TwitterApi, optionalTools: Tools = []) =>
+export type TwitterAgentOptions = {
+  tools?: Tools;
+  modelConfig?: ModelConfigurations;
+  postTweets?: boolean;
+  autoDriveUploadEnabled?: boolean;
+};
+const defaultModelConfig = {
+  provider: LLMProvider.ANTHROPIC,
+  model: 'claude-3-5-sonnet-latest',
+  temperature: 1,
+};
+const defaultOptions = {
+  tools: [],
+  modelConfigurations: {
+    inputModelConfig: defaultModelConfig,
+    messageSummaryModelConfig: defaultModelConfig,
+    finishWorkflowModelConfig: defaultModelConfig,
+  },
+  postTweets: false,
+  autoDriveUploadEnabled: false,
+};
+
+const createTwitterAgentConfig = (options?: TwitterAgentOptions) => {
+  return { ...defaultOptions, ...options };
+};
+
+export const createTwitterAgent = (
+  twitterApi: TwitterApi,
+  character: Character,
+  options?: TwitterAgentOptions,
+) =>
   new DynamicStructuredTool({
     name: 'twitter_agent',
     description: `
@@ -23,23 +54,22 @@ export const createTwitterAgentTool = (twitterApi: TwitterApi, optionalTools: To
     schema: z.object({ instructions: z.string().describe('Instructions for the workflow') }),
     func: async ({ instructions }: { instructions: string }) => {
       try {
+        const { tools, modelConfigurations, postTweets, autoDriveUploadEnabled } =
+          createTwitterAgentConfig(options);
+
         const messages = [new HumanMessage(instructions)];
         const namespace = 'twitter';
 
         const vectorStore = new VectorDB(namespace);
-        const tools = createTools(twitterApi, vectorStore);
-        const model = LLMFactory.createModel({
-          provider: LLMProvider.ANTHROPIC,
-          model: 'claude-3-5-sonnet-latest',
-          temperature: 0,
-        });
-        const prompts = await createTwitterPrompts();
-        const runner = await getOrchestratorRunner({
-          model,
-          tools: [...tools, ...optionalTools],
+        const twitterTools = createAllTwitterTools(twitterApi, postTweets);
+        const prompts = await createTwitterPrompts(character);
+        const runner = await getOrchestratorRunner(character, {
+          modelConfigurations,
+          tools: [...twitterTools, ...tools],
           prompts,
           namespace,
           vectorStore,
+          autoDriveUploadEnabled,
         });
         const result = await runner.runWorkflow(
           { messages },

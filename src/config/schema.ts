@@ -5,7 +5,7 @@ const twitterConfigSchema = z.object({
   USERNAME: z.string().min(1, 'Twitter username is required'),
   PASSWORD: z.string().min(1, 'Twitter password is required'),
   COOKIES_PATH: z.string(),
-  POST_TWEETS: z.boolean(),
+  POST_TWEETS: z.boolean().default(false),
 });
 
 const llmConfigSchema = z.object({
@@ -19,11 +19,11 @@ const llmConfigSchema = z.object({
 const autoDriveConfigSchema = z.object({
   AUTO_DRIVE_API_KEY: z.string().optional(),
   AUTO_DRIVE_ENCRYPTION_PASSWORD: z.string().optional(),
-  AUTO_DRIVE_UPLOAD: z.boolean(),
   AUTO_DRIVE_NETWORK: z
     .enum(['mainnet', 'taurus'])
     .transform(val => NetworkId[val.toUpperCase() as 'MAINNET' | 'TAURUS'])
     .default('taurus'),
+  AUTO_DRIVE_UPLOAD: z.boolean().default(true),
 });
 
 const blockchainConfigSchema = z.object({
@@ -61,7 +61,7 @@ const blockchainConfigSchema = z.object({
 const characterConfigSchema = z.object({
   name: z.string(),
   characterPath: z.string(),
-  description: z.string(),
+  goal: z.string(),
   personality: z.array(z.string()),
   expertise: z.array(z.string()),
   communicationRules: z.object({

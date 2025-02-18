@@ -1114,18 +1114,20 @@
     uuid "^10.0.0"
     zod "^3.23.8"
 
-"@langchain/ollama@^0.1.4":
-  version "0.1.4"
-  resolved "https://registry.yarnpkg.com/@langchain/ollama/-/ollama-0.1.4.tgz#3796a7b8a41000ef04ff1e5271a61eea5c16835f"
-  integrity sha512-olHPViUurGcmOI3IbhIGK/EJ7QxDlZru4j98V269PiEFTIVlciRULltgI/t3voHYTdvB8R+HV8pMo/Y3UVzvzA==
+"@langchain/ollama@0.2.0":
+  version "0.2.0"
+  resolved "https://registry.yarnpkg.com/@langchain/ollama/-/ollama-0.2.0.tgz#43b3c90e9bd82256e26b70edf37304694aeaf5d1"
+  integrity sha512-jLlYFqt+nbhaJKLakk7lRTWHZJ7wHeJLM6yuv4jToQ8zPzpL//372+MjggDoW0mnw8ofysg1T2C6mEJspKJtiA==
   dependencies:
-    ollama "^0.5.9"
+    ollama "^0.5.12"
     uuid "^10.0.0"
+    zod "^3.24.1"
+    zod-to-json-schema "^3.24.1"
 
-"@langchain/openai@0.3.16":
-  version "0.3.16"
-  resolved "https://registry.yarnpkg.com/@langchain/openai/-/openai-0.3.16.tgz#bc1ebf67e88d5e5f8320d1df4f01ec3151279101"
-  integrity sha512-Om9HRlTeI0Ou6D4pfxbWHop4WGfkCdV/7v1W/+Jr7NSf0BNoA9jk5GqGms8ZtOYSGgPvizDu3i0TrM3B4cN4NA==
+"@langchain/openai@0.4.4":
+  version "0.4.4"
+  resolved "https://registry.yarnpkg.com/@langchain/openai/-/openai-0.4.4.tgz#1832420495c53c28aa4e6515583bad8f0b83a637"
+  integrity sha512-UZybJeMd8+UX7Kn47kuFYfqKdBCeBUWNqDtmAr6ZUIMMnlsNIb6MkrEEhGgAEjGCpdT4CU8U/DyyddTz+JayOQ==
   dependencies:
     js-tiktoken "^1.0.12"
     openai "^4.77.0"
@@ -5016,10 +5018,10 @@ object-keys@^1.1.1:
   resolved "https://registry.yarnpkg.com/object-keys/-/object-keys-1.1.1.tgz#1c47f272df277f3b1daf061677d9c82e2322c60e"
   integrity sha512-NuAESUOUMrlIXOfHKzD6bpPu3tYt3xvjNdRIQ+FeT0lNb4K8WR70CaDxhuNguS2XG+GjkyMwOzsN5ZktImfhLA==
 
-ollama@^0.5.9:
-  version "0.5.12"
-  resolved "https://registry.yarnpkg.com/ollama/-/ollama-0.5.12.tgz#d8aadfaff076b2852cf826d928a03d9a40f308b9"
-  integrity sha512-flVH1fn1c9NF7VV3bW9kSu0E+bYc40b4DxL/gS2Debhao35osJFRDiPOj9sIWTMvcyj78Paw1OuhfIe7uhDWfQ==
+ollama@^0.5.12:
+  version "0.5.13"
+  resolved "https://registry.yarnpkg.com/ollama/-/ollama-0.5.13.tgz#19599ab8977be1bc15d5554671651904cb8db14a"
+  integrity sha512-qK3eE2GjMYjCiTknEJfAHjbUzUqgVtf9qtzjxWrkwBZgBG7kOB6Z4+Ov4fbvDjmKKHv+rpuTsWFg4jZvVjNBtQ==
   dependencies:
     whatwg-fetch "^3.6.20"
 
@@ -6461,3 +6463,8 @@ zod@^3.22.3, zod@^3.22.4, zod@^3.23.8:
   version "3.24.1"
   resolved "https://registry.yarnpkg.com/zod/-/zod-3.24.1.tgz#27445c912738c8ad1e9de1bea0359fa44d9d35ee"
   integrity sha512-muH7gBL9sI1nciMZV67X5fTKKBLtwpZ5VBp1vsOQzj1MhrBZ4wlVCm3gedKZWLp0Oyel8sIGfeiz54Su+OVT+A==
+
+zod@^3.24.1:
+  version "3.24.2"
+  resolved "https://registry.yarnpkg.com/zod/-/zod-3.24.2.tgz#8efa74126287c675e92f46871cfc8d15c34372b3"
+  integrity sha512-lY7CDW43ECgW9u1TcT3IoXHflywfVqDYze4waEz812jR/bZ8FHDsl7pFQoSZTz5N+2NqRXs8GBwnAwo3ZNxqhQ==
