@@ -14,6 +14,7 @@ import { parseFinishedWorkflow } from './nodes/finishWorkflowNode.js';
 import { LLMConfiguration, LLMProvider } from '../../../services/llm/types.js';
 import { createPrompts } from './prompts.js';
 import { createDefaultOrchestratorTools } from './tools.js';
+import { Character } from '../../../config/characters.js';
 
 const logger = createLogger('orchestrator-workflow');
 
@@ -73,7 +74,10 @@ const defaultOptions = {
   autoDriveUploadEnabled: false,
 };
 
-const createOrchestratorRunnerOptions = async (options?: OrchestratorRunnerOptions) => {
+const createOrchestratorRunnerOptions = async (
+  character: Character,
+  options?: OrchestratorRunnerOptions,
+) => {
   const mergedOptions = { ...defaultOptions, ...options };
 
   const vectorStore = options?.vectorStore || new VectorDB(mergedOptions.namespace);
@@ -85,19 +89,26 @@ const createOrchestratorRunnerOptions = async (options?: OrchestratorRunnerOptio
     ...mergedOptions,
     vectorStore,
     tools,
-    prompts: options?.prompts || (await createPrompts()),
+    prompts: options?.prompts || (await createPrompts(character)),
   };
 };
 
 export type OrchestratorConfig = Awaited<ReturnType<typeof createOrchestratorRunnerOptions>>;
 
 export const createOrchestratorRunner = async (
+  character: Character,
   options?: OrchestratorRunnerOptions,
 ): Promise<OrchestratorRunner> => {
-  const runnerOptions = await createOrchestratorRunnerOptions(options);
+  const runnerOptions = await createOrchestratorRunnerOptions(character, options);
 
   const nodes = await createNodes(runnerOptions);
   const workflow = await createOrchestratorWorkflow(nodes, runnerOptions.pruningParameters);
+  logger.info('prompts', {
+    inputPrompt: runnerOptions.prompts?.inputPrompt,
+    messageSummaryPrompt: runnerOptions.prompts?.messageSummaryPrompt,
+    finishWorkflowPrompt: runnerOptions.prompts?.finishWorkflowPrompt,
+  });
+
   const memoryStore = new MemorySaver();
   const app = workflow.compile({ checkpointer: memoryStore });
 
@@ -160,9 +171,9 @@ export const createOrchestratorRunner = async (
 
 export const getOrchestratorRunner = (() => {
   let runnerPromise: Promise<OrchestratorRunner> | undefined = undefined;
-  return (runnerOptions: OrchestratorRunnerOptions) => {
+  return (character: Character, runnerOptions: OrchestratorRunnerOptions) => {
     if (!runnerPromise) {
-      runnerPromise = createOrchestratorRunner(runnerOptions);
+      runnerPromise = createOrchestratorRunner(character, runnerOptions);
     }
     return runnerPromise;
   };

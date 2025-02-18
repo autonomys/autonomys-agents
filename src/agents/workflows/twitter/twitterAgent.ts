@@ -9,6 +9,8 @@ import { LLMProvider } from '../../../services/llm/types.js';
 import { VectorDB } from '../../../services/vectorDb/VectorDB.js';
 import { ModelConfigurations, Tools } from '../orchestrator/types.js';
 import { createAllTwitterTools } from '../../tools/twitter/index.js';
+import { Character } from '../../../config/characters.js';
+
 const logger = createLogger('twitter-workflow');
 
 export type TwitterAgentOptions = {
@@ -37,7 +39,11 @@ const createTwitterAgentConfig = (options?: TwitterAgentOptions) => {
   return { ...defaultOptions, ...options };
 };
 
-export const createTwitterAgent = (twitterApi: TwitterApi, options?: TwitterAgentOptions) =>
+export const createTwitterAgent = (
+  twitterApi: TwitterApi,
+  character: Character,
+  options?: TwitterAgentOptions,
+) =>
   new DynamicStructuredTool({
     name: 'twitter_agent',
     description: `
@@ -56,8 +62,8 @@ export const createTwitterAgent = (twitterApi: TwitterApi, options?: TwitterAgen
 
         const vectorStore = new VectorDB(namespace);
         const twitterTools = createAllTwitterTools(twitterApi, postTweets);
-        const prompts = await createTwitterPrompts();
-        const runner = await getOrchestratorRunner({
+        const prompts = await createTwitterPrompts(character);
+        const runner = await getOrchestratorRunner(character, {
           modelConfigurations,
           tools: [...twitterTools, ...tools],
           prompts,

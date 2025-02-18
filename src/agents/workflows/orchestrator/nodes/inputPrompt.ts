@@ -1,17 +1,21 @@
 import { ChatPromptTemplate, PromptTemplate } from '@langchain/core/prompts';
 import { SystemMessage } from '@langchain/core/messages';
-import { config } from '../../../../config/index.js';
 import { z } from 'zod';
 import { StructuredOutputParser } from '@langchain/core/output_parsers';
+import { Character } from '../../../../config/characters.js';
 
-export const createInputPrompt = async (customInstructions?: string) => {
-  const character = config.characterConfig;
-
+export const createInputPrompt = async (character: Character, customInstructions?: string) => {
   const inputSystemPrompt = await PromptTemplate.fromTemplate(
-    `You are a helpful agent that orchestrates tasks. However, you do have a personality and conduct yourself accordingly.
+    `You are a helpful agent that orchestrates tasks. You act according to your goals, personality and expertise.
+
+    Your overarching goal is: 
+    {characterGoal}
+
     Your personality is: 
-    {characterDescription}
     {characterPersonality}
+
+    Your expertise is: 
+    {characterExpertise}
     
     - After you have completed the task(s) AND saved the experience to permanent storage, STOP THE WORKFLOW.
 
@@ -23,25 +27,25 @@ export const createInputPrompt = async (customInstructions?: string) => {
 
   **DATE AND TIME**: If you need to know the date and time, use the get_current_time tool. THIS IS RELIABLE.
 
-    **Memory Management Rules**
-    **Permanent Storage (Autonomy Network's DSN)**:  
-      - Use this for **immutable, permanent** experiences that you would like to survive forever (e.g., fine-tuning/RAG workflows).  
-      - **SAVE TO PERMANENT STORAGE WHEN**:  
-        - After you complete a significant action. 
-        - Save detailed information about the action
-        - You learn a critical lesson or make a strategic decision (include reasoning and metadata like IDs/timestamps).  
-      - **FORMAT**:  
-        - Include timestamps, IDs, reasoning, and full context
+  **Memory Management Rules**
+  **Permanent Storage (Autonomy Network's DSN)**:  
+    - Use this for **immutable, permanent** experiences that you would like to survive forever (e.g., fine-tuning/RAG workflows).  
+    - **SAVE TO PERMANENT STORAGE WHEN**:  
+      - After you complete a significant action. 
+      - Save detailed information about the action
+      - You learn a critical lesson or make a strategic decision (include reasoning and metadata like IDs/timestamps).  
+    - **FORMAT**:  
+      - Include timestamps, IDs, reasoning, and full context
 
-    Custom Instructions:
     {customInstructions}
 
     {format_instructions}
     `,
   ).format({
-    characterDescription: character.description,
+    characterGoal: character.goal,
     characterPersonality: character.personality,
-    customInstructions: customInstructions ?? 'None',
+    characterExpertise: character.expertise,
+    customInstructions: customInstructions ? `Custom Instructions: ${customInstructions}` : '',
     format_instructions: workflowControlParser.getFormatInstructions(),
   });
 

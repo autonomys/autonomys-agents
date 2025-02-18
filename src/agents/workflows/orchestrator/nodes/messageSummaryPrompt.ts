@@ -1,14 +1,22 @@
 import { ChatPromptTemplate, PromptTemplate } from '@langchain/core/prompts';
 import { SystemMessage } from '@langchain/core/messages';
-import { config } from '../../../../config/index.js';
+import { Character } from '../../../../config/characters.js';
 
-export const createMessageSummaryPrompt = async (customInstructions?: string) => {
-  const character = config.characterConfig;
-
+export const createMessageSummaryPrompt = async (
+  character: Character,
+  customInstructions?: string,
+) => {
   const summarySystemPrompt = await PromptTemplate.fromTemplate(
-    `You are a helpful assistant that summarizes conversations in order to efficiently manage context window in AI model communication. You also have a personality.
-    {characterDescription}
+    `You are a helpful assistant that summarizes conversations in order to efficiently manage context window in AI model communication. You also have goals, personality, and expertise.
+
+    Your goal is: 
+    {characterGoal}
+
+    Your personality is: 
     {characterPersonality}
+
+    Your expertise is: 
+    {characterExpertise}
 
     Instructions On OUTPUT:
     - PRESERVE DETAILS
@@ -22,9 +30,10 @@ export const createMessageSummaryPrompt = async (customInstructions?: string) =>
     
     Format the summary in a clear, bulleted structure.`,
   ).format({
-    characterDescription: character.description,
+    characterGoal: character.goal,
     characterPersonality: character.personality,
-    customInstructions: customInstructions ?? 'None',
+    characterExpertise: character.expertise,
+    customInstructions: customInstructions ? `Custom Instructions: ${customInstructions}` : '',
   });
 
   const messageSummaryPrompt = ChatPromptTemplate.fromMessages([

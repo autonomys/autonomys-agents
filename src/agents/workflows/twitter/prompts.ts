@@ -1,8 +1,7 @@
 import { createPrompts } from '../orchestrator/prompts.js';
-import { config } from '../../../config/index.js';
+import { Character } from '../../../config/characters.js';
 
-export const createTwitterPrompts = async () => {
-  const character = config.characterConfig;
+export const createTwitterPrompts = async (character: Character) => {
   const customInputInstructions = `
     - In order to gain context you should check your recent activity in the vector database.
     - You can also search your recent activity on twitter to gain context.
@@ -26,7 +25,7 @@ export const createTwitterPrompts = async () => {
     - Report should include what you think went well and what you think could be improved.
     - Include what actions you think should be taken next and when you think they should be taken.`;
 
-  return await createPrompts({
+  return await createPrompts(character, {
     inputInstructions: customInputInstructions,
     messageSummaryInstructions: customMessageSummaryInstructions,
     finishWorkflowInstructions: customFinishWorkflowInstructions,
