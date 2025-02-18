@@ -61,7 +61,7 @@ const blockchainConfigSchema = z.object({
 const characterConfigSchema = z.object({
   name: z.string(),
   characterPath: z.string(),
-  description: z.string(),
+  goal: z.string(),
   personality: z.array(z.string()),
   expertise: z.array(z.string()),
   communicationRules: z.object({

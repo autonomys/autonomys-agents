@@ -5,7 +5,7 @@ import { join } from 'path';
 export interface Character {
   name: string;
   characterPath: string;
-  description: string;
+  goal: string;
   personality: string[];
   expertise: string[];
   communicationRules: {
@@ -16,7 +16,7 @@ export interface Character {
 
 interface RawCharacterConfig {
   name: string;
-  description: string;
+  goal: string;
   personality: string[];
   expertise: string[];
   communication_rules: {

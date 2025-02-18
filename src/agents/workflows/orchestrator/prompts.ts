@@ -2,19 +2,32 @@ import { createInputPrompt } from './nodes/inputPrompt.js';
 import { createMessageSummaryPrompt } from './nodes/messageSummaryPrompt.js';
 import { createFinishWorkflowPrompt } from './nodes/finishWorkflowPrompt.js';
 import { OrchestratorPrompts } from './types.js';
-export const createPrompts = async (customInstructions?: {
-  inputInstructions?: string;
-  messageSummaryInstructions?: string;
-  finishWorkflowInstructions?: string;
-  selfSchedule?: boolean;
-}): Promise<OrchestratorPrompts> => {
-  const inputPrompt = await createInputPrompt(customInstructions?.inputInstructions);
+import { Character } from '../../../config/characters.js';
+
+export const createPrompts = async (
+  character: Character,
+  customInstructions?: {
+    inputInstructions?: string;
+    messageSummaryInstructions?: string;
+    finishWorkflowInstructions?: string;
+    selfSchedule?: boolean;
+  },
+): Promise<OrchestratorPrompts> => {
+  const {
+    inputInstructions,
+    messageSummaryInstructions,
+    finishWorkflowInstructions,
+    selfSchedule,
+  } = customInstructions || {};
+  const inputPrompt = await createInputPrompt(character, inputInstructions);
   const messageSummaryPrompt = await createMessageSummaryPrompt(
-    customInstructions?.messageSummaryInstructions,
+    character,
+    messageSummaryInstructions,
   );
   const finishWorkflowPrompt = await createFinishWorkflowPrompt(
-    customInstructions?.finishWorkflowInstructions,
-    customInstructions?.selfSchedule,
+    character,
+    finishWorkflowInstructions,
+    selfSchedule,
   );
 
   return {
