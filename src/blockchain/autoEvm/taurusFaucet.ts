@@ -1,26 +1,10 @@
 import { Contract } from 'ethers';
 import { createLogger } from '../../utils/logger.js';
 import { FAUCET_ABI } from '../abi/faucet.js';
-import { wallet } from './agentWallet.js';
+import { provider, wallet } from './agentWallet.js';
 
 const logger = createLogger('faucet-tools');
 const FAUCET_CONTRACT_ADDRESS = '0x2296dbb90C714c1355Ff9cbcB70D5AB29060b454';
-
-type FaucetLockTimeResult = {
-  lockTime: BigInt;
-};
-
-type FaucetNextAccessTimeResult = {
-  nextAccessTime: BigInt;
-};
-
-type FaucetIsMinterResult = {
-  isMinter: boolean;
-};
-
-type FaucetWithdrawalAmountResult = {
-  withdrawalAmount: BigInt;
-};
 
 type FaucetRequestResult = {
   success: boolean;
@@ -32,44 +16,43 @@ const getFaucetContract = () => {
   return new Contract(FAUCET_CONTRACT_ADDRESS, FAUCET_ABI, wallet);
 };
 
-export const lockTime = async (): Promise<FaucetLockTimeResult> => {
+export const verifyFaucetBalance = async (): Promise<bigint> => {
   try {
-    const faucet = getFaucetContract();
-    const lockTime = await faucet.lockTime();
-    return { lockTime };
+    const balance = await provider.getBalance(FAUCET_CONTRACT_ADDRESS);
+    return BigInt(balance.toString());
   } catch (error) {
-    logger.error('Error calling lockTime:', error);
+    logger.error('Error calling verifyFaucetBalance:', error);
     throw error;
   }
 };
 
-export const nextAccessTime = async (address: string): Promise<FaucetNextAccessTimeResult> => {
+export const nextAccessTime = async (address: string): Promise<bigint> => {
   try {
     const faucet = getFaucetContract();
     const nextAccessTime = await faucet.nextAccessTime(address);
-    return { nextAccessTime };
+    return BigInt(nextAccessTime.toString());
   } catch (error) {
     logger.error('Error calling nextAccessTime:', error);
     throw error;
   }
 };
 
-export const isMinter = async (address: string): Promise<FaucetIsMinterResult> => {
+export const isMinter = async (): Promise<boolean> => {
   try {
     const faucet = getFaucetContract();
-    const isMinter = await faucet.isMinter(address);
-    return { isMinter };
+    const isMinter = await faucet.isMinter(wallet.address);
+    return Boolean(isMinter);
   } catch (error) {
     logger.error('Error calling isMinter:', error);
     throw error;
   }
 };
 
-export const withdrawalAmount = async (): Promise<FaucetWithdrawalAmountResult> => {
+export const withdrawalAmount = async (): Promise<bigint> => {
   try {
     const faucet = getFaucetContract();
     const withdrawalAmount = await faucet.withdrawalAmount();
-    return { withdrawalAmount };
+    return BigInt(withdrawalAmount.toString());
   } catch (error) {
     logger.error('Error calling withdrawalAmount:', error);
     throw error;
