@@ -88,11 +88,11 @@ const getMyRecentReplies = async (
   }
   return replies;
 };
-const getReplyThread = (tweet: Tweet, conversation: Tweet[]): Tweet[] => {
+const getReplyThread = (tweet: Tweet, conversation: Tweet[], maxThreadDepth: number=5): Tweet[] => {
   const replyThread: Tweet[] = [];
   let currentTweet = tweet;
 
-  while (currentTweet) {
+  while (currentTweet || replyThread.length <= maxThreadDepth) {
     if (currentTweet.inReplyToStatusId) {
       const parentTweet = conversation.find(t => t.id === currentTweet.inReplyToStatusId);
       if (parentTweet) {
@@ -108,7 +108,7 @@ const getReplyThread = (tweet: Tweet, conversation: Tweet[]): Tweet[] => {
       break;
     }
   }
-
+  logger.info('replyThread', { id: tweet.id, length: replyThread.length });
   return replyThread;
 };
 
@@ -116,6 +116,7 @@ const getMyUnrepliedToMentions = async (
   scraper: Scraper,
   username: string,
   maxResults: number = 50,
+  maxThreadDepth: number = 5,
   sinceId?: string,
 ): Promise<Tweet[]> => {
   logger.info('Getting my mentions', { username, maxResults, sinceId });
@@ -173,7 +174,7 @@ const getMyUnrepliedToMentions = async (
     const conversation = conversations.get(mention.conversationId);
     if (!conversation) return mention;
 
-    const thread = getReplyThread(mention, conversation);
+    const thread = getReplyThread(mention, conversation, maxThreadDepth);
     return {
       ...mention,
       thread,
@@ -259,8 +260,8 @@ export const createTwitterApi = async (
     scraper,
     username: username,
     userId: userId,
-    getMyUnrepliedToMentions: (maxResults: number, sinceId?: string) =>
-      getMyUnrepliedToMentions(scraper, username, maxResults, sinceId),
+    getMyUnrepliedToMentions: (maxResults: number, maxThreadDepth: number = 5, sinceId?: string) =>
+      getMyUnrepliedToMentions(scraper, username, maxResults, maxThreadDepth, sinceId),
 
     getFollowingRecentTweets: (maxResults: number = 100, randomNumberOfUsers: number = 10) =>
       getFollowingRecentTweets(scraper, username, maxResults, randomNumberOfUsers),
