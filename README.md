@@ -63,6 +63,7 @@ The interface provides a user-friendly way to interact with your agent, monitor 
 The following examples demonstrate the use of the framework and are available:
 
 - [Twitter Agent](examples/twitterAgent/README.md)
+- [Multi Personality](examples/multiPersonality/README.md)
 
 ## Character System
 
