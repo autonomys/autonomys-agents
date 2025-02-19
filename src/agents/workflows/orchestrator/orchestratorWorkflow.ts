@@ -108,11 +108,6 @@ export const createOrchestratorRunner = async (
 
   const nodes = await createNodes(runnerOptions);
   const workflow = await createOrchestratorWorkflow(nodes, runnerOptions.pruningParameters);
-  logger.info('prompts', {
-    inputPrompt: runnerOptions.prompts?.inputPrompt,
-    messageSummaryPrompt: runnerOptions.prompts?.messageSummaryPrompt,
-    finishWorkflowPrompt: runnerOptions.prompts?.finishWorkflowPrompt,
-  });
 
   const memoryStore = new MemorySaver();
   const app = workflow.compile({ checkpointer: memoryStore });
