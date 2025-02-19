@@ -1,7 +1,7 @@
 import { createInputNode } from './nodes/inputNode.js';
 import { createMessageSummaryNode } from './nodes/messageSummaryNode.js';
 import { createFinishWorkflowNode } from './nodes/finishWorkflowNode.js';
-import { OrchestratorConfig } from './orchestratorWorkflow.js';
+import { OrchestratorConfig } from './types.js';
 import { ToolNode } from '@langchain/langgraph/prebuilt';
 
 export const createNodes = async ({
