@@ -17,11 +17,14 @@ const logger = createLogger('autonomous-twitter-agent');
 
 const character = config.characterConfig;
 const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
+  //shared twitter agent and orchestrator config
+  const webSearchTool = config.SERPAPI_API_KEY ? [createWebSearchTool(config.SERPAPI_API_KEY)] : [];
+  const autoDriveUploadEnabled = config.autoDriveConfig.AUTO_DRIVE_UPLOAD;
+
   //Twitter agent config
   const { USERNAME, PASSWORD, COOKIES_PATH } = config.twitterConfig;
   const twitterApi = await createTwitterApi(USERNAME, PASSWORD, COOKIES_PATH);
-  const webSearchTool = config.SERPAPI_API_KEY ? [createWebSearchTool(config.SERPAPI_API_KEY)] : [];
-  const autoDriveUploadEnabled = config.autoDriveConfig.AUTO_DRIVE_UPLOAD;
+  //Create twitter agent as a tool to be given to the orchestrator
   const twitterAgent = createTwitterAgent(twitterApi, character, {
     tools: [...webSearchTool],
     postTweets: config.twitterConfig.POST_TWEETS,
@@ -29,13 +32,11 @@ const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
   });
 
   //Orchestrator config
+  //use default orchestrator prompts with character config from CLI  selfSchedule enabled
   const prompts = await createPrompts(character, { selfSchedule: true });
+
+  //override default model configurations for summary and finish workflow nodes
   const modelConfigurations = {
-    inputModelConfig: {
-      provider: LLMProvider.ANTHROPIC,
-      model: 'claude-3-5-sonnet-latest',
-      temperature: 0.8,
-    },
     messageSummaryModelConfig: {
       provider: LLMProvider.OPENAI,
       model: 'gpt-4o',
