@@ -88,11 +88,11 @@ const getMyRecentReplies = async (
   }
   return replies;
 };
-const getReplyThread = (tweet: Tweet, conversation: Tweet[], maxThreadDepth: number=5): Tweet[] => {
+const getReplyThread = (tweet: Tweet, conversation: Tweet[], maxThreadDepth: number): Tweet[] => {
   const replyThread: Tweet[] = [];
   let currentTweet = tweet;
 
-  while (currentTweet || replyThread.length <= maxThreadDepth) {
+  while (replyThread.length <= maxThreadDepth) {
     if (currentTweet.inReplyToStatusId) {
       const parentTweet = conversation.find(t => t.id === currentTweet.inReplyToStatusId);
       if (parentTweet) {
@@ -115,13 +115,15 @@ const getReplyThread = (tweet: Tweet, conversation: Tweet[], maxThreadDepth: num
 const getMyUnrepliedToMentions = async (
   scraper: Scraper,
   username: string,
+  maxThreadDepth: number,
+  ignoreConversationIds: string[],
   maxResults: number = 50,
-  maxThreadDepth: number = 5,
   sinceId?: string,
 ): Promise<Tweet[]> => {
   logger.info('Getting my mentions', { username, maxResults, sinceId });
 
-  const query = `@${username} -from:${username}`;
+  const queryConversationIds = ignoreConversationIds.map(id => `-conversation_id:${id}`).join(' ');
+  const query = `@${username} -from:${username} ${queryConversationIds}`;
   const mentionIterator = scraper.searchTweets(query, maxResults, SearchMode.Latest);
 
   // build a set of "already replied to" tweet IDs in one query
@@ -132,7 +134,8 @@ const getMyUnrepliedToMentions = async (
   const conversations = new Map<string, Tweet[]>();
   for await (const tweet of mentionIterator) {
     // Skip tweets without an ID
-    if (!tweet.id) continue;
+    if (!tweet.id || (tweet.conversationId && ignoreConversationIds.includes(tweet.conversationId)))
+      continue;
 
     // Stop if we've reached or passed the sinceId
     if (sinceId && tweet.id <= sinceId) {
@@ -260,8 +263,20 @@ export const createTwitterApi = async (
     scraper,
     username: username,
     userId: userId,
-    getMyUnrepliedToMentions: (maxResults: number, maxThreadDepth: number = 5, sinceId?: string) =>
-      getMyUnrepliedToMentions(scraper, username, maxResults, maxThreadDepth, sinceId),
+    getMyUnrepliedToMentions: (
+      maxResults: number,
+      maxThreadDepth: number = 5,
+      ignoreConversationIds: string[] = [],
+      sinceId?: string,
+    ) =>
+      getMyUnrepliedToMentions(
+        scraper,
+        username,
+        maxThreadDepth,
+        ignoreConversationIds,
+        maxResults,
+        sinceId,
+      ),
 
     getFollowingRecentTweets: (maxResults: number = 100, randomNumberOfUsers: number = 10) =>
       getFollowingRecentTweets(scraper, username, maxResults, randomNumberOfUsers),
