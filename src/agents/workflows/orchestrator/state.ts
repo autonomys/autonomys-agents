@@ -31,10 +31,12 @@ export const OrchestratorState = (pruningParameters: PruningParameters) =>
       default: () => null,
       reducer: (_, update) => update,
     }),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     toolCalls: Annotation<any[] | null>({
       default: () => null,
       reducer: (_, update) => update,
     }),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     executedTools: Annotation<any[]>({
       default: () => [],
       reducer: (curr, update) => [...curr, ...(update || [])],

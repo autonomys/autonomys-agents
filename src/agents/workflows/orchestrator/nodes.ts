@@ -3,7 +3,7 @@ import { createMessageSummaryNode } from './nodes/messageSummaryNode.js';
 import { createFinishWorkflowNode } from './nodes/finishWorkflowNode.js';
 import { createToolExecutionNode } from './nodes/toolExecutionNode.js';
 import { OrchestratorConfig } from './orchestratorWorkflow.js';
-import { ToolNode } from '@langchain/langgraph/prebuilt';
+import { DynamicStructuredTool } from '@langchain/core/tools';
 
 export const createNodes = async ({
   modelConfigurations,
@@ -33,14 +33,12 @@ export const createNodes = async ({
     vectorStore,
   });
   const toolExecutionNode = createToolExecutionNode({
-    tools,
+    tools: tools as DynamicStructuredTool[],
   });
-  const toolNode = new ToolNode(tools);
   return {
     inputNode,
     messageSummaryNode,
     finishWorkflowNode,
     toolExecutionNode,
-    toolNode,
   };
 };
