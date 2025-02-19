@@ -18,7 +18,11 @@ export type ModelConfigurations = {
 };
 
 export type OrchestratorRunnerOptions = {
-  modelConfigurations?: ModelConfigurations;
+  modelConfigurations?: {
+    inputModelConfig?: LLMConfiguration;
+    messageSummaryModelConfig?: LLMConfiguration;
+    finishWorkflowModelConfig?: LLMConfiguration;
+  };
   tools?: Tools;
   prompts?: OrchestratorPrompts;
   namespace?: string;

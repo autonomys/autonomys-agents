@@ -16,7 +16,11 @@ const logger = createLogger('twitter-workflow');
 
 export type TwitterAgentOptions = {
   tools?: Tools;
-  modelConfigurations?: ModelConfigurations;
+  modelConfigurations?: {
+    inputModelConfig?: LLMConfiguration;
+    messageSummaryModelConfig?: LLMConfiguration;
+    finishWorkflowModelConfig?: LLMConfiguration;
+  };
   postTweets?: boolean;
   autoDriveUploadEnabled?: boolean;
 };
@@ -46,7 +50,11 @@ const defaultOptions: TwitterAgentConfig = {
 };
 
 const createTwitterAgentConfig = (options?: TwitterAgentOptions): TwitterAgentConfig => {
-  return { ...defaultOptions, ...options };
+  const modelConfigurations = {
+    ...defaultOptions.modelConfigurations,
+    ...options?.modelConfigurations,
+  };
+  return { ...defaultOptions, ...options, modelConfigurations };
 };
 
 export const createTwitterAgent = (
