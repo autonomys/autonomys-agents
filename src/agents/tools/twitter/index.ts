@@ -23,9 +23,10 @@ export const createFetchTimelineTool = (twitterApi: TwitterApi) =>
       numTimelineTweets: number;
     }) => {
       try {
-        const tweets = (await twitterApi.getMyTimeline(numTimelineTweets, processedIds)).map(t =>
-          tweetToMinimalTweet(t),
-        );
+        const myReplies = await twitterApi.getMyRepliedToIds();
+        const tweets = (
+          await twitterApi.getMyTimeline(numTimelineTweets, [...processedIds, ...myReplies])
+        ).map(t => tweetToMinimalTweet(t));
 
         logger.info('Timeline tweets:', {
           timelineTweets: tweets.length,
@@ -55,8 +56,12 @@ export const createFetchFollowingTimelineTool = (twitterApi: TwitterApi) =>
       numFollowingTimelineTweets: number;
       processedIds: string[];
     }) => {
+      const myReplies = await twitterApi.getMyRepliedToIds();
       const tweets = (
-        await twitterApi.getFollowingTimeline(numFollowingTimelineTweets, processedIds)
+        await twitterApi.getFollowingTimeline(numFollowingTimelineTweets, [
+          ...processedIds,
+          ...myReplies,
+        ])
       ).map(t => tweetToMinimalTweet(t));
       return { tweets };
     },
