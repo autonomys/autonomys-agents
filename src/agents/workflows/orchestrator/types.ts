@@ -45,6 +45,8 @@ export type OrchestratorStateType = {
   messages: readonly BaseMessage[];
   error: Error | null;
   workflowControl: WorkflowControl | null;
+  toolCalls: any[] | null;
+  executedTools: any[] | null;
 };
 
 export type PruningParameters = {

@@ -31,4 +31,12 @@ export const OrchestratorState = (pruningParameters: PruningParameters) =>
       default: () => null,
       reducer: (_, update) => update,
     }),
+    toolCalls: Annotation<any[] | null>({
+      default: () => null,
+      reducer: (_, update) => update,
+    }),
+    executedTools: Annotation<any[]>({
+      default: () => [],
+      reducer: (curr, update) => [...curr, ...(update || [])],
+    }),
   });

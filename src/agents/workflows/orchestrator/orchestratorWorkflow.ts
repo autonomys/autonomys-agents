@@ -26,7 +26,11 @@ const handleConditionalEdge = async (state: OrchestratorStateType) => {
     return 'finishWorkflow';
   }
 
-  return 'tools';
+  if (state.toolCalls && state.toolCalls.length > 0) {
+    return 'toolExecution';
+  }
+
+  return 'messageSummary';
 };
 
 const createOrchestratorWorkflow = async (
@@ -37,10 +41,10 @@ const createOrchestratorWorkflow = async (
     .addNode('input', nodes.inputNode)
     .addNode('messageSummary', nodes.messageSummaryNode)
     .addNode('finishWorkflow', nodes.finishWorkflowNode)
-    .addNode('tools', nodes.toolNode)
+    .addNode('toolExecution', nodes.toolExecutionNode)
     .addEdge(START, 'input')
     .addConditionalEdges('input', handleConditionalEdge)
-    .addEdge('tools', 'messageSummary')
+    .addEdge('toolExecution', 'messageSummary')
     .addEdge('messageSummary', 'input')
     .addEdge('finishWorkflow', END);
 
@@ -55,8 +59,8 @@ export type OrchestratorRunner = Readonly<{
 }>;
 
 const defaultModelConfiguration: LLMConfiguration = {
-  provider: LLMProvider.ANTHROPIC,
-  model: 'claude-3-5-sonnet-latest',
+  provider: LLMProvider.OPENAI,
+  model: 'gpt-4o',
   temperature: 0.8,
 };
 
@@ -103,7 +107,7 @@ export const createOrchestratorRunner = async (
 
   const nodes = await createNodes(runnerOptions);
   const workflow = await createOrchestratorWorkflow(nodes, runnerOptions.pruningParameters);
-  logger.info('prompts', {
+  logger.debug('prompts', {
     inputPrompt: runnerOptions.prompts?.inputPrompt,
     messageSummaryPrompt: runnerOptions.prompts?.messageSummaryPrompt,
     finishWorkflowPrompt: runnerOptions.prompts?.finishWorkflowPrompt,

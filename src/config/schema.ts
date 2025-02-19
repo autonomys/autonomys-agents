@@ -14,6 +14,7 @@ const llmConfigSchema = z.object({
   LLAMA_API_URL: z.string(),
   DEEPSEEK_URL: z.string(),
   DEEPSEEK_API_KEY: z.string(),
+  GROQ_API_KEY: z.string(),
 });
 
 const autoDriveConfigSchema = z.object({

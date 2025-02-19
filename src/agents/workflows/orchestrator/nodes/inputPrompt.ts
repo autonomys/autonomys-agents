@@ -27,6 +27,8 @@ export const createInputPrompt = async (character: Character, customInstructions
 
   **DATE AND TIME**: If you need to know the date and time, use the get_current_time tool. THIS IS RELIABLE.
 
+  **ATTENTION**: If a task is completed, DO NOT repeat the same task again.
+
   **Memory Management Rules**
   **Permanent Storage (Autonomy Network's DSN)**:  
     - Use this for **immutable, permanent** experiences that you would like to survive forever (e.g., fine-tuning/RAG workflows).  
@@ -53,9 +55,10 @@ export const createInputPrompt = async (character: Character, customInstructions
     new SystemMessage(inputSystemPrompt),
     [
       'human',
-      `Based on the following messages, determine what actions should be taken.
+      `Based on the following messages, and executed tools, determine what actions should be taken.
 
       Messages: {messages}
+      Executed Tools: {executedTools}
       `,
     ],
   ]);
