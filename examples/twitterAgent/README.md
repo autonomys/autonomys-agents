@@ -4,9 +4,9 @@ This example demonstrates how to orchestrate an LLM-powered agent designed to si
 
 ## Overview
 
-- Sets up the orchestrator configuration including LLM model settings, prompts, tools (including the Twitter agent tool), and pruning parameters.
-- Defines an initial message that instructs the agent with social media management tasks (e.g., checking the timeline, liking tweets, replying to mentions, and posting new tweets).
-- Enters an infinite loop where the orchestrator runner executes the workflow, logs the results, updates the prompt based on the workflow output, and schedules subsequent iterations based on a computed or default delay.
+- Sets up the orchestrator configuration including LLM model settings, prompts, tools (including the Twitter agent tool).
+- Defines an initial message that instructs the agent to complete social media management tasks.
+- Enters an infinite loop where the orchestrator runner executes the workflow, logs the results, updates the prompt based on the agent direction, and schedules subsequent iterations based on a agent recommendation or default delay.
 
 ## Usage
 
