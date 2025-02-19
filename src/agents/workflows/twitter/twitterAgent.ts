@@ -62,7 +62,7 @@ export const createTwitterAgent = (
 
         const vectorStore = new VectorDB(namespace);
         const twitterTools = createAllTwitterTools(twitterApi, postTweets);
-        const prompts = await createTwitterPrompts(character);
+        const prompts = await createTwitterPrompts(character, twitterApi.username);
         const runner = await getOrchestratorRunner(character, {
           modelConfigurations,
           tools: [...twitterTools, ...tools],
