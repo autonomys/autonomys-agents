@@ -20,10 +20,10 @@ const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
   //Twitter agent config
   const { USERNAME, PASSWORD, COOKIES_PATH } = config.twitterConfig;
   const twitterApi = await createTwitterApi(USERNAME, PASSWORD, COOKIES_PATH);
-  const webSearchTool = createWebSearchTool(config.SERPAPI_API_KEY || '');
+  const webSearchTool = config.SERPAPI_API_KEY ? [createWebSearchTool(config.SERPAPI_API_KEY)] : [];
   const autoDriveUploadEnabled = config.autoDriveConfig.AUTO_DRIVE_UPLOAD;
-  const twitterAgentTool = createTwitterAgent(twitterApi, character, {
-    tools: [webSearchTool],
+  const twitterAgent = createTwitterAgent(twitterApi, character, {
+    tools: [...webSearchTool],
     postTweets: config.twitterConfig.POST_TWEETS,
     autoDriveUploadEnabled,
   });
@@ -49,7 +49,7 @@ const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
   };
   return {
     modelConfigurations,
-    tools: [twitterAgentTool, webSearchTool],
+    tools: [twitterAgent, ...webSearchTool],
     prompts,
     autoDriveUploadEnabled,
   };
@@ -68,16 +68,7 @@ export const orchestratorRunner = (() => {
 
 const main = async () => {
   const runner = await orchestratorRunner();
-  const initialMessage = `As a social media manager, you are expected to interact with twitter periodically in order to maintain social engagement. Save any interesting experiences from your interactions your permanent storage. 
-
-  EXAMPLES:
-  - Check your timeline and ENGAGE IN INTERESTING CONVERSATIONS.
-  - DO NOT NEGLECT CHECKING MENTIONS AND ENGAGING IN CONVERSATIONS.
-  - Post a new tweet.
-  - Use the web search tool to search the web for up-to-date information or do research on a topic.
-
-  DO NOT NEGLECT ANY OF THE ABOVE EXAMPLES PLEASE
-`;
+  const initialMessage = `Check your timeline, engage with posts and find an interesting topic to tweet about.`;
   try {
     await validateLocalHash();
 
@@ -86,8 +77,7 @@ const main = async () => {
       const result = await runner.runWorkflow({ messages: [new HumanMessage(message)] });
 
       message = `${result.summary}
-      Overarching instructions: ${initialMessage}
-      ${result.nextWorkflowPrompt ?? message}`;
+      ${result.nextWorkflowPrompt}`;
 
       logger.info('Workflow execution result:', { result });
 
