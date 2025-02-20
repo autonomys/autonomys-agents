@@ -2,6 +2,7 @@ import { END, MemorySaver, START, StateGraph } from '@langchain/langgraph';
 import { createLogger } from '../../../utils/logger.js';
 import { createNodes } from './nodes.js';
 import {
+  OrchestratorConfig,
   OrchestratorInput,
   OrchestratorRunnerOptions,
   OrchestratorStateType,
@@ -74,40 +75,39 @@ const defaultOptions = {
   autoDriveUploadEnabled: false,
 };
 
-const createOrchestratorRunnerOptions = async (
+const createOrchestratorRunnerConfig = async (
   character: Character,
   options?: OrchestratorRunnerOptions,
-) => {
+): Promise<OrchestratorConfig> => {
   const mergedOptions = { ...defaultOptions, ...options };
 
-  const vectorStore = options?.vectorStore || new VectorDB(mergedOptions.namespace);
+  const modelConfigurations = {
+    ...defaultOptions.modelConfigurations,
+    ...options?.modelConfigurations,
+  };
+  const vectorStore = options?.vectorStore || new VectorDB(defaultOptions.namespace);
   const tools = [
     ...(options?.tools || []),
     ...createDefaultOrchestratorTools(vectorStore, mergedOptions.autoDriveUploadEnabled),
   ];
+  const prompts = options?.prompts || (await createPrompts(character));
   return {
     ...mergedOptions,
     vectorStore,
     tools,
-    prompts: options?.prompts || (await createPrompts(character)),
+    modelConfigurations,
+    prompts,
   };
 };
-
-export type OrchestratorConfig = Awaited<ReturnType<typeof createOrchestratorRunnerOptions>>;
 
 export const createOrchestratorRunner = async (
   character: Character,
   options?: OrchestratorRunnerOptions,
 ): Promise<OrchestratorRunner> => {
-  const runnerOptions = await createOrchestratorRunnerOptions(character, options);
+  const runnerOptions = await createOrchestratorRunnerConfig(character, options);
 
   const nodes = await createNodes(runnerOptions);
   const workflow = await createOrchestratorWorkflow(nodes, runnerOptions.pruningParameters);
-  logger.info('prompts', {
-    inputPrompt: runnerOptions.prompts?.inputPrompt,
-    messageSummaryPrompt: runnerOptions.prompts?.messageSummaryPrompt,
-    finishWorkflowPrompt: runnerOptions.prompts?.finishWorkflowPrompt,
-  });
 
   const memoryStore = new MemorySaver();
   const app = workflow.compile({ checkpointer: memoryStore });

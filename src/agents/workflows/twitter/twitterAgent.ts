@@ -7,25 +7,20 @@ import { TwitterApi } from '../../../services/twitter/types.js';
 import { HumanMessage } from '@langchain/core/messages';
 import { LLMProvider } from '../../../services/llm/types.js';
 import { VectorDB } from '../../../services/vectorDb/VectorDB.js';
-import { ModelConfigurations, Tools } from '../orchestrator/types.js';
+import { LLMConfiguration } from '../../../services/llm/types.js';
 import { createAllTwitterTools } from '../../tools/twitter/index.js';
 import { Character } from '../../../config/characters.js';
+import { TwitterAgentConfig, TwitterAgentOptions } from './types.js';
 
 const logger = createLogger('twitter-workflow');
 
-export type TwitterAgentOptions = {
-  tools?: Tools;
-  modelConfig?: ModelConfigurations;
-  maxThreadDepth?: number;
-  postTweets?: boolean;
-  autoDriveUploadEnabled?: boolean;
-};
-const defaultModelConfig = {
+const defaultModelConfig: LLMConfiguration = {
   provider: LLMProvider.ANTHROPIC,
   model: 'claude-3-5-sonnet-latest',
   temperature: 1,
 };
-const defaultOptions = {
+
+const defaultOptions: TwitterAgentConfig = {
   tools: [],
   modelConfigurations: {
     inputModelConfig: defaultModelConfig,
@@ -37,8 +32,12 @@ const defaultOptions = {
   autoDriveUploadEnabled: false,
 };
 
-const createTwitterAgentConfig = (options?: TwitterAgentOptions) => {
-  return { ...defaultOptions, ...options };
+const createTwitterAgentConfig = (options?: TwitterAgentOptions): TwitterAgentConfig => {
+  const modelConfigurations = {
+    ...defaultOptions.modelConfigurations,
+    ...options?.modelConfigurations,
+  };
+  return { ...defaultOptions, ...options, modelConfigurations };
 };
 
 export const createTwitterAgent = (

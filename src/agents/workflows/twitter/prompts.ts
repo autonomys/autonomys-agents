@@ -16,6 +16,7 @@ export const createTwitterPrompts = async (character: Character, username: strin
     - If you find a tweet that you think is interesting, you can fetch the tweet and use it for context.
     - **DO NOT BE REPETITIVE**, use different phrases and words with each post.
     - Banned words: ${character.communicationRules.wordsToAvoid.join(', ')}
+    - General communication rules: ${character.communicationRules.rules.join(', ')}
     `;
 
   const customMessageSummaryInstructions = `

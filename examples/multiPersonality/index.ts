@@ -12,10 +12,21 @@ import { createTwitterApi } from '../../src/services/twitter/client.js';
 import { HumanMessage } from '@langchain/core/messages';
 import { createWebSearchTool } from '../../src/agents/tools/webSearch/index.js';
 import { OrchestratorRunnerOptions } from '../../src/agents/workflows/orchestrator/types.js';
-
+import { Character } from '../../src/config/characters.js';
 const logger = createLogger('autonomous-twitter-agent');
 
-const character = config.characterConfig;
+const twitterCharacter = config.characterConfig;
+const orchestratorCharacter: Character = {
+  name: 'Responsible Agent',
+  characterPath: twitterCharacter.characterPath,
+  goal: 'Schedule and execute workflows, making sure to keep any sub-agents on track',
+  personality: ['Responsible', 'Persuasive', 'Organized'],
+  expertise: ['Workflow scheduling', 'Task prioritization', 'Error handling'],
+  communicationRules: {
+    rules: [],
+    wordsToAvoid: [],
+  },
+};
 const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
   //shared twitter agent and orchestrator config
   const webSearchTool = config.SERPAPI_API_KEY ? [createWebSearchTool(config.SERPAPI_API_KEY)] : [];
@@ -25,15 +36,15 @@ const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
   const { USERNAME, PASSWORD, COOKIES_PATH } = config.twitterConfig;
   const twitterApi = await createTwitterApi(USERNAME, PASSWORD, COOKIES_PATH);
   //Create twitter agent as a tool to be given to the orchestrator
-  const twitterAgent = createTwitterAgent(twitterApi, character, {
+  const twitterAgent = createTwitterAgent(twitterApi, twitterCharacter, {
     tools: [...webSearchTool],
     postTweets: config.twitterConfig.POST_TWEETS,
     autoDriveUploadEnabled,
   });
 
   //Orchestrator config
-  //use default orchestrator prompts with character config from CLI  selfSchedule enabled
-  const prompts = await createPrompts(character, { selfSchedule: true });
+  //use default orchestrator prompts with a "responsible" character config specific for the orchestrator
+  const prompts = await createPrompts(orchestratorCharacter, { selfSchedule: true });
 
   //override default model configurations for summary and finish workflow nodes
   const modelConfigurations = {
@@ -61,7 +72,7 @@ export const orchestratorRunner = (() => {
   let runnerPromise: Promise<OrchestratorRunner> | undefined = undefined;
   return async () => {
     if (!runnerPromise) {
-      runnerPromise = createOrchestratorRunner(character, orchestrationConfig);
+      runnerPromise = createOrchestratorRunner(twitterCharacter, orchestrationConfig);
     }
     return runnerPromise;
   };
