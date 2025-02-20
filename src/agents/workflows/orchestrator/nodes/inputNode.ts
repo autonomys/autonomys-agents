@@ -47,9 +47,12 @@ export const createInputNode = ({
     });
     logger.debug('Executed Tools:', { executedTools });
 
+    const availableTools = tools.map(tool => ({ name: tool.name }));
+
     const formattedPrompt = await inputPrompt.format({
       messages: messages.map(message => message.content),
       executedTools: executedTools?.map(tool => tool),
+      availableTools: availableTools,
     });
 
     logger.info('Formatted Prompt:', { formattedPrompt });
@@ -60,6 +63,7 @@ export const createInputNode = ({
 
     const toolCalls = result.tool_calls;
 
+    logger.debug('Tool Calls:', { toolCalls });
     const usage = result.additional_kwargs?.usage as
       | { input_tokens: number; output_tokens: number }
       | undefined;
@@ -69,7 +73,10 @@ export const createInputNode = ({
       outputTokens: usage?.output_tokens,
     });
 
-    if (!JSON.stringify(result.content).includes('experience_vector_db_search')) {
+    if (
+      !JSON.stringify(result.content).includes('experience_vector_db_search') &&
+      result.content != ''
+    ) {
       const _insertData = await vectorStore.insert(JSON.stringify(result.content));
     }
 
