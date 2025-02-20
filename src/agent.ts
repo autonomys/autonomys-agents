@@ -76,7 +76,23 @@ const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
 
   //Orchestrator config
   const prompts = await createPrompts(character);
-
+  const modelConfigurations = {
+    inputModelConfig: {
+      provider: 'google',
+      model: 'gemini-2.0-flash',
+      temperature: 0.8,
+    },
+    messageSummaryModelConfig: {
+      provider: 'openai',
+      model: 'gpt-4o',
+      temperature: 0.8,
+    },
+    finishWorkflowModelConfig: {
+      provider: 'openai',
+      model: 'gpt-4o-mini',
+      temperature: 0.8,
+    },
+  };
   return {
     modelConfigurations: config.orchestratorConfig.model_configurations,
     tools: [
