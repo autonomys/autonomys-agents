@@ -23,9 +23,10 @@ export const createFetchTimelineTool = (twitterApi: TwitterApi) =>
       numTimelineTweets: number;
     }) => {
       try {
-        const tweets = (await twitterApi.getMyTimeline(numTimelineTweets, processedIds)).map(t =>
-          tweetToMinimalTweet(t),
-        );
+        const myReplies = await twitterApi.getMyRepliedToIds();
+        const tweets = (
+          await twitterApi.getMyTimeline(numTimelineTweets, [...processedIds, ...myReplies])
+        ).map(t => tweetToMinimalTweet(t));
 
         logger.info('Timeline tweets:', {
           timelineTweets: tweets.length,
@@ -55,8 +56,13 @@ export const createFetchFollowingTimelineTool = (twitterApi: TwitterApi) =>
       numFollowingTimelineTweets: number;
       processedIds: string[];
     }) => {
+      const myReplies = await twitterApi.getMyRepliedToIds();
+      logger.info('myReplies', { myReplies });
       const tweets = (
-        await twitterApi.getFollowingTimeline(numFollowingTimelineTweets, processedIds)
+        await twitterApi.getFollowingTimeline(numFollowingTimelineTweets, [
+          ...processedIds,
+          ...myReplies,
+        ])
       ).map(t => tweetToMinimalTweet(t));
       return { tweets };
     },
@@ -195,6 +201,17 @@ export const createPostTweetTool = (twitterApi: TwitterApi, postTweets: boolean 
     func: async ({ text, inReplyTo }: { text: string; inReplyTo?: string }) => {
       try {
         if (postTweets) {
+          if (inReplyTo) {
+            const myReplies = await twitterApi.getMyRepliedToIds();
+            const hasRepliedTo = myReplies.includes(inReplyTo);
+            if (hasRepliedTo) {
+              logger.info('Already replied to this tweet', { inReplyTo });
+              return {
+                postedTweet: false,
+                message: 'Already replied to this tweet',
+              };
+            }
+          }
           const postedTweetId = await twitterApi.sendTweet(text, inReplyTo);
           logger.info('Tweet posted successfully', {
             postedTweet: { postedTweetId, text },
