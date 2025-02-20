@@ -54,8 +54,8 @@ export class LLMFactory {
       case LLMProvider.GOOGLE:
         return new ChatGoogleGenerativeAI({
           apiKey: appConfig.llmConfig.GEMINI_API_KEY,
-          model: config.model,
-          temperature: config.temperature,
+          model: model,
+          temperature: temperature,
         });
       default:
         throw new Error(`Unsupported LLM provider: ${provider}`);

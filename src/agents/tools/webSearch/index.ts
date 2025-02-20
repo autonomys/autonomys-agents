@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { z } from 'zod';
 import { DynamicStructuredTool } from '@langchain/core/tools';
 import axios from 'axios';
 import { load } from 'cheerio';
+import { z } from 'zod';
 import { createLogger } from '../../../utils/logger.js';
 export const logger = createLogger('web-search-tools');
 
@@ -14,14 +14,13 @@ export const createWebSearchTool = (apiKey: string, engines: readonly string[] =
     description: 'Perform a web search for up-to-date information or to do research on a topic.',
     schema: z.object({
       query: z.string().describe('The search query string.'),
-      num: z.string().default('10'),
+      num: z.string(),
       engine: z
         .string()
-        .default('google')
         .describe(
           `Search engine to use - supported: ${engines.join(', ')}, or custom engine string`,
         ),
-      timeout: z.number().default(10000),
+      timeout: z.number(),
     }),
     func: async ({
       query,

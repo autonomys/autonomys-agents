@@ -28,8 +28,8 @@ const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
   const prompts = await createPrompts(character, { selfSchedule: true });
   const modelConfigurations = {
     inputModelConfig: {
-      provider: LLMProvider.ANTHROPIC,
-      model: 'claude-3-5-sonnet-latest',
+      provider: LLMProvider.GOOGLE,
+      model: 'gemini-1.5-flash',
       temperature: 0.8,
     },
     messageSummaryModelConfig: {
