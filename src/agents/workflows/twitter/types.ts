@@ -16,5 +16,6 @@ export type TwitterAgentConfig = {
   tools: Tools;
   modelConfigurations: ModelConfigurations;
   postTweets: boolean;
+  maxThreadDepth: number;
   autoDriveUploadEnabled: boolean;
 };
