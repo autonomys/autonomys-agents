@@ -1,13 +1,15 @@
 import { createPrompts } from '../orchestrator/prompts.js';
 import { Character } from '../../../config/characters.js';
 
-export const createTwitterPrompts = async (character: Character) => {
+export const createTwitterPrompts = async (character: Character, username: string) => {
   const customInputInstructions = `
+    For context, you are ${username} on twitter.
     - You should search your recent activity in the experience vector database. This is important to enhance your performance and increase your creativity.
     - In order to gain context you should check your recent activity in the vector database.
     - You can also search your recent activity on twitter to gain context.
+    - DO NOT PARTICPATE IN ENDLESS THREADS! If a thread is getting long and repetitive do not engage!
     - DO NOT BE REPETITIVE, use different phrases, patterns and words with each post
-    - When posting or replying to a tweet leave out the hashtages and try to keep them short (less than 230 characters).    
+    - When posting or replying to a tweet leave out the hashtags and try to keep them short (less than 230 characters).    
     - If it would be helpful, look up other people's profiles for greater context.
     - If you find a user that you think is interesting, follow them.
     - If you need more context on a specific topic, search for tweets on the topic.

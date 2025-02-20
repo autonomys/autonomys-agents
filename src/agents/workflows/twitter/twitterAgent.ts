@@ -16,6 +16,7 @@ const logger = createLogger('twitter-workflow');
 export type TwitterAgentOptions = {
   tools?: Tools;
   modelConfig?: ModelConfigurations;
+  maxThreadDepth?: number;
   postTweets?: boolean;
   autoDriveUploadEnabled?: boolean;
 };
@@ -31,6 +32,7 @@ const defaultOptions = {
     messageSummaryModelConfig: defaultModelConfig,
     finishWorkflowModelConfig: defaultModelConfig,
   },
+  maxThreadDepth: 5,
   postTweets: false,
   autoDriveUploadEnabled: false,
 };
@@ -54,15 +56,15 @@ export const createTwitterAgent = (
     schema: z.object({ instructions: z.string().describe('Instructions for the workflow') }),
     func: async ({ instructions }: { instructions: string }) => {
       try {
-        const { tools, modelConfigurations, postTweets, autoDriveUploadEnabled } =
+        const { tools, modelConfigurations, postTweets, maxThreadDepth, autoDriveUploadEnabled } =
           createTwitterAgentConfig(options);
 
         const messages = [new HumanMessage(instructions)];
         const namespace = 'twitter';
 
         const vectorStore = new VectorDB(namespace);
-        const twitterTools = createAllTwitterTools(twitterApi, postTweets);
-        const prompts = await createTwitterPrompts(character);
+        const twitterTools = createAllTwitterTools(twitterApi, maxThreadDepth, postTweets);
+        const prompts = await createTwitterPrompts(character, twitterApi.username);
         const runner = await getOrchestratorRunner(character, {
           modelConfigurations,
           tools: [...twitterTools, ...tools],
