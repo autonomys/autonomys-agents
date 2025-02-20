@@ -10,7 +10,7 @@ import { VectorDB } from '../../../services/vectorDb/VectorDB.js';
 import { LLMConfiguration } from '../../../services/llm/types.js';
 import { createAllTwitterTools } from '../../tools/twitter/index.js';
 import { Character } from '../../../config/characters.js';
-import { TwitterAgentOptions, TwitterAgentConfig } from './types.js';
+import { TwitterAgentConfig, TwitterAgentOptions } from './types.js';
 
 const logger = createLogger('twitter-workflow');
 
