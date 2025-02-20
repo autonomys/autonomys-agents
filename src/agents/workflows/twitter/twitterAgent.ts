@@ -7,30 +7,12 @@ import { TwitterApi } from '../../../services/twitter/types.js';
 import { HumanMessage } from '@langchain/core/messages';
 import { LLMProvider } from '../../../services/llm/types.js';
 import { VectorDB } from '../../../services/vectorDb/VectorDB.js';
-import { ModelConfigurations, Tools } from '../orchestrator/types.js';
 import { LLMConfiguration } from '../../../services/llm/types.js';
 import { createAllTwitterTools } from '../../tools/twitter/index.js';
 import { Character } from '../../../config/characters.js';
+import { TwitterAgentOptions, TwitterAgentConfig } from './types.js';
 
 const logger = createLogger('twitter-workflow');
-
-export type TwitterAgentOptions = {
-  tools?: Tools;
-  modelConfigurations?: {
-    inputModelConfig?: LLMConfiguration;
-    messageSummaryModelConfig?: LLMConfiguration;
-    finishWorkflowModelConfig?: LLMConfiguration;
-  };
-  postTweets?: boolean;
-  autoDriveUploadEnabled?: boolean;
-};
-
-type TwitterAgentConfig = {
-  tools: Tools;
-  modelConfigurations: ModelConfigurations;
-  postTweets: boolean;
-  autoDriveUploadEnabled: boolean;
-};
 
 const defaultModelConfig: LLMConfiguration = {
   provider: LLMProvider.ANTHROPIC,
