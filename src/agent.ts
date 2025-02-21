@@ -1,14 +1,14 @@
+import { createWebSearchTool } from './agents/tools/webSearch/index.js';
 import {
   createOrchestratorRunner,
   OrchestratorRunner,
 } from './agents/workflows/orchestrator/orchestratorWorkflow.js';
+import { createPrompts } from './agents/workflows/orchestrator/prompts.js';
+import { OrchestratorRunnerOptions } from './agents/workflows/orchestrator/types.js';
 import { createTwitterAgent } from './agents/workflows/twitter/twitterAgent.js';
 import { config } from './config/index.js';
-import { createTwitterApi } from './services/twitter/client.js';
-import { createPrompts } from './agents/workflows/orchestrator/prompts.js';
 import { LLMProvider } from './services/llm/types.js';
-import { OrchestratorRunnerOptions } from './agents/workflows/orchestrator/types.js';
-import { createWebSearchTool } from './agents/tools/webSearch/index.js';
+import { createTwitterApi } from './services/twitter/client.js';
 
 const character = config.characterConfig;
 const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
@@ -22,6 +22,9 @@ const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
     tools: [webSearchTool],
     postTweets: config.twitterConfig.POST_TWEETS,
     autoDriveUploadEnabled,
+    monitoring: {
+      enabled: true,
+    },
   });
 
   //Orchestrator config
@@ -48,6 +51,9 @@ const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
     tools: [twitterAgentTool, webSearchTool],
     prompts,
     autoDriveUploadEnabled,
+    monitoring: {
+      enabled: true,
+    },
   };
 };
 

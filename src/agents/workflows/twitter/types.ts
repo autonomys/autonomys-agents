@@ -1,5 +1,10 @@
 import { LLMConfiguration } from '../../../services/llm/types.js';
-import { ModelConfigurations, Tools } from '../orchestrator/types.js';
+import {
+  ModelConfigurations,
+  MonitoringConfig,
+  MonitoringOptions,
+  Tools,
+} from '../orchestrator/types.js';
 
 export type TwitterAgentOptions = {
   tools?: Tools;
@@ -10,6 +15,7 @@ export type TwitterAgentOptions = {
   };
   postTweets?: boolean;
   autoDriveUploadEnabled?: boolean;
+  monitoring?: MonitoringOptions;
 };
 
 export type TwitterAgentConfig = {
@@ -18,4 +24,5 @@ export type TwitterAgentConfig = {
   postTweets: boolean;
   maxThreadDepth: number;
   autoDriveUploadEnabled: boolean;
+  monitoring: MonitoringConfig;
 };
