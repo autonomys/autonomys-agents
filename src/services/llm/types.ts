@@ -1,10 +1,4 @@
-export enum LLMProvider {
-  OPENAI = 'openai',
-  ANTHROPIC = 'anthropic',
-  OLLAMA = 'ollama',
-  DEEPSEEK = 'deepseek',
-  GROQ = 'groq',
-}
+export type LLMProvider = 'openai' | 'anthropic' | 'ollama' | 'deepseek' | 'groq';
 
 export type LLMConfiguration = {
   provider: LLMProvider;

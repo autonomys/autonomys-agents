@@ -2,7 +2,6 @@ import { HumanMessage } from '@langchain/core/messages';
 import { DynamicStructuredTool } from '@langchain/core/tools';
 import { z } from 'zod';
 import { Character } from '../../../config/characters.js';
-import { LLMProvider } from '../../../services/llm/types.js';
 import { TwitterApi } from '../../../services/twitter/types.js';
 import { VectorDB } from '../../../services/vectorDb/VectorDB.js';
 import { createLogger } from '../../../utils/logger.js';
@@ -11,10 +10,11 @@ import { getOrchestratorRunner } from '../orchestrator/orchestratorWorkflow.js';
 import { cleanTwitterMessageData } from './cleanMessages.js';
 import { createTwitterPrompts } from './prompts.js';
 import { TwitterAgentConfig, TwitterAgentOptions } from './types.js';
+import { LLMConfiguration } from '../../../services/llm/types.js';
 const logger = createLogger('twitter-workflow');
 
-const defaultModelConfig = {
-  provider: LLMProvider.ANTHROPIC,
+const defaultModelConfig: LLMConfiguration = {
+  provider: 'anthropic',
   model: 'claude-3-5-sonnet-latest',
   temperature: 0.8,
 };

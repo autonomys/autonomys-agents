@@ -7,7 +7,6 @@ import { createPrompts } from './agents/workflows/orchestrator/prompts.js';
 import { OrchestratorRunnerOptions } from './agents/workflows/orchestrator/types.js';
 import { createTwitterAgent } from './agents/workflows/twitter/twitterAgent.js';
 import { config } from './config/index.js';
-import { LLMProvider } from './services/llm/types.js';
 import { createTwitterApi } from './services/twitter/client.js';
 
 const character = config.characterConfig;
@@ -34,17 +33,17 @@ const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
   const prompts = await createPrompts(character, { selfSchedule: true });
   const modelConfigurations = {
     inputModelConfig: {
-      provider: LLMProvider.ANTHROPIC,
+      provider: 'anthropic' as const,
       model: 'claude-3-5-sonnet-latest',
       temperature: 0.8,
     },
     messageSummaryModelConfig: {
-      provider: LLMProvider.OPENAI,
+      provider: 'openai' as const,
       model: 'gpt-4o',
       temperature: 0.8,
     },
     finishWorkflowModelConfig: {
-      provider: LLMProvider.OPENAI,
+      provider: 'openai' as const,
       model: 'gpt-4o-mini',
       temperature: 0.8,
     },

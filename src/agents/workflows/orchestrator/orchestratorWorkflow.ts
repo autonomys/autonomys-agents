@@ -2,7 +2,7 @@ import { BaseMessage } from '@langchain/core/messages';
 import { END, MemorySaver, START, StateGraph } from '@langchain/langgraph';
 import { uploadToDsn } from '../../../blockchain/autoDrive/autoDriveUpload.js';
 import { Character } from '../../../config/characters.js';
-import { LLMConfiguration, LLMProvider } from '../../../services/llm/types.js';
+import { LLMConfiguration } from '../../../services/llm/types.js';
 import { VectorDB } from '../../../services/vectorDb/VectorDB.js';
 import { createLogger } from '../../../utils/logger.js';
 import { cleanMessageData } from './cleanMessages.js';
@@ -62,7 +62,7 @@ export type OrchestratorRunner = Readonly<{
 }>;
 
 const defaultModelConfiguration: LLMConfiguration = {
-  provider: LLMProvider.ANTHROPIC,
+  provider: 'anthropic',
   model: 'claude-3-5-sonnet-latest',
   temperature: 0.8,
 };

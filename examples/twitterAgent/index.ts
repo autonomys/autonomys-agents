@@ -7,11 +7,13 @@ import {
 } from '../../src/agents/workflows/orchestrator/orchestratorWorkflow.js';
 import { createTwitterAgent } from '../../src/agents/workflows/twitter/twitterAgent.js';
 import { createPrompts } from '../../src/agents/workflows/orchestrator/prompts.js';
-import { LLMProvider } from '../../src/services/llm/types.js';
 import { createTwitterApi } from '../../src/services/twitter/client.js';
 import { HumanMessage } from '@langchain/core/messages';
 import { createWebSearchTool } from '../../src/agents/tools/webSearch/index.js';
-import { OrchestratorRunnerOptions } from '../../src/agents/workflows/orchestrator/types.js';
+import {
+  ModelConfigurations,
+  OrchestratorRunnerOptions,
+} from '../../src/agents/workflows/orchestrator/types.js';
 
 const logger = createLogger('autonomous-twitter-agent');
 
@@ -41,12 +43,12 @@ const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
   //override default model configurations for summary and finish workflow nodes
   const modelConfigurations = {
     messageSummaryModelConfig: {
-      provider: LLMProvider.OPENAI,
+      provider: 'openai' as const,
       model: 'gpt-4o',
       temperature: 0.8,
     },
     finishWorkflowModelConfig: {
-      provider: LLMProvider.OPENAI,
+      provider: 'openai' as const,
       model: 'gpt-4o-mini',
       temperature: 0.8,
     },
