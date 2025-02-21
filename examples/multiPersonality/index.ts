@@ -31,6 +31,7 @@ const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
   //shared twitter agent and orchestrator config
   const webSearchTool = config.SERPAPI_API_KEY ? [createWebSearchTool(config.SERPAPI_API_KEY)] : [];
   const autoDriveUploadEnabled = config.autoDriveConfig.AUTO_DRIVE_UPLOAD;
+  const monitoringEnabled = config.autoDriveConfig.AUTO_DRIVE_MONITORING;
 
   //Twitter agent config
   const { USERNAME, PASSWORD, COOKIES_PATH } = config.twitterConfig;
@@ -40,6 +41,9 @@ const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
     tools: [...webSearchTool],
     postTweets: config.twitterConfig.POST_TWEETS,
     autoDriveUploadEnabled,
+    monitoring: {
+      enabled: monitoringEnabled,
+    },
   });
 
   //Orchestrator config
@@ -64,6 +68,9 @@ const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
     tools: [twitterAgent, ...webSearchTool],
     prompts,
     autoDriveUploadEnabled,
+    monitoring: {
+      enabled: monitoringEnabled,
+    },
   };
 };
 
