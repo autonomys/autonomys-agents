@@ -28,36 +28,42 @@ import { Mutex } from 'async-mutex';
     });
 
     // Handle submission with Enter
-    ui.inputBox.key(['return'], async () => {
-      const value = ui.inputBox.getValue();
-      if (value.trim()) {
-        const release = await state.mutex.acquire();
-        try {
-          // If a workflow is already processing or there are tasks in the queue, add to scheduled tasks
-          if (state.isProcessing || state.scheduledTasks.length > 0) {
-            const nextRunTime = new Date();
-            state.scheduledTasks.push({
-              time: nextRunTime,
-              description: value,
-            });
-            const formattedTime = nextRunTime.toISOString();
-            ui.scheduledTasksBox.addItem(`${formattedTime} - ${value}`);
-            ui.scheduledTasksBox.scrollTo(Number((ui.scheduledTasksBox as any).ritems.length - 1));
-            ui.statusBox.setContent('System busy - Task added to queue');
-            ui.outputLog.log('{yellow-fg}Task queued for later execution{/yellow-fg}');
-          } else {
-            state.value = value;
-            ui.statusBox.setContent('Current Message: ' + value);
-            ui.outputLog.log('{cyan-fg}Starting new task...{/cyan-fg}');
+    const setupEnterHandler = () => {
+      ui.inputBox.unkey('return', () => {});
+      ui.inputBox.key('return', async () => {
+        const value = ui.inputBox.getValue();
+        if (value.trim()) {
+          const release = await state.mutex.acquire();
+          try {
+            // If a workflow is already processing or there are tasks in the queue, add to scheduled tasks
+            if (state.isProcessing || state.scheduledTasks.length > 0) {
+              const nextRunTime = new Date();
+              state.scheduledTasks.push({
+                time: nextRunTime,
+                description: value,
+              });
+              const formattedTime = nextRunTime.toISOString();
+              ui.scheduledTasksBox.addItem(`${formattedTime} - ${value}`);
+              ui.scheduledTasksBox.scrollTo(Number((ui.scheduledTasksBox as any).ritems.length - 1));
+              ui.statusBox.setContent('System busy - Task added to queue');
+              ui.outputLog.log('{yellow-fg}Task queued for later execution{/yellow-fg}');
+            } else {
+              state.value = value;
+              ui.statusBox.setContent('Current Message: ' + value);
+              ui.outputLog.log('{cyan-fg}Starting new task...{/cyan-fg}');
+            }
+          } finally {
+            release();
           }
-        } finally {
-          release();
+          ui.inputBox.clearValue();
+          ui.inputBox.focus();
+          ui.screen.render();
         }
-        ui.inputBox.clearValue();
-        ui.inputBox.focus();
-        ui.screen.render();
-      }
-    });
+      });
+    };
+
+    // Initial setup of Enter handler
+    setupEnterHandler();
 
     // Run the workflow loop in parallel
     (async () => {
@@ -84,7 +90,6 @@ import { Mutex } from 'async-mutex';
             ui.outputLog.log('\n{red-fg}Error:{/red-fg} ' + error.message);
             ui.statusBox.setContent('Error occurred. Enter new message to retry.');
             ui.screen.render();
-            ui.inputBox.focus();
           } finally {
             // Clear processing flag after workflow completes
             const release = await state.mutex.acquire();
@@ -93,6 +98,8 @@ import { Mutex } from 'async-mutex';
             } finally {
               release();
             }
+            ui.inputBox.focus();
+            ui.screen.render();
           }
         }
 
@@ -141,13 +148,22 @@ import { Mutex } from 'async-mutex';
                 ui.outputLog.log('{cyan-fg}Starting scheduled task...{/cyan-fg}');
                 ui.statusBox.setContent(`Executing scheduled task: ${task.description}`);
                 ui.screen.render();
+
                 await runWorkflow(task.description, runner, ui, state);
               } catch (error: any) {
                 ui.outputLog.log('\n{red-fg}Scheduled task error:{/red-fg} ' + error.message);
                 ui.statusBox.setContent('Error occurred in scheduled task. Check log for details.');
                 ui.screen.render();
               } finally {
-                state.isProcessing = false;
+                // Match the mutex handling from the first task path
+                const release = await state.mutex.acquire();
+                try {
+                  state.isProcessing = false;
+                } finally {
+                  release();
+                }
+                ui.inputBox.focus();
+                ui.screen.render();
               }
             }
           }

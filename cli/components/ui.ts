@@ -1,273 +1,59 @@
 import blessed from 'blessed';
 import { UIComponents } from '../types/types.js';
-import { loadCharacter } from '../../src/config/characters.js';
+import { createHeaderArea } from './HeaderArea.js';
+import { createOutputLog } from './OutputLog.js';
+import { createBottomArea } from './body/index.js';
+import { createSearchBox } from './SearchBox.js';
 
-export const createLogoBox = () => {
-  const logoArt = `{cyan-fg}    _         _                                        
-   / \\  _   _| |_ ___  _ __   ___  _ __ ___  _   _ ___ 
-  / _ \\| | | | __/ _ \\| '_ \\ / _ \\| '_ \` _ \\| | | / __|
- / ___ \\ |_| | || (_) | | | | (_) | | | | | | |_| \\__ \\
-/_/   \\_\\__,_|\\__\\___/|_| |_|\\___/|_| |_| |_|\\__, |___/
-                                             |___/     {/cyan-fg}`;
-
-  return blessed.box({
-    top: 0,
-    left: 'center',
-    width: '60%',
-    height: 10,
-    content: logoArt,
-    tags: true,
-    align: 'center',
-    valign: 'middle',
-    wrap: false,
-    border: 'line',
-    style: {
-      fg: 'cyan',
-      transparent: true,
-      border: { fg: 'cyan' },
-    },
-  });
-};
-
-export const createClockBox = () => {
-  return blessed.box({
-    top: 0,
-    right: 0,
-    width: '20%',
-    height: 5,
-    label: ' Date & Time ',
-    content: '',
-    padding: {
-      top: 0,
-      right: 1,
-      bottom: 0,
-      left: 1,
-    },
-    border: { type: 'line' },
-    style: {
-      border: { fg: 'cyan' },
-      fg: 'white',
-      bg: 'blue',
-      bold: true,
-    },
-    align: 'center',
-    valign: 'middle',
-    tags: true,
-  });
-};
-
-export const createOutputLog = () => {
-  return blessed.log({
-    top: 10,
-    left: '0%',
-    width: '100%',
-    height: '75%',
-    label: 'Workflow Output',
-    border: { type: 'line' },
-    style: {
-      border: { fg: 'cyan' },
-    },
-    scrollable: true,
-    alwaysScroll: true,
-    scrollbar: {
-      ch: ' ',
-      track: {
-        bg: 'blue',
-      },
-      style: { inverse: true },
-    },
-    keys: true,
-    vi: true,
-    mouse: true,
-    tags: true,
-  });
-};
-
-export const createHeaderArea = () => {
-  return blessed.box({
-    top: 0,
-    left: 0,
-    width: '100%',
-    height: 6,
-    children: [createLogoBox(), createCharacterBox(process.argv[2] || 'Unknown'), createClockBox()],
-  });
-};
-
-export const createCharacterBox = (characterDirName: string) => {
-  let displayName = characterDirName;
-  try {
-    const character = loadCharacter(characterDirName);
-    displayName = character.name;
-  } catch (error) {
-    console.error('Failed to load character name:', error);
-  }
-
-  return blessed.box({
-    top: 0,
-    left: 0,
-    width: '20%',
-    height: 5,
-    label: ' Character ',
-    content: `${displayName}`,
-    padding: {
-      top: 0,
-      right: 1,
-      bottom: 0,
-      left: 1,
-    },
-    border: { type: 'line' },
-    style: {
-      border: { fg: 'cyan' },
-      fg: 'white',
-      bg: 'red',
-      bold: true,
-    },
-    align: 'center',
-    valign: 'middle',
-    tags: true,
-  });
-};
-
-export const createBottomArea = () => {
-  const container = blessed.box({
-    bottom: 0,
-    left: 0,
-    width: '100%',
-    height: '25%',
-  });
-
-  // Split into left and right sections
-  const leftSection = blessed.box({
-    top: 0,
-    left: 0,
-    width: '70%',
-    height: '100%',
-  });
-
-  const rightSection = blessed.box({
-    top: 0,
-    right: 0,
-    width: '30%',
-    height: '100%',
-  });
-
-  // Create components
-  const inputBox = blessed.textarea({
-    bottom: 0,
-    left: 0,
-    width: '100%',
-    height: '50%',
-    label: 'Input (Enter: send, Ctrl+N: new line, Ctrl+K: focus)',
-    border: { type: 'line' },
-    style: {
-      border: { fg: 'yellow' },
-      focus: { border: { fg: 'white' } },
-    },
-    keys: true,
-    vi: false,
-    mouse: true,
-    inputOnFocus: false,
-    padding: {
-      left: 1,
-      right: 1,
-    },
-  });
-
-  const statusBox = blessed.box({
-    top: 0,
-    left: 0,
-    width: '100%',
-    height: '50%',
-    label: 'Status',
-    border: { type: 'line' },
-    style: {
-      border: { fg: 'green' },
-      fg: 'white',
-    },
-    padding: {
-      left: 1,
-      right: 1,
-    },
-  });
-
-  const scheduledTasksBox = blessed.list({
-    top: 0,
-    left: 0,
-    width: '100%',
-    height: '100%',
-    label: 'Scheduled Tasks',
-    border: { type: 'line' },
-    style: {
-      border: { fg: 'magenta' },
-      selected: { bg: 'blue' },
-      item: { hover: { bg: 'blue' } },
-    },
-    scrollable: true,
-    scrollbar: {
-      ch: ' ',
-      style: { inverse: true },
-    },
-    padding: {
-      left: 1,
-      right: 1,
-    },
-    mouse: true,
-    keys: true,
-    vi: true,
-    items: [],
-  });
-
-  // Append components to their sections
-  leftSection.append(statusBox);
-  leftSection.append(inputBox);
-  rightSection.append(scheduledTasksBox);
-
-  // Append sections to container
-  container.append(leftSection);
-  container.append(rightSection);
-
-  return {
-    container,
-    inputBox,
-    statusBox,
-    scheduledTasksBox,
-  };
-};
-
-export const createSearchBox = () => {
-  return blessed.textbox({
-    bottom: 0,
-    left: 0,
-    width: '100%',
-    height: 3,
-    border: 'line',
-    style: {
-      fg: 'white',
-      bg: 'blue',
-      border: {
-        fg: 'white',
-      },
-    },
-    hidden: true,
-    mouse: true,
-    inputOnFocus: true,
-    padding: {
-      left: 1,
-      right: 1,
-    },
-  });
-};
+// Add screen type definition
+interface ExtendedScreen extends blessed.Widgets.Screen {
+  render(): void;
+}
 
 export const createUI = (): UIComponents => {
   const screen = blessed.screen({
     smartCSR: true,
     title: 'Autonomys CLI',
     autoPadding: true,
-    warnings: true,
+    warnings: false,
     fullUnicode: true,
     input: process.stdin,
     output: process.stdout,
-    terminal: 'xterm-256color',
+    terminal: process.env.TERM || 'xterm-256color',
+    useBCE: true,
+    dockBorders: true,
+  }) as ExtendedScreen;
+
+  // Add proper exit handling
+  screen.key(['C-c', 'q'], () => {
+    // Clear all intervals and timeouts
+    screen.clearRegion(0, screen.width as number, 0, screen.height as number);
+    
+    // Reset cursor
+    screen.program.showCursor();
+    screen.program.normalBuffer();
+    screen.program.reset();
+    
+    // Exit gracefully
+    process.exit(0);
+  });
+
+  // Handle process exit
+  process.on('exit', () => {
+    screen.program.clear();
+    screen.program.reset();
+    screen.program.showCursor();
+    screen.program.normalBuffer();
+  });
+
+  // Handle unexpected errors
+  process.on('uncaughtException', (err) => {
+    screen.program.clear();
+    screen.program.reset();
+    screen.program.showCursor();
+    screen.program.normalBuffer();
+    console.error('An error occurred:', err);
+    process.exit(1);
   });
 
   // Create main layout areas
@@ -292,8 +78,14 @@ export const createUI = (): UIComponents => {
   screen.append(outputLog);
   screen.append(bottomArea.container);
   screen.append(searchBox);
+  screen.append(bottomArea.confirmDialog);
 
-  // Handle Ctrl+F using low-level keypress event with delayed focus
+  // Handle dialog events
+  bottomArea.confirmDialog.on('action', () => {
+    screen.render();
+  });
+
+  // Handle keyboard shortcuts
   screen.program.on('keypress', (ch, key) => {
     if (key && key.ctrl && key.name === 'f') {
       bottomArea.inputBox.cancel();
@@ -313,6 +105,17 @@ export const createUI = (): UIComponents => {
       setTimeout(() => {
         bottomArea.inputBox.focus();
         bottomArea.inputBox.readInput();
+        screen.render();
+      }, 100);
+      screen.render();
+      return false;
+    }
+    // Add shortcut to focus scheduled tasks box (Ctrl+T)
+    if (key && key.ctrl && key.name === 't') {
+      searchBox.hide();
+      bottomArea.inputBox.cancel();
+      setTimeout(() => {
+        bottomArea.scheduledTasksBox.focus();
         screen.render();
       }, 100);
       screen.render();
@@ -347,3 +150,4 @@ export const createUI = (): UIComponents => {
     searchBox,
   };
 };
+
