@@ -5,7 +5,7 @@ export const createConfirmDialog = () => {
     border: 'line',
     height: 3,
     width: '100%',
-    bottom: 0,
+    bottom: 3,
     left: 0,
     label: ' Confirm Delete ',
     tags: true,

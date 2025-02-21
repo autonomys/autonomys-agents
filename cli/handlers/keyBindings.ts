@@ -2,7 +2,7 @@ import { spawn } from 'child_process';
 import { UIComponents, AppState } from '../types/types.js';
 
 export const setupKeyBindings = (ui: UIComponents, state: AppState) => {
-  const { screen, outputLog, inputBox, statusBox, searchBox } = ui;
+  const { screen, outputLog, inputBox, statusBox, searchBox, scheduledTasksBox } = ui;
   let currentSearchResults: number[] = [];
   let currentSearchIndex = -1;
   let lastSearchTerm = '';
@@ -50,7 +50,7 @@ export const setupKeyBindings = (ui: UIComponents, state: AppState) => {
       outputLog.scrollTo(lines - 1);
 
       statusBox.setContent(
-        `Found ${results.length} matches (${currentSearchIndex + 1}/${results.length}). Press n for next, N for previous.`,
+        `Found ${results.length} matches (${currentSearchIndex + 1}/${results.length}). Press down for next, up for previous.`,
       );
     } else {
       statusBox.setContent(`No matches found for "${searchTerm}"`);
@@ -58,6 +58,44 @@ export const setupKeyBindings = (ui: UIComponents, state: AppState) => {
 
     screen.render();
   };
+
+  // Handle new line with Ctrl+n
+  inputBox.key(['C-n'], () => {
+    const currentValue = inputBox.getValue();
+    inputBox.setValue(currentValue + '\n');
+    screen.render();
+  });
+
+  // Handle submission with Enter
+  inputBox.key('return', async () => {
+    const value = inputBox.getValue();
+    if (value.trim()) {
+      const release = await state.mutex.acquire();
+      try {
+        if (state.isProcessing || state.scheduledTasks.length > 0) {
+          const nextRunTime = new Date();
+          state.scheduledTasks.push({
+            time: nextRunTime,
+            description: value,
+          });
+          const formattedTime = nextRunTime.toISOString();
+          scheduledTasksBox.addItem(`${formattedTime} - ${value}`);
+          scheduledTasksBox.scrollTo(Number((scheduledTasksBox as any).ritems.length - 1));
+          statusBox.setContent('System busy - Task added to queue');
+          outputLog.log('{yellow-fg}Task queued for later execution{/yellow-fg}');
+        } else {
+          state.value = value;
+          statusBox.setContent('Current Message: ' + value);
+          outputLog.log('{cyan-fg}Starting new task...{/cyan-fg}');
+        }
+      } finally {
+        release();
+      }
+      inputBox.clearValue();
+      inputBox.focus();
+      screen.render();
+    }
+  });
 
   // Quit bindings
   screen.key(['q', 'C-c'], () => process.exit(0));
@@ -69,13 +107,13 @@ export const setupKeyBindings = (ui: UIComponents, state: AppState) => {
   });
 
   // Search navigation
-  screen.key(['n'], () => {
+  screen.key(['down'], () => {
     if (lastSearchTerm) {
       performSearch(lastSearchTerm, true);
     }
   });
 
-  screen.key(['S-n'], () => {
+  screen.key(['up'], () => {
     if (lastSearchTerm && currentSearchResults.length > 0) {
       currentSearchIndex =
         (currentSearchIndex - 1 + currentSearchResults.length) % currentSearchResults.length;

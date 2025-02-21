@@ -11,7 +11,7 @@ export const createBottomArea = () => {
     bottom: 0,
     left: 0,
     width: '100%',
-    height: '25%',
+    height: '35%',
   });
 
   // Split into left and right sections

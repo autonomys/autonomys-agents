@@ -4,6 +4,7 @@ import { createHeaderArea } from './HeaderArea.js';
 import { createOutputLog } from './OutputLog.js';
 import { createBottomArea } from './body/index.js';
 import { createSearchBox } from './SearchBox.js';
+import { createHelpBox } from './body/HelpBox.js';
 
 // Add screen type definition
 interface ExtendedScreen extends blessed.Widgets.Screen {
@@ -61,6 +62,7 @@ export const createUI = (): UIComponents => {
   const outputLog = createOutputLog();
   const bottomArea = createBottomArea();
   const searchBox = createSearchBox();
+  const helpBox = createHelpBox();
 
   // Variable to suppress the first key in searchBox
   let suppressNextSearchKey = false;
@@ -79,6 +81,7 @@ export const createUI = (): UIComponents => {
   screen.append(bottomArea.container);
   screen.append(searchBox);
   screen.append(bottomArea.confirmDialog);
+  screen.append(helpBox);
 
   // Handle dialog events
   bottomArea.confirmDialog.on('action', () => {
@@ -91,7 +94,7 @@ export const createUI = (): UIComponents => {
       bottomArea.inputBox.cancel();
       searchBox.show();
       searchBox.clearValue();
-      suppressNextSearchKey = true; // suppress the key that triggered Ctrl+F
+      suppressNextSearchKey = true;
       setTimeout(() => {
         searchBox.focus();
       }, 100);
@@ -148,5 +151,6 @@ export const createUI = (): UIComponents => {
     logoBox: headerArea.children[0] as blessed.Widgets.BoxElement,
     characterBox: headerArea.children[1] as blessed.Widgets.BoxElement,
     searchBox,
+    helpBox,
   };
 };

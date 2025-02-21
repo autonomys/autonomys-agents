@@ -2,10 +2,10 @@ import blessed from 'blessed';
 
 export const createOutputLog = () => {
   return blessed.log({
-    top: 10,
+    top: 8,
     left: '0%',
     width: '100%',
-    height: '75%',
+    height: '50%',
     label: 'Workflow Output',
     border: { type: 'line' },
     style: {

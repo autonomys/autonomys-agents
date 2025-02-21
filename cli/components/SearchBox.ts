@@ -2,7 +2,7 @@ import blessed from 'blessed';
 
 export const createSearchBox = () => {
   return blessed.textbox({
-    bottom: 0,
+    bottom: 3,
     left: 0,
     width: '100%',
     height: 3,
