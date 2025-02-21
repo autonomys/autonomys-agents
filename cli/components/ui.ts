@@ -85,6 +85,17 @@ export const createUI = (): UIComponents => {
 
   // Handle dialog events
   bottomArea.confirmDialog.on('action', () => {
+    helpBox.show();
+    screen.render();
+  });
+
+  bottomArea.confirmDialog.on('show', () => {
+    helpBox.hide();
+    screen.render();
+  });
+
+  bottomArea.confirmDialog.on('cancel', () => {
+    helpBox.show();
     screen.render();
   });
 
@@ -92,6 +103,7 @@ export const createUI = (): UIComponents => {
   screen.program.on('keypress', (ch, key) => {
     if (key && key.ctrl && key.name === 'f') {
       bottomArea.inputBox.cancel();
+      helpBox.hide();
       searchBox.show();
       searchBox.clearValue();
       suppressNextSearchKey = true;
@@ -104,6 +116,7 @@ export const createUI = (): UIComponents => {
     // Add shortcut to focus input box (Ctrl+K)
     if (key && key.ctrl && key.name === 'k') {
       searchBox.hide();
+      helpBox.show();
       bottomArea.inputBox.cancel();
       setTimeout(() => {
         bottomArea.inputBox.focus();
@@ -116,6 +129,7 @@ export const createUI = (): UIComponents => {
     // Add shortcut to focus scheduled tasks box (Ctrl+T)
     if (key && key.ctrl && key.name === 't') {
       searchBox.hide();
+      helpBox.show();
       bottomArea.inputBox.cancel();
       setTimeout(() => {
         bottomArea.scheduledTasksBox.focus();
@@ -134,6 +148,7 @@ export const createUI = (): UIComponents => {
   // Bind 'escape' on the searchBox to cancel search and refocus inputBox
   searchBox.key('escape', () => {
     searchBox.hide();
+    helpBox.show();
     bottomArea.inputBox.focus();
     screen.render();
   });

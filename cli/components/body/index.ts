@@ -7,11 +7,12 @@ import { createConfirmDialog } from './ConfirmDialog.js';
 import { setupTaskDeletion } from './taskDeletion.js';
 
 export const createBottomArea = () => {
+  // Main container
   const container = blessed.box({
-    bottom: 0,
+    bottom: 2, // Space for help box
     left: 0,
     width: '100%',
-    height: '35%',
+    height: '40%', // Use percentage without subtracting for better responsiveness
   });
 
   // Split into left and right sections
@@ -19,19 +20,19 @@ export const createBottomArea = () => {
     top: 0,
     left: 0,
     width: '50%',
-    height: '100%',
+    height: '90%', // Use full height
   });
 
   const rightSection = blessed.box({
     top: 0,
     right: 0,
     width: '50%',
-    height: '100%',
+    height: '90%', // Use full height
   });
 
   // Create components
-  const inputBox = createInputBox();
   const statusBox = createStatusBox();
+  const inputBox = createInputBox();
   const scheduledTasksBox = createScheduledTasksBox();
   const tooltipBox = createTooltipBox();
   const confirmDialog = createConfirmDialog();

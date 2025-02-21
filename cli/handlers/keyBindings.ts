@@ -3,23 +3,69 @@ import { UIComponents, AppState } from '../types/types.js';
 
 export const setupKeyBindings = (ui: UIComponents, state: AppState) => {
   const { screen, outputLog, inputBox, statusBox, searchBox, scheduledTasksBox } = ui;
-  let currentSearchResults: number[] = [];
+  let currentSearchResults: { pos: number; matchedText: string }[] = [];
   let currentSearchIndex = -1;
   let lastSearchTerm = '';
+  let fullHistory: string[] = [];
+  let originalContent = '';
+
+  outputLog.on('log', (msg: string) => {
+    fullHistory.push(msg);
+    originalContent = fullHistory.join('\n');
+  });
+
+  const highlightCurrentMatch = () => {
+    if (currentSearchResults.length === 0 || currentSearchIndex === -1) return;
+
+    const { pos, matchedText } = currentSearchResults[currentSearchIndex];
+    const lines = originalContent.slice(0, pos).split('\n');
+    const targetLine = lines.length;
+
+    const height = (outputLog.height as number) - 2; // Account for borders
+    const currentScroll = outputLog.getScroll();
+    const bottomVisible = currentScroll + height;
+
+    const currentScrollPos = outputLog.getScroll();
+
+    if (targetLine < currentScroll || targetLine >= bottomVisible) {
+      const newScrollPos = Math.max(0, targetLine - Math.floor(height / 2));
+      outputLog.scrollTo(newScrollPos);
+
+      setTimeout(() => {
+        outputLog.scrollTo(newScrollPos);
+        screen.render();
+      }, 10);
+    }
+
+    const beforeMatch = originalContent.slice(0, pos);
+    const afterMatch = originalContent.slice(pos + matchedText.length);
+
+    outputLog.setContent(
+      beforeMatch + '{black-bg}{yellow-fg}' + matchedText + '{/yellow-fg}{/black-bg}' + afterMatch,
+    );
+
+    if (targetLine >= currentScroll && targetLine < bottomVisible) {
+      outputLog.scrollTo(currentScrollPos);
+    }
+
+    screen.render();
+  };
 
   const performSearch = (searchTerm: string, moveToNext: boolean = false) => {
     if (!searchTerm) return;
 
     lastSearchTerm = searchTerm;
-    const content = outputLog.getContent();
-    // Remove existing highlights
-    const cleanContent = content.replace(/\{yellow-bg\}|\{\/yellow-bg\}/g, '');
+    const cleanContent = originalContent.replace(/\{[^}]+\}/g, '');
 
-    // Find all occurrences
-    const results: number[] = [];
+    const results: { pos: number; matchedText: string }[] = [];
     let pos = 0;
-    while ((pos = cleanContent.toLowerCase().indexOf(searchTerm.toLowerCase(), pos)) !== -1) {
-      results.push(pos);
+    const searchTermLower = searchTerm.toLowerCase();
+    const contentLower = cleanContent.toLowerCase();
+
+    while ((pos = contentLower.indexOf(searchTermLower, pos)) !== -1) {
+      // Store the actual matched text from the original content
+      const matchedText = cleanContent.slice(pos, pos + searchTerm.length);
+      results.push({ pos, matchedText });
       pos += 1;
     }
 
@@ -31,42 +77,24 @@ export const setupKeyBindings = (ui: UIComponents, state: AppState) => {
         currentSearchIndex = 0;
       }
 
-      // Highlight all occurrences
-      let highlightedContent = cleanContent;
-      for (let i = results.length - 1; i >= 0; i--) {
-        const pos = results[i];
-        highlightedContent =
-          highlightedContent.slice(0, pos) +
-          '{yellow-bg}' +
-          highlightedContent.slice(pos, pos + searchTerm.length) +
-          '{/yellow-bg}' +
-          highlightedContent.slice(pos + searchTerm.length);
-      }
-
-      outputLog.setContent(highlightedContent);
-
-      // Scroll to current result
-      const lines = cleanContent.slice(0, results[currentSearchIndex]).split('\n').length;
-      outputLog.scrollTo(lines - 1);
-
       statusBox.setContent(
         `Found ${results.length} matches (${currentSearchIndex + 1}/${results.length}). Press down for next, up for previous.`,
       );
+
+      highlightCurrentMatch();
     } else {
       statusBox.setContent(`No matches found for "${searchTerm}"`);
+      outputLog.setContent(originalContent);
+      screen.render();
     }
-
-    screen.render();
   };
 
-  // Handle new line with Ctrl+n
   inputBox.key(['C-n'], () => {
     const currentValue = inputBox.getValue();
     inputBox.setValue(currentValue + '\n');
     screen.render();
   });
 
-  // Handle submission with Enter
   inputBox.key('return', async () => {
     const value = inputBox.getValue();
     if (value.trim()) {
@@ -97,19 +125,15 @@ export const setupKeyBindings = (ui: UIComponents, state: AppState) => {
     }
   });
 
-  // Quit bindings
-  screen.key(['q', 'C-c'], () => process.exit(0));
+  screen.key(['C-c'], () => process.exit(0));
 
-  // Input focus binding
-  screen.key(['C-i'], () => {
-    inputBox.focus();
-    screen.render();
-  });
-
-  // Search navigation
   screen.key(['down'], () => {
-    if (lastSearchTerm) {
-      performSearch(lastSearchTerm, true);
+    if (lastSearchTerm && currentSearchResults.length > 0) {
+      currentSearchIndex = (currentSearchIndex + 1) % currentSearchResults.length;
+      statusBox.setContent(
+        `Found ${currentSearchResults.length} matches (${currentSearchIndex + 1}/${currentSearchResults.length}). Press down for next, up for previous.`,
+      );
+      highlightCurrentMatch();
     }
   });
 
@@ -117,7 +141,10 @@ export const setupKeyBindings = (ui: UIComponents, state: AppState) => {
     if (lastSearchTerm && currentSearchResults.length > 0) {
       currentSearchIndex =
         (currentSearchIndex - 1 + currentSearchResults.length) % currentSearchResults.length;
-      performSearch(lastSearchTerm, false);
+      statusBox.setContent(
+        `Found ${currentSearchResults.length} matches (${currentSearchIndex + 1}/${currentSearchResults.length}). Press down for next, up for previous.`,
+      );
+      highlightCurrentMatch();
     }
   });
 
@@ -137,11 +164,6 @@ export const setupKeyBindings = (ui: UIComponents, state: AppState) => {
 
   screen.key(['C-p'], () => {
     outputLog.scroll(-1);
-    screen.render();
-  });
-
-  screen.key(['C-n'], () => {
-    outputLog.scroll(1);
     screen.render();
   });
 };

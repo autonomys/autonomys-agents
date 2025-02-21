@@ -16,7 +16,8 @@ export const setupTaskDeletion = (
 
     // Show confirmation dialog and handle the response
     confirmDialog.show();
-    confirmDialog.setContent(`Delete task:(Y/N) "${selectedTask.content}"?`);
+    const cleanContent = selectedTask.content.replace(/\n/g, ' ');
+    confirmDialog.setContent(`Delete task: "${cleanContent}" (Y/N)?`);
 
     function handleConfirm(ch: string, key: blessed.Widgets.Events.IKeyEventArg) {
       if (ch === 'y' || ch === 'Y' || key.name === 'enter') {
@@ -32,15 +33,17 @@ export const setupTaskDeletion = (
           scheduledTasksBox.select(newIndex);
         }
 
-        // Clean up
+        // Clean up and emit action event
         confirmDialog.hide();
         confirmDialog.removeListener('keypress', handleConfirm);
+        confirmDialog.emit('action');
         scheduledTasksBox.focus();
         scheduledTasksBox.screen.render();
       } else if (ch === 'n' || ch === 'N' || key.name === 'escape') {
-        // Just clean up on cancel
+        // Clean up and emit cancel event
         confirmDialog.hide();
         confirmDialog.removeListener('keypress', handleConfirm);
+        confirmDialog.emit('cancel');
         scheduledTasksBox.focus();
         scheduledTasksBox.screen.render();
       }

@@ -5,7 +5,7 @@ export const createOutputLog = () => {
     top: 8,
     left: '0%',
     width: '100%',
-    height: '50%',
+    height: '40%',
     label: 'Workflow Output',
     border: { type: 'line' },
     style: {
@@ -24,5 +24,7 @@ export const createOutputLog = () => {
     vi: false,
     mouse: true,
     tags: true,
+    scrollback: 5000,
+    bufferLength: 300,
   });
 };

@@ -1,11 +1,11 @@
 import blessed from 'blessed';
 
 export const createConfirmDialog = () => {
-  return blessed.question({
+  const dialog = blessed.question({
     border: 'line',
-    height: 3,
+    height: '8%',
     width: '100%',
-    bottom: 3,
+    bottom: 0,
     left: 0,
     label: ' Confirm Delete ',
     tags: true,
@@ -24,5 +24,12 @@ export const createConfirmDialog = () => {
       right: 1,
     },
     hidden: true,
+    wrap: false,
   });
+
+  // Override the buttons rendering
+  dialog._.okay.hide();
+  dialog._.cancel.hide();
+
+  return dialog;
 };

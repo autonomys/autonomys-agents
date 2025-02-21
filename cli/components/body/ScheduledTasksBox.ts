@@ -16,10 +16,9 @@ interface ExtendedList extends blessed.Widgets.ListElement {
 export const createScheduledTasksBox = () => {
   const box = blessed.list({
     top: 0,
-    bottom: 0,
     left: 0,
     width: '100%',
-    height: '80%',
+    height: '100%', // Use full height
     label: 'Scheduled Tasks (Ctrl+T: focus, ↑/↓: navigate, d: delete)',
     border: { type: 'line' },
     style: {

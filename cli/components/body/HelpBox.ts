@@ -2,8 +2,8 @@ import blessed from 'blessed';
 
 export const createHelpBox = () => {
   const shortcuts = [
-    '{white-fg}Ctrl+F{/white-fg}: Search',
-    '{white-fg}ESC{/white-fg}: Exit search',
+    // '{white-fg}Ctrl+F{/white-fg}: Search',
+    // '{white-fg}ESC{/white-fg}: Exit search',
     '{white-fg}Ctrl+N{/white-fg}: New line',
     '{white-fg}Ctrl+K{/white-fg}: Focus input',
     '{white-fg}Ctrl+T{/white-fg}: View tasks',
