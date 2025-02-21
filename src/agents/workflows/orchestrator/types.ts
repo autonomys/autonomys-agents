@@ -49,6 +49,10 @@ export type OrchestratorStateType = {
   messages: readonly BaseMessage[];
   error: Error | null;
   workflowControl: WorkflowControl | null;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  toolCalls: any[] | null;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  executedTools: any[] | null;
 };
 
 export type PruningParameters = {

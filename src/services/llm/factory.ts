@@ -3,7 +3,7 @@ import { ChatAnthropic } from '@langchain/anthropic';
 import { ChatOllama } from '@langchain/ollama';
 import { LLMConfiguration, LLMProvider } from './types.js';
 import { config as appConfig } from '../../config/index.js';
-
+import { ChatGroq } from '@langchain/groq';
 export class LLMFactory {
   static createModel(node: LLMConfiguration) {
     return this.createModelFromConfig(node);
@@ -41,6 +41,12 @@ export class LLMFactory {
           configuration: {
             baseURL: appConfig.llmConfig.DEEPSEEK_URL,
           },
+          model,
+          temperature,
+        });
+      case LLMProvider.GROQ:
+        return new ChatGroq({
+          apiKey: appConfig.llmConfig.GROQ_API_KEY,
           model,
           temperature,
         });

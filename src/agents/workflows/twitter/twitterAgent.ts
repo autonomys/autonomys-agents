@@ -17,7 +17,7 @@ const logger = createLogger('twitter-workflow');
 const defaultModelConfig: LLMConfiguration = {
   provider: LLMProvider.ANTHROPIC,
   model: 'claude-3-5-sonnet-latest',
-  temperature: 1,
+  temperature: 0.8,
 };
 
 const defaultOptions: TwitterAgentConfig = {
