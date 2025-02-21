@@ -60,8 +60,8 @@ export type OrchestratorRunner = Readonly<{
 }>;
 
 const defaultModelConfiguration: LLMConfiguration = {
-  provider: LLMProvider.OPENAI,
-  model: 'gpt-4o',
+  provider: LLMProvider.ANTHROPIC,
+  model: 'claude-3-5-sonnet-latest',
   temperature: 0.8,
 };
 

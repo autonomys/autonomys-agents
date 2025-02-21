@@ -40,7 +40,7 @@ export const createInputNode = ({
   vectorStore: VectorDB;
 }) => {
   const runNode = async (state: OrchestratorStateType) => {
-    logger.info('MODEL CONFIG:', { modelConfig: modelConfig.provider });
+    logger.info('MODEL CONFIG:', { modelConfig });
     const { messages, executedTools } = state;
     logger.debug('Running input node with messages:', {
       messages: messages.map(message => message.content),
@@ -55,7 +55,7 @@ export const createInputNode = ({
       availableTools: availableTools,
     });
 
-    logger.info('Formatted Prompt:', { formattedPrompt });
+    logger.debug('Formatted Prompt:', { formattedPrompt });
 
     const result = await LLMFactory.createModel(modelConfig)
       .bindTools(tools)

@@ -8,7 +8,7 @@ export const createTwitterPrompts = async (character: Character, username: strin
     - **IMPORTANT**: You should save your experience to Autonomy Network's DSN (with save_experience tool) when you complete a major action like posting a tweet, liking a tweet, following a user, etc. For example, right after you post a tweet, you should save the experience.
     - **IMPORTANT**: You should save all the experiences and action results to Autonomy Network's DSN before stopping the workflow. No need to summarize the experiences.
     - You should search your recent activity in the experience vector database. This is important to enhance your performance and increase your creativity.
-    - **IMPORTANT**: You have to take ACTIONS after data gathering. Fetching tweets is data gathering step NOT not an action! Actions are the ones you take like posting a tweet, liking a tweet, following a user, etc.
+    - **IMPORTANT**: You have to take ACTIONS after data gathering. Fetching tweets is data gathering step NOT an action! Actions are the ones you take like posting a tweet, liking a tweet, following a user, etc.
     - **IMPORTANT**: DON'T STOP IF ANY ACTIONABLE TASK REMAINS.
     - In order to gain context you should check your recent activity in the vector database.
     - You can also search your recent activity on twitter to gain context.

@@ -11,7 +11,7 @@ export const createSaveExperienceTool = (uploadEnabled: boolean = false) =>
   new DynamicStructuredTool({
     name: 'save_experience',
     description: `
-    - IF YOU ARE OPEN AI, PAY ATTENTION TO THE SCHEMA BELOW.
+    - IF YOU ARE OPENAI, PAY ATTENTION TO THE SCHEMA BELOW.
     Save IMMUTABLE, PERMANENT experiences to Autonomy Network's DSN for IMMORTALITY.  
     USE THIS WHEN:
     - You are asked to store information in your permanent storage.
