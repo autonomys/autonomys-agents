@@ -58,10 +58,10 @@ export const createClockBox = () => {
 
 export const createOutputLog = () => {
   return blessed.log({
-    top: 6, // Just below the header area
+    top: 10,
     left: '0%',
     width: '100%',
-    height: '75%', // Give more space to the main content
+    height: '75%',
     label: 'Workflow Output',
     border: { type: 'line' },
     style: {
@@ -157,7 +157,7 @@ export const createBottomArea = () => {
     left: 0,
     width: '100%',
     height: '50%',
-    label: 'Input (Enter: send, Ctrl+N: new line)',
+    label: 'Input (Enter: send, Ctrl+N: new line, Ctrl+K: focus)',
     border: { type: 'line' },
     style: {
       border: { fg: 'yellow' },
@@ -302,6 +302,18 @@ export const createUI = (): UIComponents => {
       suppressNextSearchKey = true; // suppress the key that triggered Ctrl+F
       setTimeout(() => {
         searchBox.focus();
+      }, 100);
+      screen.render();
+      return false;
+    }
+    // Add shortcut to focus input box (Ctrl+K)
+    if (key && key.ctrl && key.name === 'k') {
+      searchBox.hide();
+      bottomArea.inputBox.cancel();
+      setTimeout(() => {
+        bottomArea.inputBox.focus();
+        bottomArea.inputBox.readInput();
+        screen.render();
       }, 100);
       screen.render();
       return false;
