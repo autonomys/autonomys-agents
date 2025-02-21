@@ -17,4 +17,4 @@ export const createStatusBox = () => {
       right: 1,
     },
   });
-}; 
+};

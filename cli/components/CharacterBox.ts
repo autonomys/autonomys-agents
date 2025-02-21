@@ -34,4 +34,4 @@ export const createCharacterBox = (characterDirName: string) => {
     valign: 'middle',
     tags: true,
   });
-}; 
+};

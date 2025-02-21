@@ -44,7 +44,9 @@ import { Mutex } from 'async-mutex';
               });
               const formattedTime = nextRunTime.toISOString();
               ui.scheduledTasksBox.addItem(`${formattedTime} - ${value}`);
-              ui.scheduledTasksBox.scrollTo(Number((ui.scheduledTasksBox as any).ritems.length - 1));
+              ui.scheduledTasksBox.scrollTo(
+                Number((ui.scheduledTasksBox as any).ritems.length - 1),
+              );
               ui.statusBox.setContent('System busy - Task added to queue');
               ui.outputLog.log('{yellow-fg}Task queued for later execution{/yellow-fg}');
             } else {
@@ -112,7 +114,10 @@ import { Mutex } from 'async-mutex';
       while (true) {
         await new Promise(res => setTimeout(res, 1000));
 
+        let taskToProcess: { time: Date; description: string } | null = null;
         const now = new Date();
+
+        // First, check if we have a task to process under mutex
         const release = await state.mutex.acquire();
         try {
           if (!state.isProcessing && state.scheduledTasks.length > 0) {
@@ -122,54 +127,61 @@ import { Mutex } from 'async-mutex';
               .filter(task => task.time <= now);
 
             if (dueTasks.length > 0) {
-              const task = dueTasks[0]; // Get the earliest scheduled task
-              state.scheduledTasks = state.scheduledTasks.filter(t => t !== task);
+              taskToProcess = dueTasks[0]; // Get the earliest scheduled task
+              state.scheduledTasks = state.scheduledTasks.filter(t => t !== taskToProcess);
 
               const taskIndex = (ui.scheduledTasksBox as any).ritems.findIndex(
                 (item: string) =>
-                  item.includes(task.time.toISOString()) && item.includes(task.description),
+                  item.includes(taskToProcess!.time.toISOString()) &&
+                  item.includes(taskToProcess!.description),
               );
               if (taskIndex !== -1) {
                 ui.scheduledTasksBox.removeItem(taskIndex);
               }
 
               state.isProcessing = true;
-
-              // Log if task is overdue
-              const delayMinutes = Math.floor((now.getTime() - task.time.getTime()) / (1000 * 60));
-              if (delayMinutes > 0) {
-                const scheduledTime = task.time.toISOString();
-                ui.outputLog.log(
-                  `{yellow-fg}Task was scheduled for ${scheduledTime} (${delayMinutes} minutes ago){/yellow-fg}`,
-                );
-              }
-
-              try {
-                ui.outputLog.log('{cyan-fg}Starting scheduled task...{/cyan-fg}');
-                ui.statusBox.setContent(`Executing scheduled task: ${task.description}`);
-                ui.screen.render();
-
-                await runWorkflow(task.description, runner, ui, state);
-              } catch (error: any) {
-                ui.outputLog.log('\n{red-fg}Scheduled task error:{/red-fg} ' + error.message);
-                ui.statusBox.setContent('Error occurred in scheduled task. Check log for details.');
-                ui.screen.render();
-              } finally {
-                // Match the mutex handling from the first task path
-                const release = await state.mutex.acquire();
-                try {
-                  state.isProcessing = false;
-                } finally {
-                  release();
-                }
-                ui.inputBox.focus();
-                ui.screen.render();
-              }
             }
           }
         } finally {
           release();
         }
+
+        // Then process the task outside the mutex if we have one
+        if (taskToProcess) {
+          // Log if task is overdue
+          const delayMinutes = Math.floor(
+            (now.getTime() - taskToProcess.time.getTime()) / (1000 * 60),
+          );
+          if (delayMinutes > 0) {
+            const scheduledTime = taskToProcess.time.toISOString();
+            ui.outputLog.log(
+              `{yellow-fg}Task was scheduled for ${scheduledTime} (${delayMinutes} minutes ago){/yellow-fg}`,
+            );
+          }
+
+          try {
+            ui.outputLog.log('{cyan-fg}Starting scheduled task...{/cyan-fg}');
+            ui.statusBox.setContent(`Executing scheduled task: ${taskToProcess.description}`);
+            ui.screen.render();
+
+            await runWorkflow(taskToProcess.description, runner, ui, state);
+          } catch (error: any) {
+            ui.outputLog.log('\n{red-fg}Scheduled task error:{/red-fg} ' + error.message);
+            ui.statusBox.setContent('Error occurred in scheduled task. Check log for details.');
+            ui.screen.render();
+          } finally {
+            // Clear processing flag after workflow completes
+            const release = await state.mutex.acquire();
+            try {
+              state.isProcessing = false;
+            } finally {
+              release();
+            }
+            ui.inputBox.focus();
+            ui.screen.render();
+          }
+        }
+
         // Update clock with ISO format time and date
         const timeStr = now.toISOString();
         ui.clockBox.setContent(timeStr);

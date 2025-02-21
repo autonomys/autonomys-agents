@@ -28,12 +28,12 @@ export const createUI = (): UIComponents => {
   screen.key(['C-c', 'q'], () => {
     // Clear all intervals and timeouts
     screen.clearRegion(0, screen.width as number, 0, screen.height as number);
-    
+
     // Reset cursor
     screen.program.showCursor();
     screen.program.normalBuffer();
     screen.program.reset();
-    
+
     // Exit gracefully
     process.exit(0);
   });
@@ -47,7 +47,7 @@ export const createUI = (): UIComponents => {
   });
 
   // Handle unexpected errors
-  process.on('uncaughtException', (err) => {
+  process.on('uncaughtException', err => {
     screen.program.clear();
     screen.program.reset();
     screen.program.showCursor();
@@ -150,4 +150,3 @@ export const createUI = (): UIComponents => {
     searchBox,
   };
 };
-

@@ -25,4 +25,4 @@ export const createClockBox = () => {
     valign: 'middle',
     tags: true,
   });
-}; 
+};

@@ -11,4 +11,4 @@ export interface ExtendedList extends blessed.Widgets.ListElement {
   removeItem(index: number): blessed.Widgets.ListElement;
   spliceItem(index: number, count: number): void;
   getItemIndex(index: number): number;
-} 
+}

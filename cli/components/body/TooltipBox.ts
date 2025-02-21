@@ -18,6 +18,6 @@ export const createTooltipBox = () => {
       left: 1,
       right: 1,
     },
-    hidden: true
+    hidden: true,
   });
-}; 
+};

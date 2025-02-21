@@ -25,4 +25,4 @@ export const createOutputLog = () => {
     mouse: true,
     tags: true,
   });
-}; 
+};

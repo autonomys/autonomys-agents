@@ -24,4 +24,4 @@ export const createInputBox = () => {
       right: 1,
     },
   });
-}; 
+};

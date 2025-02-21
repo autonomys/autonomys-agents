@@ -49,8 +49,8 @@ export const createScheduledTasksBox = () => {
         return item.substring(0, maxLength - 3) + '...';
       }
       return item;
-    }
+    },
   }) as unknown as ExtendedList;
 
   return box;
-}; 
+};

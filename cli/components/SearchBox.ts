@@ -22,4 +22,4 @@ export const createSearchBox = () => {
       right: 1,
     },
   });
-}; 
+};

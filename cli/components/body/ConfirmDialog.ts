@@ -16,13 +16,13 @@ export const createConfirmDialog = () => {
       fg: 'white',
       bg: 'red',
       border: {
-        fg: 'red'
-      }
+        fg: 'red',
+      },
     },
     padding: {
       left: 1,
-      right: 1
+      right: 1,
     },
-    hidden: true
+    hidden: true,
   });
-}; 
+};

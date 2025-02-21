@@ -11,4 +11,4 @@ export const createHeaderArea = () => {
     height: 6,
     children: [createLogoBox(), createCharacterBox(process.argv[2] || 'Unknown'), createClockBox()],
   });
-}; 
+};
