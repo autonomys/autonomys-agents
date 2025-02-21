@@ -16,6 +16,7 @@ export type TwitterAgentOptions = {
   postTweets?: boolean;
   saveExperiences?: boolean;
   monitoring?: MonitoringOptions;
+  recursionLimit?: number;
 };
 
 export type TwitterAgentConfig = {
@@ -25,4 +26,5 @@ export type TwitterAgentConfig = {
   maxThreadDepth: number;
   saveExperiences: boolean;
   monitoring: MonitoringConfig;
+  recursionLimit: number;
 };

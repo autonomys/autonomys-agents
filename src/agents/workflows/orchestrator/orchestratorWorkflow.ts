@@ -83,6 +83,7 @@ const defaultOptions = {
     enabled: false,
     messageCleaner: cleanMessageData,
   },
+  recursionLimit: 50,
 };
 
 const createOrchestratorRunnerConfig = async (
@@ -140,7 +141,7 @@ export const createOrchestratorRunner = async (
       }
 
       const config = {
-        recursionLimit: 50,
+        recursionLimit: runnerConfig.recursionLimit,
         configurable: {
           ...runnerConfig.pruningParameters,
           thread_id: threadId,

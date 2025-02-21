@@ -40,6 +40,7 @@ export type OrchestratorRunnerOptions = {
   vectorStore?: VectorDB;
   saveExperiences?: boolean;
   monitoring?: MonitoringOptions;
+  recursionLimit?: number;
 };
 
 export type OrchestratorConfig = {
@@ -51,6 +52,7 @@ export type OrchestratorConfig = {
   vectorStore: VectorDB;
   saveExperiences: boolean;
   monitoring: MonitoringConfig;
+  recursionLimit: number;
 };
 
 export type OrchestratorInput = {

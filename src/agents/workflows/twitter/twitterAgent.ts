@@ -33,6 +33,7 @@ const defaultOptions: TwitterAgentConfig = {
     enabled: false,
     messageCleaner: cleanTwitterMessageData,
   },
+  recursionLimit: 100,
 };
 
 const createTwitterAgentConfig = (options?: TwitterAgentOptions): TwitterAgentConfig => {
@@ -44,6 +45,7 @@ const createTwitterAgentConfig = (options?: TwitterAgentOptions): TwitterAgentCo
     ...defaultOptions.monitoring,
     ...options?.monitoring,
   };
+
   return { ...defaultOptions, ...options, modelConfigurations, monitoring };
 };
 
@@ -69,6 +71,7 @@ export const createTwitterAgent = (
           maxThreadDepth,
           saveExperiences,
           monitoring,
+          recursionLimit,
         } = createTwitterAgentConfig(options);
 
         const messages = [new HumanMessage(instructions)];
@@ -85,6 +88,7 @@ export const createTwitterAgent = (
           vectorStore,
           saveExperiences,
           monitoring,
+          recursionLimit,
         });
         const result = await runner.runWorkflow(
           { messages },
