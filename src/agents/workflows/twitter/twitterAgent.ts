@@ -28,7 +28,7 @@ const defaultOptions: TwitterAgentConfig = {
   },
   maxThreadDepth: 5,
   postTweets: false,
-  autoDriveUploadEnabled: false,
+  saveExperiences: false,
   monitoring: {
     enabled: false,
     messageCleaner: cleanTwitterMessageData,
@@ -67,7 +67,7 @@ export const createTwitterAgent = (
           modelConfigurations,
           postTweets,
           maxThreadDepth,
-          autoDriveUploadEnabled,
+          saveExperiences,
           monitoring,
         } = createTwitterAgentConfig(options);
 
@@ -83,7 +83,7 @@ export const createTwitterAgent = (
           prompts,
           namespace,
           vectorStore,
-          autoDriveUploadEnabled,
+          saveExperiences,
           monitoring,
         });
         const result = await runner.runWorkflow(

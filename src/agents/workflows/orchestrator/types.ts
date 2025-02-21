@@ -38,7 +38,7 @@ export type OrchestratorRunnerOptions = {
   namespace?: string;
   pruningParameters?: PruningParameters;
   vectorStore?: VectorDB;
-  autoDriveUploadEnabled?: boolean;
+  saveExperiences?: boolean;
   monitoring?: MonitoringOptions;
 };
 
@@ -49,7 +49,7 @@ export type OrchestratorConfig = {
   namespace: string;
   pruningParameters: PruningParameters;
   vectorStore: VectorDB;
-  autoDriveUploadEnabled: boolean;
+  saveExperiences: boolean;
   monitoring: MonitoringConfig;
 };
 

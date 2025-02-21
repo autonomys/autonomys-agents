@@ -14,7 +14,7 @@ const character = config.characterConfig;
 const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
   //shared twitter agent and orchestrator config
   const webSearchTool = config.SERPAPI_API_KEY ? [createWebSearchTool(config.SERPAPI_API_KEY)] : [];
-  const autoDriveUploadEnabled = config.autoDriveConfig.AUTO_DRIVE_UPLOAD;
+  const saveExperiences = config.autoDriveConfig.AUTO_DRIVE_SAVE_EXPERIENCES;
   const monitoringEnabled = config.autoDriveConfig.AUTO_DRIVE_MONITORING;
 
   //Twitter agent config
@@ -24,7 +24,7 @@ const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
   const twitterAgentTool = createTwitterAgent(twitterApi, character, {
     tools: [...webSearchTool],
     postTweets: config.twitterConfig.POST_TWEETS,
-    autoDriveUploadEnabled,
+    saveExperiences,
     monitoring: {
       enabled: monitoringEnabled,
     },
@@ -53,7 +53,7 @@ const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
     modelConfigurations,
     tools: [twitterAgentTool, ...webSearchTool],
     prompts,
-    autoDriveUploadEnabled,
+    saveExperiences,
     monitoring: {
       enabled: monitoringEnabled,
     },

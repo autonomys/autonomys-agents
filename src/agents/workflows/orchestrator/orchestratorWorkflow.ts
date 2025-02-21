@@ -78,7 +78,7 @@ const defaultOptions = {
     maxWindowSummary: 30,
     maxQueueSize: 50,
   },
-  autoDriveUploadEnabled: false,
+  saveExperiences: false,
   monitoring: {
     enabled: false,
     messageCleaner: cleanMessageData,
@@ -98,7 +98,7 @@ const createOrchestratorRunnerConfig = async (
   const vectorStore = options?.vectorStore || new VectorDB(defaultOptions.namespace);
   const tools = [
     ...(options?.tools || []),
-    ...createDefaultOrchestratorTools(vectorStore, mergedOptions.autoDriveUploadEnabled),
+    ...createDefaultOrchestratorTools(vectorStore, mergedOptions.saveExperiences),
   ];
   const prompts = options?.prompts || (await createPrompts(character));
   const monitoring = {
@@ -161,7 +161,7 @@ export const createOrchestratorRunner = async (
         threadId,
       });
 
-      if (runnerConfig.monitoring.enabled && runnerConfig.autoDriveUploadEnabled) {
+      if (runnerConfig.monitoring.enabled) {
         const rawMessages: BaseMessage[] | undefined = (await memoryStore.getTuple(config))
           ?.checkpoint.channel_values.messages as BaseMessage[];
 
@@ -170,6 +170,7 @@ export const createOrchestratorRunner = async (
         const dsnUpload = await uploadToDsn({
           messages: cleanedMessages,
           namespace: runnerConfig.namespace,
+          type: 'monitoring',
         });
         logger.info('Dsn upload', { dsnUpload });
       }

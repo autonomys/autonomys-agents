@@ -97,8 +97,8 @@ export const config = (() => {
         AUTO_DRIVE_API_KEY: process.env.AUTO_DRIVE_API_KEY,
         AUTO_DRIVE_ENCRYPTION_PASSWORD: process.env.AUTO_DRIVE_ENCRYPTION_PASSWORD,
         AUTO_DRIVE_NETWORK: yamlConfig.auto_drive.network ?? 'taurus',
-        AUTO_DRIVE_UPLOAD: yamlConfig.auto_drive.upload ?? false,
         AUTO_DRIVE_MONITORING: yamlConfig.auto_drive.monitoring ?? false,
+        AUTO_DRIVE_SAVE_EXPERIENCES: yamlConfig.auto_drive.save_experiences ?? false,
       },
 
       blockchainConfig: {

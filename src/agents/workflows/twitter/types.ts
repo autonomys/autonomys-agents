@@ -14,7 +14,7 @@ export type TwitterAgentOptions = {
     finishWorkflowModelConfig?: LLMConfiguration;
   };
   postTweets?: boolean;
-  autoDriveUploadEnabled?: boolean;
+  saveExperiences?: boolean;
   monitoring?: MonitoringOptions;
 };
 
@@ -23,6 +23,6 @@ export type TwitterAgentConfig = {
   modelConfigurations: ModelConfigurations;
   postTweets: boolean;
   maxThreadDepth: number;
-  autoDriveUploadEnabled: boolean;
+  saveExperiences: boolean;
   monitoring: MonitoringConfig;
 };

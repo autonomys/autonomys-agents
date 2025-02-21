@@ -2,6 +2,6 @@ twitter:
   post_tweets: true
 
 auto_drive:
-  upload: true
+  save_experiences: true
   monitoring: true
   network: 'mainnet' # or 'taurus'
