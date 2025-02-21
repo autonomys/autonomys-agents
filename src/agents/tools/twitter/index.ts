@@ -185,6 +185,7 @@ export const createLikeTweetTool = (twitterApi: TwitterApi) =>
         await twitterApi.likeTweet(tweetId);
         return {
           liked: true,
+          tweetId,
         };
       } catch (error) {
         logger.error('Error liking tweet:', error);
@@ -222,6 +223,7 @@ export const createPostTweetTool = (twitterApi: TwitterApi, postTweets: boolean 
           return {
             postedTweet: true,
             postedTweetId,
+            inReplyTo,
           };
         } else {
           logger.info('Tweet not posted', { text });
@@ -240,6 +242,41 @@ export const createPostTweetTool = (twitterApi: TwitterApi, postTweets: boolean 
     },
   });
 
+export const createQuoteTweetTool = (twitterApi: TwitterApi, postTweets: boolean = false) =>
+  new DynamicStructuredTool({
+    name: 'quote_tweet',
+    description: 'Quote a tweet',
+    schema: z.object({
+      quoteTweetId: z.string().describe('The ID of the tweet you want to quote'),
+      text: z.string().describe('The text you want to quote the tweet with'),
+    }),
+    func: async ({ quoteTweetId, text }: { quoteTweetId: string; text: string }) => {
+      try {
+        if (postTweets) {
+          await twitterApi.quoteTweet(text, quoteTweetId);
+          return {
+            quoted: true,
+            quoteTweetId,
+            text,
+          };
+        } else {
+          logger.info('Quote tweet not posted', { text, quoteTweetId });
+          return {
+            quoted: false,
+            message:
+              'The posting of tweets is disabled for testing purposes. Continue as if it was enabled',
+          };
+        }
+      } catch (error) {
+        logger.error('Error quoting tweet:', error);
+        return {
+          quoted: false,
+          error: error instanceof Error ? error.message : 'Unknown error',
+        };
+      }
+    },
+  });
+
 export const createFollowUserTool = (twitterApi: TwitterApi) =>
   new DynamicStructuredTool({
     name: 'follow_user',
@@ -250,6 +287,7 @@ export const createFollowUserTool = (twitterApi: TwitterApi) =>
         await twitterApi.followUser(username);
         return {
           followed: true,
+          username,
         };
       } catch (error) {
         logger.error('Error following user:', error);
@@ -273,6 +311,7 @@ export const createAllTwitterTools = (
   const searchTweetsTool = createSearchTweetsTool(twitterApi);
   const fetchTweetTool = createFetchTweetTool(twitterApi);
   const postTweetTool = createPostTweetTool(twitterApi, postTweets);
+  const quoteTweetTool = createQuoteTweetTool(twitterApi);
   const likeTweetTool = createLikeTweetTool(twitterApi);
   const followUserTool = createFollowUserTool(twitterApi);
   const fetchProfileTool = createFetchProfileTool(twitterApi);
@@ -290,5 +329,6 @@ export const createAllTwitterTools = (
     postTweetTool,
     likeTweetTool,
     followUserTool,
+    quoteTweetTool,
   ];
 };

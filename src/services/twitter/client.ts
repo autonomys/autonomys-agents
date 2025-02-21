@@ -1,9 +1,9 @@
 import { Scraper, SearchMode, Tweet } from 'agent-twitter-client';
-import { createLogger } from '../../utils/logger.js';
 import { existsSync, readFileSync, writeFileSync } from 'fs';
 import { isValidTweet } from './convertFromTimeline.js';
 import { convertTimelineTweetToTweet } from './convertFromTimeline.js';
 import { TwitterApi } from './types.js';
+import { createLogger } from '../../utils/logger.js';
 const logger = createLogger('twitter-api');
 
 const loadCookies = async (scraper: Scraper, cookiesPath: string): Promise<void> => {
@@ -352,6 +352,10 @@ export const createTwitterApi = async (
 
       logger.warn('Tweet sent but ID could not be confirmed', { text, inReplyTo });
       return '';
+    },
+
+    quoteTweet: async (text: string, quoteTweetId: string) => {
+      await scraper.sendQuoteTweet(text, quoteTweetId);
     },
 
     likeTweet: async (tweetId: string) => {
