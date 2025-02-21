@@ -90,6 +90,7 @@ export const config = (() => {
         LLAMA_API_URL: process.env.LLAMA_API_URL || '',
         DEEPSEEK_URL: process.env.DEEPSEEK_URL || '',
         DEEPSEEK_API_KEY: process.env.DEEPSEEK_API_KEY || '',
+        GROQ_API_KEY: process.env.GROQ_API_KEY || '',
       },
 
       autoDriveConfig: {

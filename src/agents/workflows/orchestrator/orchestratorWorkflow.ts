@@ -29,7 +29,11 @@ const handleConditionalEdge = async (state: OrchestratorStateType) => {
     return 'finishWorkflow';
   }
 
-  return 'tools';
+  if (state.toolCalls && state.toolCalls.length > 0) {
+    return 'toolExecution';
+  }
+
+  return 'messageSummary';
 };
 
 const createOrchestratorWorkflow = async (
@@ -40,10 +44,10 @@ const createOrchestratorWorkflow = async (
     .addNode('input', nodes.inputNode)
     .addNode('messageSummary', nodes.messageSummaryNode)
     .addNode('finishWorkflow', nodes.finishWorkflowNode)
-    .addNode('tools', nodes.toolNode)
+    .addNode('toolExecution', nodes.toolExecutionNode)
     .addEdge(START, 'input')
     .addConditionalEdges('input', handleConditionalEdge)
-    .addEdge('tools', 'messageSummary')
+    .addEdge('toolExecution', 'messageSummary')
     .addEdge('messageSummary', 'input')
     .addEdge('finishWorkflow', END);
 
