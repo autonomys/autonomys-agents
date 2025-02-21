@@ -25,6 +25,7 @@ const autoDriveConfigSchema = z.object({
     .transform(val => NetworkId[val.toUpperCase() as 'MAINNET' | 'TAURUS'])
     .default('taurus'),
   AUTO_DRIVE_UPLOAD: z.boolean().default(true),
+  AUTO_DRIVE_MONITORING: z.boolean().default(true),
 });
 
 const blockchainConfigSchema = z.object({
