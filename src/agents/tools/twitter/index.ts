@@ -253,11 +253,12 @@ export const createQuoteTweetTool = (twitterApi: TwitterApi, postTweets: boolean
     func: async ({ quoteTweetId, text }: { quoteTweetId: string; text: string }) => {
       try {
         if (postTweets) {
-          await twitterApi.quoteTweet(text, quoteTweetId);
+          const postedTweetId = await twitterApi.quoteTweet(text, quoteTweetId);
           return {
             quoted: true,
             quoteTweetId,
             text,
+            postedTweetId,
           };
         } else {
           logger.info('Quote tweet not posted', { text, quoteTweetId });

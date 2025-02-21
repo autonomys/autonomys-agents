@@ -213,6 +213,29 @@ const getFollowingRecentTweets = async (
   return tweets;
 };
 
+const findTweetId = async (scraper: Scraper, tweetText: string, username: string) => {
+  // Retry strategy to get the tweet ID
+  const maxRetries = 3;
+  const retryDelay = 1000; // 1 second
+
+  for (let i = 0; i < maxRetries; i++) {
+    await new Promise(resolve => setTimeout(resolve, retryDelay));
+
+    const recentTweets = await iterateResponse(
+      scraper.searchTweets(`from:${username}`, 5, SearchMode.Latest),
+    );
+
+    // Find the tweet that matches our text (in case multiple tweets were sent simultaneously)
+    const sentTweet = recentTweets.find(tweet => tweet.text?.includes(tweetText));
+    if (sentTweet?.id) {
+      logger.info('Tweet ID confirmed', { id: sentTweet.id });
+      return sentTweet.id;
+    }
+  }
+  logger.warn('Tweet ID could not be confirmed', { tweetText, username });
+  return '';
+};
+
 export const createTwitterApi = async (
   username: string,
   password: string,
@@ -331,23 +354,10 @@ export const createTwitterApi = async (
         await scraper.sendTweet(text, inReplyTo);
       }
 
-      // Retry strategy to get the tweet ID
-      const maxRetries = 3;
-      const retryDelay = 1000; // 1 second
-
-      for (let i = 0; i < maxRetries; i++) {
-        await new Promise(resolve => setTimeout(resolve, retryDelay));
-
-        const recentTweets = await iterateResponse(
-          scraper.searchTweets(`from:${username}`, 5, SearchMode.Latest),
-        );
-
-        // Find the tweet that matches our text (in case multiple tweets were sent simultaneously)
-        const sentTweet = recentTweets.find(tweet => tweet.text?.includes(text));
-        if (sentTweet?.id) {
-          logger.info('Tweet sent and confirmed', { text, inReplyTo, id: sentTweet.id });
-          return sentTweet.id;
-        }
+      const tweetId = await findTweetId(scraper, text, username);
+      if (tweetId) {
+        logger.info('Tweet sent and ID confirmed', { text, inReplyTo, id: tweetId });
+        return tweetId;
       }
 
       logger.warn('Tweet sent but ID could not be confirmed', { text, inReplyTo });
@@ -356,6 +366,14 @@ export const createTwitterApi = async (
 
     quoteTweet: async (text: string, quoteTweetId: string) => {
       await scraper.sendQuoteTweet(text, quoteTweetId);
+      const tweetId = await findTweetId(scraper, text, username);
+      if (tweetId) {
+        logger.info('Tweet sent and ID confirmed', { text, quoteTweetId, id: tweetId });
+        return tweetId;
+      }
+
+      logger.warn('Tweet sent but ID could not be confirmed', { text, quoteTweetId });
+      return '';
     },
 
     likeTweet: async (tweetId: string) => {
