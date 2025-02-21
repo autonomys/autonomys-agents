@@ -1,6 +1,6 @@
 import { BaseMessage } from '@langchain/core/messages';
 
-const parseJsonString = (input: any) => {
+const parseJsonString = (input: unknown) => {
   if (typeof input !== 'string') {
     return input;
   }
@@ -8,7 +8,7 @@ const parseJsonString = (input: any) => {
   try {
     const parsed = JSON.parse(input);
     return parsed;
-  } catch (e) {
+  } catch {
     return input;
   }
 };
