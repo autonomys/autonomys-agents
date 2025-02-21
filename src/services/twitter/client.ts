@@ -214,25 +214,25 @@ const getFollowingRecentTweets = async (
 };
 
 const findTweetId = async (scraper: Scraper, tweetText: string, username: string) => {
-  // Retry strategy to get the tweet ID
-  const maxRetries = 3;
-  const retryDelay = 1000; // 1 second
+  const maxRetries = 4;
+  const baseDelay = 500;
 
   for (let i = 0; i < maxRetries; i++) {
-    await new Promise(resolve => setTimeout(resolve, retryDelay));
+    const delay = baseDelay * Math.pow(2, i);
+    await new Promise(resolve => setTimeout(resolve, delay));
 
     const recentTweets = await iterateResponse(
       scraper.searchTweets(`from:${username}`, 5, SearchMode.Latest),
     );
 
-    // Find the tweet that matches our text (in case multiple tweets were sent simultaneously)
     const sentTweet = recentTweets.find(tweet => tweet.text?.includes(tweetText));
     if (sentTweet?.id) {
-      logger.info('Tweet ID confirmed', { id: sentTweet.id });
+      logger.info('Tweet ID confirmed', { id: sentTweet.id, attemptNumber: i + 1 });
       return sentTweet.id;
     }
+    logger.debug('Tweet ID not found, retrying', { attemptNumber: i + 1, nextDelay: delay * 2 });
   }
-  logger.warn('Tweet ID could not be confirmed', { tweetText, username });
+  logger.warn('Tweet ID could not be confirmed after all retries', { tweetText, username });
   return '';
 };
 
