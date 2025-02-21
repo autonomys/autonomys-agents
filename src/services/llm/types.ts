@@ -3,6 +3,7 @@ export enum LLMProvider {
   ANTHROPIC = 'anthropic',
   OLLAMA = 'ollama',
   DEEPSEEK = 'deepseek',
+  GROQ = 'groq',
 }
 
 export type LLMConfiguration = {

@@ -23,9 +23,10 @@ export const createFetchTimelineTool = (twitterApi: TwitterApi) =>
       numTimelineTweets: number;
     }) => {
       try {
-        const tweets = (await twitterApi.getMyTimeline(numTimelineTweets, processedIds)).map(t =>
-          tweetToMinimalTweet(t),
-        );
+        const myReplies = await twitterApi.getMyRepliedToIds();
+        const tweets = (
+          await twitterApi.getMyTimeline(numTimelineTweets, [...processedIds, ...myReplies])
+        ).map(t => tweetToMinimalTweet(t));
 
         logger.info('Timeline tweets:', {
           timelineTweets: tweets.length,
@@ -55,21 +56,29 @@ export const createFetchFollowingTimelineTool = (twitterApi: TwitterApi) =>
       numFollowingTimelineTweets: number;
       processedIds: string[];
     }) => {
+      const myReplies = await twitterApi.getMyRepliedToIds();
+      logger.info('myReplies', { myReplies });
       const tweets = (
-        await twitterApi.getFollowingTimeline(numFollowingTimelineTweets, processedIds)
+        await twitterApi.getFollowingTimeline(numFollowingTimelineTweets, [
+          ...processedIds,
+          ...myReplies,
+        ])
       ).map(t => tweetToMinimalTweet(t));
       return { tweets };
     },
   });
 
-export const createFetchMentionsTool = (twitterApi: TwitterApi) =>
+export const createFetchMentionsTool = (twitterApi: TwitterApi, maxThreadDepth: number) =>
   new DynamicStructuredTool({
     name: 'fetch_mentions',
     description: 'Fetch recent tweets that mention me',
     schema: z.object({ maxMentions: z.number().default(10) }),
     func: async ({ maxMentions }: { maxMentions: number }) => {
       try {
-        const recentMentions = await twitterApi.getMyUnrepliedToMentions(maxMentions);
+        const recentMentions = await twitterApi.getMyUnrepliedToMentions(
+          maxMentions,
+          maxThreadDepth,
+        );
         return {
           mentions: recentMentions.map(t => {
             const tweet = cleanTweetForCircularReferences(t);
@@ -195,6 +204,17 @@ export const createPostTweetTool = (twitterApi: TwitterApi, postTweets: boolean 
     func: async ({ text, inReplyTo }: { text: string; inReplyTo?: string }) => {
       try {
         if (postTweets) {
+          if (inReplyTo) {
+            const myReplies = await twitterApi.getMyRepliedToIds();
+            const hasRepliedTo = myReplies.includes(inReplyTo);
+            if (hasRepliedTo) {
+              logger.info('Already replied to this tweet', { inReplyTo });
+              return {
+                postedTweet: false,
+                message: 'Already replied to this tweet',
+              };
+            }
+          }
           const postedTweetId = await twitterApi.sendTweet(text, inReplyTo);
           logger.info('Tweet posted successfully', {
             postedTweet: { postedTweetId, text },
@@ -241,10 +261,14 @@ export const createFollowUserTool = (twitterApi: TwitterApi) =>
     },
   });
 
-export const createAllTwitterTools = (twitterApi: TwitterApi, postTweets: boolean = false) => {
+export const createAllTwitterTools = (
+  twitterApi: TwitterApi,
+  maxThreadDepth: number,
+  postTweets: boolean = false,
+) => {
   const fetchTimelineTool = createFetchTimelineTool(twitterApi);
   const fetchFollowingTimelineTool = createFetchFollowingTimelineTool(twitterApi);
-  const fetchMentionsTool = createFetchMentionsTool(twitterApi);
+  const fetchMentionsTool = createFetchMentionsTool(twitterApi, maxThreadDepth);
   const fetchMyRecentTweetsAndRepliesTool = createFetchMyRecentTweetsAndRepliesTool(twitterApi);
   const searchTweetsTool = createSearchTweetsTool(twitterApi);
   const fetchTweetTool = createFetchTweetTool(twitterApi);

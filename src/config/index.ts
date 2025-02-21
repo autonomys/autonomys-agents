@@ -79,7 +79,7 @@ export const config = (() => {
         USERNAME: username,
         PASSWORD: process.env.TWITTER_PASSWORD || '',
         COOKIES_PATH: cookiesPath,
-        POST_TWEETS: yamlConfig.twitter.post_tweets,
+        POST_TWEETS: yamlConfig.twitter.post_tweets ?? false,
       },
 
       characterConfig,
@@ -90,13 +90,15 @@ export const config = (() => {
         LLAMA_API_URL: process.env.LLAMA_API_URL || '',
         DEEPSEEK_URL: process.env.DEEPSEEK_URL || '',
         DEEPSEEK_API_KEY: process.env.DEEPSEEK_API_KEY || '',
+        GROQ_API_KEY: process.env.GROQ_API_KEY || '',
       },
 
       autoDriveConfig: {
         AUTO_DRIVE_API_KEY: process.env.AUTO_DRIVE_API_KEY,
         AUTO_DRIVE_ENCRYPTION_PASSWORD: process.env.AUTO_DRIVE_ENCRYPTION_PASSWORD,
         AUTO_DRIVE_NETWORK: yamlConfig.auto_drive.network ?? 'taurus',
-        AUTO_DRIVE_UPLOAD: yamlConfig.auto_drive.upload ?? true,
+        AUTO_DRIVE_UPLOAD: yamlConfig.auto_drive.upload ?? false,
+        AUTO_DRIVE_MONITORING: yamlConfig.auto_drive.monitoring ?? false,
       },
 
       blockchainConfig: {

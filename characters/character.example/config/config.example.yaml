@@ -3,4 +3,5 @@ twitter:
 
 auto_drive:
   upload: true
-  network: 'taurus' # or 'mainnet'
+  monitoring: true
+  network: 'mainnet' # or 'taurus'

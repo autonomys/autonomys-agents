@@ -1,27 +1,33 @@
+import { createWebSearchTool } from './agents/tools/webSearch/index.js';
 import {
   createOrchestratorRunner,
   OrchestratorRunner,
 } from './agents/workflows/orchestrator/orchestratorWorkflow.js';
+import { createPrompts } from './agents/workflows/orchestrator/prompts.js';
+import { OrchestratorRunnerOptions } from './agents/workflows/orchestrator/types.js';
 import { createTwitterAgent } from './agents/workflows/twitter/twitterAgent.js';
 import { config } from './config/index.js';
-import { createTwitterApi } from './services/twitter/client.js';
-import { createPrompts } from './agents/workflows/orchestrator/prompts.js';
 import { LLMProvider } from './services/llm/types.js';
-import { OrchestratorRunnerOptions } from './agents/workflows/orchestrator/types.js';
-import { createWebSearchTool } from './agents/tools/webSearch/index.js';
+import { createTwitterApi } from './services/twitter/client.js';
 
 const character = config.characterConfig;
 const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
+  //shared twitter agent and orchestrator config
+  const webSearchTool = config.SERPAPI_API_KEY ? [createWebSearchTool(config.SERPAPI_API_KEY)] : [];
+  const autoDriveUploadEnabled = config.autoDriveConfig.AUTO_DRIVE_UPLOAD;
+  const monitoringEnabled = config.autoDriveConfig.AUTO_DRIVE_MONITORING;
+
   //Twitter agent config
   const { USERNAME, PASSWORD, COOKIES_PATH } = config.twitterConfig;
   const twitterApi = await createTwitterApi(USERNAME, PASSWORD, COOKIES_PATH);
-  const webSearchTool = createWebSearchTool(config.SERPAPI_API_KEY || '');
-  const autoDriveUploadEnabled = config.autoDriveConfig.AUTO_DRIVE_UPLOAD;
 
   const twitterAgentTool = createTwitterAgent(twitterApi, character, {
-    tools: [webSearchTool],
+    tools: [...webSearchTool],
     postTweets: config.twitterConfig.POST_TWEETS,
     autoDriveUploadEnabled,
+    monitoring: {
+      enabled: monitoringEnabled,
+    },
   });
 
   //Orchestrator config
@@ -45,9 +51,12 @@ const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
   };
   return {
     modelConfigurations,
-    tools: [twitterAgentTool, webSearchTool],
+    tools: [twitterAgentTool, ...webSearchTool],
     prompts,
     autoDriveUploadEnabled,
+    monitoring: {
+      enabled: monitoringEnabled,
+    },
   };
 };
 

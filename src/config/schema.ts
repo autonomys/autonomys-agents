@@ -14,6 +14,7 @@ const llmConfigSchema = z.object({
   LLAMA_API_URL: z.string(),
   DEEPSEEK_URL: z.string(),
   DEEPSEEK_API_KEY: z.string(),
+  GROQ_API_KEY: z.string(),
 });
 
 const autoDriveConfigSchema = z.object({
@@ -24,6 +25,7 @@ const autoDriveConfigSchema = z.object({
     .transform(val => NetworkId[val.toUpperCase() as 'MAINNET' | 'TAURUS'])
     .default('taurus'),
   AUTO_DRIVE_UPLOAD: z.boolean().default(true),
+  AUTO_DRIVE_MONITORING: z.boolean().default(true),
 });
 
 const blockchainConfigSchema = z.object({
