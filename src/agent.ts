@@ -27,29 +27,14 @@ const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
     monitoring: {
       enabled: monitoringEnabled,
     },
+    modelConfigurations: config.twitterConfig.model_configurations,
   });
 
   //Orchestrator config
   const prompts = await createPrompts(character, { selfSchedule: true });
-  const modelConfigurations = {
-    inputModelConfig: {
-      provider: 'anthropic' as const,
-      model: 'claude-3-5-sonnet-latest',
-      temperature: 0.8,
-    },
-    messageSummaryModelConfig: {
-      provider: 'openai' as const,
-      model: 'gpt-4o',
-      temperature: 0.8,
-    },
-    finishWorkflowModelConfig: {
-      provider: 'openai' as const,
-      model: 'gpt-4o-mini',
-      temperature: 0.8,
-    },
-  };
+
   return {
-    modelConfigurations,
+    modelConfigurations: config.orchestratorConfig.model_configurations,
     tools: [twitterAgentTool, ...webSearchTool],
     prompts,
     saveExperiences,

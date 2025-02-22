@@ -69,6 +69,14 @@ const yamlConfig = (() => {
   }
 })();
 
+const convertModelConfigurations = (modelConfigurations: any) => {
+  return {
+    inputModelConfig: modelConfigurations.input_model_config,
+    messageSummaryModelConfig: modelConfigurations.message_summary_model_config,
+    finishWorkflowModelConfig: modelConfigurations.finish_workflow_model_config,
+  };
+};
+
 export const config = (() => {
   try {
     const username = process.env.TWITTER_USERNAME || '';
@@ -80,6 +88,7 @@ export const config = (() => {
         PASSWORD: process.env.TWITTER_PASSWORD || '',
         COOKIES_PATH: cookiesPath,
         POST_TWEETS: yamlConfig.twitter.post_tweets ?? false,
+        model_configurations: convertModelConfigurations(yamlConfig.twitter.model_configurations),
       },
 
       characterConfig,
@@ -114,6 +123,9 @@ export const config = (() => {
       orchestratorConfig: {
         MAX_WINDOW_SUMMARY: 20,
         MAX_QUEUE_SIZE: 50,
+        model_configurations: convertModelConfigurations(
+          yamlConfig.orchestrator.model_configurations,
+        ),
       },
 
       NODE_ENV: process.env.NODE_ENV || 'development',

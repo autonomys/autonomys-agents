@@ -93,9 +93,17 @@ const createOrchestratorRunnerConfig = async (
   const mergedOptions = { ...defaultOptions, ...options };
 
   const modelConfigurations = {
-    ...defaultOptions.modelConfigurations,
-    ...options?.modelConfigurations,
+    inputModelConfig:
+      options?.modelConfigurations?.inputModelConfig ||
+      defaultOptions.modelConfigurations.inputModelConfig,
+    messageSummaryModelConfig:
+      options?.modelConfigurations?.messageSummaryModelConfig ||
+      defaultOptions.modelConfigurations.messageSummaryModelConfig,
+    finishWorkflowModelConfig:
+      options?.modelConfigurations?.finishWorkflowModelConfig ||
+      defaultOptions.modelConfigurations.finishWorkflowModelConfig,
   };
+
   const vectorStore = options?.vectorStore || new VectorDB(defaultOptions.namespace);
   const tools = [
     ...(options?.tools || []),

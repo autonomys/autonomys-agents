@@ -1,12 +1,6 @@
 import { z } from 'zod';
 import { NetworkId } from '@autonomys/auto-utils';
-
-const twitterConfigSchema = z.object({
-  USERNAME: z.string().min(1, 'Twitter username is required'),
-  PASSWORD: z.string().min(1, 'Twitter password is required'),
-  COOKIES_PATH: z.string(),
-  POST_TWEETS: z.boolean().default(false),
-});
+import { LLMProvider, LLMConfiguration } from '../services/llm/types.js';
 
 const llmConfigSchema = z.object({
   OPENAI_API_KEY: z.string(),
@@ -15,6 +9,34 @@ const llmConfigSchema = z.object({
   DEEPSEEK_URL: z.string(),
   DEEPSEEK_API_KEY: z.string(),
   GROQ_API_KEY: z.string(),
+});
+
+const llmProviderSchema: z.ZodType<LLMProvider> = z.enum([
+  'openai',
+  'anthropic',
+  'ollama',
+  'deepseek',
+  'groq',
+]);
+
+const modelConfigSchema: z.ZodType<LLMConfiguration> = z.object({
+  provider: llmProviderSchema,
+  model: z.string(),
+  temperature: z.number().optional(),
+});
+
+const modelConfigurationsSchema = z.object({
+  inputModelConfig: modelConfigSchema.optional(),
+  messageSummaryModelConfig: modelConfigSchema.optional(),
+  finishWorkflowModelConfig: modelConfigSchema.optional(),
+});
+
+const twitterConfigSchema = z.object({
+  USERNAME: z.string().min(1, 'Twitter username is required'),
+  PASSWORD: z.string().min(1, 'Twitter password is required'),
+  COOKIES_PATH: z.string(),
+  POST_TWEETS: z.boolean().default(false),
+  model_configurations: modelConfigurationsSchema.optional(),
 });
 
 const autoDriveConfigSchema = z.object({
@@ -79,6 +101,7 @@ const memoryConfigSchema = z.object({
 const orchestratorConfigSchema = z.object({
   MAX_WINDOW_SUMMARY: z.number().int().positive().default(20),
   MAX_QUEUE_SIZE: z.number().int().positive().default(50),
+  model_configurations: modelConfigurationsSchema.optional(),
 });
 
 const SERPAPI_API_KEY = z.string().optional();
