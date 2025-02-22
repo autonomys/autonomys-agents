@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { NetworkId } from '@autonomys/auto-utils';
-import { LLMProvider, LLMConfiguration } from '../services/llm/types.js';
+import { LLMConfiguration, LLMProvider } from '../services/llm/types.js';
 
 const llmConfigSchema = z.object({
   OPENAI_API_KEY: z.string(),

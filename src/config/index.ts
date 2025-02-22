@@ -69,6 +69,7 @@ const yamlConfig = (() => {
   }
 })();
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const convertModelConfigurations = (modelConfigurations: any) => {
   return {
     inputModelConfig: modelConfigurations.input_model_config,
