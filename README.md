@@ -43,15 +43,6 @@ Features:
 - Task scheduling and management
 - Live output logging
 
-Keyboard Shortcuts:
-
-- Enter: Send message/command
-- Ctrl+n: Insert new line in input
-- Ctrl+i: Focus input box
-- Ctrl+b/Ctrl+f: Scroll output log by page
-- Ctrl+p/Ctrl+n: Scroll output log by line
-- Escape/q/Ctrl+C: Quit
-
 The interface provides a user-friendly way to interact with your agent, monitor its activities, and manage scheduled tasks, all within a terminal environment.
 
 ### Known Issues
@@ -151,6 +142,8 @@ yarn resurrect your_character_name -o ./memories/my-agent -n 1000    # Fetch 100
 yarn resurrect your_character_name --output ./custom/path            # Fetch all memories to custom directory
 yarn resurrect --help                            # Show help menu
 ```
+
+While memories are being fetched, they will be added to the vector database named `experiences` in the background, located in the <your_character_name> folder within the data directory.
 
 ## Testing
 
