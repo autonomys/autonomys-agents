@@ -18,9 +18,9 @@
         "test:coverage": "jest --coverage",
         "lint": "eslint \"src/**/*.{js,ts}\"",
         "lint:fix": "eslint \"src/**/*.{js,ts}\" --fix",
-        "resurrect": "tsx cli/resurrect.ts",
+        "resurrect": "tsx scripts/resurrect.ts",
         "create-character": "tsx scripts/create-character.ts",
-        "cli": "tsx cli/cli.ts"
+        "cli": "tsx cli/index.ts"
     },
     "dependencies": {
         "@autonomys/auto-dag-data": "1.2.1",
