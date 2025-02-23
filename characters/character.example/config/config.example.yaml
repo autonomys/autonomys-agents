@@ -3,7 +3,7 @@ twitter:
   model_configurations:
     input_model_config:
       provider: anthropic
-      model: claude-3-5-sonnet-20240620
+      model: claude-3-5-sonnet-latest
       temperature: 0.8
     message_summary_model_config:
       provider: openai
@@ -23,7 +23,7 @@ orchestrator:
   model_configurations:
     input_model_config:
       provider: anthropic
-      model: claude-3-5-sonnet-20240620
+      model: claude-3-5-sonnet-latest
       temperature: 0.8
     message_summary_model_config:
       provider: openai

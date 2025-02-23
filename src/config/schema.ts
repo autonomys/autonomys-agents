@@ -39,16 +39,30 @@ const twitterConfigSchema = z.object({
   model_configurations: modelConfigurationsSchema.optional(),
 });
 
-const autoDriveConfigSchema = z.object({
-  AUTO_DRIVE_API_KEY: z.string().optional(),
-  AUTO_DRIVE_ENCRYPTION_PASSWORD: z.string().optional(),
-  AUTO_DRIVE_NETWORK: z
-    .enum(['mainnet', 'taurus'])
-    .transform(val => NetworkId[val.toUpperCase() as 'MAINNET' | 'TAURUS'])
-    .default('taurus'),
-  AUTO_DRIVE_MONITORING: z.boolean().default(false),
-  AUTO_DRIVE_SAVE_EXPERIENCES: z.boolean().default(false),
-});
+const autoDriveConfigSchema = z
+  .object({
+    AUTO_DRIVE_API_KEY: z.string().optional(),
+    AUTO_DRIVE_ENCRYPTION_PASSWORD: z.string().optional(),
+    AUTO_DRIVE_NETWORK: z
+      .enum(['mainnet', 'taurus'])
+      .transform(val => NetworkId[val.toUpperCase() as 'MAINNET' | 'TAURUS'])
+      .default('mainnet'),
+    AUTO_DRIVE_MONITORING: z.boolean().default(false),
+    AUTO_DRIVE_SAVE_EXPERIENCES: z.boolean().default(false),
+  })
+  .refine(
+    data => {
+      if (data.AUTO_DRIVE_SAVE_EXPERIENCES || data.AUTO_DRIVE_MONITORING) {
+        return !!data.AUTO_DRIVE_API_KEY;
+      }
+      return true;
+    },
+    {
+      message:
+        'AUTO_DRIVE_API_KEY is required when AUTO_DRIVE_SAVE_EXPERIENCES or AUTO_DRIVE_MONITORING is enabled',
+      path: ['AUTO_DRIVE_API_KEY'],
+    },
+  );
 
 const blockchainConfigSchema = z.object({
   RPC_URL: z.string().optional(),
