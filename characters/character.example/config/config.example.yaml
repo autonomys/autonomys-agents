@@ -32,3 +32,4 @@ orchestrator:
     finish_workflow_model_config:
       provider: openai
       model: gpt-4o
+      temperature: 0.8
