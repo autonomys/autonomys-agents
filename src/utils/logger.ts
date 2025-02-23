@@ -24,14 +24,15 @@ const formatMeta = (meta: any, _useColors: boolean = false) => {
     Object.assign(cleanMeta, meta[Symbol.for('splat')][0]);
   }
 
-  return Object.keys(cleanMeta).length ? 
-    `\n${util.inspect(cleanMeta, {
-      depth: 5,
-      colors: _useColors,
-      maxStringLength: 1000,
-      breakLength: 80,
-      compact: false,
-    })}` : '';
+  return Object.keys(cleanMeta).length
+    ? `\n${util.inspect(cleanMeta, {
+        depth: 5,
+        colors: _useColors,
+        maxStringLength: 1000,
+        breakLength: 80,
+        compact: false,
+      })}`
+    : '';
 };
 
 const createFileFormat = () =>
