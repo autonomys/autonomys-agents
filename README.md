@@ -72,7 +72,7 @@ The framework uses a YAML-based character system that allows you to create and r
 
 ### Character Configuration
 
-Each character file is a YAML configuration with the following structure. For an example character configuration, see [character.example.yaml](characters/character.example/config/character.example.yaml).
+Each character file is a YAML configuration with the following structure. For an example character personality configuration, see [character.example.yaml](characters/character.example/config/character.example.yaml) and for example parameter configuration, see [config.example.yaml](characters/character.example/config/config.example.yaml).
 
 ## Context Size Management
 
