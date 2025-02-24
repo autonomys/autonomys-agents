@@ -7,7 +7,6 @@ import {
 } from '../../src/agents/workflows/orchestrator/orchestratorWorkflow.js';
 import { createTwitterAgent } from '../../src/agents/workflows/twitter/twitterAgent.js';
 import { createPrompts } from '../../src/agents/workflows/orchestrator/prompts.js';
-import { LLMProvider } from '../../src/services/llm/types.js';
 import { createTwitterApi } from '../../src/services/twitter/client.js';
 import { HumanMessage } from '@langchain/core/messages';
 import { createWebSearchTool } from '../../src/agents/tools/webSearch/index.js';
@@ -30,7 +29,7 @@ const orchestratorCharacter: Character = {
 const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
   //shared twitter agent and orchestrator config
   const webSearchTool = config.SERPAPI_API_KEY ? [createWebSearchTool(config.SERPAPI_API_KEY)] : [];
-  const autoDriveUploadEnabled = config.autoDriveConfig.AUTO_DRIVE_UPLOAD;
+  const saveExperiences = config.autoDriveConfig.AUTO_DRIVE_SAVE_EXPERIENCES;
   const monitoringEnabled = config.autoDriveConfig.AUTO_DRIVE_MONITORING;
 
   //Twitter agent config
@@ -40,7 +39,7 @@ const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
   const twitterAgent = createTwitterAgent(twitterApi, twitterCharacter, {
     tools: [...webSearchTool],
     postTweets: config.twitterConfig.POST_TWEETS,
-    autoDriveUploadEnabled,
+    saveExperiences,
     monitoring: {
       enabled: monitoringEnabled,
     },
@@ -53,12 +52,12 @@ const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
   //override default model configurations for summary and finish workflow nodes
   const modelConfigurations = {
     messageSummaryModelConfig: {
-      provider: LLMProvider.OPENAI,
+      provider: 'openai' as const,
       model: 'gpt-4o',
       temperature: 0.8,
     },
     finishWorkflowModelConfig: {
-      provider: LLMProvider.OPENAI,
+      provider: 'openai' as const,
       model: 'gpt-4o-mini',
       temperature: 0.8,
     },
@@ -67,7 +66,7 @@ const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
     modelConfigurations,
     tools: [twitterAgent, ...webSearchTool],
     prompts,
-    autoDriveUploadEnabled,
+    saveExperiences: saveExperiences,
     monitoring: {
       enabled: monitoringEnabled,
     },

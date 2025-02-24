@@ -8,10 +8,10 @@ import {
 
 export const createDefaultOrchestratorTools = (
   vectorDb: VectorDB,
-  uploadEnabled: boolean = false,
+  saveExperiences: boolean = false,
 ) => {
   const experienceVectorDb = new VectorDB('experiences');
-  const saveExperienceTool = createSaveExperienceTool(uploadEnabled);
+  const saveExperienceTool = createSaveExperienceTool(saveExperiences);
   const getCurrentTimeTool = createGetCurrentTimeTool();
   const vectorDbSearchTool = createVectorDbSearchTool(vectorDb);
   const experienceVectorDbSearchTool = createExperienceVectorDbSearchTool(experienceVectorDb);

@@ -2,7 +2,7 @@ import { BaseMessage } from '@langchain/core/messages';
 import { END, MemorySaver, START, StateGraph } from '@langchain/langgraph';
 import { uploadToDsn } from '../../../blockchain/autoDrive/autoDriveUpload.js';
 import { Character } from '../../../config/characters.js';
-import { LLMConfiguration, LLMProvider } from '../../../services/llm/types.js';
+import { LLMConfiguration } from '../../../services/llm/types.js';
 import { VectorDB } from '../../../services/vectorDb/VectorDB.js';
 import { createLogger } from '../../../utils/logger.js';
 import { cleanMessageData } from './cleanMessages.js';
@@ -62,7 +62,7 @@ export type OrchestratorRunner = Readonly<{
 }>;
 
 const defaultModelConfiguration: LLMConfiguration = {
-  provider: LLMProvider.ANTHROPIC,
+  provider: 'anthropic',
   model: 'claude-3-5-sonnet-latest',
   temperature: 0.8,
 };
@@ -78,11 +78,12 @@ const defaultOptions = {
     maxWindowSummary: 30,
     maxQueueSize: 50,
   },
-  autoDriveUploadEnabled: false,
+  saveExperiences: false,
   monitoring: {
     enabled: false,
     messageCleaner: cleanMessageData,
   },
+  recursionLimit: 50,
 };
 
 const createOrchestratorRunnerConfig = async (
@@ -92,13 +93,21 @@ const createOrchestratorRunnerConfig = async (
   const mergedOptions = { ...defaultOptions, ...options };
 
   const modelConfigurations = {
-    ...defaultOptions.modelConfigurations,
-    ...options?.modelConfigurations,
+    inputModelConfig:
+      options?.modelConfigurations?.inputModelConfig ||
+      defaultOptions.modelConfigurations.inputModelConfig,
+    messageSummaryModelConfig:
+      options?.modelConfigurations?.messageSummaryModelConfig ||
+      defaultOptions.modelConfigurations.messageSummaryModelConfig,
+    finishWorkflowModelConfig:
+      options?.modelConfigurations?.finishWorkflowModelConfig ||
+      defaultOptions.modelConfigurations.finishWorkflowModelConfig,
   };
+
   const vectorStore = options?.vectorStore || new VectorDB(defaultOptions.namespace);
   const tools = [
     ...(options?.tools || []),
-    ...createDefaultOrchestratorTools(vectorStore, mergedOptions.autoDriveUploadEnabled),
+    ...createDefaultOrchestratorTools(vectorStore, mergedOptions.saveExperiences),
   ];
   const prompts = options?.prompts || (await createPrompts(character));
   const monitoring = {
@@ -140,7 +149,7 @@ export const createOrchestratorRunner = async (
       }
 
       const config = {
-        recursionLimit: 50,
+        recursionLimit: runnerConfig.recursionLimit,
         configurable: {
           ...runnerConfig.pruningParameters,
           thread_id: threadId,
@@ -161,7 +170,7 @@ export const createOrchestratorRunner = async (
         threadId,
       });
 
-      if (runnerConfig.monitoring.enabled && runnerConfig.autoDriveUploadEnabled) {
+      if (runnerConfig.monitoring.enabled) {
         const rawMessages: BaseMessage[] | undefined = (await memoryStore.getTuple(config))
           ?.checkpoint.channel_values.messages as BaseMessage[];
 
@@ -170,6 +179,7 @@ export const createOrchestratorRunner = async (
         const dsnUpload = await uploadToDsn({
           messages: cleanedMessages,
           namespace: runnerConfig.namespace,
+          type: 'monitoring',
         });
         logger.info('Dsn upload', { dsnUpload });
       }
