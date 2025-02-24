@@ -10,7 +10,7 @@ export const createInputBox = () => {
     border: { type: 'line' },
     style: {
       border: { fg: 'yellow' },
-      focus: { border: { fg: 'white' } },
+      focus: { border: { fg: 'white' } },      
     },
     keys: true,
     vi: true,
@@ -22,6 +22,8 @@ export const createInputBox = () => {
     padding: {
       left: 1,
       right: 1,
+      top: 1
     },
+    wrap: true,    
   });
 };
