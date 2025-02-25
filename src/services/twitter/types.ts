@@ -5,7 +5,12 @@ export interface TwitterApi {
   scraper: Scraper;
   username: string;
   userId: string;
-  getMyUnrepliedToMentions: (maxResults: number, sinceId?: string) => Promise<Tweet[]>;
+  getMyUnrepliedToMentions: (
+    maxResults: number,
+    maxThreadDepth?: number,
+    ignoreConversationIds?: string[],
+    sinceId?: string,
+  ) => Promise<Tweet[]>;
   getFollowingRecentTweets: (maxResults: number, numberOfUsers: number) => Promise<Tweet[]>;
   isLoggedIn: () => Promise<boolean>;
   getProfile: (username: string) => Promise<Profile>;
@@ -20,6 +25,7 @@ export interface TwitterApi {
   getFollowingTimeline: (count: number, excludeIds: string[]) => Promise<Tweet[]>;
   searchTweets: (query: string, count: number) => Promise<Tweet[]>;
   sendTweet: (tweet: string, inReplyTo?: string) => Promise<string>;
+  quoteTweet: (text: string, quoteTweetId: string) => Promise<string>;
   likeTweet: (tweetId: string) => Promise<void>;
   followUser: (username: string) => Promise<void>;
 }

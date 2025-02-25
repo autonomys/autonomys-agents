@@ -1,30 +1,24 @@
-import { HumanMessage } from '@langchain/core/messages';
 import { Console } from 'console';
+import { HumanMessage } from '@langchain/core/messages';
+import { UIComponents, AppState } from '../types/types.js';
 import { Writable } from 'stream';
 import blessed from 'blessed';
-import { UIComponents, AppState } from '../types/types.js';
 
-export const createOutputStreams = (
-  outputLog: blessed.Widgets.Log,
-  screen: blessed.Widgets.Screen,
-) => {
-  const stdout = new Writable({
-    write: (chunk: any, encoding: string, callback: () => void) => {
-      outputLog.log(chunk.toString());
-      screen.render();
-      callback();
-    },
-  });
+// Create custom output streams that write to the blessed log
+const createOutputStreams = (outputLog: blessed.Widgets.Log, screen: blessed.Widgets.Screen) => {
+  const createStream = () =>
+    new Writable({
+      write(chunk, encoding, callback) {
+        outputLog.add(chunk.toString());
+        screen.render();
+        callback();
+      },
+    });
 
-  const stderr = new Writable({
-    write: (chunk: any, encoding: string, callback: () => void) => {
-      outputLog.log(`{red-fg}${chunk.toString()}{/red-fg}`);
-      screen.render();
-      callback();
-    },
-  });
-
-  return { stdout, stderr };
+  return {
+    stdout: createStream(),
+    stderr: createStream(),
+  };
 };
 
 export const runWorkflow = async (
@@ -57,23 +51,35 @@ export const runWorkflow = async (
       const nextDelaySeconds = result.secondsUntilNextWorkflow;
       const nextRunTime = new Date(Date.now() + nextDelaySeconds * 1000);
 
-      state.scheduledTasks.push({
-        time: nextRunTime,
-        description: result.nextWorkflowPrompt,
-      });
+      const release = await state.mutex.acquire();
+      try {
+        state.scheduledTasks.push({
+          time: nextRunTime,
+          description: result.nextWorkflowPrompt,
+        });
 
-      const formattedTime = nextRunTime.toISOString();
-      scheduledTasksBox.addItem(`${formattedTime} - ${result.nextWorkflowPrompt}`);
-      scheduledTasksBox.scrollTo(Number((scheduledTasksBox as any).ritems.length - 1));
-      statusBox.setContent('Workflow completed. Next task scheduled.');
+        const formattedTime = nextRunTime.toISOString();
+        scheduledTasksBox.addItem(`${formattedTime} - ${result.nextWorkflowPrompt}`);
+        scheduledTasksBox.scrollTo(Number((scheduledTasksBox as any).ritems.length - 1));
+        statusBox.setContent('Workflow completed. Next task scheduled.');
+      } finally {
+        release();
+      }
     } else {
       statusBox.setContent('Workflow completed. Enter new message to start another.');
     }
   } catch (error) {
     global.console = originalConsole;
     throw error;
+  } finally {
+    // Ensure processing state is reset
+    const release = await state.mutex.acquire();
+    try {
+      state.isProcessing = false;
+    } finally {
+      release();
+    }
+    screen.render();
+    inputBox.focus();
   }
-
-  screen.render();
-  inputBox.focus();
 };

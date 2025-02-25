@@ -1,8 +1,9 @@
 import { createInputNode } from './nodes/inputNode.js';
 import { createMessageSummaryNode } from './nodes/messageSummaryNode.js';
 import { createFinishWorkflowNode } from './nodes/finishWorkflowNode.js';
-import { OrchestratorConfig } from './orchestratorWorkflow.js';
-import { ToolNode } from '@langchain/langgraph/prebuilt';
+import { createToolExecutionNode } from './nodes/toolExecutionNode.js';
+import { OrchestratorConfig } from './types.js';
+import { DynamicStructuredTool } from '@langchain/core/tools';
 
 export const createNodes = async ({
   modelConfigurations,
@@ -31,11 +32,13 @@ export const createNodes = async ({
     finishWorkflowPrompt,
     vectorStore,
   });
-  const toolNode = new ToolNode(tools);
+  const toolExecutionNode = createToolExecutionNode({
+    tools: tools as DynamicStructuredTool[],
+  });
   return {
     inputNode,
     messageSummaryNode,
     finishWorkflowNode,
-    toolNode,
+    toolExecutionNode,
   };
 };

@@ -1,53 +1,46 @@
+import { createWebSearchTool } from './agents/tools/webSearch/index.js';
 import {
   createOrchestratorRunner,
   OrchestratorRunner,
 } from './agents/workflows/orchestrator/orchestratorWorkflow.js';
+import { createPrompts } from './agents/workflows/orchestrator/prompts.js';
+import { OrchestratorRunnerOptions } from './agents/workflows/orchestrator/types.js';
 import { createTwitterAgent } from './agents/workflows/twitter/twitterAgent.js';
 import { config } from './config/index.js';
 import { createTwitterApi } from './services/twitter/client.js';
-import { createPrompts } from './agents/workflows/orchestrator/prompts.js';
-import { LLMProvider } from './services/llm/types.js';
-import { OrchestratorRunnerOptions } from './agents/workflows/orchestrator/types.js';
-import { createWebSearchTool } from './agents/tools/webSearch/index.js';
 
 const character = config.characterConfig;
 const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
+  //shared twitter agent and orchestrator config
+  const webSearchTool = config.SERPAPI_API_KEY ? [createWebSearchTool(config.SERPAPI_API_KEY)] : [];
+  const saveExperiences = config.autoDriveConfig.AUTO_DRIVE_SAVE_EXPERIENCES;
+  const monitoringEnabled = config.autoDriveConfig.AUTO_DRIVE_MONITORING;
+
   //Twitter agent config
   const { USERNAME, PASSWORD, COOKIES_PATH } = config.twitterConfig;
   const twitterApi = await createTwitterApi(USERNAME, PASSWORD, COOKIES_PATH);
-  const webSearchTool = createWebSearchTool(config.SERPAPI_API_KEY || '');
-  const autoDriveUploadEnabled = config.autoDriveConfig.AUTO_DRIVE_UPLOAD;
 
   const twitterAgentTool = createTwitterAgent(twitterApi, character, {
-    tools: [webSearchTool],
+    tools: [...webSearchTool],
     postTweets: config.twitterConfig.POST_TWEETS,
-    autoDriveUploadEnabled,
+    saveExperiences,
+    monitoring: {
+      enabled: monitoringEnabled,
+    },
+    modelConfigurations: config.twitterConfig.model_configurations,
   });
 
   //Orchestrator config
   const prompts = await createPrompts(character, { selfSchedule: true });
-  const modelConfigurations = {
-    inputModelConfig: {
-      provider: LLMProvider.ANTHROPIC,
-      model: 'claude-3-5-sonnet-latest',
-      temperature: 0.8,
-    },
-    messageSummaryModelConfig: {
-      provider: LLMProvider.OPENAI,
-      model: 'gpt-4o',
-      temperature: 0.8,
-    },
-    finishWorkflowModelConfig: {
-      provider: LLMProvider.OPENAI,
-      model: 'gpt-4o-mini',
-      temperature: 0.8,
-    },
-  };
+
   return {
-    modelConfigurations,
-    tools: [twitterAgentTool, webSearchTool],
+    modelConfigurations: config.orchestratorConfig.model_configurations,
+    tools: [twitterAgentTool, ...webSearchTool],
     prompts,
-    autoDriveUploadEnabled,
+    saveExperiences,
+    monitoring: {
+      enabled: monitoringEnabled,
+    },
   };
 };
 

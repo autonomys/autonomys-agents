@@ -1,9 +1,9 @@
 import { Scraper, SearchMode, Tweet } from 'agent-twitter-client';
-import { createLogger } from '../../utils/logger.js';
 import { existsSync, readFileSync, writeFileSync } from 'fs';
 import { isValidTweet } from './convertFromTimeline.js';
 import { convertTimelineTweetToTweet } from './convertFromTimeline.js';
 import { TwitterApi } from './types.js';
+import { createLogger } from '../../utils/logger.js';
 const logger = createLogger('twitter-api');
 
 const loadCookies = async (scraper: Scraper, cookiesPath: string): Promise<void> => {
@@ -88,11 +88,11 @@ const getMyRecentReplies = async (
   }
   return replies;
 };
-const getReplyThread = (tweet: Tweet, conversation: Tweet[]): Tweet[] => {
+const getReplyThread = (tweet: Tweet, conversation: Tweet[], maxThreadDepth: number): Tweet[] => {
   const replyThread: Tweet[] = [];
   let currentTweet = tweet;
 
-  while (currentTweet) {
+  while (replyThread.length <= maxThreadDepth) {
     if (currentTweet.inReplyToStatusId) {
       const parentTweet = conversation.find(t => t.id === currentTweet.inReplyToStatusId);
       if (parentTweet) {
@@ -108,19 +108,22 @@ const getReplyThread = (tweet: Tweet, conversation: Tweet[]): Tweet[] => {
       break;
     }
   }
-
+  logger.info('replyThread', { id: tweet.id, length: replyThread.length });
   return replyThread;
 };
 
 const getMyUnrepliedToMentions = async (
   scraper: Scraper,
   username: string,
+  maxThreadDepth: number,
+  ignoreConversationIds: string[],
   maxResults: number = 50,
   sinceId?: string,
 ): Promise<Tweet[]> => {
   logger.info('Getting my mentions', { username, maxResults, sinceId });
 
-  const query = `@${username} -from:${username}`;
+  const queryConversationIds = ignoreConversationIds.map(id => `-conversation_id:${id}`).join(' ');
+  const query = `@${username} -from:${username} ${queryConversationIds}`;
   const mentionIterator = scraper.searchTweets(query, maxResults, SearchMode.Latest);
 
   // build a set of "already replied to" tweet IDs in one query
@@ -131,7 +134,8 @@ const getMyUnrepliedToMentions = async (
   const conversations = new Map<string, Tweet[]>();
   for await (const tweet of mentionIterator) {
     // Skip tweets without an ID
-    if (!tweet.id) continue;
+    if (!tweet.id || (tweet.conversationId && ignoreConversationIds.includes(tweet.conversationId)))
+      continue;
 
     // Stop if we've reached or passed the sinceId
     if (sinceId && tweet.id <= sinceId) {
@@ -173,7 +177,7 @@ const getMyUnrepliedToMentions = async (
     const conversation = conversations.get(mention.conversationId);
     if (!conversation) return mention;
 
-    const thread = getReplyThread(mention, conversation);
+    const thread = getReplyThread(mention, conversation, maxThreadDepth);
     return {
       ...mention,
       thread,
@@ -207,6 +211,29 @@ const getFollowingRecentTweets = async (
   const query = `(${randomFollowing.map(user => `from:${user.username}`).join(' OR ')})`;
   const tweets = await iterateResponse(scraper.searchTweets(query, maxResults, SearchMode.Latest));
   return tweets;
+};
+
+const findTweetId = async (scraper: Scraper, tweetText: string, username: string) => {
+  const maxRetries = 4;
+  const baseDelay = 500;
+
+  for (let i = 0; i < maxRetries; i++) {
+    const delay = baseDelay * Math.pow(2, i);
+    await new Promise(resolve => setTimeout(resolve, delay));
+
+    const recentTweets = await iterateResponse(
+      scraper.searchTweets(`from:${username}`, 5, SearchMode.Latest),
+    );
+
+    const sentTweet = recentTweets.find(tweet => tweet.text?.includes(tweetText));
+    if (sentTweet?.id) {
+      logger.info('Tweet ID confirmed', { id: sentTweet.id, attemptNumber: i + 1 });
+      return sentTweet.id;
+    }
+    logger.debug('Tweet ID not found, retrying', { attemptNumber: i + 1, nextDelay: delay * 2 });
+  }
+  logger.warn('Tweet ID could not be confirmed after all retries', { tweetText, username });
+  return '';
 };
 
 export const createTwitterApi = async (
@@ -259,8 +286,20 @@ export const createTwitterApi = async (
     scraper,
     username: username,
     userId: userId,
-    getMyUnrepliedToMentions: (maxResults: number, sinceId?: string) =>
-      getMyUnrepliedToMentions(scraper, username, maxResults, sinceId),
+    getMyUnrepliedToMentions: (
+      maxResults: number,
+      maxThreadDepth: number = 5,
+      ignoreConversationIds: string[] = [],
+      sinceId?: string,
+    ) =>
+      getMyUnrepliedToMentions(
+        scraper,
+        username,
+        maxThreadDepth,
+        ignoreConversationIds,
+        maxResults,
+        sinceId,
+      ),
 
     getFollowingRecentTweets: (maxResults: number = 100, randomNumberOfUsers: number = 10) =>
       getFollowingRecentTweets(scraper, username, maxResults, randomNumberOfUsers),
@@ -315,26 +354,25 @@ export const createTwitterApi = async (
         await scraper.sendTweet(text, inReplyTo);
       }
 
-      // Retry strategy to get the tweet ID
-      const maxRetries = 3;
-      const retryDelay = 1000; // 1 second
-
-      for (let i = 0; i < maxRetries; i++) {
-        await new Promise(resolve => setTimeout(resolve, retryDelay));
-
-        const recentTweets = await iterateResponse(
-          scraper.searchTweets(`from:${username}`, 5, SearchMode.Latest),
-        );
-
-        // Find the tweet that matches our text (in case multiple tweets were sent simultaneously)
-        const sentTweet = recentTweets.find(tweet => tweet.text?.includes(text));
-        if (sentTweet?.id) {
-          logger.info('Tweet sent and confirmed', { text, inReplyTo, id: sentTweet.id });
-          return sentTweet.id;
-        }
+      const tweetId = await findTweetId(scraper, text, username);
+      if (tweetId) {
+        logger.info('Tweet sent and ID confirmed', { text, inReplyTo, id: tweetId });
+        return tweetId;
       }
 
       logger.warn('Tweet sent but ID could not be confirmed', { text, inReplyTo });
+      return '';
+    },
+
+    quoteTweet: async (text: string, quoteTweetId: string) => {
+      await scraper.sendQuoteTweet(text, quoteTweetId);
+      const tweetId = await findTweetId(scraper, text, username);
+      if (tweetId) {
+        logger.info('Tweet sent and ID confirmed', { text, quoteTweetId, id: tweetId });
+        return tweetId;
+      }
+
+      logger.warn('Tweet sent but ID could not be confirmed', { text, quoteTweetId });
       return '';
     },
 
