@@ -10,10 +10,7 @@ import { createPrompts } from '../../src/agents/workflows/orchestrator/prompts.j
 import { createTwitterApi } from '../../src/services/twitter/client.js';
 import { HumanMessage } from '@langchain/core/messages';
 import { createWebSearchTool } from '../../src/agents/tools/webSearch/index.js';
-import {
-  ModelConfigurations,
-  OrchestratorRunnerOptions,
-} from '../../src/agents/workflows/orchestrator/types.js';
+import { OrchestratorRunnerOptions } from '../../src/agents/workflows/orchestrator/types.js';
 
 const logger = createLogger('autonomous-twitter-agent');
 
