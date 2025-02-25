@@ -1,10 +1,10 @@
 import { DynamicStructuredTool } from '@langchain/core/tools';
 import { z } from 'zod';
 import { createLogger } from '../../../utils/logger.js';
-import { Signer } from 'ethers';
+import { ethers, Signer } from 'ethers';
 export const logger = createLogger('evm-tools');
 
-export const transferNativeToken = (signer: Signer) =>
+export const createTransferNativeTokenTool = (signer: Signer) =>
   new DynamicStructuredTool({
     name: 'transfer_native_token',
     description: 'Transfer a native token to a specific address',
@@ -20,13 +20,13 @@ export const transferNativeToken = (signer: Signer) =>
         });
         const tx = await signer.sendTransaction({
           to,
-          value: amount,
+          value: ethers.parseEther(amount),
         });
         const receipt = await tx.wait();
-        logger.info('Transferred native token - Receipt:', receipt);
+        logger.info('Transferred native token - tx hash:', receipt?.hash);
         return {
           success: true,
-          receipt,
+          txHash: receipt?.hash,
         };
       } catch (error) {
         logger.error('Error transferring native token:', error);
