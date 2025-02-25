@@ -1,7 +1,5 @@
 import { DynamicStructuredTool } from '@langchain/core/tools';
 import { z } from 'zod';
-import { ToolNode } from '@langchain/langgraph/prebuilt';
-import { AIMessage } from '@langchain/core/messages';
 import { uploadToDsn } from '../../../blockchain/autoDrive/autoDriveUpload.js';
 import { createLogger } from '../../../utils/logger.js';
 
@@ -58,24 +56,3 @@ export const createSaveExperienceTool = (saveExperiences: boolean = false) =>
       }
     },
   });
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const invokeSaveExperienceTool = async (toolNode: ToolNode, data: Record<string, any>) => {
-  logger.info('Invoking save experience tool with data:', JSON.stringify(data, null, 2));
-  const toolResponse = await toolNode.invoke({
-    messages: [
-      new AIMessage({
-        content: '',
-        tool_calls: [
-          {
-            name: 'save_experience',
-            args: { data },
-            id: 'save_experience_call',
-            type: 'tool_call',
-          },
-        ],
-      }),
-    ],
-  });
-  return toolResponse;
-};
