@@ -26,6 +26,8 @@ export const createTransferNativeTokenTool = (signer: Signer) =>
         logger.info('Transferred native token - tx hash:', receipt?.hash);
         return {
           success: true,
+          receiverAddress: to,
+          senderAddress: await signer.getAddress(),
           txHash: receipt?.hash,
         };
       } catch (error) {
@@ -33,6 +35,43 @@ export const createTransferNativeTokenTool = (signer: Signer) =>
         return {
           success: false,
           error,
+        };
+      }
+    },
+  });
+
+export const createCheckBalanceTool = (provider: ethers.Provider) =>
+  new DynamicStructuredTool({
+    name: 'check_balance',
+    description: 'Check the balance of a specific Ethereum address',
+    schema: z.object({
+      address: z.string().describe('The Ethereum address to check the balance for'),
+    }),
+    func: async ({ address }) => {
+      try {
+        // Validate the address format
+        if (!ethers.isAddress(address)) {
+          logger.error('Invalid Ethereum address format:', address);
+          return {
+            success: false,
+            error: 'Invalid Ethereum address format',
+          };
+        }
+
+        const balance = await provider.getBalance(address);
+
+        const formattedBalance = ethers.formatEther(balance);
+        logger.info('Balance checked', { address, balance: formattedBalance });
+        return {
+          success: true,
+          address,
+          balance: formattedBalance,
+        };
+      } catch (error: unknown) {
+        logger.error('Error checking balance:', error);
+        return {
+          success: false,
+          error: error instanceof Error ? error.message : 'Unknown error checking balance',
         };
       }
     },
