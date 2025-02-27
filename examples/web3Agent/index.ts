@@ -9,47 +9,34 @@ import { createPrompts } from '../../src/agents/workflows/orchestrator/prompts.j
 import { HumanMessage } from '@langchain/core/messages';
 import { OrchestratorRunnerOptions } from '../../src/agents/workflows/orchestrator/types.js';
 import { ethers } from 'ethers';
-import { createTransferNativeTokenTool } from '../../src/agents/tools/evm/index.js';
+import {
+  createCheckBalanceTool,
+  createTransferNativeTokenTool,
+} from '../../src/agents/tools/evm/index.js';
 
-const logger = createLogger('autonomous-twitter-agent');
+const logger = createLogger('autonomous-web3-agent');
 
 const character = config.characterConfig;
 const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
-  // Create transfer native token tool
+  // Check for RPC and private key in config
   if (!config.blockchainConfig.PRIVATE_KEY || !config.blockchainConfig.RPC_URL) {
     throw new Error('PRIVATE_KEY and RPC_URL are required in the blockchainConfig');
   }
-  const signer = new ethers.Wallet(
-    config.blockchainConfig.PRIVATE_KEY,
-    new ethers.JsonRpcProvider(config.blockchainConfig.RPC_URL),
-  );
+
+  // Set up provider and signer
+  const provider = new ethers.JsonRpcProvider(config.blockchainConfig.RPC_URL);
+  const signer = new ethers.Wallet(config.blockchainConfig.PRIVATE_KEY, provider);
+
+  // Create tools
   const transferNativeTokenTool = createTransferNativeTokenTool(signer);
+  const checkBalanceTool = createCheckBalanceTool(provider);
 
   //Orchestrator config
-  //use default orchestrator prompts with character config from CLI  selfSchedule enabled
+  //use default orchestrator prompts with character config
   const prompts = await createPrompts(character);
 
-  //override default model configurations for summary and finish workflow nodes
-  const modelConfigurations = {
-    inputModelConfig: {
-      provider: 'openai' as const,
-      model: 'gpt-4o',
-      temperature: 0.8,
-    },
-    messageSummaryModelConfig: {
-      provider: 'openai' as const,
-      model: 'gpt-4o',
-      temperature: 0.8,
-    },
-    finishWorkflowModelConfig: {
-      provider: 'openai' as const,
-      model: 'gpt-4o-mini',
-      temperature: 0.8,
-    },
-  };
   return {
-    modelConfigurations,
-    tools: [transferNativeTokenTool],
+    tools: [transferNativeTokenTool, checkBalanceTool],
     prompts,
   };
 };
@@ -67,28 +54,16 @@ export const orchestratorRunner = (() => {
 
 const main = async () => {
   const runner = await orchestratorRunner();
-  const initialMessage = `Transfer 0.01 ETH to 0x0F409152C9cDA318c3dB94c0693c1347E29E1Ea8`;
+
+  // Choose which message to start with
+  const initialMessage = `Transfer 0.01 AI3 to 0x0F409152C9cDA318c3dB94c0693c1347E29E1Ea8 and then check the balance of both sender and receiver`;
+
   try {
     await validateLocalHash();
 
-    let message = initialMessage;
-    while (true) {
-      const result = await runner.runWorkflow({ messages: [new HumanMessage(message)] });
+    const result = await runner.runWorkflow({ messages: [new HumanMessage(initialMessage)] });
 
-      message = `${result.summary}
-      ${result.nextWorkflowPrompt}`;
-
-      logger.info('Workflow execution result:', { result });
-
-      const nextDelaySeconds = result.secondsUntilNextWorkflow ?? 3600;
-      logger.info('Workflow execution completed successfully for character:', {
-        characterName: config.characterConfig.name,
-        runFinished: new Date().toISOString(),
-        nextRun: `${nextDelaySeconds / 60} minutes`,
-        nextWorkflowPrompt: message,
-      });
-      await new Promise(resolve => setTimeout(resolve, nextDelaySeconds * 1000));
-    }
+    logger.info('Workflow execution result:', { summary: result.summary });
   } catch (error) {
     if (error && typeof error === 'object' && 'name' in error && error.name === 'ExitPromptError') {
       logger.info('Process terminated by user');
