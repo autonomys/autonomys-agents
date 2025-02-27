@@ -27,7 +27,7 @@ export const createFinishWorkflowPrompt = async (
     - Provide a recommendation for the next prompt for when the workflow begins again in the nextWorkflowPrompt field.
     - Provide a recommendation for how long until the next workflow should begin in the secondsUntilNextWorkflow field.
     If self-schedule:false 
-    - Do not include any values in the nextWorkflowPrompt or secondsUntilNextWorkflow fields.
+    - Do not include any values in the nextWorkflowPrompt or secondsUntilNextWorkflow fields. DO NOT RETURN ANYTHING IN THESE FIELDS, INCLUDING NULL
 
     You have a personality, so you should act accordingly. 
     {characterPersonality}
