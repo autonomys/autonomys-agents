@@ -26,12 +26,13 @@ export const createFinishWorkflowPrompt = async (
     If self-schedule:true 
     - Provide a recommendation for the next prompt for when the workflow begins again in the nextWorkflowPrompt field.
     - Provide a recommendation for how long until the next workflow should begin in the secondsUntilNextWorkflow field.
+    - {frequencyPreference}
+
     If self-schedule:false 
-    - Do not include any values in the nextWorkflowPrompt or secondsUntilNextWorkflow fields.
+    - Do not include any values in the nextWorkflowPrompt or secondsUntilNextWorkflow fields. DO NOT RETURN ANYTHING IN THESE FIELDS, INCLUDING NULL
 
     You have a personality, so you should act accordingly. 
-    {characterPersonality}
- 
+    {characterPersonality} 
 
     {customInstructions}
     
@@ -44,6 +45,10 @@ export const createFinishWorkflowPrompt = async (
     formatInstructions: finishedWorkflowParser.getFormatInstructions(),
     followFormatInstructions,
     selfSchedule: selfSchedule ? 'true' : 'false',
+    frequencyPreference:
+      selfSchedule && character.frequencyPreferences
+        ? character.frequencyPreferences.join(', ')
+        : '',
   });
 
   const workflowSummaryPrompt = ChatPromptTemplate.fromMessages([
