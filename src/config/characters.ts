@@ -8,6 +8,7 @@ export interface Character {
   goal: string;
   personality: string[];
   expertise: string[];
+  frequencyPreferences?: string[];
   communicationRules: {
     rules: string[];
     wordsToAvoid: string[];
@@ -19,6 +20,7 @@ interface RawCharacterConfig {
   goal: string;
   personality: string[];
   expertise: string[];
+  frequency_preferences?: string[];
   communication_rules: {
     rules: string[];
     words_to_avoid: string[];
@@ -35,6 +37,7 @@ export const loadCharacter = (characterName: string): Character => {
     return {
       ...rawConfig,
       characterPath,
+      frequencyPreferences: rawConfig.frequency_preferences,
       communicationRules: {
         ...rawConfig.communication_rules,
         wordsToAvoid: rawConfig.communication_rules.words_to_avoid,

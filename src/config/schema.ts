@@ -102,6 +102,7 @@ const characterConfigSchema = z.object({
   goal: z.string(),
   personality: z.array(z.string()),
   expertise: z.array(z.string()),
+  frequencyPreferences: z.optional(z.array(z.string())),
   communicationRules: z.object({
     rules: z.array(z.string()),
     wordsToAvoid: z.array(z.string()),
