@@ -1,0 +1,43 @@
+import chalk from 'chalk';
+import { CommandResult, ToolMetadata } from '../types/index.js';
+import { getRegistry } from '../utils/registry.js';
+
+export async function list(options: { detailed?: boolean }): Promise<CommandResult> {
+  console.log(chalk.blue('Fetching available tools from registry...'));
+  
+  try {
+    const registry = await getRegistry();
+    const tools = Object.values(registry.tools) as ToolMetadata[];
+    
+    if (tools.length === 0) {
+      console.log(chalk.yellow('No tools found in the registry.'));
+      return { success: true, message: 'No tools found in the registry.' };
+    }
+    
+    console.log(chalk.green(`\n${tools.length} tools available:`));
+    
+    tools.forEach(tool => {
+      console.log(`\n${chalk.bold(tool.name)} (${tool.version})`);
+      
+      if (options.detailed) {
+        console.log(`  ${chalk.dim('Description:')} ${tool.description}`);
+        console.log(`  ${chalk.dim('Author:')} ${tool.author}`);
+        console.log(`  ${chalk.dim('Updated:')} ${new Date(tool.updated).toLocaleString()}`);
+        console.log(`  ${chalk.dim('CID:')} ${tool.cid}`);
+        
+        if (tool.dependencies.length > 0) {
+          console.log(`  ${chalk.dim('Dependencies:')} ${tool.dependencies.join(', ')}`);
+        }
+      }
+    });
+    
+    return { 
+      success: true, 
+      message: `Listed ${tools.length} tools`,
+      data: { tools }
+    };
+  } catch (error) {
+    console.error(chalk.red(`Error fetching registry: ${error instanceof Error ? error.message : String(error)}`));
+    return { success: false, message: `Error fetching registry: ${error}` };
+  }
+} 
