@@ -29,7 +29,9 @@ export const createFinishWorkflowPrompt = async (
     - {frequencyPreference}
 
     If self-schedule:false 
-    - Do not include any values in the nextWorkflowPrompt or secondsUntilNextWorkflow fields. DO NOT RETURN ANYTHING IN THESE FIELDS, INCLUDING NULL
+    - COMPLETELY OMIT the nextWorkflowPrompt and secondsUntilNextWorkflow fields from your JSON response
+    - DO NOT include these fields with null, undefined, or empty string values
+    - Your JSON should only contain the summary field when self-schedule is false
 
     You have a personality, so you should act accordingly. 
     {characterPersonality} 
@@ -68,12 +70,14 @@ const finishedWorkflowSchema = z.object({
   summary: z.string().describe('A detailed summary of the actions performed.'),
   nextWorkflowPrompt: z
     .string()
+    .nullable()
     .optional()
     .describe(
       'If self-scheduling is enabled, this field will be the input prompt for the next workflow. Be thoughtful about what you want to accomplish in the next workflow and write this as a prompt.',
     ),
   secondsUntilNextWorkflow: z
     .number()
+    .nullable()
     .optional()
     .describe(
       'If self-scheduling is enabled, this field will be the recommended number of seconds until the workflow should begin again.',
