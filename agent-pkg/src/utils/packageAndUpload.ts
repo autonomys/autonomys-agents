@@ -3,7 +3,7 @@ import path from 'path';
 import archiver from 'archiver';
 import { UploadFileOptions } from '@autonomys/auto-drive';
 import { ToolManifest, ToolMetadata } from '../types/index.js';
-import { uploadFileToDsn } from './dsnClient.js';
+import { uploadFileToDsn } from './autoDriveClient.js';
 
 /**
  * Creates a zip archive of a tool directory
@@ -51,7 +51,6 @@ async function createToolPackage(toolPath: string): Promise<Buffer> {
  * @returns CID of the uploaded package
  */
 async function uploadToolPackage(packageBuffer: Buffer, manifest: ToolManifest): Promise<string> {
-  // Create a file object for auto-drive
   const file = {
     read: async function* () {
       yield packageBuffer;
@@ -61,13 +60,11 @@ async function uploadToolPackage(packageBuffer: Buffer, manifest: ToolManifest):
     size: packageBuffer.length,
   };
   
-  // Upload options
   const options: UploadFileOptions = {
     compression: true,
     password: process.env.AUTO_DRIVE_ENCRYPTION_PASSWORD,
   };
-  
-  // Upload to DSN using the client
+
   return await uploadFileToDsn(file, options);
 }
 
@@ -97,7 +94,6 @@ export async function packageAndUploadTool(toolPath: string): Promise<{ cid: str
     version: manifest.version,
     description: manifest.description,
     author: manifest.author,
-    dependencies: manifest.dependencies,
     cid: cid,
     updated: new Date().toISOString()
   };

@@ -1,14 +1,18 @@
 import { createAutoDriveApi, uploadFile, downloadFile, UploadFileOptions } from '@autonomys/auto-drive';
 import { ToolRegistry } from '../types/index.js';
+import { initializeConfigAndCredentials } from './config.js';
 
-// Initialize the auto-drive API
-export const autoDriveApi = createAutoDriveApi({
-  apiKey: process.env.AUTO_DRIVE_API_KEY || '',
-  network: process.env.AUTO_DRIVE_NETWORK === 'taurus' ? 'taurus' : 'mainnet',
-});
-
-// Known entry point CID for the registry
-export const REGISTRY_ENTRY_CID = 'PLACEHOLDER_REGISTRY_CID'; // We'll create this when we first publish the registry
+async function createApiClient() {
+  const { config, credentials } = await initializeConfigAndCredentials();
+  
+  if (credentials.autoDriveApiKey) {
+    return createAutoDriveApi({
+      apiKey: credentials.autoDriveApiKey,
+      network: config.autoDriveNetwork === 'taurus' ? 'taurus' : 'mainnet',
+    });
+  }
+  throw new Error("Missing Auto Drive API key. Please run 'agentOS config' to set up your credentials.");
+}
 
 /**
  * Upload a file to Autonomys DSN
@@ -23,15 +27,25 @@ export const uploadFileToDsn = async (
     mimeType: string, 
     size: number 
   }, 
-  options: UploadFileOptions
+  options?: UploadFileOptions
 ): Promise<string> => {
   try {
     console.log(`Uploading file: ${file.name}`);
-    const cid = await uploadFile(autoDriveApi, file, options);
+    
+    const api = await createApiClient();
+    const { credentials } = await initializeConfigAndCredentials();
+    
+    let uploadOptions = options || { compression: true };
+    
+    if (!uploadOptions.password && credentials.autoDriveEncryptionPassword) {
+      uploadOptions.password = credentials.autoDriveEncryptionPassword;
+    }
+    
+    const cid = await uploadFile(api, file, uploadOptions);
     console.log(`Upload successful. CID: ${cid}`);
     return cid;
   } catch (error) {
-    console.error('Error uploading to DSN:', error);
+    console.error('Error uploading to Auto Drive:', error);
     throw error;
   }
 };
@@ -46,14 +60,12 @@ export const uploadFileToDsn = async (
 export const uploadObjectToDsn = async (
   object: any,
   name: string,
-  options: UploadFileOptions = { compression: true }
+  options?: UploadFileOptions
 ): Promise<string> => {
   try {
-    // Convert object to JSON buffer
     const jsonData = JSON.stringify(object, null, 2);
     const buffer = Buffer.from(jsonData);
     
-    // Create file object
     const file = {
       read: async function* () {
         yield buffer;
@@ -63,8 +75,7 @@ export const uploadObjectToDsn = async (
       size: buffer.length,
     };
     
-    // Upload
-    return await uploadFileToDsn(file, options);
+    return await uploadFileToDsn(file, options || { compression: true });
   } catch (error) {
     console.error('Error uploading object to DSN:', error);
     throw error;
@@ -83,9 +94,19 @@ export const downloadFileFromDsn = async (
 ): Promise<AsyncIterable<Buffer>> => {
   try {
     console.log(`Downloading file with CID: ${cid}`);
-    return await downloadFile(autoDriveApi, cid, password);
+    
+    const api = await createApiClient();
+    
+    if (!password) {
+      const { credentials } = await initializeConfigAndCredentials();
+      
+      if (credentials.autoDriveEncryptionPassword) {
+        password = credentials.autoDriveEncryptionPassword;
+      }
+    }
+    return await downloadFile(api, cid, password);
   } catch (error) {
-    console.error('Error downloading from DSN:', error);
+    console.error('Error downloading from Auto Drive:', error);
     throw error;
   }
 };
@@ -103,13 +124,11 @@ export const downloadObjectFromDsn = async <T>(
   try {
     const fileStream = await downloadFileFromDsn(cid, password);
     
-    // Buffer to store downloaded data
     const chunks: Buffer[] = [];
     for await (const chunk of fileStream) {
       chunks.push(chunk);
     }
     
-    // Parse JSON
     const jsonData = Buffer.concat(chunks).toString('utf8');
     return JSON.parse(jsonData) as T;
   } catch (error) {
@@ -117,33 +136,3 @@ export const downloadObjectFromDsn = async <T>(
     throw error;
   }
 };
-
-/**
- * Download the tool registry from DSN
- * @returns The parsed registry object
- */
-export const downloadRegistry = async (): Promise<ToolRegistry> => {
-  try {
-    return await downloadObjectFromDsn<ToolRegistry>(REGISTRY_ENTRY_CID);
-  } catch (error) {
-    console.error('Error downloading registry:', error);
-    throw error;
-  }
-};
-
-/**
- * Upload the registry to DSN
- * @param registry The registry object to upload
- * @returns CID of the uploaded registry
- */
-export const uploadRegistry = async (registry: ToolRegistry): Promise<string> => {
-  try {
-    return await uploadObjectToDsn(
-      registry, 
-      `registry-${registry.version}-${registry.updated}.json`
-    );
-  } catch (error) {
-    console.error('Error uploading registry:', error);
-    throw error;
-  }
-}; 

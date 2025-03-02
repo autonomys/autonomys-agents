@@ -24,10 +24,6 @@ export async function list(options: { detailed?: boolean }): Promise<CommandResu
         console.log(`  ${chalk.dim('Author:')} ${tool.author}`);
         console.log(`  ${chalk.dim('Updated:')} ${new Date(tool.updated).toLocaleString()}`);
         console.log(`  ${chalk.dim('CID:')} ${tool.cid}`);
-        
-        if (tool.dependencies.length > 0) {
-          console.log(`  ${chalk.dim('Dependencies:')} ${tool.dependencies.join(', ')}`);
-        }
       }
     });
     
