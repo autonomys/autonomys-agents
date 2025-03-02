@@ -4,7 +4,6 @@ export interface ToolMetadata {
   version: string;
   description: string;
   author: string;
-  dependencies: string[];
   cid: string;
   updated: string;
 }

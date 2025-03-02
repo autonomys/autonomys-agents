@@ -5,13 +5,11 @@ import path from 'path';
 import extract from 'extract-zip';
 import { CommandResult } from '../types/index.js';
 import { getToolFromRegistry } from '../utils/registry.js';
-import { downloadFileFromDsn } from '../utils/dsnClient.js';
+import { downloadFileFromDsn } from '../utils/autoDriveClient.js';
 
-// Paths for storing and installing tools
 const PACKAGES_DIR = path.join(process.env.HOME || process.env.USERPROFILE || '', '.agentOS', 'packages');
 const TOOLS_DIR = path.join(process.env.HOME || process.env.USERPROFILE || '', '.agentOS', 'tools');
 
-// Default project tools path (can be overridden)
 const DEFAULT_PROJECT_TOOLS_PATH = 'src/agents/tools';
 
 /**
@@ -23,7 +21,6 @@ async function detectProjectRoot(): Promise<string | undefined> {
   let currentDir = process.cwd();
   const homeDir = process.env.HOME || process.env.USERPROFILE || '';
   
-  // Walk up the directory tree looking for package.json or other markers
   while (currentDir && currentDir !== homeDir && currentDir !== path.parse(currentDir).root) {
     try {
       // Check for common project markers
@@ -54,10 +51,8 @@ async function detectProjectRoot(): Promise<string | undefined> {
  * @returns Path to the extracted package
  */
 async function downloadToolPackage(cid: string): Promise<string> {
-  // Ensure packages directory exists
   await fs.mkdir(PACKAGES_DIR, { recursive: true });
   
-  // Determine file path
   const packagePath = path.join(PACKAGES_DIR, `${cid}.zip`);
   
   try {
@@ -65,13 +60,11 @@ async function downloadToolPackage(cid: string): Promise<string> {
     console.log(`Downloading tool package with CID: ${cid}`);
     const fileStream = await downloadFileFromDsn(cid, process.env.AUTO_DRIVE_ENCRYPTION_PASSWORD);
     
-    // Buffer to store downloaded data
     const chunks: Buffer[] = [];
     for await (const chunk of fileStream) {
       chunks.push(chunk);
     }
     
-    // Write the file
     const fileData = Buffer.concat(chunks);
     await fs.writeFile(packagePath, fileData);
     
@@ -91,12 +84,10 @@ async function downloadToolPackage(cid: string): Promise<string> {
  * @returns Path to the extracted tool directory
  */
 async function extractToolPackage(packagePath: string, toolName: string, destDir: string): Promise<string> {
-  // Ensure the destination directory exists
   const toolDir = path.join(destDir, toolName);
   await fs.mkdir(toolDir, { recursive: true });
   
   try {
-    // Extract the zip file
     console.log(`Extracting package to: ${toolDir}`);
     await extract(packagePath, { dir: toolDir });
     
@@ -113,12 +104,8 @@ async function extractToolPackage(packagePath: string, toolName: string, destDir
  * @returns Path to the tools directory
  */
 async function getProjectToolsDir(projectRoot: string): Promise<string> {
-  // Try to find an existing tools directory
   const possiblePaths = [
     'src/agents/tools',
-    'src/tools',
-    'tools',
-    'agents/tools'
   ];
   
   for (const relativePath of possiblePaths) {
@@ -129,11 +116,9 @@ async function getProjectToolsDir(projectRoot: string): Promise<string> {
         return fullPath;
       }
     } catch (error) {
-      // Directory doesn't exist, continue to next one
     }
   }
   
-  // If no existing tools directory found, create one
   const toolsDir = path.join(projectRoot, DEFAULT_PROJECT_TOOLS_PATH);
   await fs.mkdir(toolsDir, { recursive: true });
   return toolsDir;
@@ -149,15 +134,12 @@ async function downloadAndInstallTool(
   options: { local?: boolean } = {}
 ): Promise<void> {
   try {
-    // 1. Download the tool package
     const packagePath = await downloadToolPackage(toolInfo.cid);
     
-    // 2. Determine installation directory (global or local)
     let installDir: string;
     let installType: 'global' | 'local' = 'global';
     
     if (options.local) {
-      // Find the project root and tools directory
       const projectRoot = await detectProjectRoot();
       if (!projectRoot) {
         throw new Error('Could not detect project root. Make sure you are in a project directory.');
@@ -166,16 +148,13 @@ async function downloadAndInstallTool(
       installDir = await getProjectToolsDir(projectRoot);
       installType = 'local';
     } else {
-      // Use the global tools directory
       installDir = TOOLS_DIR;
     }
     
-    // 3. Extract the package to the appropriate tools directory
     const toolDir = await extractToolPackage(packagePath, toolInfo.name, installDir);
     
     console.log(`Tool installed successfully to: ${toolDir}`);
     
-    // 4. Update project manifest if local installation (future enhancement)
     if (installType === 'local') {
       // TODO: Update project manifest or package.json with the new tool dependency
     }
@@ -194,7 +173,6 @@ export async function install(toolName: string, options: any): Promise<CommandRe
   try {
     let toolInfo;
     
-    // Direct CID install path
     if (options.cid) {
       toolInfo = {
         name: toolName,
