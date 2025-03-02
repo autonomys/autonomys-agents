@@ -4,6 +4,7 @@ import { install } from './commands/install.js';
 import { publish } from './commands/publish.js';
 import { list } from './commands/list.js';
 import { config } from './commands/config.js';
+import { clean } from './commands/clean.js';
 import { initializeConfigAndCredentials, credentialsExist } from './utils/config.js';
 
 
@@ -34,6 +35,7 @@ Promise.all([
   const publishWrapper = async (...args: any[]) => { await publish(args[0], args[1]); };
   const listWrapper = async (...args: any[]) => { await list(args[0]); };
   const configWrapper = async (...args: any[]) => { await config(args[0]); };
+  const cleanWrapper = async (...args: any[]) => { await clean(args[0]); };
 
   program
     .name('agentOS')
@@ -68,6 +70,12 @@ Promise.all([
     .option('--credentials', 'Configure only credentials')
     .option('--settings', 'Configure only settings')
     .action(configWrapper);
+    
+  program
+    .command('clean')
+    .description('Clean cached packages and temporary files')
+    .option('--force', 'Force clean without confirmation')
+    .action(cleanWrapper);
 
   program.showHelpAfterError();
 

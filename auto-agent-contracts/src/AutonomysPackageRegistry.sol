@@ -312,7 +312,7 @@ contract AutonomysPackageRegistry {
         ToolVersion storage toolVersion = tools[name].versions[latestVersion];
         
         return (
-            latestVersion,
+            toolVersion.version,
             toolVersion.cid,
             toolVersion.timestamp,
             toolVersion.metadata

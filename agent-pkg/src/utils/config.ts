@@ -12,7 +12,7 @@ const CREDENTIALS_FILE = path.join(CONFIG_DIR, 'credentials.enc');
 const DEFAULT_CONFIG = {
   autoDriveNetwork: 'mainnet',
   taurusRpcUrl: 'https://auto-evm.taurus.autonomys.xyz/ws',
-  packageRegistryAddress: '0xe564015a3de56a807794de2B1E4535DE292cf5E3',
+  packageRegistryAddress: '0x0B5cF4C198E8c75e8fE9B4D33F0B29881D13744b',
   autoSaveCredentials: true
 };
 
