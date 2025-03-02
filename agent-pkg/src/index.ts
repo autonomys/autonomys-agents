@@ -10,17 +10,14 @@ import { initializeConfigAndCredentials, credentialsExist } from './utils/config
 
 async function checkMasterPassword() {
   const isConfigCommand = process.argv.length > 2 && process.argv[2] === 'config';
+  const isHelpCommand = process.argv.length > 2 && (process.argv[2] === '-h' || process.argv[2] === '--help');
   
-  if (await credentialsExist() && !isConfigCommand) {
+  if (await credentialsExist() && !isConfigCommand && !isHelpCommand) {
     if (!process.env.AGENTOS_MASTER_PASSWORD) {
-      console.log(chalk.red('\n🛑 ERROR: Master password environment variable not set'));
-      console.log(chalk.yellow('Due to issues with interactive password prompts, you must set your master password as an environment variable:'));
+      console.log(chalk.blue('\nℹ️  Information: You have stored credentials'));
+      console.log(chalk.yellow('You can set your master password as an environment variable to avoid prompts:'));
       console.log(chalk.cyan('\n  export AGENTOS_MASTER_PASSWORD="your-master-password"\n'));
-      console.log(chalk.yellow('You can add this to your shell profile or run it before using agentOS commands.'));
-      console.log(chalk.yellow('After setting the environment variable, run your command again.\n'));
-      console.log(chalk.yellow('To reconfigure your credentials, use the config command:\n'));
-      console.log(chalk.cyan('  node dist/index.js config\n'));
-      process.exit(1);
+      console.log(chalk.yellow('Or you can simply enter it when prompted.\n'));
     }
   }
 }
