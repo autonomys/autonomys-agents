@@ -12,7 +12,6 @@ import {
   isToolOwner 
 } from './contractClient.js';
 import chalk from 'chalk';
-import { initializeConfigAndCredentials } from './config.js';
 
 // Local cache location
 const CACHE_DIR = path.join(process.env.HOME || process.env.USERPROFILE || '', '.agentOS');
@@ -139,6 +138,65 @@ export async function getToolFromRegistry(toolName: string): Promise<ToolMetadat
     
     const registry = await getLocalRegistryCache();
     return registry.tools[toolName] || null;
+  }
+}
+
+/**
+ * Get a specific version of a tool from the registry
+ * @param toolName Name of the tool
+ * @param version Specific version to retrieve
+ * @returns Tool metadata for the specified version, or null if not found
+ */
+export async function getToolVersionFromRegistry(toolName: string, version: string): Promise<ToolMetadata | null> {
+  try {
+    // First check if the tool exists
+    const toolInfo = await getToolInfo(toolName);
+    
+    if (!toolInfo.latestVersion) {
+      console.error(`Tool ${toolName} not found in registry`);
+      return null;
+    }
+    
+    // Check if the specified version exists
+    const versions = await getToolVersions(toolName);
+    if (!versions.includes(version)) {
+      console.error(`Version ${version} of tool ${toolName} not found`);
+      return null;
+    }
+    
+    // Get the specific version info
+    const versionInfo = await getToolVersion(toolName, version);
+    
+    let description = '';
+    try {
+      const metadataObj = JSON.parse(versionInfo.metadata);
+      description = metadataObj.description || '';
+    } catch (e) {
+      // Fallback if metadata can't be parsed
+    }
+    
+    // Return tool metadata for specific version
+    return {
+      name: toolName,
+      version: version,
+      description: description,
+      author: toolInfo.owner,
+      cid: versionInfo.cid,
+      updated: new Date(versionInfo.timestamp * 1000).toISOString()
+    };
+  } catch (error) {
+    console.error(`Error getting version ${version} of tool ${toolName} from registry:`, error);
+    
+    // Try to fall back to local cache if possible
+    const registry = await getLocalRegistryCache();
+    const tool = registry.tools[toolName];
+    
+    // Only return from cache if it matches the requested version
+    if (tool && tool.version === version) {
+      return tool;
+    }
+    
+    return null;
   }
 }
 
