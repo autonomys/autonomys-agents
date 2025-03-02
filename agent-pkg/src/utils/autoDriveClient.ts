@@ -11,7 +11,7 @@ async function createApiClient() {
       network: config.autoDriveNetwork === 'taurus' ? 'taurus' : 'mainnet',
     });
   }
-  throw new Error("Missing Auto Drive API key. Please run 'agentOS config' to set up your credentials.");
+  throw new Error("Missing Auto Drive API key. Please run 'autoOS config' to set up your credentials.");
 }
 
 /**

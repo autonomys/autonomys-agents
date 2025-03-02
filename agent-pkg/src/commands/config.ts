@@ -3,12 +3,12 @@ import { CommandResult } from '../types/index.js';
 import { promptForConfig, promptForCredentials } from '../utils/config.js';
 
 /**
- * Configure the agentOS CLI
+ * Configure the autoOS CLI
  * @param options Command options
  * @returns Command result
  */
 export async function config(options: any = {}): Promise<CommandResult> {
-  console.log(chalk.blue.bold('agentOS CLI Configuration\n'));
+  console.log(chalk.blue.bold('autoOS CLI Configuration\n'));
   
   const configureSettings = !options.credentials || options.settings;
   const configureCredentials = !options.settings || options.credentials;
@@ -23,7 +23,7 @@ export async function config(options: any = {}): Promise<CommandResult> {
     console.log(chalk.cyan('=== Credentials Management ==='));
     console.log(chalk.yellow('• Your credentials are encrypted with your master password'));
     console.log(chalk.yellow('• You can store your master password securely in the system keychain'));
-    console.log(chalk.yellow('• Alternatively, you can use the AGENTOS_MASTER_PASSWORD environment variable'));
+    console.log(chalk.yellow('• Alternatively, you can use the AUTOOS_MASTER_PASSWORD environment variable'));
     console.log('');
     
     await promptForCredentials();

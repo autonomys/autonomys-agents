@@ -14,7 +14,7 @@ import {
 import chalk from 'chalk';
 
 // Local cache location
-const CACHE_DIR = path.join(process.env.HOME || process.env.USERPROFILE || '', '.agentOS');
+const CACHE_DIR = path.join(process.env.HOME || process.env.USERPROFILE || '', '.autoOS');
 const REGISTRY_CACHE_PATH = path.join(CACHE_DIR, 'registry.json');
 
 // Initialize cache directory

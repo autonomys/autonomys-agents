@@ -7,8 +7,8 @@ import { CommandResult } from '../types/index.js';
 import { getToolFromRegistry, getToolVersionFromRegistry } from '../utils/registry.js';
 import { downloadFileFromDsn } from '../utils/autoDriveClient.js';
 
-const PACKAGES_DIR = path.join(process.env.HOME || process.env.USERPROFILE || '', '.agentOS', 'packages');
-const TOOLS_DIR = path.join(process.env.HOME || process.env.USERPROFILE || '', '.agentOS', 'tools');
+const PACKAGES_DIR = path.join(process.env.HOME || process.env.USERPROFILE || '', '.autoOS', 'packages');
+const TOOLS_DIR = path.join(process.env.HOME || process.env.USERPROFILE || '', '.autoOS', 'tools');
 
 const DEFAULT_PROJECT_TOOLS_PATH = 'src/agents/tools';
 
@@ -190,7 +190,7 @@ export async function install(toolName: string, options: any): Promise<CommandRe
           spinner.fail(`${versionText} of tool '${toolName}' not found in registry`);
           return { 
             success: false, 
-            message: `${versionText} of tool '${toolName}' not found in registry. Use 'agentOS list -d' to see available versions.` 
+            message: `${versionText} of tool '${toolName}' not found in registry. Use 'autoOS list -d' to see available versions.` 
           };
         }
         
@@ -226,7 +226,7 @@ export async function install(toolName: string, options: any): Promise<CommandRe
       }
     } else {
       // For global installation, import path requires special handling
-      importPath = `~/.agentOS/tools/${toolName}`;
+      importPath = `~/.autoOS/tools/${toolName}`;
     }
     
     console.log(chalk.green(`\nYou can now import the tool with:`));
@@ -240,7 +240,7 @@ export async function install(toolName: string, options: any): Promise<CommandRe
     
     if (!options.local) {
       console.log(chalk.yellow(`\nTip: To install tools directly to your project, use the --local flag:`));
-      console.log(`agentOS install ${toolName} --local`);
+      console.log(`autoOS install ${toolName} --local`);
     }
     
     return { 

@@ -1,10 +1,10 @@
-# agentOS CLI
+# autoOS CLI
 
 A package manager and toolkit for Autonomys agent tools.
 
 ## Overview
 
-agentOS CLI is a command-line interface for managing Autonomys agent tools. It allows developers to:
+autoOS CLI is a command-line interface for managing Autonomys agent tools. It allows developers to:
 
 - Install agent tools from the registry
 - Publish new tools to the registry
@@ -44,7 +44,7 @@ yarn add @autonomys/agent-os-cli
 After installation, set up your credentials and configuration:
 
 ```bash
-agentOS config
+autoOS config
 ```
 
 This interactive wizard will guide you through:
@@ -59,64 +59,64 @@ This interactive wizard will guide you through:
 
 ```bash
 # Install the latest version
-agentOS install <tool-name>
+autoOS install <tool-name>
 
 # Install a specific version
-agentOS install <tool-name> -v <version>
+autoOS install <tool-name> -v <version>
 
 # Install using a Content ID (CID)
-agentOS install <tool-name> --cid <cid>
+autoOS install <tool-name> --cid <cid>
 
 # Install locally to the current project
-agentOS install <tool-name> --local
+autoOS install <tool-name> --local
 ```
 
 ### Publish a Tool
 
 ```bash
 # Publish a tool to the registry
-agentOS publish <tool-path>
+autoOS publish <tool-path>
 
 # Upload to Auto Drive without updating the registry
-agentOS publish <tool-path> --no-registry
+autoOS publish <tool-path> --no-registry
 ```
 
 ### List Available Tools
 
 ```bash
 # List tools with basic information
-agentOS list
+autoOS list
 
 # List tools with detailed information
-agentOS list -d
+autoOS list -d
 ```
 
 ### Configure Settings
 
 ```bash
 # Configure all settings
-agentOS config
+autoOS config
 
 # Configure only credentials
-agentOS config --credentials
+autoOS config --credentials
 
 # Configure only general settings
-agentOS config --settings
+autoOS config --settings
 ```
 
 ### Clean Cached Files
 
 ```bash
 # Clean with confirmation
-agentOS clean
+autoOS clean
 
 # Force clean without confirmation
-agentOS clean --force
+autoOS clean --force
 ```
 
 ## Secure Credential Management
 
-agentOS CLI provides several secure options for managing your credentials:
+autoOS CLI provides several secure options for managing your credentials:
 
 ### System Keychain Storage
 
@@ -138,7 +138,7 @@ If you choose not to use the system keychain, your password can be:
 For CI/CD or automated scripts, you can set your master password as an environment variable:
 
 ```bash
-export AGENTOS_MASTER_PASSWORD="your-master-password"
+export AUTOOS_MASTER_PASSWORD="your-master-password"
 ```
 
 ## Tool Structure
@@ -255,7 +255,7 @@ When you're ready to publish:
 cd weather-tool
 
 # Publish to the registry
-agentOS publish .
+autoOS publish .
 ```
 
 
@@ -264,7 +264,7 @@ agentOS publish .
 After publishing your tool, you can install it using:
 
 ```bash
-agentOS install weather-tool --local
+autoOS install weather-tool --local
 ```
 
 Then, in your agent code, you can import and use the tool:
@@ -290,12 +290,12 @@ const agent = new <Agent-Instantiation>({
 #### "Failed to decrypt credentials"
 
 - Ensure you're using the correct master password
-- Try running `agentOS config --credentials` to reset your credentials
+- Try running `autoOS config --credentials` to reset your credentials
 
 #### "Master password not set"
 
-- Set the `AGENTOS_MASTER_PASSWORD` environment variable, or
-- Use the system keychain integration by running `agentOS config`
+- Set the `AUTOOS_MASTER_PASSWORD` environment variable, or
+- Use the system keychain integration by running `autoOS config`
 
 #### API Key Issues
 
@@ -307,7 +307,7 @@ const agent = new <Agent-Instantiation>({
 Verbose logs can help diagnose issues:
 
 ```bash
-DEBUG=agentOS:* agentOS <command>
+DEBUG=autoOS:* autoOS <command>
 ```
 
 ## Privacy and Security
