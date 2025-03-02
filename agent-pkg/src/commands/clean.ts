@@ -6,8 +6,8 @@ import ora from 'ora';
 import inquirer from 'inquirer';
 import { CommandResult } from '../types/index.js';
 
-const AGENTOS_DIR = path.join(os.homedir(), '.agentOS');
-const PACKAGES_DIR = path.join(AGENTOS_DIR, 'packages');
+const AUTOOS_DIR = path.join(os.homedir(), '.autoOS');
+const PACKAGES_DIR = path.join(AUTOOS_DIR, 'packages');
 
 /**
  * Clean cached packages and other temporary files
@@ -15,7 +15,7 @@ const PACKAGES_DIR = path.join(AGENTOS_DIR, 'packages');
  * @returns Command result
  */
 export async function clean(options: any = {}): Promise<CommandResult> {
-  const spinner = ora('Cleaning agentOS cache...').start();
+  const spinner = ora('Cleaning autoOS cache...').start();
   spinner.stop();
   
   try {

@@ -33,7 +33,7 @@ export async function publish(toolPath: string, options: any = {}): Promise<Comm
       spinner.succeed(`Successfully uploaded ${metadata.name} to DSN (skipped registry update)`);
       console.log(chalk.green(`\nTool uploaded with CID: ${cid}`));
       console.log(chalk.yellow(`\nFor direct installation use:`));
-      console.log(`agentOS install ${metadata.name} --cid ${cid}`);
+      console.log(`autoOS install ${metadata.name} --cid ${cid}`);
     }
     
     return { 

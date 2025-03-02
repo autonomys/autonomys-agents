@@ -5,7 +5,7 @@
   "license": "MIT",
   "main": "dist/index.js",
   "bin": {
-    "agentOS": "./dist/index.js"
+    "autoOS": "./dist/index.js"
   },
   "scripts": {
     "build": "tsc",

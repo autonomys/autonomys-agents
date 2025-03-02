@@ -11,12 +11,12 @@ import { initializeConfigAndCredentials, credentialsExist } from './utils/config
 async function checkMasterPassword() {
   const isConfigCommand = process.argv.length > 2 && process.argv[2] === 'config';
   const isHelpCommand = process.argv.length > 2 && (process.argv[2] === '-h' || process.argv[2] === '--help');
-  
+
   if (await credentialsExist() && !isConfigCommand && !isHelpCommand) {
-    if (!process.env.AGENTOS_MASTER_PASSWORD) {
+    if (!process.env.AUTOOS_MASTER_PASSWORD) {
       console.log(chalk.blue('\nℹ️  Information: You have stored credentials'));
       console.log(chalk.yellow('You can set your master password as an environment variable to avoid prompts:'));
-      console.log(chalk.cyan('\n  export AGENTOS_MASTER_PASSWORD="your-master-password"\n'));
+      console.log(chalk.cyan('\n  export AUTOOS_MASTER_PASSWORD="your-master-password"\n'));
       console.log(chalk.yellow('Or you can simply enter it when prompted.\n'));
     }
   }
@@ -35,7 +35,7 @@ Promise.all([
   const cleanWrapper = async (...args: any[]) => { await clean(args[0]); };
 
   program
-    .name('agentOS')
+    .name('autoOS')
     .description('Package manager for Autonomys agent tools')
     .version('0.1.0');
 
@@ -63,7 +63,7 @@ Promise.all([
     
   program
     .command('config')
-    .description('Configure the agentOS CLI')
+    .description('Configure the autoOS CLI')
     .option('--credentials', 'Configure only credentials')
     .option('--settings', 'Configure only settings')
     .action(configWrapper);
@@ -82,7 +82,7 @@ Promise.all([
     program.help();
   }
 }).catch(error => {
-  console.error(chalk.red('Error initializing agentOS CLI:'));
+  console.error(chalk.red('Error initializing autoOS CLI:'));
   console.error(chalk.red(error instanceof Error ? error.message : String(error)));
   process.exit(1);
 }); 

@@ -6,12 +6,12 @@ import inquirer from 'inquirer';
 import chalk from 'chalk';
 import keytar from 'keytar';
 
-const CONFIG_DIR = path.join(os.homedir(), '.agentOS');
+const CONFIG_DIR = path.join(os.homedir(), '.autoOS');
 const CONFIG_FILE = path.join(CONFIG_DIR, 'config.json');
 const CREDENTIALS_FILE = path.join(CONFIG_DIR, 'credentials.enc');
 
 // Service name for keytar (system keychain)
-const KEYCHAIN_SERVICE = 'agentOS-cli';
+const KEYCHAIN_SERVICE = 'autoOS-cli';
 const KEYCHAIN_ACCOUNT = 'masterPassword';
 
 // Add a password cache system to avoid prompting multiple times
@@ -235,7 +235,7 @@ export async function credentialsExist(): Promise<boolean> {
  * Prompt user for required configuration
  */
 export async function promptForConfig() {
-  console.log(chalk.blue('Configuration setup for agentOS CLI'));
+  console.log(chalk.blue('Configuration setup for autoOS CLI'));
   
   const currentConfig = await loadConfig();
   
@@ -280,7 +280,7 @@ export async function promptForConfig() {
  * Prompt user for required credentials
  */
 export async function promptForCredentials() {
-  console.log(chalk.blue('Credential setup for agentOS CLI'));
+  console.log(chalk.blue('Credential setup for autoOS CLI'));
   
   const hasExistingCredentials = await credentialsExist();
   let masterPassword: string;
@@ -463,16 +463,16 @@ export async function getCredentials(): Promise<Credentials> {
       }
     }
     
-    if (process.env.AGENTOS_MASTER_PASSWORD) {
+    if (process.env.AUTOOS_MASTER_PASSWORD) {
       console.log("Using master password from environment variable");
       try {
-        const credentials = await loadCredentials(process.env.AGENTOS_MASTER_PASSWORD);
+        const credentials = await loadCredentials(process.env.AUTOOS_MASTER_PASSWORD);
         // Cache the password for future use
-        cachePassword(process.env.AGENTOS_MASTER_PASSWORD);
+        cachePassword(process.env.AUTOOS_MASTER_PASSWORD);
         
         // Save to keychain if enabled
         if (config.useKeychain) {
-          await saveToKeychain(process.env.AGENTOS_MASTER_PASSWORD);
+          await saveToKeychain(process.env.AUTOOS_MASTER_PASSWORD);
         }
         
         return credentials;
@@ -549,7 +549,6 @@ export async function initializeConfigAndCredentials() {
       // First check if we have a cached password
       const cachedPassword = getCachedPassword();
       if (cachedPassword) {
-        console.log("Using cached master password for initialization");
         credentials = await loadCredentials(cachedPassword);
       } 
       // Then check system keychain
@@ -560,25 +559,25 @@ export async function initializeConfigAndCredentials() {
           credentials = await loadCredentials(keychainPassword);
           // Cache the password for this session
           cachePassword(keychainPassword);
-        } else if (process.env.AGENTOS_MASTER_PASSWORD) {
+        } else if (process.env.AUTOOS_MASTER_PASSWORD) {
           console.log("Using master password from environment variable for initialization");
-          credentials = await loadCredentials(process.env.AGENTOS_MASTER_PASSWORD);
+          credentials = await loadCredentials(process.env.AUTOOS_MASTER_PASSWORD);
           // Cache the password for future use
-          cachePassword(process.env.AGENTOS_MASTER_PASSWORD);
+          cachePassword(process.env.AUTOOS_MASTER_PASSWORD);
           // Also save to keychain if enabled
           if (config.useKeychain) {
-            await saveToKeychain(process.env.AGENTOS_MASTER_PASSWORD);
+            await saveToKeychain(process.env.AUTOOS_MASTER_PASSWORD);
           }
         } else {
           console.log("No password found in system keychain, will prompt during operations that need credentials");
         }
       }
       // Then check for environment variable
-      else if (process.env.AGENTOS_MASTER_PASSWORD) {
+      else if (process.env.AUTOOS_MASTER_PASSWORD) {
         console.log("Using master password from environment variable for initialization");
-        credentials = await loadCredentials(process.env.AGENTOS_MASTER_PASSWORD);
+        credentials = await loadCredentials(process.env.AUTOOS_MASTER_PASSWORD);
         // Cache the password for future use
-        cachePassword(process.env.AGENTOS_MASTER_PASSWORD);
+        cachePassword(process.env.AUTOOS_MASTER_PASSWORD);
       } else {
         console.log("No cached or environment password found, will prompt during operations that need credentials");
       }
