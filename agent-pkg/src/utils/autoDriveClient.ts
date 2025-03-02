@@ -1,17 +1,24 @@
-import { createAutoDriveApi, uploadFile, downloadFile, UploadFileOptions } from '@autonomys/auto-drive';
+import {
+  createAutoDriveApi,
+  uploadFile,
+  downloadFile,
+  UploadFileOptions,
+} from '@autonomys/auto-drive';
 import { ToolRegistry } from '../types/index.js';
 import { initializeConfigAndCredentials } from './config.js';
 
 async function createApiClient() {
   const { config, credentials } = await initializeConfigAndCredentials();
-  
+
   if (credentials.autoDriveApiKey) {
     return createAutoDriveApi({
       apiKey: credentials.autoDriveApiKey,
       network: config.autoDriveNetwork === 'taurus' ? 'taurus' : 'mainnet',
     });
   }
-  throw new Error("Missing Auto Drive API key. Please run 'autoOS config' to set up your credentials.");
+  throw new Error(
+    "Missing Auto Drive API key. Please run 'autoOS config' to set up your credentials.",
+  );
 }
 
 /**
@@ -21,26 +28,26 @@ async function createApiClient() {
  * @returns Promise resolving to the CID
  */
 export const uploadFileToDsn = async (
-  file: { 
-    read: () => AsyncGenerator<Buffer>, 
-    name: string, 
-    mimeType: string, 
-    size: number 
-  }, 
-  options?: UploadFileOptions
+  file: {
+    read: () => AsyncGenerator<Buffer>;
+    name: string;
+    mimeType: string;
+    size: number;
+  },
+  options?: UploadFileOptions,
 ): Promise<string> => {
   try {
     console.log(`Uploading file: ${file.name}`);
-    
+
     const api = await createApiClient();
     const { credentials } = await initializeConfigAndCredentials();
-    
+
     let uploadOptions = options || { compression: true };
-    
+
     if (!uploadOptions.password && credentials.autoDriveEncryptionPassword) {
       uploadOptions.password = credentials.autoDriveEncryptionPassword;
     }
-    
+
     const cid = await uploadFile(api, file, uploadOptions);
     console.log(`Upload successful. CID: ${cid}`);
     return cid;
@@ -60,12 +67,12 @@ export const uploadFileToDsn = async (
 export const uploadObjectToDsn = async (
   object: any,
   name: string,
-  options?: UploadFileOptions
+  options?: UploadFileOptions,
 ): Promise<string> => {
   try {
     const jsonData = JSON.stringify(object, null, 2);
     const buffer = Buffer.from(jsonData);
-    
+
     const file = {
       read: async function* () {
         yield buffer;
@@ -74,7 +81,7 @@ export const uploadObjectToDsn = async (
       mimeType: 'application/json',
       size: buffer.length,
     };
-    
+
     return await uploadFileToDsn(file, options || { compression: true });
   } catch (error) {
     console.error('Error uploading object to DSN:', error);
@@ -90,16 +97,16 @@ export const uploadObjectToDsn = async (
  */
 export const downloadFileFromDsn = async (
   cid: string,
-  password?: string
+  password?: string,
 ): Promise<AsyncIterable<Buffer>> => {
   try {
     console.log(`Downloading file with CID: ${cid}`);
-    
+
     const api = await createApiClient();
-    
+
     if (!password) {
       const { credentials } = await initializeConfigAndCredentials();
-      
+
       if (credentials.autoDriveEncryptionPassword) {
         password = credentials.autoDriveEncryptionPassword;
       }
@@ -117,18 +124,15 @@ export const downloadFileFromDsn = async (
  * @param password Optional password for encrypted files
  * @returns Parsed object
  */
-export const downloadObjectFromDsn = async <T>(
-  cid: string,
-  password?: string
-): Promise<T> => {
+export const downloadObjectFromDsn = async <T>(cid: string, password?: string): Promise<T> => {
   try {
     const fileStream = await downloadFileFromDsn(cid, password);
-    
+
     const chunks: Buffer[] = [];
     for await (const chunk of fileStream) {
       chunks.push(chunk);
     }
-    
+
     const jsonData = Buffer.concat(chunks).toString('utf8');
     return JSON.parse(jsonData) as T;
   } catch (error) {

@@ -15,24 +15,23 @@ async function createToolPackage(toolPath: string): Promise<Buffer> {
     try {
       const output: Buffer[] = [];
       const archive = archiver('zip', {
-        zlib: { level: 9 }
+        zlib: { level: 9 },
       });
 
-      archive.on('data', (chunk) => output.push(chunk));
-      
+      archive.on('data', chunk => output.push(chunk));
+
       archive.on('end', () => {
         const buffer = Buffer.concat(output);
         resolve(buffer);
       });
 
-      archive.on('error', (err) => {
+      archive.on('error', err => {
         reject(err);
       });
 
       archive.directory(toolPath, false);
-      
-      archive.finalize();
 
+      archive.finalize();
     } catch (error) {
       reject(error);
     }
@@ -54,7 +53,7 @@ async function uploadToolPackage(packageBuffer: Buffer, manifest: ToolManifest):
     mimeType: 'application/zip',
     size: packageBuffer.length,
   };
-  
+
   const options: UploadFileOptions = {
     compression: true,
     password: process.env.AUTO_DRIVE_ENCRYPTION_PASSWORD,
@@ -68,26 +67,28 @@ async function uploadToolPackage(packageBuffer: Buffer, manifest: ToolManifest):
  * @param toolPath Path to the tool directory
  * @returns Object containing the CID and tool metadata
  */
-export async function packageAndUploadTool(toolPath: string): Promise<{ cid: string, metadata: ToolMetadata }> {
+export async function packageAndUploadTool(
+  toolPath: string,
+): Promise<{ cid: string; metadata: ToolMetadata }> {
   const manifestPath = path.join(toolPath, 'manifest.json');
   const manifestData = await fs.readFile(manifestPath, 'utf8');
   const manifest = JSON.parse(manifestData) as ToolManifest;
 
   console.log('Creating tool package...');
   const packageBuffer = await createToolPackage(toolPath);
-  
+
   console.log('Uploading to Autonomys DSN...');
   const cid = await uploadToolPackage(packageBuffer, manifest);
   console.log(`Upload successful. CID: ${cid}`);
-  
+
   const metadata: ToolMetadata = {
     name: manifest.name,
     version: manifest.version,
     description: manifest.description,
     author: manifest.author,
     cid: cid,
-    updated: new Date().toISOString()
+    updated: new Date().toISOString(),
   };
-  
+
   return { cid, metadata };
-} 
+}

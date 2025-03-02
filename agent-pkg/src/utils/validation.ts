@@ -23,30 +23,34 @@ export async function validateToolStructure(toolPath: string): Promise<Validatio
     } catch (error) {
       return { valid: false, message: `Directory ${toolPath} does not exist` };
     }
-    
+
     // Check for manifest.json
     const manifestPath = path.join(toolPath, 'manifest.json');
     try {
       const manifestData = await fs.readFile(manifestPath, 'utf8');
       let manifest: ToolManifest;
-      
+
       try {
         manifest = JSON.parse(manifestData) as ToolManifest;
       } catch (parseError) {
         return { valid: false, message: 'manifest.json contains invalid JSON' };
       }
-      
+
       // Validate manifest fields
       const requiredFields: (keyof ToolManifest)[] = [
-        'name', 'version', 'description', 'author', 'main'
+        'name',
+        'version',
+        'description',
+        'author',
+        'main',
       ];
-      
+
       for (const field of requiredFields) {
         if (!manifest[field]) {
           return { valid: false, message: `manifest.json is missing required field: ${field}` };
         }
       }
-      
+
       // Check main file exists
       const mainFilePath = path.join(toolPath, manifest.main);
       try {
@@ -54,18 +58,18 @@ export async function validateToolStructure(toolPath: string): Promise<Validatio
       } catch (mainError) {
         return { valid: false, message: `Main file ${manifest.main} does not exist` };
       }
-      
+
       // Validate tool follows LangChain DynamicStructuredTool pattern
       // TODO: Add more sophisticated validation of tool structure
-      
+
       return { valid: true };
     } catch (manifestError) {
       return { valid: false, message: 'manifest.json is missing' };
     }
   } catch (error) {
-    return { 
-      valid: false, 
-      message: `Validation error: ${error instanceof Error ? error.message : String(error)}` 
+    return {
+      valid: false,
+      message: `Validation error: ${error instanceof Error ? error.message : String(error)}`,
     };
   }
-} 
+}
