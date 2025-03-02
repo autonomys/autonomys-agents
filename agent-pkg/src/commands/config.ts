@@ -8,40 +8,28 @@ import { promptForConfig, promptForCredentials } from '../utils/config.js';
  * @returns Command result
  */
 export async function config(options: any = {}): Promise<CommandResult> {
-  try {
-    console.log(chalk.blue('agentOS CLI Configuration'));
-    console.log(chalk.dim('This wizard will help you set up your agentOS CLI configuration.'));
+  console.log(chalk.blue.bold('agentOS CLI Configuration\n'));
+  
+  const configureSettings = !options.credentials || options.settings;
+  const configureCredentials = !options.settings || options.credentials;
+  
+  if (configureSettings) {
+    console.log(chalk.cyan('=== General Settings ==='));
+    await promptForConfig();
     console.log('');
-    
-    if (options.credentials) {
-      
-      await promptForCredentials();
-    } else if (options.settings) {
-      await promptForConfig();
-    } else {
-      console.log(chalk.yellow('Configuration Settings'));
-      await promptForConfig();
-      
-      console.log('');
-      console.log(chalk.yellow('Credentials'));
-      await promptForCredentials();
-    }
-    
-    console.log('');
-    console.log(chalk.green('✓ Configuration complete!'));
-    console.log(chalk.dim('You can update your configuration at any time with:'));
-    console.log(chalk.dim('  agentOS config'));
-    
-    return {
-      success: true,
-      message: 'Configuration completed successfully'
-    };
-  } catch (error) {
-    console.error(chalk.red('Failed to configure agentOS CLI:'));
-    console.error(chalk.red(error instanceof Error ? error.message : String(error)));
-    return {
-      success: false,
-      message: `Configuration failed: ${error}`
-    };
   }
+  
+  if (configureCredentials) {
+    console.log(chalk.cyan('=== Credentials Management ==='));
+    console.log(chalk.yellow('• Your credentials are encrypted with your master password'));
+    console.log(chalk.yellow('• You can store your master password securely in the system keychain'));
+    console.log(chalk.yellow('• Alternatively, you can use the AGENTOS_MASTER_PASSWORD environment variable'));
+    console.log('');
+    
+    await promptForCredentials();
+  }
+  
+  console.log(chalk.green.bold('\nConfiguration complete! 🎉'));
+  
+  return { success: true, message: 'Configuration updated successfully' };
 } 
