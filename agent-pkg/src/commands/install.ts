@@ -4,7 +4,7 @@ import fs from 'fs/promises';
 import path from 'path';
 import extract from 'extract-zip';
 import { CommandResult } from '../types/index.js';
-import { getToolFromRegistry } from '../utils/registry.js';
+import { getToolFromRegistry, getToolVersionFromRegistry } from '../utils/registry.js';
 import { downloadFileFromDsn } from '../utils/autoDriveClient.js';
 
 const PACKAGES_DIR = path.join(process.env.HOME || process.env.USERPROFILE || '', '.agentOS', 'packages');
@@ -165,6 +165,7 @@ async function downloadAndInstallTool(
 export async function install(toolName: string, options: any): Promise<CommandResult> {
   const spinner = ora(`Installing ${toolName}...`).start();
   const installType = options.local ? 'locally' : 'globally';
+  let versionText = '';
   
   try {
     let toolInfo;
@@ -179,20 +180,39 @@ export async function install(toolName: string, options: any): Promise<CommandRe
     // Registry lookup path
     else {
       // Look up tool in registry
-      toolInfo = await getToolFromRegistry(toolName);
-      
-      if (!toolInfo) {
-        spinner.fail(`Tool '${toolName}' not found in registry`);
-        return { success: false, message: `Tool '${toolName}' not found in registry` };
+      if (options.version) {
+        // If a specific version is requested
+        versionText = `version ${options.version}`;
+        spinner.text = `Looking for ${toolName} ${versionText}...`;
+        toolInfo = await getToolVersionFromRegistry(toolName, options.version);
+        
+        if (!toolInfo) {
+          spinner.fail(`${versionText} of tool '${toolName}' not found in registry`);
+          return { 
+            success: false, 
+            message: `${versionText} of tool '${toolName}' not found in registry. Use 'agentOS list -d' to see available versions.` 
+          };
+        }
+        
+        spinner.text = `Installing ${toolName} ${versionText} ${installType} from registry...`;
+      } else {
+        // Get the latest version
+        toolInfo = await getToolFromRegistry(toolName);
+        
+        if (!toolInfo) {
+          spinner.fail(`Tool '${toolName}' not found in registry`);
+          return { success: false, message: `Tool '${toolName}' not found in registry` };
+        }
+        
+        versionText = `(latest: ${toolInfo.version})`;
+        spinner.text = `Installing ${toolName} ${versionText} ${installType} from registry...`;
       }
-      
-      spinner.text = `Installing ${toolName} ${installType} from registry...`;
     }
     
     // Download and install the tool
     await downloadAndInstallTool(toolInfo, { local: options.local });
     
-    spinner.succeed(`Successfully installed ${toolName} ${installType}`);
+    spinner.succeed(`Successfully installed ${toolName} ${versionText} ${installType}`);
     
     // Provide import info
     let importPath = '';
@@ -223,10 +243,16 @@ export async function install(toolName: string, options: any): Promise<CommandRe
       console.log(`agentOS install ${toolName} --local`);
     }
     
-    return { success: true, message: `Successfully installed ${toolName} ${installType}` };
+    return { 
+      success: true, 
+      message: `Successfully installed ${toolName} ${versionText} ${installType}` 
+    };
   } catch (error) {
-    spinner.fail(`Failed to install ${toolName}`);
+    spinner.fail(`Failed to install ${toolName} ${versionText}`);
     console.error(chalk.red(error instanceof Error ? error.message : String(error)));
-    return { success: false, message: `Failed to install ${toolName}: ${error}` };
+    return { 
+      success: false, 
+      message: `Failed to install ${toolName} ${versionText}: ${error}` 
+    };
   }
 } 
