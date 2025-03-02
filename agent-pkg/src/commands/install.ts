@@ -17,13 +17,11 @@ const DEFAULT_PROJECT_TOOLS_PATH = 'src/agents/tools';
  * @returns Path to the project root or undefined if not found
  */
 async function detectProjectRoot(): Promise<string | undefined> {
-  // Start from the current directory
   let currentDir = process.cwd();
   const homeDir = process.env.HOME || process.env.USERPROFILE || '';
   
   while (currentDir && currentDir !== homeDir && currentDir !== path.parse(currentDir).root) {
     try {
-      // Check for common project markers
       const files = await fs.readdir(currentDir);
       if (
         files.includes('package.json') || 
@@ -33,7 +31,6 @@ async function detectProjectRoot(): Promise<string | undefined> {
         return currentDir;
       }
       
-      // Move up one directory
       currentDir = path.dirname(currentDir);
     } catch (error) {
       // If we can't read the directory, move up
@@ -41,7 +38,6 @@ async function detectProjectRoot(): Promise<string | undefined> {
     }
   }
   
-  // If we didn't find a project root, return undefined
   return undefined;
 }
 

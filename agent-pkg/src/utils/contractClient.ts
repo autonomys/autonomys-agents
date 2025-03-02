@@ -4,15 +4,23 @@ import chalk from 'chalk';
 
 // ABI for AutonomysPackageRegistry
 const ABI = [
-  "function registerTool(string memory name, string memory cid, string memory version, string memory metadata) external",
+  "function registerTool(string memory name, string memory version, string memory cid, string memory metadata) external",
   "function updateToolMetadata(string memory name, string memory version, string memory metadata) external",
   "function setLatestVersion(string memory name, string memory version) external",
   "function getToolInfo(string memory name) external view returns (address toolOwner, uint256 versionCount, string memory latestVersion)",
   "function getToolVersion(string memory name, string memory version) external view returns (string memory cid, uint256 timestamp, string memory metadata)",
   "function getToolVersions(string memory name) external view returns (string[] memory)",
-  "function getLatestVersion(string memory name) external view returns (string memory cid, string memory version, uint256 timestamp, string memory metadata)",
+  "function getLatestVersion(string memory name) external view returns (string memory version, string memory cid, uint256 timestamp, string memory metadata)",
   "function getAllTools() external view returns (string[] memory)",
-  "function isToolOwner(string memory name, address account) external view returns (bool)"
+  "function getToolCount() external view returns (uint256)",
+  "function versionExists(string memory name, string memory version) external view returns (bool)",
+  "function transferToolOwnership(string memory name, address newOwner) external",
+  "function transferContractOwnership(address newOwner) external",
+  "function getPublisherTools(address publisher) external view returns (string[] memory)",
+  
+  "event ToolRegistered(string name, string version, string cid, address publisher, uint256 timestamp)",
+  "event ToolUpdated(string name, string version, string cid, address publisher, uint256 timestamp)",
+  "event OwnershipTransferred(string name, address previousOwner, address newOwner)"
 ];
 
 /**
@@ -67,7 +75,7 @@ export async function registerTool(
 ): Promise<string> {
   try {
     const contract = await getRegistryContract();
-    const tx = await contract.registerTool(name, cid, version, metadata);
+    const tx = await contract.registerTool(name, version, cid, metadata);
     const receipt = await tx.wait();
     return receipt.hash;
   } catch (error) {
@@ -97,7 +105,7 @@ export async function addToolVersion(
       throw new Error(`You are not the owner of tool '${name}'`);
     }
     
-    const tx = await contract.registerTool(name, cid, version, metadata);
+    const tx = await contract.registerTool(name, version, cid, metadata);
     const receipt = await tx.wait();
     return receipt.hash;
   } catch (error) {
@@ -177,12 +185,12 @@ export async function getLatestToolVersion(name: string): Promise<{
     const contract = await getRegistryContract(true);
     const result = await contract.getLatestVersion(name);
     // Correct order for the returned values based on our logs:
-    // result[0] = CID
-    // result[1] = version
+    // result[0] = version
+    // result[1] = CID
     // result[2] = timestamp
     // result[3] = metadata
-    const cid = result[0];
-    const version = result[1];
+    const version = result[0];
+    const cid = result[1];
     const timestamp = Number(result[2]);
     const metadata = result[3];
     return { 
@@ -218,9 +226,6 @@ export async function getAllToolNames(): Promise<string[]> {
  */
 export async function isToolOwner(name: string): Promise<boolean> {
   try {
-    const contract = await getRegistryContract(true);
-    
-    // Get address for current credentials
     const { credentials, getCredentials } = await initializeConfigAndCredentials();
     let privateKey: string | undefined;
     
@@ -235,12 +240,16 @@ export async function isToolOwner(name: string): Promise<boolean> {
       return false;
     }
     
-    // Create wallet to get address
     const provider = new ethers.JsonRpcProvider((await initializeConfigAndCredentials()).config.taurusRpcUrl);
     const wallet = new ethers.Wallet(privateKey, provider);
     const address = await wallet.getAddress();
     
-    return await contract.isToolOwner(name, address);
+    try {
+      const toolInfo = await getToolInfo(name);
+      return toolInfo.owner.toLowerCase() === address.toLowerCase();
+    } catch (error) {
+      return false;
+    }
   } catch (error) {
     console.error(`Error checking ownership for tool ${name}:`, error);
     return false;
