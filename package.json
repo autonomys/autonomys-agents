@@ -1,6 +1,6 @@
 {
     "name": "autonomys-agents",
-    "version": "0.2.2",
+    "version": "0.3.0",
     "description": "Autonomys Agents",
     "main": "dist/index.js",
     "type": "module",
