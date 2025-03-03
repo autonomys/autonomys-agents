@@ -5,7 +5,7 @@ import { updateRegistry } from '../utils/registry.js';
 import { validateToolStructure } from '../utils/validation.js';
 import { packageAndUploadTool } from '../utils/packageAndUpload.js';
 
-export async function publish(toolPath: string, options: any = {}): Promise<CommandResult> {
+export const publish = async (toolPath: string, options: any = {}): Promise<CommandResult> => {
   const spinner = ora(`Publishing tool from ${toolPath}...`).start();
 
   try {
@@ -47,4 +47,4 @@ export async function publish(toolPath: string, options: any = {}): Promise<Comm
     console.error(chalk.red(error instanceof Error ? error.message : String(error)));
     return { success: false, message: `Failed to publish tool: ${error}` };
   }
-}
+};

@@ -12,7 +12,7 @@ interface ValidationResult {
  * @param toolPath Path to the tool directory
  * @returns ValidationResult indicating if the tool structure is valid
  */
-export async function validateToolStructure(toolPath: string): Promise<ValidationResult> {
+export const validateToolStructure = async (toolPath: string): Promise<ValidationResult> => {
   try {
     // Check if directory exists
     try {
@@ -72,4 +72,4 @@ export async function validateToolStructure(toolPath: string): Promise<Validatio
       message: `Validation error: ${error instanceof Error ? error.message : String(error)}`,
     };
   }
-}
+};

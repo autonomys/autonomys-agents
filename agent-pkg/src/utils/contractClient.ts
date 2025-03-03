@@ -27,7 +27,7 @@ const ABI = [
  * Initialize a contract instance for the AutonomysPackageRegistry
  * @returns An ethers.js Contract instance
  */
-export async function getRegistryContract(readOnly: boolean = false) {
+export const getRegistryContract = async (readOnly: boolean = false) => {
   try {
     const { config, credentials } = await initializeConfigAndCredentials();
     const rpcUrl = config.taurusRpcUrl;
@@ -59,7 +59,7 @@ export async function getRegistryContract(readOnly: boolean = false) {
     console.error('Error initializing contract instance:', error);
     throw error;
   }
-}
+};
 
 /**
  * Register a new tool in the AutonomysPackageRegistry
@@ -69,12 +69,12 @@ export async function getRegistryContract(readOnly: boolean = false) {
  * @param metadata Additional metadata (description, keywords, etc.)
  * @returns Transaction hash
  */
-export async function registerTool(
+export const registerTool = async (
   name: string,
   cid: string,
   version: string,
   metadata: string = '{}',
-): Promise<string> {
+): Promise<string> => {
   try {
     const contract = await getRegistryContract();
     const tx = await contract.registerTool(name, version, cid, metadata);
@@ -84,7 +84,7 @@ export async function registerTool(
     console.error(`Error registering tool ${name}:`, error);
     throw error;
   }
-}
+};
 
 /**
  * Add a new version for an existing tool
@@ -94,12 +94,12 @@ export async function registerTool(
  * @param metadata Additional metadata (description, keywords, etc.)
  * @returns Transaction hash
  */
-export async function addToolVersion(
+export const addToolVersion = async (
   name: string,
   cid: string,
   version: string,
   metadata: string = '{}',
-): Promise<string> {
+): Promise<string> => {
   try {
     const contract = await getRegistryContract();
 
@@ -114,27 +114,33 @@ export async function addToolVersion(
     console.error(`Error adding version ${version} for tool ${name}:`, error);
     throw error;
   }
-}
+};
 
 /**
  * Get information about a tool
  * @param name Tool name
  * @returns Tool information including owner, version count, and latest version
  */
-export async function getToolInfo(name: string): Promise<{
+export const getToolInfo = async (
+  name: string,
+): Promise<{
   owner: string;
   versionCount: number;
   latestVersion: string;
-}> {
+}> => {
   try {
     const contract = await getRegistryContract(true);
     const [owner, versionCount, latestVersion] = await contract.getToolInfo(name);
-    return { owner, versionCount: Number(versionCount), latestVersion };
+    return {
+      owner,
+      versionCount: Number(versionCount),
+      latestVersion,
+    };
   } catch (error) {
     console.error(`Error getting info for tool ${name}:`, error);
     throw error;
   }
-}
+};
 
 /**
  * Get information about a specific version of a tool
@@ -142,14 +148,14 @@ export async function getToolInfo(name: string): Promise<{
  * @param version Version string
  * @returns Version information including CID, timestamp, and metadata
  */
-export async function getToolVersion(
+export const getToolVersion = async (
   name: string,
   version: string,
 ): Promise<{
   cid: string;
   timestamp: number;
   metadata: string;
-}> {
+}> => {
   try {
     const contract = await getRegistryContract(true);
     const [cid, timestamp, metadata] = await contract.getToolVersion(name, version);
@@ -158,14 +164,14 @@ export async function getToolVersion(
     console.error(`Error getting version ${version} for tool ${name}:`, error);
     throw error;
   }
-}
+};
 
 /**
  * Get all versions of a tool
  * @param name Tool name
  * @returns Array of version strings
  */
-export async function getToolVersions(name: string): Promise<string[]> {
+export const getToolVersions = async (name: string): Promise<string[]> => {
   try {
     const contract = await getRegistryContract(true);
     return await contract.getToolVersions(name);
@@ -173,19 +179,21 @@ export async function getToolVersions(name: string): Promise<string[]> {
     console.error(`Error getting versions for tool ${name}:`, error);
     throw error;
   }
-}
+};
 
 /**
  * Get the latest version information for a tool
  * @param name Tool name
  * @returns Latest version information
  */
-export async function getLatestToolVersion(name: string): Promise<{
+export const getLatestToolVersion = async (
+  name: string,
+): Promise<{
   version: string;
   cid: string;
   timestamp: number;
   metadata: string;
-}> {
+}> => {
   try {
     const contract = await getRegistryContract(true);
     const result = await contract.getLatestVersion(name);
@@ -203,13 +211,13 @@ export async function getLatestToolVersion(name: string): Promise<{
     console.error(`Error getting latest version for tool ${name}:`, error);
     throw error;
   }
-}
+};
 
 /**
  * Get all registered tool names
  * @returns Array of tool names
  */
-export async function getAllToolNames(): Promise<string[]> {
+export const getAllToolNames = async (): Promise<string[]> => {
   try {
     const contract = await getRegistryContract(true);
     return await contract.getAllTools();
@@ -217,14 +225,14 @@ export async function getAllToolNames(): Promise<string[]> {
     console.error('Error getting all tool names:', error);
     throw error;
   }
-}
+};
 
 /**
  * Check if the connected account is the owner of a tool
  * @param name Tool name
  * @returns Boolean indicating ownership
  */
-export async function isToolOwner(name: string): Promise<boolean> {
+export const isToolOwner = async (name: string): Promise<boolean> => {
   try {
     const { credentials, getCredentials } = await initializeConfigAndCredentials();
     let privateKey: string | undefined;
@@ -256,4 +264,4 @@ export async function isToolOwner(name: string): Promise<boolean> {
     console.error(`Error checking ownership for tool ${name}:`, error);
     return false;
   }
-}
+};

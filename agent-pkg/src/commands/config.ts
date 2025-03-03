@@ -7,7 +7,7 @@ import { promptForConfig, promptForCredentials } from '../utils/config.js';
  * @param options Command options
  * @returns Command result
  */
-export async function config(options: any = {}): Promise<CommandResult> {
+export const config = async (options: any = {}): Promise<CommandResult> => {
   console.log(chalk.blue.bold('autoOS CLI Configuration\n'));
 
   const configureSettings = !options.credentials || options.settings;
@@ -36,4 +36,4 @@ export async function config(options: any = {}): Promise<CommandResult> {
   console.log(chalk.green.bold('\nConfiguration complete! 🎉'));
 
   return { success: true, message: 'Configuration updated successfully' };
-}
+};

@@ -18,16 +18,16 @@ const CACHE_DIR = path.join(process.env.HOME || process.env.USERPROFILE || '', '
 const REGISTRY_CACHE_PATH = path.join(CACHE_DIR, 'registry.json');
 
 // Initialize cache directory
-async function ensureCacheDir() {
+const ensureCacheDir = async () => {
   try {
     await fs.mkdir(CACHE_DIR, { recursive: true });
   } catch (error) {
     // Directory already exists
   }
-}
+};
 
 // Get registry from cache or fetch from blockchain
-export async function getRegistry(): Promise<ToolRegistry> {
+export const getRegistry = async (): Promise<ToolRegistry> => {
   await ensureCacheDir();
 
   try {
@@ -51,9 +51,9 @@ export async function getRegistry(): Promise<ToolRegistry> {
     // Cache miss or invalid, fetch from blockchain
     return await fetchRegistryFromBlockchain();
   }
-}
+};
 
-async function fetchRegistryFromBlockchain(): Promise<ToolRegistry> {
+const fetchRegistryFromBlockchain = async (): Promise<ToolRegistry> => {
   try {
     console.log(chalk.blue('Fetching registry from blockchain...'));
 
@@ -103,9 +103,9 @@ async function fetchRegistryFromBlockchain(): Promise<ToolRegistry> {
 
     return emptyRegistry;
   }
-}
+};
 
-export async function getToolFromRegistry(toolName: string): Promise<ToolMetadata | null> {
+export const getToolFromRegistry = async (toolName: string): Promise<ToolMetadata | null> => {
   try {
     const toolInfo = await getToolInfo(toolName);
 
@@ -138,7 +138,7 @@ export async function getToolFromRegistry(toolName: string): Promise<ToolMetadat
     const registry = await getLocalRegistryCache();
     return registry.tools[toolName] || null;
   }
-}
+};
 
 /**
  * Get a specific version of a tool from the registry
@@ -146,10 +146,10 @@ export async function getToolFromRegistry(toolName: string): Promise<ToolMetadat
  * @param version Specific version to retrieve
  * @returns Tool metadata for the specified version, or null if not found
  */
-export async function getToolVersionFromRegistry(
+export const getToolVersionFromRegistry = async (
   toolName: string,
   version: string,
-): Promise<ToolMetadata | null> {
+): Promise<ToolMetadata | null> => {
   try {
     // First check if the tool exists
     const toolInfo = await getToolInfo(toolName);
@@ -200,9 +200,9 @@ export async function getToolVersionFromRegistry(
 
     return null;
   }
-}
+};
 
-async function getLocalRegistryCache(): Promise<ToolRegistry> {
+const getLocalRegistryCache = async (): Promise<ToolRegistry> => {
   await ensureCacheDir();
 
   try {
@@ -215,9 +215,9 @@ async function getLocalRegistryCache(): Promise<ToolRegistry> {
       tools: {},
     };
   }
-}
+};
 
-export async function updateRegistry(toolMetadata: ToolMetadata): Promise<string> {
+export const updateRegistry = async (toolMetadata: ToolMetadata): Promise<string> => {
   try {
     console.log(chalk.blue('Updating registry on blockchain...'));
 
@@ -274,4 +274,4 @@ export async function updateRegistry(toolMetadata: ToolMetadata): Promise<string
     console.error('Error updating registry:', error);
     throw error;
   }
-}
+};

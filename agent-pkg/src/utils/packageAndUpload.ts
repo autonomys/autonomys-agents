@@ -10,7 +10,7 @@ import { uploadFileToDsn } from './autoDriveClient.js';
  * @param toolPath Path to the tool directory
  * @returns Buffer containing the zip archive
  */
-async function createToolPackage(toolPath: string): Promise<Buffer> {
+const createToolPackage = async (toolPath: string): Promise<Buffer> => {
   return new Promise((resolve, reject) => {
     try {
       const output: Buffer[] = [];
@@ -36,7 +36,7 @@ async function createToolPackage(toolPath: string): Promise<Buffer> {
       reject(error);
     }
   });
-}
+};
 
 /**
  * Uploads a tool package to Autonomys DSN
@@ -44,7 +44,10 @@ async function createToolPackage(toolPath: string): Promise<Buffer> {
  * @param manifest Tool manifest
  * @returns CID of the uploaded package
  */
-async function uploadToolPackage(packageBuffer: Buffer, manifest: ToolManifest): Promise<string> {
+const uploadToolPackage = async (
+  packageBuffer: Buffer,
+  manifest: ToolManifest,
+): Promise<string> => {
   const file = {
     read: async function* () {
       yield packageBuffer;
@@ -60,16 +63,16 @@ async function uploadToolPackage(packageBuffer: Buffer, manifest: ToolManifest):
   };
 
   return await uploadFileToDsn(file, options);
-}
+};
 
 /**
  * Packages a tool directory and uploads it to Autonomys DSN
  * @param toolPath Path to the tool directory
  * @returns Object containing the CID and tool metadata
  */
-export async function packageAndUploadTool(
+export const packageAndUploadTool = async (
   toolPath: string,
-): Promise<{ cid: string; metadata: ToolMetadata }> {
+): Promise<{ cid: string; metadata: ToolMetadata }> => {
   const manifestPath = path.join(toolPath, 'manifest.json');
   const manifestData = await fs.readFile(manifestPath, 'utf8');
   const manifest = JSON.parse(manifestData) as ToolManifest;
@@ -91,4 +94,4 @@ export async function packageAndUploadTool(
   };
 
   return { cid, metadata };
-}
+};

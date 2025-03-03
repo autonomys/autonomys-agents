@@ -6,7 +6,7 @@ import {
 } from '@autonomys/auto-drive';
 import { initializeConfigAndCredentials } from './config.js';
 
-async function createApiClient() {
+const createApiClient = async () => {
   const { config, credentials } = await initializeConfigAndCredentials();
 
   if (credentials.autoDriveApiKey) {
@@ -18,7 +18,7 @@ async function createApiClient() {
   throw new Error(
     "Missing Auto Drive API key. Please run 'autoOS config' to set up your credentials.",
   );
-}
+};
 
 /**
  * Upload a file to Autonomys DSN

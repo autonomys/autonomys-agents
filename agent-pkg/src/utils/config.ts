@@ -6,6 +6,25 @@ import inquirer from 'inquirer';
 import chalk from 'chalk';
 import keytar from 'keytar';
 
+interface Credentials {
+  autoDriveApiKey?: string;
+  autoDriveEncryptionPassword?: string;
+  autoEvmPrivateKey?: string;
+}
+
+interface PasswordCache {
+  password: string;
+  timestamp: number;
+}
+
+const DEFAULT_CONFIG = {
+  autoDriveNetwork: 'mainnet',
+  taurusRpcUrl: 'https://auto-evm.taurus.autonomys.xyz/ws',
+  packageRegistryAddress: '0x0B5cF4C198E8c75e8fE9B4D33F0B29881D13744b',
+  autoSaveCredentials: true,
+  useKeychain: true,
+};
+
 const CONFIG_DIR = path.join(os.homedir(), '.autoOS');
 const CONFIG_FILE = path.join(CONFIG_DIR, 'config.json');
 const CREDENTIALS_FILE = path.join(CONFIG_DIR, 'credentials.enc');
@@ -16,11 +35,6 @@ const KEYCHAIN_ACCOUNT = 'masterPassword';
 
 // Add a password cache system to avoid prompting multiple times
 // This will timeout after a certain period for security
-interface PasswordCache {
-  password: string;
-  timestamp: number;
-}
-
 // Store password in memory only (not persisted)
 let masterPasswordCache: PasswordCache | null = null;
 // Cache timeout in milliseconds (10 minutes)
@@ -29,18 +43,18 @@ const PASSWORD_CACHE_TIMEOUT = 10 * 60 * 1000;
 /**
  * Store the master password in the cache
  */
-function cachePassword(password: string): void {
+const cachePassword = (password: string): void => {
   masterPasswordCache = {
     password,
     timestamp: Date.now(),
   };
-}
+};
 
 /**
  * Get the cached password if it exists and hasn't expired
  * @returns The cached password or null if expired or not cached
  */
-function getCachedPassword(): string | null {
+const getCachedPassword = (): string | null => {
   if (!masterPasswordCache) return null;
 
   const now = Date.now();
@@ -55,12 +69,12 @@ function getCachedPassword(): string | null {
   // Update the timestamp to extend the cache
   masterPasswordCache.timestamp = now;
   return masterPasswordCache.password;
-}
+};
 
 /**
  * Save the master password to the system keychain
  */
-async function saveToKeychain(password: string): Promise<boolean> {
+const saveToKeychain = async (password: string): Promise<boolean> => {
   try {
     await keytar.setPassword(KEYCHAIN_SERVICE, KEYCHAIN_ACCOUNT, password);
     return true;
@@ -71,12 +85,12 @@ async function saveToKeychain(password: string): Promise<boolean> {
     console.log(chalk.gray(`Error: ${error}`));
     return false;
   }
-}
+};
 
 /**
  * Get the master password from the system keychain
  */
-async function getFromKeychain(): Promise<string | null> {
+const getFromKeychain = async (): Promise<string | null> => {
   try {
     const password = await keytar.getPassword(KEYCHAIN_SERVICE, KEYCHAIN_ACCOUNT);
     return password;
@@ -85,12 +99,12 @@ async function getFromKeychain(): Promise<string | null> {
     console.log(chalk.gray(`Error: ${error}`));
     return null;
   }
-}
+};
 
 /**
  * Delete the master password from the system keychain
  */
-async function deleteFromKeychain(): Promise<boolean> {
+const deleteFromKeychain = async (): Promise<boolean> => {
   try {
     return await keytar.deletePassword(KEYCHAIN_SERVICE, KEYCHAIN_ACCOUNT);
   } catch (error) {
@@ -98,37 +112,23 @@ async function deleteFromKeychain(): Promise<boolean> {
     console.log(chalk.gray(`Error: ${error}`));
     return false;
   }
-}
-
-const DEFAULT_CONFIG = {
-  autoDriveNetwork: 'mainnet',
-  taurusRpcUrl: 'https://auto-evm.taurus.autonomys.xyz/ws',
-  packageRegistryAddress: '0x0B5cF4C198E8c75e8fE9B4D33F0B29881D13744b',
-  autoSaveCredentials: true,
-  useKeychain: true,
 };
-
-interface Credentials {
-  autoDriveApiKey?: string;
-  autoDriveEncryptionPassword?: string;
-  autoEvmPrivateKey?: string;
-}
 
 /**
  * Ensure the config directory exists
  */
-async function ensureConfigDir() {
+const ensureConfigDir = async () => {
   try {
     await fs.mkdir(CONFIG_DIR, { recursive: true });
   } catch (error) {
     console.error('Error creating config directory:', error);
   }
-}
+};
 
 /**
  * Load the configuration file
  */
-export async function loadConfig() {
+export const loadConfig = async () => {
   await ensureConfigDir();
 
   try {
@@ -140,23 +140,23 @@ export async function loadConfig() {
     await saveConfig(config);
     return config;
   }
-}
+};
 
 /**
  * Save the configuration file
  */
-export async function saveConfig(config: any) {
+export const saveConfig = async (config: any) => {
   await ensureConfigDir();
   await fs.writeFile(CONFIG_FILE, JSON.stringify(config, null, 2));
-}
+};
 
 /**
  * Encrypt credentials with a master password
  */
-async function encryptCredentials(
+const encryptCredentials = async (
   credentials: Credentials,
   masterPassword: string,
-): Promise<Buffer> {
+): Promise<Buffer> => {
   const key = scryptSync(masterPassword, 'salt', 32);
   const iv = randomBytes(16);
   const cipher = createCipheriv('aes-256-cbc', key, iv);
@@ -165,15 +165,15 @@ async function encryptCredentials(
   const encrypted = Buffer.concat([iv, cipher.update(data, 'utf8'), cipher.final()]);
 
   return encrypted;
-}
+};
 
 /**
  * Decrypt credentials with a master password
  */
-async function decryptCredentials(
+const decryptCredentials = async (
   encryptedData: Buffer,
   masterPassword: string,
-): Promise<Credentials> {
+): Promise<Credentials> => {
   try {
     const iv = encryptedData.subarray(0, 16);
     const encryptedCredentials = encryptedData.subarray(16);
@@ -190,12 +190,12 @@ async function decryptCredentials(
   } catch (error) {
     throw new Error('Failed to decrypt credentials. Incorrect password? ' + error);
   }
-}
+};
 
 /**
  * Save credentials to an encrypted file
  */
-export async function saveCredentials(credentials: Credentials, masterPassword: string) {
+export const saveCredentials = async (credentials: Credentials, masterPassword: string) => {
   await ensureConfigDir();
 
   const encrypted = await encryptCredentials(credentials, masterPassword);
@@ -210,12 +210,12 @@ export async function saveCredentials(credentials: Credentials, masterPassword: 
     // Save to keychain
     await saveToKeychain(masterPassword);
   }
-}
+};
 
 /**
  * Load credentials from an encrypted file
  */
-export async function loadCredentials(masterPassword: string): Promise<Credentials> {
+export const loadCredentials = async (masterPassword: string): Promise<Credentials> => {
   await ensureConfigDir();
 
   try {
@@ -225,24 +225,24 @@ export async function loadCredentials(masterPassword: string): Promise<Credentia
     console.log('Error loading credentials:', error);
     return {};
   }
-}
+};
 
 /**
  * Check if credentials exist
  */
-export async function credentialsExist(): Promise<boolean> {
+export const credentialsExist = async (): Promise<boolean> => {
   try {
     await fs.access(CREDENTIALS_FILE);
     return true;
   } catch (error) {
     return false;
   }
-}
+};
 
 /**
  * Prompt user for required configuration
  */
-export async function promptForConfig() {
+export const promptForConfig = async () => {
   console.log(chalk.blue('Configuration setup for autoOS CLI'));
 
   const currentConfig = await loadConfig();
@@ -282,12 +282,12 @@ export async function promptForConfig() {
 
   await saveConfig({ ...currentConfig, ...answers });
   console.log(chalk.green('Configuration saved successfully'));
-}
+};
 
 /**
  * Prompt user for required credentials
  */
-export async function promptForCredentials() {
+export const promptForCredentials = async (): Promise<Credentials> => {
   console.log(chalk.blue('Credential setup for autoOS CLI'));
 
   const hasExistingCredentials = await credentialsExist();
@@ -327,7 +327,7 @@ export async function promptForCredentials() {
         return credentials;
       } catch (error) {
         console.error(chalk.red('Failed to decrypt credentials. Please try again.'));
-        return promptForCredentials();
+        return await promptForCredentials();
       }
     }
   } else {
@@ -430,12 +430,12 @@ export async function promptForCredentials() {
   }
 
   return credentials;
-}
+};
 
 /**
  * Get credentials - either from file or by prompting
  */
-export async function getCredentials(): Promise<Credentials> {
+export const getCredentials = async (): Promise<Credentials> => {
   console.log('getCredentials called');
   if (await credentialsExist()) {
     console.log('Credentials exist, checking for master password');
@@ -545,13 +545,13 @@ export async function getCredentials(): Promise<Credentials> {
     console.log('No credentials exist, prompting for new credentials');
     return promptForCredentials();
   }
-}
+};
 
 /**
  * Initialize configuration and credentials
  * @returns Object with all necessary configuration and credentials
  */
-export async function initializeConfigAndCredentials() {
+export const initializeConfigAndCredentials = async () => {
   const config = await loadConfig();
 
   let credentials: Credentials = {};
@@ -607,4 +607,4 @@ export async function initializeConfigAndCredentials() {
     credentials,
     getCredentials,
   };
-}
+};

@@ -14,7 +14,7 @@ const PACKAGES_DIR = path.join(AUTOOS_DIR, 'packages');
  * @param options Command options
  * @returns Command result
  */
-export async function clean(options: any = {}): Promise<CommandResult> {
+export const clean = async (options: any = {}): Promise<CommandResult> => {
   const spinner = ora('Cleaning autoOS cache...').start();
   spinner.stop();
 
@@ -100,4 +100,4 @@ export async function clean(options: any = {}): Promise<CommandResult> {
       message: `Failed to clean cache: ${error}`,
     };
   }
-}
+};

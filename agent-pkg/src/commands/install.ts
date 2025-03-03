@@ -20,7 +20,7 @@ const DEFAULT_PROJECT_TOOLS_PATH = 'src/agents/tools';
  * Detects the root directory of the current project
  * @returns Path to the project root or undefined if not found
  */
-async function detectProjectRoot(): Promise<string | undefined> {
+const detectProjectRoot = async (): Promise<string | undefined> => {
   let currentDir = process.cwd();
   const homeDir = process.env.HOME || process.env.USERPROFILE || '';
 
@@ -43,14 +43,14 @@ async function detectProjectRoot(): Promise<string | undefined> {
   }
 
   return undefined;
-}
+};
 
 /**
  * Downloads and extracts a tool package from Autonomys DSN
  * @param cid Content identifier for the tool package
  * @returns Path to the extracted package
  */
-async function downloadToolPackage(cid: string): Promise<string> {
+const downloadToolPackage = async (cid: string): Promise<string> => {
   await fs.mkdir(PACKAGES_DIR, { recursive: true });
 
   const packagePath = path.join(PACKAGES_DIR, `${cid}.zip`);
@@ -74,7 +74,7 @@ async function downloadToolPackage(cid: string): Promise<string> {
     console.error('Error downloading package:', error);
     throw error;
   }
-}
+};
 
 /**
  * Extracts a tool package to the destination directory
@@ -83,11 +83,11 @@ async function downloadToolPackage(cid: string): Promise<string> {
  * @param destDir Destination directory for extraction
  * @returns Path to the extracted tool directory
  */
-async function extractToolPackage(
+const extractToolPackage = async (
   packagePath: string,
   toolName: string,
   destDir: string,
-): Promise<string> {
+): Promise<string> => {
   const toolDir = path.join(destDir, toolName);
   await fs.mkdir(toolDir, { recursive: true });
 
@@ -100,14 +100,9 @@ async function extractToolPackage(
     console.error('Error extracting package:', error);
     throw error;
   }
-}
+};
 
-/**
- * Determines the appropriate tools directory in the project
- * @param projectRoot The root directory of the project
- * @returns Path to the tools directory
- */
-async function getProjectToolsDir(projectRoot: string): Promise<string> {
+const getProjectToolsDir = async (projectRoot: string): Promise<string> => {
   const possiblePaths = ['src/agents/tools'];
 
   for (const relativePath of possiblePaths) {
@@ -123,17 +118,17 @@ async function getProjectToolsDir(projectRoot: string): Promise<string> {
   const toolsDir = path.join(projectRoot, DEFAULT_PROJECT_TOOLS_PATH);
   await fs.mkdir(toolsDir, { recursive: true });
   return toolsDir;
-}
+};
 
 /**
  * Downloads and installs a tool from Autonomys DSN
  * @param toolInfo Information about the tool
  * @param options Installation options
  */
-async function downloadAndInstallTool(
+const downloadAndInstallTool = async (
   toolInfo: { name: string; cid: string },
   options: { local?: boolean } = {},
-): Promise<void> {
+): Promise<void> => {
   try {
     const packagePath = await downloadToolPackage(toolInfo.cid);
 
@@ -165,9 +160,9 @@ async function downloadAndInstallTool(
     console.error('Failed to download and install tool:', error);
     throw error;
   }
-}
+};
 
-export async function install(toolName: string, options: any): Promise<CommandResult> {
+export const install = async (toolName: string, options: any): Promise<CommandResult> => {
   const spinner = ora(`Installing ${toolName}...`).start();
   const installType = options.local ? 'locally' : 'globally';
   let versionText = '';
@@ -265,4 +260,4 @@ export async function install(toolName: string, options: any): Promise<CommandRe
       message: `Failed to install ${toolName} ${versionText}: ${error}`,
     };
   }
-}
+};

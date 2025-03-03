@@ -7,7 +7,7 @@ import { config } from './commands/config.js';
 import { clean } from './commands/clean.js';
 import { initializeConfigAndCredentials, credentialsExist } from './utils/config.js';
 
-async function checkMasterPassword() {
+const checkMasterPassword = async () => {
   const isConfigCommand = process.argv.length > 2 && process.argv[2] === 'config';
   const isHelpCommand =
     process.argv.length > 2 && (process.argv[2] === '-h' || process.argv[2] === '--help');
@@ -24,7 +24,7 @@ async function checkMasterPassword() {
       console.log(chalk.yellow('Or you can simply enter it when prompted.\n'));
     }
   }
-}
+};
 
 const program = new Command();
 
