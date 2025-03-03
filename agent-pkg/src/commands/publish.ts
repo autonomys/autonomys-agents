@@ -1,5 +1,3 @@
-import fs from 'fs/promises';
-import path from 'path';
 import chalk from 'chalk';
 import ora from 'ora';
 import { CommandResult } from '../types/index.js';

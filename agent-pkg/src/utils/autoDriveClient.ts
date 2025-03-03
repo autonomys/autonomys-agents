@@ -4,7 +4,6 @@ import {
   downloadFile,
   UploadFileOptions,
 } from '@autonomys/auto-drive';
-import { ToolRegistry } from '../types/index.js';
 import { initializeConfigAndCredentials } from './config.js';
 
 async function createApiClient() {

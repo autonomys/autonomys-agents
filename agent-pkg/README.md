@@ -1,4 +1,4 @@
-# autoOS CLI
+# autoOS CLI `WIP`
 
 A package manager and toolkit for Autonomys agent tools.
 

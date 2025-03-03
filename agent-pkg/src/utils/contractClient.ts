@@ -1,5 +1,5 @@
 import { ethers } from 'ethers';
-import { initializeConfigAndCredentials, getCredentials } from './config.js';
+import { initializeConfigAndCredentials } from './config.js';
 import chalk from 'chalk';
 
 // ABI for AutonomysPackageRegistry
@@ -29,7 +29,7 @@ const ABI = [
  */
 export async function getRegistryContract(readOnly: boolean = false) {
   try {
-    const { config, credentials, getCredentials } = await initializeConfigAndCredentials();
+    const { config, credentials } = await initializeConfigAndCredentials();
     const rpcUrl = config.taurusRpcUrl;
     const contractAddress = config.packageRegistryAddress;
 
@@ -189,11 +189,6 @@ export async function getLatestToolVersion(name: string): Promise<{
   try {
     const contract = await getRegistryContract(true);
     const result = await contract.getLatestVersion(name);
-    // Correct order for the returned values based on our logs:
-    // result[0] = version
-    // result[1] = CID
-    // result[2] = timestamp
-    // result[3] = metadata
     const version = result[0];
     const cid = result[1];
     const timestamp = Number(result[2]);
