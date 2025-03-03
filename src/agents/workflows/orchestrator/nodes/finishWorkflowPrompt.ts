@@ -24,15 +24,19 @@ export const createFinishWorkflowPrompt = async (
     
     self-schedule:{selfSchedule} 
     If self-schedule:true 
-    - Provide a recommendation for the next prompt for when the workflow begins again in the nextWorkflowPrompt field.
-    - Provide a recommendation for how long until the next workflow should begin in the secondsUntilNextWorkflow field.
+    - Include a "schedule" object with the following fields:
+      - nextWorkflowPrompt: A recommendation for the next prompt for when the workflow begins again
+      - secondsUntilNextWorkflow: A recommendation for how long until the next workflow should begin
     - {frequencyPreference}
 
     If self-schedule:false 
-    - Do not include any values in the nextWorkflowPrompt or secondsUntilNextWorkflow fields. DO NOT RETURN ANYTHING IN THESE FIELDS, INCLUDING NULL
+    - COMPLETELY OMIT the schedule field from your JSON response
+    - Your JSON should only contain the summary field when self-schedule is false
 
-    You have a personality, so you should act accordingly. 
-    {characterPersonality} 
+    You have a personality, goals and expertise, so you should act accordingly. 
+    Personality: {characterPersonality} 
+    Goals: {characterGoals}
+    Expertise: {characterExpertise}
 
     {customInstructions}
     
@@ -41,6 +45,8 @@ export const createFinishWorkflowPrompt = async (
     {formatInstructions}`,
   ).format({
     characterPersonality: character.personality,
+    characterGoals: character.goal,
+    characterExpertise: character.expertise,
     customInstructions: customInstructions ? `Custom Instructions: ${customInstructions}` : '',
     formatInstructions: finishedWorkflowParser.getFormatInstructions(),
     followFormatInstructions,
@@ -64,21 +70,27 @@ export const createFinishWorkflowPrompt = async (
   return workflowSummaryPrompt;
 };
 
-const finishedWorkflowSchema = z.object({
-  summary: z.string().describe('A detailed summary of the actions performed.'),
+const scheduleSchema = z.object({
   nextWorkflowPrompt: z
     .string()
-    .optional()
     .describe(
-      'If self-scheduling is enabled, this field will be the input prompt for the next workflow. Be thoughtful about what you want to accomplish in the next workflow and write this as a prompt.',
+      'The input prompt for the next workflow. Be thoughtful about what you want to accomplish in the next workflow and write this as a prompt. It should be inline with the goals and expertise of the character and potentially different from the previous workflow.',
     ),
   secondsUntilNextWorkflow: z
     .number()
+    .describe('The recommended number of seconds until the workflow should begin again.'),
+});
+
+// Define the finished workflow schema with an optional schedule
+const finishedWorkflowSchema = z.object({
+  summary: z.string().describe('A detailed summary of the actions performed.'),
+  schedule: scheduleSchema
     .optional()
     .describe(
-      'If self-scheduling is enabled, this field will be the recommended number of seconds until the workflow should begin again.',
+      'If self-scheduling is enabled, this object contains scheduling information for the next workflow.',
     ),
 });
 
 export const finishedWorkflowParser = StructuredOutputParser.fromZodSchema(finishedWorkflowSchema);
+export type Schedule = z.infer<typeof scheduleSchema>;
 export type FinishedWorkflow = z.infer<typeof finishedWorkflowSchema>;
