@@ -22,7 +22,6 @@ function App() {
     window.addEventListener('keydown', handleKeyDown);
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
-      // Clean up all event source connections when component unmounts
       closeAll();
     };
   }, []);
