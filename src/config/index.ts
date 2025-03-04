@@ -71,6 +71,14 @@ const yamlConfig = (() => {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const convertModelConfigurations = (modelConfigurations: any) => {
+  if (!modelConfigurations) {
+    return {
+      inputModelConfig: undefined,
+      messageSummaryModelConfig: undefined,
+      finishWorkflowModelConfig: undefined,
+    };
+  }
+
   return {
     inputModelConfig: modelConfigurations.input_model_config,
     messageSummaryModelConfig: modelConfigurations.message_summary_model_config,
@@ -125,7 +133,7 @@ export const config = (() => {
         MAX_WINDOW_SUMMARY: 20,
         MAX_QUEUE_SIZE: 50,
         model_configurations: convertModelConfigurations(
-          yamlConfig.orchestrator.model_configurations,
+          yamlConfig.orchestrator?.model_configurations,
         ),
       },
 
