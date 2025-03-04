@@ -13,10 +13,12 @@ export interface ApiServer {
     runner: OrchestratorRunner;
   };
   broadcastLog: (namespace: string, level: string, message: string, meta?: LogMetadata) => void;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   attachLogger: (logger: any, namespace: string) => any;
   getRegisteredNamespaces: () => string[];
 }
 
 export interface LogMetadata {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   [key: string]: string | number | boolean | null | undefined | object | any[];
 }

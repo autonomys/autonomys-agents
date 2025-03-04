@@ -19,16 +19,17 @@ import {
   OrchestratorStateType,
   PruningParameters,
 } from './types.js';
-const logger = createLogger('orchestrator-workflow');
+import { attachLogger } from '../../../api/server.js';
 
 const handleConditionalEdge = async (
   state: OrchestratorStateType,
   pruningParameters: PruningParameters,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  workflowLogger: any,
 ) => {
-  logger.debug('State in conditional edge', { state });
-
+  workflowLogger.debug('State in conditional edge', { state });
   if (state.workflowControl && state.workflowControl.shouldStop) {
-    logger.info('Workflow stop requested', { reason: state.workflowControl.reason });
+    workflowLogger.info('Workflow stop requested', { reason: state.workflowControl.reason });
     return 'finishWorkflow';
   }
 
@@ -38,7 +39,7 @@ const handleConditionalEdge = async (
 
   // Check if we need to summarize messages based on pruning parameters
   if (state.messages.length > pruningParameters.maxQueueSize) {
-    logger.info('Messages exceed maxQueueSize, triggering summary', {
+    workflowLogger.info('Messages exceed maxQueueSize, triggering summary', {
       messageCount: state.messages.length,
       maxQueueSize: pruningParameters.maxQueueSize,
     });
@@ -46,7 +47,7 @@ const handleConditionalEdge = async (
   }
 
   // Skip message summary if not needed
-  logger.info('Not summarizing, not enough messages', {
+  workflowLogger.info('Not summarizing, not enough messages', {
     messageCount: state.messages.length,
     maxQueueSize: pruningParameters.maxQueueSize,
   });
@@ -56,6 +57,8 @@ const handleConditionalEdge = async (
 const createOrchestratorWorkflow = async (
   nodes: Awaited<ReturnType<typeof createNodes>>,
   pruningParameters: PruningParameters,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  workflowLogger: any,
 ) => {
   const workflow = new StateGraph(OrchestratorState(pruningParameters))
     .addNode('input', nodes.inputNode)
@@ -63,7 +66,9 @@ const createOrchestratorWorkflow = async (
     .addNode('finishWorkflow', nodes.finishWorkflowNode)
     .addNode('toolExecution', nodes.toolExecutionNode)
     .addEdge(START, 'input')
-    .addConditionalEdges('input', state => handleConditionalEdge(state, pruningParameters))
+    .addConditionalEdges('input', state =>
+      handleConditionalEdge(state, pruningParameters, workflowLogger),
+    )
     .addEdge('toolExecution', 'input')
     .addEdge('messageSummary', 'input')
     .addEdge('finishWorkflow', END);
@@ -138,6 +143,7 @@ const createOrchestratorRunnerConfig = async (
     modelConfigurations,
     prompts,
     monitoring,
+    api: options?.api,
   };
 };
 
@@ -147,8 +153,19 @@ export const createOrchestratorRunner = async (
 ): Promise<OrchestratorRunner> => {
   const runnerConfig = await createOrchestratorRunnerConfig(character, options);
 
+  const namespaceLogger = createLogger(`orchestrator-workflow-${runnerConfig.namespace}`);
+  let workflowLogger = namespaceLogger;
+
+  if (options?.api) {
+    workflowLogger = attachLogger(namespaceLogger, runnerConfig.namespace);
+  }
+
   const nodes = await createNodes(runnerConfig);
-  const workflow = await createOrchestratorWorkflow(nodes, runnerConfig.pruningParameters);
+  const workflow = await createOrchestratorWorkflow(
+    nodes,
+    runnerConfig.pruningParameters,
+    workflowLogger,
+  );
 
   const memoryStore = new MemorySaver();
   const app = workflow.compile({ checkpointer: memoryStore });
@@ -159,7 +176,7 @@ export const createOrchestratorRunner = async (
       options?: { threadId?: string },
     ): Promise<FinishedWorkflow> => {
       const threadId = `${options?.threadId || 'orchestrator'}-${Date.now()}`;
-      logger.info('Starting orchestrator workflow', { threadId });
+      workflowLogger.info('Starting orchestrator workflow', { threadId });
 
       if (!runnerConfig.vectorStore.isOpen()) {
         await runnerConfig.vectorStore.open();
@@ -183,7 +200,7 @@ export const createOrchestratorRunner = async (
         finalState = state;
       }
 
-      logger.info('Workflow completed', {
+      workflowLogger.info('Workflow completed', {
         threadId,
       });
 
@@ -198,7 +215,7 @@ export const createOrchestratorRunner = async (
           namespace: runnerConfig.namespace,
           type: 'monitoring',
         });
-        logger.info('Dsn upload', { dsnUpload });
+        workflowLogger.info('Dsn upload', { dsnUpload });
       }
 
       if (finalState?.finishWorkflow?.messages?.[0]?.content) {
@@ -211,7 +228,7 @@ export const createOrchestratorRunner = async (
         runnerConfig.vectorStore.close();
         return { summary: workflowSummary, schedule };
       } else {
-        logger.error('Workflow completed but no finished workflow data found', {
+        workflowLogger.error('Workflow completed but no finished workflow data found', {
           finalState,
           content: finalState?.finishWorkflow?.content,
         });
@@ -223,11 +240,23 @@ export const createOrchestratorRunner = async (
 };
 
 export const getOrchestratorRunner = (() => {
-  let runnerPromise: Promise<OrchestratorRunner> | undefined = undefined;
+  const runners: Map<string, Promise<OrchestratorRunner>> = new Map();
+
   return (character: Character, runnerOptions: OrchestratorRunnerOptions) => {
-    if (!runnerPromise) {
-      runnerPromise = createOrchestratorRunner(character, runnerOptions);
+    const runnerPromise = createOrchestratorRunner(character, runnerOptions);
+
+    if (runnerOptions.api) {
+      runnerPromise.then(runner => {
+        if (runnerOptions.api) {
+          runnerOptions.api.registerRunner(
+            runnerOptions.namespace ?? defaultOptions.namespace,
+            runner,
+          );
+        }
+      });
+
+      runners.set(runnerOptions.namespace ?? defaultOptions.namespace, runnerPromise);
     }
-    return runnerPromise;
+    return runners.get(runnerOptions.namespace ?? defaultOptions.namespace)!;
   };
 })();

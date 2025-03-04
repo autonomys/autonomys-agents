@@ -11,6 +11,8 @@ import { cleanTwitterMessageData } from './cleanMessages.js';
 import { createTwitterPrompts } from './prompts.js';
 import { TwitterAgentConfig, TwitterAgentOptions } from './types.js';
 import { LLMConfiguration } from '../../../services/llm/types.js';
+import { createApiServer } from '../../../api/server.js';
+
 const logger = createLogger('twitter-workflow');
 
 const defaultModelConfig: LLMConfiguration = {
@@ -89,6 +91,7 @@ export const createTwitterAgent = (
           saveExperiences,
           monitoring,
           recursionLimit,
+          api: createApiServer(),
         });
         const result = await runner.runWorkflow(
           { messages },
