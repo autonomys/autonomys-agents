@@ -47,19 +47,19 @@ export const runWorkflow = async (
     global.console = originalConsole;
     outputLog.log('\n{bold}Workflow completed{/bold}');
 
-    if (result.nextWorkflowPrompt && result.secondsUntilNextWorkflow) {
-      const nextDelaySeconds = result.secondsUntilNextWorkflow;
+    if (result.schedule) {
+      const nextDelaySeconds = result.schedule.secondsUntilNextWorkflow;
       const nextRunTime = new Date(Date.now() + nextDelaySeconds * 1000);
 
       const release = await state.mutex.acquire();
       try {
         state.scheduledTasks.push({
           time: nextRunTime,
-          description: result.nextWorkflowPrompt,
+          description: result.schedule.nextWorkflowPrompt,
         });
 
         const formattedTime = nextRunTime.toISOString();
-        scheduledTasksBox.addItem(`${formattedTime} - ${result.nextWorkflowPrompt}`);
+        scheduledTasksBox.addItem(`${formattedTime} - ${result.schedule.nextWorkflowPrompt}`);
         scheduledTasksBox.scrollTo(Number((scheduledTasksBox as any).ritems.length - 1));
         statusBox.setContent('Workflow completed. Next task scheduled.');
       } finally {

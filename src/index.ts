@@ -35,11 +35,11 @@ const main = async () => {
     while (true) {
       const result = await runner.runWorkflow({ messages: [new HumanMessage(message)] });
 
-      message = `${result.summary}\n${result.nextWorkflowPrompt ?? message}`;
+      message = `${result.summary}\n${result.schedule?.nextWorkflowPrompt ?? message}`;
 
       logger.info('Workflow execution result:', { result });
 
-      const nextDelaySeconds = result.secondsUntilNextWorkflow ?? 3600;
+      const nextDelaySeconds = result.schedule?.secondsUntilNextWorkflow ?? 3600;
       logger.info('Workflow execution completed successfully for character:', {
         characterName: config.characterConfig.name,
         runFinished: new Date().toISOString(),

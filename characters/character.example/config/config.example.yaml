@@ -1,5 +1,5 @@
 twitter:
-  post_tweets: true
+  post_tweets: false
   model_configurations:
     input_model_config:
       provider: anthropic
@@ -15,8 +15,8 @@ twitter:
       temperature: 0.8
 
 auto_drive:
-  save_experiences: true
-  monitoring: true
+  save_experiences: false
+  monitoring: false
   network: 'mainnet' # or 'taurus'
 
 orchestrator:

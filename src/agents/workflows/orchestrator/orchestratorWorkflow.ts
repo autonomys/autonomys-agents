@@ -21,7 +21,10 @@ import {
 } from './types.js';
 const logger = createLogger('orchestrator-workflow');
 
-const handleConditionalEdge = async (state: OrchestratorStateType) => {
+const handleConditionalEdge = async (
+  state: OrchestratorStateType,
+  pruningParameters: PruningParameters,
+) => {
   logger.debug('State in conditional edge', { state });
 
   if (state.workflowControl && state.workflowControl.shouldStop) {
@@ -33,7 +36,21 @@ const handleConditionalEdge = async (state: OrchestratorStateType) => {
     return 'toolExecution';
   }
 
-  return 'messageSummary';
+  // Check if we need to summarize messages based on pruning parameters
+  if (state.messages.length > pruningParameters.maxQueueSize) {
+    logger.info('Messages exceed maxQueueSize, triggering summary', {
+      messageCount: state.messages.length,
+      maxQueueSize: pruningParameters.maxQueueSize,
+    });
+    return 'messageSummary';
+  }
+
+  // Skip message summary if not needed
+  logger.info('Not summarizing, not enough messages', {
+    messageCount: state.messages.length,
+    maxQueueSize: pruningParameters.maxQueueSize,
+  });
+  return 'input';
 };
 
 const createOrchestratorWorkflow = async (
@@ -46,8 +63,8 @@ const createOrchestratorWorkflow = async (
     .addNode('finishWorkflow', nodes.finishWorkflowNode)
     .addNode('toolExecution', nodes.toolExecutionNode)
     .addEdge(START, 'input')
-    .addConditionalEdges('input', handleConditionalEdge)
-    .addEdge('toolExecution', 'messageSummary')
+    .addConditionalEdges('input', state => handleConditionalEdge(state, pruningParameters))
+    .addEdge('toolExecution', 'input')
     .addEdge('messageSummary', 'input')
     .addEdge('finishWorkflow', END);
 
@@ -185,16 +202,14 @@ export const createOrchestratorRunner = async (
       }
 
       if (finalState?.finishWorkflow?.messages?.[0]?.content) {
-        const workflowData = await parseFinishedWorkflow(
+        const { summary, schedule } = await parseFinishedWorkflow(
           finalState.finishWorkflow.messages[0].content,
         );
 
-        const summary = `This action finished running at ${new Date().toISOString()}. Action summary: ${workflowData.summary}`;
-        const nextWorkflowPrompt =
-          workflowData.nextWorkflowPrompt &&
-          `Instructions for this workflow: ${workflowData.nextWorkflowPrompt}`;
+        const workflowSummary = `This action finished running at ${new Date().toISOString()}. Action summary: ${summary}`;
+
         runnerConfig.vectorStore.close();
-        return { ...workflowData, summary, nextWorkflowPrompt };
+        return { summary: workflowSummary, schedule };
       } else {
         logger.error('Workflow completed but no finished workflow data found', {
           finalState,

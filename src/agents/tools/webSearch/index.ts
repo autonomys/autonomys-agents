@@ -6,7 +6,7 @@ import { load } from 'cheerio';
 import { createLogger } from '../../../utils/logger.js';
 export const logger = createLogger('web-search-tools');
 
-const DEFAULT_ENGINES = ['google', 'google_news'] as const;
+const DEFAULT_ENGINES = ['google'] as const;
 
 export const createWebSearchTool = (apiKey: string, engines: readonly string[] = DEFAULT_ENGINES) =>
   new DynamicStructuredTool({

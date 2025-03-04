@@ -10,10 +10,7 @@ import { createPrompts } from '../../src/agents/workflows/orchestrator/prompts.j
 import { createTwitterApi } from '../../src/services/twitter/client.js';
 import { HumanMessage } from '@langchain/core/messages';
 import { createWebSearchTool } from '../../src/agents/tools/webSearch/index.js';
-import {
-  ModelConfigurations,
-  OrchestratorRunnerOptions,
-} from '../../src/agents/workflows/orchestrator/types.js';
+import { OrchestratorRunnerOptions } from '../../src/agents/workflows/orchestrator/types.js';
 
 const logger = createLogger('autonomous-twitter-agent');
 
@@ -86,11 +83,11 @@ const main = async () => {
       const result = await runner.runWorkflow({ messages: [new HumanMessage(message)] });
 
       message = `${result.summary}
-      ${result.nextWorkflowPrompt}`;
+      ${result.schedule?.nextWorkflowPrompt}`;
 
       logger.info('Workflow execution result:', { result });
 
-      const nextDelaySeconds = result.secondsUntilNextWorkflow ?? 3600;
+      const nextDelaySeconds = result.schedule?.secondsUntilNextWorkflow ?? 3600;
       logger.info('Workflow execution completed successfully for character:', {
         characterName: config.characterConfig.name,
         runFinished: new Date().toISOString(),

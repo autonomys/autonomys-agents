@@ -1,6 +1,6 @@
 {
     "name": "autonomys-agents",
-    "version": "0.2.2",
+    "version": "0.3.0",
     "description": "Autonomys Agents",
     "main": "dist/index.js",
     "type": "module",
@@ -12,6 +12,7 @@
         "format:check": "prettier --check \"src/**/*.ts\" \"tests/**/*.ts\"",
         "example:twitter-agent": "tsx examples/twitterAgent/index.ts",
         "example:multi-personality": "tsx examples/multiPersonality/index.ts",
+        "example:web3-agent": "tsx examples/web3Agent/index.ts",
         "example:vector-db": "tsx examples/vectorDbExample.ts",
         "test": "jest",
         "test:watch": "jest --watch",
@@ -34,6 +35,7 @@
         "@langchain/ollama": "0.2.0",
         "@langchain/openai": "0.4.4",
         "@types/blessed": "^0.1.25",
+        "@types/xml2js": "^0.4.14",
         "agent-twitter-client": "0.0.18",
         "async-mutex": "^0.5.0",
         "axios": "^1.7.9",
@@ -46,6 +48,7 @@
         "sqlite3": "^5.1.7",
         "vectorlite": "^0.2.0",
         "winston": "^3.11.0",
+        "xml2js": "^0.6.2",
         "zod": "^3.22.4",
         "zod-to-json-schema": "^3.24.1"
     },
