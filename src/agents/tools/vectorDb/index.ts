@@ -73,17 +73,28 @@ export const createExperienceVectorDbSearchTool = (vectorDb: VectorDB) =>
   new DynamicStructuredTool({
     name: 'experience_vector_db_search',
     description: `
-      Search the vector database for CONTEXTUAL data that you previously produced as your memory.  
-      Sometimes it is necessary to see your long ago experiences to enhance your performance. So, don't be afraid of choosing long time ago as metadata filter.
-      USE THIS WHEN:  
-      - You want to recall how you previously were performing a task.
-      - You want to enhance your performance on a task by learning from your past experiences.  
-      OUTPUT: Return timestamps and matched keywords.`,
+      Search your memory database for past experiences and interactions. 
+      This tool helps you recall context from your previous activities to enhance your responses.
+      
+      EFFECTIVE QUERIES:
+      - Use specific, content-rich phrases (not generic terms like "conversations" or "interactions")
+      - Include distinctive keywords that might appear in stored memories
+      - Focus on specific topics, entities, or actions 
+      - Use the time filter to narrow results to a specific period, not the query field.
+
+      USAGE GUIDANCE:
+      - Use this when you need to recall specific past conversations or actions
+      - Consider searching with multiple queries if your first search returns no results
+      - Time filters help narrow results to relevant periods`,
     schema: z.object({
       query: z.string().describe(
-        `Query text to find semantically similar content. The query will be embedded and compared using HNSW similarity:
-            - Focus on key concepts rather than exact phrases' +
-            - Include relevant learned lessons`,
+        `Specific, detailed query to find semantically similar content. For effective results:
+        - Include specific keywords likely to appear in stored memories
+        - Use descriptive phrases rather than general terms
+        - Do not use timeframes in the query (recent, old, etc.)
+        - Target particular topics, actions, or content types
+        - Bad example: "recent conversations"
+        - Good example: "explanations about blockchain to users" or "responses to elon musk tweets"`,
       ),
       metadataFilter: z.string().describe(
         `Filter the search by metadata. Metadata filter examples: 
