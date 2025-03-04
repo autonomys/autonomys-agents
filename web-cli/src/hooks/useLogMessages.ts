@@ -19,7 +19,7 @@ export const useLogMessages = () => {
 
   const handleLogMessage = useCallback((message: EventSourceMessage) => {
     setLogMessages(prev => [...prev, message]);
-    
+
     setNamespaceCount(prev => {
       const newCount = { ...prev };
       newCount[message.namespace] = (newCount[message.namespace] || 0) + 1;
@@ -30,7 +30,7 @@ export const useLogMessages = () => {
 
   useEffect(() => {
     const unsubscribe = subscribeToMessages(handleLogMessage);
-    
+
     return () => {
       unsubscribe();
     };
@@ -42,7 +42,7 @@ export const useLogMessages = () => {
       setNamespaceCount({});
     } else {
       setLogMessages(prev => prev.filter(msg => msg.namespace !== namespace));
-      
+
       setNamespaceCount(prev => {
         const newCount = { ...prev };
         const currentCount = newCount[namespace] || 0;
@@ -53,11 +53,14 @@ export const useLogMessages = () => {
     }
   }, []);
 
-  const getFilteredMessages = useCallback((namespace: string) => {
-    return namespace === 'all' 
-      ? logMessages 
-      : logMessages.filter(msg => msg.namespace === namespace);
-  }, [logMessages]);
+  const getFilteredMessages = useCallback(
+    (namespace: string) => {
+      return namespace === 'all'
+        ? logMessages
+        : logMessages.filter(msg => msg.namespace === namespace);
+    },
+    [logMessages],
+  );
 
   const cleanUp = useCallback((subscribedNamespaces: Set<string>) => {
     subscribedNamespaces.forEach(ns => {
@@ -71,6 +74,6 @@ export const useLogMessages = () => {
     setLogContainerRef,
     clearLogs,
     getFilteredMessages,
-    cleanUp
+    cleanUp,
   };
-}; 
+};

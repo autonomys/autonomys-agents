@@ -107,8 +107,14 @@
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(5px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .log-timestamp {
@@ -125,17 +131,20 @@
   font-weight: 600;
 }
 
-.log-level[data-level="info"], .log-info {
+.log-level[data-level='info'],
+.log-info {
   color: #4fc3f7;
   border-left-color: #4fc3f7;
 }
 
-.log-level[data-level="error"], .log-error {
+.log-level[data-level='error'],
+.log-error {
   color: #ef5350;
   border-left-color: #ef5350;
 }
 
-.log-level[data-level="debug"], .log-debug {
+.log-level[data-level='debug'],
+.log-debug {
   color: #9ccc65;
   border-left-color: #9ccc65;
 }

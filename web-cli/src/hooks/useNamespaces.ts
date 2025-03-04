@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { fetchNamespaces, subscribeToNamespace } from '../services/LogService';
 
-// Polling interval in milliseconds
 const NAMESPACE_POLL_INTERVAL = 5000;
 
 export const useNamespaces = () => {
@@ -14,18 +13,15 @@ export const useNamespaces = () => {
     try {
       const fetchedNamespaces = await fetchNamespaces();
       let hasNewNamespaces = false;
-      
 
       fetchedNamespaces.forEach(ns => {
         if (!subscribedNamespacesRef.current.has(ns)) {
-
           hasNewNamespaces = true;
           subscribeToNamespace(ns);
           subscribedNamespacesRef.current.add(ns);
           console.log(`New namespace detected: ${ns}`);
         }
       });
-      
 
       if (hasNewNamespaces) {
         setNamespaces(['all', ...fetchedNamespaces]);
@@ -39,22 +35,22 @@ export const useNamespaces = () => {
     const loadNamespaces = async () => {
       const fetchedNamespaces = await fetchNamespaces();
       setNamespaces(['all', ...fetchedNamespaces]);
-      
+
       subscribeToNamespace('all');
       subscribedNamespacesRef.current.add('all');
-      
+
       fetchedNamespaces.forEach(ns => {
         subscribeToNamespace(ns);
         subscribedNamespacesRef.current.add(ns);
       });
     };
-    
+
     loadNamespaces();
-    
+
     pollingIntervalRef.current = window.setInterval(() => {
       checkForNewNamespaces();
     }, NAMESPACE_POLL_INTERVAL);
-    
+
     return () => {
       if (pollingIntervalRef.current) {
         clearInterval(pollingIntervalRef.current);
@@ -64,7 +60,7 @@ export const useNamespaces = () => {
 
   const changeNamespace = useCallback((namespace: string) => {
     setActiveNamespace(namespace);
-    
+
     if (!subscribedNamespacesRef.current.has(namespace)) {
       subscribeToNamespace(namespace);
       subscribedNamespacesRef.current.add(namespace);
@@ -80,6 +76,6 @@ export const useNamespaces = () => {
     activeNamespace,
     subscribedNamespaces: subscribedNamespacesRef.current,
     changeNamespace,
-    refreshNamespaces
+    refreshNamespaces,
   };
-}; 
+};

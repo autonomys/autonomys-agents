@@ -7,21 +7,11 @@ import NamespaceTabs from './NamespaceTabs';
 import LogMessageList from './LogMessageList';
 
 const OutputLog: React.FC<OutputLogProps> = ({ messages }) => {
-  const { 
-    namespaces, 
-    activeNamespace, 
-    subscribedNamespaces,
-    changeNamespace, 
-    refreshNamespaces 
-  } = useNamespaces();
-  
-  const { 
-    namespaceCount, 
-    setLogContainerRef, 
-    clearLogs, 
-    getFilteredMessages,
-    cleanUp
-  } = useLogMessages();
+  const { namespaces, activeNamespace, subscribedNamespaces, changeNamespace, refreshNamespaces } =
+    useNamespaces();
+
+  const { namespaceCount, setLogContainerRef, clearLogs, getFilteredMessages, cleanUp } =
+    useLogMessages();
 
   useEffect(() => {
     return () => {
@@ -40,8 +30,8 @@ const OutputLog: React.FC<OutputLogProps> = ({ messages }) => {
   const filteredMessages = getFilteredMessages(activeNamespace);
 
   return (
-    <div className="output-log-container">
-      <NamespaceTabs 
+    <div className='output-log-container'>
+      <NamespaceTabs
         namespaces={namespaces}
         activeNamespace={activeNamespace}
         namespaceCount={namespaceCount}
@@ -49,7 +39,7 @@ const OutputLog: React.FC<OutputLogProps> = ({ messages }) => {
         onRefreshNamespaces={refreshNamespaces}
         onClearLogs={handleClearLogs}
       />
-      <LogMessageList 
+      <LogMessageList
         filteredMessages={filteredMessages}
         legacyMessages={messages}
         setLogRef={setLogContainerRef}

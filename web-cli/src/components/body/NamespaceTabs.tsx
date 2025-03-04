@@ -16,10 +16,10 @@ const NamespaceTabs: React.FC<NamespaceTabsProps> = ({
   namespaceCount,
   onNamespaceChange,
   onRefreshNamespaces,
-  onClearLogs
+  onClearLogs,
 }) => {
   return (
-    <div className="namespace-tabs">
+    <div className='namespace-tabs'>
       {namespaces.map(namespace => (
         <button
           key={namespace}
@@ -28,18 +28,18 @@ const NamespaceTabs: React.FC<NamespaceTabsProps> = ({
         >
           {namespace}
           {namespaceCount[namespace] > 0 && (
-            <span className="namespace-count">{namespaceCount[namespace]}</span>
+            <span className='namespace-count'>{namespaceCount[namespace]}</span>
           )}
         </button>
       ))}
-      <button className="namespace-tab refresh-namespaces" onClick={onRefreshNamespaces}>
-        <span className="refresh-icon">🔄</span>
+      <button className='namespace-tab refresh-namespaces' onClick={onRefreshNamespaces}>
+        <span className='refresh-icon'>🔄</span>
       </button>
-      <button className="namespace-tab clear-logs" onClick={onClearLogs}>
-        <span className="clear-icon">🗑️</span> Clear
+      <button className='namespace-tab clear-logs' onClick={onClearLogs}>
+        <span className='clear-icon'>🗑️</span> Clear
       </button>
     </div>
   );
 };
 
-export default NamespaceTabs; 
+export default NamespaceTabs;
