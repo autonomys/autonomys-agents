@@ -11,29 +11,23 @@ const InputBox: React.FC<InputBoxProps> = ({ value, onChange, onSubmit, disabled
   };
 
   return (
-    <div className="input-box">
+    <div className='input-box'>
       <h3>Input {disabled && '(Processing...)'}</h3>
-      <div className="input-container">
+      <div className='input-container'>
         <textarea
-          className="input-textarea"
+          className='input-textarea'
           value={value}
-          onChange={(e) => onChange(e.target.value)}
+          onChange={e => onChange(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="Enter your message here..."
+          placeholder='Enter your message here...'
         />
-        <button 
-          className="submit-button" 
-          onClick={onSubmit} 
-          disabled={disabled || !value.trim()}
-        >
+        <button className='submit-button' onClick={onSubmit} disabled={disabled || !value.trim()}>
           Send
         </button>
       </div>
-      <div className="input-tooltip">
-        Press Enter to send, Shift+Enter for new line
-      </div>
+      <div className='input-tooltip'>Press Enter to send, Shift+Enter for new line</div>
     </div>
   );
 };
 
-export default InputBox; 
+export default InputBox;

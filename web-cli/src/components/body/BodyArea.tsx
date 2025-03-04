@@ -15,11 +15,11 @@ const BodyArea: React.FC = () => {
   const handleInputSubmit = () => {
     if (state.value.trim() && !state.isProcessing) {
       dispatch({ type: 'SET_PROCESSING', payload: true });
-      
+
       console.log('Processing input:', state.value);
-      
+
       dispatch({ type: 'CLEAR_VALUE' });
-      
+
       setTimeout(() => {
         dispatch({ type: 'SET_PROCESSING', payload: false });
       }, 2000);
@@ -31,24 +31,21 @@ const BodyArea: React.FC = () => {
   };
 
   return (
-    <div className="body-area">
-      <div className="body-left-section">
+    <div className='body-area'>
+      <div className='body-left-section'>
         <StatusBox status={state.isProcessing ? 'Processing...' : 'Ready'} />
-        <InputBox 
-          value={state.value} 
-          onChange={handleInputChange} 
-          onSubmit={handleInputSubmit} 
-          disabled={state.isProcessing} 
+        <InputBox
+          value={state.value}
+          onChange={handleInputChange}
+          onSubmit={handleInputSubmit}
+          disabled={state.isProcessing}
         />
       </div>
-      <div className="body-right-section">
-        <ScheduledTasksBox 
-          tasks={state.scheduledTasks} 
-          onDeleteTask={handleDeleteTask} 
-        />
+      <div className='body-right-section'>
+        <ScheduledTasksBox tasks={state.scheduledTasks} onDeleteTask={handleDeleteTask} />
       </div>
     </div>
   );
 };
 
-export default BodyArea; 
+export default BodyArea;

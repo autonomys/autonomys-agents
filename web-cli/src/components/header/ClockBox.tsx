@@ -16,13 +16,11 @@ const ClockBox: React.FC<ClockBoxProps> = ({ time }) => {
   }, []);
 
   return (
-    <div className="clock-box">
+    <div className='clock-box'>
       <h3>Date & Time</h3>
-      <div className="clock-content">
-        {currentTime.toISOString()}
-      </div>
+      <div className='clock-content'>{currentTime.toISOString()}</div>
     </div>
   );
 };
 
-export default ClockBox; 
+export default ClockBox;

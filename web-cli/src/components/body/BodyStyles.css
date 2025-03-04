@@ -23,7 +23,8 @@
   color: white;
 }
 
-.body-left-section, .body-right-section {
+.body-left-section,
+.body-right-section {
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -153,4 +154,4 @@
 
 .delete-task-button:hover {
   color: #f14c4c;
-} 
+}

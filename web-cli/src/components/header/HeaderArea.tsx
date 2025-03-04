@@ -6,12 +6,12 @@ import './HeaderStyles.css';
 
 const HeaderArea: React.FC = () => {
   return (
-    <div className="header-area">
-      <CharacterBox character="Joy Builder" />
+    <div className='header-area'>
+      <CharacterBox character='Joy Builder' />
       <LogoBox />
       <ClockBox time={new Date()} />
     </div>
   );
 };
 
-export default HeaderArea; 
+export default HeaderArea;

@@ -7,7 +7,9 @@
   border-bottom: 1px solid #444;
 }
 
-.character-box, .logo-box, .clock-box {
+.character-box,
+.logo-box,
+.clock-box {
   flex: 1;
   padding: 10px;
   display: flex;
@@ -48,7 +50,8 @@ h3 {
   opacity: 0.7;
 }
 
-.character-content, .clock-content {
+.character-content,
+.clock-content {
   font-size: 1rem;
   margin-top: 5px;
-} 
+}

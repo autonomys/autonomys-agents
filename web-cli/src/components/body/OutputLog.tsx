@@ -12,9 +12,9 @@ const OutputLog: React.FC<OutputLogProps> = ({ messages }) => {
   }, [messages]);
 
   return (
-    <div className="output-log" ref={logRef}>
+    <div className='output-log' ref={logRef}>
       {messages.map((message, index) => (
-        <div key={index} className="log-message">
+        <div key={index} className='log-message'>
           {message}
         </div>
       ))}
@@ -22,4 +22,4 @@ const OutputLog: React.FC<OutputLogProps> = ({ messages }) => {
   );
 };
 
-export default OutputLog; 
+export default OutputLog;

@@ -26,7 +26,7 @@ function App() {
 
   return (
     <AppProvider>
-      <div className="App">
+      <div className='App'>
         <HeaderArea />
         <OutputLog messages={messages} />
         <BodyArea />
