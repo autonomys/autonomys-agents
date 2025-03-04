@@ -43,3 +43,12 @@ export interface CharacterBoxProps {
 export interface ClockBoxProps {
   time: Date;
 }
+
+export interface EventSourceMessage {
+  namespace: string;
+  type: string;
+  timestamp?: string;
+  level?: string;
+  message: string;
+  meta?: any;
+}

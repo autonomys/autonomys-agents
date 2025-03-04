@@ -1,0 +1,9 @@
+.output-log-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background-color: #1e1e1e;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+} 
