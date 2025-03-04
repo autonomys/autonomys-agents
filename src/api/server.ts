@@ -3,7 +3,7 @@ import cors from 'cors';
 import { createLogger } from '../utils/logger.js';
 import { OrchestratorRunner } from '../agents/workflows/orchestrator/orchestratorWorkflow.js';
 import { ApiServer, LogMetadata } from './types.js';
-
+import { config } from '../config/index.js';
 const logger = createLogger('api-server');
 
 const logStreamClients = new Map<number, { res: Response; namespace: string }>();
@@ -51,7 +51,7 @@ const createSingletonApiServer = (): ApiServer => {
 
   app.use('/api', apiRouter);
 
-  const PORT = 3001;
+  const PORT = config.API_PORT;
   const server = app.listen(PORT, () => {
     logger.info(`API server started on port ${PORT}`);
   });

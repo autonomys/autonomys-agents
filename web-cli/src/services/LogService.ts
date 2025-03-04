@@ -1,6 +1,7 @@
 import { EventSourceMessage } from '../types/types';
 
-const API_BASE_URL = 'http://localhost:3001/api';
+const API_PORT = process.env.REACT_APP_API_PORT || '3001';
+const API_BASE_URL = `http://localhost:${API_PORT}/api`;
 
 const eventSources = new Map<string, any>();
 const messageCallbacks: Array<(message: EventSourceMessage) => void> = [];

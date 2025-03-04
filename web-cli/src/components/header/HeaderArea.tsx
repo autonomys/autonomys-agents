@@ -4,10 +4,12 @@ import LogoBox from './LogoBox';
 import ClockBox from './ClockBox';
 import './HeaderStyles.css';
 
+const characterName = process.env.REACT_APP_CHARACTER || 'default';
+
 const HeaderArea: React.FC = () => {
   return (
     <div className='header-area'>
-      <CharacterBox character='Joy Builder' />
+      <CharacterBox character={characterName} />
       <LogoBox />
       <ClockBox time={new Date()} />
     </div>
