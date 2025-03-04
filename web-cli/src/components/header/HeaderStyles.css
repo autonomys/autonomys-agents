@@ -1,0 +1,54 @@
+.header-area {
+  display: flex;
+  width: 100%;
+  height: 80px;
+  background-color: #1e1e1e;
+  color: white;
+  border-bottom: 1px solid #444;
+}
+
+.character-box, .logo-box, .clock-box {
+  flex: 1;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.character-box {
+  background-color: #d16969;
+  border-right: 1px solid #444;
+}
+
+.logo-box {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+
+.clock-box {
+  background-color: #569cd6;
+  border-left: 1px solid #444;
+  text-align: right;
+}
+
+.logo-text {
+  font-size: 2rem;
+  font-weight: bold;
+  color: #569cd6;
+  text-shadow: 0 0 10px rgba(86, 156, 214, 0.5);
+  margin: 0;
+}
+
+h3 {
+  margin: 0;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  opacity: 0.7;
+}
+
+.character-content, .clock-content {
+  font-size: 1rem;
+  margin-top: 5px;
+} 

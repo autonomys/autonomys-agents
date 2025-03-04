@@ -8,7 +8,7 @@
         "build": "tsc",
         "start": "tsx scripts/start.ts",
         "dev": "NODE_ENV=development tsx --no-cache --watch src/index.ts",
-        "format": "prettier --write \"src/**/*.ts\" \"tests/**/*.ts\" \"cli/**/*.ts\"",
+        "format": "prettier --write \"src/**/*.ts\" \"tests/**/*.ts\" \"cli/**/*.ts\" \"web-cli/**/*.ts\"",
         "format:check": "prettier --check \"src/**/*.ts\" \"tests/**/*.ts\"",
         "example:twitter-agent": "tsx examples/twitterAgent/index.ts",
         "example:multi-personality": "tsx examples/multiPersonality/index.ts",
