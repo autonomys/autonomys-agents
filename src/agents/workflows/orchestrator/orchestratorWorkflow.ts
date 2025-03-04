@@ -244,19 +244,23 @@ export const getOrchestratorRunner = (() => {
 
   return (character: Character, runnerOptions: OrchestratorRunnerOptions) => {
     const runnerPromise = createOrchestratorRunner(character, runnerOptions);
+    const namespace = runnerOptions.namespace ?? defaultOptions.namespace;
 
     if (runnerOptions.api) {
       runnerPromise.then(runner => {
         if (runnerOptions.api) {
-          runnerOptions.api.registerRunner(
-            runnerOptions.namespace ?? defaultOptions.namespace,
-            runner,
-          );
+          runnerOptions.api.registerRunner(namespace, runner);
         }
       });
 
-      runners.set(runnerOptions.namespace ?? defaultOptions.namespace, runnerPromise);
+      runners.set(namespace, runnerPromise);
     }
-    return runners.get(runnerOptions.namespace ?? defaultOptions.namespace)!;
+
+    const runner = runners.get(namespace);
+    if (!runner) {
+      throw new Error(`Runner for namespace ${namespace} not found`);
+    }
+
+    return runner;
   };
 })();

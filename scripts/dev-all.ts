@@ -8,20 +8,25 @@ const rootDir = dirname(__dirname);
 
 const characterArg = process.argv.slice(2).join(' ');
 
-export const loadCharacter = (characterName: string): [number, string] => {    
+export const loadCharacter = (characterName: string): [number, number,string] => {    
     if (!characterName) {
         throw new Error('Character name is required');
     }
     
     try { 
-        let port, name;;
+        let apiPort, webCliPort, name;;
         const characterPath = join(process.cwd(), 'characters', characterName);
         const envPath = join(characterPath, 'config', '.env');
         const envContent = readFileSync(envPath, 'utf8');
         
         const portMatch = envContent.match(/API_PORT=(\d+)/);
         if (portMatch && portMatch[1]) {
-            port = parseInt(portMatch[1], 10);
+            apiPort = parseInt(portMatch[1], 10);
+        }
+
+        const webCliPortMatch = envContent.match(/WEB_CLI_PORT=(\d+)/);
+        if (webCliPortMatch && webCliPortMatch[1]) {
+            webCliPort = parseInt(webCliPortMatch[1], 10);
         }
 
         const characterYamlPath = join(characterPath, 'config', `${characterName}.yaml`);
@@ -30,22 +35,15 @@ export const loadCharacter = (characterName: string): [number, string] => {
         if (characterNameMatch && characterNameMatch[1]) {
             name = characterNameMatch[1];
         }
-        
-        if (!port) {
-            throw new Error('Failed to load API_PORT for ' + characterName);
-        }
 
-        if (!name) {
-            throw new Error('Failed to load character name for ' + characterName);
-        }
-        return [port, name];
+        return [apiPort, webCliPort, name];
     } catch (error) {
         console.error(`Failed to load API_PORT for '${characterName}':`, error);
         throw new Error('Failed to load API_PORT for ' + error);
     }
 };
 
-const [apiPort, characterName] = characterArg ? loadCharacter(characterArg) : [3001, "default"];
+const [apiPort, webCliPort, characterName] = characterArg ? loadCharacter(characterArg) : [3001, 3000, "default"];
 console.log(`Using API port ${apiPort} for character '${characterName}'`);
 
 const colors = {
@@ -73,8 +71,8 @@ const webCliProcess = spawn('yarn', ['start'], {
   cwd: `${rootDir}/web-cli`,
   env: { 
     ...process.env,
+    PORT: webCliPort.toString(),
     REACT_APP_API_PORT: apiPort.toString(),
-    NODE_OPTIONS: '--max-old-space-size=4096',
     REACT_APP_CHARACTER: characterName
   },
   shell: true,
