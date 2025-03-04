@@ -11,7 +11,9 @@ export const createDefaultOrchestratorTools = (
   saveExperiences: boolean = false,
 ) => {
   const experienceVectorDb = new VectorDB('experiences');
-  const saveExperienceTool = createSaveExperienceTool(saveExperiences);
+  const updateExperienceVectorDb = (data: unknown) =>
+    experienceVectorDb.insert(JSON.stringify(data));
+  const saveExperienceTool = createSaveExperienceTool(saveExperiences, updateExperienceVectorDb);
   const getCurrentTimeTool = createGetCurrentTimeTool();
   const vectorDbSearchTool = createVectorDbSearchTool(vectorDb);
   const experienceVectorDbSearchTool = createExperienceVectorDbSearchTool(experienceVectorDb);

@@ -5,7 +5,10 @@ import { createLogger } from '../../../utils/logger.js';
 
 export const logger = createLogger('auto-drive-tools');
 
-export const createSaveExperienceTool = (saveExperiences: boolean = false) =>
+export const createSaveExperienceTool = (
+  saveExperiences: boolean = false,
+  updateVectorDb?: (data: unknown) => Promise<boolean>,
+) =>
   new DynamicStructuredTool({
     name: 'save_experience',
     description: `
@@ -44,6 +47,8 @@ export const createSaveExperienceTool = (saveExperiences: boolean = false) =>
           return upload;
         }
         logger.info('AutoDrive upload is disabled, skipping upload');
+        if (updateVectorDb) await updateVectorDb(data);
+
         return {
           success: false,
           cid: null,
