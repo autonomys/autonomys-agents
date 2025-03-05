@@ -132,6 +132,8 @@ export const config = (() => {
       NODE_ENV: process.env.NODE_ENV || 'development',
 
       SERPAPI_API_KEY: process.env.SERPAPI_API_KEY || '',
+
+      API_PORT: process.env.API_PORT ? parseInt(process.env.API_PORT, 10) : 3001,
     };
     return configSchema.parse(rawConfig);
   } catch (error) {

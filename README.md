@@ -28,7 +28,7 @@ Autonomys Agents is an **EXPERIMENTAL** framework for building AI agents. Curren
    - For production build and run: `yarn start <your-character-name>`
    - For interactive CLI interface: `yarn cli <your-character-name>`
 
-## Interactive CLI Interface
+## Interactive CLI Interface 
 
 The framework includes an interactive terminal-based UI for managing and monitoring your AI agent. To start the interface:
 
@@ -36,14 +36,38 @@ The framework includes an interactive terminal-based UI for managing and monitor
 yarn cli <your-character-name>
 ```
 
+## Interactive Web CLI Interface (WIP)
+
+A modern web-based interface for interacting with your agent. To start:
+
+```bash
+cd web-cli && yarn
+```
+Then, in the root folder:
+
+```bash
+yarn dev:all <your-character-name>
+```
+
 Features:
+- Tabbed namespace logs for organized output
+- Real-time log updates via Server-Sent Events
+- Color-coded messages by log level
+- Character-specific configuration
 
-- Real-time character status and workflow monitoring
-- Interactive command input with keyboard shortcuts
-- Task scheduling and management
-- Live output logging
+## Running with dev:all
 
-The interface provides a user-friendly way to interact with your agent, monitor its activities, and manage scheduled tasks, all within a terminal environment.
+The `dev:all` command launches both the main application and web interface concurrently:
+
+```bash
+yarn dev:all <your-character-name>
+```
+
+This command:
+- Starts your agent with the specified character
+- Launches the web interface configured for that character
+- Automatically uses the character's API port from its .env file
+- Provides color-coded output from both processes
 
 ### Known Issues
 

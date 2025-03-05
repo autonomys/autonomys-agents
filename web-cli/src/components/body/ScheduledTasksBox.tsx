@@ -1,6 +1,6 @@
 import React from 'react';
 import { ScheduledTasksBoxProps } from '../../types/types';
-import './BodyStyles.css';
+import './styles/BodyStyles.css';
 
 const ScheduledTasksBox: React.FC<ScheduledTasksBoxProps> = ({ tasks, onDeleteTask }) => {
   return (

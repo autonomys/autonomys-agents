@@ -3,7 +3,7 @@ import StatusBox from './StatusBox';
 import InputBox from './InputBox';
 import ScheduledTasksBox from './ScheduledTasksBox';
 import { useAppContext } from '../../context/AppContext';
-import './BodyStyles.css';
+import './styles/BodyStyles.css';
 
 const BodyArea: React.FC = () => {
   const { state, dispatch } = useAppContext();

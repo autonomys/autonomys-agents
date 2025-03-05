@@ -1,6 +1,6 @@
 import React from 'react';
 import { StatusBoxProps } from '../../types/types';
-import './BodyStyles.css';
+import './styles/BodyStyles.css';
 
 const StatusBox: React.FC<StatusBoxProps> = ({ status }) => {
   return (

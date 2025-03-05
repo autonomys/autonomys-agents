@@ -1,6 +1,6 @@
 import React, { KeyboardEvent } from 'react';
 import { InputBoxProps } from '../../types/types';
-import './BodyStyles.css';
+import './styles/BodyStyles.css';
 
 const InputBox: React.FC<InputBoxProps> = ({ value, onChange, onSubmit, disabled }) => {
   const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {

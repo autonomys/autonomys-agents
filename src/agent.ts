@@ -8,6 +8,7 @@ import { OrchestratorRunnerOptions } from './agents/workflows/orchestrator/types
 import { createTwitterAgent } from './agents/workflows/twitter/twitterAgent.js';
 import { config } from './config/index.js';
 import { createTwitterApi } from './services/twitter/client.js';
+import { createApiServer, registerRunner } from './api/server.js';
 
 const character = config.characterConfig;
 const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
@@ -44,12 +45,21 @@ const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
   };
 };
 
+const apiServer = createApiServer();
+
 const orchestrationConfig = await orchestratorConfig();
 export const orchestratorRunner = (() => {
   let runnerPromise: Promise<OrchestratorRunner> | undefined = undefined;
   return async () => {
     if (!runnerPromise) {
-      runnerPromise = createOrchestratorRunner(character, orchestrationConfig);
+      runnerPromise = createOrchestratorRunner(character, {
+        ...orchestrationConfig,
+        namespace: 'orchestrator',
+        api: apiServer,
+      });
+
+      const runner = await runnerPromise;
+      registerRunner('orchestrator', runner);
     }
     return runnerPromise;
   };
