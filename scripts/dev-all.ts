@@ -52,7 +52,7 @@ const colors = {
   reset: '\x1b[0m',
 };
 
-function prefixOutput(prefix: string, color: string, data: Buffer) {
+const prefixOutput = (prefix: string, color: string, data: Buffer) => {
   const lines = data.toString().split('\n');
   for (const line of lines) {
     if (line.trim()) {
