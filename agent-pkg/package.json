@@ -1,0 +1,36 @@
+{
+  "name": "@autonomys/agent-os-cli",
+  "version": "0.1.0",
+  "description": "Package manager for Autonomys agent tools",
+  "license": "MIT",
+  "main": "dist/index.js",
+  "bin": {
+    "autoOS": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "ts-node src/index.ts",
+    "prepublish": "npm run build"
+  },
+  "dependencies": {
+    "@autonomys/auto-drive": "1.2.3",
+    "archiver": "^5.3.1",
+    "chalk": "^5.2.0",
+    "commander": "^10.0.0",
+    "dotenv": "^16.4.7",
+    "ethers": "^6.11.1",
+    "extract-zip": "^2.0.1",
+    "inquirer": "^9.2.0",
+    "keytar": "^7.9.0",
+    "ora": "^6.3.0"
+  },
+  "devDependencies": {
+    "@types/archiver": "^5.3.2",
+    "@types/inquirer": "^9.0.3",
+    "@types/node": "^18.15.0",
+    "ts-node": "^10.9.1",
+    "typescript": "^5.0.0"
+  },
+  "type": "module"
+}
