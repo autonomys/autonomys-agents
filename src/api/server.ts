@@ -4,6 +4,9 @@ import { createLogger } from '../utils/logger.js';
 import { OrchestratorRunner } from '../agents/workflows/orchestrator/orchestratorWorkflow.js';
 import { ApiServer, LogMetadata } from './types.js';
 import { config } from '../config/index.js';
+import { HumanMessage } from '@langchain/core/messages';
+import asyncHandler from 'express-async-handler';
+
 const logger = createLogger('api-server');
 
 const logStreamClients = new Map<number, { res: Response; namespace: string }>();
@@ -48,6 +51,37 @@ const createSingletonApiServer = (): ApiServer => {
       namespaces: Array.from(orchestratorRunners.keys()),
     });
   });
+
+  apiRouter.post(
+    '/:namespace/run',
+    asyncHandler(async (req: Request, res: Response) => {
+      const { namespace } = req.params;
+      const { message } = req.body;
+
+      if (!message) {
+        res.status(400).json({ error: 'Message is required' });
+        return;
+      }
+
+      const runner = orchestratorRunners.get(namespace);
+      if (!runner) {
+        res.status(404).json({ error: `No runner found for namespace: ${namespace}` });
+        return;
+      }
+
+      logger.info(`Starting workflow execution for namespace: ${namespace}`);
+
+      const result = await runner.runWorkflow(
+        { messages: [new HumanMessage(message)] },
+        { threadId: `api-${namespace}-${Date.now()}` },
+      );
+
+      res.status(200).json({
+        status: 'success',
+        result,
+      });
+    }),
+  );
 
   app.use('/api', apiRouter);
 
