@@ -8,7 +8,7 @@ import { OrchestratorRunnerOptions } from './agents/workflows/orchestrator/types
 import { createTwitterAgent } from './agents/workflows/twitter/twitterAgent.js';
 import { config } from './config/index.js';
 import { createTwitterApi } from './services/twitter/client.js';
-import { createApiServer, registerRunner } from './api/server.js';
+import { createApiServer, withApiIntegration, registerRunnerWithApi } from './api/server.js';
 
 const character = config.characterConfig;
 const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
@@ -52,14 +52,23 @@ export const orchestratorRunner = (() => {
   let runnerPromise: Promise<OrchestratorRunner> | undefined = undefined;
   return async () => {
     if (!runnerPromise) {
-      runnerPromise = createOrchestratorRunner(character, {
-        ...orchestrationConfig,
-        namespace: 'orchestrator',
-        api: apiServer,
-      });
+      // Create the runner with API integration options
+      const namespace = 'orchestrator';
 
-      const runner = await runnerPromise;
-      registerRunner('orchestrator', runner);
+      // withApiIntegration now handles creating and enhancing the logger
+      runnerPromise = createOrchestratorRunner(
+        character,
+        withApiIntegration(apiServer, {
+          ...orchestrationConfig,
+          namespace,
+        }),
+      );
+
+      // Register the runner with the API after creation
+      // This keeps the registration logic in the API layer where it belongs
+      if (apiServer) {
+        runnerPromise = registerRunnerWithApi(runnerPromise, apiServer, namespace);
+      }
     }
     return runnerPromise;
   };

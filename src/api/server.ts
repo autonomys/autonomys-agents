@@ -146,3 +146,29 @@ export const attachLogger = (logger: any, namespace: string) => {
   const api = createApiServer();
   return api.attachLogger(logger, namespace);
 };
+
+// Helper function to create orchestrator options with API integration
+export const withApiIntegration = (api: ApiServer, baseOptions: any = {}) => {
+  const namespace = baseOptions.namespace || 'orchestrator';
+
+  // Create a logger with API integration
+  const logger = createLogger(`orchestrator-workflow-${namespace}`);
+  const enhancedLogger = attachLogger(logger, namespace);
+
+  return {
+    ...baseOptions,
+    api,
+    logger: enhancedLogger,
+  };
+};
+
+// Helper function to register a runner with the API after it's created
+export const registerRunnerWithApi = async (
+  runnerPromise: Promise<OrchestratorRunner>,
+  api: ApiServer,
+  namespace: string,
+): Promise<OrchestratorRunner> => {
+  const runner = await runnerPromise;
+  api.registerRunner(namespace, runner);
+  return runner;
+};
