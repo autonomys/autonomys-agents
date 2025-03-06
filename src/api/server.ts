@@ -1,15 +1,16 @@
-import express, { Request, Response, Router } from 'express';
+import express, { Response } from 'express';
 import cors from 'cors';
 import { createLogger } from '../utils/logger.js';
 import { OrchestratorRunner } from '../agents/workflows/orchestrator/orchestratorWorkflow.js';
 import { ApiServer, LogMetadata } from './types.js';
 import { config } from '../config/index.js';
+import { createApiRouter } from './routes/index.js';
+
 import { Logger } from 'winston';
 const logger = createLogger('api-server');
 
-const logStreamClients = new Map<number, { res: Response; namespace: string }>();
-
-const orchestratorRunners = new Map<string, OrchestratorRunner>();
+export const logStreamClients = new Map<number, { res: Response; namespace: string }>();
+export const orchestratorRunners = new Map<string, OrchestratorRunner>();
 
 let apiServer: ApiServer | null = null;
 
@@ -18,38 +19,7 @@ const createSingletonApiServer = (): ApiServer => {
   app.use(cors());
   app.use(express.json());
 
-  const apiRouter = Router();
-
-  apiRouter.get('/:namespace/logs', (req: Request, res: Response) => {
-    const { namespace } = req.params;
-    res.setHeader('Content-Type', 'text/event-stream');
-    res.setHeader('Cache-Control', 'no-cache');
-    res.setHeader('Connection', 'keep-alive');
-
-    res.write(
-      `data: ${JSON.stringify({ type: 'connection', message: 'Connected to log stream' })}\n\n`,
-    );
-
-    const clientId = Date.now();
-
-    logStreamClients.set(clientId, { res, namespace });
-
-    req.on('close', () => {
-      logStreamClients.delete(clientId);
-      logger.info(`Client ${clientId} disconnected from log stream`);
-    });
-  });
-
-  apiRouter.get('/health', (_, res: Response) => {
-    res.status(200).json({ status: 'ok' });
-  });
-
-  apiRouter.get('/namespaces', (_, res: Response) => {
-    res.status(200).json({
-      namespaces: Array.from(orchestratorRunners.keys()),
-    });
-  });
-
+  const apiRouter = createApiRouter();
   app.use('/api', apiRouter);
 
   const PORT = config.API_PORT;
