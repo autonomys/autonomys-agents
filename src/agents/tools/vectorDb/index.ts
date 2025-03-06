@@ -5,7 +5,13 @@ import { VectorDB } from '../../../services/vectorDb/VectorDB.js';
 
 const logger = createLogger('vector-db-tool');
 
-export const createExperienceVectorDbSearchTool = (vectorDb: VectorDB) =>
+export const createExperienceVectorDbSearchTool = (
+  searchVectorDb: (params: {
+    query: string;
+    metadataFilter?: string;
+    limit?: number;
+  }) => Promise<Array<{ rowid: number; distance: number; content: string; created_at: string }>>,
+) =>
   new DynamicStructuredTool({
     name: 'experience_vector_db_search',
     description: `
@@ -49,7 +55,7 @@ export const createExperienceVectorDbSearchTool = (vectorDb: VectorDB) =>
       metadataFilter?: string;
       limit?: number;
     }) => {
-      const memories = await vectorDb.search({ query, metadataFilter, limit });
+      const memories = await searchVectorDb({ query, metadataFilter, limit });
       logger.info('Searched vector db', { query, metadataFilter, memories });
       return memories;
     },

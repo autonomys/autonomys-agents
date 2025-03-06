@@ -40,7 +40,11 @@ export const createSaveExperienceTool = (
         logger.info('Uploading data to DSN - Received data:', {
           data: JSON.stringify(data, null, 2),
         });
-        if (updateVectorDb) await updateVectorDb(data);
+        try {
+          if (updateVectorDb) await updateVectorDb(data);
+        } catch (error) {
+          logger.error('Error updating VectorDB:', error);
+        }
         if (saveExperiences) {
           const upload: { success: boolean; cid: string; previousCid: string | null } =
             await uploadToDsn(data);
