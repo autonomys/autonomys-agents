@@ -142,6 +142,9 @@ export const createTaskQueue = (namespace: string): TaskQueue => {
       const taskIndex = scheduledTasks.findIndex(task => task.id === id);
       if (taskIndex >= 0) {
         scheduledTasks[taskIndex].status = 'deleted';
+        const deletedTask = scheduledTasks.splice(taskIndex, 1)[0];
+        deletedTask.completedAt = new Date();
+        completedTasks.push(deletedTask);
       }
       logger.info(`Deleted task ${id} in namespace: ${namespace}`);
     },
