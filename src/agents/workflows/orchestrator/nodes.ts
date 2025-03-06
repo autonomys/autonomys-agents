@@ -10,7 +10,6 @@ export const createNodes = async ({
   tools,
   prompts,
   pruningParameters,
-  vectorStore,
 }: OrchestratorConfig) => {
   const { inputPrompt, messageSummaryPrompt, finishWorkflowPrompt } = prompts;
   const { inputModelConfig, messageSummaryModelConfig, finishWorkflowModelConfig } =
@@ -19,18 +18,15 @@ export const createNodes = async ({
     modelConfig: inputModelConfig,
     inputPrompt,
     tools,
-    vectorStore,
   });
   const messageSummaryNode = createMessageSummaryNode({
     modelConfig: messageSummaryModelConfig,
     messageSummaryPrompt,
     pruningParameters,
-    vectorStore,
   });
   const finishWorkflowNode = createFinishWorkflowNode({
     modelConfig: finishWorkflowModelConfig,
     finishWorkflowPrompt,
-    vectorStore,
   });
   const toolExecutionNode = createToolExecutionNode({
     tools: tools as DynamicStructuredTool[],

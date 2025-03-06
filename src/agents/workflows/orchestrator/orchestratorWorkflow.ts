@@ -124,10 +124,9 @@ const createOrchestratorRunnerConfig = async (
       defaultOptions.modelConfigurations.finishWorkflowModelConfig,
   };
 
-  const vectorStore = options?.vectorStore || new VectorDB(defaultOptions.namespace);
   const tools = [
     ...(options?.tools || []),
-    ...createDefaultOrchestratorTools(vectorStore, mergedOptions.saveExperiences),
+    ...createDefaultOrchestratorTools(mergedOptions.saveExperiences),
   ];
   const prompts = options?.prompts || (await createPrompts(character));
   const monitoring = {
@@ -136,7 +135,6 @@ const createOrchestratorRunnerConfig = async (
   };
   return {
     ...mergedOptions,
-    vectorStore,
     tools,
     modelConfigurations,
     prompts,
@@ -171,10 +169,6 @@ export const createOrchestratorRunner = async (
     ): Promise<FinishedWorkflow> => {
       const threadId = `${options?.threadId || 'orchestrator'}-${Date.now()}`;
       workflowLogger.info('Starting orchestrator workflow', { threadId });
-
-      if (!runnerConfig.vectorStore.isOpen()) {
-        await runnerConfig.vectorStore.open();
-      }
 
       const config = {
         recursionLimit: runnerConfig.recursionLimit,
@@ -219,14 +213,12 @@ export const createOrchestratorRunner = async (
 
         const workflowSummary = `This action finished running at ${new Date().toISOString()}. Action summary: ${summary}`;
 
-        runnerConfig.vectorStore.close();
         return { summary: workflowSummary, schedule };
       } else {
         workflowLogger.error('Workflow completed but no finished workflow data found', {
           finalState,
           content: finalState?.finishWorkflow?.content,
         });
-        runnerConfig.vectorStore.close();
         return { summary: 'Extracting workflow data failed' };
       }
     },
