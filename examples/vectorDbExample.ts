@@ -11,7 +11,7 @@ import { VectorDB } from '../src/services/vectorDb/VectorDB.js';
 
     // Record A: Recent sample record
     await vectorDb.insert('Recent sample content A');
-    
+
     // Record B: Old sample record - we will update its timestamp
     await vectorDb.insert('Old sample content B');
 
@@ -24,19 +24,25 @@ import { VectorDB } from '../src/services/vectorDb/VectorDB.js';
     // We use the underlying database connection to execute a direct update
     const db = vectorDb.getDatabase();
     // This update targets the record containing 'Old sample content B'
-    db.exec("UPDATE content_store SET created_at = datetime('now', '-2 hours') WHERE content LIKE '%Old sample content B%'");
+    db.exec(
+      "UPDATE content_store SET created_at = datetime('now', '-2 hours') WHERE content LIKE '%Old sample content B%'",
+    );
     console.log('Updated Record B timestamp to 2 hours ago.');
 
     // Perform a plain vector search using a sample query that includes the word 'sample'
     console.log("Performing plain vector search for 'sample'...");
-    const plainResults = await vectorDb.search('sample', 5);
+    const plainResults = await vectorDb.search({ query: 'sample', limit: 5 });
     console.log('Plain vector search results:', plainResults);
 
     // Perform a metadata filtered search
     // Filter: records created in the last 1 hour
     const metadataFilter = "created_at >= datetime('now', '-1 hour')";
     console.log(`Performing metadata filtered search for 'sample' with filter: ${metadataFilter}`);
-    const metadataResults = await vectorDb.searchWithMetadata('sample', metadataFilter, 5);
+    const metadataResults = await vectorDb.search({
+      query: 'sample',
+      metadataFilter,
+      limit: 5,
+    });
     console.log('Metadata filtered search results:', metadataResults);
 
     // Close the vector database connection
@@ -45,4 +51,4 @@ import { VectorDB } from '../src/services/vectorDb/VectorDB.js';
   } catch (err) {
     console.error('Error in vectorDbExample:', err);
   }
-})(); 
+})();

@@ -61,9 +61,7 @@ export const createVectorDbSearchTool = (vectorDb: VectorDB) =>
       metadataFilter?: string;
       limit?: number;
     }) => {
-      const memories = !metadataFilter
-        ? await vectorDb.search(query, limit)
-        : await vectorDb.searchWithMetadata(query, metadataFilter, limit);
+      const memories = await vectorDb.search({ query, metadataFilter, limit });
       logger.info('Searched vector db', { query, metadataFilter, memories });
       return memories;
     },
@@ -113,9 +111,7 @@ export const createExperienceVectorDbSearchTool = (vectorDb: VectorDB) =>
       metadataFilter?: string;
       limit?: number;
     }) => {
-      const memories = !metadataFilter
-        ? await vectorDb.search(query, limit)
-        : await vectorDb.searchWithMetadata(query, metadataFilter, limit);
+      const memories = await vectorDb.search({ query, metadataFilter, limit });
       logger.info('Searched vector db', { query, metadataFilter, memories });
       return memories;
     },
