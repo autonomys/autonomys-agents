@@ -69,6 +69,12 @@ const createSingletonApiServer = (): ApiServer => {
         return;
       }
 
+      if (runner.getTaskQueue().current) {
+        runner.scheduleTask(message, new Date(Date.now()));
+        res.status(409).json({ error: 'workflow already running, schedule a task instead' });
+        return;
+      }
+
       logger.info(`Starting workflow execution for namespace: ${namespace}`);
 
       const result = await runner.runWorkflow(
