@@ -5,6 +5,7 @@ import { Character } from '../../../config/characters.js';
 import { LLMConfiguration } from '../../../services/llm/types.js';
 import { VectorDB } from '../../../services/vectorDb/VectorDB.js';
 import { createLogger } from '../../../utils/logger.js';
+import { Logger } from 'winston';
 import { cleanMessageData } from './cleanMessages.js';
 import { createNodes } from './nodes.js';
 import { parseFinishedWorkflow } from './nodes/finishWorkflowNode.js';
@@ -19,15 +20,13 @@ import {
   OrchestratorStateType,
   PruningParameters,
 } from './types.js';
-import { attachLogger } from '../../../api/server.js';
 import { createTaskQueue } from './scheduler/taskQueue.js';
 import { ScheduledTask, TaskQueue } from './scheduler/types.js';
 
 const handleConditionalEdge = async (
   state: OrchestratorStateType,
   pruningParameters: PruningParameters,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  workflowLogger: any,
+  workflowLogger: Logger,
 ) => {
   workflowLogger.debug('State in conditional edge', { state });
   if (state.workflowControl && state.workflowControl.shouldStop) {
@@ -59,8 +58,7 @@ const handleConditionalEdge = async (
 const createOrchestratorWorkflow = async (
   nodes: Awaited<ReturnType<typeof createNodes>>,
   pruningParameters: PruningParameters,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  workflowLogger: any,
+  workflowLogger: Logger,
 ) => {
   const workflow = new StateGraph(OrchestratorState(pruningParameters))
     .addNode('input', nodes.inputNode)
@@ -94,7 +92,7 @@ export type OrchestratorRunner = Readonly<{
 
 const defaultModelConfiguration: LLMConfiguration = {
   provider: 'anthropic',
-  model: 'claude-3-5-sonnet-latest',
+  model: 'claude-3-7-sonnet-latest',
   temperature: 0.8,
 };
 
@@ -152,7 +150,7 @@ const createOrchestratorRunnerConfig = async (
     modelConfigurations,
     prompts,
     monitoring,
-    api: options?.api,
+    logger: options?.logger,
   };
 };
 
@@ -162,12 +160,8 @@ export const createOrchestratorRunner = async (
 ): Promise<OrchestratorRunner> => {
   const runnerConfig = await createOrchestratorRunnerConfig(character, options);
 
-  const namespaceLogger = createLogger(`orchestrator-workflow-${runnerConfig.namespace}`);
-  let workflowLogger = namespaceLogger;
-
-  if (options?.api) {
-    workflowLogger = attachLogger(namespaceLogger, runnerConfig.namespace);
-  }
+  const workflowLogger =
+    options?.logger || createLogger(`orchestrator-workflow-${runnerConfig.namespace}`);
 
   const nodes = await createNodes(runnerConfig);
   const workflow = await createOrchestratorWorkflow(
@@ -278,16 +272,10 @@ export const getOrchestratorRunner = (() => {
   const runners: Map<string, Promise<OrchestratorRunner>> = new Map();
 
   return (character: Character, runnerOptions: OrchestratorRunnerOptions) => {
-    const runnerPromise = createOrchestratorRunner(character, runnerOptions);
     const namespace = runnerOptions.namespace ?? defaultOptions.namespace;
 
-    if (runnerOptions.api) {
-      runnerPromise.then(runner => {
-        if (runnerOptions.api) {
-          runnerOptions.api.registerRunner(namespace, runner);
-        }
-      });
-
+    if (!runners.has(namespace)) {
+      const runnerPromise = createOrchestratorRunner(character, runnerOptions);
       runners.set(namespace, runnerPromise);
     }
 
