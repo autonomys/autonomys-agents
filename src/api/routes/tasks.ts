@@ -1,5 +1,5 @@
 import { Request, Response, Router } from 'express';
-import { orchestratorRunners } from '../server.js';
+import { orchestratorRunners, taskStreamClients, broadcastTaskUpdate } from '../server.js';
 import { createLogger } from '../../utils/logger.js';
 import asyncHandler from 'express-async-handler';
 
@@ -70,6 +70,8 @@ export const createTasksRouter = (): Router => {
           task,
           message: `Task scheduled for ${executeAt.toISOString()}`,
         });
+
+        broadcastTaskUpdate(namespace);
       } else {
         const taskQueue = runner.getTaskQueue();
 
@@ -82,6 +84,8 @@ export const createTasksRouter = (): Router => {
             task,
             message: `Task scheduled for immediate execution after current task completes (${executeAt.toISOString()})`,
           });
+
+          broadcastTaskUpdate(namespace);
         } else {
           try {
             logger.info(`Running immediate task for namespace: ${namespace}`);
@@ -92,6 +96,8 @@ export const createTasksRouter = (): Router => {
               task,
               message: `Task scheduled for immediate execution after current task completes (${executeAt.toISOString()})`,
             });
+
+            broadcastTaskUpdate(namespace);
           } catch (error: unknown) {
             logger.error('Error executing immediate task', { error });
             res.status(500).json({
@@ -103,6 +109,70 @@ export const createTasksRouter = (): Router => {
       }
     }),
   );
+
+  router.delete(
+    '/:namespace/task/:taskId',
+    asyncHandler(async (req: Request, res: Response) => {
+      const { namespace, taskId } = req.params;
+
+      const runner = orchestratorRunners.get(namespace);
+      if (!runner) {
+        res.status(404).json({ error: `No runner found for namespace: ${namespace}` });
+        return;
+      }
+
+      if (typeof runner.deleteTask !== 'function') {
+        res.status(501).json({ error: 'Runner does not support task deletion' });
+        return;
+      }
+
+      runner.deleteTask(taskId);
+
+      res.status(200).json({
+        status: 'success',
+        message: `Task ${taskId} deleted successfully`,
+      });
+
+      broadcastTaskUpdate(namespace);
+    }),
+  );
+
+  router.get('/:namespace/taskStream', (req: Request, res: Response) => {
+    const { namespace } = req.params;
+
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+
+    res.write(
+      `data: ${JSON.stringify({
+        type: 'connection',
+        message: 'Connected to task stream',
+        timestamp: new Date().toISOString(),
+      })}\n\n`,
+    );
+
+    const runner = orchestratorRunners.get(namespace);
+    if (runner && typeof runner.getTaskQueue === 'function') {
+      const tasks = runner.getTaskQueue();
+      res.write(
+        `data: ${JSON.stringify({
+          type: 'tasks',
+          timestamp: new Date().toISOString(),
+          namespace,
+          tasks,
+        })}\n\n`,
+      );
+    }
+
+    const clientId = Date.now();
+    taskStreamClients.set(clientId, { res, namespace });
+
+    req.on('close', () => {
+      taskStreamClients.delete(clientId);
+      logger.info(`Client ${clientId} disconnected from task stream`);
+    });
+  });
 
   return router;
 };

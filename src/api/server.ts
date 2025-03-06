@@ -10,6 +10,7 @@ import { Logger } from 'winston';
 const logger = createLogger('api-server');
 
 export const logStreamClients = new Map<number, { res: Response; namespace: string }>();
+export const taskStreamClients = new Map<number, { res: Response; namespace: string }>();
 export const orchestratorRunners = new Map<string, OrchestratorRunner>();
 
 let apiServer: ApiServer | null = null;
@@ -49,6 +50,35 @@ const createSingletonApiServer = (): ApiServer => {
     });
   };
 
+  const broadcastTaskUpdate = (namespace: string) => {
+    taskStreamClients.forEach((client, clientId) => {
+      if (client.namespace === namespace || client.namespace === 'all') {
+        const runner = orchestratorRunners.get(namespace);
+        if (!runner || typeof runner.getTaskQueue !== 'function') {
+          return;
+        }
+
+        const tasks = runner.getTaskQueue();
+        const taskEvent = {
+          type: 'tasks',
+          timestamp: new Date().toISOString(),
+          namespace,
+          tasks,
+        };
+
+        try {
+          client.res.write(`data: ${JSON.stringify(taskEvent)}\n\n`);
+        } catch (e) {
+          logger.error('Error sending task update to client, removing client', {
+            clientId,
+            error: e,
+          });
+          taskStreamClients.delete(clientId);
+        }
+      }
+    });
+  };
+
   const attachLogger = (existingLogger: Logger, namespace: string): Logger => {
     type LoggerMethod = (message: string | object, ...meta: unknown[]) => Logger;
     const wrapLoggerMethod = (level: string, method: LoggerMethod): LoggerMethod => {
@@ -75,6 +105,7 @@ const createSingletonApiServer = (): ApiServer => {
       return { namespace, runner };
     },
     broadcastLog,
+    broadcastTaskUpdate,
     attachLogger,
     getRegisteredNamespaces: () => {
       return Array.from(orchestratorRunners.keys());
@@ -100,9 +131,19 @@ export const broadcastLog = (
   message: string,
   meta?: LogMetadata,
 ) => {
-  if (apiServer) {
-    apiServer.broadcastLog(namespace, level, message, meta);
+  if (!apiServer) {
+    return;
   }
+
+  apiServer.broadcastLog(namespace, level, message, meta);
+};
+
+export const broadcastTaskUpdate = (namespace: string) => {
+  if (!apiServer) {
+    return;
+  }
+
+  apiServer.broadcastTaskUpdate(namespace);
 };
 
 export const attachLogger = (logger: Logger, namespace: string) => {
