@@ -1,10 +1,10 @@
-import { VectorDB } from '../src/services/vectorDb/VectorDB.js';
+import { getVectorDB, closeVectorDB } from '../src/services/vectorDb/vectorDBPool.js';
 
 (async () => {
   try {
-    // Create an instance of VectorDB for the 'example' namespace
-    const vectorDb = new VectorDB('example');
-    console.log('VectorDB instance created.');
+    // Get a VectorDB instance for the 'example' namespace from the pool
+    const vectorDb = getVectorDB('example');
+    console.log('VectorDB instance retrieved from pool.');
 
     // Insert test content with distinct markers
     console.log('Inserting test content...');
@@ -88,7 +88,7 @@ import { VectorDB } from '../src/services/vectorDb/VectorDB.js';
     });
 
     // Close the vector database connection
-    vectorDb.close();
+    closeVectorDB('example');
     console.log('VectorDB connection closed.');
   } catch (err) {
     console.error('Error in vectorDbExample:', err);

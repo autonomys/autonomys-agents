@@ -11,7 +11,6 @@ const logger = createLogger('vector-database');
 export class VectorDB {
   private db!: Database.Database;
   private openai!: OpenAI;
-  private nextRowId!: number;
   private readonly indexFilePath: string;
   private readonly dbFilePath: string;
   private maxElements: number;
@@ -26,7 +25,6 @@ export class VectorDB {
 
     this.indexFilePath = join(targetDir, `${namespace}-index.bin`);
     this.dbFilePath = join(targetDir, `${namespace}-store.db`);
-    this.nextRowId = 1;
     this.maxElements = maxElements ?? VectorDB.DEFAULT_MAX_ELEMENTS;
     this.openai = new OpenAI({
       apiKey: config.llmConfig.OPENAI_API_KEY,
@@ -74,11 +72,7 @@ export class VectorDB {
       }
     }
 
-    const maxRowIdResult = this.db
-      .prepare('SELECT MAX(rowid) as maxId FROM content_store')
-      .get() as { maxId: number | null };
-    this.nextRowId = (maxRowIdResult?.maxId || 0) + 1;
-    logger.info(`Initialized with next rowid: ${this.nextRowId}`);
+    logger.info('VectorDB initialized successfully');
   }
 
   private createTables(): void {
@@ -90,7 +84,7 @@ export class VectorDB {
             );
             
             CREATE TABLE IF NOT EXISTS content_store (
-                rowid INTEGER PRIMARY KEY,
+                rowid INTEGER PRIMARY KEY AUTOINCREMENT,
                 content TEXT,
                 created_at TEXT
             );
@@ -115,13 +109,15 @@ export class VectorDB {
 
     this.db.exec('BEGIN IMMEDIATE');
     try {
-      if (this.nextRowId > this.maxElements) {
+      // Check if we've reached the maximum number of elements
+      const countResult = this.db.prepare('SELECT COUNT(*) as count FROM content_store').get() as {
+        count: number;
+      };
+
+      if (countResult.count >= this.maxElements) {
+        // Delete the oldest record to make room
         const oldestRowId = this.db
-          .prepare(
-            `
-                    SELECT MIN(rowid) as min_id FROM content_store
-                `,
-          )
+          .prepare('SELECT MIN(rowid) as min_id FROM content_store')
           .get() as { min_id: number };
         const oldestId = Number(oldestRowId.min_id);
 
@@ -132,25 +128,26 @@ export class VectorDB {
           logger.error('Error during delete:', deleteError);
           throw deleteError;
         }
-
-        this.nextRowId = oldestId;
       }
 
-      const currentRowId = Number(this.nextRowId);
+      // Insert into content_store first and get the AUTOINCREMENT rowid
+      const contentStatement = this.db.prepare(`
+                INSERT INTO content_store (content, created_at)
+                VALUES (?, ?)
+            `);
+
+      const contentResult = contentStatement.run(content, timestamp);
+      const newRowId = contentResult.lastInsertRowid;
+
+      // Now insert into embeddings_index with the same rowid
       const vectorStatement = this.db.prepare(`
                 INSERT INTO embeddings_index (rowid, embedding_vector) 
                 VALUES (?, ?)
             `);
 
-      const contentStatement = this.db.prepare(`
-                INSERT INTO content_store (rowid, content, created_at)
-                VALUES (?, ?, ?)
-            `);
+      vectorStatement.run(newRowId, Buffer.from(new Float32Array(embedding).buffer));
 
-      vectorStatement.run(currentRowId, Buffer.from(new Float32Array(embedding).buffer));
-      contentStatement.run(currentRowId, content, timestamp);
-      logger.info('Inserted content:', { content });
-      this.nextRowId++;
+      logger.info('Inserted content with rowid:', { rowid: newRowId, content });
       this.db.exec('COMMIT');
     } catch (error) {
       logger.error('Error during insert:', error);
