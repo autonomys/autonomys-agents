@@ -45,6 +45,48 @@ import { VectorDB } from '../src/services/vectorDb/VectorDB.js';
     });
     console.log('Metadata filtered search results:', metadataResults);
 
+    // CHUNKING EXAMPLE: Insert a large text that exceeds the token limit
+    console.log('\n--- CHUNKING EXAMPLE ---');
+    console.log('Inserting large text that will be automatically chunked...');
+
+    // Generate a large text (approximately 50,000 characters)
+    // This will exceed the 28,000 character limit and trigger chunking
+    const generateLargeText = () => {
+      const paragraph =
+        'This is a sample paragraph that will be repeated multiple times to create a large text. ' +
+        'It contains various words and phrases that can be used for searching later. ' +
+        'Topics include artificial intelligence, machine learning, vector databases, and semantic search. ' +
+        'We want to ensure this text is large enough to trigger the automatic chunking functionality. ';
+
+      // Repeat the paragraph approximately 500 times to exceed the limit
+      return Array(500).fill(paragraph).join(' ');
+    };
+
+    const largeText = generateLargeText();
+    console.log(
+      `Generated text of ${largeText.length} characters (exceeds the 28,000 character limit)`,
+    );
+
+    // Insert the large text - this will trigger automatic chunking
+    await vectorDb.insert(largeText);
+    console.log('Large text inserted with automatic chunking');
+
+    // Search for terms within the chunked text
+    console.log('\nSearching within the chunked text...');
+    const chunkSearchResults = await vectorDb.search({
+      query: 'artificial intelligence vector database',
+      limit: 3,
+    });
+
+    console.log('Chunk search results:');
+    chunkSearchResults.forEach((result, index) => {
+      // Display a preview of the content (first 100 characters)
+      const contentPreview = result.content.substring(0, 100) + '...';
+      console.log(
+        `Result ${index + 1}: [Distance: ${result.distance.toFixed(4)}] ${contentPreview}`,
+      );
+    });
+
     // Close the vector database connection
     vectorDb.close();
     console.log('VectorDB connection closed.');

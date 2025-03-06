@@ -110,11 +110,7 @@ export class VectorDB {
     }
   }
 
-  async insert(content: string, timestamp?: string): Promise<boolean> {
-    if (!content || content.trim().length === 0) {
-      throw new Error('Content cannot be empty');
-    }
-
+  private async insertChunk(content: string, timestamp: string): Promise<boolean> {
     const embedding = await this.getEmbedding(content);
 
     this.db.exec('BEGIN IMMEDIATE');
@@ -152,7 +148,7 @@ export class VectorDB {
             `);
 
       vectorStatement.run(currentRowId, Buffer.from(new Float32Array(embedding).buffer));
-      contentStatement.run(currentRowId, content, timestamp ?? new Date().toISOString());
+      contentStatement.run(currentRowId, content, timestamp);
       logger.info('Inserted content:', { content });
       this.nextRowId++;
       this.db.exec('COMMIT');
@@ -163,6 +159,51 @@ export class VectorDB {
     }
 
     return true;
+  }
+
+  async insert(content: string, timestamp?: string): Promise<boolean> {
+    if (!content || content.trim().length === 0) {
+      throw new Error('Content cannot be empty');
+    }
+
+    // Define max chunk size (approximately 7000 tokens, using ~4 chars per token estimate)
+    const MAX_CHUNK_SIZE = 28000;
+    const createdAt = timestamp ?? new Date().toISOString();
+
+    // If content is within limits, process normally
+    if (content.length <= MAX_CHUNK_SIZE) {
+      return this.insertChunk(content, createdAt);
+    }
+
+    // For long content, split into chunks and insert each
+    logger.info(`Content length ${content.length} exceeds limit. Splitting into chunks.`);
+    let position = 0;
+    let chunkCount = 0;
+    let success = true;
+
+    while (position < content.length) {
+      const chunkEnd = Math.min(position + MAX_CHUNK_SIZE, content.length);
+      const chunk = content.substring(position, chunkEnd);
+      chunkCount++;
+
+      // Add chunk number to metadata in content
+      const chunkContent = `[Chunk ${chunkCount}] ${chunk}`;
+
+      try {
+        const result = await this.insertChunk(chunkContent, createdAt);
+        if (!result) {
+          success = false;
+        }
+      } catch (error) {
+        logger.error(`Error inserting chunk ${chunkCount}:`, error);
+        success = false;
+      }
+
+      position = chunkEnd;
+    }
+
+    logger.info(`Split content into ${chunkCount} chunks`);
+    return success;
   }
 
   async search(params: {
