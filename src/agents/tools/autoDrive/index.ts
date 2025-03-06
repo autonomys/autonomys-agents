@@ -40,6 +40,7 @@ export const createSaveExperienceTool = (
         logger.info('Uploading data to DSN - Received data:', {
           data: JSON.stringify(data, null, 2),
         });
+        if (updateVectorDb) await updateVectorDb(data);
         if (saveExperiences) {
           const upload: { success: boolean; cid: string; previousCid: string | null } =
             await uploadToDsn(data);
@@ -47,7 +48,6 @@ export const createSaveExperienceTool = (
           return upload;
         }
         logger.info('AutoDrive upload is disabled, skipping upload');
-        if (updateVectorDb) await updateVectorDb(data);
 
         return {
           success: false,
