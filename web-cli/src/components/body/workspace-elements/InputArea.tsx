@@ -1,6 +1,7 @@
 import React from 'react';
 import StatusBox from '../StatusBox';
 import InputBox from '../InputBox';
+import { ScheduledTask } from '../../../types/types';
 import '../styles/BodyStyles.css';
 
 interface InputAreaProps {
@@ -8,6 +9,7 @@ interface InputAreaProps {
   isProcessing: boolean;
   handleInputChange: (value: string) => void;
   handleInputSubmit: () => void;
+  currentTask?: ScheduledTask;
 }
 
 const InputArea: React.FC<InputAreaProps> = ({
@@ -15,10 +17,22 @@ const InputArea: React.FC<InputAreaProps> = ({
   isProcessing,
   handleInputChange,
   handleInputSubmit,
+  currentTask,
 }) => {
+  // Determine the status text based on processing state and current task
+  const getStatusText = () => {
+    if (isProcessing) {
+      return 'Processing...';
+    } else if (currentTask) {
+      return `Running: ${currentTask.description}`;
+    } else {
+      return 'Ready';
+    }
+  };
+
   return (
     <div className='body-left-section'>
-      <StatusBox status={isProcessing ? 'Processing...' : 'Ready'} />
+      <StatusBox status={getStatusText()} />
       <InputBox
         value={value}
         onChange={handleInputChange}

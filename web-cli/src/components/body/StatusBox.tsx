@@ -6,7 +6,16 @@ const StatusBox: React.FC<StatusBoxProps> = ({ status }) => {
   return (
     <div className='status-box'>
       <h3>Status</h3>
-      <div className='status-content'>{status}</div>
+      {status.startsWith('Running:') ? (
+        <div className='status-content status-running'>
+          <div className='status-label'>Running Task</div>
+          <div className='status-message'>{status.substring(9)}</div>
+        </div>
+      ) : status === 'Ready' ? (
+        <div className='status-content status-ready'>Ready for input</div>
+      ) : (
+        <div className='status-content'>{status}</div>
+      )}
     </div>
   );
 };

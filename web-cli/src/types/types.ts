@@ -51,4 +51,6 @@ export interface ScheduledTask {
   id: string;
   time: Date;
   description: string;
+  startedAt?: Date;
+  status?: string;
 }

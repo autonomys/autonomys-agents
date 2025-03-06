@@ -20,6 +20,7 @@ export interface TaskEventMessage {
 }
 
 type TaskUpdateCallback = (tasks: ScheduledTask[]) => void;
+type CurrentTaskUpdateCallback = (task: ScheduledTask | undefined) => void;
 type ConnectionStatusCallback = (status: ConnectionStatus) => void;
 
 export enum ConnectionStatus {
@@ -30,6 +31,7 @@ export enum ConnectionStatus {
 }
 
 const taskCallbacks: TaskUpdateCallback[] = [];
+const currentTaskCallbacks: CurrentTaskUpdateCallback[] = [];
 const connectionStatusCallbacks: ConnectionStatusCallback[] = [];
 let taskEventSource: EventSource | null = null;
 let activeNamespace = DEFAULT_NAMESPACE;
@@ -93,20 +95,41 @@ export const connectToTaskStream = (namespace: string = DEFAULT_NAMESPACE): void
         console.log(`Received task stream message:`, event.data);
         const data = JSON.parse(event.data) as TaskEventMessage;
 
-        if (data.type === 'tasks' && data.tasks?.scheduled) {
-          // Map API tasks to our app's task format
-          const tasks = data.tasks.scheduled
-            .map((task: any) => ({
-              id: task.id,
-              time: new Date(task.scheduledFor),
-              description: task.message,
-            }))
-            .sort((a: ScheduledTask, b: ScheduledTask) => a.time.getTime() - b.time.getTime());
+        if (data.type === 'tasks') {
+          // Handle scheduled tasks
+          if (data.tasks?.scheduled) {
+            // Map API tasks to our app's task format
+            const tasks = data.tasks.scheduled
+              .map((task: any) => ({
+                id: task.id,
+                time: new Date(task.scheduledFor),
+                description: task.message,
+              }))
+              .sort((a: ScheduledTask, b: ScheduledTask) => a.time.getTime() - b.time.getTime());
 
-          console.log(`Mapped ${tasks.length} tasks`);
+            console.log(`Mapped ${tasks.length} tasks`);
 
-          // Notify all registered callbacks
-          taskCallbacks.forEach(callback => callback(tasks));
+            // Notify all registered callbacks
+            taskCallbacks.forEach(callback => callback(tasks));
+          }
+          
+          // Handle current task
+          if (data.tasks?.current) {
+            const currentTask = data.tasks.current;
+            const mappedTask: ScheduledTask = {
+              id: currentTask.id,
+              time: new Date(currentTask.scheduledFor),
+              description: currentTask.message,
+              startedAt: currentTask.startedAt ? new Date(currentTask.startedAt) : undefined,
+              status: currentTask.status
+            };
+            
+            console.log('Current task detected:', mappedTask);
+            currentTaskCallbacks.forEach(callback => callback(mappedTask));
+          } else if (data.tasks && !data.tasks.current) {
+            console.log('No current task running');
+            currentTaskCallbacks.forEach(callback => callback(undefined));
+          }
         }
       } catch (error) {
         console.error('Error parsing task stream message:', error);
@@ -156,6 +179,22 @@ export const subscribeToTaskUpdates = (callback: TaskUpdateCallback): (() => voi
     const index = taskCallbacks.indexOf(callback);
     if (index !== -1) {
       taskCallbacks.splice(index, 1);
+    }
+  };
+};
+
+export const subscribeToCurrentTask = (callback: CurrentTaskUpdateCallback): (() => void) => {
+  currentTaskCallbacks.push(callback);
+  
+  // Initialize connection if not already done
+  if (!isInitialized || connectionStatus === ConnectionStatus.DISCONNECTED) {
+    connectToTaskStream();
+  }
+  
+  return () => {
+    const index = currentTaskCallbacks.indexOf(callback);
+    if (index !== -1) {
+      currentTaskCallbacks.splice(index, 1);
     }
   };
 };
@@ -211,6 +250,7 @@ export const closeTaskStream = (): void => {
 
   setConnectionStatus(ConnectionStatus.DISCONNECTED);
   taskCallbacks.length = 0;
+  currentTaskCallbacks.length = 0;
   connectionStatusCallbacks.length = 0;
   reconnectAttempts = 0;
 };

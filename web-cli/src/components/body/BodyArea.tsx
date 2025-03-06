@@ -7,6 +7,7 @@ import {
   subscribeToConnectionStatus,
   reconnect,
   deleteTask,
+  subscribeToCurrentTask,
 } from '../../services/TaskStreamService';
 import { ScheduledTask } from '../../types/types';
 import InputArea from './workspace-elements/InputArea';
@@ -16,6 +17,7 @@ import './styles/BodyStyles.css';
 const BodyArea: React.FC = () => {
   const { state, dispatch } = useAppContext();
   const [tasks, setTasks] = useState<ScheduledTask[]>([]);
+  const [currentTask, setCurrentTask] = useState<ScheduledTask | undefined>(undefined);
   const [loading, setLoading] = useState(true);
   const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>(
     ConnectionStatus.DISCONNECTED,
@@ -39,11 +41,17 @@ const BodyArea: React.FC = () => {
         setLoading(false);
       }
     });
+    
+    const unsubscribeFromCurrentTask = subscribeToCurrentTask(task => {
+      console.log('Current task update:', task);
+      setCurrentTask(task);
+    });
 
     return () => {
       console.log('Cleaning up task stream subscriptions');
       unsubscribeFromTasks();
       unsubscribeFromStatus();
+      unsubscribeFromCurrentTask();
       closeTaskStream();
     };
   }, []);
@@ -107,6 +115,7 @@ const BodyArea: React.FC = () => {
         isProcessing={state.isProcessing}
         handleInputChange={handleInputChange}
         handleInputSubmit={handleInputSubmit}
+        currentTask={currentTask}
       />
       <TasksArea
         tasks={tasks}

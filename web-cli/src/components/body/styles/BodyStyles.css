@@ -248,15 +248,83 @@
 }
 
 .status-box {
-  padding: 10px;
-  background-color: #1e1e1e;
-  border-bottom: 1px solid #444;
-  height: 60px;
+  background-color: #1a1d29;
+  border-radius: 6px;
+  padding: 12px;
+  margin-bottom: 15px;
+  border: 1px solid #2d3142;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.status-box h3 {
+  margin: 0 0 10px 0;
+  font-size: 14px;
+  text-transform: uppercase;
+  color: #8b94b5;
+  letter-spacing: 1px;
+  font-weight: 600;
+  border-bottom: 1px solid #2d3142;
+  padding-bottom: 8px;
 }
 
 .status-content {
-  margin-top: 5px;
-  font-size: 1rem;
+  font-size: 14px;
+  color: #e9ecef;
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+
+.status-running {
+  background-color: rgba(59, 130, 246, 0.1);
+  border-left: 3px solid #3b82f6;
+  padding: 10px;
+  margin: 4px 0;
+  border-radius: 4px;
+  animation: pulse 2s infinite ease-in-out;
+}
+
+@keyframes pulse {
+  0% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.2); }
+  70% { box-shadow: 0 0 0 6px rgba(59, 130, 246, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
+}
+
+.status-label {
+  font-weight: 600;
+  color: #3b82f6;
+  margin-bottom: 6px;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+}
+
+.status-label::before {
+  content: "";
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  background-color: #3b82f6;
+  border-radius: 50%;
+  margin-right: 8px;
+  animation: blink 1.5s infinite;
+}
+
+@keyframes blink {
+  0% { opacity: 0.4; }
+  50% { opacity: 1; }
+  100% { opacity: 0.4; }
+}
+
+.status-message {
+  font-weight: 400;
+  color: #e9ecef;
+  word-break: break-word;
+  line-height: 1.4;
+  padding-left: 16px;
+  border-left: 1px solid rgba(59, 130, 246, 0.3);
+  margin-left: 4px;
 }
 
 .input-box {
@@ -467,4 +535,30 @@
 
 .reconnect-button:hover {
   background-color: #0069d9;
+}
+
+/* Additional status states */
+.status-ready {
+  background-color: rgba(34, 197, 94, 0.1);
+  border-left: 3px solid #22c55e;
+  padding: 10px;
+  margin: 4px 0;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  color: #e9ecef;
+}
+
+.status-ready::before {
+  content: "•";
+  color: #22c55e;
+  font-size: 24px;
+  margin-right: 8px;
+}
+
+.status-content:not(.status-running):not(.status-ready) {
+  padding: 10px;
+  background-color: rgba(245, 158, 11, 0.1);
+  border-left: 3px solid #f59e0b;
+  border-radius: 4px;
 }
