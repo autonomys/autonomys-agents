@@ -10,6 +10,7 @@ interface InputAreaProps {
   handleInputChange: (value: string) => void;
   handleInputSubmit: () => void;
   currentTask?: ScheduledTask;
+  error?: string;
 }
 
 const InputArea: React.FC<InputAreaProps> = ({
@@ -18,10 +19,13 @@ const InputArea: React.FC<InputAreaProps> = ({
   handleInputChange,
   handleInputSubmit,
   currentTask,
+  error,
 }) => {
   // Determine the status text based on processing state and current task
   const getStatusText = () => {
-    if (isProcessing) {
+    if (error) {
+      return `Error: ${error}`;
+    } else if (isProcessing) {
       return 'Processing...';
     } else if (currentTask) {
       return `Running: ${currentTask.description}`;

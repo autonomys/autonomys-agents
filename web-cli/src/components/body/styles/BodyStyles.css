@@ -562,3 +562,41 @@
   border-left: 3px solid #f59e0b;
   border-radius: 4px;
 }
+
+/* Error status styling */
+.status-error {
+  background-color: rgba(239, 68, 68, 0.1);
+  border-left: 3px solid #ef4444;
+  padding: 10px;
+  margin: 4px 0;
+  border-radius: 4px;
+}
+
+.status-error .status-label {
+  font-weight: 600;
+  color: #ef4444;
+  margin-bottom: 6px;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+}
+
+.status-error .status-label::before {
+  content: "";
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  background-color: #ef4444;
+  border-radius: 50%;
+  margin-right: 8px;
+}
+
+.status-error .status-message {
+  font-weight: 400;
+  color: #e9ecef;
+  word-break: break-word;
+  line-height: 1.4;
+  padding-left: 16px;
+  border-left: 1px solid rgba(239, 68, 68, 0.3);
+  margin-left: 4px;
+}

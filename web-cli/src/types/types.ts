@@ -8,6 +8,8 @@ export interface WorkflowResult {
   secondsUntilNextWorkflow?: number;
   nextWorkflowPrompt?: string;
   workflowSummary?: string;
+  scheduled?: boolean;
+  error?: string;
 }
 
 export interface OutputLogProps {

@@ -9,6 +9,7 @@ import {
   deleteTask,
   subscribeToCurrentTask,
 } from '../../services/TaskStreamService';
+import { runWorkflow } from '../../services/WorkflowService';
 import { ScheduledTask } from '../../types/types';
 import InputArea from './workspace-elements/InputArea';
 import TasksArea from './workspace-elements/TasksArea';
@@ -19,6 +20,7 @@ const BodyArea: React.FC = () => {
   const [tasks, setTasks] = useState<ScheduledTask[]>([]);
   const [currentTask, setCurrentTask] = useState<ScheduledTask | undefined>(undefined);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | undefined>(undefined);
   const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>(
     ConnectionStatus.DISCONNECTED,
   );
@@ -57,20 +59,35 @@ const BodyArea: React.FC = () => {
   }, []);
 
   const handleInputChange = (value: string) => {
+    if (error) setError(undefined);
     dispatch({ type: 'SET_VALUE', payload: value });
   };
 
-  const handleInputSubmit = () => {
+  const handleInputSubmit = async () => {
     if (state.value.trim() && !state.isProcessing) {
+      setError(undefined);
       dispatch({ type: 'SET_PROCESSING', payload: true });
 
       console.log('Processing input:', state.value);
-
-      dispatch({ type: 'CLEAR_VALUE' });
-
-      setTimeout(() => {
+      
+      try {
+        const result = await runWorkflow(state.value);
+        console.log('Workflow result:', result);
+        
+        if (result.scheduled) {
+          console.log('Task scheduled for later execution');
+        }
+        
+        if (result.secondsUntilNextWorkflow && result.nextWorkflowPrompt) {
+          console.log(`Next workflow in ${result.secondsUntilNextWorkflow} seconds: ${result.nextWorkflowPrompt}`);
+        }
+      } catch (error) {
+        console.error('Error running workflow:', error);
+        setError(error instanceof Error ? error.message : 'Unknown error occurred');
+      } finally {
+        dispatch({ type: 'CLEAR_VALUE' });
         dispatch({ type: 'SET_PROCESSING', payload: false });
-      }, 2000);
+      }
     }
   };
 
@@ -116,6 +133,7 @@ const BodyArea: React.FC = () => {
         handleInputChange={handleInputChange}
         handleInputSubmit={handleInputSubmit}
         currentTask={currentTask}
+        error={error}
       />
       <TasksArea
         tasks={tasks}

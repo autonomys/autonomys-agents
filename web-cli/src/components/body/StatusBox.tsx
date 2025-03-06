@@ -13,6 +13,11 @@ const StatusBox: React.FC<StatusBoxProps> = ({ status }) => {
         </div>
       ) : status === 'Ready' ? (
         <div className='status-content status-ready'>Ready for input</div>
+      ) : status.startsWith('Error:') ? (
+        <div className='status-content status-error'>
+          <div className='status-label'>Error</div>
+          <div className='status-message'>{status.substring(7)}</div>
+        </div>
       ) : (
         <div className='status-content'>{status}</div>
       )}
