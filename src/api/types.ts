@@ -1,6 +1,7 @@
 import { Express } from 'express';
 import { Server } from 'http';
 import { OrchestratorRunner } from '../agents/workflows/orchestrator/orchestratorWorkflow.js';
+import { Logger } from 'winston';
 
 export interface ApiServer {
   app: Express;
@@ -13,8 +14,7 @@ export interface ApiServer {
     runner: OrchestratorRunner;
   };
   broadcastLog: (namespace: string, level: string, message: string, meta?: LogMetadata) => void;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  attachLogger: (logger: any, namespace: string) => any;
+  attachLogger: (logger: Logger, namespace: string) => Logger;
   getRegisteredNamespaces: () => string[];
 }
 
