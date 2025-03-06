@@ -20,6 +20,8 @@ import {
   PruningParameters,
 } from './types.js';
 import { attachLogger } from '../../../api/server.js';
+import { createTaskQueue } from './scheduler/taskQueue.js';
+import { ScheduledTask, TaskQueue } from './scheduler/types.js';
 
 const handleConditionalEdge = async (
   state: OrchestratorStateType,
@@ -81,6 +83,13 @@ export type OrchestratorRunner = Readonly<{
     input?: OrchestratorInput,
     options?: { threadId?: string },
   ) => Promise<FinishedWorkflow>;
+
+  // Scheduled task management methods
+  scheduleTask: (message: string, executeAt: Date) => ScheduledTask;
+  getNextDueTask: () => ScheduledTask | undefined;
+  getTaskQueue: () => ReturnType<TaskQueue['getAllTasks']>;
+  getTimeUntilNextTask: () => { nextTask?: ScheduledTask; msUntilNext: number | null };
+  deleteTask: (id: string) => void;
 }>;
 
 const defaultModelConfiguration: LLMConfiguration = {
@@ -170,6 +179,9 @@ export const createOrchestratorRunner = async (
   const memoryStore = new MemorySaver();
   const app = workflow.compile({ checkpointer: memoryStore });
 
+  const namespace = runnerConfig.namespace || 'orchestrator';
+  const taskQueue = createTaskQueue(namespace);
+
   return {
     runWorkflow: async (
       input?: OrchestratorInput,
@@ -224,9 +236,12 @@ export const createOrchestratorRunner = async (
         );
 
         const workflowSummary = `This action finished running at ${new Date().toISOString()}. Action summary: ${summary}`;
+        const result = { summary: workflowSummary, schedule };
+
+        taskQueue.updateTaskStatus(taskQueue.currentTask?.id || '', 'completed', result);
 
         runnerConfig.vectorStore.close();
-        return { summary: workflowSummary, schedule };
+        return result;
       } else {
         workflowLogger.error('Workflow completed but no finished workflow data found', {
           finalState,
@@ -235,6 +250,26 @@ export const createOrchestratorRunner = async (
         runnerConfig.vectorStore.close();
         return { summary: 'Extracting workflow data failed' };
       }
+    },
+
+    scheduleTask: (message: string, executeAt: Date): ScheduledTask => {
+      return taskQueue.scheduleTask(message, executeAt);
+    },
+
+    getNextDueTask: (): ScheduledTask | undefined => {
+      return taskQueue.getNextDueTask();
+    },
+
+    getTaskQueue: () => {
+      return taskQueue.getAllTasks();
+    },
+
+    getTimeUntilNextTask: () => {
+      return taskQueue.getTimeUntilNextTask();
+    },
+
+    deleteTask: (id: string) => {
+      return taskQueue.deleteTask(id);
     },
   };
 };
