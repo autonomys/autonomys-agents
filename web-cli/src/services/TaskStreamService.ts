@@ -1,8 +1,6 @@
 import { ScheduledTask } from '../types/types';
 
-/* eslint-disable no-undef */
 const API_PORT = process.env.REACT_APP_API_PORT || '3001';
-/* eslint-enable no-undef */
 const API_BASE_URL = `http://localhost:${API_PORT}/api`;
 
 const DEFAULT_NAMESPACE = 'orchestrator';
@@ -112,7 +110,7 @@ export const connectToTaskStream = (namespace: string = DEFAULT_NAMESPACE): void
             // Notify all registered callbacks
             taskCallbacks.forEach(callback => callback(tasks));
           }
-          
+
           // Handle current task
           if (data.tasks?.current) {
             const currentTask = data.tasks.current;
@@ -121,9 +119,9 @@ export const connectToTaskStream = (namespace: string = DEFAULT_NAMESPACE): void
               time: new Date(currentTask.scheduledFor),
               description: currentTask.message,
               startedAt: currentTask.startedAt ? new Date(currentTask.startedAt) : undefined,
-              status: currentTask.status
+              status: currentTask.status,
             };
-            
+
             console.log('Current task detected:', mappedTask);
             currentTaskCallbacks.forEach(callback => callback(mappedTask));
           } else if (data.tasks && !data.tasks.current) {
@@ -185,12 +183,12 @@ export const subscribeToTaskUpdates = (callback: TaskUpdateCallback): (() => voi
 
 export const subscribeToCurrentTask = (callback: CurrentTaskUpdateCallback): (() => void) => {
   currentTaskCallbacks.push(callback);
-  
+
   // Initialize connection if not already done
   if (!isInitialized || connectionStatus === ConnectionStatus.DISCONNECTED) {
     connectToTaskStream();
   }
-  
+
   return () => {
     const index = currentTaskCallbacks.indexOf(callback);
     if (index !== -1) {

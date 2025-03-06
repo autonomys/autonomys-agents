@@ -286,9 +286,15 @@
 }
 
 @keyframes pulse {
-  0% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.2); }
-  70% { box-shadow: 0 0 0 6px rgba(59, 130, 246, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
+  0% {
+    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.2);
+  }
+  70% {
+    box-shadow: 0 0 0 6px rgba(59, 130, 246, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0);
+  }
 }
 
 .status-label {
@@ -301,7 +307,7 @@
 }
 
 .status-label::before {
-  content: "";
+  content: '';
   display: inline-block;
   width: 8px;
   height: 8px;
@@ -312,9 +318,15 @@
 }
 
 @keyframes blink {
-  0% { opacity: 0.4; }
-  50% { opacity: 1; }
-  100% { opacity: 0.4; }
+  0% {
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.4;
+  }
 }
 
 .status-message {
@@ -550,7 +562,7 @@
 }
 
 .status-ready::before {
-  content: "•";
+  content: '•';
   color: #22c55e;
   font-size: 24px;
   margin-right: 8px;
@@ -582,7 +594,7 @@
 }
 
 .status-error .status-label::before {
-  content: "";
+  content: '';
   display: inline-block;
   width: 8px;
   height: 8px;

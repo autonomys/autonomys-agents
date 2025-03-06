@@ -39,11 +39,11 @@ const BodyArea: React.FC = () => {
       console.log(`Connection status changed to: ${status}`);
       setConnectionStatus(status);
 
-      if (status === ConnectionStatus.CONNECTED && loading) {
+      if (status === ConnectionStatus.CONNECTED) {
         setLoading(false);
       }
     });
-    
+
     const unsubscribeFromCurrentTask = subscribeToCurrentTask(task => {
       console.log('Current task update:', task);
       setCurrentTask(task);
@@ -69,17 +69,19 @@ const BodyArea: React.FC = () => {
       dispatch({ type: 'SET_PROCESSING', payload: true });
 
       console.log('Processing input:', state.value);
-      
+
       try {
         const result = await runWorkflow(state.value);
         console.log('Workflow result:', result);
-        
+
         if (result.scheduled) {
           console.log('Task scheduled for later execution');
         }
-        
+
         if (result.secondsUntilNextWorkflow && result.nextWorkflowPrompt) {
-          console.log(`Next workflow in ${result.secondsUntilNextWorkflow} seconds: ${result.nextWorkflowPrompt}`);
+          console.log(
+            `Next workflow in ${result.secondsUntilNextWorkflow} seconds: ${result.nextWorkflowPrompt}`,
+          );
         }
       } catch (error) {
         console.error('Error running workflow:', error);
