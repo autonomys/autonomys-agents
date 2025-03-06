@@ -4,7 +4,6 @@ import { ToolNode } from '@langchain/langgraph/prebuilt';
 import { LLMConfiguration } from '../../../services/llm/types.js';
 import { VectorDB } from '../../../services/vectorDb/VectorDB.js';
 import { WorkflowControl } from './nodes/inputPrompt.js';
-import { ApiServer } from '../../../api/types.js';
 import { Logger } from 'winston';
 
 export type OrchestratorPrompts = {
@@ -56,7 +55,7 @@ export type OrchestratorConfig = {
   saveExperiences: boolean;
   monitoring: MonitoringConfig;
   recursionLimit: number;
-  api?: ApiServer;
+  logger?: Logger;
 };
 
 export type OrchestratorInput = {

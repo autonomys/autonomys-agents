@@ -56,7 +56,7 @@ const handleConditionalEdge = async (
 const createOrchestratorWorkflow = async (
   nodes: Awaited<ReturnType<typeof createNodes>>,
   pruningParameters: PruningParameters,
-  workflowLogger: winston.Logger,
+  workflowLogger: Logger,
 ) => {
   const workflow = new StateGraph(OrchestratorState(pruningParameters))
     .addNode('input', nodes.inputNode)
@@ -141,7 +141,7 @@ const createOrchestratorRunnerConfig = async (
     modelConfigurations,
     prompts,
     monitoring,
-    api: options?.api,
+    logger: options?.logger,
   };
 };
 
@@ -151,7 +151,6 @@ export const createOrchestratorRunner = async (
 ): Promise<OrchestratorRunner> => {
   const runnerConfig = await createOrchestratorRunnerConfig(character, options);
 
-  // Use the injected logger if provided, otherwise create a default one
   const workflowLogger =
     options?.logger || createLogger(`orchestrator-workflow-${runnerConfig.namespace}`);
 

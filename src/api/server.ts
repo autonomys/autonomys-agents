@@ -4,6 +4,7 @@ import { createLogger } from '../utils/logger.js';
 import { OrchestratorRunner } from '../agents/workflows/orchestrator/orchestratorWorkflow.js';
 import { ApiServer, LogMetadata } from './types.js';
 import { config } from '../config/index.js';
+import { Logger } from 'winston';
 const logger = createLogger('api-server');
 
 const logStreamClients = new Map<number, { res: Response; namespace: string }>();
@@ -78,26 +79,19 @@ const createSingletonApiServer = (): ApiServer => {
     });
   };
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const attachLogger = (existingLogger: any, namespace: string) => {
-    const originalInfo = existingLogger.info;
-    const originalDebug = existingLogger.debug;
-    const originalError = existingLogger.error;
-
-    existingLogger.info = (msg: string, meta?: LogMetadata) => {
-      originalInfo.call(existingLogger, msg, meta);
-      broadcastLog(namespace, 'info', msg, meta);
+  const attachLogger = (existingLogger: Logger, namespace: string): Logger => {
+    type LoggerMethod = (message: string | object, ...meta: unknown[]) => Logger;
+    const wrapLoggerMethod = (level: string, method: LoggerMethod): LoggerMethod => {
+      return function (this: Logger, message: string | object, ...meta: unknown[]): Logger {
+        const result = method.apply(this, [message, ...meta]);
+        broadcastLog(namespace, level, String(message), meta[0] as LogMetadata);
+        return result;
+      };
     };
 
-    existingLogger.debug = (msg: string, meta?: LogMetadata) => {
-      originalDebug.call(existingLogger, msg, meta);
-      broadcastLog(namespace, 'debug', msg, meta);
-    };
-
-    existingLogger.error = (msg: string, meta?: LogMetadata) => {
-      originalError.call(existingLogger, msg, meta);
-      broadcastLog(namespace, 'error', msg, meta);
-    };
+    existingLogger.info = wrapLoggerMethod('info', existingLogger.info);
+    existingLogger.debug = wrapLoggerMethod('debug', existingLogger.debug);
+    existingLogger.error = wrapLoggerMethod('error', existingLogger.error);
 
     return existingLogger;
   };
@@ -141,28 +135,22 @@ export const broadcastLog = (
   }
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const attachLogger = (logger: any, namespace: string) => {
+export const attachLogger = (logger: Logger, namespace: string) => {
   const api = createApiServer();
   return api.attachLogger(logger, namespace);
 };
 
-// Helper function to create orchestrator options with API integration
-export const withApiIntegration = (api: ApiServer, baseOptions: any = {}) => {
-  const namespace = baseOptions.namespace || 'orchestrator';
-
-  // Create a logger with API integration
+// Helper function
+export const withApiLogger = (namespace: string) => {
   const logger = createLogger(`orchestrator-workflow-${namespace}`);
   const enhancedLogger = attachLogger(logger, namespace);
 
   return {
-    ...baseOptions,
-    api,
     logger: enhancedLogger,
   };
 };
 
-// Helper function to register a runner with the API after it's created
+// Helper function
 export const registerRunnerWithApi = async (
   runnerPromise: Promise<OrchestratorRunner>,
   api: ApiServer,

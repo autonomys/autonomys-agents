@@ -61,7 +61,7 @@ const prefixOutput = (prefix: string, color: string, data: Buffer) => {
   }
 }
 
-const backendProcess = spawn('tsx', ['--no-cache', '--watch', 'src/index.ts', ...(characterArg ? [characterArg] : [])], {
+const agentProcess = spawn('tsx', ['--no-cache', '--watch', 'src/index.ts', ...(characterArg ? [characterArg] : [])], {
   cwd: rootDir, 
   env: { ...process.env, NODE_ENV: 'development' },
   shell: true,
@@ -78,14 +78,14 @@ const webCliProcess = spawn('yarn', ['start'], {
   shell: true,
 });
 
-backendProcess.stdout.on('data', (data) => prefixOutput('backend', colors.blue, data));
-backendProcess.stderr.on('data', (data) => prefixOutput('backend', colors.blue, data));
+agentProcess.stdout.on('data', (data) => prefixOutput('agent', colors.blue, data));
+agentProcess.stderr.on('data', (data) => prefixOutput('agent', colors.blue, data));
 
 webCliProcess.stdout.on('data', (data) => prefixOutput('web-cli', colors.green, data));
 webCliProcess.stderr.on('data', (data) => prefixOutput('web-cli', colors.green, data));
 
 const cleanup = () => {
-  backendProcess.kill();
+  agentProcess.kill();
   webCliProcess.kill();
   process.exit();
 };
@@ -93,8 +93,8 @@ const cleanup = () => {
 process.on('SIGINT', cleanup);
 process.on('SIGTERM', cleanup);
 
-backendProcess.on('error', (error) => {
-  console.error(`Backend process error: ${error.message}`);
+agentProcess.on('error', (error) => {
+  console.error(`Agent process error: ${error.message}`);
   cleanup();
 });
 
@@ -103,8 +103,8 @@ webCliProcess.on('error', (error) => {
   cleanup();
 });
 
-backendProcess.on('exit', (code) => {
-  console.log(`Backend process exited with code ${code}`);
+agentProcess.on('exit', (code) => {
+  console.log(`Agent process exited with code ${code}`);
   cleanup();
 });
 
