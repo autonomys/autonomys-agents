@@ -6,6 +6,8 @@ const logger = createLogger('task-scheduler');
 
 const taskQueues = new Map<string, TaskQueue>();
 
+const MAX_COMPLETED_TASKS = 50;
+
 export const createTaskQueue = (namespace: string): TaskQueue => {
   if (taskQueues.get(namespace)) {
     return taskQueues.get(namespace) as TaskQueue;
@@ -153,7 +155,7 @@ export const createTaskQueue = (namespace: string): TaskQueue => {
       return {
         current: currentTask,
         scheduled: this.scheduledTasks,
-        completed: [...completedTasks],
+        completed: [...completedTasks].slice(-MAX_COMPLETED_TASKS),
       };
     },
 
