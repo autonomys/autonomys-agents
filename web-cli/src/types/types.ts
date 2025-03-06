@@ -1,10 +1,7 @@
 export interface AppState {
   value: string;
   isProcessing: boolean;
-  scheduledTasks: Array<{
-    time: Date;
-    description: string;
-  }>;
+  scheduledTasks: Array<ScheduledTask>;
 }
 
 export interface WorkflowResult {
@@ -29,11 +26,8 @@ export interface InputBoxProps {
 }
 
 export interface ScheduledTasksBoxProps {
-  tasks: Array<{
-    time: Date;
-    description: string;
-  }>;
-  onDeleteTask: (index: number) => void;
+  tasks: Array<ScheduledTask>;
+  onDeleteTask: (id: string) => void;
 }
 
 export interface CharacterBoxProps {
@@ -51,4 +45,10 @@ export interface EventSourceMessage {
   level?: string;
   message: string;
   meta?: any;
+}
+
+export interface ScheduledTask {
+  id: string;
+  time: Date;
+  description: string;
 }

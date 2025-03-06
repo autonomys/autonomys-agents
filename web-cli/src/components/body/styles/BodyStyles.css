@@ -403,3 +403,68 @@
 .refresh-icon {
   display: inline-block;
 }
+
+.loading-indicator {
+  margin-top: 10px;
+  text-align: center;
+  font-style: italic;
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.task-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.task-header h3 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: bold;
+}
+
+.connection-status {
+  display: flex;
+  align-items: center;
+  font-size: 0.8rem;
+  padding: 3px 8px;
+  border-radius: 4px;
+}
+
+.connection-status-connected {
+  background-color: #d4edda;
+  color: #155724;
+}
+
+.connection-status-connecting {
+  background-color: #fff3cd;
+  color: #856404;
+}
+
+.connection-status-disconnected {
+  background-color: #f8d7da;
+  color: #721c24;
+}
+
+.connection-status-error {
+  background-color: #f8d7da;
+  color: #721c24;
+}
+
+.reconnect-button {
+  margin-left: 8px;
+  padding: 2px 6px;
+  font-size: 0.75rem;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.reconnect-button:hover {
+  background-color: #0069d9;
+}
