@@ -4,6 +4,7 @@ import { ToolNode } from '@langchain/langgraph/prebuilt';
 import { LLMConfiguration } from '../../../services/llm/types.js';
 import { VectorDB } from '../../../services/vectorDb/VectorDB.js';
 import { WorkflowControl } from './nodes/inputPrompt.js';
+import { Logger } from 'winston';
 
 export type OrchestratorPrompts = {
   inputPrompt: ChatPromptTemplate;
@@ -41,6 +42,7 @@ export type OrchestratorRunnerOptions = {
   saveExperiences?: boolean;
   monitoring?: MonitoringOptions;
   recursionLimit?: number;
+  logger?: Logger;
 };
 
 export type OrchestratorConfig = {
@@ -53,6 +55,7 @@ export type OrchestratorConfig = {
   saveExperiences: boolean;
   monitoring: MonitoringConfig;
   recursionLimit: number;
+  logger?: Logger;
 };
 
 export type OrchestratorInput = {

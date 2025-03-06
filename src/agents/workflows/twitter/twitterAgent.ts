@@ -6,11 +6,13 @@ import { TwitterApi } from '../../../services/twitter/types.js';
 import { VectorDB } from '../../../services/vectorDb/VectorDB.js';
 import { createLogger } from '../../../utils/logger.js';
 import { createAllTwitterTools } from '../../tools/twitter/index.js';
-import { getOrchestratorRunner } from '../orchestrator/orchestratorWorkflow.js';
+import { createOrchestratorRunner } from '../orchestrator/orchestratorWorkflow.js';
 import { cleanTwitterMessageData } from './cleanMessages.js';
 import { createTwitterPrompts } from './prompts.js';
 import { TwitterAgentConfig, TwitterAgentOptions } from './types.js';
 import { LLMConfiguration } from '../../../services/llm/types.js';
+import { createApiServer, registerRunnerWithApi, withApiLogger } from '../../../api/server.js';
+
 const logger = createLogger('twitter-workflow');
 
 const defaultModelConfig: LLMConfiguration = {
@@ -73,14 +75,15 @@ export const createTwitterAgent = (
           monitoring,
           recursionLimit,
         } = createTwitterAgentConfig(options);
-
+        const apiServer = createApiServer();
         const messages = [new HumanMessage(instructions)];
         const namespace = 'twitter';
 
         const vectorStore = new VectorDB(namespace);
         const twitterTools = createAllTwitterTools(twitterApi, maxThreadDepth, postTweets);
         const prompts = await createTwitterPrompts(character, twitterApi.username);
-        const runner = await getOrchestratorRunner(character, {
+
+        const runner = createOrchestratorRunner(character, {
           modelConfigurations,
           tools: [...twitterTools, ...tools],
           prompts,
@@ -89,8 +92,11 @@ export const createTwitterAgent = (
           saveExperiences,
           monitoring,
           recursionLimit,
+          ...withApiLogger(namespace),
         });
-        const result = await runner.runWorkflow(
+
+        const runnerPromise = await registerRunnerWithApi(runner, apiServer, namespace);
+        const result = await runnerPromise.runWorkflow(
           { messages },
           { threadId: 'twitter_workflow_state' },
         );

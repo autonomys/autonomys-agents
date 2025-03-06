@@ -3,6 +3,7 @@ import HeaderArea from './components/header/HeaderArea';
 import OutputLog from './components/body/OutputLog';
 import BodyArea from './components/body/BodyArea';
 import { AppProvider } from './context/AppContext';
+import { closeAll } from './services/LogService';
 import './App.css';
 
 function App() {
@@ -21,6 +22,7 @@ function App() {
     window.addEventListener('keydown', handleKeyDown);
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
+      closeAll();
     };
   }, []);
 
