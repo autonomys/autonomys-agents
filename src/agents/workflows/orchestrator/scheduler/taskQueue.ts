@@ -1,6 +1,7 @@
 import { v4 as uuidv4 } from 'uuid';
 import { createLogger } from '../../../../utils/logger.js';
 import { ScheduledTask, TaskQueue } from './types.js';
+import { broadcastTaskUpdate } from '../../../../api/server.js';
 
 const logger = createLogger('task-scheduler');
 
@@ -138,6 +139,8 @@ export const createTaskQueue = (namespace: string): TaskQueue => {
           logger.warn(`Tried to update unknown task: ${id} in namespace: ${namespace}`);
         }
       }
+
+      broadcastTaskUpdate(namespace);
     },
 
     deleteTask(id: string): void {

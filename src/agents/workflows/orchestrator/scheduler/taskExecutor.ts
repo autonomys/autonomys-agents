@@ -1,12 +1,13 @@
 import { createLogger } from '../../../../utils/logger.js';
 import { OrchestratorRunner } from '../orchestratorWorkflow.js';
 import { HumanMessage } from '@langchain/core/messages';
-
+import { broadcastTaskUpdate } from '../../../../api/server.js';
 const logger = createLogger('task-executor');
 
 export const startTaskExecutor = (
   runner: OrchestratorRunner,
-  checkIntervalMs = 10000,
+  namespace: string,
+  checkIntervalMs = 1000,
 ): (() => void) => {
   let running = true;
 
@@ -19,6 +20,7 @@ export const startTaskExecutor = (
           scheduledFor: dueTask.scheduledFor.toISOString(),
           message: dueTask.message,
         });
+        broadcastTaskUpdate(namespace);
 
         const result = await runner.runWorkflow(
           {
@@ -31,6 +33,8 @@ export const startTaskExecutor = (
         logger.info(`Task ${dueTask.id} completed successfully`, {
           result,
         });
+
+        broadcastTaskUpdate(namespace);
       }
     } catch (error: unknown) {
       logger.error('Error executing scheduled task', {
@@ -50,15 +54,6 @@ export const startTaskExecutor = (
 
         setTimeout(scheduleNextRun, 100);
       } else if (nextTask && msUntilNext !== null) {
-        logger.info(
-          `Next task scheduled for ${nextTask.scheduledFor.toISOString()} (in ${Math.floor(msUntilNext / 1000)} seconds)`,
-          {
-            taskId: nextTask.id,
-            message:
-              nextTask.message.substring(0, 100) + (nextTask.message.length > 100 ? '...' : ''),
-          },
-        );
-
         const nextCheckIn = Math.min(msUntilNext, checkIntervalMs);
         setTimeout(scheduleNextRun, nextCheckIn);
       } else {

@@ -1,7 +1,6 @@
 import { Request, Response } from 'express';
 import asyncHandler from 'express-async-handler';
-import { HumanMessage } from '@langchain/core/messages';
-import { broadcastTaskUpdateUtility } from './TaskController.js';
+import { broadcastTaskUpdate } from '../server.js';
 import { createLogger } from '../../utils/logger.js';
 import { orchestratorRunners } from './StateController.js';
 import { OrchestratorRunner } from '../../agents/workflows/orchestrator/orchestratorWorkflow.js';
@@ -23,23 +22,11 @@ export const executeWorkflow = asyncHandler(async (req: Request, res: Response) 
     return;
   }
 
-  if (runner.getTaskQueue().current) {
-    runner.scheduleTask(message, new Date(Date.now()));
-    broadcastTaskUpdateUtility(namespace);
-    res.status(409).json({ error: 'workflow already running, schedule a task instead' });
-    return;
-  }
-
-  logger.info(`Starting workflow execution for namespace: ${namespace}`);
-
-  const result = await runner.runWorkflow(
-    { messages: [new HumanMessage(message)] },
-    { threadId: `api-${namespace}-${Date.now()}` },
-  );
+  runner.scheduleTask(message, new Date(Date.now()));
+  broadcastTaskUpdate(namespace);
 
   res.status(200).json({
     status: 'success',
-    result,
   });
 });
 

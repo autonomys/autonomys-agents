@@ -5,6 +5,5 @@ export const createWorkflowsRouter = (): Router => {
   const router = Router();
 
   router.post('/:namespace/run', executeWorkflow);
-
   return router;
 };

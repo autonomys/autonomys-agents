@@ -1,6 +1,6 @@
 import React from 'react';
-import { ConnectionStatus } from '../../../services/TaskStreamService';
-import '../styles/BodyStyles.css';
+import { ConnectionStatus } from '../services/TaskStreamService';
+import './styles/BodyStyles.css';
 
 interface ConnectionStatusProps {
   connectionStatus: ConnectionStatus;
