@@ -1,9 +1,5 @@
 import { EventSourceMessage } from '../types/types';
-
-/* eslint-disable no-undef */
-const API_PORT = process.env.REACT_APP_API_PORT || '3001';
-/* eslint-enable no-undef */
-const API_BASE_URL = `http://localhost:${API_PORT}/api`;
+import { API_BASE_URL } from './Api';
 
 const eventSources = new Map<string, any>();
 const messageCallbacks: Array<(message: EventSourceMessage) => void> = [];

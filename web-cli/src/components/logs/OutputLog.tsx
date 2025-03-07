@@ -1,9 +1,9 @@
 import React, { useEffect } from 'react';
 import { OutputLogProps } from '../../types/types';
-import './styles/OutputLog.css';
+import '../styles/OutputLog.css';
 import { useNamespaces } from '../../hooks/useNamespaces';
 import { useLogMessages } from '../../hooks/useLogMessages';
-import NamespaceTabs from './NamespaceTabs';
+import NamespaceTabs from '../NamespaceTabs';
 import LogMessageList from './LogMessageList';
 
 const OutputLog: React.FC<OutputLogProps> = ({ messages }) => {

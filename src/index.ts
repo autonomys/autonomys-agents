@@ -38,7 +38,7 @@ const main = async () => {
     logger.info(`Initial task scheduled for ${initialTaskTime.toISOString()}`);
 
     logger.info('Starting task executor...');
-    const _stopTaskExecutor = startTaskExecutor(runner);
+    const _stopTaskExecutor = startTaskExecutor(runner, 'orchestrator');
 
     logger.info('Application initialized and ready to process scheduled tasks');
     return new Promise(() => {});

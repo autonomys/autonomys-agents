@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import HeaderArea from './components/header/HeaderArea';
-import OutputLog from './components/body/OutputLog';
-import BodyArea from './components/body/BodyArea';
+import OutputLog from './components/logs/OutputLog';
+import BodyArea from './components/BodyArea';
 import { AppProvider } from './context/AppContext';
 import { closeAll } from './services/LogService';
 import './App.css';

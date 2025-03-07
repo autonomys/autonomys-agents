@@ -14,6 +14,7 @@ export interface ApiServer {
     runner: OrchestratorRunner;
   };
   broadcastLog: (namespace: string, level: string, message: string, meta?: LogMetadata) => void;
+  broadcastTaskUpdate: (namespace: string) => void;
   attachLogger: (logger: Logger, namespace: string) => Logger;
   getRegisteredNamespaces: () => string[];
 }

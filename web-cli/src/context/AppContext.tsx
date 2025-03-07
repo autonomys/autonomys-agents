@@ -1,25 +1,21 @@
 import React, { createContext, useContext, useReducer, ReactNode } from 'react';
-import { AppState } from '../types/types';
+import { AppState, ScheduledTask } from '../types/types';
 
 const initialState: AppState = {
   value: '',
-  isProcessing: false,
   scheduledTasks: [],
 };
 
 type ActionType =
   | { type: 'SET_VALUE'; payload: string }
-  | { type: 'SET_PROCESSING'; payload: boolean }
-  | { type: 'ADD_SCHEDULED_TASK'; payload: { time: Date; description: string } }
-  | { type: 'REMOVE_SCHEDULED_TASK'; payload: number }
+  | { type: 'ADD_SCHEDULED_TASK'; payload: ScheduledTask }
+  | { type: 'REMOVE_SCHEDULED_TASK'; payload: string }
   | { type: 'CLEAR_VALUE' };
 
 const appReducer = (state: AppState, action: ActionType): AppState => {
   switch (action.type) {
     case 'SET_VALUE':
       return { ...state, value: action.payload };
-    case 'SET_PROCESSING':
-      return { ...state, isProcessing: action.payload };
     case 'ADD_SCHEDULED_TASK':
       return {
         ...state,
@@ -28,7 +24,7 @@ const appReducer = (state: AppState, action: ActionType): AppState => {
     case 'REMOVE_SCHEDULED_TASK':
       return {
         ...state,
-        scheduledTasks: state.scheduledTasks.filter((_, index) => index !== action.payload),
+        scheduledTasks: state.scheduledTasks.filter(task => task.id !== action.payload),
       };
     case 'CLEAR_VALUE':
       return { ...state, value: '' };
