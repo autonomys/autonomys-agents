@@ -39,6 +39,10 @@ const twitterConfigSchema = z.object({
   model_configurations: modelConfigurationsSchema.optional(),
 });
 
+const slackConfigSchema = z.object({
+  SLACK_APP_TOKEN: z.string().optional(),
+});
+
 const autoDriveConfigSchema = z
   .object({
     AUTO_DRIVE_API_KEY: z.string().optional(),
@@ -129,6 +133,7 @@ export const configSchema = z.object({
   memoryConfig: memoryConfigSchema,
   characterConfig: characterConfigSchema,
   orchestratorConfig: orchestratorConfigSchema,
+  slackConfig: slackConfigSchema,
   SERPAPI_API_KEY: SERPAPI_API_KEY,
   NODE_ENV: z.enum(['development', 'production', 'test']),
   API_PORT: z.number().int().positive().default(3001),
