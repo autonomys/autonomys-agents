@@ -23,6 +23,9 @@ export const getVectorDB = (namespace: string, maxElements?: number): VectorDB =
     // This should not happen given the logic above, but handling for type safety
     throw new Error(`Failed to initialize or retrieve VectorDB for namespace: ${namespace}`);
   }
+  if (!db.isOpen()) {
+    db.open();
+  }
   return db;
 };
 
