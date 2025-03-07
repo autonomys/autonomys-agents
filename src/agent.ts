@@ -9,6 +9,7 @@ import { createTwitterAgent } from './agents/workflows/twitter/twitterAgent.js';
 import { config } from './config/index.js';
 import { createTwitterApi } from './services/twitter/client.js';
 import { createApiServer, registerRunnerWithApi, withApiLogger } from './api/server.js';
+import { createSlackTools } from './agents/tools/slack/index.js';
 
 const character = config.characterConfig;
 const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
@@ -31,12 +32,17 @@ const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
     modelConfigurations: config.twitterConfig.model_configurations,
   });
 
+  //If slack api key is provided, add slack tools
+  const slackTools = config.slackConfig.SLACK_APP_TOKEN
+    ? await createSlackTools(config.slackConfig.SLACK_APP_TOKEN)
+    : [];
+
   //Orchestrator config
   const prompts = await createPrompts(character, { selfSchedule: true });
 
   return {
     modelConfigurations: config.orchestratorConfig.model_configurations,
-    tools: [twitterAgentTool, ...webSearchTool],
+    tools: [twitterAgentTool, ...webSearchTool, ...slackTools],
     prompts,
     saveExperiences,
     monitoring: {
