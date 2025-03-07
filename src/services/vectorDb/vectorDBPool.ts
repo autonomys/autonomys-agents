@@ -18,7 +18,12 @@ export const getVectorDB = (namespace: string, maxElements?: number): VectorDB =
     const db = new VectorDB(namespace, maxElements);
     dbInstances.set(namespace, db);
   }
-  return dbInstances.get(namespace)!;
+  const db = dbInstances.get(namespace);
+  if (!db) {
+    // This should not happen given the logic above, but handling for type safety
+    throw new Error(`Failed to initialize or retrieve VectorDB for namespace: ${namespace}`);
+  }
+  return db;
 };
 
 /**
