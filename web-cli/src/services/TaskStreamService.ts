@@ -41,15 +41,12 @@ let isInitialized = false;
 // Max backoff delay is ~5 minutes (300000ms)
 const MAX_RECONNECT_DELAY = 300000;
 
-// Set connection status and notify listeners
 const setConnectionStatus = (status: ConnectionStatus) => {
   connectionStatus = status;
   connectionStatusCallbacks.forEach(callback => callback(status));
 };
 
-// Exponential backoff for reconnection attempts
 const getReconnectDelay = () => {
-  // Start with 1 second, then exponential backoff with some randomness
   const delay = Math.min(
     1000 * Math.pow(1.5, reconnectAttempts) + Math.random() * 1000,
     MAX_RECONNECT_DELAY,
@@ -60,13 +57,11 @@ const getReconnectDelay = () => {
 export const connectToTaskStream = (namespace: string = DEFAULT_NAMESPACE): void => {
   console.log(`Attempting to connect to task stream for namespace: ${namespace}`);
 
-  // Clear any existing reconnect timeout
   if (reconnectTimeout) {
     clearTimeout(reconnectTimeout);
     reconnectTimeout = null;
   }
 
-  // Close existing connection if any
   if (taskEventSource) {
     taskEventSource.close();
     taskEventSource = null;
@@ -76,7 +71,6 @@ export const connectToTaskStream = (namespace: string = DEFAULT_NAMESPACE): void
   setConnectionStatus(ConnectionStatus.CONNECTING);
 
   try {
-    // Correct URL path to match the API routes structure
     const url = `${API_BASE_URL}/${namespace}/taskStream`;
     console.log(`Connecting to task stream at: ${url}`);
 
@@ -85,7 +79,7 @@ export const connectToTaskStream = (namespace: string = DEFAULT_NAMESPACE): void
     taskEventSource.onopen = () => {
       console.log(`Connected to task stream for namespace: ${namespace}`);
       setConnectionStatus(ConnectionStatus.CONNECTED);
-      reconnectAttempts = 0; // Reset reconnect attempts on successful connection
+      reconnectAttempts = 0;
     };
 
     taskEventSource.onmessage = event => {
@@ -94,9 +88,7 @@ export const connectToTaskStream = (namespace: string = DEFAULT_NAMESPACE): void
         const data = JSON.parse(event.data) as TaskEventMessage;
 
         if (data.type === 'tasks') {
-          // Handle scheduled tasks
           if (data.tasks?.scheduled) {
-            // Map API tasks to our app's task format
             const tasks = data.tasks.scheduled
               .map((task: any) => ({
                 id: task.id,
@@ -111,7 +103,6 @@ export const connectToTaskStream = (namespace: string = DEFAULT_NAMESPACE): void
             taskCallbacks.forEach(callback => callback(tasks));
           }
 
-          // Handle current task
           if (data.tasks?.current) {
             const currentTask = data.tasks.current;
             const mappedTask: ScheduledTask = {
@@ -140,7 +131,6 @@ export const connectToTaskStream = (namespace: string = DEFAULT_NAMESPACE): void
       taskEventSource = null;
       setConnectionStatus(ConnectionStatus.ERROR);
 
-      // Try to reconnect with exponential backoff
       reconnectAttempts++;
       const delay = getReconnectDelay();
       console.log(
@@ -157,7 +147,6 @@ export const connectToTaskStream = (namespace: string = DEFAULT_NAMESPACE): void
     console.error('Failed to connect to task stream:', error);
     setConnectionStatus(ConnectionStatus.ERROR);
 
-    // Attempt to reconnect
     reconnectAttempts++;
     const delay = getReconnectDelay();
     reconnectTimeout = setTimeout(() => connectToTaskStream(activeNamespace), delay);
@@ -184,7 +173,6 @@ export const subscribeToTaskUpdates = (callback: TaskUpdateCallback): (() => voi
 export const subscribeToCurrentTask = (callback: CurrentTaskUpdateCallback): (() => void) => {
   currentTaskCallbacks.push(callback);
 
-  // Initialize connection if not already done
   if (!isInitialized || connectionStatus === ConnectionStatus.DISCONNECTED) {
     connectToTaskStream();
   }

@@ -24,7 +24,7 @@ export interface InputBoxProps {
   value: string;
   onChange: (value: string) => void;
   onSubmit: () => void;
-  disabled: boolean;
+  disabled?: boolean;
 }
 
 export interface ScheduledTasksBoxProps {

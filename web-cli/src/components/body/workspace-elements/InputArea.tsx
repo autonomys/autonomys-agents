@@ -21,14 +21,18 @@ const InputArea: React.FC<InputAreaProps> = ({
   currentTask,
   error,
 }) => {
-  // Determine the status text based on processing state and current task
+  // Determine the status text based on current task status
   const getStatusText = () => {
-    if (error) {
+    if (currentTask) {
+      // If the current task has a status, use it; otherwise show as "Running"
+      const taskStatus = currentTask.status || 'processing';
+      
+      // Capitalize the first letter of the status
+      const formattedStatus = taskStatus.charAt(0).toUpperCase() + taskStatus.slice(1);
+      
+      return `${formattedStatus}: ${currentTask.description}`;
+    } else if (error) {
       return `Error: ${error}`;
-    } else if (isProcessing) {
-      return 'Processing...';
-    } else if (currentTask) {
-      return `Running: ${currentTask.description}`;
     } else {
       return 'Ready';
     }
@@ -41,7 +45,6 @@ const InputArea: React.FC<InputAreaProps> = ({
         value={value}
         onChange={handleInputChange}
         onSubmit={handleInputSubmit}
-        disabled={isProcessing}
       />
     </div>
   );

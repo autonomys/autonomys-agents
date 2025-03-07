@@ -12,7 +12,7 @@ const InputBox: React.FC<InputBoxProps> = ({ value, onChange, onSubmit, disabled
 
   return (
     <div className='input-box'>
-      <h3>Input {disabled && '(Processing...)'}</h3>
+      <h3>Input</h3>
       <div className='input-container'>
         <textarea
           className='input-textarea'
@@ -21,7 +21,10 @@ const InputBox: React.FC<InputBoxProps> = ({ value, onChange, onSubmit, disabled
           onKeyDown={handleKeyDown}
           placeholder='Enter your message here...'
         />
-        <button className='submit-button' onClick={onSubmit} disabled={disabled || !value.trim()}>
+        <button 
+          className='submit-button' 
+          onClick={onSubmit} 
+        >
           Send
         </button>
       </div>

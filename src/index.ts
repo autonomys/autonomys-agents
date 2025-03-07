@@ -14,15 +14,9 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
-const initialMessage = `As a social media manager, you are expected to interact with twitter periodically in order to maintain social engagement. Use your judgement how frequently you should run these interactions and what you should do. You don't need do the same things every time.
+const initialMessage = `
+  ONLY fetch the time.
 
-  - Check your timeline for interesting conversations and join the conversation.
-  - Like interesting tweets.
-  - Follow interesting users.
-  - Check your mentions and reply to useful conversations that you haven't replied to yet.
-  - Post a new tweet.
-
-  Save all actions results and experiences from your interactions to Autonomy Network's DSN.
 `;
 
 const main = async () => {
@@ -31,14 +25,14 @@ const main = async () => {
     logger.info('Initializing orchestrator runner...');
     const runner = await orchestratorRunner();
 
-    const initialTaskTime = new Date();
-    initialTaskTime.setSeconds(initialTaskTime.getSeconds());
+    // const initialTaskTime = new Date();
+    // initialTaskTime.setSeconds(initialTaskTime.getSeconds());
 
-    runner.scheduleTask(initialMessage, initialTaskTime);
-    logger.info(`Initial task scheduled for ${initialTaskTime.toISOString()}`);
+    // runner.scheduleTask(initialMessage, initialTaskTime);
+    // logger.info(`Initial task scheduled for ${initialTaskTime.toISOString()}`);
 
     logger.info('Starting task executor...');
-    const _stopTaskExecutor = startTaskExecutor(runner);
+    const _stopTaskExecutor = startTaskExecutor(runner, 'orchestrator');
 
     logger.info('Application initialized and ready to process scheduled tasks');
     return new Promise(() => {});
