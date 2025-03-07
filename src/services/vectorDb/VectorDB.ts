@@ -11,7 +11,6 @@ const logger = createLogger('vector-database');
 export class VectorDB {
   private db!: Database.Database;
   private openai!: OpenAI;
-  private nextRowId!: number;
   private readonly indexFilePath: string;
   private readonly dbFilePath: string;
   private maxElements: number;
@@ -26,7 +25,6 @@ export class VectorDB {
 
     this.indexFilePath = join(targetDir, `${namespace}-index.bin`);
     this.dbFilePath = join(targetDir, `${namespace}-store.db`);
-    this.nextRowId = 1;
     this.maxElements = maxElements ?? VectorDB.DEFAULT_MAX_ELEMENTS;
     this.openai = new OpenAI({
       apiKey: config.llmConfig.OPENAI_API_KEY,
@@ -74,11 +72,7 @@ export class VectorDB {
       }
     }
 
-    const maxRowIdResult = this.db
-      .prepare('SELECT MAX(rowid) as maxId FROM content_store')
-      .get() as { maxId: number | null };
-    this.nextRowId = (maxRowIdResult?.maxId || 0) + 1;
-    logger.info(`Initialized with next rowid: ${this.nextRowId}`);
+    logger.info('VectorDB initialized successfully');
   }
 
   private createTables(): void {
@@ -90,7 +84,7 @@ export class VectorDB {
             );
             
             CREATE TABLE IF NOT EXISTS content_store (
-                rowid INTEGER PRIMARY KEY,
+                rowid INTEGER PRIMARY KEY AUTOINCREMENT,
                 content TEXT,
                 created_at TEXT
             );
@@ -110,22 +104,20 @@ export class VectorDB {
     }
   }
 
-  async insert(content: string, timestamp?: string): Promise<boolean> {
-    if (!content || content.trim().length === 0) {
-      throw new Error('Content cannot be empty');
-    }
-
+  private async insertChunk(content: string, timestamp: string): Promise<boolean> {
     const embedding = await this.getEmbedding(content);
 
     this.db.exec('BEGIN IMMEDIATE');
     try {
-      if (this.nextRowId > this.maxElements) {
+      // Check if we've reached the maximum number of elements
+      const countResult = this.db.prepare('SELECT COUNT(*) as count FROM content_store').get() as {
+        count: number;
+      };
+
+      if (countResult.count >= this.maxElements) {
+        // Delete the oldest record to make room
         const oldestRowId = this.db
-          .prepare(
-            `
-                    SELECT MIN(rowid) as min_id FROM content_store
-                `,
-          )
+          .prepare('SELECT MIN(rowid) as min_id FROM content_store')
           .get() as { min_id: number };
         const oldestId = Number(oldestRowId.min_id);
 
@@ -136,25 +128,26 @@ export class VectorDB {
           logger.error('Error during delete:', deleteError);
           throw deleteError;
         }
-
-        this.nextRowId = oldestId;
       }
 
-      const currentRowId = Number(this.nextRowId);
+      // Insert into content_store first and get the AUTOINCREMENT rowid
+      const contentStatement = this.db.prepare(`
+                INSERT INTO content_store (content, created_at)
+                VALUES (?, ?)
+            `);
+
+      const contentResult = contentStatement.run(content, timestamp);
+      const newRowId = contentResult.lastInsertRowid;
+
+      // Now insert into embeddings_index with the same rowid
       const vectorStatement = this.db.prepare(`
                 INSERT INTO embeddings_index (rowid, embedding_vector) 
                 VALUES (?, ?)
             `);
 
-      const contentStatement = this.db.prepare(`
-                INSERT INTO content_store (rowid, content, created_at)
-                VALUES (?, ?, ?)
-            `);
+      vectorStatement.run(newRowId, Buffer.from(new Float32Array(embedding).buffer));
 
-      vectorStatement.run(currentRowId, Buffer.from(new Float32Array(embedding).buffer));
-      contentStatement.run(currentRowId, content, timestamp ?? new Date().toISOString());
-      logger.info('Inserted content:', { content });
-      this.nextRowId++;
+      logger.info('Inserted content with rowid:', { rowid: newRowId, content });
       this.db.exec('COMMIT');
     } catch (error) {
       logger.error('Error during insert:', error);
@@ -165,72 +158,93 @@ export class VectorDB {
     return true;
   }
 
-  async search(
-    content: string,
-    limit: number = 5,
-  ): Promise<Array<{ rowid: number; distance: number; content: string }>> {
+  async insert(content: string, timestamp?: string): Promise<boolean> {
     if (!content || content.trim().length === 0) {
-      throw new Error('Search query cannot be empty');
+      throw new Error('Content cannot be empty');
     }
 
-    const embedding = await this.getEmbedding(content);
+    // Define max chunk size (approximately 7000 tokens, using ~4 chars per token estimate)
+    const MAX_CHUNK_SIZE = 28000;
+    const createdAt = timestamp ?? new Date().toISOString();
 
-    const integerLimit = parseInt(limit.toString(), 10);
-    logger.info(`Searching with limit: ${integerLimit}`);
+    // If content is within limits, process normally
+    if (content.length <= MAX_CHUNK_SIZE) {
+      return this.insertChunk(content, createdAt);
+    }
 
-    const statement = this.db.prepare(`
-            SELECT v.rowid, v.distance, c.content, c.created_at
-            FROM (
-                SELECT rowid, distance 
-                FROM embeddings_index 
-                WHERE knn_search(embedding_vector, knn_param(?, ${integerLimit}))
-            ) v
-            JOIN content_store c ON v.rowid = c.rowid
-        `);
+    // For long content, split into chunks and insert each
+    logger.info(`Content length ${content.length} exceeds limit. Splitting into chunks.`);
+    let position = 0;
+    let chunkCount = 0;
+    let success = true;
 
-    return statement.all(Buffer.from(new Float32Array(embedding).buffer)) as Array<{
-      rowid: number;
-      distance: number;
-      content: string;
-      created_at: string;
-    }>;
+    while (position < content.length) {
+      const chunkEnd = Math.min(position + MAX_CHUNK_SIZE, content.length);
+      const chunk = content.substring(position, chunkEnd);
+      chunkCount++;
+
+      // Add chunk number to metadata in content
+      const chunkContent = `[Chunk ${chunkCount}] ${chunk}`;
+
+      try {
+        const result = await this.insertChunk(chunkContent, createdAt);
+        if (!result) {
+          success = false;
+        }
+      } catch (error) {
+        logger.error(`Error inserting chunk ${chunkCount}:`, error);
+        success = false;
+      }
+
+      position = chunkEnd;
+    }
+
+    logger.info(`Split content into ${chunkCount} chunks`);
+    return success;
   }
 
-  async searchWithMetadata(
-    query: string,
-    metadataFilter: string,
-    limit: number = 5,
-  ): Promise<Array<{ rowid: number; distance: number; content: string }>> {
+  async search(params: {
+    query: string;
+    metadataFilter?: string;
+    limit?: number;
+  }): Promise<Array<{ rowid: number; distance: number; content: string; created_at: string }>> {
+    const { query, metadataFilter, limit = 5 } = params;
+
     if (!query || query.trim().length === 0) {
       throw new Error('Search query cannot be empty');
     }
 
-    const candidateStatement = this.db.prepare(
-      `SELECT rowid FROM content_store WHERE ${metadataFilter}`,
-    );
-    const candidateRows = candidateStatement.all() as Array<{ rowid: number }>;
-
-    if (candidateRows.length === 0) {
-      return [];
-    }
-
-    const candidateIds = candidateRows.map(row => row.rowid);
-    const candidateListStr = candidateIds.join(',');
-
     const embedding = await this.getEmbedding(query);
-    const integerLimit = parseInt(limit.toString(), 10);
-    logger.info(`Searching with metadata filter with limit: ${integerLimit}`);
+    const integerLimit = parseInt(String(limit), 10);
 
-    const queryString = `
-            SELECT v.rowid, v.distance, c.content, c.created_at
-            FROM (
-                SELECT rowid, distance 
-                FROM embeddings_index 
-                WHERE knn_search(embedding_vector, knn_param(?, ${integerLimit}))
-            ) v
-            JOIN content_store c ON v.rowid = c.rowid
-            WHERE c.rowid IN (${candidateListStr})
-      `;
+    // Base query that's common to both cases
+    let queryString = `
+      SELECT v.rowid, v.distance, c.content, c.created_at
+      FROM (
+          SELECT rowid, distance 
+          FROM embeddings_index 
+          WHERE knn_search(embedding_vector, knn_param(?, ${integerLimit}))
+      ) v
+      JOIN content_store c ON v.rowid = c.rowid
+    `;
+
+    if (metadataFilter) {
+      logger.info(`Searching with metadata filter with limit: ${integerLimit}`);
+
+      // Get candidate rows that match the metadata filter
+      const candidateStatement = this.db.prepare(
+        `SELECT rowid FROM content_store WHERE ${metadataFilter}`,
+      );
+      const candidateRows = candidateStatement.all() as Array<{ rowid: number }>;
+
+      if (candidateRows.length === 0) {
+        return [];
+      }
+
+      const candidateListStr = candidateRows.map(row => row.rowid).join(',');
+      // Append the WHERE clause to filter by candidate rows
+      queryString += ` WHERE c.rowid IN (${candidateListStr})`;
+    }
 
     const statement = this.db.prepare(queryString);
     return statement.all(Buffer.from(new Float32Array(embedding).buffer)) as Array<{

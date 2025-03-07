@@ -2,7 +2,6 @@ import { BaseMessage } from '@langchain/core/messages';
 import { ChatPromptTemplate } from '@langchain/core/prompts';
 import { ToolNode } from '@langchain/langgraph/prebuilt';
 import { LLMConfiguration } from '../../../services/llm/types.js';
-import { VectorDB } from '../../../services/vectorDb/VectorDB.js';
 import { WorkflowControl } from './nodes/inputPrompt.js';
 import { Logger } from 'winston';
 
@@ -38,7 +37,6 @@ export type OrchestratorRunnerOptions = {
   prompts?: OrchestratorPrompts;
   namespace?: string;
   pruningParameters?: PruningParameters;
-  vectorStore?: VectorDB;
   saveExperiences?: boolean;
   monitoring?: MonitoringOptions;
   recursionLimit?: number;
@@ -51,7 +49,6 @@ export type OrchestratorConfig = {
   prompts: OrchestratorPrompts;
   namespace: string;
   pruningParameters: PruningParameters;
-  vectorStore: VectorDB;
   saveExperiences: boolean;
   monitoring: MonitoringConfig;
   recursionLimit: number;
