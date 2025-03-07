@@ -7,7 +7,7 @@ const logger = createLogger('task-executor');
 export const startTaskExecutor = (
   runner: OrchestratorRunner,
   namespace: string,
-  checkIntervalMs = 10000,
+  checkIntervalMs = 1000,
 ): (() => void) => {
   let running = true;
 
@@ -20,9 +20,6 @@ export const startTaskExecutor = (
           scheduledFor: dueTask.scheduledFor.toISOString(),
           message: dueTask.message,
         });
-        
-        // Task is already marked as processing in getNextDueTask
-        // Just broadcast this update to all clients
         broadcastTaskUpdate(namespace);
 
         const result = await runner.runWorkflow(

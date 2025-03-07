@@ -139,7 +139,7 @@ export const createTaskQueue = (namespace: string): TaskQueue => {
           logger.warn(`Tried to update unknown task: ${id} in namespace: ${namespace}`);
         }
       }
-      
+
       broadcastTaskUpdate(namespace);
     },
 
