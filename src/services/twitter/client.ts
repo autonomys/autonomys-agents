@@ -184,7 +184,8 @@ const getMyUnrepliedToMentions = async (
     };
   });
 
-  return withThreads;
+  // Break circular references before returning
+  return withThreads.map(tweet => breakCircularReferences(tweet));
 };
 
 const getFollowingRecentTweets = async (
@@ -270,7 +271,8 @@ export const createTwitterApi = async (
   const cleanTimelineTweets = (tweets: unknown[], count: number) => {
     const cleanedTweets = tweets
       .filter(isValidTweet)
-      .map(tweet => convertTimelineTweetToTweet(tweet));
+      .map(tweet => convertTimelineTweetToTweet(tweet))
+      .map(tweet => breakCircularReferences(tweet)); // Break circular references
 
     // the twitter api does not respect the count parameter so randomly sorting and slicing
     const trimmedTweets =
@@ -316,17 +318,23 @@ export const createTwitterApi = async (
 
     getMyProfile: async () => await scraper.getProfile(username),
 
-    getTweet: async (tweetId: string) => scraper.getTweet(tweetId),
+    getTweet: async (tweetId: string) => {
+      const tweet = await scraper.getTweet(tweetId);
+      return tweet ? breakCircularReferences(tweet) : null;
+    },
 
     getRecentTweets: async (username: string, limit: number = 100) => {
       const userId = await scraper.getUserIdByScreenName(username);
-      return await iterateResponse(scraper.getTweetsByUserId(userId, limit));
+      const tweets = await iterateResponse(scraper.getTweetsByUserId(userId, limit));
+      return tweets.map(tweet => breakCircularReferences(tweet));
     },
 
-    getMyRecentTweets: async (limit: number = 10) =>
-      await iterateResponse(
+    getMyRecentTweets: async (limit: number = 10) => {
+      const tweets = await iterateResponse(
         scraper.getTweetsByUserId(await scraper.getUserIdByScreenName(username), limit),
-      ),
+      );
+      return tweets.map(tweet => breakCircularReferences(tweet));
+    },
 
     getMyRepliedToIds: async () => Array.from(await getUserReplyIds(scraper, username, 100)),
 
@@ -341,10 +349,15 @@ export const createTwitterApi = async (
     getFollowingTimeline: async (count: number, excludeIds: string[]) =>
       cleanTimelineTweets(await scraper.fetchFollowingTimeline(count, excludeIds), count),
 
-    getMyRecentReplies: (limit: number = 10) => getMyRecentReplies(scraper, username, limit),
+    getMyRecentReplies: (limit: number = 10) => {
+      const replies = getMyRecentReplies(scraper, username, limit);
+      return replies.then(tweets => tweets.map(tweet => breakCircularReferences(tweet)));
+    },
 
-    searchTweets: async (query: string, count: number = 25) =>
-      await iterateResponse(scraper.searchTweets(query, count, SearchMode.Latest)),
+    searchTweets: async (query: string, count: number = 25) => {
+      const tweets = await iterateResponse(scraper.searchTweets(query, count, SearchMode.Latest));
+      return tweets.map(tweet => breakCircularReferences(tweet));
+    },
 
     sendTweet: async (text: string, inReplyTo?: string) => {
       // Send the tweet and wait for it to complete
@@ -385,4 +398,38 @@ export const createTwitterApi = async (
       await scraper.followUser(username);
     },
   };
+};
+
+/// Helper function
+const breakCircularReferences = (tweet: Tweet): Tweet => {
+  if (!tweet) return tweet;
+  const safeClone: Tweet = { ...tweet };
+  if (safeClone.inReplyToStatus) {
+    safeClone.inReplyToStatus = {
+      id: safeClone.inReplyToStatus.id,
+      text: safeClone.inReplyToStatus.text,
+      username: safeClone.inReplyToStatus.username,
+    } as Tweet;
+  }
+  if (safeClone.thread && Array.isArray(safeClone.thread)) {
+    safeClone.thread = safeClone.thread.map(threadTweet => {
+      const safeThreadTweet = { ...threadTweet };
+
+      if (safeThreadTweet.inReplyToStatus) {
+        if (safeThreadTweet.inReplyToStatus.id === tweet.id) {
+          safeThreadTweet.inReplyToStatus = {
+            id: safeThreadTweet.inReplyToStatus.id,
+            text: safeThreadTweet.inReplyToStatus.text,
+            username: safeThreadTweet.inReplyToStatus.username,
+          } as Tweet;
+        } else {
+          safeThreadTweet.inReplyToStatus = breakCircularReferences(
+            safeThreadTweet.inReplyToStatus,
+          );
+        }
+      }
+      return safeThreadTweet;
+    });
+  }
+  return safeClone;
 };
