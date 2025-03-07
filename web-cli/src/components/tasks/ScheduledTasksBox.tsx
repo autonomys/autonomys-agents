@@ -1,13 +1,12 @@
 import React from 'react';
 import { ScheduledTasksBoxProps } from '../../types/types';
-import './styles/BodyStyles.css';
+import '../styles/BodyStyles.css';
 
 const ScheduledTasksBox: React.FC<ScheduledTasksBoxProps> = ({ tasks, onDeleteTask }) => {
-  // Function to get the appropriate status class
   const getStatusClass = (status?: string) => {
     if (!status) return 'status-ready';
-    
-    switch(status.toLowerCase()) {
+
+    switch (status.toLowerCase()) {
       case 'processing':
         return 'status-running';
       case 'completed':
@@ -19,7 +18,6 @@ const ScheduledTasksBox: React.FC<ScheduledTasksBoxProps> = ({ tasks, onDeleteTa
     }
   };
 
-  // Format the time in a more readable way
   const formatTime = (time: Date) => {
     return time.toISOString().replace('T', ' ').substring(0, 19);
   };

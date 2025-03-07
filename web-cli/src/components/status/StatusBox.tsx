@@ -1,9 +1,9 @@
 import React from 'react';
 import { StatusBoxProps } from '../../types/types';
-import './styles/BodyStyles.css';
+import '../styles/BodyStyles.css';
 
 const StatusBox: React.FC<StatusBoxProps> = ({ status }) => {
-  // Get appropriate status class based on the status text
+  console.log('Status:', status);
   const getStatusClass = () => {
     if (status.startsWith('Running:') || status.startsWith('Processing:')) {
       return 'status-running';
@@ -16,7 +16,6 @@ const StatusBox: React.FC<StatusBoxProps> = ({ status }) => {
     }
   };
 
-  // Get the status label without the message
   const getStatusLabel = () => {
     if (status.includes(':')) {
       return status.split(':')[0];
@@ -24,7 +23,6 @@ const StatusBox: React.FC<StatusBoxProps> = ({ status }) => {
     return status;
   };
 
-  // Get the message part of the status
   const getStatusMessage = () => {
     if (status.includes(':')) {
       return status.substring(status.indexOf(':') + 1).trim();
@@ -45,7 +43,8 @@ const StatusBox: React.FC<StatusBoxProps> = ({ status }) => {
         ) : (
           <>
             <div className='status-label'>
-              <span className="status-dot"></span>{statusLabel}
+              <span className='status-dot'></span>
+              {statusLabel}
             </div>
             {statusMessage && <div className='status-message'>{statusMessage}</div>}
           </>

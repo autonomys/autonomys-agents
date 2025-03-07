@@ -1,6 +1,6 @@
 import React from 'react';
-import ConnectionStatusIndicator from './ConnectionStatus';
-import { ConnectionStatus } from '../../../services/TaskStreamService';
+import ConnectionStatusIndicator from '../ConnectionStatus';
+import { ConnectionStatus } from '../../services/TaskStreamService';
 import '../styles/BodyStyles.css';
 
 interface TaskHeaderProps {

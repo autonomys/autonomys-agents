@@ -1,8 +1,8 @@
 import React from 'react';
 import TaskHeader from './TaskHeader';
-import ScheduledTasksBox from '../ScheduledTasksBox';
-import { ScheduledTask } from '../../../types/types';
-import { ConnectionStatus } from '../../../services/TaskStreamService';
+import ScheduledTasksBox from './ScheduledTasksBox';
+import { ScheduledTask } from '../../types/types';
+import { ConnectionStatus } from '../../services/TaskStreamService';
 import '../styles/BodyStyles.css';
 
 interface TasksAreaProps {

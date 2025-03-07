@@ -1,21 +1,6 @@
 import { ScheduledTask } from '../types/types';
-
-const API_PORT = process.env.REACT_APP_API_PORT || '3001';
-const API_BASE_URL = `http://localhost:${API_PORT}/api`;
-
-const DEFAULT_NAMESPACE = 'orchestrator';
-
-export interface TaskEventMessage {
-  type: string;
-  timestamp: string;
-  namespace: string;
-  tasks?: {
-    current?: any;
-    scheduled: any[];
-    completed: any[];
-  };
-  message?: string;
-}
+import { API_BASE_URL, DEFAULT_NAMESPACE } from './Api';
+import { TaskEventMessage } from '../types/types';
 
 type TaskUpdateCallback = (tasks: ScheduledTask[]) => void;
 type CurrentTaskUpdateCallback = (task: ScheduledTask | undefined) => void;
@@ -275,4 +260,4 @@ if (typeof document !== 'undefined') {
   });
 }
 
-connectToTaskStream();
+const _connectToTaskStream = connectToTaskStream();

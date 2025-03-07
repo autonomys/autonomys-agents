@@ -1,5 +1,3 @@
-// This file defines global interfaces and types that may be missing from the TypeScript standard library
-
 interface EventSourceInit {
   withCredentials?: boolean;
 }
@@ -51,5 +49,4 @@ declare var EventSource: {
   readonly OPEN: number;
 };
 
-// Ensure fetch is available
 declare var fetch: typeof fetch;
