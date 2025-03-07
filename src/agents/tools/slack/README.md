@@ -1,15 +1,32 @@
 # Slack Tool
 
-This is a simple slack integration to post message to a specific channel.
-
-For this tool to work, you need to specify two environment variables
+This is a simple slack integration to interact in slack channels.
 
 ## Environment Variables
 
 ```env
 SLACK_APP_TOKEN="xoxb-"
-SLACK_CONVERSATION_ID=""
 ```
+
+## Setup
+
+1. Create a Slack app in the [Slack API Console](https://api.slack.com/apps)
+2. Enable the following permissions for your app:
+
+   - `chat:write`
+   - `chat:write.public`
+   - `channels:read`
+   - `channels:history`
+   - `groups:read` (for private channels)
+   - `im:read` (for direct messages)
+   - `mpim:read` (for group direct messages)
+   - `users:read` (for user information)
+
+3. Install the app to your workspace
+4. Set the following environment variables:
+   ```
+   SLACK_APP_TOKEN=xoxb-your-bot-token
+   ```
 
 ## Slack App manifest example
 
@@ -28,8 +45,13 @@ oauth_config:
     bot:
       - app_mentions:read
       - chat:write
-      - im:read
+      - chat:write.public
       - channels:history
+      - channels:read
+      - groups:read
+      - im:read
+      - mpim:read
+      - users:read
 settings:
   org_deploy_enabled: false
   socket_mode_enabled: false
@@ -38,4 +60,4 @@ settings:
 
 ## Slack API Documentation
 
-[Slack API](https://api.slack.com/)
+For more information about the Slack API, visit the [Slack API Documentation](https://api.slack.com/).
