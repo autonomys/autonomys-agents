@@ -21,6 +21,7 @@ import {
 } from './types.js';
 import { createTaskQueue } from './scheduler/taskQueue.js';
 import { ScheduledTask, TaskQueue } from './scheduler/types.js';
+import { closeVectorDB } from '../../../services/vectorDb/vectorDBPool.js';
 
 const handleConditionalEdge = async (
   state: OrchestratorStateType,
@@ -226,7 +227,7 @@ export const createOrchestratorRunner = async (
         const result = { summary: workflowSummary, schedule };
 
         taskQueue.updateTaskStatus(taskQueue.currentTask?.id || '', 'completed', result);
-
+        closeVectorDB(defaultOptions.namespace);
         return result;
       } else {
         workflowLogger.error('Workflow completed but no finished workflow data found', {
