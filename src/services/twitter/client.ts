@@ -37,6 +37,40 @@ const login = async (
   logger.info('New cookies saved to file');
 };
 
+/// Helper function
+const breakCircularReferences = (tweet: Tweet): Tweet => {
+  if (!tweet) return tweet;
+  const safeClone: Tweet = { ...tweet };
+  if (safeClone.inReplyToStatus) {
+    safeClone.inReplyToStatus = {
+      id: safeClone.inReplyToStatus.id,
+      text: safeClone.inReplyToStatus.text,
+      username: safeClone.inReplyToStatus.username,
+    } as Tweet;
+  }
+  if (safeClone.thread && Array.isArray(safeClone.thread)) {
+    safeClone.thread = safeClone.thread.map(threadTweet => {
+      const safeThreadTweet = { ...threadTweet };
+
+      if (safeThreadTweet.inReplyToStatus) {
+        if (safeThreadTweet.inReplyToStatus.id === tweet.id) {
+          safeThreadTweet.inReplyToStatus = {
+            id: safeThreadTweet.inReplyToStatus.id,
+            text: safeThreadTweet.inReplyToStatus.text,
+            username: safeThreadTweet.inReplyToStatus.username,
+          } as Tweet;
+        } else {
+          safeThreadTweet.inReplyToStatus = breakCircularReferences(
+            safeThreadTweet.inReplyToStatus,
+          );
+        }
+      }
+      return safeThreadTweet;
+    });
+  }
+  return safeClone;
+};
+
 const iterateResponse = async <T>(response: AsyncGenerator<T>): Promise<T[]> => {
   const iterated: T[] = [];
   for await (const item of response) {
@@ -398,38 +432,4 @@ export const createTwitterApi = async (
       await scraper.followUser(username);
     },
   };
-};
-
-/// Helper function
-const breakCircularReferences = (tweet: Tweet): Tweet => {
-  if (!tweet) return tweet;
-  const safeClone: Tweet = { ...tweet };
-  if (safeClone.inReplyToStatus) {
-    safeClone.inReplyToStatus = {
-      id: safeClone.inReplyToStatus.id,
-      text: safeClone.inReplyToStatus.text,
-      username: safeClone.inReplyToStatus.username,
-    } as Tweet;
-  }
-  if (safeClone.thread && Array.isArray(safeClone.thread)) {
-    safeClone.thread = safeClone.thread.map(threadTweet => {
-      const safeThreadTweet = { ...threadTweet };
-
-      if (safeThreadTweet.inReplyToStatus) {
-        if (safeThreadTweet.inReplyToStatus.id === tweet.id) {
-          safeThreadTweet.inReplyToStatus = {
-            id: safeThreadTweet.inReplyToStatus.id,
-            text: safeThreadTweet.inReplyToStatus.text,
-            username: safeThreadTweet.inReplyToStatus.username,
-          } as Tweet;
-        } else {
-          safeThreadTweet.inReplyToStatus = breakCircularReferences(
-            safeThreadTweet.inReplyToStatus,
-          );
-        }
-      }
-      return safeThreadTweet;
-    });
-  }
-  return safeClone;
 };
