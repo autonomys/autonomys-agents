@@ -1,18 +1,17 @@
-import { HumanMessage } from '@langchain/core/messages';
 import { DynamicStructuredTool } from '@langchain/core/tools';
-import { z } from 'zod';
+import { HumanMessage } from '@langchain/core/messages';
 import { Character } from '../../../config/characters.js';
 import { TwitterApi } from '../../../services/twitter/types.js';
-import { VectorDB } from '../../../services/vectorDb/VectorDB.js';
-import { createLogger } from '../../../utils/logger.js';
 import { createAllTwitterTools } from '../../tools/twitter/index.js';
 import { createOrchestratorRunner } from '../orchestrator/orchestratorWorkflow.js';
-import { cleanTwitterMessageData } from './cleanMessages.js';
 import { createTwitterPrompts } from './prompts.js';
-import { TwitterAgentConfig, TwitterAgentOptions } from './types.js';
 import { LLMConfiguration } from '../../../services/llm/types.js';
 import { createApiServer, registerRunnerWithApi, withApiLogger } from '../../../api/server.js';
 
+import { createLogger } from '../../../utils/logger.js';
+import { z } from 'zod';
+import { TwitterAgentConfig, TwitterAgentOptions } from './types.js';
+import { cleanTwitterMessageData } from './cleanMessages.js';
 const logger = createLogger('twitter-workflow');
 
 const defaultModelConfig: LLMConfiguration = {
@@ -79,7 +78,6 @@ export const createTwitterAgent = (
         const messages = [new HumanMessage(instructions)];
         const namespace = 'twitter';
 
-        const vectorStore = new VectorDB(namespace);
         const twitterTools = createAllTwitterTools(twitterApi, maxThreadDepth, postTweets);
         const prompts = await createTwitterPrompts(character, twitterApi.username);
 
@@ -88,7 +86,6 @@ export const createTwitterAgent = (
           tools: [...twitterTools, ...tools],
           prompts,
           namespace,
-          vectorStore,
           saveExperiences,
           monitoring,
           recursionLimit,

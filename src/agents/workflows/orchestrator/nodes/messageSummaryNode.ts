@@ -3,7 +3,6 @@ import { createLogger } from '../../../../utils/logger.js';
 import { OrchestratorStateType } from '../types.js';
 import { LLMFactory } from '../../../../services/llm/factory.js';
 import { LLMConfiguration } from '../../../../services/llm/types.js';
-import { VectorDB } from '../../../../services/vectorDb/VectorDB.js';
 import { PruningParameters } from '../types.js';
 import { ChatPromptTemplate } from '@langchain/core/prompts';
 
@@ -13,12 +12,10 @@ export const createMessageSummaryNode = ({
   modelConfig,
   messageSummaryPrompt,
   pruningParameters,
-  vectorStore,
 }: {
   modelConfig: LLMConfiguration;
   messageSummaryPrompt: ChatPromptTemplate;
   pruningParameters: PruningParameters;
-  vectorStore: VectorDB;
 }) => {
   const runNode = async (state: OrchestratorStateType) => {
     logger.info('MessageSummary Node');
@@ -47,8 +44,6 @@ export const createMessageSummaryNode = ({
       typeof newSummary.content === 'string'
         ? newSummary.content
         : JSON.stringify(newSummary.content, null, 2);
-
-    const _insertData = await vectorStore.insert(summaryContent);
 
     return {
       messages: [new AIMessage({ content: `Summary of conversation earlier: ${summaryContent}` })],

@@ -1,5 +1,4 @@
 import { ChatPromptTemplate } from '@langchain/core/prompts';
-import { VectorDB } from '../../../../services/vectorDb/VectorDB.js';
 import { LLMFactory } from '../../../../services/llm/factory.js';
 import { createLogger } from '../../../../utils/logger.js';
 import { OrchestratorStateType } from '../types.js';
@@ -28,11 +27,9 @@ export const parseFinishedWorkflow = async (content: unknown) => {
 export const createFinishWorkflowNode = ({
   modelConfig,
   finishWorkflowPrompt,
-  vectorStore,
 }: {
   modelConfig: LLMConfiguration;
   finishWorkflowPrompt: ChatPromptTemplate;
-  vectorStore: VectorDB;
 }) => {
   const runNode = async (state: OrchestratorStateType) => {
     logger.info('Workflow Summary Node');
@@ -54,8 +51,6 @@ export const createFinishWorkflowNode = ({
     const finishedWorkflow = await parseFinishedWorkflow(result.content);
 
     logger.info('Finished Workflow:', { finishedWorkflow });
-
-    const _insertData = await vectorStore.insert(JSON.stringify(finishedWorkflow));
 
     return {
       messages: [new AIMessage({ content: result.content })],

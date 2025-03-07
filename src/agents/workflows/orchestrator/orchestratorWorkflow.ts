@@ -3,7 +3,6 @@ import { END, MemorySaver, START, StateGraph } from '@langchain/langgraph';
 import { uploadToDsn } from '../../../blockchain/autoDrive/autoDriveUpload.js';
 import { Character } from '../../../config/characters.js';
 import { LLMConfiguration } from '../../../services/llm/types.js';
-import { VectorDB } from '../../../services/vectorDb/VectorDB.js';
 import { createLogger } from '../../../utils/logger.js';
 import { Logger } from 'winston';
 import { cleanMessageData } from './cleanMessages.js';
@@ -22,6 +21,7 @@ import {
 } from './types.js';
 import { createTaskQueue } from './scheduler/taskQueue.js';
 import { ScheduledTask, TaskQueue } from './scheduler/types.js';
+import { closeVectorDB } from '../../../services/vectorDb/vectorDBPool.js';
 
 const handleConditionalEdge = async (
   state: OrchestratorStateType,
@@ -133,10 +133,9 @@ const createOrchestratorRunnerConfig = async (
       defaultOptions.modelConfigurations.finishWorkflowModelConfig,
   };
 
-  const vectorStore = options?.vectorStore || new VectorDB(defaultOptions.namespace);
   const tools = [
     ...(options?.tools || []),
-    ...createDefaultOrchestratorTools(vectorStore, mergedOptions.saveExperiences),
+    ...createDefaultOrchestratorTools(mergedOptions.saveExperiences),
   ];
   const prompts = options?.prompts || (await createPrompts(character));
   const monitoring = {
@@ -145,7 +144,6 @@ const createOrchestratorRunnerConfig = async (
   };
   return {
     ...mergedOptions,
-    vectorStore,
     tools,
     modelConfigurations,
     prompts,
@@ -183,10 +181,6 @@ export const createOrchestratorRunner = async (
     ): Promise<FinishedWorkflow> => {
       const threadId = `${options?.threadId || 'orchestrator'}-${Date.now()}`;
       workflowLogger.info('Starting orchestrator workflow', { threadId });
-
-      if (!runnerConfig.vectorStore.isOpen()) {
-        await runnerConfig.vectorStore.open();
-      }
 
       const config = {
         recursionLimit: runnerConfig.recursionLimit,
@@ -233,15 +227,13 @@ export const createOrchestratorRunner = async (
         const result = { summary: workflowSummary, schedule };
 
         taskQueue.updateTaskStatus(taskQueue.currentTask?.id || '', 'completed', result);
-
-        runnerConfig.vectorStore.close();
+        closeVectorDB(defaultOptions.namespace);
         return result;
       } else {
         workflowLogger.error('Workflow completed but no finished workflow data found', {
           finalState,
           content: finalState?.finishWorkflow?.content,
         });
-        runnerConfig.vectorStore.close();
         return { summary: 'Extracting workflow data failed' };
       }
     },

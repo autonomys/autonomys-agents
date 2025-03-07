@@ -2,7 +2,6 @@ import { LLMFactory } from '../../../../services/llm/factory.js';
 import { createLogger } from '../../../../utils/logger.js';
 import { OrchestratorStateType, Tools } from '../types.js';
 import { workflowControlParser } from './inputPrompt.js';
-import { VectorDB } from '../../../../services/vectorDb/VectorDB.js';
 import { LLMConfiguration } from '../../../../services/llm/types.js';
 import { ChatPromptTemplate } from '@langchain/core/prompts';
 
@@ -32,12 +31,10 @@ export const createInputNode = ({
   modelConfig,
   inputPrompt,
   tools,
-  vectorStore,
 }: {
   modelConfig: LLMConfiguration;
   inputPrompt: ChatPromptTemplate;
   tools: Tools;
-  vectorStore: VectorDB;
 }) => {
   const runNode = async (state: OrchestratorStateType) => {
     logger.info('MODEL CONFIG:', { modelConfig });
@@ -72,13 +69,6 @@ export const createInputNode = ({
       inputTokens: usage?.input_tokens,
       outputTokens: usage?.output_tokens,
     });
-
-    if (
-      !JSON.stringify(result.content).includes('experience_vector_db_search') &&
-      result.content != ''
-    ) {
-      const _insertData = await vectorStore.insert(JSON.stringify(result.content));
-    }
 
     const workflowControl = await parseWorkflowControl(result.content);
 

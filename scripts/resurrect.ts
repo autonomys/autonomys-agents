@@ -7,18 +7,17 @@ import { download } from '../src/blockchain/autoDrive/autoDriveDownload.js';
 import { config } from '../src/config/index.js';
 import { createLogger } from '../src/utils/logger.js';
 import { VectorDB } from '../src/services/vectorDb/VectorDB.js';
+import { getVectorDB, closeVectorDB } from '../src/services/vectorDb/vectorDBPool.js';
 
 const logger = createLogger('resurrect-cli');
-let vectorDb: VectorDB | null = null;
+let vectorDb: VectorDB;
 
 const cleanupOnApplicationClose = async (signal?: string) => {
   if (signal) {
-    logger.info(`Received ${signal} signal`);
+    logger.info(`Received ${signal}, cleaning up...`);
   }
-  if (vectorDb?.isOpen()) {
-    logger.info('Closing vector database...');
-    vectorDb.close();
-    logger.info('Vector database closed successfully');
+  if (vectorDb) {
+    closeVectorDB('experiences');
   }
   process.exit(0);
 };
@@ -189,7 +188,7 @@ const run = async () => {
       return;
     }
 
-    vectorDb = new VectorDB('experiences');
+    vectorDb = getVectorDB('experiences');
     await vectorDb.open();
 
     logger.info(
