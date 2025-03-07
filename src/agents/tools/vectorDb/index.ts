@@ -14,19 +14,21 @@ export const createExperienceVectorDbSearchTool = (
   new DynamicStructuredTool({
     name: 'experience_vector_db_search',
     description: `
-      Search your memory database for past experiences and interactions. 
+      Search your memory database for past experiences and interactions. You save your experiences as they happen for future reference. BE SURE TO MAKE USE OF THIS TOOL OFTEN.
       This tool helps you recall context from your previous activities to enhance your responses.
       
       EFFECTIVE QUERIES:
       - Use specific, content-rich phrases (not generic terms like "conversations" or "interactions")
       - Include distinctive keywords that might appear in stored memories
       - Focus on specific topics, entities, or actions 
-      - Use the time filter to narrow results to a specific period, not the query field.
+      - Use the time filter to narrow results to a specific period, not the query field. (i.e. DON'T USE "recent", "old", "today", "yesterday", etc.)
 
       USAGE GUIDANCE:
       - Use this when you need to recall specific past conversations or actions
-      - Consider searching with multiple queries if your first search returns no results
-      - Time filters help narrow results to relevant periods`,
+      - Use this to gain context about what you have done or said in the past and what you know about a particular topic
+      - Consider searching with multiple queries to get more context as needed
+      - Time filters help narrow results to relevant periods
+      - If you don't want a time filter, omit the metadataFilter parameter`,
     schema: z.object({
       query: z.string().describe(
         `Specific, detailed query to find semantically similar content. For effective results:
@@ -38,7 +40,7 @@ export const createExperienceVectorDbSearchTool = (
         - Good example: "explanations about blockchain to users" or "responses to elon musk tweets"`,
       ),
       metadataFilter: z.string().describe(
-        `Filter the search by metadata. Metadata filter examples: 
+        `OPTIONAL:Filter the search by metadata, the current metadata only includes created_at. Metadata filter examples: 
             - based on range: created_at >= datetime('now', '-1 hour')
             - before time: created_at <= "2025-02-12 09:00:00"' +
             - after time: created_at >= "2025-02-11 14:30:00"`,

@@ -53,9 +53,10 @@ export const runWorkflow = async (
 
       const release = await state.mutex.acquire();
       try {
+        const description = `Previous workflow summary: ${result.summary}\nNext workflow prompt: ${result.schedule.nextWorkflowPrompt}`;
         state.scheduledTasks.push({
           time: nextRunTime,
-          description: result.schedule.nextWorkflowPrompt,
+          description,
         });
 
         const formattedTime = nextRunTime.toISOString();
