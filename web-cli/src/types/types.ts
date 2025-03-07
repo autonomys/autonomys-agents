@@ -1,16 +1,14 @@
 export interface AppState {
   value: string;
-  isProcessing: boolean;
-  scheduledTasks: Array<{
-    time: Date;
-    description: string;
-  }>;
+  scheduledTasks: Array<ScheduledTask>;
 }
 
 export interface WorkflowResult {
   secondsUntilNextWorkflow?: number;
   nextWorkflowPrompt?: string;
   workflowSummary?: string;
+  status?: string;
+  error?: string;
 }
 
 export interface OutputLogProps {
@@ -23,17 +21,15 @@ export interface StatusBoxProps {
 
 export interface InputBoxProps {
   value: string;
-  onChange: (value: string) => void;
-  onSubmit: () => void;
-  disabled: boolean;
+  handleInputChange: (value: string) => void;
+  handleInputSubmit: () => void;
+  currentTask?: ScheduledTask;
+  error?: string;
 }
 
 export interface ScheduledTasksBoxProps {
-  tasks: Array<{
-    time: Date;
-    description: string;
-  }>;
-  onDeleteTask: (index: number) => void;
+  tasks: Array<ScheduledTask>;
+  onDeleteTask: (id: string) => void;
 }
 
 export interface CharacterBoxProps {
@@ -51,4 +47,30 @@ export interface EventSourceMessage {
   level?: string;
   message: string;
   meta?: any;
+}
+
+export interface ScheduledTask {
+  id: string;
+  time: Date;
+  description: string;
+  startedAt?: Date;
+  status?: string;
+}
+
+export interface LogMessageListProps {
+  filteredMessages: EventSourceMessage[];
+  legacyMessages?: string[];
+  setLogRef: (ref: HTMLDivElement | null) => void;
+}
+
+export interface TaskEventMessage {
+  type: string;
+  timestamp: string;
+  namespace: string;
+  tasks?: {
+    current?: any;
+    scheduled: any[];
+    completed: any[];
+  };
+  message?: string;
 }

@@ -1,12 +1,6 @@
 import React from 'react';
-import { EventSourceMessage } from '../../types/types';
-import './styles/LogMessageList.css';
-
-interface LogMessageListProps {
-  filteredMessages: EventSourceMessage[];
-  legacyMessages?: string[];
-  setLogRef: (ref: HTMLDivElement | null) => void;
-}
+import { LogMessageListProps } from '../../types/types';
+import '../styles/LogMessageList.css';
 
 const LogMessageList: React.FC<LogMessageListProps> = ({
   filteredMessages,
@@ -19,14 +13,12 @@ const LogMessageList: React.FC<LogMessageListProps> = ({
         <div className='welcome-message'>Welcome to Autonomys Agents Web CLI</div>
       )}
 
-      {/* Legacy messages (if any) */}
       {legacyMessages.map((message, index) => (
         <div key={index} className='log-message'>
           {message}
         </div>
       ))}
 
-      {/* Log messages from event source */}
       {filteredMessages.map((msg, index) => (
         <div key={`log-${index}`} className={`log-message log-${msg.level || 'info'}`}>
           <span className='log-timestamp'>

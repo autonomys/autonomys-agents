@@ -20,16 +20,30 @@ export default [
         },
       },
       globals: {
+        // Browser globals
         window: 'readonly',
         document: 'readonly',
         console: 'readonly',
+
+        // Timer functions
         setTimeout: 'readonly',
+        clearTimeout: 'readonly',
         clearInterval: 'readonly',
         setInterval: 'readonly',
+
+        // HTML elements
         HTMLElement: 'readonly',
         HTMLDivElement: 'readonly',
         HTMLTextAreaElement: 'readonly',
         KeyboardEvent: 'readonly',
+
+        // Network API globals
+        fetch: 'readonly',
+        EventSource: 'readonly',
+
+        // Node.js globals
+        process: 'readonly',
+        NodeJS: 'readonly',
       },
     },
     plugins: {
@@ -37,6 +51,11 @@ export default [
       react: reactPlugin,
       'react-hooks': reactHooksPlugin,
       prettier: prettierPlugin,
+    },
+    // Updated linterOptions structure
+    linterOptions: {
+      reportUnusedDisableDirectives: true,
+      noInlineConfig: false,
     },
     rules: {
       'prettier/prettier': 'error',

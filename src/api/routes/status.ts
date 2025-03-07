@@ -1,18 +1,11 @@
-import { Response, Router } from 'express';
-import { orchestratorRunners } from '../server.js';
+import { Router } from 'express';
+import { getHealth, getNamespaces } from '../controller/StatusController.js';
 
 export const createStatusRouter = (): Router => {
   const router = Router();
-  // Health check endpoint
-  router.get('/health', (_, res: Response) => {
-    res.status(200).json({ status: 'ok' });
-  });
 
-  router.get('/namespaces', (_, res: Response) => {
-    res.status(200).json({
-      namespaces: Array.from(orchestratorRunners.keys()),
-    });
-  });
+  router.get('/health', getHealth);
+  router.get('/namespaces', getNamespaces);
 
   return router;
 };
