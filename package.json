@@ -49,6 +49,7 @@
     "dotenv": "^16.3.1",
     "ethers": "^6.13.4",
     "express": "^4.21.2",
+    "express-async-handler": "^1.2.0",
     "inquirer": "^10.2.0",
     "sqlite3": "^5.1.7",
     "vectorlite": "^0.2.0",

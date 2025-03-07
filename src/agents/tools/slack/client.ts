@@ -85,8 +85,8 @@ const fetchAllChannels = async (client: WebClient): Promise<ChannelInfo[]> => {
   return allChannels
     .filter(channel => channel.id && channel.name)
     .map(channel => ({
-      id: channel.id!,
-      name: channel.name!,
+      id: channel.id ?? '',
+      name: channel.name ?? '',
       isMember: channel.is_member ?? false,
     }));
 };
