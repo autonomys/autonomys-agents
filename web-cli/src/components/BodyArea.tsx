@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
+import { Flex } from '@chakra-ui/react';
 import { useAppContext } from '../context/AppContext';
 import {
   subscribeToTaskUpdates,
@@ -13,7 +14,6 @@ import { runWorkflow } from '../services/WorkflowService';
 import { ScheduledTask } from '../types/types';
 import InputArea from './input/InputArea';
 import TasksArea from './tasks/TasksArea';
-import './styles/BodyStyles.css';
 
 const BodyArea: React.FC = () => {
   const { state, dispatch } = useAppContext();
@@ -114,23 +114,34 @@ const BodyArea: React.FC = () => {
   const connectionStatusInfo = getConnectionStatusInfo();
 
   return (
-    <div className='body-area'>
-      <InputArea
-        value={state.value}
-        handleInputChange={handleInputChange}
-        handleInputSubmit={handleInputSubmit}
-        currentTask={currentTask}
-        error={error}
-      />
-      <TasksArea
-        tasks={tasks}
-        loading={loading}
-        connectionStatus={connectionStatus}
-        connectionStatusInfo={connectionStatusInfo}
-        handleDeleteTask={handleDeleteTask}
-        handleReconnect={handleReconnect}
-      />
-    </div>
+    <Flex 
+      width="100%" 
+      height="40vh" 
+      bg="rgba(30, 30, 30, 0.8)"
+      color="white"
+      borderTop="1px solid"
+      borderColor="gray.700"
+    >
+      <Flex direction="column" flex="2">
+        <InputArea
+          value={state.value}
+          handleInputChange={handleInputChange}
+          handleInputSubmit={handleInputSubmit}
+          currentTask={currentTask}
+          error={error}
+        />
+      </Flex>
+      <Flex direction="column" flex="3">
+        <TasksArea
+          tasks={tasks}
+          loading={loading}
+          connectionStatus={connectionStatus}
+          connectionStatusInfo={connectionStatusInfo}
+          handleDeleteTask={handleDeleteTask}
+          handleReconnect={handleReconnect}
+        />
+      </Flex>
+    </Flex>
   );
 };
 
