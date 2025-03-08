@@ -133,7 +133,7 @@ export const createAddReactionTool = (
     channelId: string,
     timestamp: string,
     reaction: string,
-  ) => Promise<{ success: boolean; channel: string; reaction: string; ok: boolean }>,
+  ) => Promise<{ success: boolean; channel: string; reaction: string }>,
 ) =>
   new DynamicStructuredTool({
     name: 'add_reaction',
@@ -178,7 +178,6 @@ export const createGetReactionTool = (
       users: string[];
       count: number;
     }[];
-    ok: boolean;
   }>,
 ) =>
   new DynamicStructuredTool({

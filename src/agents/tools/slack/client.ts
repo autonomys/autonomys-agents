@@ -166,10 +166,9 @@ export const slackClient = async (token: string) => {
       full,
     });
     return {
-      success: true,
+      success: response.ok ?? false,
       channel: channelId,
       reaction: response.message?.reactions ?? [],
-      ok: response.ok ?? false,
     };
   };
 
@@ -180,10 +179,9 @@ export const slackClient = async (token: string) => {
       name: reaction,
     });
     return {
-      success: true,
+      success: response.ok ?? false,
       channel: channelId,
       reaction,
-      ok: response.ok ?? false,
     };
   };
 
