@@ -1,4 +1,5 @@
 import {
+  Block,
   ConversationsHistoryResponse,
   ConversationsListResponse,
   UsersInfoResponse,
@@ -145,16 +146,23 @@ export const slackClient = async (token: string) => {
     return fetchMessages(client, channelId, limit);
   };
 
-  const postMessage = async (channelId: string, message: string, threadTs?: string) => {
+  const postMessage = async (
+    channelId: string,
+    message: string,
+    blocks?: Block[],
+    threadTs?: string,
+  ) => {
     const response = await client.chat.postMessage({
       channel: channelId,
       text: message,
+      blocks: blocks,
       thread_ts: threadTs,
     });
     return {
       success: true,
       channel: channelId,
-      message: message,
+      message,
+      blocks,
       ts: response.ts ?? '',
     };
   };
