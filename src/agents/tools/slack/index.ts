@@ -133,7 +133,7 @@ export const createGetUserInfoTool = (
 export const createSlackTools = async (slackToken: string) => {
   const slack = await slackClient(slackToken);
   const postMessage = (channelId: string, message: string, blocks?: Block[], threadTs?: string) =>
-    slack.postMessage(channelId, message, blocks, threadTs);
+    slack.postMessage({ channel: channelId, text: message, blocks, thread_ts: threadTs });
   const getUserChannels = () => slack.getUserChannels();
   const getMessages = (channelId: string, limit: number) => slack.getMessages(channelId, limit);
   const getUserInfo = (userId: string) => slack.getUserInfo(userId);
