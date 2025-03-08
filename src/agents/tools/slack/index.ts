@@ -1,4 +1,5 @@
 import { DynamicStructuredTool } from '@langchain/core/tools';
+import { Block } from '@slack/web-api';
 import { z } from 'zod';
 import { createLogger } from '../../../utils/logger.js';
 import { ChannelInfo, MessageInfo, slackClient, UserInfo } from './client.js';
@@ -12,6 +13,7 @@ export const createPostSlackMsgTool = (
   postMessage: (
     channelId: string,
     message: string,
+    blocks?: Block[],
     threadTs?: string,
   ) => Promise<{ success: boolean; channel: string; message: string; ts: string }>,
 ) =>
@@ -22,14 +24,17 @@ export const createPostSlackMsgTool = (
     - You want to report or highlight something to your colleagues.
     FORMAT: Include links, messages, and any other relevant information. Avoid very long messages.`,
     schema: z.object({
-      message: z.string().describe('The message to post to Slack'),
       channelId: z.string().describe('The channel ID to post to.'),
+      message: z.string().describe('The message to post to Slack'),
+      blocks: z
+        .array(z.any())
+        .describe('The blocks to post to Slack using Slack block-kit (optional)'),
       threadTs: z.string().describe('The thread timestamp to post to if this is a reply.'),
     }),
-    func: async ({ message, channelId, threadTs }) => {
+    func: async ({ message, channelId, blocks, threadTs }) => {
       try {
         logger.info('Posting message to Slack - Received data:', message);
-        const result = await postMessage(channelId, message, threadTs);
+        const result = await postMessage(channelId, message, blocks, threadTs);
         logger.info('Message posted to Slack:', { result });
         return JSON.stringify(result);
       } catch (error) {
@@ -56,7 +61,7 @@ export const createListChannelsTool = (getUserChannels: () => Promise<ChannelInf
         const channels = await getUserChannels();
         return {
           success: true,
-          channels: channels,
+          channels,
         };
       } catch (error) {
         logger.error('Error listing Slack channels:', error);
@@ -88,7 +93,7 @@ export const createListMessagesTool = (
         const messages = await getMessages(channelId, limit);
         return {
           success: true,
-          messages: messages,
+          messages,
           agentUserId,
         };
       } catch (error) {
@@ -127,8 +132,8 @@ export const createGetUserInfoTool = (
 
 export const createSlackTools = async (slackToken: string) => {
   const slack = await slackClient(slackToken);
-  const postMessage = (channelId: string, message: string, threadTs?: string) =>
-    slack.postMessage(channelId, message, threadTs);
+  const postMessage = (channelId: string, message: string, blocks?: Block[], threadTs?: string) =>
+    slack.postMessage({ channel: channelId, text: message, blocks, thread_ts: threadTs });
   const getUserChannels = () => slack.getUserChannels();
   const getMessages = (channelId: string, limit: number) => slack.getMessages(channelId, limit);
   const getUserInfo = (userId: string) => slack.getUserInfo(userId);
