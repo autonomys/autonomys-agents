@@ -4,6 +4,21 @@
   "description": "Autonomys Agents",
   "main": "dist/index.js",
   "type": "module",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/autonomys/autonomys-agents"
+  },
+  "author": {
+    "name": "Autonomys",
+    "url": "https://www.autonomys.xyz"
+  },
+  "bugs": {
+    "url": "https://github.com/autonomys/autonomys-agents/issues"
+  },
+  "engines": {
+    "node": ">=20.18.1"
+  },
   "scripts": {
     "build": "tsc",
     "start": "tsx scripts/start.ts",
