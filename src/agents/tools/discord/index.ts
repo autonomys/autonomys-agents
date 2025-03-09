@@ -1,5 +1,4 @@
 import { DynamicStructuredTool } from '@langchain/core/tools';
-import { Client } from 'discord.js';
 import { z } from 'zod';
 import { createLogger } from '../../../utils/logger.js';
 import discordClient, { ChannelInfo, MessageInfo, ServerInfo } from './client.js';
@@ -158,6 +157,36 @@ const createAddReactionTool = (
     },
   });
 
+const createGetMentionsTool = (
+  getMessages: (channelId: string, limit: number) => Promise<MessageInfo[]>,
+) =>
+  new DynamicStructuredTool({
+    name: 'discord_get_mentions',
+    description: 'Get all mentions from recent messages in a channel',
+    schema: z.object({
+      channelId: z.string().describe('The channel ID to get mentions from'),
+      limit: z.number().describe('The number of messages to check for mentions. Default is 10.'),
+    }),
+    func: async ({ channelId, limit = 10 }) => {
+      try {
+        logger.info('Getting Discord mentions');
+        const messages = await getMessages(channelId, limit);
+        const mentionsWithMessages = messages.map(msg => ({
+          messageId: msg.id,
+          content: msg.content,
+          mentions: msg.mentions,
+        }));
+        return {
+          success: true,
+          mentions: mentionsWithMessages,
+        };
+      } catch (error) {
+        logger.error('Error getting Discord mentions:', error);
+        throw error;
+      }
+    },
+  });
+
 export const createDiscordTools = async (token: string) => {
   const discord = await discordClient(token);
 
@@ -172,5 +201,6 @@ export const createDiscordTools = async (token: string) => {
     createAddReactionTool((channelId, messageId, reaction) =>
       discord.addReaction(channelId, messageId, reaction),
     ),
+    createGetMentionsTool((channelId, limit) => discord.getMessages(channelId, limit)),
   ];
 };

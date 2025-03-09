@@ -25,6 +25,12 @@ export type UserInfo = {
   displayName?: string;
 };
 
+export type MentionInfo = {
+  users: UserInfo[];
+  roles: { id: string; name: string }[];
+  everyone: boolean;
+};
+
 export type MessageInfo = {
   id: string;
   content: string;
@@ -32,6 +38,7 @@ export type MessageInfo = {
   channelId: string;
   timestamp: Date;
   replies: MessageInfo[];
+  mentions: MentionInfo;
 };
 
 const toServerInfo = (guild: Guild): ServerInfo => ({
@@ -61,6 +68,14 @@ const toMessageInfo = (message: Message): MessageInfo => ({
   channelId: message.channelId,
   timestamp: message.createdAt,
   replies: [],
+  mentions: {
+    users: Array.from(message.mentions.users.values()).map(toUserInfo),
+    roles: Array.from(message.mentions.roles.values()).map(role => ({
+      id: role.id,
+      name: role.name,
+    })),
+    everyone: message.mentions.everyone,
+  },
 });
 
 export const discordClient = async (token: string) => {
