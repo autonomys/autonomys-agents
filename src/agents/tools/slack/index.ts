@@ -130,6 +130,79 @@ export const createGetUserInfoTool = (
     },
   });
 
+/**
+ * Creates a tool to post a simple message to Slack
+ */
+export const createAddReactionTool = (
+  addReaction: (
+    channelId: string,
+    timestamp: string,
+    reaction: string,
+  ) => Promise<{ success: boolean; channel: string; reaction: string }>,
+) =>
+  new DynamicStructuredTool({
+    name: 'add_reaction',
+    description: `Add a reaction to a message in a Slack channel.
+    USE THIS WHEN: 
+    - You want to react to a message in a Slack channel.
+    FORMAT: Choose a appropriate reaction from the list of reactions available in the Slack channel and that convey your emotion or reaction to the message.`,
+    schema: z.object({
+      channelId: z.string().describe('The channel ID to post to.'),
+      timestamp: z.string().describe('The timestamp of the message to react to.'),
+      reaction: z.string().describe('The reaction to add to the message.'),
+    }),
+    func: async ({ channelId, timestamp, reaction }) => {
+      try {
+        logger.info('Adding reaction to Slack - Received data:', {
+          channelId,
+          timestamp,
+          reaction,
+        });
+        const result = await addReaction(channelId, timestamp, reaction);
+        logger.info('Reaction added to Slack:', { result });
+        return JSON.stringify(result);
+      } catch (error) {
+        logger.error('Error adding reaction to Slack:', error);
+        throw error;
+      }
+    },
+  });
+
+/**
+ * Creates a tool to get a reaction from a message in a Slack channel
+ */
+export const createGetReactionTool = (
+  getReaction: (
+    channelId: string,
+    timestamp: string,
+  ) => Promise<{
+    success: boolean;
+    channel: string;
+    reaction: {
+      name: string;
+      users: string[];
+      count: number;
+    }[];
+  }>,
+) =>
+  new DynamicStructuredTool({
+    name: 'get_reaction',
+    description: `Get all reactions from a message in a Slack channel.`,
+    schema: z.object({
+      channelId: z.string().describe('The channel ID to get the reaction from.'),
+      timestamp: z.string().describe('The timestamp of the message to get the reaction from.'),
+    }),
+    func: async ({ channelId, timestamp }) => {
+      try {
+        const reaction = await getReaction(channelId, timestamp);
+        return JSON.stringify(reaction);
+      } catch (error) {
+        logger.error('Error getting reaction from Slack:', error);
+        throw error;
+      }
+    },
+  });
+
 export const createSlackTools = async (slackToken: string) => {
   const slack = await slackClient(slackToken);
   const postMessage = (channelId: string, message: string, blocks?: Block[], threadTs?: string) =>

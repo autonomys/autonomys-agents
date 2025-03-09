@@ -156,6 +156,32 @@ export const slackClient = async (token: string) => {
     };
   };
 
+  const getReaction = async (channelId: string, timestamp: string, full: boolean = false) => {
+    const response = await client.reactions.get({
+      channel: channelId,
+      timestamp,
+      full,
+    });
+    return {
+      success: response.ok ?? false,
+      channel: channelId,
+      reaction: response.message?.reactions ?? [],
+    };
+  };
+
+  const addReaction = async (channelId: string, timestamp: string, reaction: string) => {
+    const response = await client.reactions.add({
+      channel: channelId,
+      timestamp,
+      name: reaction,
+    });
+    return {
+      success: response.ok ?? false,
+      channel: channelId,
+      reaction,
+    };
+  };
+
   return {
     client,
     userId: botId,
@@ -163,6 +189,8 @@ export const slackClient = async (token: string) => {
     getMessages,
     getUserInfo,
     postMessage,
+    getReaction,
+    addReaction,
   };
 };
 
