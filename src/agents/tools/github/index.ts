@@ -5,11 +5,14 @@ import {
   CommentInfo,
   CreateCommentParams,
   CreateIssueParams,
+  CreatePRCommentParams,
   CreateReactionParams,
   githubClient,
   IssueInfo,
   MentionInfo,
   NotificationInfo,
+  PRCommentInfo,
+  PullRequestInfo,
   ReactionInfo,
 } from './client.js';
 
@@ -248,6 +251,185 @@ export const createListNotificationsTool = (
     },
   });
 
+/**
+ * Creates a tool to list GitHub pull requests
+ */
+export const createListPullRequestsTool = (
+  listPullRequests: (state?: 'open' | 'closed' | 'all') => Promise<PullRequestInfo[]>,
+) =>
+  new DynamicStructuredTool({
+    name: 'list_github_pull_requests',
+    description: `List GitHub pull requests in the configured repository.
+    USE THIS WHEN:
+    - You need to see all pull requests in the repository
+    - You want to check the status of existing PRs
+    - You need to find PRs you're assigned to or need to review`,
+    schema: z.object({
+      state: z
+        .enum(['open', 'closed', 'all'])
+        .optional()
+        .describe('Filter pull requests by state. Default is "open".'),
+    }),
+    func: async ({ state = 'open' }) => {
+      try {
+        logger.info('Listing GitHub pull requests');
+        const prs = await listPullRequests(state);
+        return {
+          success: true,
+          pull_requests: prs,
+        };
+      } catch (error) {
+        logger.error('Error listing GitHub pull requests:', error);
+        throw error;
+      }
+    },
+  });
+
+/**
+ * Creates a tool to get a specific GitHub pull request
+ */
+export const createGetPullRequestTool = (
+  getPullRequest: (pull_number: number) => Promise<PullRequestInfo>,
+) =>
+  new DynamicStructuredTool({
+    name: 'get_github_pull_request',
+    description: `Get details of a specific GitHub pull request.
+    USE THIS WHEN:
+    - You need detailed information about a specific PR
+    - You want to check who is assigned or reviewing a PR
+    - You need to verify the current state of a PR`,
+    schema: z.object({
+      pull_number: z.number().describe('The number of the pull request to get'),
+    }),
+    func: async ({ pull_number }) => {
+      try {
+        logger.info('Getting GitHub pull request:', { pull_number });
+        const pr = await getPullRequest(pull_number);
+        return {
+          success: true,
+          pull_request: pr,
+        };
+      } catch (error) {
+        logger.error('Error getting GitHub pull request:', error);
+        throw error;
+      }
+    },
+  });
+
+/**
+ * Creates a tool to list comments on a GitHub pull request
+ */
+export const createListPRCommentsTool = (
+  listPRComments: (pull_number: number) => Promise<PRCommentInfo[]>,
+) =>
+  new DynamicStructuredTool({
+    name: 'list_github_pr_comments',
+    description: `List comments on a specific GitHub pull request.
+    USE THIS WHEN:
+    - You need to check for review comments on a PR
+    - You want to see the discussion history of a PR
+    - You need to track if someone has replied to your PR comments`,
+    schema: z.object({
+      pull_number: z.number().describe('The number of the pull request to get comments from'),
+    }),
+    func: async ({ pull_number }) => {
+      try {
+        logger.info('Listing GitHub PR comments:', { pull_number });
+        const comments = await listPRComments(pull_number);
+        return {
+          success: true,
+          comments,
+        };
+      } catch (error) {
+        logger.error('Error listing GitHub PR comments:', error);
+        throw error;
+      }
+    },
+  });
+
+/**
+ * Creates a tool to comment on a GitHub pull request
+ */
+export const createCreatePRCommentTool = (
+  createPRComment: (params: CreatePRCommentParams) => Promise<PRCommentInfo>,
+) =>
+  new DynamicStructuredTool({
+    name: 'create_github_pr_comment',
+    description: `Create a new comment on a GitHub pull request.
+    USE THIS WHEN:
+    - You need to respond to a PR review or discussion
+    - You want to provide feedback on specific code changes
+    - You need to add information or suggestions to a PR
+    
+    Note: To comment on specific lines of code, provide the path, line, and commit_id.
+    For general PR comments, only pull_number and body are required.`,
+    schema: z.object({
+      pull_number: z.number().describe('The number of the pull request to comment on'),
+      body: z.string().describe('The content of the comment'),
+      commit_id: z
+        .string()
+        .optional()
+        .describe('The commit SHA to comment on (required for line comments)'),
+      path: z.string().optional().describe('The file path to comment on'),
+      line: z.number().optional().describe('The line number to comment on'),
+      side: z
+        .enum(['LEFT', 'RIGHT'])
+        .optional()
+        .describe('Which version of the line to comment on (LEFT for previous, RIGHT for current)'),
+    }),
+    func: async ({ pull_number, body, commit_id, path, line, side }) => {
+      try {
+        logger.info('Creating GitHub PR comment:', { pull_number });
+        const comment = await createPRComment({ pull_number, body, commit_id, path, line, side });
+        return {
+          success: true,
+          comment,
+        };
+      } catch (error) {
+        logger.error('Error creating GitHub PR comment:', error);
+        throw error;
+      }
+    },
+  });
+
+/**
+ * Creates a tool to add a reaction to a GitHub pull request comment
+ */
+export const createCreatePRReactionTool = (
+  createPRReaction: (
+    params: CreateReactionParams & { pull_number: number },
+  ) => Promise<ReactionInfo>,
+) =>
+  new DynamicStructuredTool({
+    name: 'create_github_pr_reaction',
+    description: `Create a reaction on a GitHub pull request comment.
+    USE THIS WHEN:
+    - You want to add an emoji reaction to a PR comment
+    - You need to express sentiment or feedback through reactions on PR discussions
+    
+    Available reactions: +1, -1, laugh, confused, heart, hooray, rocket, eyes`,
+    schema: z.object({
+      pull_number: z.number().describe('The number of the pull request'),
+      comment_id: z.number().describe('The ID of the comment to react to'),
+      content: z
+        .enum(['+1', '-1', 'laugh', 'confused', 'heart', 'hooray', 'rocket', 'eyes'])
+        .describe('The type of reaction to add'),
+    }),
+    func: async ({ pull_number, comment_id, content }) => {
+      try {
+        logger.info('Creating GitHub PR reaction:', { pull_number, comment_id, content });
+        const reaction = await createPRReaction({ pull_number, comment_id, content });
+        return {
+          success: true,
+          reaction,
+        };
+      } catch (error) {
+        logger.error('Error creating GitHub PR reaction:', error);
+        throw error;
+      }
+    },
+  });
+
 export const createGitHubTools = async (token: string, owner: string, repo: string) => {
   const github = await githubClient(token, owner, repo);
   const listIssues = (state?: 'open' | 'closed' | 'all') => github.listIssues(state);
@@ -257,6 +439,12 @@ export const createGitHubTools = async (token: string, owner: string, repo: stri
   const createReaction = (params: CreateReactionParams) => github.createReaction(params);
   const listMentions = () => github.listMentions();
   const listNotifications = (all?: boolean) => github.listNotifications(all);
+  const listPullRequests = (state?: 'open' | 'closed' | 'all') => github.listPullRequests(state);
+  const getPullRequest = (pull_number: number) => github.getPullRequest(pull_number);
+  const listPRComments = (pull_number: number) => github.listPRComments(pull_number);
+  const createPRComment = (params: CreatePRCommentParams) => github.createPRComment(params);
+  const createPRReaction = (params: CreateReactionParams & { pull_number: number }) =>
+    github.createPRReaction(params);
 
   return [
     createListIssuesTools(listIssues),
@@ -266,5 +454,10 @@ export const createGitHubTools = async (token: string, owner: string, repo: stri
     createCreateReactionTool(createReaction),
     createListMentionsTool(listMentions),
     createListNotificationsTool(listNotifications),
+    createListPullRequestsTool(listPullRequests),
+    createGetPullRequestTool(getPullRequest),
+    createListPRCommentsTool(listPRComments),
+    createCreatePRCommentTool(createPRComment),
+    createCreatePRReactionTool(createPRReaction),
   ];
 };

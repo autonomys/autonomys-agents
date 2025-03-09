@@ -91,6 +91,40 @@ export interface MentionInfo {
   type: 'issue' | 'pull_request';
 }
 
+export interface PullRequestInfo {
+  number: number;
+  title: string;
+  state: string;
+  body?: string;
+  html_url: string;
+  created_at: string;
+  updated_at: string;
+  user: {
+    login: string;
+  };
+  assignees: {
+    login: string;
+  }[];
+  requested_reviewers: {
+    login: string;
+  }[];
+}
+
+export interface CreatePRCommentParams {
+  pull_number: number;
+  body: string;
+  commit_id?: string;
+  path?: string;
+  line?: number;
+  side?: 'LEFT' | 'RIGHT';
+}
+
+export interface PRCommentInfo extends CommentInfo {
+  position?: number;
+  path?: string;
+  commit_id?: string;
+}
+
 export interface GitHubClient {
   listIssues: (state?: 'open' | 'closed' | 'all') => Promise<IssueInfo[]>;
   createIssue: (params: CreateIssueParams) => Promise<IssueInfo>;
@@ -99,6 +133,13 @@ export interface GitHubClient {
   createReaction: (params: CreateReactionParams) => Promise<ReactionInfo>;
   listMentions: () => Promise<MentionInfo[]>;
   listNotifications: (all?: boolean) => Promise<NotificationInfo[]>;
+  listPullRequests: (state?: 'open' | 'closed' | 'all') => Promise<PullRequestInfo[]>;
+  getPullRequest: (pull_number: number) => Promise<PullRequestInfo>;
+  listPRComments: (pull_number: number) => Promise<PRCommentInfo[]>;
+  createPRComment: (params: CreatePRCommentParams) => Promise<PRCommentInfo>;
+  createPRReaction: (
+    params: CreateReactionParams & { pull_number: number },
+  ) => Promise<ReactionInfo>;
 }
 
 export const githubClient = async (
@@ -310,6 +351,163 @@ export const githubClient = async (
     }
   };
 
+  const listPullRequests = async (
+    state: 'open' | 'closed' | 'all' = 'open',
+  ): Promise<PullRequestInfo[]> => {
+    try {
+      const response = await octokit.pulls.list({
+        owner,
+        repo,
+        state,
+      });
+
+      return response.data.map(pr => ({
+        number: pr.number,
+        title: pr.title,
+        state: pr.state,
+        body: pr.body || undefined,
+        html_url: pr.html_url,
+        created_at: pr.created_at,
+        updated_at: pr.updated_at,
+        user: {
+          login: pr.user?.login || 'unknown',
+        },
+        assignees: pr.assignees?.map(assignee => ({ login: assignee.login })) || [],
+        requested_reviewers:
+          pr.requested_reviewers?.map(reviewer => ({ login: reviewer.login })) || [],
+      }));
+    } catch (error) {
+      logger.error('Error listing pull requests:', error);
+      throw error;
+    }
+  };
+
+  const getPullRequest = async (pull_number: number): Promise<PullRequestInfo> => {
+    try {
+      const response = await octokit.pulls.get({
+        owner,
+        repo,
+        pull_number,
+      });
+
+      return {
+        number: response.data.number,
+        title: response.data.title,
+        state: response.data.state,
+        body: response.data.body || undefined,
+        html_url: response.data.html_url,
+        created_at: response.data.created_at,
+        updated_at: response.data.updated_at,
+        user: {
+          login: response.data.user?.login || 'unknown',
+        },
+        assignees: response.data.assignees?.map(assignee => ({ login: assignee.login })) || [],
+        requested_reviewers:
+          response.data.requested_reviewers?.map(reviewer => ({ login: reviewer.login })) || [],
+      };
+    } catch (error) {
+      logger.error('Error getting pull request:', error);
+      throw error;
+    }
+  };
+
+  const listPRComments = async (pull_number: number): Promise<PRCommentInfo[]> => {
+    try {
+      const response = await octokit.pulls.listReviewComments({
+        owner,
+        repo,
+        pull_number,
+      });
+
+      return response.data.map(comment => ({
+        id: comment.id,
+        body: comment.body || '',
+        user: {
+          login: comment.user?.login || 'unknown',
+        },
+        created_at: comment.created_at,
+        updated_at: comment.updated_at,
+        html_url: comment.html_url,
+        position: comment.position || undefined,
+        path: comment.path,
+        commit_id: comment.commit_id,
+      }));
+    } catch (error) {
+      logger.error('Error listing PR comments:', error);
+      throw error;
+    }
+  };
+
+  const createPRComment = async (params: CreatePRCommentParams): Promise<PRCommentInfo> => {
+    try {
+      let response;
+
+      if (params.path && params.line) {
+        // Create a review comment on a specific line
+        response = await octokit.pulls.createReviewComment({
+          owner,
+          repo,
+          pull_number: params.pull_number,
+          body: params.body,
+          commit_id: params.commit_id || '',
+          path: params.path,
+          line: params.line,
+          side: params.side || 'RIGHT',
+        });
+      } else {
+        // Create a regular PR comment
+        response = await octokit.issues.createComment({
+          owner,
+          repo,
+          issue_number: params.pull_number,
+          body: params.body,
+        });
+      }
+
+      return {
+        id: response.data.id,
+        body: response.data.body || '',
+        user: {
+          login: response.data.user?.login || 'unknown',
+        },
+        created_at: response.data.created_at,
+        updated_at: response.data.updated_at,
+        html_url: response.data.html_url,
+        position: 'position' in response.data ? response.data.position : undefined,
+        path: 'path' in response.data ? response.data.path : undefined,
+        commit_id: 'commit_id' in response.data ? response.data.commit_id : undefined,
+      };
+    } catch (error) {
+      logger.error('Error creating PR comment:', error);
+      throw error;
+    }
+  };
+
+  const createPRReaction = async (
+    params: CreateReactionParams & { pull_number: number },
+  ): Promise<ReactionInfo> => {
+    try {
+      const response = await octokit.reactions.createForPullRequestReviewComment({
+        owner,
+        repo,
+        comment_id: params.comment_id!,
+        content: params.content,
+      });
+
+      return {
+        id: response.data.id,
+        content: response.data.content as ReactionType,
+        user: {
+          login: response.data.user?.login || 'unknown',
+        },
+        created_at: response.data.created_at,
+      };
+    } catch (error) {
+      logger.error('Error creating PR reaction:', error);
+      throw error;
+    }
+  };
+
   return {
     listIssues,
     createIssue,
@@ -318,5 +516,10 @@ export const githubClient = async (
     createReaction,
     listMentions,
     listNotifications,
+    listPullRequests,
+    getPullRequest,
+    listPRComments,
+    createPRComment,
+    createPRReaction,
   };
 };
