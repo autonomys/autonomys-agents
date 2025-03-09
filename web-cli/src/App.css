@@ -4,6 +4,14 @@
   padding: 0;
 }
 
+html, body {
+  height: 100%;
+  overflow-x: hidden;
+  overflow-y: auto;
+  position: relative;
+  -webkit-overflow-scrolling: touch;
+}
+
 body {
   font-family:
     -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell',
@@ -22,9 +30,19 @@ pre {
 .App {
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  min-height: 100vh;
   width: 100%;
-  overflow: hidden;
+  overflow-y: auto;
+  overflow-x: hidden;
+  position: relative;
+  z-index: 1;
+}
+
+/* Fix for stacking context issues with Chakra UI */
+#root {
+  position: relative;
+  z-index: 1;
+  height: 100%;
 }
 
 .red {

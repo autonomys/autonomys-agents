@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { Flex } from '@chakra-ui/react';
+import { Flex, Box } from '@chakra-ui/react';
 import { useAppContext } from '../context/AppContext';
 import {
   subscribeToTaskUpdates,
@@ -79,24 +79,19 @@ const BodyArea: React.FC = () => {
     }
   };
 
-  const handleDeleteTask = async (id: string) => {
-    console.log(`Deleting task: ${id}`);
-    setLoading(true);
-    const success = await deleteTask(id);
-
-    if (!success) {
-      console.error('Failed to delete task');
-      setLoading(false);
+  const handleDeleteTask = useCallback(async (id: string) => {
+    try {
+      await deleteTask(id);
+    } catch (error) {
+      console.error('Error deleting task:', error);
     }
-  };
+  }, []);
 
   const handleReconnect = useCallback(() => {
-    console.log('Manual reconnect triggered from UI');
-    setLoading(true);
     reconnect();
   }, []);
 
-  const getConnectionStatusInfo = useCallback(() => {
+  const connectionStatusInfo = (() => {
     switch (connectionStatus) {
       case ConnectionStatus.CONNECTED:
         return { message: 'Connected', className: 'connection-status-connected' };
@@ -109,20 +104,22 @@ const BodyArea: React.FC = () => {
       default:
         return { message: 'Unknown', className: 'connection-status-unknown' };
     }
-  }, [connectionStatus]);
-
-  const connectionStatusInfo = getConnectionStatusInfo();
+  })();
 
   return (
     <Flex 
-      width="100%" 
-      height="40vh" 
-      bg="rgba(30, 30, 30, 0.8)"
-      color="white"
-      borderTop="1px solid"
-      borderColor="gray.700"
+      direction={{ base: 'column', lg: 'row' }} 
+      flex="1" 
+      p={4} 
+      gap={4}
+      position="relative"
     >
-      <Flex direction="column" flex="2">
+      <Box 
+        flex={{ base: '1', lg: '3' }}
+        position="relative"
+        zIndex={5}
+        minHeight="200px"
+      >
         <InputArea
           value={state.value}
           handleInputChange={handleInputChange}
@@ -130,8 +127,15 @@ const BodyArea: React.FC = () => {
           currentTask={currentTask}
           error={error}
         />
-      </Flex>
-      <Flex direction="column" flex="3">
+      </Box>
+      
+      <Box 
+        flex={{ base: '1', lg: '2' }}
+        display={{ base: 'block', lg: 'block' }}
+        position="relative"
+        zIndex={1}
+        minHeight="200px"
+      >
         <TasksArea
           tasks={tasks}
           loading={loading}
@@ -140,7 +144,7 @@ const BodyArea: React.FC = () => {
           handleDeleteTask={handleDeleteTask}
           handleReconnect={handleReconnect}
         />
-      </Flex>
+      </Box>
     </Flex>
   );
 };

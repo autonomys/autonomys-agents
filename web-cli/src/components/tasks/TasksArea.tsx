@@ -31,18 +31,21 @@ const TasksArea: React.FC<TasksAreaProps> = ({
       flex="1" 
       borderLeft="1px solid" 
       borderColor="gray.700"
-      height="100%"
+      minHeight="200px"
       width="100%"
       bg="rgba(26, 26, 46, 0.6)"
       boxShadow="inset 0 0 20px rgba(0, 0, 0, 0.3)"
-      overflow="hidden" /* To ensure child content doesn't overflow */
+      overflow="visible"
+      position="relative"
     >
       <TaskHeader
         connectionStatus={connectionStatus}
         connectionStatusInfo={connectionStatusInfo}
         handleReconnect={handleReconnect}
       />
-      <ScheduledTasksBox tasks={tasks} onDeleteTask={handleDeleteTask} />
+      <Box pt={1} px={2} flex="1" display="flex" flexDirection="column">
+        <ScheduledTasksBox tasks={tasks} onDeleteTask={handleDeleteTask} />
+      </Box>
       
       {loading && (
         <Flex 
@@ -58,15 +61,9 @@ const TasksArea: React.FC<TasksAreaProps> = ({
           border="1px solid"
           borderColor="gray.700"
           zIndex="1"
-          backdropFilter="blur(8px)"
         >
-          <Spinner 
-            size="sm" 
-            color="brand.neonBlue" 
-          />
-          <Text fontSize={["xs", "sm"]} color="whiteAlpha.800" fontWeight="medium">
-            Loading tasks...
-          </Text>
+          <Spinner size="sm" color="brand.neonBlue" />
+          <Text fontSize="sm" color="whiteAlpha.800">Loading tasks...</Text>
         </Flex>
       )}
     </Flex>
