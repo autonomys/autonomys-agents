@@ -1,12 +1,12 @@
-import { z } from 'zod';
 import dotenv from 'dotenv';
-import { configSchema } from './schema.js';
+import { existsSync, readFileSync } from 'fs';
+import { mkdir } from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { mkdir } from 'fs/promises';
-import { existsSync, readFileSync } from 'fs';
-import { loadCharacter } from './characters.js';
 import yaml from 'yaml';
+import { z } from 'zod';
+import { loadCharacter } from './characters.js';
+import { configSchema } from './schema.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -104,6 +104,12 @@ export const config = (() => {
 
       slackConfig: {
         SLACK_APP_TOKEN: process.env.SLACK_APP_TOKEN || '',
+      },
+
+      githubConfig: {
+        GITHUB_TOKEN: process.env.GITHUB_TOKEN || '',
+        GITHUB_OWNER: process.env.GITHUB_OWNER || '',
+        GITHUB_REPO: process.env.GITHUB_REPO || '',
       },
 
       llmConfig: {
