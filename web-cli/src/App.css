@@ -231,3 +231,80 @@ pre {
     background-position: 0% center;
   }
 }
+
+/* Add these animations for the advanced tabs */
+@keyframes scannerEffect {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+@keyframes hexPulse {
+  0% { opacity: 0.5; }
+  50% { opacity: 1; }
+  100% { opacity: 0.5; }
+}
+
+@keyframes floatEffect {
+  0% { transform: translateY(0); }
+  50% { transform: translateY(-2px); }
+  100% { transform: translateY(0); }
+}
+
+/* Advanced neural network tab animations */
+@keyframes neuralPulse {
+  0%, 100% { 
+    box-shadow: 0 0 0 0 rgba(255, 0, 204, 0); 
+    transform: scale(1);
+  }
+  50% { 
+    box-shadow: 0 0 10px 3px rgba(255, 0, 204, 0.6); 
+    transform: scale(1.02);
+  }
+}
+
+@keyframes neuronActivate {
+  0% { transform: scale(0.8); opacity: 0.3; }
+  50% { transform: scale(1.2); opacity: 1; }
+  100% { transform: scale(1); opacity: 0.8; }
+}
+
+@keyframes dataFlow {
+  0% { 
+    background-position: 0% 50%;
+    opacity: 0.8;
+  }
+  50% { 
+    background-position: 100% 50%;
+    opacity: 1;
+  }
+  100% { 
+    background-position: 0% 50%;
+    opacity: 0.8;
+  }
+}
+
+@keyframes connectionFlow {
+  0% { stroke-dashoffset: 100; }
+  100% { stroke-dashoffset: 0; }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -100% 0;
+  }
+  100% {
+    background-position: 300% 0;
+  }
+}
+
+@keyframes nodeRipple {
+  0% {
+    box-shadow: 0 0 0 0 rgba(255, 0, 204, 0.6);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(255, 0, 204, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(255, 0, 204, 0);
+  }
+}

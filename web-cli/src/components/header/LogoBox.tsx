@@ -3,7 +3,7 @@ import { Box, Flex, Heading, Text, Image } from '@chakra-ui/react';
 
 const LogoBox: React.FC = () => {
   return (
-    <Box textAlign="center" py="4" bg="rgba(0, 0, 0, 0.3)">
+    <Box textAlign="center" py="4" >
       <Flex justifyContent="center" alignItems="center" mb="2">
         <Text 
           as="span" 
