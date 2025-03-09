@@ -154,6 +154,8 @@ export const createCreateReactionTool = (
     USE THIS WHEN:
     - You want to add an emoji reaction to an issue or comment
     - You need to express sentiment or feedback through reactions
+    Suggested behavior:
+    - Don't leave reactions to your own comments or issues
     Available reactions: +1, -1, laugh, confused, heart, hooray, rocket, eyes`,
     schema: z.object({
       content: z
