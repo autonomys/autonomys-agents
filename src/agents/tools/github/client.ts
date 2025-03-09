@@ -24,6 +24,31 @@ export interface CommentInfo {
   html_url: string;
 }
 
+export type ReactionType =
+  | '+1'
+  | '-1'
+  | 'laugh'
+  | 'confused'
+  | 'heart'
+  | 'hooray'
+  | 'rocket'
+  | 'eyes';
+
+export interface ReactionInfo {
+  id: number;
+  content: ReactionType;
+  user: {
+    login: string;
+  };
+  created_at: string;
+}
+
+export interface CreateReactionParams {
+  content: ReactionType;
+  issue_number?: number;
+  comment_id?: number;
+}
+
 export interface CreateIssueParams {
   title: string;
   body?: string;
@@ -41,6 +66,7 @@ export interface GitHubClient {
   createIssue: (params: CreateIssueParams) => Promise<IssueInfo>;
   listComments: (issue_number: number) => Promise<CommentInfo[]>;
   createComment: (params: CreateCommentParams) => Promise<CommentInfo>;
+  createReaction: (params: CreateReactionParams) => Promise<ReactionInfo>;
 }
 
 export const githubClient = async (
@@ -156,10 +182,49 @@ export const githubClient = async (
     }
   };
 
+  const createReaction = async (params: CreateReactionParams): Promise<ReactionInfo> => {
+    try {
+      let response;
+
+      if (params.issue_number) {
+        // Create reaction for an issue
+        response = await octokit.reactions.createForIssue({
+          owner,
+          repo,
+          issue_number: params.issue_number,
+          content: params.content,
+        });
+      } else if (params.comment_id) {
+        // Create reaction for a comment
+        response = await octokit.reactions.createForIssueComment({
+          owner,
+          repo,
+          comment_id: params.comment_id,
+          content: params.content,
+        });
+      } else {
+        throw new Error('Either issue_number or comment_id must be provided');
+      }
+
+      return {
+        id: response.data.id,
+        content: response.data.content as ReactionType,
+        user: {
+          login: response.data.user?.login || 'unknown',
+        },
+        created_at: response.data.created_at,
+      };
+    } catch (error) {
+      logger.error('Error creating reaction:', error);
+      throw error;
+    }
+  };
+
   return {
     listIssues,
     createIssue,
     listComments,
     createComment,
+    createReaction,
   };
 };

@@ -5,8 +5,10 @@ import {
   CommentInfo,
   CreateCommentParams,
   CreateIssueParams,
+  CreateReactionParams,
   githubClient,
   IssueInfo,
+  ReactionInfo,
 } from './client.js';
 
 const logger = createLogger('github-tools');
@@ -140,17 +142,60 @@ export const createCreateCommentTool = (
     },
   });
 
+/**
+ * Creates a tool to add a reaction to a GitHub issue or comment
+ */
+export const createCreateReactionTool = (
+  createReaction: (params: CreateReactionParams) => Promise<ReactionInfo>,
+) =>
+  new DynamicStructuredTool({
+    name: 'create_github_reaction',
+    description: `Create a reaction on a GitHub issue or comment in the configured repository.
+    USE THIS WHEN:
+    - You want to add an emoji reaction to an issue or comment
+    - You need to express sentiment or feedback through reactions
+    Available reactions: +1, -1, laugh, confused, heart, hooray, rocket, eyes`,
+    schema: z.object({
+      content: z
+        .enum(['+1', '-1', 'laugh', 'confused', 'heart', 'hooray', 'rocket', 'eyes'])
+        .describe('The type of reaction to add'),
+      issue_number: z
+        .number()
+        .optional()
+        .describe('The number of the issue to react to. Required if not reacting to a comment'),
+      comment_id: z
+        .number()
+        .optional()
+        .describe('The ID of the comment to react to. Required if not reacting to an issue'),
+    }),
+    func: async ({ content, issue_number, comment_id }) => {
+      try {
+        logger.info('Creating GitHub reaction:', { content, issue_number, comment_id });
+        const reaction = await createReaction({ content, issue_number, comment_id });
+        return {
+          success: true,
+          reaction,
+        };
+      } catch (error) {
+        logger.error('Error creating GitHub reaction:', error);
+        throw error;
+      }
+    },
+  });
+
 export const createGitHubTools = async (token: string, owner: string, repo: string) => {
   const github = await githubClient(token, owner, repo);
   const listIssues = (state?: 'open' | 'closed' | 'all') => github.listIssues(state);
   const createIssue = (params: CreateIssueParams) => github.createIssue(params);
   const listComments = (issue_number: number) => github.listComments(issue_number);
   const createComment = (params: CreateCommentParams) => github.createComment(params);
+  const createReaction = (params: CreateReactionParams) => github.createReaction(params);
 
   return [
     createListIssuesTools(listIssues),
     createCreateIssueTool(createIssue),
     createListCommentsTools(listComments),
     createCreateCommentTool(createComment),
+    createCreateReactionTool(createReaction),
   ];
 };
