@@ -51,7 +51,9 @@ const main = async () => {
   const initialMessage = `
 - Check for new issues in the repository, and create a new issue if you encounter an error or have a suggestion.
 - Check for new mentions and notifications, and react to them (with reactions or comments) if you have a suggestion.
-`;
+- Check for new pull requests, and review or comment on them if you have a suggestion.
+- Check for new comments on issues and pull requests, and respond to them if you have a suggestion.
+- React to new pull request and comments with reactions if you have like or dislike.`;
 
   try {
     await validateLocalHash();
