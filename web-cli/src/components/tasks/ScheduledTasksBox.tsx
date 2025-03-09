@@ -23,7 +23,7 @@ const ScheduledTasksBox: React.FC<ScheduledTasksBoxProps> = ({ tasks, onDeleteTa
   };
 
   const formatTime = (time: Date) => {
-    return time.toISOString().replace('T', ' ').substring(0, 19);
+    return time.toISOString(); // Return the full ISO format (e.g., 2025-03-09T01:32:26.997Z)
   };
 
   // Ensure the component updates if the window resizes

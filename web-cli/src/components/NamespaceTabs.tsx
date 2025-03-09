@@ -104,10 +104,12 @@ const NamespaceTabs: React.FC<NamespaceTabsProps> = ({
         transition="all 0.3s ease"
         _hover={{
           bg: "rgba(0, 204, 255, 0.2)",
-          transform: "rotate(180deg)",
           boxShadow: "0 0 10px rgba(0, 204, 255, 0.3)",
+          color: "cyan.300"
         }}
         onClick={onRefreshNamespaces}
+        title="Refresh Namespaces"
+        aria-label="Refresh Namespaces"
       >
         ↻
       </Button>

@@ -15,7 +15,7 @@ const CharacterBox: React.FC<CharacterBoxProps> = ({ character }) => {
       flexDirection="column"
       justifyContent="space-between"
     >
-      <Text color="brand.neonPink" textTransform="uppercase" fontSize="sm" mb="2" textShadow="0 0 5px rgba(255, 0, 204, 0.5)">
+      <Text color="brand.neonPink" textTransform="uppercase" fontSize="m" mb="2" textShadow="0 0 5px rgba(255, 0, 204, 0.5)">
         Character
       </Text>
       <Box 

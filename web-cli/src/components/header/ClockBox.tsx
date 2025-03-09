@@ -15,16 +15,9 @@ const ClockBox: React.FC<ClockBoxProps> = ({ time }) => {
     };
   }, []);
 
-  // Format the date in YYYY-MM-DD format
-  const formatDate = (date: Date) => {
-    return date.toISOString().split('T')[0];
-  };
-
-  // Format the time in HH:MM:SS format
-  const formatTime = (date: Date) => {
-    // Using a shorter time format to prevent truncation
-    const timeString = date.toTimeString().split(' ')[0];
-    return timeString;
+  // Format the date in ISO format (e.g., 2025-03-09T01:32:26.997Z)
+  const formatISODateTime = (date: Date) => {
+    return date.toISOString();
   };
 
   return (
@@ -45,18 +38,18 @@ const ClockBox: React.FC<ClockBoxProps> = ({ time }) => {
         <Text 
           color="brand.neonPink" 
           textTransform="uppercase" 
-          fontSize="xs" 
+          fontSize="lg" 
           mb="1.5" 
           textAlign="right" 
           textShadow="0 0 5px rgba(255, 0, 204, 0.5)"
         >
-          Date & Time
+          ISO Date & Time
         </Text>
         
         <Box 
           bg="rgba(0, 0, 0, 0.3)"
           borderRadius="3px"
-          p="1"
+          p="2"
           fontFamily="mono"
           letterSpacing="0px"
           position="relative"
@@ -64,30 +57,25 @@ const ClockBox: React.FC<ClockBoxProps> = ({ time }) => {
           borderRight="2px solid"
           borderColor="brand.neonGreen"
           color="brand.neonBlue"
-          fontSize="xs"
-          mb="1.5"
+          fontSize="lg"
           textAlign="right"
+          width="100%"
+          whiteSpace="nowrap"
+          overflowX="auto"
+          css={{
+            "&::-webkit-scrollbar": {
+              height: "2px",
+            },
+            "&::-webkit-scrollbar-track": {
+              background: "rgba(0, 0, 0, 0.1)",
+            },
+            "&::-webkit-scrollbar-thumb": {
+              background: "rgba(0, 204, 255, 0.3)",
+              borderRadius: "1px",
+            }
+          }}
         >
-          {formatDate(currentTime)}
-        </Box>
-        
-        <Box 
-          bg="rgba(0, 0, 0, 0.3)"
-          borderRadius="3px"
-          p="1"
-          fontFamily="mono"
-          letterSpacing="0px"
-          position="relative"
-          overflow="hidden"
-          borderRight="2px solid"
-          borderColor="brand.neonGreen"
-          color="brand.neonBlue"
-          fontSize="md"
-          fontWeight="bold"
-          textAlign="right"
-          mt="0"
-        >
-          {formatTime(currentTime)}
+          {formatISODateTime(currentTime)}
         </Box>
       </Flex>
     </Box>

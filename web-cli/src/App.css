@@ -45,6 +45,13 @@ pre {
   height: 100%;
 }
 
+/* Adding missing blink animation for cursor in CharacterBox */
+@keyframes blink {
+  0% { opacity: 1; }
+  50% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
 .red {
   color: #d16969;
 }
@@ -68,4 +75,21 @@ pre {
 }
 .gray {
   color: #888;
+}
+
+/* Connection status colors */
+.connection-status-connected {
+  color: #6a9955; /* Green */
+}
+.connection-status-connecting {
+  color: #dcdcaa; /* Yellow */
+}
+.connection-status-disconnected {
+  color: #d16969; /* Red */
+}
+.connection-status-error {
+  color: #d16969; /* Red */
+}
+.connection-status-unknown {
+  color: #888; /* Gray */
 }
