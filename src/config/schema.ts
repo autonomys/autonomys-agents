@@ -1,5 +1,5 @@
-import { z } from 'zod';
 import { NetworkId } from '@autonomys/auto-utils';
+import { z } from 'zod';
 import { LLMConfiguration, LLMProvider } from '../services/llm/types.js';
 
 const llmConfigSchema = z.object({
@@ -41,6 +41,12 @@ const twitterConfigSchema = z.object({
 
 const slackConfigSchema = z.object({
   SLACK_APP_TOKEN: z.string().optional(),
+});
+
+const githubConfigSchema = z.object({
+  GITHUB_TOKEN: z.string().optional(),
+  GITHUB_OWNER: z.string().optional(),
+  GITHUB_REPO: z.string().optional(),
 });
 
 const autoDriveConfigSchema = z
@@ -134,6 +140,7 @@ export const configSchema = z.object({
   characterConfig: characterConfigSchema,
   orchestratorConfig: orchestratorConfigSchema,
   slackConfig: slackConfigSchema,
+  githubConfig: githubConfigSchema,
   SERPAPI_API_KEY: SERPAPI_API_KEY,
   NODE_ENV: z.enum(['development', 'production', 'test']),
   API_PORT: z.number().int().positive().default(3001),

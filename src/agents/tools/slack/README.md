@@ -21,6 +21,8 @@ SLACK_APP_TOKEN="xoxb-"
    - `im:read` (for direct messages)
    - `mpim:read` (for group direct messages)
    - `users:read` (for user information)
+   - `reactions:read` (to read reactions to messages)
+   - `reactions:write` (to react to messages)
 
 3. Install the app to your workspace
 4. Set the following environment variables:
@@ -52,6 +54,8 @@ oauth_config:
       - im:read
       - mpim:read
       - users:read
+      - reactions:read
+      - reactions:write
 settings:
   org_deploy_enabled: false
   socket_mode_enabled: false
