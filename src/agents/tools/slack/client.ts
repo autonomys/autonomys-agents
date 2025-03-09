@@ -1,4 +1,5 @@
 import {
+  ChatPostMessageArguments,
   ConversationsHistoryResponse,
   ConversationsListResponse,
   UsersInfoResponse,
@@ -145,17 +146,39 @@ export const slackClient = async (token: string) => {
     return fetchMessages(client, channelId, limit);
   };
 
-  const postMessage = async (channelId: string, message: string, threadTs?: string) => {
-    const response = await client.chat.postMessage({
-      channel: channelId,
-      text: message,
-      thread_ts: threadTs,
-    });
+  const postMessage = async (message: ChatPostMessageArguments) => {
+    const response = await client.chat.postMessage(message);
     return {
       success: true,
-      channel: channelId,
-      message: message,
+      channel: message.channel ?? '',
+      message: message.text ?? '',
       ts: response.ts ?? '',
+    };
+  };
+
+  const getReaction = async (channelId: string, timestamp: string, full: boolean = false) => {
+    const response = await client.reactions.get({
+      channel: channelId,
+      timestamp,
+      full,
+    });
+    return {
+      success: response.ok ?? false,
+      channel: channelId,
+      reaction: response.message?.reactions ?? [],
+    };
+  };
+
+  const addReaction = async (channelId: string, timestamp: string, reaction: string) => {
+    const response = await client.reactions.add({
+      channel: channelId,
+      timestamp,
+      name: reaction,
+    });
+    return {
+      success: response.ok ?? false,
+      channel: channelId,
+      reaction,
     };
   };
 
@@ -166,6 +189,8 @@ export const slackClient = async (token: string) => {
     getMessages,
     getUserInfo,
     postMessage,
+    getReaction,
+    addReaction,
   };
 };
 
