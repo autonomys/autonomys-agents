@@ -14,6 +14,7 @@ import {
   PRCommentInfo,
   PullRequestInfo,
   ReactionInfo,
+  WatchedRepoInfo,
 } from './client.js';
 
 const logger = createLogger('github-tools');
@@ -430,6 +431,105 @@ export const createCreatePRReactionTool = (
     },
   });
 
+/**
+ * Creates a tool to watch a GitHub repository
+ */
+export const createWatchRepoTool = (
+  watchRepo: (owner: string, repo: string, ignored?: boolean) => Promise<void>,
+) =>
+  new DynamicStructuredTool({
+    name: 'watch_github_repository',
+    description: `Watch a GitHub repository to receive notifications about its activity.
+    USE THIS WHEN:
+    - You want to start monitoring a repository
+    - You need to track changes and updates in a repository
+    - You want to receive notifications about issues, PRs, and other activities
+    
+    Note: You can optionally set 'ignored' to true to watch without receiving notifications.`,
+    schema: z.object({
+      owner: z.string().describe('The owner of the repository to watch'),
+      repo: z.string().describe('The name of the repository to watch'),
+      ignored: z
+        .boolean()
+        .optional()
+        .describe(
+          'If true, watch the repository but do not receive notifications. Default is false.',
+        ),
+    }),
+    func: async ({ owner, repo, ignored = false }) => {
+      try {
+        logger.info('Watching GitHub repository:', { owner, repo, ignored });
+        await watchRepo(owner, repo, ignored);
+        return {
+          success: true,
+          message: `Successfully watched repository ${owner}/${repo}`,
+        };
+      } catch (error) {
+        logger.error('Error watching GitHub repository:', error);
+        throw error;
+      }
+    },
+  });
+
+/**
+ * Creates a tool to unwatch a GitHub repository
+ */
+export const createUnwatchRepoTool = (
+  unwatchRepo: (owner: string, repo: string) => Promise<void>,
+) =>
+  new DynamicStructuredTool({
+    name: 'unwatch_github_repository',
+    description: `Stop watching a GitHub repository.
+    USE THIS WHEN:
+    - You want to stop monitoring a repository
+    - You no longer need notifications from a repository
+    - You want to clean up your watched repositories list`,
+    schema: z.object({
+      owner: z.string().describe('The owner of the repository to unwatch'),
+      repo: z.string().describe('The name of the repository to unwatch'),
+    }),
+    func: async ({ owner, repo }) => {
+      try {
+        logger.info('Un-watching GitHub repository:', { owner, repo });
+        await unwatchRepo(owner, repo);
+        return {
+          success: true,
+          message: `Successfully unwatched repository ${owner}/${repo}`,
+        };
+      } catch (error) {
+        logger.error('Error un-watching GitHub repository:', error);
+        throw error;
+      }
+    },
+  });
+
+/**
+ * Creates a tool to list watched GitHub repositories
+ */
+export const createListWatchedReposTool = (listWatchedRepos: () => Promise<WatchedRepoInfo[]>) =>
+  new DynamicStructuredTool({
+    name: 'list_watched_github_repositories',
+    description: `List all GitHub repositories you are watching.
+    USE THIS WHEN:
+    - You want to see all repositories you're watching
+    - You need to check your notification settings for repositories
+    - You want to review which repositories you're monitoring`,
+    schema: z.object({}),
+    func: async () => {
+      try {
+        logger.info('Listing watched GitHub repositories');
+        const repos = await listWatchedRepos();
+        return {
+          success: true,
+          watched_repositories: repos,
+        };
+      } catch (error) {
+        logger.error('Error listing watched GitHub repositories:', error);
+        throw error;
+      }
+    },
+  });
+
 export const createGitHubTools = async (token: string, owner: string, repo: string) => {
   const github = await githubClient(token, owner, repo);
   const listIssues = (state?: 'open' | 'closed' | 'all') => github.listIssues(state);
@@ -445,6 +545,11 @@ export const createGitHubTools = async (token: string, owner: string, repo: stri
   const createPRComment = (params: CreatePRCommentParams) => github.createPRComment(params);
   const createPRReaction = (params: CreateReactionParams & { pull_number: number }) =>
     github.createPRReaction(params);
+  const watchRepo = (targetOwner: string, targetRepo: string, ignored?: boolean) =>
+    github.watchRepo(targetOwner, targetRepo, ignored);
+  const unwatchRepo = (targetOwner: string, targetRepo: string) =>
+    github.unwatchRepo(targetOwner, targetRepo);
+  const listWatchedRepos = () => github.listWatchedRepos();
 
   return [
     createListIssuesTools(listIssues),
@@ -459,5 +564,8 @@ export const createGitHubTools = async (token: string, owner: string, repo: stri
     createListPRCommentsTool(listPRComments),
     createCreatePRCommentTool(createPRComment),
     createCreatePRReactionTool(createPRReaction),
+    createWatchRepoTool(watchRepo),
+    createUnwatchRepoTool(unwatchRepo),
+    createListWatchedReposTool(listWatchedRepos),
   ];
 };

@@ -125,6 +125,20 @@ export interface PRCommentInfo extends CommentInfo {
   commit_id?: string;
 }
 
+export interface WatchedRepoInfo {
+  id: number;
+  name: string;
+  full_name: string;
+  description?: string;
+  html_url: string;
+  updated_at: string;
+  pushed_at: string;
+  subscription: {
+    subscribed: boolean;
+    ignored: boolean;
+  };
+}
+
 export interface GitHubClient {
   listIssues: (state?: 'open' | 'closed' | 'all') => Promise<IssueInfo[]>;
   createIssue: (params: CreateIssueParams) => Promise<IssueInfo>;
@@ -140,6 +154,9 @@ export interface GitHubClient {
   createPRReaction: (
     params: CreateReactionParams & { pull_number: number },
   ) => Promise<ReactionInfo>;
+  watchRepo: (owner: string, repo: string, ignored?: boolean) => Promise<void>;
+  unwatchRepo: (owner: string, repo: string) => Promise<void>;
+  listWatchedRepos: () => Promise<WatchedRepoInfo[]>;
 }
 
 export const githubClient = async (
@@ -508,6 +525,77 @@ export const githubClient = async (
     }
   };
 
+  const watchRepo = async (
+    targetOwner: string,
+    targetRepo: string,
+    ignored: boolean = false,
+  ): Promise<void> => {
+    try {
+      // First, set up the watching subscription
+      await octokit.activity.setRepoSubscription({
+        owner: targetOwner,
+        repo: targetRepo,
+        subscribed: true,
+        ignored: ignored,
+      });
+
+      logger.info('Successfully watched repository:', { owner: targetOwner, repo: targetRepo });
+    } catch (error) {
+      logger.error('Error watching repository:', error);
+      throw error;
+    }
+  };
+
+  const unwatchRepo = async (targetOwner: string, targetRepo: string): Promise<void> => {
+    try {
+      await octokit.activity.deleteRepoSubscription({
+        owner: targetOwner,
+        repo: targetRepo,
+      });
+
+      logger.info('Successfully unwatched repository:', { owner: targetOwner, repo: targetRepo });
+    } catch (error) {
+      logger.error('Error un-watching repository:', error);
+      throw error;
+    }
+  };
+
+  const listWatchedRepos = async (): Promise<WatchedRepoInfo[]> => {
+    try {
+      const response = await octokit.activity.listReposStarredByAuthenticatedUser();
+      const watchedRepos = await Promise.all(
+        response.data.map(async repo => {
+          // Get subscription details for each repo
+          const subscription = await octokit.activity
+            .getRepoSubscription({
+              owner: repo.owner.login,
+              repo: repo.name,
+            })
+            .catch(() => ({ data: { subscribed: true, ignored: false } }));
+
+          return {
+            id: repo.id,
+            name: repo.name,
+            full_name: repo.full_name,
+            description: repo.description || undefined,
+            html_url: repo.html_url,
+            updated_at: repo.updated_at,
+            pushed_at: repo.pushed_at,
+            subscription: {
+              subscribed: subscription.data.subscribed,
+              ignored: subscription.data.ignored,
+            },
+          };
+        }),
+      );
+
+      return watchedRepos.filter(repo => repo.updated_at !== null) as WatchedRepoInfo[];
+    } catch (error) {
+      logger.error('Error listing watched repositories:', error);
+      throw error;
+    }
+  };
+
   return {
     listIssues,
     createIssue,
@@ -521,5 +609,8 @@ export const githubClient = async (
     listPRComments,
     createPRComment,
     createPRReaction,
+    watchRepo,
+    unwatchRepo,
+    listWatchedRepos,
   };
 };
