@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Flex, Box, Text, useToken } from '@chakra-ui/react';
+import { ChatButton } from './chat/index';
+import { useChatContext } from '../context/ChatContext';
 
 // Define types for the neural connection props
 interface NeuralConnectionProps {
@@ -77,6 +79,12 @@ const NamespaceTabs: React.FC<NamespaceTabsProps> = ({
   const [activeIndex, setActiveIndex] = useState(namespaces.indexOf(activeNamespace));
   const [pulsingNode, setPulsingNode] = useState<number | null>(null);
   const [dataProcessing, setDataProcessing] = useState(false);
+  const { dispatch } = useChatContext();
+
+  // Add function to handle chat button click
+  const handleChatClick = (namespace: string) => {
+    dispatch({ type: 'SET_ACTIVE_CHAT', payload: namespace });
+  };
 
   // Simulate data processing when tab changes
   useEffect(() => {
@@ -316,6 +324,9 @@ const NamespaceTabs: React.FC<NamespaceTabsProps> = ({
                   {namespace}
                 </Text>
               </Box>
+
+              {/* Add the chat button below each tab */}
+              <ChatButton onClick={() => handleChatClick(namespace)} disabled={false} />
             </Flex>
           );
         })}
