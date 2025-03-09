@@ -8,6 +8,8 @@ import {
   CreateReactionParams,
   githubClient,
   IssueInfo,
+  MentionInfo,
+  NotificationInfo,
   ReactionInfo,
 } from './client.js';
 
@@ -185,6 +187,67 @@ export const createCreateReactionTool = (
     },
   });
 
+/**
+ * Creates a tool to list GitHub mentions
+ */
+export const createListMentionsTool = (listMentions: () => Promise<MentionInfo[]>) =>
+  new DynamicStructuredTool({
+    name: 'list_github_mentions',
+    description: `List GitHub issues and pull requests where you are mentioned.
+    USE THIS WHEN:
+    - You want to check where you've been mentioned
+    - You need to find discussions you're involved in
+    - You want to track conversations where someone has tagged you`,
+    schema: z.object({}),
+    func: async () => {
+      try {
+        logger.info('Listing GitHub mentions');
+        const mentions = await listMentions();
+        return {
+          success: true,
+          mentions,
+        };
+      } catch (error) {
+        logger.error('Error listing GitHub mentions:', error);
+        throw error;
+      }
+    },
+  });
+
+/**
+ * Creates a tool to list GitHub notifications
+ */
+export const createListNotificationsTool = (
+  listNotifications: (all?: boolean) => Promise<NotificationInfo[]>,
+) =>
+  new DynamicStructuredTool({
+    name: 'list_github_notifications',
+    description: `List GitHub notifications for the authenticated user.
+    USE THIS WHEN:
+    - You want to check your unread notifications
+    - You need to stay updated on repository activities
+    - You want to see all notifications, including read ones`,
+    schema: z.object({
+      all: z
+        .boolean()
+        .optional()
+        .describe('If true, show all notifications. If false, show only unread notifications.'),
+    }),
+    func: async ({ all = false }) => {
+      try {
+        logger.info('Listing GitHub notifications:', { all });
+        const notifications = await listNotifications(all);
+        return {
+          success: true,
+          notifications,
+        };
+      } catch (error) {
+        logger.error('Error listing GitHub notifications:', error);
+        throw error;
+      }
+    },
+  });
+
 export const createGitHubTools = async (token: string, owner: string, repo: string) => {
   const github = await githubClient(token, owner, repo);
   const listIssues = (state?: 'open' | 'closed' | 'all') => github.listIssues(state);
@@ -192,6 +255,8 @@ export const createGitHubTools = async (token: string, owner: string, repo: stri
   const listComments = (issue_number: number) => github.listComments(issue_number);
   const createComment = (params: CreateCommentParams) => github.createComment(params);
   const createReaction = (params: CreateReactionParams) => github.createReaction(params);
+  const listMentions = () => github.listMentions();
+  const listNotifications = (all?: boolean) => github.listNotifications(all);
 
   return [
     createListIssuesTools(listIssues),
@@ -199,5 +264,7 @@ export const createGitHubTools = async (token: string, owner: string, repo: stri
     createListCommentsTools(listComments),
     createCreateCommentTool(createComment),
     createCreateReactionTool(createReaction),
+    createListMentionsTool(listMentions),
+    createListNotificationsTool(listNotifications),
   ];
 };

@@ -61,12 +61,44 @@ export interface CreateCommentParams {
   body: string;
 }
 
+export interface NotificationInfo {
+  id: string;
+  unread: boolean;
+  reason: string;
+  subject: {
+    title: string;
+    type: string;
+    url: string;
+  };
+  repository: {
+    full_name: string;
+  };
+  updated_at: string;
+  url: string;
+  html_url?: string;
+}
+
+export interface MentionInfo {
+  number: number;
+  title: string;
+  body: string;
+  html_url: string;
+  repository: {
+    full_name: string;
+  };
+  created_at: string;
+  updated_at: string;
+  type: 'issue' | 'pull_request';
+}
+
 export interface GitHubClient {
   listIssues: (state?: 'open' | 'closed' | 'all') => Promise<IssueInfo[]>;
   createIssue: (params: CreateIssueParams) => Promise<IssueInfo>;
   listComments: (issue_number: number) => Promise<CommentInfo[]>;
   createComment: (params: CreateCommentParams) => Promise<CommentInfo>;
   createReaction: (params: CreateReactionParams) => Promise<ReactionInfo>;
+  listMentions: () => Promise<MentionInfo[]>;
+  listNotifications: (all?: boolean) => Promise<NotificationInfo[]>;
 }
 
 export const githubClient = async (
@@ -220,11 +252,71 @@ export const githubClient = async (
     }
   };
 
+  const listMentions = async (): Promise<MentionInfo[]> => {
+    try {
+      // Search for issues and PRs where the authenticated user is mentioned
+      const response = await octokit.search.issuesAndPullRequests({
+        q: `mentions:${(await octokit.users.getAuthenticated()).data.login}`,
+        sort: 'updated',
+        order: 'desc',
+      });
+
+      return response.data.items.map(item => ({
+        number: item.number,
+        title: item.title,
+        body: item.body || '',
+        html_url: item.html_url,
+        repository: {
+          full_name: item.repository_url.split('/repos/')[1],
+        },
+        created_at: item.created_at,
+        updated_at: item.updated_at,
+        type: item.pull_request ? 'pull_request' : 'issue',
+      }));
+    } catch (error) {
+      logger.error('Error listing mentions:', error);
+      throw error;
+    }
+  };
+
+  const listNotifications = async (all: boolean = false): Promise<NotificationInfo[]> => {
+    try {
+      const response = await octokit.activity.listNotificationsForAuthenticatedUser({
+        all, // if true, show all notifications, if false, show only unread
+      });
+
+      return response.data.map(notification => ({
+        id: notification.id,
+        unread: notification.unread,
+        reason: notification.reason,
+        subject: {
+          title: notification.subject.title,
+          type: notification.subject.type,
+          url: notification.subject.url,
+        },
+        repository: {
+          full_name: notification.repository.full_name,
+        },
+        updated_at: notification.updated_at,
+        url: notification.url,
+        html_url: notification.subject.url
+          ?.replace('api.github.com/repos', 'github.com')
+          .replace('/pulls/', '/pull/')
+          .replace('/issues/', '/issue/'),
+      }));
+    } catch (error) {
+      logger.error('Error listing notifications:', error);
+      throw error;
+    }
+  };
+
   return {
     listIssues,
     createIssue,
     listComments,
     createComment,
     createReaction,
+    listMentions,
+    listNotifications,
   };
 };
