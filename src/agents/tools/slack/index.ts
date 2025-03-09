@@ -1,4 +1,5 @@
 import { DynamicStructuredTool } from '@langchain/core/tools';
+import { Block } from '@slack/web-api';
 import { z } from 'zod';
 import { createLogger } from '../../../utils/logger.js';
 import { ChannelInfo, MessageInfo, slackClient, UserInfo } from './client.js';
@@ -12,6 +13,7 @@ export const createPostSlackMsgTool = (
   postMessage: (
     channelId: string,
     message: string,
+    blocks?: Block[],
     threadTs?: string,
   ) => Promise<{ success: boolean; channel: string; message: string; ts: string }>,
 ) =>
@@ -22,14 +24,17 @@ export const createPostSlackMsgTool = (
     - You want to report or highlight something to your colleagues.
     FORMAT: Include links, messages, and any other relevant information. Avoid very long messages.`,
     schema: z.object({
-      message: z.string().describe('The message to post to Slack'),
       channelId: z.string().describe('The channel ID to post to.'),
+      message: z.string().describe('The message to post to Slack'),
+      blocks: z
+        .array(z.any())
+        .describe('The blocks to post to Slack using Slack block-kit (optional)'),
       threadTs: z.string().describe('The thread timestamp to post to if this is a reply.'),
     }),
-    func: async ({ message, channelId, threadTs }) => {
+    func: async ({ message, channelId, blocks, threadTs }) => {
       try {
         logger.info('Posting message to Slack - Received data:', message);
-        const result = await postMessage(channelId, message, threadTs);
+        const result = await postMessage(channelId, message, blocks, threadTs);
         logger.info('Message posted to Slack:', { result });
         return JSON.stringify(result);
       } catch (error) {
@@ -56,7 +61,7 @@ export const createListChannelsTool = (getUserChannels: () => Promise<ChannelInf
         const channels = await getUserChannels();
         return {
           success: true,
-          channels: channels,
+          channels,
         };
       } catch (error) {
         logger.error('Error listing Slack channels:', error);
@@ -88,7 +93,7 @@ export const createListMessagesTool = (
         const messages = await getMessages(channelId, limit);
         return {
           success: true,
-          messages: messages,
+          messages,
           agentUserId,
         };
       } catch (error) {
@@ -125,10 +130,83 @@ export const createGetUserInfoTool = (
     },
   });
 
+/**
+ * Creates a tool to post a simple message to Slack
+ */
+export const createAddReactionTool = (
+  addReaction: (
+    channelId: string,
+    timestamp: string,
+    reaction: string,
+  ) => Promise<{ success: boolean; channel: string; reaction: string }>,
+) =>
+  new DynamicStructuredTool({
+    name: 'add_reaction',
+    description: `Add a reaction to a message in a Slack channel.
+    USE THIS WHEN: 
+    - You want to react to a message in a Slack channel.
+    FORMAT: Choose a appropriate reaction from the list of reactions available in the Slack channel and that convey your emotion or reaction to the message.`,
+    schema: z.object({
+      channelId: z.string().describe('The channel ID to post to.'),
+      timestamp: z.string().describe('The timestamp of the message to react to.'),
+      reaction: z.string().describe('The reaction to add to the message.'),
+    }),
+    func: async ({ channelId, timestamp, reaction }) => {
+      try {
+        logger.info('Adding reaction to Slack - Received data:', {
+          channelId,
+          timestamp,
+          reaction,
+        });
+        const result = await addReaction(channelId, timestamp, reaction);
+        logger.info('Reaction added to Slack:', { result });
+        return JSON.stringify(result);
+      } catch (error) {
+        logger.error('Error adding reaction to Slack:', error);
+        throw error;
+      }
+    },
+  });
+
+/**
+ * Creates a tool to get a reaction from a message in a Slack channel
+ */
+export const createGetReactionTool = (
+  getReaction: (
+    channelId: string,
+    timestamp: string,
+  ) => Promise<{
+    success: boolean;
+    channel: string;
+    reaction: {
+      name: string;
+      users: string[];
+      count: number;
+    }[];
+  }>,
+) =>
+  new DynamicStructuredTool({
+    name: 'get_reaction',
+    description: `Get all reactions from a message in a Slack channel.`,
+    schema: z.object({
+      channelId: z.string().describe('The channel ID to get the reaction from.'),
+      timestamp: z.string().describe('The timestamp of the message to get the reaction from.'),
+    }),
+    func: async ({ channelId, timestamp }) => {
+      try {
+        const reaction = await getReaction(channelId, timestamp);
+        return JSON.stringify(reaction);
+      } catch (error) {
+        logger.error('Error getting reaction from Slack:', error);
+        throw error;
+      }
+    },
+  });
+
 export const createSlackTools = async (slackToken: string) => {
   const slack = await slackClient(slackToken);
-  const postMessage = (channelId: string, message: string, threadTs?: string) =>
-    slack.postMessage(channelId, message, threadTs);
+  const postMessage = (channelId: string, message: string, blocks?: Block[], threadTs?: string) =>
+    slack.postMessage({ channel: channelId, text: message, blocks, thread_ts: threadTs });
   const getUserChannels = () => slack.getUserChannels();
   const getMessages = (channelId: string, limit: number) => slack.getMessages(channelId, limit);
   const getUserInfo = (userId: string) => slack.getUserInfo(userId);
