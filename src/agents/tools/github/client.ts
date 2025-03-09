@@ -1,4 +1,4 @@
-import { Octokit } from '@octokit/rest';
+import { Octokit, RestEndpointMethodTypes } from '@octokit/rest';
 import { createLogger } from '../../../utils/logger.js';
 
 const logger = createLogger('github-client');
@@ -13,6 +13,17 @@ export interface IssueInfo {
   html_url: string;
 }
 
+export interface CommentInfo {
+  id: number;
+  body: string;
+  user: {
+    login: string;
+  };
+  created_at: string;
+  updated_at: string;
+  html_url: string;
+}
+
 export interface CreateIssueParams {
   title: string;
   body?: string;
@@ -20,9 +31,16 @@ export interface CreateIssueParams {
   assignees?: string[];
 }
 
+export interface CreateCommentParams {
+  issue_number: number;
+  body: string;
+}
+
 export interface GitHubClient {
   listIssues: (state?: 'open' | 'closed' | 'all') => Promise<IssueInfo[]>;
   createIssue: (params: CreateIssueParams) => Promise<IssueInfo>;
+  listComments: (issue_number: number) => Promise<CommentInfo[]>;
+  createComment: (params: CreateCommentParams) => Promise<CommentInfo>;
 }
 
 export const githubClient = async (
@@ -42,15 +60,17 @@ export const githubClient = async (
         state,
       });
 
-      return response.data.map(issue => ({
-        number: issue.number,
-        title: issue.title,
-        state: issue.state,
-        body: issue.body || undefined,
-        created_at: issue.created_at,
-        updated_at: issue.updated_at,
-        html_url: issue.html_url,
-      }));
+      return response.data.map(
+        (issue: RestEndpointMethodTypes['issues']['listForRepo']['response']['data'][number]) => ({
+          number: issue.number,
+          title: issue.title,
+          state: issue.state,
+          body: issue.body || undefined,
+          created_at: issue.created_at,
+          updated_at: issue.updated_at,
+          html_url: issue.html_url,
+        }),
+      );
     } catch (error) {
       logger.error('Error listing GitHub issues:', error);
       throw error;
@@ -83,8 +103,63 @@ export const githubClient = async (
     }
   };
 
+  const listComments = async (issue_number: number): Promise<CommentInfo[]> => {
+    try {
+      const response = await octokit.issues.listComments({
+        owner,
+        repo,
+        issue_number,
+      });
+
+      return response.data.map(
+        (
+          comment: RestEndpointMethodTypes['issues']['listComments']['response']['data'][number],
+        ) => ({
+          id: comment.id,
+          body: comment.body || '',
+          user: {
+            login: comment.user?.login || 'unknown',
+          },
+          created_at: comment.created_at,
+          updated_at: comment.updated_at,
+          html_url: comment.html_url,
+        }),
+      );
+    } catch (error) {
+      logger.error('Error listing issue comments:', error);
+      throw error;
+    }
+  };
+
+  const createComment = async (params: CreateCommentParams): Promise<CommentInfo> => {
+    try {
+      const response = await octokit.issues.createComment({
+        owner,
+        repo,
+        issue_number: params.issue_number,
+        body: params.body,
+      });
+
+      return {
+        id: response.data.id,
+        body: response.data.body || '',
+        user: {
+          login: response.data.user?.login || 'unknown',
+        },
+        created_at: response.data.created_at,
+        updated_at: response.data.updated_at,
+        html_url: response.data.html_url,
+      };
+    } catch (error) {
+      logger.error('Error creating issue comment:', error);
+      throw error;
+    }
+  };
+
   return {
     listIssues,
     createIssue,
+    listComments,
+    createComment,
   };
 };
