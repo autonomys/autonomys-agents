@@ -308,3 +308,25 @@ pre {
     box-shadow: 0 0 0 0 rgba(255, 0, 204, 0);
   }
 }
+
+/* Enhanced Send Button Styles */
+.send-button::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 15%;
+  right: 15%;
+  height: 1px;
+  background: rgba(0, 255, 153, 0.7);
+  animation: shimmer 2s infinite linear;
+}
+
+.send-button:hover {
+  text-shadow: 0 0 8px rgba(0, 255, 153, 0.7);
+}
+
+.send-button:hover .send-icon {
+  transform: translateX(3px) translateY(-3px) rotate(-45deg) !important;
+  text-shadow: 0 0 5px rgba(0, 255, 153, 1);
+  transition: all 0.3s ease;
+}

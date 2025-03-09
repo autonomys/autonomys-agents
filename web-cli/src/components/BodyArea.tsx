@@ -107,19 +107,8 @@ const BodyArea: React.FC = () => {
   })();
 
   return (
-    <Flex 
-      direction={{ base: 'column', lg: 'row' }} 
-      flex="1" 
-      p={4} 
-      gap={4}
-      position="relative"
-    >
-      <Box 
-        flex={{ base: '1', lg: '3' }}
-        position="relative"
-        zIndex={5}
-        minHeight="200px"
-      >
+    <Flex direction={{ base: 'column', lg: 'row' }} flex='1' p={4} gap={4} position='relative'>
+      <Box flex={{ base: '1', lg: '3' }} position='relative' zIndex={5} minHeight='200px'>
         <InputArea
           value={state.value}
           handleInputChange={handleInputChange}
@@ -128,13 +117,13 @@ const BodyArea: React.FC = () => {
           error={error}
         />
       </Box>
-      
-      <Box 
+
+      <Box
         flex={{ base: '1', lg: '2' }}
         display={{ base: 'block', lg: 'block' }}
-        position="relative"
+        position='relative'
         zIndex={1}
-        minHeight="200px"
+        minHeight='200px'
       >
         <TasksArea
           tasks={tasks}

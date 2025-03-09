@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box, Heading, Flex } from '@chakra-ui/react';
+import { Heading, Flex } from '@chakra-ui/react';
 import ConnectionStatusIndicator from '../ConnectionStatus';
 import { ConnectionStatus } from '../../services/TaskStreamService';
 
@@ -18,16 +18,16 @@ const TaskHeader: React.FC<TaskHeaderProps> = ({
   handleReconnect,
 }) => {
   return (
-    <Flex 
-      justifyContent="space-between" 
-      alignItems="center" 
-      p={4} 
-      borderBottom="1px solid" 
-      borderColor="gray.600"
-      bg="rgba(26, 26, 46, 0.8)"
-      backdropFilter="blur(8px)"
-      position="relative"
-      overflow="hidden"
+    <Flex
+      justifyContent='space-between'
+      alignItems='center'
+      p={4}
+      borderBottom='1px solid'
+      borderColor='gray.600'
+      bg='rgba(26, 26, 46, 0.8)'
+      backdropFilter='blur(8px)'
+      position='relative'
+      overflow='hidden'
       _before={{
         content: '""',
         position: 'absolute',
@@ -38,12 +38,12 @@ const TaskHeader: React.FC<TaskHeaderProps> = ({
         bgGradient: 'linear(to-r, transparent, brand.neonBlue, transparent)',
       }}
     >
-      <Heading 
-        as="h3" 
-        size="md" 
-        color="brand.neonGreen" 
-        textShadow="0 0 5px rgba(0, 255, 153, 0.5)"
-        fontSize={["md", "lg", "xl"]}
+      <Heading
+        as='h3'
+        size='md'
+        color='brand.neonGreen'
+        textShadow='0 0 5px rgba(0, 255, 153, 0.5)'
+        fontSize={['md', 'lg', 'xl']}
       >
         Scheduled Tasks
       </Heading>

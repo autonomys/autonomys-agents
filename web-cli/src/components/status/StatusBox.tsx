@@ -52,7 +52,7 @@ const StatusBox: React.FC<StatusBoxProps> = ({ status }) => {
     <Resizable
       defaultSize={{
         width: '100%',
-        height: 200
+        height: 200,
       }}
       minHeight={150}
       maxHeight={500}
@@ -64,7 +64,7 @@ const StatusBox: React.FC<StatusBoxProps> = ({ status }) => {
         topRight: false,
         bottomRight: false,
         bottomLeft: false,
-        topLeft: false
+        topLeft: false,
       }}
       handleStyles={{
         bottom: {
@@ -73,39 +73,39 @@ const StatusBox: React.FC<StatusBoxProps> = ({ status }) => {
           backgroundColor: 'transparent',
           backgroundImage: `linear-gradient(to right, transparent, ${statusColor}40, transparent)`,
           bottom: '0px',
-          cursor: 'row-resize'
-        }
+          cursor: 'row-resize',
+        },
       }}
       handleComponent={{
         bottom: (
-          <Box 
-            width="100%" 
-            height="8px" 
-            position="absolute" 
-            bottom="0" 
-            cursor="row-resize"
-            borderRadius="0 0 6px 6px"
+          <Box
+            width='100%'
+            height='8px'
+            position='absolute'
+            bottom='0'
+            cursor='row-resize'
+            borderRadius='0 0 6px 6px'
             _hover={{
               backgroundImage: `linear-gradient(to right, transparent, ${statusColor}, transparent)`,
-              opacity: 0.7
+              opacity: 0.7,
             }}
           />
-        )
+        ),
       }}
     >
       <Box
         p={4}
-        bg="rgba(26, 26, 46, 0.8)"
-        borderRadius="md"
-        boxShadow="0 4px 8px rgba(0, 0, 0, 0.3)"
-        backdropFilter="blur(8px)"
-        border="1px solid"
-        borderColor="gray.700"
-        position="relative"
-        display="flex"
-        flexDirection="column"
-        height="100%"
-        width="100%"
+        bg='rgba(26, 26, 46, 0.8)'
+        borderRadius='md'
+        boxShadow='0 4px 8px rgba(0, 0, 0, 0.3)'
+        backdropFilter='blur(8px)'
+        border='1px solid'
+        borderColor='gray.700'
+        position='relative'
+        display='flex'
+        flexDirection='column'
+        height='100%'
+        width='100%'
         _before={{
           content: '""',
           position: 'absolute',
@@ -117,77 +117,73 @@ const StatusBox: React.FC<StatusBoxProps> = ({ status }) => {
         }}
       >
         <Heading
-          as="h3"
-          size="md"
+          as='h3'
+          size='md'
           mb={3}
-          color="brand.neonGreen"
-          textShadow="0 0 5px rgba(0, 255, 153, 0.5)"
-          display="flex"
-          alignItems="center"
+          color='brand.neonGreen'
+          textShadow='0 0 5px rgba(0, 255, 153, 0.5)'
+          display='flex'
+          alignItems='center'
           gap={2}
-          fontSize={["md", "lg", "xl"]}
+          fontSize={['md', 'lg', 'xl']}
         >
           <Box
-            as="span"
-            w="8px"
-            h="8px"
-            borderRadius="full"
+            as='span'
+            w='8px'
+            h='8px'
+            borderRadius='full'
             bg={statusColor}
             boxShadow={`0 0 8px ${statusColor}`}
-            animation="pulse 2s infinite"
+            animation='pulse 2s infinite'
           />
           Status
         </Heading>
-        
+
         <Box
           p={3}
           bg={bgColor}
-          borderRadius="md"
-          borderLeft="3px solid"
+          borderRadius='md'
+          borderLeft='3px solid'
           borderColor={statusColor}
-          transition="all 0.2s ease"
-          flex="1"
-          overflowY="auto"
+          transition='all 0.2s ease'
+          flex='1'
+          overflowY='auto'
           css={{
-            "&::-webkit-scrollbar": {
-              width: "6px",
-              borderRadius: "3px",
+            '&::-webkit-scrollbar': {
+              width: '6px',
+              borderRadius: '3px',
             },
-            "&::-webkit-scrollbar-track": {
-              background: "rgba(0, 0, 0, 0.1)",
+            '&::-webkit-scrollbar-track': {
+              background: 'rgba(0, 0, 0, 0.1)',
             },
-            "&::-webkit-scrollbar-thumb": {
+            '&::-webkit-scrollbar-thumb': {
               background: `${statusColor}40`,
-              borderRadius: "3px",
-            }
+              borderRadius: '3px',
+            },
           }}
         >
           {isReady ? (
-            <Text 
-              fontWeight="500" 
-              color={statusColor}
-              fontSize={["sm", "md", "lg"]}
-            >
+            <Text fontWeight='500' color={statusColor} fontSize={['sm', 'md', 'lg']}>
               Ready for input
             </Text>
           ) : (
-            <Flex direction="column">
-              <Text 
-                fontWeight="600" 
-                color={statusColor} 
+            <Flex direction='column'>
+              <Text
+                fontWeight='600'
+                color={statusColor}
                 mb={statusMessage ? 2 : 0}
-                fontSize={["sm", "md", "lg"]}
+                fontSize={['sm', 'md', 'lg']}
               >
                 {statusLabel}
               </Text>
               {statusMessage && (
-                <Text 
-                  fontSize={["sm", "md"]}
-                  fontWeight="normal" 
-                  color="whiteAlpha.800"
-                  wordBreak="break-word"
-                  whiteSpace="pre-wrap"
-                  lineHeight="1.6"
+                <Text
+                  fontSize={['sm', 'md']}
+                  fontWeight='normal'
+                  color='whiteAlpha.800'
+                  wordBreak='break-word'
+                  whiteSpace='pre-wrap'
+                  lineHeight='1.6'
                 >
                   {statusMessage}
                 </Text>

@@ -11,5 +11,5 @@ root.render(
     <ChakraProvider value={system}>
       <App />
     </ChakraProvider>
-  </React.StrictMode>
+  </React.StrictMode>,
 );

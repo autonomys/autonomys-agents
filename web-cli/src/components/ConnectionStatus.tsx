@@ -33,22 +33,24 @@ const ConnectionStatusIndicator: React.FC<ConnectionStatusProps> = ({
   };
 
   const statusColor = getStatusColor();
-  const isDisconnected = connectionStatus === ConnectionStatus.DISCONNECTED || connectionStatus === ConnectionStatus.ERROR;
+  const isDisconnected =
+    connectionStatus === ConnectionStatus.DISCONNECTED ||
+    connectionStatus === ConnectionStatus.ERROR;
 
   return (
-    <Flex alignItems="center" gap={2}>
-      <Box 
-        width="8px" 
-        height="8px" 
-        borderRadius="full" 
+    <Flex alignItems='center' gap={2}>
+      <Box
+        width='8px'
+        height='8px'
+        borderRadius='full'
         bg={statusColor}
         boxShadow={`0 0 8px ${statusColor}`}
-        animation={isDisconnected ? "none" : "pulse 2s infinite"}
+        animation={isDisconnected ? 'none' : 'pulse 2s infinite'}
         mr={1}
       />
-      <Text 
-        fontSize={["xs", "sm", "md"]} 
-        fontWeight="medium"
+      <Text
+        fontSize={['xs', 'sm', 'md']}
+        fontWeight='medium'
         color={statusColor}
         textShadow={`0 0 5px ${statusColor}`}
       >
@@ -56,27 +58,29 @@ const ConnectionStatusIndicator: React.FC<ConnectionStatusProps> = ({
       </Text>
       {isDisconnected && (
         <Button
-          size={["xs", "sm"]}
+          size={['xs', 'sm']}
           ml={2}
           onClick={handleReconnect}
-          title="Reconnect to task stream"
-          bg="rgba(0, 0, 0, 0.3)"
-          color={connectionStatus === ConnectionStatus.ERROR ? "#ef5350" : "brand.neonBlue"}
-          border="1px solid"
-          borderColor={connectionStatus === ConnectionStatus.ERROR ? "#ef5350" : "brand.neonBlue"}
-          fontSize={["xs", "sm"]}
-          _hover={{ 
-            bg: connectionStatus === ConnectionStatus.ERROR 
-              ? "rgba(239, 83, 80, 0.2)" 
-              : "rgba(0, 204, 255, 0.2)",
-            boxShadow: connectionStatus === ConnectionStatus.ERROR 
-              ? "0 0 8px rgba(239, 83, 80, 0.5)" 
-              : "0 0 8px rgba(0, 204, 255, 0.5)"
+          title='Reconnect to task stream'
+          bg='rgba(0, 0, 0, 0.3)'
+          color={connectionStatus === ConnectionStatus.ERROR ? '#ef5350' : 'brand.neonBlue'}
+          border='1px solid'
+          borderColor={connectionStatus === ConnectionStatus.ERROR ? '#ef5350' : 'brand.neonBlue'}
+          fontSize={['xs', 'sm']}
+          _hover={{
+            bg:
+              connectionStatus === ConnectionStatus.ERROR
+                ? 'rgba(239, 83, 80, 0.2)'
+                : 'rgba(0, 204, 255, 0.2)',
+            boxShadow:
+              connectionStatus === ConnectionStatus.ERROR
+                ? '0 0 8px rgba(239, 83, 80, 0.5)'
+                : '0 0 8px rgba(0, 204, 255, 0.5)',
           }}
           _active={{
-            transform: "translateY(1px)"
+            transform: 'translateY(1px)',
           }}
-          transition="all 0.2s ease"
+          transition='all 0.2s ease'
         >
           Reconnect
         </Button>

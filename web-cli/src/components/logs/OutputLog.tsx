@@ -34,28 +34,28 @@ const OutputLog: React.FC<OutputLogProps> = ({ messages }) => {
   const filteredMessages = getFilteredMessages(activeNamespace);
 
   return (
-    <Box 
-      position="relative" 
-      zIndex={10} 
-      style={{ 
+    <Box
+      position='relative'
+      zIndex={10}
+      style={{
         transform: 'translate3d(0, 0, 0)',
-        willChange: 'transform'
+        willChange: 'transform',
       }}
     >
       <Resizable
         defaultSize={{
           width: '100%',
-          height: 400
+          height: 400,
         }}
-        size={{ 
-          width: '100%', 
-          height: size.height 
+        size={{
+          width: '100%',
+          height: size.height,
         }}
         minHeight={200}
         maxHeight={800}
         onResizeStop={(e, direction, ref, d) => {
-          setSize(prevSize => ({ 
-            height: prevSize.height + d.height 
+          setSize(prevSize => ({
+            height: prevSize.height + d.height,
           }));
         }}
         enable={{
@@ -66,49 +66,51 @@ const OutputLog: React.FC<OutputLogProps> = ({ messages }) => {
           topRight: false,
           bottomRight: false,
           bottomLeft: false,
-          topLeft: false
+          topLeft: false,
         }}
         handleStyles={{
           bottom: {
             height: '8px',
             borderRadius: '0 0 6px 6px',
             backgroundColor: 'transparent',
-            backgroundImage: 'linear-gradient(to right, transparent, rgba(255, 0, 255, 0.4), transparent)',
+            backgroundImage:
+              'linear-gradient(to right, transparent, rgba(255, 0, 255, 0.4), transparent)',
             bottom: '0px',
             cursor: 'row-resize',
-            zIndex: 11
-          }
+            zIndex: 11,
+          },
         }}
         handleComponent={{
           bottom: (
-            <Box 
-              width="100%" 
-              height="8px" 
-              position="absolute" 
-              bottom="0" 
-              cursor="row-resize"
-              borderRadius="0 0 6px 6px"
+            <Box
+              width='100%'
+              height='8px'
+              position='absolute'
+              bottom='0'
+              cursor='row-resize'
+              borderRadius='0 0 6px 6px'
               zIndex={11}
               _hover={{
-                backgroundImage: 'linear-gradient(to right, transparent, rgba(255, 0, 255, 0.8), transparent)',
-                opacity: 0.7
+                backgroundImage:
+                  'linear-gradient(to right, transparent, rgba(255, 0, 255, 0.8), transparent)',
+                opacity: 0.7,
               }}
             />
-          )
+          ),
         }}
       >
-        <Flex 
+        <Flex
           ref={containerRef}
-          direction="column" 
-          h="100%" 
-          w="100%"
-          bg="rgba(26, 26, 46, 0.8)"
-          borderRadius="lg" 
-          overflow="visible" 
-          boxShadow="0 8px 32px rgba(0, 0, 0, 0.4)"
-          border="1px solid"
-          borderColor="gray.700"
-          position="relative"
+          direction='column'
+          h='100%'
+          w='100%'
+          bg='rgba(26, 26, 46, 0.8)'
+          borderRadius='lg'
+          overflow='visible'
+          boxShadow='0 8px 32px rgba(0, 0, 0, 0.4)'
+          border='1px solid'
+          borderColor='gray.700'
+          position='relative'
           _before={{
             content: '""',
             position: 'absolute',
@@ -117,7 +119,7 @@ const OutputLog: React.FC<OutputLogProps> = ({ messages }) => {
             right: 0,
             height: '1px',
             bgGradient: 'linear(to-r, transparent, brand.neonPink, transparent)',
-            zIndex: "1"
+            zIndex: '1',
           }}
         >
           <NamespaceTabs
@@ -128,28 +130,28 @@ const OutputLog: React.FC<OutputLogProps> = ({ messages }) => {
             onRefreshNamespaces={refreshNamespaces}
             onClearLogs={handleClearLogs}
           />
-          
-          <Box 
-            ref={(ref: HTMLDivElement | null) => setLogContainerRef(ref)} 
-            flex="1" 
-            overflowY="auto"
+
+          <Box
+            ref={(ref: HTMLDivElement | null) => setLogContainerRef(ref)}
+            flex='1'
+            overflowY='auto'
             maxHeight={size.height - 50} // Account for NamespaceTabs height
             css={{
-              "&::-webkit-scrollbar": {
-                width: "8px",
-                borderRadius: "4px",
+              '&::-webkit-scrollbar': {
+                width: '8px',
+                borderRadius: '4px',
               },
-              "&::-webkit-scrollbar-track": {
-                background: "rgba(0, 0, 0, 0.1)",
+              '&::-webkit-scrollbar-track': {
+                background: 'rgba(0, 0, 0, 0.1)',
               },
-              "&::-webkit-scrollbar-thumb": {
-                background: "rgba(255, 0, 255, 0.3)",
-                borderRadius: "4px",
-              }
+              '&::-webkit-scrollbar-thumb': {
+                background: 'rgba(255, 0, 255, 0.3)',
+                borderRadius: '4px',
+              },
             }}
           >
-            <LogMessageList 
-              filteredMessages={filteredMessages} 
+            <LogMessageList
+              filteredMessages={filteredMessages}
               legacyMessages={messages}
               setLogRef={() => {}} // This is handled by the parent Box's ref now
             />
