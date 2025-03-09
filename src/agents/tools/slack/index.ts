@@ -1,5 +1,6 @@
 import { DynamicStructuredTool } from '@langchain/core/tools';
 import { Block } from '@slack/web-api';
+import { Reaction } from '@slack/web-api/dist/types/response/ReactionsGetResponse.js';
 import { z } from 'zod';
 import { createLogger } from '../../../utils/logger.js';
 import { ChannelInfo, MessageInfo, slackClient, UserInfo } from './client.js';
@@ -178,11 +179,7 @@ export const createGetReactionTool = (
   ) => Promise<{
     success: boolean;
     channel: string;
-    reaction: {
-      name: string;
-      users: string[];
-      count: number;
-    }[];
+    reaction: Reaction[];
   }>,
 ) =>
   new DynamicStructuredTool({
@@ -210,11 +207,17 @@ export const createSlackTools = async (slackToken: string) => {
   const getUserChannels = () => slack.getUserChannels();
   const getMessages = (channelId: string, limit: number) => slack.getMessages(channelId, limit);
   const getUserInfo = (userId: string) => slack.getUserInfo(userId);
+  const addReaction = (channelId: string, timestamp: string, reaction: string) =>
+    slack.addReaction(channelId, timestamp, reaction);
+  const getReaction = (channelId: string, timestamp: string) =>
+    slack.getReaction(channelId, timestamp);
 
   return [
     createPostSlackMsgTool(postMessage),
     createListChannelsTool(getUserChannels),
     createListMessagesTool(getMessages, slack.userId),
     createGetUserInfoTool(getUserInfo),
+    createAddReactionTool(addReaction),
+    createGetReactionTool(getReaction),
   ];
 };
