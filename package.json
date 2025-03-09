@@ -16,6 +16,7 @@
     "example:web3-agent": "tsx examples/web3Agent/index.ts",
     "example:vector-db": "tsx examples/vectorDbExample.ts",
     "example:slack-agent": "tsx examples/slackAgent/index.ts",
+    "example:github-agent": "tsx examples/githubAgent/index.ts",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
