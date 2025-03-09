@@ -50,6 +50,7 @@ const main = async () => {
   // Choose which message to start with
   const initialMessage = `
 - Check for new issues in the repository, and create a new issue if you encounter an error or have a suggestion.
+- Check for new mentions and notifications, and react to them (with reactions or comments) if you have a suggestion.
 `;
 
   try {
