@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
+import { Flex, Box } from '@chakra-ui/react';
 import { useAppContext } from '../context/AppContext';
 import {
   subscribeToTaskUpdates,
@@ -13,7 +14,6 @@ import { runWorkflow } from '../services/WorkflowService';
 import { ScheduledTask } from '../types/types';
 import InputArea from './input/InputArea';
 import TasksArea from './tasks/TasksArea';
-import './styles/BodyStyles.css';
 
 const BodyArea: React.FC = () => {
   const { state, dispatch } = useAppContext();
@@ -79,24 +79,19 @@ const BodyArea: React.FC = () => {
     }
   };
 
-  const handleDeleteTask = async (id: string) => {
-    console.log(`Deleting task: ${id}`);
-    setLoading(true);
-    const success = await deleteTask(id);
-
-    if (!success) {
-      console.error('Failed to delete task');
-      setLoading(false);
+  const handleDeleteTask = useCallback(async (id: string) => {
+    try {
+      await deleteTask(id);
+    } catch (error) {
+      console.error('Error deleting task:', error);
     }
-  };
+  }, []);
 
   const handleReconnect = useCallback(() => {
-    console.log('Manual reconnect triggered from UI');
-    setLoading(true);
     reconnect();
   }, []);
 
-  const getConnectionStatusInfo = useCallback(() => {
+  const connectionStatusInfo = (() => {
     switch (connectionStatus) {
       case ConnectionStatus.CONNECTED:
         return { message: 'Connected', className: 'connection-status-connected' };
@@ -109,28 +104,37 @@ const BodyArea: React.FC = () => {
       default:
         return { message: 'Unknown', className: 'connection-status-unknown' };
     }
-  }, [connectionStatus]);
-
-  const connectionStatusInfo = getConnectionStatusInfo();
+  })();
 
   return (
-    <div className='body-area'>
-      <InputArea
-        value={state.value}
-        handleInputChange={handleInputChange}
-        handleInputSubmit={handleInputSubmit}
-        currentTask={currentTask}
-        error={error}
-      />
-      <TasksArea
-        tasks={tasks}
-        loading={loading}
-        connectionStatus={connectionStatus}
-        connectionStatusInfo={connectionStatusInfo}
-        handleDeleteTask={handleDeleteTask}
-        handleReconnect={handleReconnect}
-      />
-    </div>
+    <Flex direction={{ base: 'column', lg: 'row' }} flex='1' p={4} gap={4} position='relative'>
+      <Box flex={{ base: '1', lg: '3' }} position='relative' zIndex={5} minHeight='200px'>
+        <InputArea
+          value={state.value}
+          handleInputChange={handleInputChange}
+          handleInputSubmit={handleInputSubmit}
+          currentTask={currentTask}
+          error={error}
+        />
+      </Box>
+
+      <Box
+        flex={{ base: '1', lg: '2' }}
+        display={{ base: 'block', lg: 'block' }}
+        position='relative'
+        zIndex={1}
+        minHeight='200px'
+      >
+        <TasksArea
+          tasks={tasks}
+          loading={loading}
+          connectionStatus={connectionStatus}
+          connectionStatusInfo={connectionStatusInfo}
+          handleDeleteTask={handleDeleteTask}
+          handleReconnect={handleReconnect}
+        />
+      </Box>
+    </Flex>
   );
 };
 
