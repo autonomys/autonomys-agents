@@ -112,6 +112,10 @@ export const config = (() => {
         GITHUB_REPO: process.env.GITHUB_REPO || '',
       },
 
+      notionConfig: {
+        NOTION_TOKEN: process.env.NOTION_TOKEN || '',
+      },
+
       llmConfig: {
         OPENAI_API_KEY: process.env.OPENAI_API_KEY || '',
         ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY || '',
