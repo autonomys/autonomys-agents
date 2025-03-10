@@ -1,0 +1,166 @@
+import { DynamicStructuredTool } from '@langchain/core/tools';
+import { z } from 'zod';
+import { createLogger } from '../../../utils/logger.js';
+import { CommentInfo, notionClient, PageInfo } from './client.js';
+
+const logger = createLogger('notion-tools');
+
+/**
+ * Creates a tool to create a new page in Notion
+ */
+export const createCreatePageTool = (
+  createPage: (parentId: string, title: string, content: any) => Promise<PageInfo>,
+) =>
+  new DynamicStructuredTool({
+    name: 'create_notion_page',
+    description: `Create a new page in Notion.
+    USE THIS WHEN: 
+    - You need to create a new page in Notion
+    - You want to document something in a structured way`,
+    schema: z.object({
+      parentId: z
+        .string()
+        .describe('The ID of the parent page or database where the new page will be created.'),
+      title: z.string().describe('The title of the new page.'),
+      content: z.array(z.any()).describe('The content blocks to add to the page.'),
+    }),
+    func: async ({ parentId, title, content }) => {
+      try {
+        logger.info('Creating Notion page - Received data:', { parentId, title });
+        const result = await createPage(parentId, title, content);
+        logger.info('Page created in Notion:', { result });
+        return JSON.stringify(result);
+      } catch (error) {
+        logger.error('Error creating Notion page:', error);
+        throw error;
+      }
+    },
+  });
+
+/**
+ * Creates a tool to update page content in Notion
+ */
+export const createUpdatePageTool = (updatePage: (pageId: string, content: any) => Promise<any>) =>
+  new DynamicStructuredTool({
+    name: 'update_notion_page',
+    description: `Update content of an existing page in Notion.
+    USE THIS WHEN: 
+    - You need to add or modify content in an existing page
+    - You want to append new blocks to a page`,
+    schema: z.object({
+      pageId: z.string().describe('The ID of the page to update.'),
+      content: z.array(z.any()).describe('The content blocks to add to the page.'),
+    }),
+    func: async ({ pageId, content }) => {
+      try {
+        logger.info('Updating Notion page - Received data:', { pageId });
+        const result = await updatePage(pageId, content);
+        logger.info('Page updated in Notion:', { result });
+        return JSON.stringify(result);
+      } catch (error) {
+        logger.error('Error updating Notion page:', error);
+        throw error;
+      }
+    },
+  });
+
+/**
+ * Creates a tool to add a comment to a page
+ */
+export const createAddCommentTool = (
+  addComment: (pageId: string, content: string) => Promise<CommentInfo>,
+) =>
+  new DynamicStructuredTool({
+    name: 'add_notion_comment',
+    description: `Add a comment to a page in Notion.
+    USE THIS WHEN: 
+    - You want to add a comment to a page
+    - You need to provide feedback or notes on content`,
+    schema: z.object({
+      pageId: z.string().describe('The ID of the page to comment on.'),
+      content: z.string().describe('The content of the comment.'),
+    }),
+    func: async ({ pageId, content }) => {
+      try {
+        logger.info('Adding Notion comment - Received data:', { pageId, content });
+        const result = await addComment(pageId, content);
+        logger.info('Comment added to Notion:', { result });
+        return JSON.stringify(result);
+      } catch (error) {
+        logger.error('Error adding Notion comment:', error);
+        throw error;
+      }
+    },
+  });
+
+/**
+ * Creates a tool to reply to a comment
+ */
+export const createReplyToCommentTool = (
+  replyToComment: (commentId: string, content: string) => Promise<CommentInfo>,
+) =>
+  new DynamicStructuredTool({
+    name: 'reply_to_notion_comment',
+    description: `Reply to an existing comment in Notion.
+    USE THIS WHEN: 
+    - You want to respond to a specific comment
+    - You need to continue a discussion thread`,
+    schema: z.object({
+      commentId: z.string().describe('The ID of the comment to reply to.'),
+      content: z.string().describe('The content of the reply.'),
+    }),
+    func: async ({ commentId, content }) => {
+      try {
+        logger.info('Replying to Notion comment - Received data:', { commentId, content });
+        const result = await replyToComment(commentId, content);
+        logger.info('Reply added to Notion:', { result });
+        return JSON.stringify(result);
+      } catch (error) {
+        logger.error('Error replying to Notion comment:', error);
+        throw error;
+      }
+    },
+  });
+
+/**
+ * Creates a tool to get comments on a page
+ */
+export const createGetCommentsTool = (getComments: (pageId: string) => Promise<CommentInfo[]>) =>
+  new DynamicStructuredTool({
+    name: 'get_notion_comments',
+    description: `Get all comments on a page in Notion.
+    USE THIS WHEN: 
+    - You want to see all comments on a page
+    - You need to review feedback or discussions`,
+    schema: z.object({
+      pageId: z.string().describe('The ID of the page to get comments from.'),
+    }),
+    func: async ({ pageId }) => {
+      try {
+        logger.info('Getting Notion comments - Received data:', { pageId });
+        const comments = await getComments(pageId);
+        return JSON.stringify({
+          success: true,
+          comments,
+        });
+      } catch (error) {
+        logger.error('Error getting Notion comments:', error);
+        return JSON.stringify({
+          success: false,
+          error: error,
+        });
+      }
+    },
+  });
+
+export const createNotionTools = async (notionToken: string) => {
+  const notion = await notionClient(notionToken);
+
+  return [
+    createCreatePageTool(notion.createPage),
+    createUpdatePageTool(notion.updatePage),
+    createAddCommentTool(notion.addComment),
+    createReplyToCommentTool(notion.replyToComment),
+    createGetCommentsTool(notion.getComments),
+  ];
+};
