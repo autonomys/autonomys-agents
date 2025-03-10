@@ -130,7 +130,11 @@ export const createDeleteEmailTool = (
     },
   });
 
-export const createGmailTools = async (credentials: { email: string; appPassword: string }) => {
+export const createGmailTools = async (credentials: {
+  email: string;
+  password: string;
+  appPassword: string;
+}) => {
   const gmail = await gmailClient(credentials);
 
   return [

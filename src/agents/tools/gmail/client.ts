@@ -3,10 +3,14 @@ import { JWT } from 'google-auth-library';
 
 type GmailThread = gmail_v1.Schema$Thread;
 
-const gmailClient = async (credentials: { email: string; appPassword: string }) => {
+const gmailClient = async (credentials: {
+  email: string;
+  password: string;
+  appPassword: string;
+}) => {
   const auth = new JWT({
     email: credentials.email,
-    key: credentials.appPassword,
+    key: credentials.password || credentials.appPassword,
     scopes: ['https://www.googleapis.com/auth/gmail.modify'],
   });
 

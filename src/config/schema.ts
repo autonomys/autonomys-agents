@@ -51,6 +51,7 @@ const githubConfigSchema = z.object({
 
 const gmailConfigSchema = z.object({
   GMAIL_EMAIL: z.string().optional(),
+  GMAIL_PASSWORD: z.string().optional(),
   GMAIL_APP_PASSWORD: z.string().optional(),
 });
 

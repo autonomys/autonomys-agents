@@ -114,6 +114,7 @@ export const config = (() => {
 
       gmailConfig: {
         GMAIL_EMAIL: process.env.GMAIL_EMAIL || '',
+        GMAIL_PASSWORD: process.env.GMAIL_PASSWORD || '',
         GMAIL_APP_PASSWORD: process.env.GMAIL_APP_PASSWORD || '',
       },
 
