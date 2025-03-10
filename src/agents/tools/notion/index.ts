@@ -47,6 +47,7 @@ export const createListDatabasesTool = (listDatabases: () => Promise<SearchRespo
       }
     },
   });
+
 /**
  * Creates a tool to create a new database in Notion
  */
