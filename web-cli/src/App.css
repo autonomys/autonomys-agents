@@ -4,7 +4,8 @@
   padding: 0;
 }
 
-html, body {
+html,
+body {
   height: 100%;
   overflow-x: hidden;
   overflow-y: auto;
@@ -47,9 +48,15 @@ pre {
 
 /* Adding missing blink animation for cursor in CharacterBox */
 @keyframes blink {
-  0% { opacity: 1; }
-  50% { opacity: 0; }
-  100% { opacity: 1; }
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
 }
 
 .red {
@@ -112,13 +119,20 @@ pre {
 
 @keyframes pulsate {
   0% {
-    text-shadow: 0 0 10px rgba(0, 255, 153, 0.7), 0 0 20px rgba(0, 255, 153, 0.5);
+    text-shadow:
+      0 0 10px rgba(0, 255, 153, 0.7),
+      0 0 20px rgba(0, 255, 153, 0.5);
   }
   50% {
-    text-shadow: 0 0 15px rgba(0, 255, 153, 0.9), 0 0 30px rgba(0, 255, 153, 0.7), 0 0 40px rgba(0, 255, 153, 0.5);
+    text-shadow:
+      0 0 15px rgba(0, 255, 153, 0.9),
+      0 0 30px rgba(0, 255, 153, 0.7),
+      0 0 40px rgba(0, 255, 153, 0.5);
   }
   100% {
-    text-shadow: 0 0 10px rgba(0, 255, 153, 0.7), 0 0 20px rgba(0, 255, 153, 0.5);
+    text-shadow:
+      0 0 10px rgba(0, 255, 153, 0.7),
+      0 0 20px rgba(0, 255, 153, 0.5);
   }
 }
 
@@ -180,10 +194,12 @@ pre {
   left: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(90deg, 
-    rgba(0, 255, 153, 0) 0%, 
-    rgba(0, 255, 153, 0.5) 50%, 
-    rgba(0, 255, 153, 0) 100%);
+  background: linear-gradient(
+    90deg,
+    rgba(0, 255, 153, 0) 0%,
+    rgba(0, 255, 153, 0.5) 50%,
+    rgba(0, 255, 153, 0) 100%
+  );
   background-size: 200% 100%;
   animation: scan 3s ease-in-out infinite;
   mix-blend-mode: overlay;
@@ -191,7 +207,9 @@ pre {
 }
 
 .logo-image {
-  animation: pulse 2s infinite alternate, float 6s ease-in-out infinite;
+  animation:
+    pulse 2s infinite alternate,
+    float 6s ease-in-out infinite;
   transform-origin: center center;
 }
 
@@ -208,16 +226,19 @@ pre {
 .title-agentic {
   position: relative;
   animation: pulsate 2s infinite alternate;
-  background: linear-gradient(90deg, 
-    rgba(0, 255, 153, 0.7) 0%, 
-    rgba(0, 204, 255, 0.7) 50%, 
-    rgba(0, 255, 153, 0.7) 100%);
+  background: linear-gradient(
+    90deg,
+    rgba(0, 255, 153, 0.7) 0%,
+    rgba(0, 204, 255, 0.7) 50%,
+    rgba(0, 255, 153, 0.7) 100%
+  );
   background-size: 200% auto;
   background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-  animation: pulsate 2s infinite alternate, 
-            backgroundShift 8s linear infinite;
+  animation:
+    pulsate 2s infinite alternate,
+    backgroundShift 8s linear infinite;
 }
 
 @keyframes backgroundShift {
@@ -234,58 +255,103 @@ pre {
 
 /* Add these animations for the advanced tabs */
 @keyframes scannerEffect {
-  0% { transform: translateX(-100%); }
-  100% { transform: translateX(100%); }
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
 }
 
 @keyframes hexPulse {
-  0% { opacity: 0.5; }
-  50% { opacity: 1; }
-  100% { opacity: 0.5; }
+  0% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.5;
+  }
+}
+
+@keyframes pulseEffect {
+  0% {
+    opacity: 0.3;
+    transform: scale(0.95);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(1.05);
+  }
+  100% {
+    opacity: 0.3;
+    transform: scale(0.95);
+  }
 }
 
 @keyframes floatEffect {
-  0% { transform: translateY(0); }
-  50% { transform: translateY(-2px); }
-  100% { transform: translateY(0); }
+  0% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-2px);
+  }
+  100% {
+    transform: translateY(0);
+  }
 }
 
 /* Advanced neural network tab animations */
 @keyframes neuralPulse {
-  0%, 100% { 
-    box-shadow: 0 0 0 0 rgba(255, 0, 204, 0); 
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(255, 0, 204, 0);
     transform: scale(1);
   }
-  50% { 
-    box-shadow: 0 0 10px 3px rgba(255, 0, 204, 0.6); 
+  50% {
+    box-shadow: 0 0 10px 3px rgba(255, 0, 204, 0.6);
     transform: scale(1.02);
   }
 }
 
 @keyframes neuronActivate {
-  0% { transform: scale(0.8); opacity: 0.3; }
-  50% { transform: scale(1.2); opacity: 1; }
-  100% { transform: scale(1); opacity: 0.8; }
+  0% {
+    transform: scale(0.8);
+    opacity: 0.3;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
 }
 
 @keyframes dataFlow {
-  0% { 
+  0% {
     background-position: 0% 50%;
     opacity: 0.8;
   }
-  50% { 
+  50% {
     background-position: 100% 50%;
     opacity: 1;
   }
-  100% { 
+  100% {
     background-position: 0% 50%;
     opacity: 0.8;
   }
 }
 
 @keyframes connectionFlow {
-  0% { stroke-dashoffset: 100; }
-  100% { stroke-dashoffset: 0; }
+  0% {
+    stroke-dashoffset: 100;
+  }
+  100% {
+    stroke-dashoffset: 0;
+  }
 }
 
 @keyframes shimmer {
@@ -311,7 +377,7 @@ pre {
 
 /* Enhanced Send Button Styles */
 .send-button::after {
-  content: "";
+  content: '';
   position: absolute;
   bottom: 0;
   left: 15%;

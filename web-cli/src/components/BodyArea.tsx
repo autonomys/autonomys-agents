@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { Flex, Box } from '@chakra-ui/react';
 import { useAppContext } from '../context/AppContext';
+import { useChatContext } from '../context/ChatContext';
 import {
   subscribeToTaskUpdates,
   closeTaskStream,
@@ -14,9 +15,11 @@ import { runWorkflow } from '../services/WorkflowService';
 import { ScheduledTask } from '../types/types';
 import InputArea from './input/InputArea';
 import TasksArea from './tasks/TasksArea';
+import ChatArea from './chat/ChatArea';
 
 const BodyArea: React.FC = () => {
   const { state, dispatch } = useAppContext();
+  const { state: chatState, dispatch: chatDispatch } = useChatContext();
   const [tasks, setTasks] = useState<ScheduledTask[]>([]);
   const [currentTask, setCurrentTask] = useState<ScheduledTask | undefined>(undefined);
   const [loading, setLoading] = useState(true);
@@ -91,6 +94,10 @@ const BodyArea: React.FC = () => {
     reconnect();
   }, []);
 
+  const handleCloseChat = useCallback(() => {
+    chatDispatch({ type: 'SET_ACTIVE_CHAT', payload: null });
+  }, [chatDispatch]);
+
   const connectionStatusInfo = (() => {
     switch (connectionStatus) {
       case ConnectionStatus.CONNECTED:
@@ -109,13 +116,17 @@ const BodyArea: React.FC = () => {
   return (
     <Flex direction={{ base: 'column', lg: 'row' }} flex='1' p={4} gap={4} position='relative'>
       <Box flex={{ base: '1', lg: '3' }} position='relative' zIndex={5} minHeight='200px'>
-        <InputArea
-          value={state.value}
-          handleInputChange={handleInputChange}
-          handleInputSubmit={handleInputSubmit}
-          currentTask={currentTask}
-          error={error}
-        />
+        {chatState.activeChatNamespace ? (
+          <ChatArea namespace={chatState.activeChatNamespace} onClose={handleCloseChat} />
+        ) : (
+          <InputArea
+            value={state.value}
+            handleInputChange={handleInputChange}
+            handleInputSubmit={handleInputSubmit}
+            currentTask={currentTask}
+            error={error}
+          />
+        )}
       </Box>
 
       <Box
