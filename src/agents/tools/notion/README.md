@@ -22,6 +22,13 @@ To use these tools, you need to:
 3. Share the pages/databases you want to access with your integration
 4. Pass the integration token when creating the tools
 
+## Environment Variables
+
+Add in your character .env
+
+`NOTION_TOKEN` The integration token
+`NOTION_DATABASE_ID` The default page/db id to use
+
 ## Available Tools
 
 - list_notion_databases - List all databases accessible to the integration
@@ -39,7 +46,8 @@ To use these tools, you need to:
 import { createNotionTools } from './notion';
 
 const notionToken = 'your-notion-integration-token';
-const tools = await createNotionTools(notionToken);
+const notionDatabaseId = 'your-notion-default-db-id';
+const tools = await createNotionTools(notionToken, notionDatabaseId);
 
 // Use the tools in your agent
 ```
