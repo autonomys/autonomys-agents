@@ -1,6 +1,5 @@
 import { createSystem, defaultConfig, defineConfig } from '@chakra-ui/react';
 
-// Define our 90s retro theme configuration
 const customConfig = defineConfig({
   theme: {
     tokens: {
@@ -29,7 +28,6 @@ const customConfig = defineConfig({
   },
 });
 
-// Create the custom system by merging with the default config
 export const system = createSystem(defaultConfig, customConfig);
 
 export default system;

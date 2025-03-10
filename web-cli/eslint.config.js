@@ -24,6 +24,8 @@ export default [
         window: 'readonly',
         document: 'readonly',
         console: 'readonly',
+        localStorage: 'readonly',
+        HTMLInputElement: 'readonly',
 
         // Timer functions
         setTimeout: 'readonly',

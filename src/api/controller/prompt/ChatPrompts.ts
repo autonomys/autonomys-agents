@@ -8,7 +8,7 @@ import {
 
 const searchParamsSchema = z.object({
   query: z.string().describe('The optimized search query to find relevant information'),
-//   metadataFilter: z.string().optional().describe('The metadata filter to apply to the search'),
+  //   metadataFilter: z.string().optional().describe('The metadata filter to apply to the search'),
   limit: z.number().default(5).describe('Number of results to return'),
 });
 

@@ -20,7 +20,6 @@ export const useChatMessages = (namespace: string) => {
       try {
         setIsLoading(true);
 
-
         const contextMessages = state.messages[namespace];
 
         if (contextMessages && contextMessages.length > 0) {

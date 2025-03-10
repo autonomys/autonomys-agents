@@ -66,7 +66,7 @@ export const sendChatMessage = asyncHandler(async (req: Request, res: Response) 
     let searchParams: SearchParams;
     try {
       searchParams = await searchChain.invoke({
-        message: message
+        message: message,
       });
 
       logger.info('Generated search parameters:', { searchParams, namespace });

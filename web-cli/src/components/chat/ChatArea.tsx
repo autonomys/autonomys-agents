@@ -17,16 +17,9 @@ interface ChatAreaProps {
 
 const ChatArea: React.FC<ChatAreaProps> = ({ namespace, onClose }) => {
   const [size, setSize] = useState({ height: 500 });
-  
-  const {
-    messages,
-    isLoading,
-    isTyping,
-    inputValue,
-    setInputValue,
-    messagesEndRef,
-    sendMessage
-  } = useChatMessages(namespace);
+
+  const { messages, isLoading, isTyping, inputValue, setInputValue, messagesEndRef, sendMessage } =
+    useChatMessages(namespace);
 
   const handleInputChange = (value: string) => {
     setInputValue(value);
@@ -91,19 +84,19 @@ const ChatArea: React.FC<ChatAreaProps> = ({ namespace, onClose }) => {
         ),
       }}
     >
-      <Box {...chatContainerStyles} height="100%">
+      <Box {...chatContainerStyles} height='100%'>
         <ChatHeader namespace={namespace} onClose={onClose} />
-        <Box {...messagesAreaStyles}>          
-          {messages.map((message) => (
+        <Box {...messagesAreaStyles}>
+          {messages.map(message => (
             <ChatMessage key={message.id} message={message} namespace={namespace} />
           ))}
-          
+
           {isTyping && <TypingIndicator namespace={namespace} />}
           <div ref={messagesEndRef} />
         </Box>
-        
+
         <Box {...dividerStyles} />
-        
+
         <ChatInput
           value={inputValue}
           onChange={handleInputChange}

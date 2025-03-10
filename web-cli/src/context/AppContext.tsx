@@ -6,6 +6,17 @@ const initialState: AppState = {
   scheduledTasks: [],
 };
 
+interface AppContextType {
+  state: AppState;
+  dispatch: React.Dispatch<ActionType>;
+}
+
+const AppContext = createContext<AppContextType | undefined>(undefined);
+
+interface AppProviderProps {
+  children: ReactNode;
+}
+
 type ActionType =
   | { type: 'SET_VALUE'; payload: string }
   | { type: 'ADD_SCHEDULED_TASK'; payload: ScheduledTask }
@@ -32,17 +43,6 @@ const appReducer = (state: AppState, action: ActionType): AppState => {
       return state;
   }
 };
-
-interface AppContextType {
-  state: AppState;
-  dispatch: React.Dispatch<ActionType>;
-}
-
-const AppContext = createContext<AppContextType | undefined>(undefined);
-
-interface AppProviderProps {
-  children: ReactNode;
-}
 
 export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   const [state, dispatch] = useReducer(appReducer, initialState);

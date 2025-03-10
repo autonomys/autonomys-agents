@@ -11,24 +11,20 @@ interface LoadOlderButtonProps {
 export const LoadOlderButton: React.FC<LoadOlderButtonProps> = ({
   onClick,
   isLoading,
-  hasMore
+  hasMore,
 }) => {
   if (!hasMore) return null;
-  
+
   return (
-    <Button
-      {...loadOlderButtonStyles}
-      onClick={onClick}
-      disabled={isLoading}
-    >
+    <Button {...loadOlderButtonStyles} onClick={onClick} disabled={isLoading}>
       {isLoading ? (
-        <Spinner size="xs" color="brand.neonBlue" mr={2} />
+        <Spinner size='xs' color='brand.neonBlue' mr={2} />
       ) : (
-        <Box as="span" mr={2} transform="rotate(-90deg)" fontSize="xs">
+        <Box as='span' mr={2} transform='rotate(-90deg)' fontSize='xs'>
           ↑
         </Box>
       )}
-      <Text>{isLoading ? "Loading..." : "Load Older"}</Text>
+      <Text>{isLoading ? 'Loading...' : 'Load Older'}</Text>
     </Button>
   );
-}; 
+};
