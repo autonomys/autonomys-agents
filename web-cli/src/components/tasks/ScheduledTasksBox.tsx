@@ -4,7 +4,6 @@ import { Resizable } from 're-resizable';
 import { ScheduledTasksBoxProps } from '../../types/types';
 
 const ScheduledTasksBox: React.FC<ScheduledTasksBoxProps> = ({ tasks, onDeleteTask }) => {
-  // Use same height as InputBox
   const [size, setSize] = useState({ height: 200 });
 
   const getStatusColor = (status?: string) => {
@@ -23,13 +22,11 @@ const ScheduledTasksBox: React.FC<ScheduledTasksBoxProps> = ({ tasks, onDeleteTa
   };
 
   const formatTime = (time: Date) => {
-    return time.toISOString(); // Return the full ISO format (e.g., 2025-03-09T01:32:26.997Z)
+    return time.toISOString();
   };
 
-  // Ensure the component updates if the window resizes
   useEffect(() => {
     const handleResize = () => {
-      // Force component update when window resizes
       setSize(prevSize => ({ ...prevSize }));
     };
 
@@ -41,7 +38,7 @@ const ScheduledTasksBox: React.FC<ScheduledTasksBoxProps> = ({ tasks, onDeleteTa
     <Resizable
       defaultSize={{
         width: '100%',
-        height: 200, // Initial height (same as InputBox)
+        height: 200,
       }}
       size={{
         width: '100%',

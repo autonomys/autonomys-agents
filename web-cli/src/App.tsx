@@ -3,6 +3,7 @@ import HeaderArea from './components/header/HeaderArea';
 import OutputLog from './components/logs/OutputLog';
 import BodyArea from './components/BodyArea';
 import { AppProvider } from './context/AppContext';
+import { ChatProvider } from './context/ChatContext';
 import { closeAll } from './services/LogService';
 import './App.css';
 
@@ -28,11 +29,13 @@ function App() {
 
   return (
     <AppProvider>
-      <div className='App'>
-        <HeaderArea />
-        <OutputLog messages={messages} />
-        <BodyArea />
-      </div>
+      <ChatProvider>
+        <div className='App'>
+          <HeaderArea />
+          <OutputLog messages={messages} />
+          <BodyArea />
+        </div>
+      </ChatProvider>
     </AppProvider>
   );
 }

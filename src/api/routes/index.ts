@@ -3,6 +3,7 @@ import { createLogsRouter } from './logs.js';
 import { createStatusRouter } from './status.js';
 import { createWorkflowsRouter } from './workflows.js';
 import { createTasksRouter } from './tasks.js';
+import { createChatRouter } from './chat.js';
 
 export const createApiRouter = (): Router => {
   const apiRouter = Router();
@@ -11,6 +12,7 @@ export const createApiRouter = (): Router => {
   apiRouter.use(createStatusRouter());
   apiRouter.use(createWorkflowsRouter());
   apiRouter.use(createTasksRouter());
+  apiRouter.use(createChatRouter());
 
   return apiRouter;
 };
