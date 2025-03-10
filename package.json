@@ -52,6 +52,7 @@
     "@langchain/langgraph": "0.2.36",
     "@langchain/ollama": "0.2.0",
     "@langchain/openai": "0.4.4",
+    "@notionhq/client": "^2.2.16",
     "@octokit/rest": "^21.1.1",
     "@slack/web-api": "^7.8.0",
     "@types/blessed": "^0.1.25",
