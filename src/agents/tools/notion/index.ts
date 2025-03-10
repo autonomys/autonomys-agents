@@ -1,15 +1,26 @@
 import { DynamicStructuredTool } from '@langchain/core/tools';
-import { CreateDatabaseResponse } from '@notionhq/client/build/src/api-endpoints.js';
+import {
+  AppendBlockChildrenParameters,
+  AppendBlockChildrenResponse,
+  CreateCommentResponse,
+  CreateDatabaseParameters,
+  CreateDatabaseResponse,
+  CreatePageParameters,
+  CreatePageResponse,
+  ListCommentsResponse,
+  QueryDatabaseResponse,
+  SearchResponse,
+} from '@notionhq/client/build/src/api-endpoints.js';
 import { z } from 'zod';
 import { createLogger } from '../../../utils/logger.js';
-import { CommentInfo, notionClient, PageInfo } from './client.js';
+import { notionClient } from './client.js';
 
 const logger = createLogger('notion-tools');
 
 /**
  * Creates a tool to list pages in Notion
  */
-export const createListDatabasesTool = (listDatabases: () => Promise<PageInfo[]>) =>
+export const createListDatabasesTool = (listDatabases: () => Promise<SearchResponse>) =>
   new DynamicStructuredTool({
     name: 'list_notion_databases',
     description: `List all databases in Notion that the integration has access to.
@@ -22,7 +33,7 @@ export const createListDatabasesTool = (listDatabases: () => Promise<PageInfo[]>
       try {
         logger.info('Listing Notion databases');
         const databases = await listDatabases();
-        logger.info('Databases retrieved from Notion:', { count: databases.length });
+        logger.info('Databases count retrieved from Notion:', { count: databases.results.length });
         return JSON.stringify({
           success: true,
           databases,
@@ -40,7 +51,10 @@ export const createListDatabasesTool = (listDatabases: () => Promise<PageInfo[]>
  * Creates a tool to create a new database in Notion
  */
 export const createCreateDatabaseTool = (
-  createDatabase: (title: string) => Promise<CreateDatabaseResponse>,
+  createDatabase: (
+    title: string,
+    properties: CreateDatabaseParameters['properties'],
+  ) => Promise<CreateDatabaseResponse>,
 ) =>
   new DynamicStructuredTool({
     name: 'create_notion_database',
@@ -50,11 +64,15 @@ export const createCreateDatabaseTool = (
       - You want to set up a structured data collection`,
     schema: z.object({
       title: z.string().describe('The title of the new database.'),
+      properties: z.array(z.any()).describe('The properties of the new Notion database.'),
     }),
-    func: async ({ title }) => {
+    func: async ({ title, properties }) => {
       try {
         logger.info('Creating Notion database - Received data:', { title });
-        const result = await createDatabase(title);
+        const result = await createDatabase(
+          title,
+          properties as unknown as CreateDatabaseParameters['properties'],
+        );
         logger.info('Database created in Notion:', { result });
         return JSON.stringify({
           success: true,
@@ -74,7 +92,7 @@ export const createCreateDatabaseTool = (
  * Creates a tool to list pages in a specific database
  */
 export const createListDatabasePagesTool = (
-  listDatabasePages: (databaseId: string) => Promise<PageInfo[]>,
+  listDatabasePages: (databaseId: string) => Promise<QueryDatabaseResponse>,
 ) =>
   new DynamicStructuredTool({
     name: 'list_notion_database_pages',
@@ -90,7 +108,7 @@ export const createListDatabasePagesTool = (
       try {
         logger.info('Listing Notion database pages - Received data:', { databaseId });
         const pages = await listDatabasePages(databaseId);
-        logger.info('Pages retrieved from Notion database:', { count: pages.length });
+        logger.info('Pages count retrieved from Notion database:', { count: pages.results.length });
         return JSON.stringify({
           success: true,
           pages,
@@ -109,7 +127,11 @@ export const createListDatabasePagesTool = (
  * Creates a tool to create a new page in Notion
  */
 export const createCreatePageTool = (
-  createPage: (parentId: string, title: string, content: any) => Promise<PageInfo>,
+  createPage: (
+    parentId: string,
+    title: string,
+    children: CreatePageParameters['children'],
+  ) => Promise<CreatePageResponse>,
 ) =>
   new DynamicStructuredTool({
     name: 'create_notion_page',
@@ -122,12 +144,12 @@ export const createCreatePageTool = (
         .string()
         .describe('The ID of the parent page or database where the new page will be created.'),
       title: z.string().describe('The title of the new page.'),
-      content: z.array(z.any()).describe('The content blocks to add to the page.'),
+      children: z.array(z.any()).describe('The children blocks to add to the page.'),
     }),
-    func: async ({ parentId, title, content }) => {
+    func: async ({ parentId, title, children }) => {
       try {
         logger.info('Creating Notion page - Received data:', { parentId, title });
-        const result = await createPage(parentId, title, content);
+        const result = await createPage(parentId, title, children);
         logger.info('Page created in Notion:', { result });
         return JSON.stringify(result);
       } catch (error) {
@@ -140,7 +162,12 @@ export const createCreatePageTool = (
 /**
  * Creates a tool to update page content in Notion
  */
-export const createUpdatePageTool = (updatePage: (pageId: string, content: any) => Promise<any>) =>
+export const createUpdatePageTool = (
+  updatePage: (
+    pageId: string,
+    children: AppendBlockChildrenParameters['children'],
+  ) => Promise<AppendBlockChildrenResponse>,
+) =>
   new DynamicStructuredTool({
     name: 'update_notion_page',
     description: `Update content of an existing page in Notion.
@@ -149,12 +176,12 @@ export const createUpdatePageTool = (updatePage: (pageId: string, content: any) 
     - You want to append new blocks to a page`,
     schema: z.object({
       pageId: z.string().describe('The ID of the page to update.'),
-      content: z.array(z.any()).describe('The content blocks to add to the page.'),
+      children: z.array(z.any()).describe('The children blocks to add to the page.'),
     }),
-    func: async ({ pageId, content }) => {
+    func: async ({ pageId, children }) => {
       try {
         logger.info('Updating Notion page - Received data:', { pageId });
-        const result = await updatePage(pageId, content);
+        const result = await updatePage(pageId, children);
         logger.info('Page updated in Notion:', { result });
         return JSON.stringify(result);
       } catch (error) {
@@ -167,8 +194,8 @@ export const createUpdatePageTool = (updatePage: (pageId: string, content: any) 
 /**
  * Creates a tool to add a comment to a page
  */
-export const createAddCommentTool = (
-  addComment: (pageId: string, content: string) => Promise<CommentInfo>,
+export const createAddCommentToPageTool = (
+  addCommentToPage: (pageId: string, content: string) => Promise<CreateCommentResponse>,
 ) =>
   new DynamicStructuredTool({
     name: 'add_notion_comment',
@@ -183,7 +210,7 @@ export const createAddCommentTool = (
     func: async ({ pageId, content }) => {
       try {
         logger.info('Adding Notion comment - Received data:', { pageId, content });
-        const result = await addComment(pageId, content);
+        const result = await addCommentToPage(pageId, content);
         logger.info('Comment added to Notion:', { result });
         return JSON.stringify(result);
       } catch (error) {
@@ -194,10 +221,39 @@ export const createAddCommentTool = (
   });
 
 /**
+ * Creates a tool to add a comment to a discussion
+ */
+export const createAddCommentToDiscussionTool = (
+  addCommentToDiscussion: (discussionId: string, content: string) => Promise<CreateCommentResponse>,
+) =>
+  new DynamicStructuredTool({
+    name: 'add_notion_discussion_comment',
+    description: `Add a comment to a discussion in Notion.
+    USE THIS WHEN: 
+    - You want to add a comment to an existing discussion
+    - You need to contribute to an ongoing thread`,
+    schema: z.object({
+      discussionId: z.string().describe('The ID of the discussion to comment on.'),
+      content: z.string().describe('The content of the comment.'),
+    }),
+    func: async ({ discussionId, content }) => {
+      try {
+        logger.info('Adding Notion discussion comment - Received data:', { discussionId, content });
+        const result = await addCommentToDiscussion(discussionId, content);
+        logger.info('Comment added to Notion discussion:', { result });
+        return JSON.stringify(result);
+      } catch (error) {
+        logger.error('Error adding Notion discussion comment:', error);
+        throw error;
+      }
+    },
+  });
+
+/**
  * Creates a tool to reply to a comment
  */
 export const createReplyToCommentTool = (
-  replyToComment: (commentId: string, content: string) => Promise<CommentInfo>,
+  replyToComment: (commentId: string, content: string) => Promise<CreateCommentResponse>,
 ) =>
   new DynamicStructuredTool({
     name: 'reply_to_notion_comment',
@@ -225,7 +281,9 @@ export const createReplyToCommentTool = (
 /**
  * Creates a tool to get comments on a page
  */
-export const createGetCommentsTool = (getComments: (pageId: string) => Promise<CommentInfo[]>) =>
+export const createGetCommentsTool = (
+  getComments: (pageId: string) => Promise<ListCommentsResponse>,
+) =>
   new DynamicStructuredTool({
     name: 'get_notion_comments',
     description: `Get all comments on a page in Notion.
@@ -257,12 +315,20 @@ export const createNotionTools = async (notionToken: string) => {
   const notion = await notionClient(notionToken);
 
   const listDatabases = () => notion.listDatabases();
-  const createDatabase = (title: string) => notion.createDatabase(title);
+  const createDatabase = (title: string, properties: CreateDatabaseParameters['properties']) =>
+    notion.createDatabase(title, properties);
   const listDatabasePages = (databaseId: string) => notion.listDatabasePages(databaseId);
-  const createPage = (parentId: string, title: string, content: any) =>
-    notion.createPage(parentId, title, content);
-  const updatePage = (pageId: string, content: any) => notion.updatePage(pageId, content);
-  const addComment = (pageId: string, content: string) => notion.addComment(pageId, content);
+  const createPage = (
+    parentId: string,
+    title: string,
+    children: CreatePageParameters['children'],
+  ) => notion.createPage(parentId, title, children);
+  const updatePage = (pageId: string, children: AppendBlockChildrenParameters['children']) =>
+    notion.updatePage(pageId, children);
+  const addCommentToPage = (pageId: string, content: string) =>
+    notion.addCommentToPage(pageId, content);
+  const addCommentToDiscussion = (discussionId: string, content: string) =>
+    notion.addCommentToDiscussion(discussionId, content);
   const replyToComment = (commentId: string, content: string) =>
     notion.replyToComment(commentId, content);
   const getComments = (pageId: string) => notion.getComments(pageId);
@@ -273,7 +339,8 @@ export const createNotionTools = async (notionToken: string) => {
     createListDatabasePagesTool(listDatabasePages),
     createCreatePageTool(createPage),
     createUpdatePageTool(updatePage),
-    createAddCommentTool(addComment),
+    createAddCommentToPageTool(addCommentToPage),
+    createAddCommentToDiscussionTool(addCommentToDiscussion),
     createReplyToCommentTool(replyToComment),
     createGetCommentsTool(getComments),
   ];
