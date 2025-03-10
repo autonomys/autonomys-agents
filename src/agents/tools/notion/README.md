@@ -4,6 +4,8 @@ This module provides a set of tools for interacting with Notion through the offi
 
 ## Features
 
+- List all accessible Notion databases
+- List pages within a specific database
 - Create new pages in Notion
 - Update existing page content
 - Add comments to pages
@@ -21,10 +23,13 @@ To use these tools, you need to:
 
 ## Available Tools
 
-- create_notion_page
-- update_notion_page
-- add_notion_comment
-- reply_to_notion_comment
+- list_notion_databases - List all databases accessible to the integration
+- list_notion_database_pages - List all pages within a specific database
+- create_notion_page - Create a new page in Notion
+- update_notion_page - Update content of an existing page
+- add_notion_comment - Add a comment to a page
+- reply_to_notion_comment - Reply to an existing comment
+- get_notion_comments - Get all comments on a page
 
 ## Usage Example
 

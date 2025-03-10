@@ -70,6 +70,23 @@ export const notionClient = async (token: string) => {
     throw new Error('Failed to authenticate with Notion');
   }
 
+  const listDatabases = async () => {
+    const response = await client.search({
+      filter: {
+        property: 'object',
+        value: 'database',
+      },
+    });
+    return response.results.map(page => toPageInfo(page as PageObjectResponse));
+  };
+
+  const listDatabasePages = async (databaseId: string) => {
+    const response = await client.databases.query({
+      database_id: databaseId,
+    });
+    return response.results.map(page => toPageInfo(page as PageObjectResponse));
+  };
+
   const createPage = async (parentId: string, title: string, content: any) => {
     const response = await client.pages.create({
       parent: { page_id: parentId },
@@ -116,6 +133,8 @@ export const notionClient = async (token: string) => {
 
   return {
     client,
+    listDatabases,
+    listDatabasePages,
     createPage,
     updatePage,
     addComment,

@@ -6,6 +6,72 @@ import { CommentInfo, notionClient, PageInfo } from './client.js';
 const logger = createLogger('notion-tools');
 
 /**
+ * Creates a tool to list pages in Notion
+ */
+export const createListDatabasesTool = (listDatabases: () => Promise<PageInfo[]>) =>
+  new DynamicStructuredTool({
+    name: 'list_notion_databases',
+    description: `List all databases in Notion that the integration has access to.
+    USE THIS WHEN: 
+    - You need to find existing databases
+    - You want to see what databases are available to work with
+    - You need to get database IDs for other operations`,
+    schema: z.object({}),
+    func: async () => {
+      try {
+        logger.info('Listing Notion databases');
+        const databases = await listDatabases();
+        logger.info('Databases retrieved from Notion:', { count: databases.length });
+        return JSON.stringify({
+          success: true,
+          databases,
+        });
+      } catch (error) {
+        logger.error('Error listing Notion databases:', error);
+        return JSON.stringify({
+          success: false,
+          error: error,
+        });
+      }
+    },
+  });
+
+/**
+ * Creates a tool to list pages in a specific database
+ */
+export const createListDatabasePagesTool = (
+  listDatabasePages: (databaseId: string) => Promise<PageInfo[]>,
+) =>
+  new DynamicStructuredTool({
+    name: 'list_notion_database_pages',
+    description: `List all pages in a specific Notion database.
+      USE THIS WHEN: 
+      - You need to find pages within a specific database
+      - You want to see what content exists in a particular database
+      - You need to get page IDs from a specific database`,
+    schema: z.object({
+      databaseId: z.string().describe('The ID of the database to list pages from.'),
+    }),
+    func: async ({ databaseId }) => {
+      try {
+        logger.info('Listing Notion database pages - Received data:', { databaseId });
+        const pages = await listDatabasePages(databaseId);
+        logger.info('Pages retrieved from Notion database:', { count: pages.length });
+        return JSON.stringify({
+          success: true,
+          pages,
+        });
+      } catch (error) {
+        logger.error('Error listing Notion database pages:', error);
+        return JSON.stringify({
+          success: false,
+          error: error,
+        });
+      }
+    },
+  });
+
+/**
  * Creates a tool to create a new page in Notion
  */
 export const createCreatePageTool = (
@@ -156,6 +222,8 @@ export const createGetCommentsTool = (getComments: (pageId: string) => Promise<C
 export const createNotionTools = async (notionToken: string) => {
   const notion = await notionClient(notionToken);
 
+  const listDatabases = () => notion.listDatabases();
+  const listDatabasePages = (databaseId: string) => notion.listDatabasePages(databaseId);
   const createPage = (parentId: string, title: string, content: any) =>
     notion.createPage(parentId, title, content);
   const updatePage = (pageId: string, content: any) => notion.updatePage(pageId, content);
@@ -165,6 +233,8 @@ export const createNotionTools = async (notionToken: string) => {
   const getComments = (pageId: string) => notion.getComments(pageId);
 
   return [
+    createListDatabasesTool(listDatabases),
+    createListDatabasePagesTool(listDatabasePages),
     createCreatePageTool(createPage),
     createUpdatePageTool(updatePage),
     createAddCommentTool(addComment),
