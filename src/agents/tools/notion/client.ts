@@ -3,6 +3,7 @@ import type {
   CommentObjectResponse,
   PageObjectResponse,
 } from '@notionhq/client/build/src/api-endpoints.d.ts';
+import { createLogger } from '../../../utils/logger.js';
 
 export type PageInfo = {
   id: string;
@@ -25,6 +26,8 @@ export type CommentInfo = {
     id: string;
   };
 };
+
+export const logger = createLogger('notion-client');
 
 const toPageInfo = (page: PageObjectResponse): PageInfo => {
   const title =
@@ -77,6 +80,7 @@ export const notionClient = async (token: string) => {
         value: 'database',
       },
     });
+    logger.info('listDatabases', { results: response.results });
     return response.results.map(page => toPageInfo(page as PageObjectResponse));
   };
 
@@ -84,6 +88,7 @@ export const notionClient = async (token: string) => {
     const response = await client.databases.query({
       database_id: databaseId,
     });
+    logger.info('listDatabasePages', { results: response.results });
     return response.results.map(page => toPageInfo(page as PageObjectResponse));
   };
 
@@ -97,6 +102,7 @@ export const notionClient = async (token: string) => {
       },
       children: content,
     });
+    logger.info('createPage', { response });
     return toPageInfo(response as PageObjectResponse);
   };
 
@@ -105,6 +111,7 @@ export const notionClient = async (token: string) => {
       block_id: pageId,
       children: content,
     });
+    logger.info('updatePage', { response });
     return response;
   };
 
@@ -113,6 +120,7 @@ export const notionClient = async (token: string) => {
       parent: { page_id: pageId },
       rich_text: [{ text: { content } }],
     });
+    logger.info('addComment', { response });
     return toCommentInfo(response as CommentObjectResponse);
   };
 
@@ -121,6 +129,7 @@ export const notionClient = async (token: string) => {
       parent: { page_id: commentId },
       rich_text: [{ text: { content } }],
     });
+    logger.info('replyToComment', { response });
     return toCommentInfo(response as CommentObjectResponse);
   };
 
@@ -128,6 +137,7 @@ export const notionClient = async (token: string) => {
     const response = await client.comments.list({
       block_id: pageId,
     });
+    logger.info('getComments', { response });
     return response.results.map(comment => toCommentInfo(comment as CommentObjectResponse));
   };
 
