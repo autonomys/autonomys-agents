@@ -113,7 +113,7 @@ export const createListCommentsTools = (
     - You need to check if YOU have already commented on an issue (to avoid duplicate comments)
     - You want to read the discussion on an issue before responding
     
-    IMPORTANT: Always use this tool to check for existing comments before creating a new comment on an issue. This helps prevent duplicate comments and ensures you're responding to the latest information.`,
+    IMPORTANT: ALWAYS use this tool to check for existing comments before creating a new comment on an issue. This helps prevent duplicate comments and ensures you're responding to the latest information.`,
     schema: z.object({
       issue_number: z.number().describe('The number of the issue to list comments for'),
     }),
@@ -149,8 +149,7 @@ export const createCreateCommentTool = (
     IMPORTANT: Before creating a new comment, ALWAYS follow these steps:
     1. Use list_github_comments to get all comments on the issue
     2. Check if you've already commented on this issue by looking for comments from your username
-    3. If you've already commented, consider whether a new comment is necessary or if you should update your existing comment
-    
+    DO NOT USE THIS TOOL IF YOU HAVE NOT ALREADY CHECKED FOR EXISTING COMMENTS USING list_github_comments.
     Avoid posting duplicate or very similar comments on the same issue.`,
     schema: z.object({
       issue_number: z.number().describe('The number of the issue to comment on'),
@@ -355,7 +354,7 @@ export const createListPRCommentsTool = (
     - You need to check if YOU have already commented on a PR (to avoid duplicate comments)
     - You want to read the discussion on a PR before responding
     
-    IMPORTANT: Always use this tool to check for existing comments before creating a new comment on a pull request. This helps prevent duplicate comments and ensures you're responding to the latest information.`,
+    IMPORTANT: ALWAYS USE THIS TOOL to check for existing comments BEFORE creating a new comment on a pull request. This helps prevent duplicate comments and ensures you're responding to the latest information.`,
     schema: z.object({
       pull_number: z.number().describe('The number of the pull request to list comments for'),
     }),
@@ -391,7 +390,7 @@ export const createCreatePRCommentTool = (
     IMPORTANT: Before creating a new comment, ALWAYS follow these steps:
     1. Use list_github_pr_comments to get all comments on the pull request
     2. Check if you've already commented on this PR by looking for comments from your username
-    3. If you've already commented, consider whether a new comment is necessary or if you should update your existing comment
+    DO NOT USE THIS TOOL IF YOU HAVE NOT ALREADY CHECKED FOR EXISTING COMMENTS USING list_github_pr_comments.
     
     Avoid posting duplicate or very similar comments on the same pull request.`,
     schema: z.object({
