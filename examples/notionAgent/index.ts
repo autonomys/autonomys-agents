@@ -45,7 +45,14 @@ const main = async () => {
   const runner = await orchestratorRunner();
 
   // Choose which message to start with
-  const initialMessage = `Create a new page in Notion with some content and add a comment to it, the goal is to write a Whitepaper for a new project.`;
+  const initialMessage = `
+    First, list available Notion databases.
+    Then create a new page in one of those databases with some content.
+    Remember: The new page MUST be created in a parent database (you'll need the database ID).
+    Finally, add a comment to the page.
+    
+    The goal is to write a Whitepaper for a new project.
+  `;
 
   try {
     await validateLocalHash();
