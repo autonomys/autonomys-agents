@@ -68,7 +68,8 @@ export const notionClient = async (token: string) => {
 
   // Verify the integration token by making a test request
   try {
-    await client.users.me({});
+    const me = await client.users.me({});
+    logger.info('me', { me });
   } catch (error) {
     throw new Error('Failed to authenticate with Notion');
   }
@@ -82,6 +83,20 @@ export const notionClient = async (token: string) => {
     });
     logger.info('listDatabases', { results: response.results });
     return response.results.map(page => toPageInfo(page as PageObjectResponse));
+  };
+
+  const createDatabase = async (title: string) => {
+    const response = await client.databases.create({
+      parent: { type: 'page_id', page_id: 'workspace' },
+      title: [{ type: 'text', text: { content: title } }],
+      properties: {
+        Name: {
+          title: {},
+        },
+      },
+    });
+    logger.info('createDatabase', { response });
+    return response;
   };
 
   const listDatabasePages = async (databaseId: string) => {
@@ -144,6 +159,7 @@ export const notionClient = async (token: string) => {
   return {
     client,
     listDatabases,
+    createDatabase,
     listDatabasePages,
     createPage,
     updatePage,

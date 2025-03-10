@@ -1,4 +1,5 @@
 import { DynamicStructuredTool } from '@langchain/core/tools';
+import { CreateDatabaseResponse } from '@notionhq/client/build/src/api-endpoints.js';
 import { z } from 'zod';
 import { createLogger } from '../../../utils/logger.js';
 import { CommentInfo, notionClient, PageInfo } from './client.js';
@@ -28,6 +29,39 @@ export const createListDatabasesTool = (listDatabases: () => Promise<PageInfo[]>
         });
       } catch (error) {
         logger.error('Error listing Notion databases:', error);
+        return JSON.stringify({
+          success: false,
+          error: error,
+        });
+      }
+    },
+  });
+/**
+ * Creates a tool to create a new database in Notion
+ */
+export const createCreateDatabaseTool = (
+  createDatabase: (title: string) => Promise<CreateDatabaseResponse>,
+) =>
+  new DynamicStructuredTool({
+    name: 'create_notion_database',
+    description: `Create a new database in Notion.
+      USE THIS WHEN: 
+      - You need to create a new database at the workspace level
+      - You want to set up a structured data collection`,
+    schema: z.object({
+      title: z.string().describe('The title of the new database.'),
+    }),
+    func: async ({ title }) => {
+      try {
+        logger.info('Creating Notion database - Received data:', { title });
+        const result = await createDatabase(title);
+        logger.info('Database created in Notion:', { result });
+        return JSON.stringify({
+          success: true,
+          database: result,
+        });
+      } catch (error) {
+        logger.error('Error creating Notion database:', error);
         return JSON.stringify({
           success: false,
           error: error,
@@ -223,6 +257,7 @@ export const createNotionTools = async (notionToken: string) => {
   const notion = await notionClient(notionToken);
 
   const listDatabases = () => notion.listDatabases();
+  const createDatabase = (title: string) => notion.createDatabase(title);
   const listDatabasePages = (databaseId: string) => notion.listDatabasePages(databaseId);
   const createPage = (parentId: string, title: string, content: any) =>
     notion.createPage(parentId, title, content);
@@ -234,6 +269,7 @@ export const createNotionTools = async (notionToken: string) => {
 
   return [
     createListDatabasesTool(listDatabases),
+    createCreateDatabaseTool(createDatabase),
     createListDatabasePagesTool(listDatabasePages),
     createCreatePageTool(createPage),
     createUpdatePageTool(updatePage),
