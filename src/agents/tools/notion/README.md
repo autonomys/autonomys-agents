@@ -21,6 +21,12 @@ To use these tools, you need to:
 2. Get your integration token
 3. Share the pages/databases you want to access with your integration
 4. Pass the integration token when creating the tools
+5. Create a entrypoint page (database) and retrieve the database ID from the url (the UUID that follow the shortname of the page)
+6. Go to ... in top right of the page (page settings)
+7. Go to Connections in page settings
+8. Search for your integration app and approve the integration
+
+The agent will use the entrypoint page as the default database, if it create more page, it may go deeper in these page and create other children pages. In Notion pretty much every database/page exist as a children of an other database/page.
 
 ## Environment Variables
 
