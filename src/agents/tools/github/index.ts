@@ -30,7 +30,12 @@ export const createListIssuesTools = (
     description: `List GitHub issues in the configured repository.
     USE THIS WHEN:
     - You need to see all issues in the repository
-    - You want to check the status of existing issues`,
+    - You want to check the status of existing issues
+    - You need to check if an issue already exists before creating a new one
+    - You want to find issues related to a specific topic or problem
+    
+    IMPORTANT: Always use this tool to check for existing issues before creating a new issue.
+    This helps prevent duplicate issues and ensures you're working with the latest information.`,
     schema: z.object({
       state: z
         .enum(['open', 'closed', 'all'])
@@ -63,7 +68,9 @@ export const createCreateIssueTool = (
     description: `Create a new GitHub issue in the configured repository.
     USE THIS WHEN:
     - You need to create a new issue to track work
-    - You want to report a bug or request a feature`,
+    - You want to report a bug or request a feature
+    
+    IMPORTANT: Before creating a new issue, ALWAYS check existing issues using list_github_issues to avoid creating duplicate issues for the same topic. Search for issues with similar titles or content, and consider adding a comment to an existing issue instead of creating a new one.`,
     schema: z.object({
       title: z.string().describe('The title of the issue'),
       body: z.string().optional().describe('The body/description of the issue'),
@@ -93,17 +100,20 @@ export const createListCommentsTools = (
 ) =>
   new DynamicStructuredTool({
     name: 'list_github_comments',
-    description: `List comments on a specific GitHub issue in the configured repository.
+    description: `List comments on a GitHub issue in the configured repository.
     USE THIS WHEN:
-    - You need to check for new comments or responses on an issue
-    - You want to see the discussion history of an issue
-    - You need to track if someone has replied to an issue`,
+    - You need to see all comments on an issue
+    - You want to check if someone has already responded to an issue
+    - You need to check if YOU have already commented on an issue (to avoid duplicate comments)
+    - You want to read the discussion on an issue before responding
+    
+    IMPORTANT: Always use this tool to check for existing comments before creating a new comment on an issue. This helps prevent duplicate comments and ensures you're responding to the latest information.`,
     schema: z.object({
-      issue_number: z.number().describe('The number of the issue to get comments from'),
+      issue_number: z.number().describe('The number of the issue to list comments for'),
     }),
     func: async ({ issue_number }) => {
       try {
-        logger.info('Listing GitHub issue comments:', { issue_number });
+        logger.info('Listing GitHub comments:', { issue_number });
         const comments = await listComments(issue_number);
         return {
           success: true,
@@ -128,7 +138,9 @@ export const createCreateCommentTool = (
     USE THIS WHEN:
     - You need to respond to someone's comment on an issue
     - You want to add additional information to an issue
-    - You need to provide an update or status report on an issue`,
+    - You need to provide an update or status report on an issue
+    
+    IMPORTANT: Before creating a new comment, ALWAYS check existing comments using list_github_comments to avoid posting duplicate comments on the same issue. If you've already commented on an issue, consider whether a new comment is necessary.`,
     schema: z.object({
       issue_number: z.number().describe('The number of the issue to comment on'),
       body: z.string().describe('The content of the comment'),
@@ -325,13 +337,16 @@ export const createListPRCommentsTool = (
 ) =>
   new DynamicStructuredTool({
     name: 'list_github_pr_comments',
-    description: `List comments on a specific GitHub pull request.
+    description: `List comments on a GitHub pull request in the configured repository.
     USE THIS WHEN:
-    - You need to check for review comments on a PR
-    - You want to see the discussion history of a PR
-    - You need to track if someone has replied to your PR comments`,
+    - You need to see all comments on a pull request
+    - You want to check if someone has already reviewed or commented on a PR
+    - You need to check if YOU have already commented on a PR (to avoid duplicate comments)
+    - You want to read the discussion on a PR before responding
+    
+    IMPORTANT: Always use this tool to check for existing comments before creating a new comment on a pull request. This helps prevent duplicate comments and ensures you're responding to the latest information.`,
     schema: z.object({
-      pull_number: z.number().describe('The number of the pull request to get comments from'),
+      pull_number: z.number().describe('The number of the pull request to list comments for'),
     }),
     func: async ({ pull_number }) => {
       try {
@@ -356,27 +371,34 @@ export const createCreatePRCommentTool = (
 ) =>
   new DynamicStructuredTool({
     name: 'create_github_pr_comment',
-    description: `Create a new comment on a GitHub pull request.
+    description: `Create a new comment on a GitHub pull request in the configured repository.
     USE THIS WHEN:
-    - You need to respond to a PR review or discussion
-    - You want to provide feedback on specific code changes
-    - You need to add information or suggestions to a PR
+    - You need to provide feedback on a pull request
+    - You want to suggest changes to code in a pull request
+    - You need to ask questions about a pull request
     
-    Note: To comment on specific lines of code, provide the path, line, and commit_id.
-    For general PR comments, only pull_number and body are required.`,
+    IMPORTANT: Before creating a new comment, ALWAYS check existing comments using list_github_pr_comments to avoid posting duplicate comments on the same pull request. If you've already commented on a pull request, consider whether a new comment is necessary or if you should update your existing comment.`,
     schema: z.object({
       pull_number: z.number().describe('The number of the pull request to comment on'),
       body: z.string().describe('The content of the comment'),
       commit_id: z
         .string()
         .optional()
-        .describe('The commit SHA to comment on (required for line comments)'),
-      path: z.string().optional().describe('The file path to comment on'),
-      line: z.number().optional().describe('The line number to comment on'),
+        .describe('The SHA of the commit to comment on (required for review line comments)'),
+      path: z
+        .string()
+        .optional()
+        .describe('The relative file path to comment on (for review comments)'),
+      line: z
+        .number()
+        .optional()
+        .describe('The line number in the file to comment on (for review comments)'),
       side: z
         .enum(['LEFT', 'RIGHT'])
         .optional()
-        .describe('Which version of the line to comment on (LEFT for previous, RIGHT for current)'),
+        .describe(
+          'Which side of a diff to comment on. LEFT is for deletions, RIGHT is for additions. Default is RIGHT.',
+        ),
     }),
     func: async ({ pull_number, body, commit_id, path, line, side }) => {
       try {
@@ -406,20 +428,24 @@ export const createCreatePRReactionTool = (
     description: `Create a reaction on a GitHub pull request comment.
     USE THIS WHEN:
     - You want to add an emoji reaction to a PR comment
-    - You need to express sentiment or feedback through reactions on PR discussions
+    - You need to express sentiment or feedback on a PR through reactions
     
+    IMPORTANT: Before adding a reaction, consider whether you've already reacted to this PR comment. Avoid adding multiple reactions to the same content. Remember that you can only add each reaction type once per comment.
+    
+    Suggested behavior:
+    - Don't leave reactions to your own comments
     Available reactions: +1, -1, laugh, confused, heart, hooray, rocket, eyes`,
     schema: z.object({
-      pull_number: z.number().describe('The number of the pull request'),
-      comment_id: z.number().describe('The ID of the comment to react to'),
       content: z
         .enum(['+1', '-1', 'laugh', 'confused', 'heart', 'hooray', 'rocket', 'eyes'])
         .describe('The type of reaction to add'),
+      pull_number: z.number().describe('The number of the pull request'),
+      comment_id: z.number().describe('The ID of the comment to react to'),
     }),
-    func: async ({ pull_number, comment_id, content }) => {
+    func: async ({ content, pull_number, comment_id }) => {
       try {
-        logger.info('Creating GitHub PR reaction:', { pull_number, comment_id, content });
-        const reaction = await createPRReaction({ pull_number, comment_id, content });
+        logger.info('Creating GitHub PR reaction:', { content, pull_number, comment_id });
+        const reaction = await createPRReaction({ content, pull_number, comment_id });
         return {
           success: true,
           reaction,
