@@ -11,6 +11,9 @@ export interface IssueInfo {
   created_at: string;
   updated_at: string;
   html_url: string;
+  user: {
+    login: string;
+  };
 }
 
 export interface CommentInfo {
@@ -139,6 +142,13 @@ export interface WatchedRepoInfo {
   };
 }
 
+export interface UserInfo {
+  login: string;
+  name?: string;
+  avatar_url?: string;
+  html_url: string;
+}
+
 export interface GitHubClient {
   listIssues: (state?: 'open' | 'closed' | 'all') => Promise<IssueInfo[]>;
   createIssue: (params: CreateIssueParams) => Promise<IssueInfo>;
@@ -158,6 +168,7 @@ export interface GitHubClient {
   unwatchRepo: (owner: string, repo: string) => Promise<void>;
   listWatchedRepos: () => Promise<WatchedRepoInfo[]>;
   searchIssues: (query: string, state?: 'open' | 'closed' | 'all') => Promise<IssueInfo[]>;
+  getAuthenticatedUser: () => Promise<UserInfo>;
 }
 
 export const githubClient = async (
@@ -186,6 +197,9 @@ export const githubClient = async (
           created_at: issue.created_at,
           updated_at: issue.updated_at,
           html_url: issue.html_url,
+          user: {
+            login: issue.user?.login || 'unknown',
+          },
         }),
       );
     } catch (error) {
@@ -213,6 +227,9 @@ export const githubClient = async (
         created_at: response.data.created_at,
         updated_at: response.data.updated_at,
         html_url: response.data.html_url,
+        user: {
+          login: response.data.user?.login || 'unknown',
+        },
       };
     } catch (error) {
       logger.error('Error creating GitHub issue:', error);
@@ -625,9 +642,29 @@ export const githubClient = async (
           created_at: issue.created_at,
           updated_at: issue.updated_at,
           html_url: issue.html_url,
+          user: {
+            login: issue.user?.login || 'unknown',
+          },
         }));
     } catch (error) {
       logger.error('Error searching GitHub issues:', error);
+      throw error;
+    }
+  };
+
+  const getAuthenticatedUser = async (): Promise<UserInfo> => {
+    try {
+      logger.info('Getting authenticated user info');
+      const response = await octokit.users.getAuthenticated();
+
+      return {
+        login: response.data.login,
+        name: response.data.name || undefined,
+        avatar_url: response.data.avatar_url || undefined,
+        html_url: response.data.html_url,
+      };
+    } catch (error) {
+      logger.error('Error getting authenticated user:', error);
       throw error;
     }
   };
@@ -649,5 +686,6 @@ export const githubClient = async (
     unwatchRepo,
     listWatchedRepos,
     searchIssues,
+    getAuthenticatedUser,
   };
 };

@@ -14,6 +14,7 @@ import {
   PRCommentInfo,
   PullRequestInfo,
   ReactionInfo,
+  UserInfo,
   WatchedRepoInfo,
 } from './client.js';
 
@@ -610,6 +611,36 @@ export const createSearchIssuesTools = (
     },
   });
 
+/**
+ * Creates a tool to get the authenticated GitHub user's information
+ */
+export const createGetAuthenticatedUserTool = (getAuthenticatedUser: () => Promise<UserInfo>) =>
+  new DynamicStructuredTool({
+    name: 'get_github_authenticated_user',
+    description: `Get information about the authenticated GitHub user (yourself).
+    USE THIS WHEN:
+    - You need to know your GitHub username
+    - You need to check if a comment was made by you
+    - You need to identify yourself in GitHub interactions
+    
+    IMPORTANT: Use this tool to get your username before checking comments or issues,
+    so you can identify which comments were made by you and avoid duplicate comments.`,
+    schema: z.object({}),
+    func: async () => {
+      try {
+        logger.info('Getting authenticated GitHub user');
+        const user = await getAuthenticatedUser();
+        return {
+          success: true,
+          user,
+        };
+      } catch (error) {
+        logger.error('Error getting authenticated GitHub user:', error);
+        throw error;
+      }
+    },
+  });
+
 export const createGitHubTools = async (token: string, owner: string, repo: string) => {
   const github = await githubClient(token, owner, repo);
   const listIssues = (state?: 'open' | 'closed' | 'all') => github.listIssues(state);
@@ -632,6 +663,7 @@ export const createGitHubTools = async (token: string, owner: string, repo: stri
   const listWatchedRepos = () => github.listWatchedRepos();
   const searchIssues = (query: string, state?: 'open' | 'closed' | 'all') =>
     github.searchIssues(query, state);
+  const getAuthenticatedUser = () => github.getAuthenticatedUser();
 
   return [
     createListIssuesTools(listIssues),
@@ -650,5 +682,6 @@ export const createGitHubTools = async (token: string, owner: string, repo: stri
     createUnwatchRepoTool(unwatchRepo),
     createListWatchedReposTool(listWatchedRepos),
     createSearchIssuesTools(searchIssues),
+    createGetAuthenticatedUserTool(getAuthenticatedUser),
   ];
 };
