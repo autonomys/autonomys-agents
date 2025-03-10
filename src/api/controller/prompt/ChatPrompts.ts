@@ -8,7 +8,12 @@ import {
 
 const searchParamsSchema = z.object({
   query: z.string().describe('The optimized search query to find relevant information'),
-  //   metadataFilter: z.string().optional().describe('The metadata filter to apply to the search'),
+  metadataFilter: z
+    .string()
+    .optional()
+    .describe(
+      'The metadata filter to apply to the search, if not provided, it will be empty string',
+    ),
   limit: z.number().default(5).describe('Number of results to return'),
 });
 
@@ -26,13 +31,14 @@ GUIDELINES FOR EFFECTIVE QUERIES:
 - Extract the core information needs from the user's message
 
 Filter the search by metadata. Metadata filter examples: 
-- based on range: created_at >= datetime('now', '-1 hour')
+- based on range: created_at >= datetime('now', '-1 day')
 - before time: created_at <= "2025-02-12 09:00:00"
 - after time: created_at >= "2025-02-11 14:30:00"
 
+If the user didn't specify any particular topic, come up with your best guess based on the user's message.
 ${formatInstructionsEscaped}
 
-Only include metadataFilter when it's relevant to the user's query. If the user doesn't specify time periods or other constraints, leave it as null.
+Only include metadataFilter when it's relevant to the user's query. If the user doesn't specify time periods or other constraints, leave it as empty string.
 `;
 
 const searchSystemPrompt = SystemMessagePromptTemplate.fromTemplate(searchSystemTemplateText);

@@ -9,7 +9,7 @@ import { LLMFactory } from '../../services/llm/factory.js';
 const logger = createLogger('chat-controller');
 interface SearchParams {
   query: string;
-  metadataFilter?: string;
+  metadataFilter?: string | '';
   limit?: number;
 }
 
@@ -59,7 +59,7 @@ export const sendChatMessage = asyncHandler(async (req: Request, res: Response) 
   }
 
   try {
-    const db = getVectorDB(namespace);
+    const db = getVectorDB('experiences');
     const searchChain = searchPrompt.pipe(searchQueryModel).pipe(searchParamsParser);
     logger.info('Generating search parameters...');
 
@@ -79,6 +79,7 @@ export const sendChatMessage = asyncHandler(async (req: Request, res: Response) 
     }
 
     const relevantContext = await db.search(searchParams);
+    logger.info('Relevant context:', { relevantContext, namespace });
     const contextText = relevantContext.map(item => item.content).join('\n\n');
 
     const responseChain = responsePrompt.pipe(streamingModel).pipe(new StringOutputParser());
