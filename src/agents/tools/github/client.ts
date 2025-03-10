@@ -157,6 +157,7 @@ export interface GitHubClient {
   watchRepo: (owner: string, repo: string, ignored?: boolean) => Promise<void>;
   unwatchRepo: (owner: string, repo: string) => Promise<void>;
   listWatchedRepos: () => Promise<WatchedRepoInfo[]>;
+  searchIssues: (query: string, state?: 'open' | 'closed' | 'all') => Promise<IssueInfo[]>;
 }
 
 export const githubClient = async (
@@ -596,6 +597,41 @@ export const githubClient = async (
     }
   };
 
+  const searchIssues = async (
+    query: string,
+    state: 'open' | 'closed' | 'all' = 'open',
+  ): Promise<IssueInfo[]> => {
+    try {
+      // Format the search query to include repo and state
+      const searchQuery = `repo:${owner}/${repo} is:issue state:${state} ${query}`;
+
+      logger.info('Searching GitHub issues:', { query: searchQuery });
+
+      const response = await octokit.search.issuesAndPullRequests({
+        q: searchQuery,
+        sort: 'updated',
+        order: 'desc',
+        per_page: 20,
+      });
+
+      // Filter out pull requests, keep only issues
+      return response.data.items
+        .filter(item => !item.pull_request)
+        .map(issue => ({
+          number: issue.number,
+          title: issue.title,
+          state: issue.state,
+          body: issue.body || undefined,
+          created_at: issue.created_at,
+          updated_at: issue.updated_at,
+          html_url: issue.html_url,
+        }));
+    } catch (error) {
+      logger.error('Error searching GitHub issues:', error);
+      throw error;
+    }
+  };
+
   return {
     listIssues,
     createIssue,
@@ -612,5 +648,6 @@ export const githubClient = async (
     watchRepo,
     unwatchRepo,
     listWatchedRepos,
+    searchIssues,
   };
 };

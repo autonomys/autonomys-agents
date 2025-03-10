@@ -70,7 +70,12 @@ export const createCreateIssueTool = (
     - You need to create a new issue to track work
     - You want to report a bug or request a feature
     
-    IMPORTANT: Before creating a new issue, ALWAYS check existing issues using list_github_issues to avoid creating duplicate issues for the same topic. Search for issues with similar titles or content, and consider adding a comment to an existing issue instead of creating a new one.`,
+    IMPORTANT: Before creating a new issue, ALWAYS check for existing issues:
+    1. First use search_github_issues with relevant keywords to find similar issues
+    2. If no results, use list_github_issues to browse all open issues
+    
+    Only create a new issue if you've confirmed a similar issue doesn't already exist.
+    If a similar issue exists, consider adding a comment to that issue instead.`,
     schema: z.object({
       title: z.string().describe('The title of the issue'),
       body: z.string().optional().describe('The body/description of the issue'),
@@ -140,7 +145,12 @@ export const createCreateCommentTool = (
     - You want to add additional information to an issue
     - You need to provide an update or status report on an issue
     
-    IMPORTANT: Before creating a new comment, ALWAYS check existing comments using list_github_comments to avoid posting duplicate comments on the same issue. If you've already commented on an issue, consider whether a new comment is necessary.`,
+    IMPORTANT: Before creating a new comment, ALWAYS follow these steps:
+    1. Use list_github_comments to get all comments on the issue
+    2. Check if you've already commented on this issue by looking for comments from your username
+    3. If you've already commented, consider whether a new comment is necessary or if you should update your existing comment
+    
+    Avoid posting duplicate or very similar comments on the same issue.`,
     schema: z.object({
       issue_number: z.number().describe('The number of the issue to comment on'),
       body: z.string().describe('The content of the comment'),
@@ -377,14 +387,19 @@ export const createCreatePRCommentTool = (
     - You want to suggest changes to code in a pull request
     - You need to ask questions about a pull request
     
-    IMPORTANT: Before creating a new comment, ALWAYS check existing comments using list_github_pr_comments to avoid posting duplicate comments on the same pull request. If you've already commented on a pull request, consider whether a new comment is necessary or if you should update your existing comment.`,
+    IMPORTANT: Before creating a new comment, ALWAYS follow these steps:
+    1. Use list_github_pr_comments to get all comments on the pull request
+    2. Check if you've already commented on this PR by looking for comments from your username
+    3. If you've already commented, consider whether a new comment is necessary or if you should update your existing comment
+    
+    Avoid posting duplicate or very similar comments on the same pull request.`,
     schema: z.object({
       pull_number: z.number().describe('The number of the pull request to comment on'),
       body: z.string().describe('The content of the comment'),
       commit_id: z
         .string()
         .optional()
-        .describe('The SHA of the commit to comment on (required for review line comments)'),
+        .describe('The SHA of the commit to comment on (for review comments)'),
       path: z
         .string()
         .optional()
@@ -556,6 +571,45 @@ export const createListWatchedReposTool = (listWatchedRepos: () => Promise<Watch
     },
   });
 
+/**
+ * Creates a tool to search GitHub issues
+ */
+export const createSearchIssuesTools = (
+  searchIssues: (query: string, state?: 'open' | 'closed' | 'all') => Promise<IssueInfo[]>,
+) =>
+  new DynamicStructuredTool({
+    name: 'search_github_issues',
+    description: `Search for GitHub issues in the configured repository by keywords.
+    USE THIS WHEN:
+    - You need to find issues related to specific topics or keywords
+    - You want to check if an issue already exists before creating a new one
+    - You need to find issues with specific words in the title or body
+    
+    IMPORTANT: Always use this tool to search for existing issues before creating a new issue.
+    This is more effective than just listing all issues, as it allows you to find issues by keywords.
+    Search for keywords related to the issue you're considering creating.`,
+    schema: z.object({
+      query: z.string().describe('Keywords to search for in issue titles and bodies'),
+      state: z
+        .enum(['open', 'closed', 'all'])
+        .optional()
+        .describe('Filter issues by state. Default is "open".'),
+    }),
+    func: async ({ query, state = 'open' }) => {
+      try {
+        logger.info('Searching GitHub issues:', { query, state });
+        const issues = await searchIssues(query, state);
+        return {
+          success: true,
+          issues,
+        };
+      } catch (error) {
+        logger.error('Error searching GitHub issues:', error);
+        throw error;
+      }
+    },
+  });
+
 export const createGitHubTools = async (token: string, owner: string, repo: string) => {
   const github = await githubClient(token, owner, repo);
   const listIssues = (state?: 'open' | 'closed' | 'all') => github.listIssues(state);
@@ -576,6 +630,8 @@ export const createGitHubTools = async (token: string, owner: string, repo: stri
   const unwatchRepo = (targetOwner: string, targetRepo: string) =>
     github.unwatchRepo(targetOwner, targetRepo);
   const listWatchedRepos = () => github.listWatchedRepos();
+  const searchIssues = (query: string, state?: 'open' | 'closed' | 'all') =>
+    github.searchIssues(query, state);
 
   return [
     createListIssuesTools(listIssues),
@@ -593,5 +649,6 @@ export const createGitHubTools = async (token: string, owner: string, repo: stri
     createWatchRepoTool(watchRepo),
     createUnwatchRepoTool(unwatchRepo),
     createListWatchedReposTool(listWatchedRepos),
+    createSearchIssuesTools(searchIssues),
   ];
 };
