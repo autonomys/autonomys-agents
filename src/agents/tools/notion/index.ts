@@ -156,11 +156,19 @@ export const createGetCommentsTool = (getComments: (pageId: string) => Promise<C
 export const createNotionTools = async (notionToken: string) => {
   const notion = await notionClient(notionToken);
 
+  const createPage = (parentId: string, title: string, content: any) =>
+    notion.createPage(parentId, title, content);
+  const updatePage = (pageId: string, content: any) => notion.updatePage(pageId, content);
+  const addComment = (pageId: string, content: string) => notion.addComment(pageId, content);
+  const replyToComment = (commentId: string, content: string) =>
+    notion.replyToComment(commentId, content);
+  const getComments = (pageId: string) => notion.getComments(pageId);
+
   return [
-    createCreatePageTool(notion.createPage),
-    createUpdatePageTool(notion.updatePage),
-    createAddCommentTool(notion.addComment),
-    createReplyToCommentTool(notion.replyToComment),
-    createGetCommentsTool(notion.getComments),
+    createCreatePageTool(createPage),
+    createUpdatePageTool(updatePage),
+    createAddCommentTool(addComment),
+    createReplyToCommentTool(replyToComment),
+    createGetCommentsTool(getComments),
   ];
 };

@@ -63,6 +63,13 @@ const toCommentInfo = (comment: CommentObjectResponse): CommentInfo => {
 export const notionClient = async (token: string) => {
   const client = new Client({ auth: token });
 
+  // Verify the integration token by making a test request
+  try {
+    await client.users.me({});
+  } catch (error) {
+    throw new Error('Failed to authenticate with Notion');
+  }
+
   const createPage = async (parentId: string, title: string, content: any) => {
     const response = await client.pages.create({
       parent: { page_id: parentId },
@@ -108,6 +115,7 @@ export const notionClient = async (token: string) => {
   };
 
   return {
+    client,
     createPage,
     updatePage,
     addComment,
