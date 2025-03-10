@@ -112,6 +112,11 @@ export const config = (() => {
         GITHUB_REPO: process.env.GITHUB_REPO || '',
       },
 
+      gmailConfig: {
+        GMAIL_EMAIL: process.env.GMAIL_EMAIL || '',
+        GMAIL_APP_PASSWORD: process.env.GMAIL_APP_PASSWORD || '',
+      },
+
       llmConfig: {
         OPENAI_API_KEY: process.env.OPENAI_API_KEY || '',
         ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY || '',
