@@ -81,21 +81,17 @@ const NamespaceTabs: React.FC<NamespaceTabsProps> = ({
   const [dataProcessing, setDataProcessing] = useState(false);
   const { dispatch } = useChatContext();
 
-  // Add function to handle chat button click
   const handleChatClick = (namespace: string) => {
     dispatch({ type: 'SET_ACTIVE_CHAT', payload: namespace });
   };
 
-  // Simulate data processing when tab changes
   useEffect(() => {
     const index = namespaces.indexOf(activeNamespace);
     setActiveIndex(index);
     setDataProcessing(true);
 
-    // Simulate neural network learning/adapting
     const nodesToPulse = [index];
 
-    // Add random connected nodes
     for (let i = 0; i < 2; i++) {
       const randomNode = Math.floor(Math.random() * namespaces.length);
       if (!nodesToPulse.includes(randomNode)) {
