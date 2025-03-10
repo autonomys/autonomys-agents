@@ -16,7 +16,7 @@ export const notionClient = async (token: string) => {
     const me = await client.users.me({});
     logger.info('me', { me });
   } catch (error) {
-    throw new Error('Failed to authenticate with Notion');
+    throw new Error(`Failed to authenticate with Notion: ${error}`);
   }
 
   const listDatabases = async () => {
