@@ -16,7 +16,6 @@ const ConnectionStatusIndicator: React.FC<ConnectionStatusProps> = ({
   connectionStatusInfo,
   handleReconnect,
 }) => {
-  // Map CSS class names to Chakra UI colors
   const getStatusColor = () => {
     switch (connectionStatusInfo.className) {
       case 'connection-status-connected':

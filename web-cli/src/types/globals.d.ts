@@ -2,6 +2,15 @@ interface EventSourceInit {
   withCredentials?: boolean;
 }
 
+// Add declaration for localStorage to global namespace
+interface Window {
+  localStorage: Storage;
+}
+
+// Declare localStorage as a global variable
+// This syntax is more likely to be recognized by ESLint
+declare var localStorage: Storage;
+
 interface EventSource extends EventTarget {
   readonly CLOSED: number;
   readonly CONNECTING: number;
