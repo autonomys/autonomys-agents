@@ -51,6 +51,7 @@ const githubConfigSchema = z.object({
 
 const notionConfigSchema = z.object({
   NOTION_TOKEN: z.string().optional(),
+  NOTION_DATABASE_ID: z.string().optional(),
 });
 
 const autoDriveConfigSchema = z

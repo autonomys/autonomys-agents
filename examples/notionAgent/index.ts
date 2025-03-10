@@ -15,10 +15,14 @@ const logger = createLogger('notion-agent');
 const character = config.characterConfig;
 const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
   const notionToken = config.notionConfig.NOTION_TOKEN;
+  const notionDatabaseId = config.notionConfig.NOTION_DATABASE_ID;
   if (!notionToken) {
     throw new Error('NOTION_TOKEN is required in the environment variables');
   }
-  const notionTools = await createNotionTools(notionToken);
+  if (!notionDatabaseId) {
+    throw new Error('NOTION_DATABASE_ID is required in the environment variables');
+  }
+  const notionTools = await createNotionTools(notionToken, notionDatabaseId);
 
   //Orchestrator config
   //use default orchestrator prompts with character config

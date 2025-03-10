@@ -31,12 +31,13 @@ export const notionClient = async (token: string) => {
   };
 
   const createDatabase = async (
+    databaseId: string,
     title: string,
     properties: CreateDatabaseParameters['properties'],
   ) => {
     const response = await client.databases.create({
       parent: {
-        database_id: '1b2724a899ee80e3ac7af69820027437',
+        database_id: databaseId,
         type: 'database_id',
       },
       title: [{ type: 'text', text: { content: title } }],

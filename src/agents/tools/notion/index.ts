@@ -311,12 +311,12 @@ export const createGetCommentsTool = (
     },
   });
 
-export const createNotionTools = async (notionToken: string) => {
+export const createNotionTools = async (notionToken: string, databaseId: string) => {
   const notion = await notionClient(notionToken);
 
   const listDatabases = () => notion.listDatabases();
   const createDatabase = (title: string, properties: CreateDatabaseParameters['properties']) =>
-    notion.createDatabase(title, properties);
+    notion.createDatabase(databaseId, title, properties);
   const listDatabasePages = (databaseId: string) => notion.listDatabasePages(databaseId);
   const createPage = (
     parentId: string,
