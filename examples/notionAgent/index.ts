@@ -46,8 +46,9 @@ const main = async () => {
 
   // Choose which message to start with
   const initialMessage = `
-    First, list available Notion databases.
-    Then create a new page in one of those databases with some content.
+    First, list available Notion databases
+    Then create a new database in Notion if there are none or if you need to create a new one to separate the project from other projects.
+    Then create a new page in the database with some content or update a page with new content.
     Remember: The new page MUST be created in a parent database (you'll need the database ID).
     Finally, add a comment to the page.
     
