@@ -14,7 +14,6 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
-
 const main = async () => {
   try {
     await validateLocalHash();
