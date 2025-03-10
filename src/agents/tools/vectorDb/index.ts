@@ -43,7 +43,7 @@ export const createExperienceVectorDbSearchTool = (
             - before time: created_at <= "2025-02-12 09:00:00"' +
             - after time: created_at >= "2025-02-11 14:30:00"`,
       ),
-      limit: z.number().optional(),
+      limit: z.number().optional().default(6).describe('OPTIONAL: Limit the number of results returned'),
     }),
     func: async ({
       query,
