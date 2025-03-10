@@ -55,6 +55,24 @@ export const notionClient = async (token: string) => {
     return response;
   };
 
+  const createPageLinkedToDatabase = async (
+    databaseId: string,
+    title: string,
+    children: CreatePageParameters['children'],
+  ) => {
+    const response = await client.pages.create({
+      parent: { database_id: databaseId },
+      properties: {
+        Name: {
+          title: [{ text: { content: title } }],
+        },
+      },
+      children,
+    });
+    logger.info('createPageLinkedToDatabase', { response });
+    return response;
+  };
+
   const createPage = async (
     parentId: string,
     title: string,
@@ -126,6 +144,7 @@ export const notionClient = async (token: string) => {
     createDatabase,
     listDatabasePages,
     createPage,
+    createPageLinkedToDatabase,
     updatePage,
     addCommentToPage,
     addCommentToDiscussion,

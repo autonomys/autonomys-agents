@@ -52,6 +52,7 @@ export const createListDatabasesTool = (listDatabases: () => Promise<SearchRespo
  */
 export const createCreateDatabaseTool = (
   createDatabase: (
+    databaseId: string,
     title: string,
     properties: CreateDatabaseParameters['properties'],
   ) => Promise<CreateDatabaseResponse>,
@@ -63,13 +64,15 @@ export const createCreateDatabaseTool = (
       - You need to create a new database at the workspace level
       - You want to set up a structured data collection`,
     schema: z.object({
+      databaseId: z.string().describe('The ID of the database to create.'),
       title: z.string().describe('The title of the new database.'),
       properties: z.array(z.any()).describe('The properties of the new Notion database.'),
     }),
-    func: async ({ title, properties }) => {
+    func: async ({ databaseId, title, properties }) => {
       try {
         logger.info('Creating Notion database - Received data:', { title });
         const result = await createDatabase(
+          databaseId,
           title,
           properties as unknown as CreateDatabaseParameters['properties'],
         );
@@ -154,6 +157,43 @@ export const createCreatePageTool = (
         return JSON.stringify(result);
       } catch (error) {
         logger.error('Error creating Notion page:', error);
+        throw error;
+      }
+    },
+  });
+
+/**
+ * Creates a tool to create a new page in Notion linked to a database
+ */
+export const createCreatePageLinkedToDatabaseTool = (
+  createPageLinkedToDatabase: (
+    databaseId: string,
+    title: string,
+    children: CreatePageParameters['children'],
+  ) => Promise<CreatePageResponse>,
+) =>
+  new DynamicStructuredTool({
+    name: 'create_notion_page_linked_to_database',
+    description: `Create a new page in Notion linked to a database.
+    USE THIS WHEN: 
+    - You need to create a new page in Notion linked to a database
+    - You want to document something in a structured way`,
+    schema: z.object({
+      databaseId: z.string().describe('The ID of the database to create the page in.'),
+      title: z.string().describe('The title of the new page.'),
+      children: z.array(z.any()).describe('The children blocks to add to the page.'),
+    }),
+    func: async ({ databaseId, title, children }) => {
+      try {
+        logger.info('Creating Notion page linked to database - Received data:', {
+          databaseId,
+          title,
+        });
+        const result = await createPageLinkedToDatabase(databaseId, title, children);
+        logger.info('Page created in Notion:', { result });
+        return JSON.stringify(result);
+      } catch (error) {
+        logger.error('Error creating Notion page linked to database:', error);
         throw error;
       }
     },
@@ -311,13 +351,22 @@ export const createGetCommentsTool = (
     },
   });
 
-export const createNotionTools = async (notionToken: string, databaseId: string) => {
+export const createNotionTools = async (notionToken: string, defaultDatabaseId: string) => {
   const notion = await notionClient(notionToken);
 
   const listDatabases = () => notion.listDatabases();
-  const createDatabase = (title: string, properties: CreateDatabaseParameters['properties']) =>
-    notion.createDatabase(databaseId, title, properties);
-  const listDatabasePages = (databaseId: string) => notion.listDatabasePages(databaseId);
+  const createDatabase = (
+    databaseId: string = defaultDatabaseId,
+    title: string,
+    properties: CreateDatabaseParameters['properties'],
+  ) => notion.createDatabase(databaseId, title, properties);
+  const listDatabasePages = (databaseId: string = defaultDatabaseId) =>
+    notion.listDatabasePages(databaseId);
+  const createPageLinkedToDatabase = (
+    databaseId: string = defaultDatabaseId,
+    title: string,
+    children: CreatePageParameters['children'],
+  ) => notion.createPageLinkedToDatabase(databaseId, title, children);
   const createPage = (
     parentId: string,
     title: string,
@@ -338,6 +387,7 @@ export const createNotionTools = async (notionToken: string, databaseId: string)
     createCreateDatabaseTool(createDatabase),
     createListDatabasePagesTool(listDatabasePages),
     createCreatePageTool(createPage),
+    createCreatePageLinkedToDatabaseTool(createPageLinkedToDatabase),
     createUpdatePageTool(updatePage),
     createAddCommentToPageTool(addCommentToPage),
     createAddCommentToDiscussionTool(addCommentToDiscussion),
