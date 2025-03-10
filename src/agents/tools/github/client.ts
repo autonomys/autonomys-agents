@@ -126,6 +126,7 @@ export interface PRCommentInfo extends CommentInfo {
   position?: number;
   path?: string;
   commit_id?: string;
+  is_review_comment?: boolean;
 }
 
 export interface WatchedRepoInfo {
@@ -448,13 +449,22 @@ export const githubClient = async (
 
   const listPRComments = async (pull_number: number): Promise<PRCommentInfo[]> => {
     try {
-      const response = await octokit.pulls.listReviewComments({
+      // Get review comments (comments on specific lines of code)
+      const reviewCommentsResponse = await octokit.pulls.listReviewComments({
         owner,
         repo,
         pull_number,
       });
 
-      return response.data.map(comment => ({
+      // Get general comments on the PR
+      const generalCommentsResponse = await octokit.issues.listComments({
+        owner,
+        repo,
+        issue_number: pull_number, // For general comments, use issue_number (same as pull_number)
+      });
+
+      // Process review comments
+      const reviewComments = reviewCommentsResponse.data.map(comment => ({
         id: comment.id,
         body: comment.body || '',
         user: {
@@ -466,7 +476,35 @@ export const githubClient = async (
         position: comment.position || undefined,
         path: comment.path,
         commit_id: comment.commit_id,
+        is_review_comment: true,
       }));
+
+      // Process general comments
+      const generalComments = generalCommentsResponse.data.map(comment => ({
+        id: comment.id,
+        body: comment.body || '',
+        user: {
+          login: comment.user?.login || 'unknown',
+        },
+        created_at: comment.created_at,
+        updated_at: comment.updated_at,
+        html_url: comment.html_url,
+        is_review_comment: false,
+      }));
+
+      // Combine both types of comments and sort by creation date (newest first)
+      const allComments = [...reviewComments, ...generalComments].sort(
+        (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+      );
+
+      logger.info('Listed PR comments:', {
+        pull_number,
+        reviewCommentsCount: reviewComments.length,
+        generalCommentsCount: generalComments.length,
+        totalCount: allComments.length,
+      });
+
+      return allComments;
     } catch (error) {
       logger.error('Error listing PR comments:', error);
       throw error;
@@ -525,7 +563,7 @@ export const githubClient = async (
       const response = await octokit.reactions.createForPullRequestReviewComment({
         owner,
         repo,
-        comment_id: params.comment_id!,
+        comment_id: params.comment_id || 0,
         content: params.content,
       });
 
