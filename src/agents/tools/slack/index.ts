@@ -2,6 +2,7 @@ import { DynamicStructuredTool } from '@langchain/core/tools';
 import {
   Block,
   ChatPostMessageResponse,
+  EmojiListResponse,
   PinsAddResponse,
   PinsListResponse,
   PinsRemoveResponse,
@@ -427,6 +428,36 @@ export const createRemovePinTool = (
     },
   });
 
+/**
+ * Creates a tool to list all custom emojis in a Slack workspace
+ */
+export const createListEmojisTool = (
+  getEmojis: (includeCategories?: boolean) => Promise<EmojiListResponse>,
+) =>
+  new DynamicStructuredTool({
+    name: 'list_emojis',
+    description: `List all custom emojis available in the Slack workspace.
+    USE THIS WHEN:
+    - You want to see what custom emojis are available
+    - You need to find specific emoji aliases
+    - You want to check if certain custom emojis exist`,
+    schema: z.object({
+      includeCategories: z
+        .boolean()
+        .optional()
+        .describe('Whether to include emoji categories in the response. Defaults to false.'),
+    }),
+    func: async ({ includeCategories = false }) => {
+      try {
+        const result = await getEmojis(includeCategories);
+        return JSON.stringify(result);
+      } catch (error) {
+        logger.error('Error listing emojis from Slack:', error);
+        throw error;
+      }
+    },
+  });
+
 export const createSlackTools = async (slackToken: string) => {
   const slack = await slackClient(slackToken);
   const postMessage = (channelId: string, message: string, blocks?: Block[], threadTs?: string) =>
@@ -456,5 +487,6 @@ export const createSlackTools = async (slackToken: string) => {
     createListPinsTool(slack.getPins),
     createAddPinTool(slack.addPin),
     createRemovePinTool(slack.removePin),
+    createListEmojisTool(slack.getEmojis),
   ];
 };

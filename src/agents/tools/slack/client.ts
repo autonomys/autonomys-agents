@@ -229,6 +229,14 @@ export const slackClient = async (token: string) => {
     return response;
   };
 
+  const getEmojis = async (includeCategories: boolean = false) => {
+    const response = await client.emoji.list({
+      include_categories: includeCategories,
+    });
+    logger.info('getEmojis:', { response });
+    return response;
+  };
+
   return {
     client,
     userId: botId,
@@ -245,6 +253,7 @@ export const slackClient = async (token: string) => {
     getPins,
     addPin,
     removePin,
+    getEmojis,
   };
 };
 
