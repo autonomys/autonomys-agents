@@ -19,13 +19,13 @@ const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
   const webSearchTool = config.SERPAPI_API_KEY ? [createWebSearchTool(config.SERPAPI_API_KEY)] : [];
   const saveExperiences = config.autoDriveConfig.AUTO_DRIVE_SAVE_EXPERIENCES;
   const monitoringEnabled = config.autoDriveConfig.AUTO_DRIVE_MONITORING;
-  const webhookIssueReportTool = createWebhookIssueReportTool(config.API_PORT);
+  const webhookIssueReportTool = [createWebhookIssueReportTool(config.API_PORT)];
   //Twitter agent config
   const { USERNAME, PASSWORD, COOKIES_PATH } = config.twitterConfig;
   const twitterApi = await createTwitterApi(USERNAME, PASSWORD, COOKIES_PATH);
 
   const twitterAgentTool = createTwitterAgent(twitterApi, character, {
-    tools: [...webSearchTool, webhookIssueReportTool],
+    tools: [...webSearchTool, ...webhookIssueReportTool],
     postTweets: config.twitterConfig.POST_TWEETS,
     saveExperiences,
     monitoring: {
@@ -56,7 +56,7 @@ const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
       ...webSearchTool,
       ...slackTools,
       ...githubTools,
-      webhookIssueReportTool,
+      ...webhookIssueReportTool,
     ],
     prompts,
     saveExperiences,
