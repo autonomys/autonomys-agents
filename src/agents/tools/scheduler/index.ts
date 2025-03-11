@@ -1,18 +1,11 @@
 import { DynamicStructuredTool } from '@langchain/core/tools';
 import { z } from 'zod';
 import { createLogger } from '../../../utils/logger.js';
-import axios from 'axios';
-import { AddTaskResponse, GetTasksResponse } from './types.js';
+import { orchestratorRunners } from '../../workflows/registration.js';
 
 const logger = createLogger('scheduler-tool');
 
-/**
- * Creates a tool that allows the agent to add a new task to the scheduler
- * @param port - The port number where the API is running
- * @param namespace - The namespace for the agent (default: 'default')
- * @returns A DynamicStructuredTool that can be used to add tasks
- */
-export const createSchedulerAddTaskTool = (port: number, namespace: string = 'orchestrator') =>
+export const createSchedulerAddTaskTool = () =>
   new DynamicStructuredTool({
     name: 'scheduler_add_task',
     description: `
@@ -29,7 +22,7 @@ export const createSchedulerAddTaskTool = (port: number, namespace: string = 'or
         `A clear and detailed description of the task to be performed. Include all necessary context and specific 
         instructions about what needs to be done. Be explicit since you (the agent) will be executing this task later.`,
       ),
-      scheduledTime: z
+      scheduleOffsetSeconds: z
         .number()
         .optional()
         .describe(
@@ -38,43 +31,38 @@ export const createSchedulerAddTaskTool = (port: number, namespace: string = 'or
         for execution after current tasks complete.`,
         ),
     }),
-    func: async ({ message, scheduledTime }) => {
+    func: async ({ message, scheduleOffsetSeconds }) => {
       try {
         let executeAt: Date | undefined;
-
-        if (typeof scheduledTime === 'number') {
+        const runner = orchestratorRunners.get('orchestrator');
+        if (typeof scheduleOffsetSeconds === 'number') {
           const now = new Date();
-          executeAt = new Date(now.getTime() + scheduledTime * 1000);
+          executeAt = new Date(now.getTime() + scheduleOffsetSeconds * 1000);
+
+          if (!runner) {
+            return {
+              success: false,
+              error: 'Orchestrator runner not found',
+            };
+          }
+          runner.scheduleTask(message, executeAt);
+
+          logger.info('Added new task', {
+            message,
+            secondsFromNow: scheduleOffsetSeconds,
+            scheduledFor: executeAt?.toISOString(),
+          });
+
+          return {
+            success: true,
+            message: 'Task added successfully',
+          };
         }
-
-        const requestBody = {
-          message,
-          scheduledTime: executeAt?.toISOString(),
-        };
-
-        const { data } = await axios.post<AddTaskResponse>(
-          `http://localhost:${port}/api/${namespace}/addTask`,
-          requestBody,
-        );
-
-        logger.info('Added new task via API', {
-          message,
-          secondsFromNow: scheduledTime,
-          scheduledFor: executeAt?.toISOString(),
-          response: data,
-        });
-
-        return {
-          success: true,
-          taskId: data.task?.id,
-          scheduledFor: data.task?.scheduledFor || executeAt?.toISOString(),
-          message: data.message,
-        };
       } catch (error) {
         logger.error('Failed to add task', {
           error: error instanceof Error ? error.message : String(error),
           message,
-          scheduledTime,
+          scheduleOffsetSeconds,
         });
 
         return {
@@ -86,13 +74,7 @@ export const createSchedulerAddTaskTool = (port: number, namespace: string = 'or
     },
   });
 
-/**
- * Creates a tool that allows the agent to get the current list of tasks
- * @param port - The port number where the API is running
- * @param namespace - The namespace for the agent (default: 'default')
- * @returns A DynamicStructuredTool that can be used to get tasks
- */
-export const createSchedulerGetTasksTool = (port: number, namespace: string = 'orchestrator') =>
+export const createSchedulerGetTasksTool = () =>
   new DynamicStructuredTool({
     name: 'scheduler_get_tasks',
     description: `
@@ -107,25 +89,28 @@ export const createSchedulerGetTasksTool = (port: number, namespace: string = 'o
     schema: z.object({}),
     func: async () => {
       try {
-        const { data } = await axios.get<GetTasksResponse>(
-          `http://localhost:${port}/api/${namespace}/tasks`,
-        );
+        const runner = orchestratorRunners.get('orchestrator');
+        if (!runner) {
+          return {
+            success: false,
+            error: 'Orchestrator runner not found',
+          };
+        }
+        const tasks = runner.getTaskQueue();
 
-        logger.info('Retrieved task list via API', {
-          namespace,
-          currentTaskCount: data.tasks.current ? 1 : 0,
-          scheduledTaskCount: data.tasks.scheduled.length,
-          completedTaskCount: data.tasks.completed.length,
+        logger.info('Retrieved task list', {
+          currentTaskCount: tasks.current ? 1 : 0,
+          scheduledTaskCount: tasks.scheduled.length,
+          completedTaskCount: tasks.completed.length,
         });
 
         return {
           success: true,
-          tasks: data.tasks,
+          tasks: tasks,
         };
       } catch (error) {
         logger.error('Failed to get tasks', {
           error: error instanceof Error ? error.message : String(error),
-          namespace,
         });
 
         return {
@@ -137,9 +122,52 @@ export const createSchedulerGetTasksTool = (port: number, namespace: string = 'o
     },
   });
 
-export const createAllSchedulerTools = (port: number, namespace: string = 'orchestrator') => {
+export const createSchedulerDeleteTasksTool = () =>
+  new DynamicStructuredTool({
+    name: 'scheduler_delete_task',
+    description: `
+        Delete your current task by its ID.
+        Use this tool to delete tasks that are no longer needed.
+        
+        USAGE GUIDANCE:
+        - Use to delete tasks that are no longer needed
+      `,
+    schema: z.object({
+      taskId: z.string().describe('The ID of the task to delete'),
+    }),
+    func: async ({ taskId }) => {
+      try {
+        const runner = orchestratorRunners.get('orchestrator');
+        if (!runner) {
+          return {
+            success: false,
+            error: 'Orchestrator runner not found',
+          };
+        }
+        runner.deleteTask(taskId);
+
+        return {
+          success: true,
+          message: `Task ${taskId} deleted successfully`,
+        };
+      } catch (error) {
+        logger.error('Failed to delete task', {
+          error: error instanceof Error ? error.message : String(error),
+        });
+
+        return {
+          success: false,
+          error:
+            error instanceof Error ? error.message : 'Unknown error occurred when deleting task',
+        };
+      }
+    },
+  });
+
+export const createAllSchedulerTools = () => {
   return [
-    createSchedulerAddTaskTool(port, namespace),
-    createSchedulerGetTasksTool(port, namespace),
+    createSchedulerAddTaskTool(),
+    createSchedulerGetTasksTool(),
+    createSchedulerDeleteTasksTool(),
   ];
 };
