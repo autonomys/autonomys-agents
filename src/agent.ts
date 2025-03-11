@@ -10,7 +10,7 @@ import { config } from './config/index.js';
 import { createTwitterApi } from './services/twitter/client.js';
 import { createApiServer, registerRunnerWithApi, withApiLogger } from './api/server.js';
 import { createSlackTools } from './agents/tools/slack/index.js';
-
+import { createGitHubTools } from './agents/tools/github/index.js';
 const character = config.characterConfig;
 const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
   //shared twitter agent and orchestrator config
@@ -37,12 +37,19 @@ const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
     ? await createSlackTools(config.slackConfig.SLACK_APP_TOKEN)
     : [];
 
+  //If github api key is provided, add github tools
+  const { GITHUB_TOKEN, GITHUB_OWNER, GITHUB_REPO } = config.githubConfig;
+  const githubTools =
+    GITHUB_TOKEN && GITHUB_OWNER && GITHUB_REPO
+      ? await createGitHubTools(GITHUB_TOKEN, GITHUB_OWNER, GITHUB_REPO)
+      : [];
+
   //Orchestrator config
   const prompts = await createPrompts(character, { selfSchedule: true });
 
   return {
     modelConfigurations: config.orchestratorConfig.model_configurations,
-    tools: [twitterAgentTool, ...webSearchTool, ...slackTools],
+    tools: [twitterAgentTool, ...webSearchTool, ...slackTools, ...githubTools],
     prompts,
     saveExperiences,
     monitoring: {
