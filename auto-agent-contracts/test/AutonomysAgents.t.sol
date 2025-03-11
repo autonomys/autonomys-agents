@@ -408,4 +408,25 @@ contract AgentMemoryTest is Test {
         agents_.setLastMonitoringHash(hash2);
         assertEq(agents_.getLastMonitoringHash(agent), hash2);
     }
+
+    function testMemoryContract() public {
+        // Test initial state
+        assertEq(agents_.memoryContract(), address(0));
+
+        // Test setting memory contract by owner
+        address newMemoryContract = address(0x123);
+        agents_.setMemoryContract(newMemoryContract);
+        assertEq(agents_.memoryContract(), newMemoryContract);
+
+        // Test updating memory contract
+        address updatedMemoryContract = address(0x456);
+        agents_.setMemoryContract(updatedMemoryContract);
+        assertEq(agents_.memoryContract(), updatedMemoryContract);
+
+        // Test non-owner cannot set memory contract
+        address nonOwner = address(0x789);
+        vm.prank(nonOwner);
+        vm.expectRevert("Only the owner can call this function");
+        agents_.setMemoryContract(address(0x999));
+    }
 }

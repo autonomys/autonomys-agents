@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.28;
 
+import {AgentMemory} from "./AgentMemory.sol";
+
 contract AutonomysAgents {
     mapping(address => bytes32) public character;
     mapping(address => bool) public isCharacterWhitelisted;
@@ -12,6 +14,7 @@ contract AutonomysAgents {
     mapping(address => bytes32) public lastMonitoringHash;
 
     address public owner;
+    address public memoryContract;
 
     event CharacterSet(address indexed agent, bytes32 character);
     event CharacterWhitelisted(address indexed agent);
@@ -54,7 +57,11 @@ contract AutonomysAgents {
     }
 
     function getLastMemoryHash(address _agent) public view returns (bytes32) {
-        return lastMemoryHash[_agent];
+        bytes32 memoryHash = lastMemoryHash[_agent];
+        if (memoryHash == bytes32(0)) {
+            memoryHash = AgentMemory(memoryContract).getLastMemoryHash(_agent);
+        }
+        return memoryHash;
     }
 
     function getLastMonitoringHash(address _agent) public view returns (bytes32) {
@@ -121,5 +128,9 @@ contract AutonomysAgents {
     function transferOwnership(address _newOwner) public onlyOwner {
         owner = _newOwner;
         emit OwnershipTransferred(msg.sender, _newOwner);
+    }
+
+    function setMemoryContract(address _memoryContract) public onlyOwner {
+        memoryContract = _memoryContract;
     }
 }
