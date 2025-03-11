@@ -9,6 +9,8 @@ contract AgentMemory {
     mapping(address => bytes32[]) public memoriesLabels;
     mapping(address => mapping(bytes32 => bytes32[])) public labeledMemories;
 
+    mapping(address => bytes32) public lastMonitoringHash;
+
     address public owner;
 
     event CharacterSet(address indexed agent, bytes32 character);
@@ -17,6 +19,8 @@ contract AgentMemory {
     event LastMemoryHashSet(address indexed agent, bytes32 hash);
     event MemoryLabelAdded(address indexed agent, bytes32 indexed labelHash);
     event LabeledMemoryAdded(address indexed agent, bytes32 indexed labelHash, bytes32 memoryHash);
+
+    event LastMonitoringHashSet(address indexed agent, bytes32 hash);
 
     event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
 
@@ -44,8 +48,17 @@ contract AgentMemory {
         emit LastMemoryHashSet(msg.sender, hash);
     }
 
+    function setLastMonitoringHash(bytes32 hash) public {
+        lastMonitoringHash[msg.sender] = hash;
+        emit LastMonitoringHashSet(msg.sender, hash);
+    }
+
     function getLastMemoryHash(address _agent) public view returns (bytes32) {
         return lastMemoryHash[_agent];
+    }
+
+    function getLastMonitoringHash(address _agent) public view returns (bytes32) {
+        return lastMonitoringHash[_agent];
     }
 
     function addLabeledMemory(bytes32 _labelHash, bytes32 _memoryHash) public {

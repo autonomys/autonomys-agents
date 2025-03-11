@@ -60,4 +60,52 @@ contract AgentMemoryTest is Test {
         emit log_named_uint("Gas for first set", firstSetGas);
         emit log_named_uint("Gas for update", updateGas);
     }
+
+    function testSetAndGetLastMonitoringHash() public {
+        bytes32 testHash = bytes32(uint256(1));
+        memory_.setLastMonitoringHash(testHash);
+        assertEq(memory_.getLastMonitoringHash(agent), testHash);
+    }
+
+    function testLastMonitoringHashMapping() public {
+        bytes32 testHash1 = bytes32(uint256(1));
+        bytes32 testHash2 = bytes32(uint256(2));
+        address otherAgent = address(0x123);
+
+        // Set hash for this contract
+        memory_.setLastMonitoringHash(testHash1);
+        assertEq(memory_.getLastMonitoringHash(agent), testHash1);
+        assertEq(memory_.lastMonitoringHash(agent), testHash1);
+
+        // Set hash as other agent
+        vm.prank(otherAgent);
+        memory_.setLastMonitoringHash(testHash2);
+
+        // Verify each agent has their own hash
+        assertEq(memory_.getLastMonitoringHash(agent), testHash1);
+        assertEq(memory_.getLastMonitoringHash(otherAgent), testHash2);
+    }
+
+    function testUpdateMonitoringHash() public {
+        bytes32 firstHash = bytes32(uint256(1));
+        bytes32 secondHash = bytes32(uint256(2));
+
+        // Measure gas for first hash setting
+        uint256 gasBefore = gasleft();
+        memory_.setLastMonitoringHash(firstHash);
+        uint256 firstSetGas = gasBefore - gasleft();
+
+        assertEq(memory_.getLastMonitoringHash(agent), firstHash);
+
+        // Measure gas for updating existing hash
+        gasBefore = gasleft();
+        memory_.setLastMonitoringHash(secondHash);
+        uint256 updateGas = gasBefore - gasleft();
+
+        assertEq(memory_.getLastMonitoringHash(agent), secondHash);
+
+        // Log gas usage for comparison
+        emit log_named_uint("Gas for first monitoring hash set", firstSetGas);
+        emit log_named_uint("Gas for monitoring hash update", updateGas);
+    }
 }
