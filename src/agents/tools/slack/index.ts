@@ -15,7 +15,12 @@ import {
 } from './chat.js';
 import { slackClient } from './client.js';
 import { createAddPinTool, createListPinsTool, createRemovePinTool } from './pin.js';
-import { createAddReactionTool, createGetReactionTool, createListEmojisTool } from './reaction.js';
+import {
+  createAddReactionTool,
+  createGetReactionTool,
+  createListEmojisTool,
+  createRemoveReactionTool,
+} from './reaction.js';
 import {
   createGetUserInfoTool,
   createGetUserPresenceTool,
@@ -36,6 +41,8 @@ export const createSlackTools = async (slackToken: string) => {
   const getMessages = (channelId: string, limit: number) => slack.getMessages(channelId, limit);
   const addReaction = (channelId: string, timestamp: string, reaction: string) =>
     slack.addReaction(channelId, timestamp, reaction);
+  const removeReaction = (channelId: string, timestamp: string, reaction: string) =>
+    slack.removeReaction(channelId, timestamp, reaction);
   const getReaction = (channelId: string, timestamp: string) =>
     slack.getReaction(channelId, timestamp);
   const editMessage = (channelId: string, ts: string, text: string, blocks?: Block[]) =>
@@ -87,6 +94,7 @@ export const createSlackTools = async (slackToken: string) => {
     createGetUserPresenceTool(slack.getUserPresence),
     createSetUserPresenceTool(slack.setUserPresence),
     createAddReactionTool(addReaction),
+    createRemoveReactionTool(removeReaction),
     createGetReactionTool(getReaction),
     createListPinsTool(slack.getPins),
     createAddPinTool(slack.addPin),

@@ -229,6 +229,16 @@ export const slackClient = async (token: string) => {
     return response;
   };
 
+  const removeReaction = async (channelId: string, timestamp: string, reaction: string) => {
+    const response = await client.reactions.remove({
+      channel: channelId,
+      timestamp,
+      name: reaction,
+    });
+    logger.info('removeReaction:', { response });
+    return response;
+  };
+
   const getPins = async (channelId: string) => {
     const response = await client.pins.list({
       channel: channelId,
@@ -305,6 +315,7 @@ export const slackClient = async (token: string) => {
     getPermalink,
     getReaction,
     addReaction,
+    removeReaction,
     getPins,
     addPin,
     removePin,
