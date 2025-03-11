@@ -4,7 +4,9 @@ import { z } from 'zod';
 import { createLogger } from '../../../utils/logger.js';
 import {
   CommentInfo,
+  CommitInfo,
   CreateCommentParams,
+  CreateCommitParams,
   CreateIssueParams,
   CreatePRCommentParams,
   CreateReactionParams,
@@ -818,6 +820,51 @@ export const createCreateBranchTool = (
     },
   });
 
+export const createCommitTool = (
+  createCommit: (owner: string, repo: string, params: CreateCommitParams) => Promise<CommitInfo>,
+) =>
+  new DynamicStructuredTool({
+    name: 'create_commit',
+    description: `Creates a commit with file changes in a repository.
+    USE THIS WHEN:
+    - You need to commit one or more file changes
+    - You want to update files in a branch
+    - You need to make changes to the codebase
+    
+    IMPORTANT: 
+    - Make sure you have write access to the repository
+    - The branch must exist
+    - All file paths must be relative to the repository root
+    - File content must be the complete new content of the file`,
+    schema: z.object({
+      owner: z.string().describe('The owner of the repository'),
+      repo: z.string().describe('The name of the repository'),
+      branch: z.string().describe('The branch to commit to'),
+      message: z.string().describe('The commit message'),
+      changes: z
+        .array(
+          z.object({
+            path: z.string().describe('The path to the file, relative to repository root'),
+            content: z.string().describe('The new content of the file'),
+          }),
+        )
+        .describe('Array of file changes to commit'),
+    }),
+    func: async ({ owner, repo, branch, message, changes }) => {
+      try {
+        const commit = await createCommit(owner, repo, {
+          branch,
+          message,
+          changes,
+        });
+        return JSON.stringify(commit, null, 2);
+      } catch (error) {
+        logger.error(`Error creating commit in repository ${owner}/${repo}:`, error);
+        throw error;
+      }
+    },
+  });
+
 export const createGitHubTools = async (token: string, owner: string, repo: string) => {
   const github = await githubClient(token, owner, repo);
   const listIssues = (state?: 'open' | 'closed' | 'all') => github.listIssues(state);
@@ -856,6 +903,8 @@ export const createGitHubTools = async (token: string, owner: string, repo: stri
     branchName: string,
     sourceBranch: string,
   ) => github.createBranch(targetOwner, targetRepo, branchName, sourceBranch);
+  const createCommitFn = (targetOwner: string, targetRepo: string, params: CreateCommitParams) =>
+    github.createCommit(targetOwner, targetRepo, params);
 
   return [
     createListIssuesTools(listIssues),
@@ -882,5 +931,6 @@ export const createGitHubTools = async (token: string, owner: string, repo: stri
     createForkRepoTool(createFork),
     createGetDefaultBranchTool(getDefaultBranch),
     createCreateBranchTool(createBranch),
+    createCommitTool(createCommitFn),
   ];
 };

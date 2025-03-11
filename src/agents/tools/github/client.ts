@@ -150,6 +150,27 @@ export interface UserInfo {
   html_url: string;
 }
 
+export interface CommitInfo {
+  sha: string;
+  url: string;
+  html_url: string;
+  message: string;
+  author: {
+    name: string;
+    email: string;
+    date: string;
+  };
+}
+
+export interface CreateCommitParams {
+  branch: string;
+  message: string;
+  changes: Array<{
+    path: string;
+    content: string;
+  }>;
+}
+
 export const githubClient = async (token: string, owner: string, repo: string) => {
   const octokit = new Octokit({
     auth: token,
@@ -795,6 +816,90 @@ export const githubClient = async (token: string, owner: string, repo: string) =
     }
   };
 
+  const createCommit = async (
+    targetOwner: string,
+    targetRepo: string,
+    params: CreateCommitParams,
+  ): Promise<CommitInfo> => {
+    try {
+      logger.info(
+        `Creating commit in repository ${targetOwner}/${targetRepo} on branch ${params.branch}`,
+      );
+
+      // First, get the latest commit SHA of the branch
+      const branchData = await octokit.git.getRef({
+        owner: targetOwner,
+        repo: targetRepo,
+        ref: `heads/${params.branch}`,
+      });
+      const latestCommitSha = branchData.data.object.sha;
+
+      // Get the base tree
+      const baseTree = await octokit.git.getCommit({
+        owner: targetOwner,
+        repo: targetRepo,
+        commit_sha: latestCommitSha,
+      });
+      const baseTreeSha = baseTree.data.tree.sha;
+
+      // Create blobs for each file change
+      const blobPromises = params.changes.map(change =>
+        octokit.git.createBlob({
+          owner: targetOwner,
+          repo: targetRepo,
+          content: change.content,
+          encoding: 'utf-8',
+        }),
+      );
+      const blobs = await Promise.all(blobPromises);
+
+      // Create a new tree with the file changes
+      const tree = await octokit.git.createTree({
+        owner: targetOwner,
+        repo: targetRepo,
+        base_tree: baseTreeSha,
+        tree: params.changes.map((change, index) => ({
+          path: change.path,
+          mode: '100644',
+          type: 'blob',
+          sha: blobs[index].data.sha,
+        })),
+      });
+
+      // Create the commit
+      const commit = await octokit.git.createCommit({
+        owner: targetOwner,
+        repo: targetRepo,
+        message: params.message,
+        tree: tree.data.sha,
+        parents: [latestCommitSha],
+      });
+
+      // Update the branch reference
+      await octokit.git.updateRef({
+        owner: targetOwner,
+        repo: targetRepo,
+        ref: `heads/${params.branch}`,
+        sha: commit.data.sha,
+      });
+
+      return {
+        sha: commit.data.sha,
+        url: commit.data.url,
+        html_url: `https://github.com/${targetOwner}/${targetRepo}/commit/${commit.data.sha}`,
+        message: params.message,
+        author: {
+          name: commit.data.author.name,
+          email: commit.data.author.email,
+          date: commit.data.author.date,
+        },
+      };
+    } catch (error) {
+      logger.error(`Error creating commit in repository ${targetOwner}/${targetRepo}:`, error);
+      throw error;
+    }
+  };
+
   return {
     listIssues,
     createIssue,
@@ -820,5 +925,6 @@ export const githubClient = async (token: string, owner: string, repo: string) =
     createFork,
     getDefaultBranch,
     createBranch,
+    createCommit,
   };
 };
