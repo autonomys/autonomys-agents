@@ -7,6 +7,7 @@ import {
   UsersSetPresenceArguments,
   WebClient,
 } from '@slack/web-api';
+import { createLogger } from '../../../utils/logger.js';
 
 type Channel = NonNullable<ConversationsListResponse['channels']>[0];
 export type ChannelInfo = {
@@ -35,6 +36,8 @@ export type MessageInfo = Message & {
   replies: Message[];
   thread_ts: string;
 };
+
+export const logger = createLogger('slack-client');
 
 const toMessage = ({ user, text, ts }: MessageElement): Message | undefined => {
   if (!user || !text || !ts) {
@@ -176,12 +179,8 @@ export const slackClient = async (token: string) => {
 
   const postMessage = async (message: ChatPostMessageArguments) => {
     const response = await client.chat.postMessage(message);
-    return {
-      success: true,
-      channel: message.channel ?? '',
-      message: message.text ?? '',
-      ts: response.ts ?? '',
-    };
+    logger.info('postMessage:', { response });
+    return response;
   };
 
   const getReaction = async (channelId: string, timestamp: string, full: boolean = false) => {
@@ -190,11 +189,8 @@ export const slackClient = async (token: string) => {
       timestamp,
       full,
     });
-    return {
-      success: response.ok ?? false,
-      channel: channelId,
-      reaction: response.message?.reactions ?? [],
-    };
+    logger.info('getReaction:', { response });
+    return response;
   };
 
   const addReaction = async (channelId: string, timestamp: string, reaction: string) => {
@@ -203,11 +199,34 @@ export const slackClient = async (token: string) => {
       timestamp,
       name: reaction,
     });
-    return {
-      success: response.ok ?? false,
+    logger.info('addReaction:', { response });
+    return response;
+  };
+
+  const getPins = async (channelId: string) => {
+    const response = await client.pins.list({
       channel: channelId,
-      reaction,
-    };
+    });
+    logger.info('getPins:', { response });
+    return response;
+  };
+
+  const addPin = async (channelId: string, timestamp: string) => {
+    const response = await client.pins.add({
+      channel: channelId,
+      timestamp,
+    });
+    logger.info('addPin:', { response });
+    return response;
+  };
+
+  const removePin = async (channelId: string, timestamp: string) => {
+    const response = await client.pins.remove({
+      channel: channelId,
+      timestamp,
+    });
+    logger.info('removePin:', { response });
+    return response;
   };
 
   return {
@@ -223,6 +242,9 @@ export const slackClient = async (token: string) => {
     postMessage,
     getReaction,
     addReaction,
+    getPins,
+    addPin,
+    removePin,
   };
 };
 
