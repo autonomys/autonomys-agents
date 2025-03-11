@@ -3,6 +3,8 @@ import {
   ConversationsHistoryResponse,
   ConversationsListResponse,
   UsersInfoResponse,
+  UsersProfileSetArguments,
+  UsersSetPresenceArguments,
   WebClient,
 } from '@slack/web-api';
 
@@ -138,6 +140,32 @@ export const slackClient = async (token: string) => {
     return toUserProfile(user.user);
   };
 
+  const getUserProfile = async (userId: string) => {
+    const user = await client.users.profile.get({ user: userId });
+    if (!user.profile) {
+      return undefined;
+    }
+    return user.profile;
+  };
+
+  const setUserProfile = async (userId: string, profile: UsersProfileSetArguments['profile']) => {
+    const response = await client.users.profile.set({ user: userId, profile });
+    return response.ok;
+  };
+
+  const getUserPresence = async (userId: string) => {
+    const user = await client.users.getPresence({ user: userId });
+    if (!user.presence) {
+      return undefined;
+    }
+    return user.presence;
+  };
+
+  const setUserPresence = async (presence: UsersSetPresenceArguments['presence']) => {
+    const response = await client.users.setPresence({ presence });
+    return response.ok;
+  };
+
   const getUserChannels = async () => {
     return (await fetchAllChannels(client)).filter(c => c.isMember);
   };
@@ -185,9 +213,13 @@ export const slackClient = async (token: string) => {
   return {
     client,
     userId: botId,
+    getUserInfo,
+    getUserProfile,
+    setUserProfile,
+    getUserPresence,
+    setUserPresence,
     getUserChannels,
     getMessages,
-    getUserInfo,
     postMessage,
     getReaction,
     addReaction,
