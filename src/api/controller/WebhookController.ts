@@ -7,9 +7,9 @@ import { broadcastTaskUpdateUtility } from './TaskController.js';
 const logger = createLogger('WebhookController');
 
 export const handleWebhook = asyncHandler(async (req: Request, res: Response) => {
-  const { type, data } = req.body;
+  const { type, message } = req.body;
 
-  if (!type || !data) {
+  if (!type || !message) {
     logger.error('Missing required parameters');
     res.status(400).json({ error: 'Missing required parameters' });
     return;
@@ -27,8 +27,7 @@ export const handleWebhook = asyncHandler(async (req: Request, res: Response) =>
   try {
     switch (type) {
       case 'issue':
-        const task = runner.scheduleTask(data, new Date());
-        logger.info(`Scheduled task: ${task.id} for namespace: orchestrator`);
+        const _task = runner.scheduleTask(message, new Date());
         broadcastTaskUpdateUtility('orchestrator');
         res.status(200).json({ message: 'Webhook received and task scheduled' });
         break;
