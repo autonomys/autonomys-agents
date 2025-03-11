@@ -1,4 +1,5 @@
 import { DynamicStructuredTool } from '@langchain/core/tools';
+import { RestEndpointMethodTypes } from '@octokit/rest';
 import { z } from 'zod';
 import { createLogger } from '../../../utils/logger.js';
 import {
@@ -640,6 +641,118 @@ export const createGetAuthenticatedUserTool = (getAuthenticatedUser: () => Promi
     },
   });
 
+export const createListAuthenticatedUserReposTool = (
+  listAuthenticatedUserRepos: () => Promise<
+    RestEndpointMethodTypes['repos']['listForAuthenticatedUser']['response']['data']
+  >,
+) =>
+  new DynamicStructuredTool({
+    name: 'list_authenticated_user_repos',
+    description: 'Lists repositories owned by the authenticated user',
+    schema: z.object({}),
+    func: async () => {
+      try {
+        const repos = await listAuthenticatedUserRepos();
+        return JSON.stringify(repos, null, 2);
+      } catch (error) {
+        logger.error('Error listing authenticated user repositories:', error);
+        throw error;
+      }
+    },
+  });
+
+export const createListUserReposTool = (
+  listUserRepos: (
+    username: string,
+  ) => Promise<RestEndpointMethodTypes['repos']['listForUser']['response']['data']>,
+) =>
+  new DynamicStructuredTool({
+    name: 'list_user_repos',
+    description: 'Lists public repositories for a specific user',
+    schema: z.object({
+      username: z.string().describe('The username whose repositories to list'),
+    }),
+    func: async ({ username }) => {
+      try {
+        const repos = await listUserRepos(username);
+        return JSON.stringify(repos, null, 2);
+      } catch (error) {
+        logger.error(`Error listing repositories for user ${username}:`, error);
+        throw error;
+      }
+    },
+  });
+
+export const createListOrgReposTool = (
+  listOrgRepos: (
+    org: string,
+  ) => Promise<RestEndpointMethodTypes['repos']['listForOrg']['response']['data']>,
+) =>
+  new DynamicStructuredTool({
+    name: 'list_org_repos',
+    description: 'Lists repositories for a specific organization',
+    schema: z.object({
+      org: z.string().describe('The organization name whose repositories to list'),
+    }),
+    func: async ({ org }) => {
+      try {
+        const repos = await listOrgRepos(org);
+        return JSON.stringify(repos, null, 2);
+      } catch (error) {
+        logger.error(`Error listing repositories for organization ${org}:`, error);
+        throw error;
+      }
+    },
+  });
+
+export const createListForksTool = (
+  listForks: (
+    owner: string,
+    repo: string,
+  ) => Promise<RestEndpointMethodTypes['repos']['listForks']['response']['data']>,
+) =>
+  new DynamicStructuredTool({
+    name: 'list_forks',
+    description: 'Lists forks of a specific repository',
+    schema: z.object({
+      owner: z.string().describe('The owner of the repository'),
+      repo: z.string().describe('The name of the repository'),
+    }),
+    func: async ({ owner, repo }) => {
+      try {
+        const forks = await listForks(owner, repo);
+        return JSON.stringify(forks, null, 2);
+      } catch (error) {
+        logger.error(`Error listing forks for repository ${owner}/${repo}:`, error);
+        throw error;
+      }
+    },
+  });
+
+export const createForkRepoTool = (
+  createFork: (
+    owner: string,
+    repo: string,
+  ) => Promise<RestEndpointMethodTypes['repos']['createFork']['response']['data']>,
+) =>
+  new DynamicStructuredTool({
+    name: 'fork_repo',
+    description: 'Creates a fork of a repository',
+    schema: z.object({
+      owner: z.string().describe('The owner of the repository to fork'),
+      repo: z.string().describe('The name of the repository to fork'),
+    }),
+    func: async ({ owner, repo }) => {
+      try {
+        const fork = await createFork(owner, repo);
+        return JSON.stringify(fork, null, 2);
+      } catch (error) {
+        logger.error(`Error creating fork for repository ${owner}/${repo}:`, error);
+        throw error;
+      }
+    },
+  });
+
 export const createGitHubTools = async (token: string, owner: string, repo: string) => {
   const github = await githubClient(token, owner, repo);
   const listIssues = (state?: 'open' | 'closed' | 'all') => github.listIssues(state);
@@ -663,6 +776,13 @@ export const createGitHubTools = async (token: string, owner: string, repo: stri
   const searchIssues = (query: string, state?: 'open' | 'closed' | 'all') =>
     github.searchIssues(query, state);
   const getAuthenticatedUser = () => github.getAuthenticatedUser();
+  const listAuthenticatedUserRepos = () => github.listAuthenticatedUserRepos();
+  const listUserRepos = (username: string) => github.listUserRepos(username);
+  const listOrgRepos = (org: string) => github.listOrgRepos(org);
+  const listForks = (targetOwner: string, targetRepo: string) =>
+    github.listForks(targetOwner, targetRepo);
+  const createFork = (targetOwner: string, targetRepo: string) =>
+    github.createFork(targetOwner, targetRepo);
 
   return [
     createListIssuesTools(listIssues),
@@ -682,5 +802,10 @@ export const createGitHubTools = async (token: string, owner: string, repo: stri
     createListWatchedReposTool(listWatchedRepos),
     createSearchIssuesTools(searchIssues),
     createGetAuthenticatedUserTool(getAuthenticatedUser),
+    createListAuthenticatedUserReposTool(listAuthenticatedUserRepos),
+    createListUserReposTool(listUserRepos),
+    createListOrgReposTool(listOrgRepos),
+    createListForksTool(listForks),
+    createForkRepoTool(createFork),
   ];
 };

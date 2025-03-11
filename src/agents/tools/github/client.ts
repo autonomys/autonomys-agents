@@ -150,33 +150,7 @@ export interface UserInfo {
   html_url: string;
 }
 
-export interface GitHubClient {
-  listIssues: (state?: 'open' | 'closed' | 'all') => Promise<IssueInfo[]>;
-  createIssue: (params: CreateIssueParams) => Promise<IssueInfo>;
-  listComments: (issue_number: number) => Promise<CommentInfo[]>;
-  createComment: (params: CreateCommentParams) => Promise<CommentInfo>;
-  createReaction: (params: CreateReactionParams) => Promise<ReactionInfo>;
-  listMentions: () => Promise<MentionInfo[]>;
-  listNotifications: (all?: boolean) => Promise<NotificationInfo[]>;
-  listPullRequests: (state?: 'open' | 'closed' | 'all') => Promise<PullRequestInfo[]>;
-  getPullRequest: (pull_number: number) => Promise<PullRequestInfo>;
-  listPRComments: (pull_number: number) => Promise<PRCommentInfo[]>;
-  createPRComment: (params: CreatePRCommentParams) => Promise<PRCommentInfo>;
-  createPRReaction: (
-    params: CreateReactionParams & { pull_number: number },
-  ) => Promise<ReactionInfo>;
-  watchRepo: (owner: string, repo: string, ignored?: boolean) => Promise<void>;
-  unwatchRepo: (owner: string, repo: string) => Promise<void>;
-  listWatchedRepos: () => Promise<WatchedRepoInfo[]>;
-  searchIssues: (query: string, state?: 'open' | 'closed' | 'all') => Promise<IssueInfo[]>;
-  getAuthenticatedUser: () => Promise<UserInfo>;
-}
-
-export const githubClient = async (
-  token: string,
-  owner: string,
-  repo: string,
-): Promise<GitHubClient> => {
+export const githubClient = async (token: string, owner: string, repo: string) => {
   const octokit = new Octokit({
     auth: token,
   });
@@ -707,6 +681,67 @@ export const githubClient = async (
     }
   };
 
+  const listAuthenticatedUserRepos = async () => {
+    try {
+      logger.info('Listing authenticated user repositories');
+      const response = await octokit.repos.listForAuthenticatedUser();
+      return response.data;
+    } catch (error) {
+      logger.error('Error listing authenticated user repositories:', error);
+      throw error;
+    }
+  };
+
+  const listUserRepos = async (username: string) => {
+    try {
+      logger.info(`Listing repositories for user ${username}`);
+      const response = await octokit.repos.listForUser({ username });
+      return response.data;
+    } catch (error) {
+      logger.error(`Error listing repositories for user ${username}:`, error);
+      throw error;
+    }
+  };
+
+  const listOrgRepos = async (org: string) => {
+    try {
+      logger.info(`Listing repositories for organization ${org}`);
+      const response = await octokit.repos.listForOrg({ org });
+      return response.data;
+    } catch (error) {
+      logger.error(`Error listing repositories for organization ${org}:`, error);
+      throw error;
+    }
+  };
+
+  const listForks = async (targetOwner: string, targetRepo: string) => {
+    try {
+      logger.info(`Listing forks for repository ${targetOwner}/${targetRepo}`);
+      const response = await octokit.repos.listForks({
+        owner: targetOwner,
+        repo: targetRepo,
+      });
+      return response.data;
+    } catch (error) {
+      logger.error(`Error listing forks for repository ${targetOwner}/${targetRepo}:`, error);
+      throw error;
+    }
+  };
+
+  const createFork = async (targetOwner: string, targetRepo: string) => {
+    try {
+      logger.info(`Creating fork for repository ${targetOwner}/${targetRepo}`);
+      const response = await octokit.repos.createFork({
+        owner: targetOwner,
+        repo: targetRepo,
+      });
+      return response.data;
+    } catch (error) {
+      logger.error(`Error creating fork for repository ${targetOwner}/${targetRepo}:`, error);
+      throw error;
+    }
+  };
+
   return {
     listIssues,
     createIssue,
@@ -725,5 +760,10 @@ export const githubClient = async (
     listWatchedRepos,
     searchIssues,
     getAuthenticatedUser,
+    listAuthenticatedUserRepos,
+    listUserRepos,
+    listOrgRepos,
+    listForks,
+    createFork,
   };
 };
