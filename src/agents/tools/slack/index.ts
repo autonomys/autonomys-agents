@@ -2,6 +2,7 @@ import { DynamicStructuredTool } from '@langchain/core/tools';
 import {
   Block,
   ChatPostMessageResponse,
+  ChatUpdateResponse,
   EmojiListResponse,
   PinsAddResponse,
   PinsListResponse,
@@ -458,6 +459,52 @@ export const createListEmojisTool = (
     },
   });
 
+/**
+ * Creates a tool to edit an existing message in a Slack channel
+ */
+export const createEditMessageTool = (
+  editMessage: (
+    channelId: string,
+    ts: string,
+    text: string,
+    blocks?: Block[],
+  ) => Promise<ChatUpdateResponse>,
+) =>
+  new DynamicStructuredTool({
+    name: 'edit_slack_msg',
+    description: `Edit an existing message in a Slack channel.
+    USE THIS WHEN:
+    - You need to update or correct a previously sent message
+    - You want to modify the content of an existing message
+    - You need to update message blocks or text
+    FORMAT: Provide the channel ID, message timestamp, and the new text/blocks to update the message.`,
+    schema: z.object({
+      channelId: z.string().describe('The channel ID where the message is located.'),
+      timestamp: z.string().describe('The timestamp of the message to edit.'),
+      text: z.string().describe('The new text for the message.'),
+      blocks: z
+        .array(z.any())
+        .optional()
+        .describe('Optional: The new blocks for the message using Slack block-kit.'),
+    }),
+    func: async ({ channelId, timestamp, text, blocks }) => {
+      try {
+        logger.info('Editing message in Slack - Received data:', {
+          channelId,
+          timestamp,
+          text,
+          blocks,
+        });
+        const result = await editMessage(channelId, timestamp, text, blocks);
+        logger.info('Message edited in Slack:', { result });
+        return JSON.stringify(result);
+      } catch (error) {
+        logger.error('Error editing message in Slack:', error);
+        throw error;
+      }
+    },
+  });
+
 export const createSlackTools = async (slackToken: string) => {
   const slack = await slackClient(slackToken);
   const postMessage = (channelId: string, message: string, blocks?: Block[], threadTs?: string) =>
@@ -472,6 +519,8 @@ export const createSlackTools = async (slackToken: string) => {
     slack.addReaction(channelId, timestamp, reaction);
   const getReaction = (channelId: string, timestamp: string) =>
     slack.getReaction(channelId, timestamp);
+  const editMessage = (channelId: string, ts: string, text: string, blocks?: Block[]) =>
+    slack.editMessage({ channel: channelId, ts, text, blocks });
 
   return [
     createPostSlackMsgTool(postMessage),
@@ -488,5 +537,8 @@ export const createSlackTools = async (slackToken: string) => {
     createAddPinTool(slack.addPin),
     createRemovePinTool(slack.removePin),
     createListEmojisTool(slack.getEmojis),
+    createEditMessageTool(editMessage),
   ];
 };
+
+export default createSlackTools;

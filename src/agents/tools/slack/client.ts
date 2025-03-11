@@ -1,5 +1,6 @@
 import {
   ChatPostMessageArguments,
+  ChatUpdateArguments,
   ConversationsHistoryResponse,
   ConversationsListResponse,
   UsersInfoResponse,
@@ -183,6 +184,12 @@ export const slackClient = async (token: string) => {
     return response;
   };
 
+  const editMessage = async (options: ChatUpdateArguments) => {
+    const response = await client.chat.update(options);
+    logger.info('editMessage:', { response });
+    return response;
+  };
+
   const getReaction = async (channelId: string, timestamp: string, full: boolean = false) => {
     const response = await client.reactions.get({
       channel: channelId,
@@ -248,6 +255,7 @@ export const slackClient = async (token: string) => {
     getUserChannels,
     getMessages,
     postMessage,
+    editMessage,
     getReaction,
     addReaction,
     getPins,
