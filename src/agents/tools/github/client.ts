@@ -742,6 +742,59 @@ export const githubClient = async (token: string, owner: string, repo: string) =
     }
   };
 
+  const getDefaultBranch = async (targetOwner: string, targetRepo: string): Promise<string> => {
+    try {
+      logger.info(`Getting default branch for repository ${targetOwner}/${targetRepo}`);
+      const response = await octokit.repos.get({
+        owner: targetOwner,
+        repo: targetRepo,
+      });
+      return response.data.default_branch;
+    } catch (error) {
+      logger.error(
+        `Error getting default branch for repository ${targetOwner}/${targetRepo}:`,
+        error,
+      );
+      throw error;
+    }
+  };
+
+  const createBranch = async (
+    targetOwner: string,
+    targetRepo: string,
+    branchName: string,
+    sourceBranch: string,
+  ) => {
+    try {
+      logger.info(
+        `Creating branch ${branchName} from ${sourceBranch} in repository ${targetOwner}/${targetRepo}`,
+      );
+
+      // First, get the SHA of the source branch
+      const sourceRef = await octokit.git.getRef({
+        owner: targetOwner,
+        repo: targetRepo,
+        ref: `heads/${sourceBranch}`,
+      });
+
+      // Create the new branch using the source branch's SHA
+      const response = await octokit.git.createRef({
+        owner: targetOwner,
+        repo: targetRepo,
+        ref: `refs/heads/${branchName}`,
+        sha: sourceRef.data.object.sha,
+      });
+
+      return response.data;
+    } catch (error) {
+      logger.error(
+        `Error creating branch ${branchName} in repository ${targetOwner}/${targetRepo}:`,
+        error,
+      );
+      throw error;
+    }
+  };
+
   return {
     listIssues,
     createIssue,
@@ -765,5 +818,7 @@ export const githubClient = async (token: string, owner: string, repo: string) =
     listOrgRepos,
     listForks,
     createFork,
+    getDefaultBranch,
+    createBranch,
   };
 };

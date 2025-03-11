@@ -753,6 +753,71 @@ export const createForkRepoTool = (
     },
   });
 
+export const createGetDefaultBranchTool = (
+  getDefaultBranch: (owner: string, repo: string) => Promise<string>,
+) =>
+  new DynamicStructuredTool({
+    name: 'get_default_branch',
+    description: `Gets the default branch (e.g., main or master) of a repository.
+    USE THIS WHEN:
+    - You need to know the main branch of a repository
+    - You want to create a new branch from the default branch
+    - You need to perform operations that require knowing the base branch`,
+    schema: z.object({
+      owner: z.string().describe('The owner of the repository'),
+      repo: z.string().describe('The name of the repository'),
+    }),
+    func: async ({ owner, repo }) => {
+      try {
+        const defaultBranch = await getDefaultBranch(owner, repo);
+        return JSON.stringify({ default_branch: defaultBranch }, null, 2);
+      } catch (error) {
+        logger.error(`Error getting default branch for repository ${owner}/${repo}:`, error);
+        throw error;
+      }
+    },
+  });
+
+export const createCreateBranchTool = (
+  createBranch: (
+    owner: string,
+    repo: string,
+    branchName: string,
+    sourceBranch: string,
+  ) => Promise<RestEndpointMethodTypes['git']['createRef']['response']['data']>,
+) =>
+  new DynamicStructuredTool({
+    name: 'create_branch',
+    description: `Creates a new branch from an existing branch in a repository.
+    USE THIS WHEN:
+    - You need to create a new feature branch
+    - You want to create a branch for testing or development
+    - You need to create a branch for a pull request
+    
+    IMPORTANT: Make sure you have write access to the repository.
+    The source branch must exist in the repository.`,
+    schema: z.object({
+      owner: z.string().describe('The owner of the repository'),
+      repo: z.string().describe('The name of the repository'),
+      branchName: z.string().describe('The name of the new branch to create'),
+      sourceBranch: z
+        .string()
+        .describe('The name of the source branch to create from (e.g., main)'),
+    }),
+    func: async ({ owner, repo, branchName, sourceBranch }) => {
+      try {
+        const branch = await createBranch(owner, repo, branchName, sourceBranch);
+        return JSON.stringify(branch, null, 2);
+      } catch (error) {
+        logger.error(
+          `Error creating branch ${branchName} from ${sourceBranch} in repository ${owner}/${repo}:`,
+          error,
+        );
+        throw error;
+      }
+    },
+  });
+
 export const createGitHubTools = async (token: string, owner: string, repo: string) => {
   const github = await githubClient(token, owner, repo);
   const listIssues = (state?: 'open' | 'closed' | 'all') => github.listIssues(state);
@@ -783,6 +848,14 @@ export const createGitHubTools = async (token: string, owner: string, repo: stri
     github.listForks(targetOwner, targetRepo);
   const createFork = (targetOwner: string, targetRepo: string) =>
     github.createFork(targetOwner, targetRepo);
+  const getDefaultBranch = (targetOwner: string, targetRepo: string) =>
+    github.getDefaultBranch(targetOwner, targetRepo);
+  const createBranch = (
+    targetOwner: string,
+    targetRepo: string,
+    branchName: string,
+    sourceBranch: string,
+  ) => github.createBranch(targetOwner, targetRepo, branchName, sourceBranch);
 
   return [
     createListIssuesTools(listIssues),
@@ -807,5 +880,7 @@ export const createGitHubTools = async (token: string, owner: string, repo: stri
     createListOrgReposTool(listOrgRepos),
     createListForksTool(listForks),
     createForkRepoTool(createFork),
+    createGetDefaultBranchTool(getDefaultBranch),
+    createCreateBranchTool(createBranch),
   ];
 };
