@@ -1,3 +1,5 @@
+import { createGitHubTools } from './agents/tools/github/index.js';
+import { createSlackTools } from './agents/tools/slack/index.js';
 import { createWebSearchTool } from './agents/tools/webSearch/index.js';
 import {
   createOrchestratorRunner,
@@ -6,11 +8,9 @@ import {
 import { createPrompts } from './agents/workflows/orchestrator/prompts.js';
 import { OrchestratorRunnerOptions } from './agents/workflows/orchestrator/types.js';
 import { createTwitterAgent } from './agents/workflows/twitter/twitterAgent.js';
+import { createApiServer, registerRunnerWithApi, withApiLogger } from './api/server.js';
 import { config } from './config/index.js';
 import { createTwitterApi } from './services/twitter/client.js';
-import { createApiServer, registerRunnerWithApi, withApiLogger } from './api/server.js';
-import { createSlackTools } from './agents/tools/slack/index.js';
-import { createGitHubTools } from './agents/tools/github/index.js';
 const character = config.characterConfig;
 const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
   //shared twitter agent and orchestrator config
@@ -19,18 +19,28 @@ const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
   const monitoringEnabled = config.autoDriveConfig.AUTO_DRIVE_MONITORING;
 
   //Twitter agent config
-  const { USERNAME, PASSWORD, COOKIES_PATH } = config.twitterConfig;
-  const twitterApi = await createTwitterApi(USERNAME, PASSWORD, COOKIES_PATH);
-
-  const twitterAgentTool = createTwitterAgent(twitterApi, character, {
-    tools: [...webSearchTool],
-    postTweets: config.twitterConfig.POST_TWEETS,
-    saveExperiences,
-    monitoring: {
-      enabled: monitoringEnabled,
-    },
-    modelConfigurations: config.twitterConfig.model_configurations,
-  });
+  const twitterAgentTool =
+    config.twitterConfig.USERNAME && config.twitterConfig.PASSWORD
+      ? [
+          createTwitterAgent(
+            await createTwitterApi(
+              config.twitterConfig.USERNAME,
+              config.twitterConfig.PASSWORD,
+              config.twitterConfig.COOKIES_PATH,
+            ),
+            character,
+            {
+              tools: [...webSearchTool],
+              postTweets: config.twitterConfig.POST_TWEETS,
+              saveExperiences,
+              monitoring: {
+                enabled: monitoringEnabled,
+              },
+              modelConfigurations: config.twitterConfig.model_configurations,
+            },
+          ),
+        ]
+      : [];
 
   //If slack api key is provided, add slack tools
   const slackTools = config.slackConfig.SLACK_APP_TOKEN
@@ -49,7 +59,7 @@ const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
 
   return {
     modelConfigurations: config.orchestratorConfig.model_configurations,
-    tools: [twitterAgentTool, ...webSearchTool, ...slackTools, ...githubTools],
+    tools: [...twitterAgentTool, ...webSearchTool, ...slackTools, ...githubTools],
     prompts,
     saveExperiences,
     monitoring: {
