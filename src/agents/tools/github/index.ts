@@ -9,6 +9,7 @@ import {
   CreateCommitParams,
   CreateIssueParams,
   CreatePRCommentParams,
+  CreatePullRequestParams,
   CreateReactionParams,
   githubClient,
   IssueInfo,
@@ -865,6 +866,50 @@ export const createCommitTool = (
     },
   });
 
+export const createPullRequestTool = (
+  createPullRequest: (
+    owner: string,
+    repo: string,
+    params: CreatePullRequestParams,
+  ) => Promise<PullRequestInfo>,
+) =>
+  new DynamicStructuredTool({
+    name: 'create_pull_request',
+    description: `Creates a new pull request in a repository.
+    USE THIS WHEN:
+    - You want to merge changes from one branch to another
+    - You have completed your feature work and want to request a review
+    - You want to propose changes to a repository
+    
+    IMPORTANT: 
+    - The head branch must exist and contain the changes you want to merge
+    - The base branch is where you want to merge your changes into
+    - You can create a draft PR by setting draft to true
+    - Make sure your commit changes are pushed to the head branch before creating the PR`,
+    schema: z.object({
+      owner: z.string().describe('The owner of the repository'),
+      repo: z.string().describe('The name of the repository'),
+      title: z.string().describe('The title of the pull request'),
+      body: z.string().optional().describe('The description of the pull request'),
+      head: z.string().describe('The name of the branch where your changes are implemented'),
+      base: z.string().describe('The name of the branch you want your changes pulled into'),
+      draft: z.boolean().optional().describe('Whether to create the pull request as a draft'),
+      maintainer_can_modify: z
+        .boolean()
+        .optional()
+        .describe('Whether maintainers can modify the pull request'),
+    }),
+    func: async ({ owner, repo, ...params }) => {
+      try {
+        const pullRequest = await createPullRequest(owner, repo, params);
+        return JSON.stringify(pullRequest, null, 2);
+      } catch (error) {
+        logger.error(`Error creating pull request in repository ${owner}/${repo}:`, error);
+        throw error;
+      }
+    },
+  });
+
 export const createGitHubTools = async (token: string, owner: string, repo: string) => {
   const github = await githubClient(token, owner, repo);
   const listIssues = (state?: 'open' | 'closed' | 'all') => github.listIssues(state);
@@ -905,6 +950,11 @@ export const createGitHubTools = async (token: string, owner: string, repo: stri
   ) => github.createBranch(targetOwner, targetRepo, branchName, sourceBranch);
   const createCommitFn = (targetOwner: string, targetRepo: string, params: CreateCommitParams) =>
     github.createCommit(targetOwner, targetRepo, params);
+  const createPullRequestFn = (
+    targetOwner: string,
+    targetRepo: string,
+    params: CreatePullRequestParams,
+  ) => github.createPullRequest(targetOwner, targetRepo, params);
 
   return [
     createListIssuesTools(listIssues),
@@ -932,5 +982,6 @@ export const createGitHubTools = async (token: string, owner: string, repo: stri
     createGetDefaultBranchTool(getDefaultBranch),
     createCreateBranchTool(createBranch),
     createCommitTool(createCommitFn),
+    createPullRequestTool(createPullRequestFn),
   ];
 };

@@ -171,6 +171,15 @@ export interface CreateCommitParams {
   }>;
 }
 
+export interface CreatePullRequestParams {
+  title: string;
+  body?: string;
+  head: string;
+  base: string;
+  draft?: boolean;
+  maintainer_can_modify?: boolean;
+}
+
 export const githubClient = async (token: string, owner: string, repo: string) => {
   const octokit = new Octokit({
     auth: token,
@@ -900,6 +909,56 @@ export const githubClient = async (token: string, owner: string, repo: string) =
     }
   };
 
+  const createPullRequest = async (
+    targetOwner: string,
+    targetRepo: string,
+    params: CreatePullRequestParams,
+  ): Promise<PullRequestInfo> => {
+    try {
+      logger.info(
+        `Creating pull request from ${params.head} to ${params.base} in repository ${targetOwner}/${targetRepo}`,
+      );
+
+      const response = await octokit.pulls.create({
+        owner: targetOwner,
+        repo: targetRepo,
+        title: params.title,
+        body: params.body,
+        head: params.head,
+        base: params.base,
+        draft: params.draft,
+        maintainer_can_modify: params.maintainer_can_modify,
+      });
+
+      return {
+        number: response.data.number,
+        title: response.data.title,
+        state: response.data.state,
+        body: response.data.body || undefined,
+        html_url: response.data.html_url,
+        created_at: response.data.created_at,
+        updated_at: response.data.updated_at,
+        user: {
+          login: response.data.user?.login || 'unknown',
+        },
+        assignees:
+          response.data.assignees?.map(assignee => ({
+            login: assignee.login,
+          })) || [],
+        requested_reviewers:
+          response.data.requested_reviewers?.map(reviewer => ({
+            login: reviewer.login,
+          })) || [],
+      };
+    } catch (error) {
+      logger.error(
+        `Error creating pull request in repository ${targetOwner}/${targetRepo}:`,
+        error,
+      );
+      throw error;
+    }
+  };
+
   return {
     listIssues,
     createIssue,
@@ -926,5 +985,6 @@ export const githubClient = async (token: string, owner: string, repo: string) =
     getDefaultBranch,
     createBranch,
     createCommit,
+    createPullRequest,
   };
 };
