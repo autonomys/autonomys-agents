@@ -49,6 +49,11 @@ const githubConfigSchema = z.object({
   GITHUB_REPO: z.string().optional(),
 });
 
+const notionConfigSchema = z.object({
+  NOTION_TOKEN: z.string().optional(),
+  NOTION_DATABASE_ID: z.string().optional(),
+});
+
 const autoDriveConfigSchema = z
   .object({
     AUTO_DRIVE_API_KEY: z.string().optional(),
@@ -141,6 +146,7 @@ export const configSchema = z.object({
   orchestratorConfig: orchestratorConfigSchema,
   slackConfig: slackConfigSchema,
   githubConfig: githubConfigSchema,
+  notionConfig: notionConfigSchema,
   SERPAPI_API_KEY: SERPAPI_API_KEY,
   NODE_ENV: z.enum(['development', 'production', 'test']),
   API_PORT: z.number().int().positive().default(3001),
