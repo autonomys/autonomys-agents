@@ -2,6 +2,7 @@ import { Tweet } from '../../../../services/twitter/types.js';
 
 export type MinimalTweet = {
   id?: string;
+  conversationId?: string;
   username?: string;
   text?: string;
   createdAt?: string;
@@ -17,6 +18,7 @@ export const tweetToMinimalTweet = (tweet: Tweet): MinimalTweet => {
 
   return {
     id: tweet.id,
+    conversationId: tweet.conversationId,
     username: tweet.username,
     text: tweet.text,
     createdAt: tweet.timeParsed?.toString(),

@@ -1,215 +1,171 @@
 import blessed from 'blessed';
 import { UIComponents } from '../types/types.js';
-import { loadCharacter } from '../../src/config/characters.js';
+import { createHeaderArea } from './HeaderArea.js';
+import { createOutputLog } from './OutputLog.js';
+import { createBottomArea } from './body/index.js';
+import { createSearchBox } from './SearchBox.js';
+import { createHelpBox } from './body/HelpBox.js';
 
-export const createLogoBox = () => {
-  const logoArt = `{cyan-fg}    _         _                                        
-   / \\  _   _| |_ ___  _ __   ___  _ __ ___  _   _ ___ 
-  / _ \\| | | | __/ _ \\| '_ \\ / _ \\| '_ \` _ \\| | | / __|
- / ___ \\ |_| | || (_) | | | | (_) | | | | | | |_| \\__ \\
-/_/   \\_\\__,_|\\__\\___/|_| |_|\\___/|_| |_| |_|\\__, |___/
-                                             |___/     {/cyan-fg}`;
-
-  return blessed.box({
-    top: 0,
-    left: 'center',
-    width: '60%',
-    height: 10,
-    content: logoArt,
-    tags: true,
-    align: 'center',
-    valign: 'middle',
-    wrap: false,
-    border: 'line',
-    style: {
-      fg: 'cyan',
-      transparent: true,
-      border: { fg: 'cyan' },
-    },
-  });
-};
-
-export const createClockBox = () => {
-  return blessed.box({
-    top: 0,
-    right: 0,
-    width: '20%',
-    height: 5,
-    label: ' Date & Time ',
-    content: '',
-    padding: {
-      top: 0,
-      right: 1,
-      bottom: 0,
-      left: 1,
-    },
-    border: { type: 'line' },
-    style: {
-      border: { fg: 'cyan' },
-      fg: 'white',
-      bg: 'blue',
-      bold: true,
-    },
-    align: 'center',
-    valign: 'middle',
-    tags: true,
-  });
-};
-
-export const createOutputLog = () => {
-  return blessed.log({
-    top: 8,
-    left: '0%',
-    width: '100%',
-    height: '62%',
-    label: 'Workflow Output (F2 to focus input)',
-    border: { type: 'line' },
-    style: {
-      border: { fg: 'cyan' },
-      scrollbar: { bg: 'blue' },
-    },
-    scrollable: true,
-    alwaysScroll: true,
-    scrollbar: {
-      ch: ' ',
-      style: { inverse: true },
-    },
-    keys: true,
-    vi: true,
-    mouse: true,
-    tags: true,
-  });
-};
-
-export const createStatusBox = () => {
-  return blessed.box({
-    top: '70%',
-    left: '0%',
-    width: '100%',
-    height: '10%',
-    label: 'Status',
-    content: 'Enter a message in the input below.',
-    border: { type: 'line' },
-    style: { border: { fg: 'green' } },
-    mouse: true,
-  });
-};
-
-export const createScheduledTasksBox = () => {
-  return blessed.list({
-    top: '80%',
-    left: '0%',
-    width: '100%',
-    height: '10%',
-    label: 'Scheduled Tasks',
-    border: { type: 'line' },
-    style: {
-      border: { fg: 'magenta' },
-      selected: { bg: 'blue' },
-      item: { hover: { bg: 'blue' } },
-    },
-    mouse: true,
-    keys: true,
-    vi: true,
-    items: [],
-    scrollable: true,
-    scrollbar: {
-      ch: ' ',
-      style: { inverse: true },
-    },
-  });
-};
-
-export const createInputBox = () => {
-  return blessed.textarea({
-    bottom: 0,
-    left: '0%',
-    width: '100%',
-    height: '10%',
-    label: 'Input - Type message (Enter to send, Ctrl+n for new line, Ctrl+i to focus)',
-    border: { type: 'line' },
-    style: {
-      border: { fg: 'yellow' },
-      focus: { border: { fg: 'white' } },
-    },
-    keys: true,
-    vi: true,
-    mouse: true,
-    inputOnFocus: true,
-    padding: {
-      left: 1,
-      right: 1,
-    },
-  });
-};
-
-export const createCharacterBox = (characterDirName: string) => {
-  let displayName = characterDirName;
-  try {
-    const character = loadCharacter(characterDirName);
-    displayName = character.name;
-  } catch (error) {
-    console.error('Failed to load character name:', error);
-  }
-
-  return blessed.box({
-    top: 0,
-    left: 0,
-    width: '20%',
-    height: 5,
-    label: ' Character ',
-    content: `${displayName}`,
-    padding: {
-      top: 0,
-      right: 1,
-      bottom: 1,
-      left: 1,
-    },
-    border: { type: 'line' },
-    style: {
-      border: { fg: 'cyan' },
-      fg: 'white',
-      bg: 'red',
-      bold: true,
-    },
-    align: 'center',
-    valign: 'middle',
-    tags: true,
-  });
-};
+// Add screen type definition
+interface ExtendedScreen extends blessed.Widgets.Screen {
+  render(): void;
+}
 
 export const createUI = (): UIComponents => {
   const screen = blessed.screen({
     smartCSR: true,
-    title: 'Interactive CLI',
+    title: 'Autonomys CLI',
     autoPadding: true,
-    warnings: true,
+    warnings: false,
+    fullUnicode: true,
+    input: process.stdin,
+    output: process.stdout,
+    terminal: process.env.TERM || 'xterm-256color',
+    useBCE: true,
+    dockBorders: true,
+  }) as ExtendedScreen;
+
+  // Add proper exit handling
+  screen.key(['C-c', 'q'], () => {
+    // Clear all intervals and timeouts
+    screen.clearRegion(0, screen.width as number, 0, screen.height as number);
+
+    // Reset cursor
+    screen.program.showCursor();
+    screen.program.normalBuffer();
+    screen.program.reset();
+
+    // Exit gracefully
+    process.exit(0);
   });
 
-  const outputLog = createOutputLog();
-  const statusBox = createStatusBox();
-  const scheduledTasksBox = createScheduledTasksBox();
-  const inputBox = createInputBox();
-  const clockBox = createClockBox();
-  const logoBox = createLogoBox();
-  const characterBox = createCharacterBox(process.argv[2] || 'Unknown');
+  // Handle process exit
+  process.on('exit', () => {
+    screen.program.clear();
+    screen.program.reset();
+    screen.program.showCursor();
+    screen.program.normalBuffer();
+  });
 
-  screen.append(logoBox);
+  // Handle unexpected errors
+  process.on('uncaughtException', err => {
+    screen.program.clear();
+    screen.program.reset();
+    screen.program.showCursor();
+    screen.program.normalBuffer();
+    console.error('An error occurred:', err);
+    process.exit(1);
+  });
+
+  // Create main layout areas
+  const headerArea = createHeaderArea();
+  const outputLog = createOutputLog();
+  const bottomArea = createBottomArea();
+  const searchBox = createSearchBox();
+  const helpBox = createHelpBox();
+
+  // Variable to suppress the first key in searchBox
+  let suppressNextSearchKey = false;
+
+  // When a key is pressed in the searchBox, if suppression is active, ignore it
+  searchBox.on('keypress', (ch, key) => {
+    if (suppressNextSearchKey) {
+      suppressNextSearchKey = false;
+      return false; // prevent duplicate character
+    }
+  });
+
+  // Append everything in the correct order
+  screen.append(headerArea);
   screen.append(outputLog);
-  screen.append(statusBox);
-  screen.append(scheduledTasksBox);
-  screen.append(inputBox);
-  screen.append(clockBox);
-  screen.append(characterBox);
+  screen.append(bottomArea.container);
+  screen.append(searchBox);
+  screen.append(bottomArea.confirmDialog);
+  screen.append(helpBox);
+
+  // Handle dialog events
+  bottomArea.confirmDialog.on('action', () => {
+    helpBox.show();
+    screen.render();
+  });
+
+  bottomArea.confirmDialog.on('show', () => {
+    helpBox.hide();
+    screen.render();
+  });
+
+  bottomArea.confirmDialog.on('cancel', () => {
+    helpBox.show();
+    screen.render();
+  });
+
+  // Handle keyboard shortcuts
+  screen.program.on('keypress', (ch, key) => {
+    if (key && key.ctrl && key.name === 'f') {
+      bottomArea.inputBox.cancel();
+      helpBox.hide();
+      searchBox.show();
+      searchBox.clearValue();
+      suppressNextSearchKey = true;
+      setTimeout(() => {
+        searchBox.focus();
+      }, 100);
+      screen.render();
+      return false;
+    }
+    // Add shortcut to focus input box (Ctrl+K)
+    if (key && key.ctrl && key.name === 'k') {
+      searchBox.hide();
+      helpBox.show();
+      bottomArea.inputBox.cancel();
+      setTimeout(() => {
+        bottomArea.inputBox.focus();
+        bottomArea.inputBox.readInput();
+        screen.render();
+      }, 100);
+      screen.render();
+      return false;
+    }
+    // Add shortcut to focus scheduled tasks box (Ctrl+T)
+    if (key && key.ctrl && key.name === 't') {
+      searchBox.hide();
+      helpBox.show();
+      bottomArea.inputBox.cancel();
+      setTimeout(() => {
+        bottomArea.scheduledTasksBox.focus();
+        screen.render();
+      }, 100);
+      screen.render();
+      return false;
+    }
+  });
+
+  // Bind 'enter' on the searchBox to emit submit event
+  searchBox.key('enter', () => {
+    searchBox.emit('submit');
+  });
+
+  // Bind 'escape' on the searchBox to cancel search and refocus inputBox
+  searchBox.key('escape', () => {
+    searchBox.hide();
+    helpBox.show();
+    bottomArea.inputBox.focus();
+    screen.render();
+  });
+
+  // Focus input box by default
+  bottomArea.inputBox.focus();
 
   return {
     screen,
     outputLog,
-    statusBox,
-    scheduledTasksBox,
-    inputBox,
-    clockBox,
-    logoBox,
-    characterBox,
+    statusBox: bottomArea.statusBox,
+    scheduledTasksBox: bottomArea.scheduledTasksBox,
+    inputBox: bottomArea.inputBox,
+    clockBox: headerArea.children[2] as blessed.Widgets.BoxElement,
+    logoBox: headerArea.children[0] as blessed.Widgets.BoxElement,
+    characterBox: headerArea.children[1] as blessed.Widgets.BoxElement,
+    searchBox,
+    helpBox,
   };
 };

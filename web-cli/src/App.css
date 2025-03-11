@@ -1,0 +1,398 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body {
+  height: 100%;
+  overflow-x: hidden;
+  overflow-y: auto;
+  position: relative;
+  -webkit-overflow-scrolling: touch;
+}
+
+body {
+  font-family:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell',
+    'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: #1e1e1e;
+  color: #d4d4d4;
+}
+
+code,
+pre {
+  font-family: 'Consolas', 'Courier New', monospace;
+}
+
+.App {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  width: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  position: relative;
+  z-index: 1;
+}
+
+/* Fix for stacking context issues with Chakra UI */
+#root {
+  position: relative;
+  z-index: 1;
+  height: 100%;
+}
+
+/* Adding missing blink animation for cursor in CharacterBox */
+@keyframes blink {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+.red {
+  color: #d16969;
+}
+.green {
+  color: #6a9955;
+}
+.blue {
+  color: #569cd6;
+}
+.yellow {
+  color: #dcdcaa;
+}
+.cyan {
+  color: #4ec9b0;
+}
+.magenta {
+  color: #c586c0;
+}
+.white {
+  color: #d4d4d4;
+}
+.gray {
+  color: #888;
+}
+
+/* Connection status colors */
+.connection-status-connected {
+  color: #6a9955; /* Green */
+}
+.connection-status-connecting {
+  color: #dcdcaa; /* Yellow */
+}
+.connection-status-disconnected {
+  color: #d16969; /* Red */
+}
+.connection-status-error {
+  color: #d16969; /* Red */
+}
+.connection-status-unknown {
+  color: #888; /* Gray */
+}
+
+/* Enhanced logo animations */
+@keyframes pulse {
+  0% {
+    filter: drop-shadow(0 0 8px rgba(0, 255, 153, 0.7));
+    transform: scale(1);
+  }
+  50% {
+    filter: drop-shadow(0 0 15px rgba(0, 255, 153, 0.9));
+    transform: scale(1.05);
+  }
+  100% {
+    filter: drop-shadow(0 0 8px rgba(0, 255, 153, 0.7));
+    transform: scale(1);
+  }
+}
+
+@keyframes pulsate {
+  0% {
+    text-shadow:
+      0 0 10px rgba(0, 255, 153, 0.7),
+      0 0 20px rgba(0, 255, 153, 0.5);
+  }
+  50% {
+    text-shadow:
+      0 0 15px rgba(0, 255, 153, 0.9),
+      0 0 30px rgba(0, 255, 153, 0.7),
+      0 0 40px rgba(0, 255, 153, 0.5);
+  }
+  100% {
+    text-shadow:
+      0 0 10px rgba(0, 255, 153, 0.7),
+      0 0 20px rgba(0, 255, 153, 0.5);
+  }
+}
+
+@keyframes scan {
+  0% {
+    background-position: -100% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+@keyframes float {
+  0% {
+    transform: translateY(0) rotate(0deg);
+  }
+  25% {
+    transform: translateY(-4px) rotate(2deg);
+  }
+  50% {
+    transform: translateY(0) rotate(0deg);
+  }
+  75% {
+    transform: translateY(4px) rotate(-2deg);
+  }
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+}
+
+@keyframes orbit {
+  0% {
+    transform: rotate(0deg) translateX(3px) rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg) translateX(3px) rotate(-360deg);
+  }
+}
+
+.logo-container {
+  position: relative;
+  display: inline-block;
+}
+
+.logo-orbit {
+  position: absolute;
+  top: -10px;
+  left: -10px;
+  right: -10px;
+  bottom: -10px;
+  border: 1px solid rgba(0, 255, 153, 0.3);
+  border-radius: 50%;
+  animation: orbit 8s linear infinite;
+}
+
+.logo-scan {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    90deg,
+    rgba(0, 255, 153, 0) 0%,
+    rgba(0, 255, 153, 0.5) 50%,
+    rgba(0, 255, 153, 0) 100%
+  );
+  background-size: 200% 100%;
+  animation: scan 3s ease-in-out infinite;
+  mix-blend-mode: overlay;
+  pointer-events: none;
+}
+
+.logo-image {
+  animation:
+    pulse 2s infinite alternate,
+    float 6s ease-in-out infinite;
+  transform-origin: center center;
+}
+
+.bracket-left {
+  animation: float 6s ease-in-out infinite;
+  animation-delay: -1s;
+}
+
+.bracket-right {
+  animation: float 6s ease-in-out infinite;
+  animation-delay: -3s;
+}
+
+.title-agentic {
+  position: relative;
+  animation: pulsate 2s infinite alternate;
+  background: linear-gradient(
+    90deg,
+    rgba(0, 255, 153, 0.7) 0%,
+    rgba(0, 204, 255, 0.7) 50%,
+    rgba(0, 255, 153, 0.7) 100%
+  );
+  background-size: 200% auto;
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation:
+    pulsate 2s infinite alternate,
+    backgroundShift 8s linear infinite;
+}
+
+@keyframes backgroundShift {
+  0% {
+    background-position: 0% center;
+  }
+  50% {
+    background-position: 100% center;
+  }
+  100% {
+    background-position: 0% center;
+  }
+}
+
+/* Add these animations for the advanced tabs */
+@keyframes scannerEffect {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes hexPulse {
+  0% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.5;
+  }
+}
+
+@keyframes pulseEffect {
+  0% {
+    opacity: 0.3;
+    transform: scale(0.95);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(1.05);
+  }
+  100% {
+    opacity: 0.3;
+    transform: scale(0.95);
+  }
+}
+
+@keyframes floatEffect {
+  0% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-2px);
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+
+/* Advanced neural network tab animations */
+@keyframes neuralPulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(255, 0, 204, 0);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 10px 3px rgba(255, 0, 204, 0.6);
+    transform: scale(1.02);
+  }
+}
+
+@keyframes neuronActivate {
+  0% {
+    transform: scale(0.8);
+    opacity: 0.3;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+}
+
+@keyframes dataFlow {
+  0% {
+    background-position: 0% 50%;
+    opacity: 0.8;
+  }
+  50% {
+    background-position: 100% 50%;
+    opacity: 1;
+  }
+  100% {
+    background-position: 0% 50%;
+    opacity: 0.8;
+  }
+}
+
+@keyframes connectionFlow {
+  0% {
+    stroke-dashoffset: 100;
+  }
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -100% 0;
+  }
+  100% {
+    background-position: 300% 0;
+  }
+}
+
+@keyframes nodeRipple {
+  0% {
+    box-shadow: 0 0 0 0 rgba(255, 0, 204, 0.6);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(255, 0, 204, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(255, 0, 204, 0);
+  }
+}
+
+/* Enhanced Send Button Styles */
+.send-button::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 15%;
+  right: 15%;
+  height: 1px;
+  background: rgba(0, 255, 153, 0.7);
+  animation: shimmer 2s infinite linear;
+}
+
+.send-button:hover {
+  text-shadow: 0 0 8px rgba(0, 255, 153, 0.7);
+}
+
+.send-button:hover .send-icon {
+  transform: translateX(3px) translateY(-3px) rotate(-45deg) !important;
+  text-shadow: 0 0 5px rgba(0, 255, 153, 1);
+  transition: all 0.3s ease;
+}

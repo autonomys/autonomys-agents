@@ -1,12 +1,12 @@
-import { z } from 'zod';
 import dotenv from 'dotenv';
-import { configSchema } from './schema.js';
+import { existsSync, readFileSync } from 'fs';
+import { mkdir } from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { mkdir } from 'fs/promises';
-import { existsSync, readFileSync } from 'fs';
-import { loadCharacter } from './characters.js';
 import yaml from 'yaml';
+import { z } from 'zod';
+import { loadCharacter } from './characters.js';
+import { configSchema } from './schema.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -69,6 +69,23 @@ const yamlConfig = (() => {
   }
 })();
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const convertModelConfigurations = (modelConfigurations: any) => {
+  if (!modelConfigurations) {
+    return {
+      inputModelConfig: undefined,
+      messageSummaryModelConfig: undefined,
+      finishWorkflowModelConfig: undefined,
+    };
+  }
+
+  return {
+    inputModelConfig: modelConfigurations.input_model_config,
+    messageSummaryModelConfig: modelConfigurations.message_summary_model_config,
+    finishWorkflowModelConfig: modelConfigurations.finish_workflow_model_config,
+  };
+};
+
 export const config = (() => {
   try {
     const username = process.env.TWITTER_USERNAME || '';
@@ -79,10 +96,21 @@ export const config = (() => {
         USERNAME: username,
         PASSWORD: process.env.TWITTER_PASSWORD || '',
         COOKIES_PATH: cookiesPath,
-        POST_TWEETS: yamlConfig.twitter.post_tweets,
+        POST_TWEETS: yamlConfig.twitter.post_tweets ?? false,
+        model_configurations: convertModelConfigurations(yamlConfig.twitter.model_configurations),
       },
 
       characterConfig,
+
+      slackConfig: {
+        SLACK_APP_TOKEN: process.env.SLACK_APP_TOKEN || '',
+      },
+
+      githubConfig: {
+        GITHUB_TOKEN: process.env.GITHUB_TOKEN || '',
+        GITHUB_OWNER: process.env.GITHUB_OWNER || '',
+        GITHUB_REPO: process.env.GITHUB_REPO || '',
+      },
 
       llmConfig: {
         OPENAI_API_KEY: process.env.OPENAI_API_KEY || '',
@@ -90,13 +118,15 @@ export const config = (() => {
         LLAMA_API_URL: process.env.LLAMA_API_URL || '',
         DEEPSEEK_URL: process.env.DEEPSEEK_URL || '',
         DEEPSEEK_API_KEY: process.env.DEEPSEEK_API_KEY || '',
+        GROQ_API_KEY: process.env.GROQ_API_KEY || '',
       },
 
       autoDriveConfig: {
         AUTO_DRIVE_API_KEY: process.env.AUTO_DRIVE_API_KEY,
         AUTO_DRIVE_ENCRYPTION_PASSWORD: process.env.AUTO_DRIVE_ENCRYPTION_PASSWORD,
         AUTO_DRIVE_NETWORK: yamlConfig.auto_drive.network ?? 'taurus',
-        AUTO_DRIVE_UPLOAD: yamlConfig.auto_drive.upload ?? true,
+        AUTO_DRIVE_MONITORING: yamlConfig.auto_drive.monitoring ?? false,
+        AUTO_DRIVE_SAVE_EXPERIENCES: yamlConfig.auto_drive.save_experiences ?? false,
       },
 
       blockchainConfig: {
@@ -112,11 +142,16 @@ export const config = (() => {
       orchestratorConfig: {
         MAX_WINDOW_SUMMARY: 20,
         MAX_QUEUE_SIZE: 50,
+        model_configurations: convertModelConfigurations(
+          yamlConfig.orchestrator?.model_configurations,
+        ),
       },
 
       NODE_ENV: process.env.NODE_ENV || 'development',
 
       SERPAPI_API_KEY: process.env.SERPAPI_API_KEY || '',
+
+      API_PORT: process.env.API_PORT ? parseInt(process.env.API_PORT, 10) : 3001,
     };
     return configSchema.parse(rawConfig);
   } catch (error) {

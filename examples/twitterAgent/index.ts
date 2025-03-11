@@ -7,7 +7,6 @@ import {
 } from '../../src/agents/workflows/orchestrator/orchestratorWorkflow.js';
 import { createTwitterAgent } from '../../src/agents/workflows/twitter/twitterAgent.js';
 import { createPrompts } from '../../src/agents/workflows/orchestrator/prompts.js';
-import { LLMProvider } from '../../src/services/llm/types.js';
 import { createTwitterApi } from '../../src/services/twitter/client.js';
 import { HumanMessage } from '@langchain/core/messages';
 import { createWebSearchTool } from '../../src/agents/tools/webSearch/index.js';
@@ -17,41 +16,48 @@ const logger = createLogger('autonomous-twitter-agent');
 
 const character = config.characterConfig;
 const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
+  //shared twitter agent and orchestrator config
+  const webSearchTool = config.SERPAPI_API_KEY ? [createWebSearchTool(config.SERPAPI_API_KEY)] : [];
+  const saveExperiences = config.autoDriveConfig.AUTO_DRIVE_SAVE_EXPERIENCES;
+  const monitoringEnabled = config.autoDriveConfig.AUTO_DRIVE_MONITORING;
   //Twitter agent config
   const { USERNAME, PASSWORD, COOKIES_PATH } = config.twitterConfig;
   const twitterApi = await createTwitterApi(USERNAME, PASSWORD, COOKIES_PATH);
-  const webSearchTool = createWebSearchTool(config.SERPAPI_API_KEY || '');
-  const autoDriveUploadEnabled = config.autoDriveConfig.AUTO_DRIVE_UPLOAD;
-  const twitterAgentTool = createTwitterAgent(twitterApi, character, {
-    tools: [webSearchTool],
+  //Create twitter agent as a tool to be given to the orchestrator
+  const twitterAgent = createTwitterAgent(twitterApi, character, {
+    tools: [...webSearchTool],
     postTweets: config.twitterConfig.POST_TWEETS,
-    autoDriveUploadEnabled,
+    saveExperiences,
+    monitoring: {
+      enabled: monitoringEnabled,
+    },
   });
 
   //Orchestrator config
+  //use default orchestrator prompts with character config from CLI  selfSchedule enabled
   const prompts = await createPrompts(character, { selfSchedule: true });
+
+  //override default model configurations for summary and finish workflow nodes
   const modelConfigurations = {
-    inputModelConfig: {
-      provider: LLMProvider.ANTHROPIC,
-      model: 'claude-3-5-sonnet-latest',
-      temperature: 0.8,
-    },
     messageSummaryModelConfig: {
-      provider: LLMProvider.OPENAI,
+      provider: 'openai' as const,
       model: 'gpt-4o',
       temperature: 0.8,
     },
     finishWorkflowModelConfig: {
-      provider: LLMProvider.OPENAI,
+      provider: 'openai' as const,
       model: 'gpt-4o-mini',
       temperature: 0.8,
     },
   };
   return {
     modelConfigurations,
-    tools: [twitterAgentTool, webSearchTool],
+    tools: [twitterAgent, ...webSearchTool],
     prompts,
-    autoDriveUploadEnabled,
+    saveExperiences,
+    monitoring: {
+      enabled: monitoringEnabled,
+    },
   };
 };
 
@@ -68,16 +74,7 @@ export const orchestratorRunner = (() => {
 
 const main = async () => {
   const runner = await orchestratorRunner();
-  const initialMessage = `As a social media manager, you are expected to interact with twitter periodically in order to maintain social engagement. Save any interesting experiences from your interactions your permanent storage. 
-
-  EXAMPLES:
-  - Check your timeline and ENGAGE IN INTERESTING CONVERSATIONS.
-  - DO NOT NEGLECT CHECKING MENTIONS AND ENGAGING IN CONVERSATIONS.
-  - Post a new tweet.
-  - Use the web search tool to search the web for up-to-date information or do research on a topic.
-
-  DO NOT NEGLECT ANY OF THE ABOVE EXAMPLES PLEASE
-`;
+  const initialMessage = `Check your timeline, engage with posts and find an interesting topic to tweet about.`;
   try {
     await validateLocalHash();
 
@@ -86,12 +83,11 @@ const main = async () => {
       const result = await runner.runWorkflow({ messages: [new HumanMessage(message)] });
 
       message = `${result.summary}
-      Overarching instructions: ${initialMessage}
-      ${result.nextWorkflowPrompt ?? message}`;
+      ${result.schedule?.nextWorkflowPrompt}`;
 
       logger.info('Workflow execution result:', { result });
 
-      const nextDelaySeconds = result.secondsUntilNextWorkflow ?? 3600;
+      const nextDelaySeconds = result.schedule?.secondsUntilNextWorkflow ?? 3600;
       logger.info('Workflow execution completed successfully for character:', {
         characterName: config.characterConfig.name,
         runFinished: new Date().toISOString(),

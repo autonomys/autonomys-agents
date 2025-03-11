@@ -1,9 +1,9 @@
 import { ChatOpenAI } from '@langchain/openai';
 import { ChatAnthropic } from '@langchain/anthropic';
 import { ChatOllama } from '@langchain/ollama';
-import { LLMConfiguration, LLMProvider } from './types.js';
+import { LLMConfiguration } from './types.js';
 import { config as appConfig } from '../../config/index.js';
-
+import { ChatGroq } from '@langchain/groq';
 export class LLMFactory {
   static createModel(node: LLMConfiguration) {
     return this.createModelFromConfig(node);
@@ -11,7 +11,7 @@ export class LLMFactory {
 
   static createModelFromConfig({ model, provider, temperature }: LLMConfiguration) {
     switch (provider) {
-      case LLMProvider.OPENAI:
+      case 'openai':
         const baseConfig = {
           apiKey: appConfig.llmConfig.OPENAI_API_KEY,
           model,
@@ -23,24 +23,30 @@ export class LLMFactory {
           });
         }
         return new ChatOpenAI(baseConfig);
-      case LLMProvider.ANTHROPIC:
+      case 'anthropic':
         return new ChatAnthropic({
           apiKey: appConfig.llmConfig.ANTHROPIC_API_KEY,
           model,
           temperature,
         });
-      case LLMProvider.OLLAMA:
+      case 'ollama':
         return new ChatOllama({
           baseUrl: appConfig.llmConfig.LLAMA_API_URL,
           model,
           temperature,
         });
-      case LLMProvider.DEEPSEEK:
+      case 'deepseek':
         return new ChatOpenAI({
           apiKey: appConfig.llmConfig.DEEPSEEK_API_KEY,
           configuration: {
             baseURL: appConfig.llmConfig.DEEPSEEK_URL,
           },
+          model,
+          temperature,
+        });
+      case 'groq':
+        return new ChatGroq({
+          apiKey: appConfig.llmConfig.GROQ_API_KEY,
           model,
           temperature,
         });

@@ -28,7 +28,7 @@ Autonomys Agents is an **EXPERIMENTAL** framework for building AI agents. Curren
    - For production build and run: `yarn start <your-character-name>`
    - For interactive CLI interface: `yarn cli <your-character-name>`
 
-## Interactive CLI Interface
+## Interactive CLI Interface 
 
 The framework includes an interactive terminal-based UI for managing and monitoring your AI agent. To start the interface:
 
@@ -36,27 +36,49 @@ The framework includes an interactive terminal-based UI for managing and monitor
 yarn cli <your-character-name>
 ```
 
+## Interactive Web CLI Interface (WIP)
+
+A modern web-based interface for interacting with your agent. To start:
+
+```bash
+cd web-cli && yarn
+```
+Then, in the root folder:
+
+```bash
+yarn dev:all <your-character-name>
+```
+
 Features:
-- Real-time character status and workflow monitoring
-- Interactive command input with keyboard shortcuts
-- Task scheduling and management
-- Live output logging
+- Tabbed namespace logs for organized output
+- Real-time log updates via Server-Sent Events
+- Color-coded messages by log level
+- Character-specific configuration
 
-Keyboard Shortcuts:
-- Enter: Send message/command
-- Ctrl+n: Insert new line in input
-- Ctrl+i: Focus input box
-- Ctrl+b/Ctrl+f: Scroll output log by page
-- Ctrl+p/Ctrl+n: Scroll output log by line
-- Escape/q/Ctrl+C: Quit
+## Running with dev:all
 
-The interface provides a user-friendly way to interact with your agent, monitor its activities, and manage scheduled tasks, all within a terminal environment.
+The `dev:all` command launches both the main application and web interface concurrently:
+
+```bash
+yarn dev:all <your-character-name>
+```
+
+This command:
+- Starts your agent with the specified character
+- Launches the web interface configured for that character
+- Automatically uses the character's API port from its .env file
+- Provides color-coded output from both processes
+
+### Known Issues
+
+- This feature is in the very early stages of development and will be rapidly evolving. See https://github.com/autonomys/autonomys-agents/issues/242 for more information on planned features and known bugs.
 
 ## Examples
 
 The following examples demonstrate the use of the framework and are available:
 
 - [Twitter Agent](examples/twitterAgent/README.md)
+- [Multi Personality](examples/multiPersonality/README.md)
 
 ## Character System
 
@@ -70,109 +92,43 @@ The framework uses a YAML-based character system that allows you to create and r
    ```bash
    # Create a new character
    yarn create-character your_character
-
    ```
 
 ### Character Configuration
 
-Each character file is a YAML configuration with the following structure:
-
-```yaml
-name: 'Agent Name'
-
-description: |
-  Core personality description
-  Can span multiple lines
-
-personality:
-  - Key behavioral trait 1
-  - Key behavioral trait 2
-
-expertise:
-  - Area of knowledge 1
-  - Area of knowledge 2
-
-communication_rules:
-  rules:
-    - Operating guideline 1
-    - Operating guideline 2
-  words_to_avoid:
-    - word1
-    - word2
-
-twitter_profile:
-  username: 'twitter_handle'
-  trend_focus:
-    - Topic to monitor 1
-    - Topic to monitor 2
-
-  content_focus:
-    - Content guideline 1
-    - Content guideline 2
-
-  reply_style:
-    - Engagement approach 1
-    - Engagement approach 2
-
-  engagement_criteria:
-    - Engagement rule 1
-    - Engagement rule 2
-```
-
-### Example Characters
-
-1. Joy Builder (`joy_builder.yaml`):
-
-   ```yaml
-   name: 'Joy Builder'
-   username: 'buildjoy'
-   description: |
-     Joy Builder is an AI agent who is relentlessly optimistic about technology's potential to solve human problems.
-     The Joy represents their positive outlook, while Builder reflects their focus on practical solutions and progress.
-
-   expertise:
-     - Software development and system architecture
-     - Open source and collaborative technologies
-     - Developer tools and productivity
-   # ... other configuration
-   ```
-
-2. Tech Analyst (`tech_analyst.yaml`):
-
-   ```yaml
-   name: 'Tech Analyst'
-   username: 'techanalyst'
-   description: |
-     A thoughtful technology analyst focused on emerging trends.
-     Provides balanced perspectives on technological developments.
-
-   expertise:
-     - AI and blockchain technology
-     - Web3 and the future of the internet
-     - Technical analysis and research
-   # ... other configuration
-   ```
+Each character file is a YAML configuration with the following structure. For an example character personality configuration, see [character.example.yaml](characters/character.example/config/character.example.yaml) and for example parameter configuration, see [config.example.yaml](characters/character.example/config/config.example.yaml).
 
 ## Context Size Management
 
-The orchestrator helps manage the LLM's context window size through pruning parameters. These parameters control message summarization and retention. Configure them in two ways:
+The orchestrator includes a message pruning system to manage the LLM's context window size. This is important because LLMs have a limited context window, and long conversations need to be summarized to stay within these limits while retaining important information.
 
-1. Dynamic configuration when creating the orchestrator:
-   ```typescript
-   const runner = await getOrchestratorRunner({
-     model,                   // model to use for the agent
-     prompts,                 // prompts for the agent
-     tools,                   // tools available to the agent
-     namespace,               // name of the agent
-     vectorStore,             // vector store for the agent
-     pruningParameters: PruningParameters{
-       maxWindowSummary: 10,  // End index for message slice
-       maxQueueSize: 50       // Trigger summarization threshold
-     }
-   });
-   ```
+The pruning system works through two main parameters:
 
-When messages exceed `maxQueueSize`, a summary is created. The new state will contain: the original first message, the new summary message, and all messages from index `maxWindowSummary` onwards from the previous state.
+- `maxQueueSize` (default: 50): The maximum number of messages to keep before triggering a summarization
+- `maxWindowSummary` (default: 10): How many of the most recent messages to keep after summarization
+
+Here's how the pruning process works:
+
+1. When the number of messages exceeds `maxQueueSize`, the summarization is triggered
+2. The system creates a summary of messages from index 1 to `maxWindowSummary`
+3. After summarization, the new message queue will contain:
+   - The original first message
+   - The new summary message
+   - All messages from index `maxWindowSummary` onwards
+
+You can configure these parameters when creating the orchestrator:
+
+```typescript
+const runner = await getOrchestratorRunner(character, {
+  pruningParameters: {
+    maxWindowSummary: 10, // Keep 10 most recent messages after summarization
+    maxQueueSize: 50, // Trigger summarization when reaching 50 messages
+  },
+  // ... other configuration options
+});
+```
+
+This ensures your agent can maintain long-running conversations while keeping the most relevant context within the LLM's context window limits.
 
 ## Autonomys Network Integration
 
@@ -187,7 +143,7 @@ To use this feature:
 
 1. Configure your AUTO_DRIVE_API_KEY in `.env` (obtain from https://ai3.storage)
 2. Enable Auto Drive uploading in `config.yaml`
-3. Provide your Taurus EVM wallet details (PRIVATE_KEY) and Agent Memory Contract Address (CONTRACT_ADDRESS) in .env`
+3. Provide your Taurus EVM wallet details (PRIVATE_KEY) and Agent Memory Contract Address (CONTRACT_ADDRESS) in `.env`
 4. Make sure your Taurus EVM wallet has funds. A faucet can be found at https://subspacefaucet.com/
 5. Provide encryption password in `.env` (optional, leave empty to not encrypt the agent memories)
 
@@ -210,6 +166,8 @@ yarn resurrect your_character_name -o ./memories/my-agent -n 1000    # Fetch 100
 yarn resurrect your_character_name --output ./custom/path            # Fetch all memories to custom directory
 yarn resurrect --help                            # Show help menu
 ```
+
+While memories are being fetched, they will be added to the vector database named `experiences` in the background, located in the <your_character_name> folder within the data directory.
 
 ## Testing
 

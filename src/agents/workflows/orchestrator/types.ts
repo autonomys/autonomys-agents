@@ -1,9 +1,9 @@
 import { BaseMessage } from '@langchain/core/messages';
-import { ToolNode } from '@langchain/langgraph/prebuilt';
 import { ChatPromptTemplate } from '@langchain/core/prompts';
-import { WorkflowControl } from './nodes/inputPrompt.js';
-import { VectorDB } from '../../../services/vectorDb/VectorDB.js';
+import { ToolNode } from '@langchain/langgraph/prebuilt';
 import { LLMConfiguration } from '../../../services/llm/types.js';
+import { WorkflowControl } from './nodes/inputPrompt.js';
+import { Logger } from 'winston';
 
 export type OrchestratorPrompts = {
   inputPrompt: ChatPromptTemplate;
@@ -17,14 +17,30 @@ export type ModelConfigurations = {
   finishWorkflowModelConfig: LLMConfiguration;
 };
 
+export type MonitoringOptions = {
+  enabled?: boolean;
+  messageCleaner?: (messages: BaseMessage[]) => unknown;
+};
+
+export type MonitoringConfig = {
+  enabled: boolean;
+  messageCleaner: (messages: BaseMessage[]) => unknown;
+};
+
 export type OrchestratorRunnerOptions = {
-  modelConfigurations?: ModelConfigurations;
+  modelConfigurations?: {
+    inputModelConfig?: LLMConfiguration;
+    messageSummaryModelConfig?: LLMConfiguration;
+    finishWorkflowModelConfig?: LLMConfiguration;
+  };
   tools?: Tools;
   prompts?: OrchestratorPrompts;
   namespace?: string;
   pruningParameters?: PruningParameters;
-  vectorStore?: VectorDB;
-  autoDriveUploadEnabled?: boolean;
+  saveExperiences?: boolean;
+  monitoring?: MonitoringOptions;
+  recursionLimit?: number;
+  logger?: Logger;
 };
 
 export type OrchestratorConfig = {
@@ -33,8 +49,10 @@ export type OrchestratorConfig = {
   prompts: OrchestratorPrompts;
   namespace: string;
   pruningParameters: PruningParameters;
-  vectorStore: VectorDB;
-  autoDriveUploadEnabled: boolean;
+  saveExperiences: boolean;
+  monitoring: MonitoringConfig;
+  recursionLimit: number;
+  logger?: Logger;
 };
 
 export type OrchestratorInput = {
@@ -45,6 +63,10 @@ export type OrchestratorStateType = {
   messages: readonly BaseMessage[];
   error: Error | null;
   workflowControl: WorkflowControl | null;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  toolCalls: any[] | null;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  executedTools: any[] | null;
 };
 
 export type PruningParameters = {

@@ -10,6 +10,8 @@ export interface UIComponents {
   clockBox: blessed.Widgets.BoxElement;
   logoBox: blessed.Widgets.BoxElement;
   characterBox: blessed.Widgets.BoxElement;
+  searchBox: blessed.Widgets.TextboxElement;
+  helpBox: blessed.Widgets.BoxElement;
 }
 
 export interface AppState {
