@@ -2,15 +2,15 @@
 pragma solidity ^0.8.28;
 
 import {Script} from "forge-std/Script.sol";
-import {AgentMemory} from "../src/AgentMemory.sol";
+import {AutonomysAgents} from "../src/AutonomysAgents.sol";
 import {console} from "forge-std/console.sol";
 
 contract DeployScript is Script {
     function setUp() public {}
 
-    function run() public returns (AgentMemory) {
+    function run() public returns (AutonomysAgents) {
         // Log deployment info
-        console.log("Deploying AgentMemory contract");
+        console.log("Deploying AutonomysAgents contract");
         console.log("Deployer address:", msg.sender);
         console.log("Chain ID:", block.chainid);
 
@@ -18,12 +18,12 @@ contract DeployScript is Script {
         vm.startBroadcast();
 
         // Deploy AgentMemory contract
-        AgentMemory memory_ = new AgentMemory();
-        console.log("AgentMemory deployed to:", address(memory_));
+        AutonomysAgents agents_ = new AutonomysAgents();
+        console.log("AutonomysAgents deployed to:", address(agents_));
 
         // Stop sending transactions
         vm.stopBroadcast();
 
-        return memory_;
+        return agents_;
     }
 }
