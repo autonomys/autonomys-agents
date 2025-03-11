@@ -34,16 +34,46 @@ import { getVectorDB, closeVectorDB } from '../src/services/vectorDb/vectorDBPoo
     const plainResults = await vectorDb.search({ query: 'sample', limit: 5 });
     console.log('Plain vector search results:', plainResults);
 
-    // Perform a metadata filtered search
+    // Perform a SQL filtered search
     // Filter: records created in the last 1 hour
-    const metadataFilter = "created_at >= datetime('now', '-1 hour')";
-    console.log(`Performing metadata filtered search for 'sample' with filter: ${metadataFilter}`);
-    const metadataResults = await vectorDb.search({
+    const sqlFilter = "created_at >= datetime('now', '-1 hour')";
+    console.log(`Performing SQL filtered search for 'sample' with filter: ${sqlFilter}`);
+    const filteredResults = await vectorDb.search({
       query: 'sample',
-      metadataFilter,
+      sqlFilter,
       limit: 5,
     });
-    console.log('Metadata filtered search results:', metadataResults);
+    console.log('SQL filtered search results:', filteredResults);
+
+    // Example of content filtering
+    const contentFilter = "content LIKE '%Recent%'";
+    console.log(`Performing content filtered search for 'sample' with filter: ${contentFilter}`);
+    const contentFilteredResults = await vectorDb.search({
+      query: 'sample',
+      sqlFilter: contentFilter,
+      limit: 5,
+    });
+    console.log('Content filtered search results:', contentFilteredResults);
+
+    // DIRECT SQL QUERY EXAMPLES
+    console.log('\n--- DIRECT SQL QUERY EXAMPLES ---');
+
+    // Example 1: Basic SELECT query to get all records
+    console.log('Example 1: Basic SELECT query');
+    const allRecords = await vectorDb.queryContent(
+      'SELECT rowid, content, created_at FROM content_store',
+    );
+    console.log(`Retrieved ${allRecords.length} records`);
+
+    // Example 2: Query with ORDER BY to get most recent records
+    console.log('\nExample 2: Query with ORDER BY');
+    const recentRecords = await vectorDb.queryContent(
+      'SELECT rowid, content, created_at FROM content_store ORDER BY created_at DESC LIMIT 3',
+    );
+    console.log('Most recent records:');
+    recentRecords.forEach((record, index) => {
+      console.log(`${index + 1}. [${record.created_at}] ${record.content.substring(0, 50)}...`);
+    });
 
     // CHUNKING EXAMPLE: Insert a large text that exceeds the token limit
     console.log('\n--- CHUNKING EXAMPLE ---');
@@ -86,6 +116,31 @@ import { getVectorDB, closeVectorDB } from '../src/services/vectorDb/vectorDBPoo
         `Result ${index + 1}: [Distance: ${result.distance.toFixed(4)}] ${contentPreview}`,
       );
     });
+
+    // Example 5: Find and count chunks using queryContent
+    console.log('\nExample 5: Finding chunks using queryContent');
+    const chunkQuery = await vectorDb.queryContent(`
+      SELECT rowid, content, created_at 
+      FROM content_store 
+      WHERE content LIKE '[Chunk %]%'
+      ORDER BY rowid
+    `);
+    console.log(`Found ${chunkQuery.length} chunks from the large text insertion`);
+    if (chunkQuery.length > 0) {
+      // Show the first chunk
+      console.log('First chunk preview:', chunkQuery[0].content.substring(0, 100) + '...');
+    }
+
+    // Example of combining multiple conditions in SQL filter
+    const combinedFilter =
+      "created_at >= datetime('now', '-3 hours') AND content LIKE '%intelligence%'";
+    console.log(`\nPerforming combined filter search with filter: ${combinedFilter}`);
+    const combinedResults = await vectorDb.search({
+      query: 'artificial intelligence',
+      sqlFilter: combinedFilter,
+      limit: 3,
+    });
+    console.log('Combined filter search results:', combinedResults.length);
 
     // Close the vector database connection
     closeVectorDB('example');

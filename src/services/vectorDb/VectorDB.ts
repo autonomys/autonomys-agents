@@ -86,7 +86,7 @@ export class VectorDB {
             CREATE TABLE IF NOT EXISTS content_store (
                 rowid INTEGER PRIMARY KEY AUTOINCREMENT,
                 content TEXT,
-                created_at TEXT
+                created_at DATETIME
             );
         `);
   }
@@ -133,7 +133,7 @@ export class VectorDB {
       // Insert into content_store first and get the AUTOINCREMENT rowid
       const contentStatement = this.db.prepare(`
                 INSERT INTO content_store (content, created_at)
-                VALUES (?, ?)
+                VALUES (?, datetime(?))
             `);
 
       const contentResult = contentStatement.run(content, timestamp);
@@ -205,10 +205,10 @@ export class VectorDB {
 
   async search(params: {
     query: string;
-    metadataFilter?: string;
+    sqlFilter?: string;
     limit?: number;
   }): Promise<Array<{ rowid: number; distance: number; content: string; created_at: string }>> {
-    const { query, metadataFilter, limit = 5 } = params;
+    const { query, sqlFilter, limit = 5 } = params;
 
     if (!query || query.trim().length === 0) {
       throw new Error('Search query cannot be empty');
@@ -228,22 +228,32 @@ export class VectorDB {
       JOIN content_store c ON v.rowid = c.rowid
     `;
 
-    if (metadataFilter) {
-      logger.info(`Searching with metadata filter with limit: ${integerLimit}`);
+    if (sqlFilter) {
+      logger.info(`Searching with SQL filter with limit: ${integerLimit}`);
 
-      // Get candidate rows that match the metadata filter
-      const candidateStatement = this.db.prepare(
-        `SELECT rowid FROM content_store WHERE ${metadataFilter}`,
-      );
-      const candidateRows = candidateStatement.all() as Array<{ rowid: number }>;
+      try {
+        // Get candidate rows that match the SQL filter
+        const candidateStatement = this.db.prepare(
+          `SELECT rowid FROM content_store WHERE ${sqlFilter}`,
+        );
+        const candidateRows = candidateStatement.all() as Array<{ rowid: number }>;
 
-      if (candidateRows.length === 0) {
-        return [];
+        if (candidateRows.length === 0) {
+          logger.info('No rows matched the SQL filter');
+          return [];
+        }
+
+        const candidateListStr = candidateRows.map(row => row.rowid).join(',');
+        // Append the WHERE clause to filter by candidate rows
+        queryString += ` WHERE c.rowid IN (${candidateListStr})`;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } catch (error: any) {
+        logger.error('Error applying SQL filter:', {
+          filter: sqlFilter,
+          errorMessage: error?.message || String(error),
+        });
+        throw new Error(`Invalid SQL filter: ${error?.message || 'Unknown error'}`);
       }
-
-      const candidateListStr = candidateRows.map(row => row.rowid).join(',');
-      // Append the WHERE clause to filter by candidate rows
-      queryString += ` WHERE c.rowid IN (${candidateListStr})`;
     }
 
     const statement = this.db.prepare(queryString);
@@ -253,6 +263,55 @@ export class VectorDB {
       content: string;
       created_at: string;
     }>;
+  }
+
+  async queryContent(sqlQuery: string) {
+    // Basic SQL injection prevention - check for dangerous patterns
+    const dangerousPatterns = [
+      /;.*;/i, // Multiple statements
+      /PRAGMA/i, // PRAGMA commands
+      /ATTACH DATABASE/i, // Attaching databases
+      /ALTER TABLE/i, // Altering tables
+      /DROP TABLE/i, // Dropping tables
+      /DELETE FROM/i, // Deleting data
+      /UPDATE/i, // Updating data
+      /INSERT INTO/i, // Inserting data
+      /CREATE TABLE/i, // Creating tables
+      /VACUUM/i, // VACUUM command
+      /EXEC/i, // EXEC command
+      /EXECUTE/i, // EXECUTE command
+      /SYSTEM/i, // SYSTEM command
+      /xp_cmdshell/i, // SQL Server command shell
+    ];
+
+    // Check for dangerous patterns
+    for (const pattern of dangerousPatterns) {
+      if (pattern.test(sqlQuery)) {
+        logger.error(`Potentially dangerous SQL query rejected: ${sqlQuery}`);
+        throw new Error('SQL query contains potentially dangerous operations');
+      }
+    }
+
+    // Ensure the query only targets the content_store table
+    if (!sqlQuery.toLowerCase().includes('from content_store')) {
+      logger.error(`SQL query not targeting content_store table rejected: ${sqlQuery}`);
+      throw new Error('SQL query must target the content_store table');
+    }
+
+    // Log the query for auditing
+    logger.info(`Executing SQL query: ${sqlQuery}`);
+
+    try {
+      const statement = this.db.prepare(sqlQuery);
+      return statement.all() as Array<{
+        rowid: number;
+        content: string;
+        created_at: string;
+      }>;
+    } catch (error) {
+      logger.error(`Error executing SQL query: ${error}`);
+      throw error;
+    }
   }
 
   getDatabase(): Database.Database {

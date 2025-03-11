@@ -40,6 +40,7 @@
     "lint:fix": "eslint \"src/**/*.{js,ts}\" --fix",
     "resurrect": "tsx scripts/resurrect.ts",
     "create-character": "tsx scripts/create-character.ts",
+    "migrate:vector-db": "tsx scripts/migrate-vector-db.ts",
     "cli": "tsx cli/index.ts"
   },
   "dependencies": {
