@@ -1,6 +1,7 @@
 import { DynamicStructuredTool } from '@langchain/core/tools';
 import {
   Block,
+  ChatGetPermalinkResponse,
   ChatPostMessageResponse,
   ChatScheduleMessageResponse,
   ChatUpdateResponse,
@@ -563,6 +564,40 @@ export const createScheduleMessageTool = (
     },
   });
 
+/**
+ * Creates a tool to get a permanent link to a specific message
+ */
+export const createGetPermalinkTool = (
+  getPermalink: (channelId: string, messageTs: string) => Promise<ChatGetPermalinkResponse>,
+) =>
+  new DynamicStructuredTool({
+    name: 'get_slack_permalink',
+    description: `Get a permanent link to a specific Slack message.
+    USE THIS WHEN:
+    - You need to reference a specific message in another message
+    - You want to share a message link on other platforms
+    - You need to create a permanent reference to a conversation
+    FORMAT: Provide the channel ID and message timestamp to get its permalink.`,
+    schema: z.object({
+      channelId: z.string().describe('The channel ID where the message is located.'),
+      messageTs: z.string().describe('The timestamp of the message to get the permalink for.'),
+    }),
+    func: async ({ channelId, messageTs }) => {
+      try {
+        logger.info('Getting permalink for Slack message:', {
+          channelId,
+          messageTs,
+        });
+        const result = await getPermalink(channelId, messageTs);
+        logger.info('Got permalink for Slack message:', { result });
+        return JSON.stringify(result);
+      } catch (error) {
+        logger.error('Error getting permalink for Slack message:', error);
+        throw error;
+      }
+    },
+  });
+
 export const createSlackTools = async (slackToken: string) => {
   const slack = await slackClient(slackToken);
   const postMessage = (channelId: string, message: string, blocks?: Block[], threadTs?: string) =>
@@ -593,6 +628,8 @@ export const createSlackTools = async (slackToken: string) => {
       blocks,
       thread_ts: threadTs,
     });
+  const getPermalink = (channelId: string, messageTs: string) =>
+    slack.getPermalink(channelId, messageTs);
 
   return [
     createPostSlackMsgTool(postMessage),
@@ -611,6 +648,7 @@ export const createSlackTools = async (slackToken: string) => {
     createListEmojisTool(slack.getEmojis),
     createEditMessageTool(editMessage),
     createScheduleMessageTool(scheduleMessage),
+    createGetPermalinkTool(getPermalink),
   ];
 };
 

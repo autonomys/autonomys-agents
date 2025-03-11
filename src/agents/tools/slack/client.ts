@@ -197,6 +197,15 @@ export const slackClient = async (token: string) => {
     return response;
   };
 
+  const getPermalink = async (channelId: string, messageTs: string) => {
+    const response = await client.chat.getPermalink({
+      channel: channelId,
+      message_ts: messageTs,
+    });
+    logger.info('getPermalink:', { response });
+    return response;
+  };
+
   const getReaction = async (channelId: string, timestamp: string, full: boolean = false) => {
     const response = await client.reactions.get({
       channel: channelId,
@@ -264,6 +273,7 @@ export const slackClient = async (token: string) => {
     postMessage,
     editMessage,
     scheduleMessage,
+    getPermalink,
     getReaction,
     addReaction,
     getPins,
