@@ -2,7 +2,7 @@ import { DynamicStructuredTool } from '@langchain/core/tools';
 import { UsersProfileGetResponse, UsersProfileSetArguments } from '@slack/web-api';
 import { z } from 'zod';
 import { createLogger } from '../../../utils/logger.js';
-import { UserInfo } from './client.js';
+import type { UserInfo } from './utils/types.js';
 
 const logger = createLogger('slack-tools');
 

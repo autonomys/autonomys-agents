@@ -1,7 +1,7 @@
 import { DynamicStructuredTool } from '@langchain/core/tools';
 import { z } from 'zod';
 import { createLogger } from '../../../utils/logger.js';
-import { ChannelInfo } from './client.js';
+import type { ChannelInfo } from './utils/types.js';
 
 const logger = createLogger('slack-tools');
 

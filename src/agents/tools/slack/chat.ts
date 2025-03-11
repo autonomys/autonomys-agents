@@ -8,7 +8,7 @@ import {
 } from '@slack/web-api';
 import { z } from 'zod';
 import { createLogger } from '../../../utils/logger.js';
-import { MessageInfo } from './client.js';
+import type { MessageInfo } from './utils/types.js';
 
 const logger = createLogger('slack-tools');
 

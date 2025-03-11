@@ -13,7 +13,6 @@ import {
   createPostSlackMsgTool,
   createScheduleMessageTool,
 } from './chat.js';
-import { slackClient } from './client.js';
 import { createAddPinTool, createListPinsTool, createRemovePinTool } from './pin.js';
 import {
   createAddReactionTool,
@@ -28,6 +27,7 @@ import {
   createSetUserPresenceTool,
   createSetUserProfileTool,
 } from './user.js';
+import { slackClient } from './utils/client.js';
 
 export const createSlackTools = async (slackToken: string) => {
   const slack = await slackClient(slackToken);
