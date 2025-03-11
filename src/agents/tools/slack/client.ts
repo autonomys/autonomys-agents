@@ -1,4 +1,7 @@
 import {
+  BookmarksAddArguments,
+  BookmarksEditArguments,
+  BookmarksRemoveArguments,
   ChatPostMessageArguments,
   ChatScheduleMessageArguments,
   ChatUpdateArguments,
@@ -252,6 +255,32 @@ export const slackClient = async (token: string) => {
     return response;
   };
 
+  const listBookmarks = async (channelId: string) => {
+    const response = await client.bookmarks.list({
+      channel_id: channelId,
+    });
+    logger.info('listBookmarks:', { response });
+    return response;
+  };
+
+  const addBookmark = async (options: BookmarksAddArguments) => {
+    const response = await client.bookmarks.add(options);
+    logger.info('addBookmark:', { response });
+    return response;
+  };
+
+  const editBookmark = async (options: BookmarksEditArguments) => {
+    const response = await client.bookmarks.edit(options);
+    logger.info('editBookmark:', { response });
+    return response;
+  };
+
+  const removeBookmark = async (options: BookmarksRemoveArguments) => {
+    const response = await client.bookmarks.remove(options);
+    logger.info('removeBookmark:', { response });
+    return response;
+  };
+
   const getEmojis = async (includeCategories: boolean = false) => {
     const response = await client.emoji.list({
       include_categories: includeCategories,
@@ -280,6 +309,10 @@ export const slackClient = async (token: string) => {
     addPin,
     removePin,
     getEmojis,
+    listBookmarks,
+    addBookmark,
+    editBookmark,
+    removeBookmark,
   };
 };
 
