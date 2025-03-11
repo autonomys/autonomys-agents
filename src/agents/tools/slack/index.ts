@@ -2,6 +2,7 @@ import { DynamicStructuredTool } from '@langchain/core/tools';
 import {
   Block,
   ChatPostMessageResponse,
+  ChatScheduleMessageResponse,
   ChatUpdateResponse,
   EmojiListResponse,
   PinsAddResponse,
@@ -505,6 +506,63 @@ export const createEditMessageTool = (
     },
   });
 
+/**
+ * Creates a tool to schedule a message to be sent later in a Slack channel
+ */
+export const createScheduleMessageTool = (
+  scheduleMessage: (
+    channelId: string,
+    text: string,
+    postAt: number,
+    blocks?: Block[],
+    threadTs?: string,
+  ) => Promise<ChatScheduleMessageResponse>,
+) =>
+  new DynamicStructuredTool({
+    name: 'schedule_slack_msg',
+    description: `Schedule a message to be sent later in a Slack channel.
+    USE THIS WHEN:
+    - You want to send a message at a specific time in the future
+    - You need to schedule announcements or reminders
+    - You want to time messages for different time zones
+    FORMAT: Provide the channel ID, message text, and Unix timestamp for when to send the message.
+    NOTE: The post_at time must be within 120 days from now, and cannot be in the past.`,
+    schema: z.object({
+      channelId: z.string().describe('The channel ID to post to.'),
+      text: z.string().describe('The message text to schedule.'),
+      postAt: z
+        .number()
+        .describe(
+          'Unix timestamp of when message should be sent. Must be within 120 days and not in the past.',
+        ),
+      blocks: z
+        .array(z.any())
+        .optional()
+        .describe('Optional: The blocks to post using Slack block-kit.'),
+      threadTs: z
+        .string()
+        .optional()
+        .describe('Optional: The thread timestamp to post to if this is a reply.'),
+    }),
+    func: async ({ channelId, text, postAt, blocks, threadTs }) => {
+      try {
+        logger.info('Scheduling message in Slack - Received data:', {
+          channelId,
+          text,
+          postAt,
+          blocks,
+          threadTs,
+        });
+        const result = await scheduleMessage(channelId, text, postAt, blocks, threadTs);
+        logger.info('Message scheduled in Slack:', { result });
+        return JSON.stringify(result);
+      } catch (error) {
+        logger.error('Error scheduling message in Slack:', error);
+        throw error;
+      }
+    },
+  });
+
 export const createSlackTools = async (slackToken: string) => {
   const slack = await slackClient(slackToken);
   const postMessage = (channelId: string, message: string, blocks?: Block[], threadTs?: string) =>
@@ -521,6 +579,20 @@ export const createSlackTools = async (slackToken: string) => {
     slack.getReaction(channelId, timestamp);
   const editMessage = (channelId: string, ts: string, text: string, blocks?: Block[]) =>
     slack.editMessage({ channel: channelId, ts, text, blocks });
+  const scheduleMessage = (
+    channelId: string,
+    text: string,
+    postAt: number,
+    blocks?: Block[],
+    threadTs?: string,
+  ) =>
+    slack.scheduleMessage({
+      channel: channelId,
+      text,
+      post_at: postAt,
+      blocks,
+      thread_ts: threadTs,
+    });
 
   return [
     createPostSlackMsgTool(postMessage),
@@ -538,6 +610,7 @@ export const createSlackTools = async (slackToken: string) => {
     createRemovePinTool(slack.removePin),
     createListEmojisTool(slack.getEmojis),
     createEditMessageTool(editMessage),
+    createScheduleMessageTool(scheduleMessage),
   ];
 };
 

@@ -1,5 +1,6 @@
 import {
   ChatPostMessageArguments,
+  ChatScheduleMessageArguments,
   ChatUpdateArguments,
   ConversationsHistoryResponse,
   ConversationsListResponse,
@@ -190,6 +191,12 @@ export const slackClient = async (token: string) => {
     return response;
   };
 
+  const scheduleMessage = async (options: ChatScheduleMessageArguments) => {
+    const response = await client.chat.scheduleMessage(options);
+    logger.info('scheduleMessage:', { response });
+    return response;
+  };
+
   const getReaction = async (channelId: string, timestamp: string, full: boolean = false) => {
     const response = await client.reactions.get({
       channel: channelId,
@@ -256,6 +263,7 @@ export const slackClient = async (token: string) => {
     getMessages,
     postMessage,
     editMessage,
+    scheduleMessage,
     getReaction,
     addReaction,
     getPins,
