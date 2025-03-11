@@ -8,11 +8,11 @@ import {
 
 const searchParamsSchema = z.object({
   query: z.string().describe('The optimized search query to find relevant information'),
-  metadataFilter: z
+  sqlFilter: z
     .string()
     .optional()
     .describe(
-      'The metadata filter to apply to the search, if not provided, it will be empty string',
+      'SQL WHERE clause to filter search results. Only include when relevant to the query.',
     ),
   limit: z.number().default(5).describe('Number of results to return'),
 });
@@ -30,15 +30,22 @@ GUIDELINES FOR EFFECTIVE QUERIES:
 - Focus on specific topics, entities, or actions mentioned by the user
 - Extract the core information needs from the user's message
 
-Filter the search by metadata. Metadata filter examples: 
-- based on range: created_at >= datetime('now', '-1 day')
-- before time: created_at <= "2025-02-12 09:00:00"
-- after time: created_at >= "2025-02-11 14:30:00"
+SQL filter examples for date/time filtering: 
+- Recent items: created_at >= datetime('now', '-1 hour')
+- Before specific date: created_at <= '2025-02-12 09:00:00'
+- After specific date: created_at >= '2025-02-11 14:30:00'
+- Date range: created_at >= '2025-02-11' AND created_at < '2025-02-12'
+- Today only: date(created_at) = date('now')
+
+You can also filter on content: content LIKE '%keyword%'
+
+Note: The created_at field is stored as DATETIME in SQLite, so you can use all SQLite's 
+date/time functions like datetime(), date(), time(), strftime(), etc.
 
 If the user didn't specify any particular topic, come up with your best guess based on the user's message.
 ${formatInstructionsEscaped}
 
-Only include metadataFilter when it's relevant to the user's query. If the user doesn't specify time periods or other constraints, leave it as empty string.
+Only include sqlFilter when it's relevant to the user's query. If the user doesn't specify time periods or other constraints, leave it as empty string.
 `;
 
 const searchSystemPrompt = SystemMessagePromptTemplate.fromTemplate(searchSystemTemplateText);
