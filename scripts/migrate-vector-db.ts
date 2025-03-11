@@ -79,9 +79,22 @@ const migrateVectorDb = async (namespace: string = 'experiences'): Promise<boole
     return false;
   }
 
-  // Create a timestamp for the backup filename
-  const timestamp = new Date().toISOString().replace(/:/g, '-');
-  const originalDbBackupPath = join(dataDir, `${namespace}-store-backup-${timestamp}.db`);
+  // Create backup directory - only if migration is needed
+  const backupDir = join(dataDir, 'backup-' + new Date().toISOString().replace(/:/g, '-'));
+  if (!existsSync(backupDir)) {
+    mkdirSync(backupDir, { recursive: true });
+  }
+
+  // Backup the original files
+  const dbBackupPath = join(backupDir, basename(dbFilePath));
+
+  try {
+    copyFileSync(dbFilePath, dbBackupPath);
+    logger.info(`Created backup in: ${backupDir}`);
+  } catch (error: any) {
+    logger.error(`Failed to create backup: ${error.message || String(error)}`);
+    return false;
+  }
 
   // Extract data from content_store
   let records: any[] = [];
@@ -152,7 +165,8 @@ const migrateVectorDb = async (namespace: string = 'experiences'): Promise<boole
   sourceDb.close();
   if (targetDb) targetDb.close();
 
-  // Rename the original database as backup
+  // Rename the original database to preserve it
+  const originalDbBackupPath = join(dataDir, `${namespace}-store-original.db`);
   try {
     renameSync(dbFilePath, originalDbBackupPath);
     logger.info(`Renamed original database to: ${originalDbBackupPath}`);
