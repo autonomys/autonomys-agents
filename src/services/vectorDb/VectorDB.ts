@@ -246,6 +246,7 @@ export class VectorDB {
         const candidateListStr = candidateRows.map(row => row.rowid).join(',');
         // Append the WHERE clause to filter by candidate rows
         queryString += ` WHERE c.rowid IN (${candidateListStr})`;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } catch (error: any) {
         logger.error('Error applying SQL filter:', {
           filter: sqlFilter,
@@ -309,50 +310,6 @@ export class VectorDB {
       }>;
     } catch (error) {
       logger.error(`Error executing SQL query: ${error}`);
-      throw error;
-    }
-  }
-
-  // Add a safer alternative that uses parameterized queries for common use cases
-  async queryContentSafe(options: {
-    limit?: number;
-    offset?: number;
-    dateFrom?: string;
-    dateTo?: string;
-    contentFilter?: string;
-  }) {
-    const { limit = 100, offset = 0, dateFrom, dateTo, contentFilter } = options;
-
-    let query = 'SELECT rowid, content, created_at FROM content_store WHERE 1=1';
-    const params: any[] = [];
-
-    if (dateFrom) {
-      query += ' AND created_at >= ?';
-      params.push(dateFrom);
-    }
-
-    if (dateTo) {
-      query += ' AND created_at <= ?';
-      params.push(dateTo);
-    }
-
-    if (contentFilter) {
-      query += ' AND content LIKE ?';
-      params.push(`%${contentFilter}%`);
-    }
-
-    query += ' ORDER BY created_at DESC LIMIT ? OFFSET ?';
-    params.push(limit, offset);
-
-    try {
-      const statement = this.db.prepare(query);
-      return statement.all(...params) as Array<{
-        rowid: number;
-        content: string;
-        created_at: string;
-      }>;
-    } catch (error) {
-      logger.error(`Error executing parameterized query: ${error}`);
       throw error;
     }
   }

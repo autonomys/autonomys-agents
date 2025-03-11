@@ -123,6 +123,7 @@ export const createExperienceVectorDbQueryContentTool = (
           resultCount: memories.length,
         });
         return memories;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } catch (error: any) {
         logger.error('SQL query rejected', {
           sqlQuery,
