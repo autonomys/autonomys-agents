@@ -80,25 +80,55 @@ export const createExperienceVectorDbQueryContentTool = (
   new DynamicStructuredTool({
     name: 'experience_vector_db_query_content',
     description: `
-      Search your memory database for past experiences and interactions using plain SQL rather than semantic search.
+      Search your memory database for past experiences and interactions using SQL queries.
+
       The Schema of the database table (content_store) is as follows:
-        - id: INTEGER PRIMARY KEY AUTOINCREMENT
+        - rowid: INTEGER PRIMARY KEY AUTOINCREMENT
         - content: TEXT
         - created_at: DATETIME
+      
       USE THIS TOOL WHEN:
-        - You want to query the content of the experiences dataabase but don't need to do semantic search.
-      EXAMPLES:
+        - You want to query the content of the experiences database but don't need to do semantic search.
+      
+      EXAMPLES USE CASES:
         - Find the last 10 experiences
         - Find all experiences in the last hour
         - Find experiences with a specific CID
+
+      SECURITY NOTES:
+        - Only SELECT queries against the content_store table are allowed
+        - Queries are validated to prevent dangerous operations
+        - Queries must include the content_store table
       `,
     schema: z.object({
-      sqlQuery: z.string().describe('The SQL query to query the content of the vector database.'),
+      sqlQuery: z.string().describe(`
+        SQL query to execute. Must be a SELECT query targeting the content_store table.
+        
+        Common patterns:
+        - Filtering by date: WHERE created_at >= datetime('now', '-1 hour')
+        - Filtering by content: WHERE content LIKE '%keyword%'
+        - Limiting results: LIMIT 10
+        - Sorting: ORDER BY created_at DESC
+        - Date functions: date(created_at) = date('now')
+        
+        Note: For security, only SELECT queries against the content_store table are allowed.
+        Dangerous operations (DELETE, UPDATE, INSERT, etc.) will be rejected.
+      `),
     }),
-    func: async ({ sqlQuery }) => {
-      const memories = await queryContent(sqlQuery);
-      logger.info('Queried vector db', { sqlQuery, memories });
-      return memories;
+    func: async ({ sqlQuery }: { sqlQuery: string }) => {
+      try {
+        const memories = await queryContent(sqlQuery);
+        logger.info('Queried vector db with SQL query', {
+          sqlQuery,
+          resultCount: memories.length,
+        });
+        return memories;
+      } catch (error: any) {
+        logger.error('SQL query rejected', {
+          sqlQuery,
+          error: error.message,
+        });
+      }
     },
   });
 
