@@ -108,6 +108,9 @@ contract AgentMemory {
         if (endIndex > labels.length) {
             endIndex = labels.length;
         }
+        if (startIndex >= labels.length) {
+            return new bytes32[](0);
+        }
         bytes32[] memory paginatedLabels = new bytes32[](endIndex - startIndex);
         for (uint256 i = startIndex; i < endIndex; i++) {
             paginatedLabels[i - startIndex] = labels[i];
