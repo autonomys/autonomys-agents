@@ -2,7 +2,7 @@ import { DynamicStructuredTool } from '@langchain/core/tools';
 import { z } from 'zod';
 import { createLogger } from '../../../utils/logger.js';
 import axios from 'axios';
-import { AddTaskResponse } from './types.js';
+import { AddTaskResponse, GetTasksResponse } from './types.js';
 
 const logger = createLogger('scheduler-tool');
 
@@ -12,14 +12,14 @@ const logger = createLogger('scheduler-tool');
  * @param namespace - The namespace for the agent (default: 'default')
  * @returns A DynamicStructuredTool that can be used to add tasks
  */
-export const createSchedulerAddTaskTool = (port: number, namespace: string = 'default') =>
+export const createSchedulerAddTaskTool = (port: number, namespace: string = 'orchestrator') =>
   new DynamicStructuredTool({
     name: 'scheduler_add_task',
     description: `
       Add a new task to your schedule. Use this tool when you identify something important that needs to be done later.
       
       USAGE GUIDANCE:
-      - Create tasks for follow-up actions that can't be completed now
+      - Create tasks for follow-up actions that can't be completed now or you wish to schedule for a future time
       - Use clear, specific descriptions for the task
       - Specify a future time when the task should be executed
       - Remember that you will be the one executing this task later
@@ -85,3 +85,61 @@ export const createSchedulerAddTaskTool = (port: number, namespace: string = 'de
       }
     },
   });
+
+/**
+ * Creates a tool that allows the agent to get the current list of tasks
+ * @param port - The port number where the API is running
+ * @param namespace - The namespace for the agent (default: 'default')
+ * @returns A DynamicStructuredTool that can be used to get tasks
+ */
+export const createSchedulerGetTasksTool = (port: number, namespace: string = 'orchestrator') =>
+  new DynamicStructuredTool({
+    name: 'scheduler_get_tasks',
+    description: `
+      Retrieve your current task list including scheduled, current, and completed tasks.
+      Use this tool to check what tasks are already scheduled to avoid creating duplicate tasks.
+      
+      USAGE GUIDANCE:
+      - Check this before scheduling similar tasks that might already be planned
+      - Use to review your upcoming work
+      - Helpful when you need to prioritize or manage your schedule
+    `,
+    schema: z.object({}),
+    func: async () => {
+      try {
+        const { data } = await axios.get<GetTasksResponse>(
+          `http://localhost:${port}/api/${namespace}/tasks`,
+        );
+
+        logger.info('Retrieved task list via API', {
+          namespace,
+          currentTaskCount: data.tasks.current ? 1 : 0,
+          scheduledTaskCount: data.tasks.scheduled.length,
+          completedTaskCount: data.tasks.completed.length,
+        });
+
+        return {
+          success: true,
+          tasks: data.tasks,
+        };
+      } catch (error) {
+        logger.error('Failed to get tasks', {
+          error: error instanceof Error ? error.message : String(error),
+          namespace,
+        });
+
+        return {
+          success: false,
+          error:
+            error instanceof Error ? error.message : 'Unknown error occurred when retrieving tasks',
+        };
+      }
+    },
+  });
+
+export const createAllSchedulerTools = (port: number, namespace: string = 'orchestrator') => {
+  return [
+    createSchedulerAddTaskTool(port, namespace),
+    createSchedulerGetTasksTool(port, namespace),
+  ];
+};

@@ -27,3 +27,15 @@ export interface AddTaskResponse {
   task?: ScheduledTaskResponse;
   message: string;
 }
+
+/**
+ * The response from the task list API endpoint
+ */
+export interface GetTasksResponse {
+  namespace: string;
+  tasks: {
+    current?: ScheduledTaskResponse;
+    scheduled: ScheduledTaskResponse[];
+    completed: ScheduledTaskResponse[];
+  };
+}
