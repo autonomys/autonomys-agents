@@ -11,6 +11,9 @@ export interface IssueInfo {
   created_at: string;
   updated_at: string;
   html_url: string;
+  user: {
+    login: string;
+  };
 }
 
 export interface CommentInfo {
@@ -123,6 +126,7 @@ export interface PRCommentInfo extends CommentInfo {
   position?: number;
   path?: string;
   commit_id?: string;
+  is_review_comment?: boolean;
 }
 
 export interface WatchedRepoInfo {
@@ -137,6 +141,13 @@ export interface WatchedRepoInfo {
     subscribed: boolean;
     ignored: boolean;
   };
+}
+
+export interface UserInfo {
+  login: string;
+  name?: string;
+  avatar_url?: string;
+  html_url: string;
 }
 
 export interface GitHubClient {
@@ -157,6 +168,8 @@ export interface GitHubClient {
   watchRepo: (owner: string, repo: string, ignored?: boolean) => Promise<void>;
   unwatchRepo: (owner: string, repo: string) => Promise<void>;
   listWatchedRepos: () => Promise<WatchedRepoInfo[]>;
+  searchIssues: (query: string, state?: 'open' | 'closed' | 'all') => Promise<IssueInfo[]>;
+  getAuthenticatedUser: () => Promise<UserInfo>;
 }
 
 export const githubClient = async (
@@ -185,6 +198,9 @@ export const githubClient = async (
           created_at: issue.created_at,
           updated_at: issue.updated_at,
           html_url: issue.html_url,
+          user: {
+            login: issue.user?.login || 'unknown',
+          },
         }),
       );
     } catch (error) {
@@ -212,6 +228,9 @@ export const githubClient = async (
         created_at: response.data.created_at,
         updated_at: response.data.updated_at,
         html_url: response.data.html_url,
+        user: {
+          login: response.data.user?.login || 'unknown',
+        },
       };
     } catch (error) {
       logger.error('Error creating GitHub issue:', error);
@@ -430,13 +449,22 @@ export const githubClient = async (
 
   const listPRComments = async (pull_number: number): Promise<PRCommentInfo[]> => {
     try {
-      const response = await octokit.pulls.listReviewComments({
+      // Get review comments (comments on specific lines of code)
+      const reviewCommentsResponse = await octokit.pulls.listReviewComments({
         owner,
         repo,
         pull_number,
       });
 
-      return response.data.map(comment => ({
+      // Get general comments on the PR
+      const generalCommentsResponse = await octokit.issues.listComments({
+        owner,
+        repo,
+        issue_number: pull_number, // For general comments, use issue_number (same as pull_number)
+      });
+
+      // Process review comments
+      const reviewComments = reviewCommentsResponse.data.map(comment => ({
         id: comment.id,
         body: comment.body || '',
         user: {
@@ -448,7 +476,35 @@ export const githubClient = async (
         position: comment.position || undefined,
         path: comment.path,
         commit_id: comment.commit_id,
+        is_review_comment: true,
       }));
+
+      // Process general comments
+      const generalComments = generalCommentsResponse.data.map(comment => ({
+        id: comment.id,
+        body: comment.body || '',
+        user: {
+          login: comment.user?.login || 'unknown',
+        },
+        created_at: comment.created_at,
+        updated_at: comment.updated_at,
+        html_url: comment.html_url,
+        is_review_comment: false,
+      }));
+
+      // Combine both types of comments and sort by creation date (newest first)
+      const allComments = [...reviewComments, ...generalComments].sort(
+        (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+      );
+
+      logger.info('Listed PR comments:', {
+        pull_number,
+        reviewCommentsCount: reviewComments.length,
+        generalCommentsCount: generalComments.length,
+        totalCount: allComments.length,
+      });
+
+      return allComments;
     } catch (error) {
       logger.error('Error listing PR comments:', error);
       throw error;
@@ -507,7 +563,7 @@ export const githubClient = async (
       const response = await octokit.reactions.createForPullRequestReviewComment({
         owner,
         repo,
-        comment_id: params.comment_id!,
+        comment_id: params.comment_id || 0,
         content: params.content,
       });
 
@@ -596,6 +652,61 @@ export const githubClient = async (
     }
   };
 
+  const searchIssues = async (
+    query: string,
+    state: 'open' | 'closed' | 'all' = 'open',
+  ): Promise<IssueInfo[]> => {
+    try {
+      // Format the search query to include repo and state
+      const searchQuery = `repo:${owner}/${repo} is:issue state:${state} ${query}`;
+
+      logger.info('Searching GitHub issues:', { query: searchQuery });
+
+      const response = await octokit.search.issuesAndPullRequests({
+        q: searchQuery,
+        sort: 'updated',
+        order: 'desc',
+        per_page: 20,
+      });
+
+      // Filter out pull requests, keep only issues
+      return response.data.items
+        .filter(item => !item.pull_request)
+        .map(issue => ({
+          number: issue.number,
+          title: issue.title,
+          state: issue.state,
+          body: issue.body || undefined,
+          created_at: issue.created_at,
+          updated_at: issue.updated_at,
+          html_url: issue.html_url,
+          user: {
+            login: issue.user?.login || 'unknown',
+          },
+        }));
+    } catch (error) {
+      logger.error('Error searching GitHub issues:', error);
+      throw error;
+    }
+  };
+
+  const getAuthenticatedUser = async (): Promise<UserInfo> => {
+    try {
+      logger.info('Getting authenticated user info');
+      const response = await octokit.users.getAuthenticated();
+
+      return {
+        login: response.data.login,
+        name: response.data.name || undefined,
+        avatar_url: response.data.avatar_url || undefined,
+        html_url: response.data.html_url,
+      };
+    } catch (error) {
+      logger.error('Error getting authenticated user:', error);
+      throw error;
+    }
+  };
+
   return {
     listIssues,
     createIssue,
@@ -612,5 +723,7 @@ export const githubClient = async (
     watchRepo,
     unwatchRepo,
     listWatchedRepos,
+    searchIssues,
+    getAuthenticatedUser,
   };
 };

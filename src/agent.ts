@@ -11,6 +11,7 @@ import { createTwitterApi } from './services/twitter/client.js';
 import { createApiServer, registerRunnerWithApi, withApiLogger } from './api/server.js';
 import { createSlackTools } from './agents/tools/slack/index.js';
 import { createAllSchedulerTools } from './agents/tools/scheduler/index.js';
+import { createGitHubTools } from './agents/tools/github/index.js';
 
 const character = config.characterConfig;
 const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
@@ -39,12 +40,19 @@ const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
     ? await createSlackTools(config.slackConfig.SLACK_APP_TOKEN)
     : [];
 
+  //If github api key is provided, add github tools
+  const { GITHUB_TOKEN, GITHUB_OWNER, GITHUB_REPO } = config.githubConfig;
+  const githubTools =
+    GITHUB_TOKEN && GITHUB_OWNER && GITHUB_REPO
+      ? await createGitHubTools(GITHUB_TOKEN, GITHUB_OWNER, GITHUB_REPO)
+      : [];
+
   //Orchestrator config
   const prompts = await createPrompts(character, { selfSchedule: true });
 
   return {
     modelConfigurations: config.orchestratorConfig.model_configurations,
-    tools: [twitterAgentTool, ...webSearchTool, ...slackTools, ...schedulerTools],
+    tools: [twitterAgentTool, ...webSearchTool, ...slackTools, ...githubTools, ...schedulerTools],
     prompts,
     saveExperiences,
     monitoring: {
