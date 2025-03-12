@@ -126,10 +126,16 @@ export const createEditMessageTool = (
         });
         const result = await editMessage(channelId, timestamp, text, blocks);
         logger.info('Message edited in Slack:', { result });
-        return JSON.stringify(result);
+        return {
+          success: true,
+          message: result,
+        };
       } catch (error) {
         logger.error('Error editing message in Slack:', error);
-        throw error;
+        return {
+          success: false,
+          error,
+        };
       }
     },
   });
@@ -184,10 +190,16 @@ export const createScheduleMessageTool = (
         });
         const result = await scheduleMessage(channelId, text, postAt, blocks, threadTs);
         logger.info('Message scheduled in Slack:', { result });
-        return JSON.stringify(result);
+        return {
+          success: true,
+          message: result,
+        };
       } catch (error) {
         logger.error('Error scheduling message in Slack:', error);
-        throw error;
+        return {
+          success: false,
+          error,
+        };
       }
     },
   });
@@ -218,10 +230,16 @@ export const createGetPermalinkTool = (
         });
         const result = await getPermalink(channelId, messageTs);
         logger.info('Got permalink for Slack message:', { result });
-        return JSON.stringify(result);
+        return {
+          success: true,
+          permalink: result.permalink,
+        };
       } catch (error) {
         logger.error('Error getting permalink for Slack message:', error);
-        throw error;
+        return {
+          success: false,
+          error,
+        };
       }
     },
   });

@@ -31,10 +31,16 @@ export const createListBookmarksTool = (
         logger.info('Listing bookmarks in Slack channel:', { channelId });
         const result = await listBookmarks(channelId);
         logger.info('Listed bookmarks in Slack:', { result });
-        return JSON.stringify(result);
+        return {
+          success: true,
+          bookmarks: result.bookmarks,
+        };
       } catch (error) {
         logger.error('Error listing bookmarks in Slack:', error);
-        throw error;
+        return {
+          success: false,
+          error,
+        };
       }
     },
   });
@@ -80,10 +86,16 @@ export const createAddBookmarkTool = (
         });
         const result = await addBookmark(channelId, title, link, entityId, emoji);
         logger.info('Added bookmark in Slack:', { result });
-        return JSON.stringify(result);
+        return {
+          success: true,
+          bookmark: result,
+        };
       } catch (error) {
         logger.error('Error adding bookmark in Slack:', error);
-        throw error;
+        return {
+          success: false,
+          error,
+        };
       }
     },
   });
@@ -122,10 +134,16 @@ export const createEditBookmarkTool = (
         });
         const result = await editBookmark(channelId, bookmarkId, title, emoji);
         logger.info('Edited bookmark in Slack:', { result });
-        return JSON.stringify(result);
+        return {
+          success: true,
+          bookmark: result,
+        };
       } catch (error) {
         logger.error('Error editing bookmark in Slack:', error);
-        throw error;
+        return {
+          success: false,
+          error,
+        };
       }
     },
   });
@@ -152,10 +170,16 @@ export const createRemoveBookmarkTool = (
         logger.info('Removing bookmark from Slack:', { channelId, bookmarkId });
         const result = await removeBookmark(channelId, bookmarkId);
         logger.info('Removed bookmark from Slack:', { result });
-        return JSON.stringify(result);
+        return {
+          success: true,
+          bookmark: result,
+        };
       } catch (error) {
         logger.error('Error removing bookmark from Slack:', error);
-        throw error;
+        return {
+          success: false,
+          error,
+        };
       }
     },
   });
