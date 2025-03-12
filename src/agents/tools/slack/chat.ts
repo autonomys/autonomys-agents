@@ -46,10 +46,16 @@ export const createPostSlackMsgTool = (
         logger.info('Posting message to Slack - Received data:', message);
         const result = await postMessage(channelId, message, blocks, threadTs);
         logger.info('Message posted to Slack:', { result });
-        return JSON.stringify(result);
+        return {
+          success: true,
+          message: result,  
+        };
       } catch (error) {
         logger.error('Error posting message to Slack:', error);
-        throw error;
+        return {
+          success: false,
+          error: error,
+        };
       }
     },
   });
