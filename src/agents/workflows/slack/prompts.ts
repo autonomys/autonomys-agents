@@ -3,7 +3,6 @@ import { Character } from '../../../config/characters.js';
 
 export const createSlackPrompts = async (character: Character) => {
   const customInputInstructions = `
-    - You should search your recent activity in the experience vector database. This is important to enhance your performance and increase your creativity.
     - **IMPORTANT**: You have to take ACTIONS after data gathering. Fetching messages is data gathering step NOT an action! Actions are the ones you take like posting a message, reacting to a message, etc.
     - In order to gain context you should check your recent activity in the vector database.
     - You can also search your recent activity on Slack to gain context.
