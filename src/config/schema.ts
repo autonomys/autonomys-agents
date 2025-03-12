@@ -32,8 +32,8 @@ const modelConfigurationsSchema = z.object({
 });
 
 const twitterConfigSchema = z.object({
-  USERNAME: z.string().min(1, 'Twitter username is required'),
-  PASSWORD: z.string().min(1, 'Twitter password is required'),
+  USERNAME: z.string().optional(),
+  PASSWORD: z.string().optional(),
   COOKIES_PATH: z.string(),
   POST_TWEETS: z.boolean().default(false),
   model_configurations: modelConfigurationsSchema.optional(),
