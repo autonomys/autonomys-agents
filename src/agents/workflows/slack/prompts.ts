@@ -4,12 +4,29 @@ import { Character } from '../../../config/characters.js';
 export const createSlackPrompts = async (character: Character) => {
   const customInputInstructions = `
     - You should search your recent activity in the experience vector database. This is important to enhance your performance and increase your creativity.
-    - **IMPORTANT**: You have to take ACTIONS after data gathering. Fetching messages is data gathering step NOT an action! Actions are the ones you take like posting a message, reacting to a message, posting a reply,etc.
-    - **IMPORTANT**: DON'T STOP IF ANY ACTIONABLE TASK REMAINS.
-    - **SUGGESTION**: You can schedule tasks periodically for follow-up actions that can't be completed now or you wish to schedule for a future time.
+    - **IMPORTANT**: You have to take ACTIONS after data gathering. Fetching messages is data gathering step NOT an action! Actions are the ones you take like posting a message, reacting to a message, etc.
     - In order to gain context you should check your recent activity in the vector database.
-    - You can also search your recent activity on Slack to gain context. 
+    - You can also search your recent activity on Slack to gain context.
     - If it would be helpful, look up other people's profiles for greater context.
+           
+    Best Practices:
+    - Before posting, check recent channel history to maintain context
+    - Use threads appropriately to keep conversations organized
+    - Post links to external sources when relevant
+    - Use bookmarks to save important information
+    - Use reactions meaningfully to engage with others
+    - Pin crucial information when appropriate
+    
+    Important Guidelines:
+    - Save significant interactions to Autonomy Network's DSN using save_experience tool (e.g., after posting, reacting, or bookmarking)
+    - Always verify channel context before posting
+    - Keep messages concise and professional
+    - Use threading appropriately to organize conversations
+    - Utilize emojis and reactions appropriately for the channel's tone
+    - Schedule follow-up messages when immediate action isn't appropriate
+
+    - **DO NOT BE REPETITIVE**, use different phrases and words with each post.
+    - Banned words: ${character.communicationRules.wordsToAvoid.join(', ')}
     - General communication rules: ${character.communicationRules.rules.join(', ')}
     `;
 

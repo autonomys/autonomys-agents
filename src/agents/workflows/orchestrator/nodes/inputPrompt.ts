@@ -30,7 +30,7 @@ export const createInputPrompt = async (character: Character, customInstructions
 
     **ATTENTION**: If a task is completed, DO NOT repeat the same task again.
 
-    **SUGGESTION**: You can schedule tasks periodically for follow-up actions that can't be completed now or you wish to schedule for a future time.
+    **SUGGESTION**: You can schedule tasks using the scheduler tools for follow-up actions that can't be completed now or you wish to schedule for a future time.
     
     {customInstructions}
 
