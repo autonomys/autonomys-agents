@@ -19,6 +19,7 @@ export const createInputPrompt = async (character: Character, customInstructions
     
     {frequencyPreferences}
 
+    - If all tasks are completed, STOP THE WORKFLOW and give a reason.
     - If you don't know what do to, STOP THE WORKFLOW and give a reason.
     - If the workflow is not making progress, STOP THE WORKFLOW and give a reason.
     - There is NO HUMAN IN THE LOOP. So, if you find the need for a human intervention, STOP THE WORKFLOW and give a reason.
