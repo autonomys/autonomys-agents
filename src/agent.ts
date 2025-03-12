@@ -9,7 +9,7 @@ import { createTwitterAgent } from './agents/workflows/twitter/twitterAgent.js';
 import { config } from './config/index.js';
 import { createTwitterApi } from './services/twitter/client.js';
 import { withApiLogger } from './api/server.js';
-import { createSlackTools } from './agents/tools/slack/index.js';
+import { createSlackAgent } from './agents/workflows/slack/slackAgent.js';
 import { createAllSchedulerTools } from './agents/tools/scheduler/index.js';
 import { createGitHubTools } from './agents/tools/github/index.js';
 import { registerOrchestratorRunner } from './agents/workflows/registration.js';
@@ -37,8 +37,14 @@ const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
   });
 
   //If slack api key is provided, add slack tools
-  const slackTools = config.slackConfig.SLACK_APP_TOKEN
-    ? await createSlackTools(config.slackConfig.SLACK_APP_TOKEN)
+  const slackAgentTool = config.slackConfig.SLACK_APP_TOKEN
+    ? [createSlackAgent(config.slackConfig.SLACK_APP_TOKEN, character, {
+        tools: [...schedulerTools],
+        saveExperiences,
+        monitoring: {
+          enabled: monitoringEnabled,
+        },
+      })]
     : [];
 
   //If github api key is provided, add github tools
@@ -53,7 +59,7 @@ const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
 
   return {
     modelConfigurations: config.orchestratorConfig.model_configurations,
-    tools: [twitterAgentTool, ...webSearchTool, ...slackTools, ...githubTools, ...schedulerTools],
+    tools: [twitterAgentTool, ...slackAgentTool, ...webSearchTool, ...githubTools, ...schedulerTools],
     prompts,
     saveExperiences,
     monitoring: {

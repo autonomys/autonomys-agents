@@ -112,7 +112,7 @@ const defaultOptions = {
     enabled: false,
     messageCleaner: cleanMessageData,
   },
-  recursionLimit: 50,
+  recursionLimit: 100,
 };
 
 const createOrchestratorRunnerConfig = async (
