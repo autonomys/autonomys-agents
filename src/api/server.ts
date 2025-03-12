@@ -1,7 +1,6 @@
 import express from 'express';
 import cors from 'cors';
 import { createLogger } from '../utils/logger.js';
-import { OrchestratorRunner } from '../agents/workflows/orchestrator/orchestratorWorkflow.js';
 import { ApiServer, LogMetadata } from './types.js';
 import { config } from '../config/index.js';
 import { createApiRouter } from './routes/index.js';
@@ -9,7 +8,7 @@ import { broadcastTaskUpdateUtility } from './controller/TaskController.js';
 import { Logger } from 'winston';
 import { attachLoggerUtility } from './controller/LogsController.js';
 import { broadcastLogUtility } from './controller/LogsController.js';
-import { getRegisteredNamespaces, registerRunnerUtility } from './controller/WorkflowController.js';
+import { getRegisteredNamespaces } from './controller/WorkflowController.js';
 const logger = createLogger('api-server');
 
 let apiServer: ApiServer | null = null;
@@ -30,7 +29,6 @@ const createSingletonApiServer = (): ApiServer => {
   return {
     app,
     server,
-    registerRunner: registerRunnerUtility,
     broadcastLog: broadcastLogUtility,
     broadcastTaskUpdate: broadcastTaskUpdateUtility,
     attachLogger: attachLoggerUtility,
@@ -43,11 +41,6 @@ export const createApiServer = () => {
     apiServer = createSingletonApiServer();
   }
   return apiServer;
-};
-
-export const registerRunner = (namespace: string, runner: OrchestratorRunner) => {
-  const api = createApiServer();
-  return api.registerRunner(namespace, runner);
 };
 
 export const broadcastLog = (
@@ -84,15 +77,4 @@ export const withApiLogger = (namespace: string) => {
   return {
     logger: enhancedLogger,
   };
-};
-
-// Helper function
-export const registerRunnerWithApi = async (
-  runnerPromise: Promise<OrchestratorRunner>,
-  api: ApiServer,
-  namespace: string,
-): Promise<OrchestratorRunner> => {
-  const runner = await runnerPromise;
-  api.registerRunner(namespace, runner);
-  return runner;
 };
