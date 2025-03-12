@@ -5,7 +5,8 @@ import axios from 'axios';
 
 const logger = createLogger('webhook-issue-report-tool');
 
-export const createWebhookIssueReportTool = (port: number) =>
+// This tool will be used to report issues to the webhook of other agents in future.
+export const createWebhookIssueReportTool = (url: string) =>
   new DynamicStructuredTool({
     name: 'webhook_issue_report',
     description: `Report an issue to with the webhook`,
@@ -14,7 +15,7 @@ export const createWebhookIssueReportTool = (port: number) =>
     }),
     func: async ({ message }: { message: string }) => {
       logger.info('Reporting issue', { message });
-      const _response = await axios.post(`http://localhost:${port}/api/webhook`, {
+      const _response = await axios.post(`${url}/api/webhook`, {
         type: 'issue',
         message,
       });

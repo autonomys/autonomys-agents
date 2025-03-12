@@ -32,6 +32,8 @@ export const createInputPrompt = async (character: Character, customInstructions
 
     **IMPORTANT**: In case of encoutering any issues, errors, faults, or difficulties report them to the webhook.
 
+    **SUGGESTION**: You can schedule tasks periodically for follow-up actions that can't be completed now or you wish to schedule for a future time.
+    
     {customInstructions}
 
     {format_instructions}

@@ -32,8 +32,8 @@ const modelConfigurationsSchema = z.object({
 });
 
 const twitterConfigSchema = z.object({
-  USERNAME: z.string().min(1, 'Twitter username is required'),
-  PASSWORD: z.string().min(1, 'Twitter password is required'),
+  USERNAME: z.string().optional(),
+  PASSWORD: z.string().optional(),
   COOKIES_PATH: z.string(),
   POST_TWEETS: z.boolean().default(false),
   model_configurations: modelConfigurationsSchema.optional(),
@@ -47,6 +47,11 @@ const githubConfigSchema = z.object({
   GITHUB_TOKEN: z.string().optional(),
   GITHUB_OWNER: z.string().optional(),
   GITHUB_REPO: z.string().optional(),
+});
+
+const notionConfigSchema = z.object({
+  NOTION_TOKEN: z.string().optional(),
+  NOTION_DATABASE_ID: z.string().optional(),
 });
 
 const autoDriveConfigSchema = z
@@ -141,6 +146,7 @@ export const configSchema = z.object({
   orchestratorConfig: orchestratorConfigSchema,
   slackConfig: slackConfigSchema,
   githubConfig: githubConfigSchema,
+  notionConfig: notionConfigSchema,
   SERPAPI_API_KEY: SERPAPI_API_KEY,
   NODE_ENV: z.enum(['development', 'production', 'test']),
   API_PORT: z.number().int().positive().default(3001),
