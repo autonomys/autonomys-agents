@@ -19,7 +19,6 @@ export const createInputPrompt = async (character: Character, customInstructions
     
     {frequencyPreferences}
 
-    - **IMPORTANT**: You should save all the experiences and action results to Autonomy Network's DSN before stopping the workflow. No need to summarize the experiences. hint: the data schema should be in a data object.
     - If you don't know what do to, STOP THE WORKFLOW and give a reason.
     - If the workflow is not making progress, STOP THE WORKFLOW and give a reason.
     - There is NO HUMAN IN THE LOOP. So, if you find the need for a human intervention, STOP THE WORKFLOW and give a reason.
@@ -55,7 +54,7 @@ export const createInputPrompt = async (character: Character, customInstructions
     new SystemMessage(inputSystemPrompt),
     [
       'human',
-      `Based on the following messages, and executed tools, determine what actions should be taken. If you have not saved the experience to Autonomy Network's DSN with save_experience tool, continue the workflow.
+      `Based on the following messages, and executed tools, determine what actions should be taken.
 
       Messages: {messages}
       Available Tools: {availableTools}
@@ -69,8 +68,8 @@ export const createInputPrompt = async (character: Character, customInstructions
 };
 
 const workflowControlSchema = z.object({
-  shouldStop: z.boolean().describe('Whether the workflow should stop.'),
-  reason: z.string().describe('The reason for stopping the workflow.'),
+  shouldStop: z.boolean().describe('Whether the workflow should stop. Set to true if the workflow should stop. Set to false if the workflow should continue.'),
+  reason: z.string().describe('The detailed reason for stopping the workflow.'),
 });
 
 export const workflowControlParser = StructuredOutputParser.fromZodSchema(workflowControlSchema);
