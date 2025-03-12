@@ -1,14 +1,5 @@
 import { DynamicStructuredTool } from '@langchain/core/tools';
-import {
-  Block,
-  ChatGetPermalinkResponse,
-  ChatScheduleMessageResponse,
-  ChatUpdateResponse,
-  EmojiListResponse,
-  PinsAddResponse,
-  PinsListResponse,
-  PinsRemoveResponse,
-} from '@slack/web-api';
+import { PinsAddResponse, PinsListResponse, PinsRemoveResponse } from '@slack/web-api';
 import { z } from 'zod';
 import { createLogger } from '../../../utils/logger.js';
 

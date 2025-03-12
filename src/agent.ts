@@ -38,13 +38,15 @@ const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
 
   //If slack api key is provided, add slack tools
   const slackAgentTool = config.slackConfig.SLACK_APP_TOKEN
-    ? [createSlackAgent(config.slackConfig.SLACK_APP_TOKEN, character, {
-        tools: [...schedulerTools],
-        saveExperiences,
-        monitoring: {
-          enabled: monitoringEnabled,
-        },
-      })]
+    ? [
+        createSlackAgent(config.slackConfig.SLACK_APP_TOKEN, character, {
+          tools: [...schedulerTools],
+          saveExperiences,
+          monitoring: {
+            enabled: monitoringEnabled,
+          },
+        }),
+      ]
     : [];
 
   //If github api key is provided, add github tools
@@ -59,7 +61,13 @@ const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
 
   return {
     modelConfigurations: config.orchestratorConfig.model_configurations,
-    tools: [twitterAgentTool, ...slackAgentTool, ...webSearchTool, ...githubTools, ...schedulerTools],
+    tools: [
+      twitterAgentTool,
+      ...slackAgentTool,
+      ...webSearchTool,
+      ...githubTools,
+      ...schedulerTools,
+    ],
     prompts,
     saveExperiences,
     monitoring: {
