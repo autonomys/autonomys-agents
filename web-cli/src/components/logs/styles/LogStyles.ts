@@ -1,0 +1,333 @@
+import { SystemStyleObject, BoxProps, FlexProps, TextProps, ButtonProps } from '@chakra-ui/react';
+import { ElementType } from 'react';
+
+// Styles for the MetaData component
+export const metaDataContainer: BoxProps = {
+  mt: '2',
+  ml: '5',
+  fontSize: ['xs', 'sm'],
+};
+
+export const getMetaDataToggleButton = (isOpen: boolean): FlexProps => ({
+  as: 'button',
+  display: 'flex',
+  alignItems: 'center',
+  bg: isOpen ? 'rgba(255, 0, 204, 0.1)' : 'transparent',
+  px: 2,
+  py: 1,
+  borderRadius: 'md',
+  _hover: {
+    bg: 'rgba(255, 0, 204, 0.15)',
+  },
+  transition: 'all 0.2s',
+  role: 'group',
+  cursor: 'pointer',
+  position: 'relative',
+  borderLeft: '2px solid',
+  borderColor: 'brand.neonPink',
+  boxShadow: isOpen ? '0 0 3px rgba(255, 0, 204, 0.3)' : 'none',
+});
+
+export const metaDataToggleIcon: TextProps = {
+  color: 'brand.neonPink',
+  fontStyle: 'italic',
+  fontWeight: 'normal',
+  fontSize: ['xs', 'sm'],
+  textShadow: '0 0 5px rgba(255, 0, 204, 0.5)',
+  mr: 2,
+};
+
+export const metaDataToggleLabel: TextProps = {
+  color: 'brand.neonPink',
+  fontStyle: 'italic',
+  fontWeight: 'normal',
+  mr: 2,
+};
+
+export const getMetaDataFieldCount = (isOpen: boolean): TextProps => ({
+  as: 'span',
+  fontWeight: 'light',
+  opacity: isOpen ? 0.9 : 0.7,
+  color: 'white',
+  fontSize: 'xs',
+  transition: 'opacity 0.2s',
+  _groupHover: { opacity: 0.9 },
+});
+
+export const metaDataPreviewText: TextProps = {
+  as: 'span',
+  ml: 3,
+  color: 'gray.400',
+  fontSize: 'xs',
+  maxW: '70%',
+  overflow: 'hidden',
+  textOverflow: 'ellipsis',
+  whiteSpace: 'nowrap',
+  display: 'inline-block',
+};
+
+export const metaDataContentContainer: BoxProps = {
+  maxH: '400px',
+  overflowY: 'auto',
+  bg: 'rgba(10, 10, 15, 0.4)',
+  borderRadius: 'md',
+  mt: '2',
+  borderLeft: '2px solid',
+  borderColor: 'brand.neonPink',
+  borderTop: '1px solid',
+  borderTopColor: 'gray.700',
+  borderBottom: '1px solid',
+  borderBottomColor: 'gray.700',
+  borderRight: '1px solid',
+  borderRightColor: 'gray.700',
+  color: 'white',
+  fontSize: ['xs', 'sm'],
+  boxShadow: '0 3px 10px rgba(0, 0, 0, 0.2)',
+  css: {
+    '&::-webkit-scrollbar': {
+      width: '6px',
+      borderRadius: '3px',
+    },
+    '&::-webkit-scrollbar-track': {
+      background: 'rgba(0, 0, 0, 0.1)',
+    },
+    '&::-webkit-scrollbar-thumb': {
+      background: 'rgba(255, 0, 204, 0.3)',
+      borderRadius: '3px',
+    },
+  },
+};
+
+// Styles for the ObjectNode component
+export const objectNodeContainer: BoxProps = {
+  mt: 1,
+  borderRadius: 'md',
+  position: 'relative',
+};
+
+export const getObjectNodeHeader = (depth: number): FlexProps => ({
+  alignItems: 'center',
+  bg: `rgba(0, 0, 0, ${0.1 + depth * 0.05})`,
+  p: 1,
+  borderRadius: 'md',
+  _hover: { bg: `rgba(0, 10, 20, ${0.2 + depth * 0.05})` },
+  transition: 'all 0.2s',
+});
+
+export const objectNodeToggleButton: ButtonProps = {
+  variant: 'ghost' as 'ghost',
+  colorScheme: 'blue',
+  p: 0,
+  minW: '24px',
+  height: '24px',
+  mr: 1,
+  size: 'xs',
+};
+
+export const getObjectNodeChildrenContainer = (isArray: boolean): BoxProps => ({
+  pl: 3,
+  borderLeft: '2px dashed',
+  borderColor: isArray ? 'rgba(21, 101, 192, 0.3)' : 'rgba(0, 188, 212, 0.3)',
+  mt: 1,
+  ml: 1,
+});
+
+// Styles for the MetadataValue component
+export const metadataValueContainer: BoxProps = {
+  mt: 1,
+  p: 1,
+  borderRadius: 'sm',
+  _hover: { bg: 'rgba(0, 0, 0, 0.15)' },
+  transition: 'all 0.2s',
+};
+
+export const metadataValueIndexLabel: TextProps = {
+  color: 'blue.400',
+  fontSize: 'xs',
+  width: '30px',
+  opacity: 0.8,
+};
+
+export const metadataValueNameLabel: TextProps = {
+  fontWeight: 'bold',
+  color: 'cyan.300',
+  mr: 1,
+};
+
+export const getMetadataValueText = (isExpanded: boolean, isLongString: boolean): TextProps => ({
+  as: 'span',
+  wordBreak: 'break-word',
+  maxW: isLongString && !isExpanded ? '600px' : 'none',
+});
+
+export const getMetadataValueExpandButton = (isExpanded: boolean): BoxProps => ({
+  as: 'button',
+  display: 'flex',
+  alignItems: 'center',
+  ml: 2,
+  height: '20px',
+  px: 2,
+  py: 0,
+  fontSize: 'xs',
+  fontWeight: 'medium',
+  color: isExpanded ? 'orange.300' : 'blue.300',
+  bg: isExpanded ? 'rgba(255, 126, 0, 0.1)' : 'rgba(0, 120, 255, 0.1)',
+  border: '1px solid',
+  borderColor: isExpanded ? 'orange.600' : 'blue.600',
+  borderRadius: 'md',
+  _hover: {
+    bg: isExpanded ? 'rgba(255, 126, 0, 0.2)' : 'rgba(0, 120, 255, 0.2)',
+    boxShadow: '0 0 5px rgba(120, 120, 255, 0.3)',
+  },
+  _active: {
+    bg: isExpanded ? 'rgba(255, 126, 0, 0.3)' : 'rgba(0, 120, 255, 0.3)',
+  },
+  cursor: 'pointer',
+});
+
+export const metadataValueTypeLabel: TextProps = {
+  as: 'span',
+  fontSize: 'xs',
+  ml: 2,
+  color: 'gray.500',
+  opacity: 0.6,
+};
+
+export const metadataValueExpandedContent: BoxProps = {
+  mt: 2,
+  p: 2,
+  bg: 'rgba(0, 0, 0, 0.15)',
+  borderRadius: 'md',
+  borderLeft: '2px solid',
+  borderColor: 'orange.700',
+  maxH: '300px',
+  overflowY: 'auto',
+  css: {
+    '&::-webkit-scrollbar': {
+      width: '4px',
+      borderRadius: '2px',
+    },
+    '&::-webkit-scrollbar-track': {
+      background: 'rgba(0, 0, 0, 0.1)',
+    },
+    '&::-webkit-scrollbar-thumb': {
+      background: 'rgba(255, 126, 0, 0.3)',
+      borderRadius: '2px',
+    },
+  },
+};
+
+export const metadataValueExpandedText: TextProps = {
+  as: 'span',
+  wordBreak: 'break-word',
+  whiteSpace: 'pre-wrap',
+  fontSize: 'xs',
+  color: 'orange.300',
+};
+
+// Styles for the LogMessageList component
+export const logMessageListContainer: BoxProps = {
+  flex: '1',
+  overflowY: 'auto',
+  p: 4,
+  bg: 'rgba(20, 20, 30, 0.7)',
+  backdropFilter: 'blur(5px)',
+  fontFamily: "'Consolas', 'Monaco', monospace",
+  color: 'white',
+  whiteSpace: 'pre-wrap',
+  fontSize: ['sm', 'md'],
+  lineHeight: '1.6',
+  css: {
+    '&::-webkit-scrollbar': {
+      width: '8px',
+      borderRadius: '4px',
+    },
+    '&::-webkit-scrollbar-track': {
+      background: 'rgba(0, 0, 0, 0.1)',
+    },
+    '&::-webkit-scrollbar-thumb': {
+      background: 'rgba(255, 0, 204, 0.3)',
+      borderRadius: '4px',
+    },
+  },
+};
+
+export const logMessageListWelcomeText: TextProps = {
+  color: 'brand.neonPink',
+  fontSize: ['md', 'lg', 'xl'],
+  fontStyle: 'italic',
+  textAlign: 'center',
+  my: 8,
+  textShadow: '0 0 15px rgba(255, 0, 204, 0.5)',
+  fontWeight: 'medium',
+  letterSpacing: 'wide',
+};
+
+export const logMessageListLegacyMessage: BoxProps = {
+  mb: 3,
+  p: 3,
+  borderRadius: 'md',
+  bg: 'rgba(0, 0, 0, 0.2)',
+  borderLeft: '3px solid',
+  borderColor: 'gray.600',
+  position: 'relative',
+  transition: 'all 0.2s ease',
+  _hover: {
+    bg: 'rgba(0, 0, 0, 0.3)',
+    boxShadow: '0 0 10px rgba(0, 0, 0, 0.2)',
+  },
+  fontSize: ['xs', 'sm'],
+};
+
+export const getLogMessageListMessageBox = (color: string): BoxProps => ({
+  mb: 3,
+  p: 3,
+  borderRadius: 'md',
+  bg: 'rgba(0, 0, 0, 0.2)',
+  borderLeft: '3px solid',
+  borderColor: color,
+  position: 'relative',
+  transition: 'all 0.2s ease',
+  _hover: {
+    bg: 'rgba(0, 0, 0, 0.3)',
+    boxShadow: '0 0 12px rgba(0, 0, 0, 0.3)',
+  },
+  _before: {
+    content: '""',
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    width: '3px',
+    height: '100%',
+    bg: color,
+    boxShadow: `0 0 8px ${color}`,
+  },
+});
+
+export const logMessageListTimestamp: TextProps = {
+  color: 'gray.400',
+  fontWeight: '500',
+  fontSize: ['xs', 'sm'],
+};
+
+export const logMessageListNamespace: TextProps = {
+  color: 'brand.neonBlue',
+  fontWeight: '500',
+  fontSize: ['xs', 'sm'],
+};
+
+export const getLogMessageListLevel = (color: string): TextProps => ({
+  color: color,
+  fontWeight: '600',
+  fontSize: ['xs', 'sm'],
+  textShadow: `0 0 5px ${color}`,
+});
+
+export const logMessageListMessage: TextProps = {
+  color: 'white',
+  wordBreak: 'break-word',
+  whiteSpace: 'pre-wrap',
+  fontSize: ['xs', 'sm'],
+  fontWeight: 'normal',
+  lineHeight: '1.6',
+};
