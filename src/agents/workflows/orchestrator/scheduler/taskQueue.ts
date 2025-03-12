@@ -97,22 +97,6 @@ export const createTaskQueue = (namespace: string): TaskQueue => {
 
           if (status === 'completed' && result) {
             currentTask.result = result;
-
-            if (result.schedule?.nextWorkflowPrompt && result.schedule?.secondsUntilNextWorkflow) {
-              const nextExecutionTime = new Date(
-                Date.now() + result.schedule.secondsUntilNextWorkflow * 1000,
-              );
-
-              queue.scheduleTask(result.schedule.nextWorkflowPrompt, nextExecutionTime);
-
-              logger.info(
-                `Auto-scheduled next task for ${nextExecutionTime.toISOString()} in namespace: ${namespace}`,
-                {
-                  nextPrompt: result.schedule.nextWorkflowPrompt,
-                  secondsDelay: result.schedule.secondsUntilNextWorkflow,
-                },
-              );
-            }
           } else if (status === 'failed' && result) {
             currentTask.error = result;
           }
