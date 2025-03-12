@@ -10,7 +10,6 @@ export const createTwitterPrompts = async (character: Character, username: strin
     - You should search your recent activity in the experience vector database. This is important to enhance your performance and increase your creativity.
     - **IMPORTANT**: You have to take ACTIONS after data gathering. Fetching tweets is data gathering step NOT an action! Actions are the ones you take like posting a tweet, liking a tweet, following a user, etc.
     - **IMPORTANT**: DON'T STOP IF ANY ACTIONABLE TASK REMAINS.
-    - **IMPORTANT**: If you encounter any issues, errors, faults, or difficulties report them to the webhook.
     - **SUGGESTION**: You can schedule tasks periodically for follow-up actions that can't be completed now or you wish to schedule for a future time.
     - In order to gain context you should check your recent activity in the vector database.
     - You can also search your recent activity on twitter to gain context.
