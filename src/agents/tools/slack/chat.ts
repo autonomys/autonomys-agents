@@ -29,7 +29,10 @@ export const createPostSlackMsgTool = (
     USE THIS WHEN: 
     - You want to report or highlight something to your colleagues.
     - You need to send a message to a specific channel.
-    FORMAT: Include links, messages, and any other relevant information. Avoid very long messages.`,
+    FORMAT: Include links, messages, and any other relevant information. Avoid very long messages.
+    BEFORE POSTING:
+    - use the list_slack_messages tool to check if a similar message has already been posted. If it has, do not post the same message again.
+    - After reviewing the list of messages, determine if the message would be best suited as a thread or a new message.`,
     schema: z.object({
       channelId: z.string().describe('The channel ID to post to.'),
       message: z.string().describe('The message to post to Slack'),
