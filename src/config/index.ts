@@ -157,6 +157,14 @@ export const config = (() => {
       SERPAPI_API_KEY: process.env.SERPAPI_API_KEY || '',
 
       API_PORT: process.env.API_PORT ? parseInt(process.env.API_PORT, 10) : 3001,
+
+      apiSecurityConfig: {
+        API_TOKEN: process.env.API_TOKEN || '',
+        ENABLE_AUTH: process.env.ENABLE_AUTH === 'true',
+        CORS_ALLOWED_ORIGINS: process.env.CORS_ALLOWED_ORIGINS
+          ? process.env.CORS_ALLOWED_ORIGINS.split(',')
+          : ['*'],
+      },
     };
     return configSchema.parse(rawConfig);
   } catch (error) {
