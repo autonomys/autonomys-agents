@@ -47,8 +47,8 @@ export const createTaskQueue = (namespace: string): TaskQueue => {
 
       scheduledTasks.push(task);
 
-      // Sort tasks by scheduled time
       scheduledTasks.sort((a, b) => a.scheduledFor.getTime() - b.scheduledFor.getTime());
+      broadcastTaskUpdate(namespace);
 
       return task;
     },
@@ -152,6 +152,7 @@ export const createTaskQueue = (namespace: string): TaskQueue => {
         completedTasks.push(deletedTask);
       }
       logger.info(`Deleted task ${id} in namespace: ${namespace}`);
+      broadcastTaskUpdate(namespace);
     },
 
     getAllTasks() {

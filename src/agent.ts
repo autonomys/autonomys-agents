@@ -8,22 +8,26 @@ import { OrchestratorRunnerOptions } from './agents/workflows/orchestrator/types
 import { createTwitterAgent } from './agents/workflows/twitter/twitterAgent.js';
 import { config } from './config/index.js';
 import { createTwitterApi } from './services/twitter/client.js';
-import { createApiServer, registerRunnerWithApi, withApiLogger } from './api/server.js';
+import { withApiLogger } from './api/server.js';
 import { createSlackTools } from './agents/tools/slack/index.js';
+import { createAllSchedulerTools } from './agents/tools/scheduler/index.js';
 import { createGitHubTools } from './agents/tools/github/index.js';
+import { registerOrchestratorRunner } from './agents/workflows/registration.js';
+
 const character = config.characterConfig;
 const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
   //shared twitter agent and orchestrator config
   const webSearchTool = config.SERPAPI_API_KEY ? [createWebSearchTool(config.SERPAPI_API_KEY)] : [];
   const saveExperiences = config.autoDriveConfig.AUTO_DRIVE_SAVE_EXPERIENCES;
   const monitoringEnabled = config.autoDriveConfig.AUTO_DRIVE_MONITORING;
+  const schedulerTools = createAllSchedulerTools();
 
   //Twitter agent config
   const { USERNAME, PASSWORD, COOKIES_PATH } = config.twitterConfig;
   const twitterApi = await createTwitterApi(USERNAME, PASSWORD, COOKIES_PATH);
 
   const twitterAgentTool = createTwitterAgent(twitterApi, character, {
-    tools: [...webSearchTool],
+    tools: [...webSearchTool, ...schedulerTools],
     postTweets: config.twitterConfig.POST_TWEETS,
     saveExperiences,
     monitoring: {
@@ -49,7 +53,7 @@ const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
 
   return {
     modelConfigurations: config.orchestratorConfig.model_configurations,
-    tools: [twitterAgentTool, ...webSearchTool, ...slackTools, ...githubTools],
+    tools: [twitterAgentTool, ...webSearchTool, ...slackTools, ...githubTools, ...schedulerTools],
     prompts,
     saveExperiences,
     monitoring: {
@@ -62,7 +66,6 @@ const orchestrationConfig = await orchestratorConfig();
 export const orchestratorRunner = (() => {
   let runnerPromise: Promise<OrchestratorRunner> | undefined = undefined;
   return async () => {
-    const apiServer = createApiServer();
     if (!runnerPromise) {
       const namespace = 'orchestrator';
 
@@ -70,7 +73,8 @@ export const orchestratorRunner = (() => {
         ...orchestrationConfig,
         ...withApiLogger(namespace),
       });
-      runnerPromise = registerRunnerWithApi(runnerPromise, apiServer, namespace);
+      const runner = await runnerPromise;
+      registerOrchestratorRunner(namespace, runner);
     }
     return runnerPromise;
   };

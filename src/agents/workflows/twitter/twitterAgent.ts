@@ -6,12 +6,13 @@ import { createAllTwitterTools } from '../../tools/twitter/index.js';
 import { createOrchestratorRunner } from '../orchestrator/orchestratorWorkflow.js';
 import { createTwitterPrompts } from './prompts.js';
 import { LLMConfiguration } from '../../../services/llm/types.js';
-import { createApiServer, registerRunnerWithApi, withApiLogger } from '../../../api/server.js';
-
+import { withApiLogger } from '../../../api/server.js';
 import { createLogger } from '../../../utils/logger.js';
 import { z } from 'zod';
 import { TwitterAgentConfig, TwitterAgentOptions } from './types.js';
 import { cleanTwitterMessageData } from './cleanMessages.js';
+import { registerOrchestratorRunner } from '../../workflows/registration.js';
+
 const logger = createLogger('twitter-workflow');
 
 const defaultModelConfig: LLMConfiguration = {
@@ -74,7 +75,6 @@ export const createTwitterAgent = (
           monitoring,
           recursionLimit,
         } = createTwitterAgentConfig(options);
-        const apiServer = createApiServer();
         const messages = [new HumanMessage(instructions)];
         const namespace = 'twitter';
 
@@ -92,7 +92,8 @@ export const createTwitterAgent = (
           ...withApiLogger(namespace),
         });
 
-        const runnerPromise = await registerRunnerWithApi(runner, apiServer, namespace);
+        const runnerPromise = await runner;
+        registerOrchestratorRunner(namespace, runnerPromise);
         const result = await runnerPromise.runWorkflow(
           { messages },
           { threadId: 'twitter_workflow_state' },
