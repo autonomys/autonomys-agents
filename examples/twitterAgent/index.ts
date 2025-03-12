@@ -1,16 +1,16 @@
-import { config } from '../../src/config/index.js';
-import { createLogger } from '../../src/utils/logger.js';
-import { validateLocalHash } from '../../src/blockchain/localHashStorage.js';
+import { HumanMessage } from '@langchain/core/messages';
+import { createWebSearchTool } from '../../src/agents/tools/webSearch/index.js';
 import {
   createOrchestratorRunner,
   OrchestratorRunner,
 } from '../../src/agents/workflows/orchestrator/orchestratorWorkflow.js';
-import { createTwitterAgent } from '../../src/agents/workflows/twitter/twitterAgent.js';
 import { createPrompts } from '../../src/agents/workflows/orchestrator/prompts.js';
-import { createTwitterApi } from '../../src/services/twitter/client.js';
-import { HumanMessage } from '@langchain/core/messages';
-import { createWebSearchTool } from '../../src/agents/tools/webSearch/index.js';
 import { OrchestratorRunnerOptions } from '../../src/agents/workflows/orchestrator/types.js';
+import { createTwitterAgent } from '../../src/agents/workflows/twitter/twitterAgent.js';
+import { validateLocalHash } from '../../src/blockchain/localHashStorage.js';
+import { config } from '../../src/config/index.js';
+import { createTwitterApi } from '../../src/services/twitter/client.js';
+import { createLogger } from '../../src/utils/logger.js';
 
 const logger = createLogger('autonomous-twitter-agent');
 
@@ -20,18 +20,30 @@ const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
   const webSearchTool = config.SERPAPI_API_KEY ? [createWebSearchTool(config.SERPAPI_API_KEY)] : [];
   const saveExperiences = config.autoDriveConfig.AUTO_DRIVE_SAVE_EXPERIENCES;
   const monitoringEnabled = config.autoDriveConfig.AUTO_DRIVE_MONITORING;
+
   //Twitter agent config
-  const { USERNAME, PASSWORD, COOKIES_PATH } = config.twitterConfig;
-  const twitterApi = await createTwitterApi(USERNAME, PASSWORD, COOKIES_PATH);
-  //Create twitter agent as a tool to be given to the orchestrator
-  const twitterAgent = createTwitterAgent(twitterApi, character, {
-    tools: [...webSearchTool],
-    postTweets: config.twitterConfig.POST_TWEETS,
-    saveExperiences,
-    monitoring: {
-      enabled: monitoringEnabled,
-    },
-  });
+  const twitterAgentTool =
+    config.twitterConfig.USERNAME && config.twitterConfig.PASSWORD
+      ? [
+          createTwitterAgent(
+            await createTwitterApi(
+              config.twitterConfig.USERNAME,
+              config.twitterConfig.PASSWORD,
+              config.twitterConfig.COOKIES_PATH,
+            ),
+            character,
+            {
+              tools: [...webSearchTool],
+              postTweets: config.twitterConfig.POST_TWEETS,
+              saveExperiences,
+              monitoring: {
+                enabled: monitoringEnabled,
+              },
+              modelConfigurations: config.twitterConfig.model_configurations,
+            },
+          ),
+        ]
+      : [];
 
   //Orchestrator config
   //use default orchestrator prompts with character config from CLI  selfSchedule enabled
@@ -52,7 +64,7 @@ const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
   };
   return {
     modelConfigurations,
-    tools: [twitterAgent, ...webSearchTool],
+    tools: [...twitterAgentTool, ...webSearchTool],
     prompts,
     saveExperiences,
     monitoring: {
