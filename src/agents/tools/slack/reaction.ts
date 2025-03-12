@@ -28,10 +28,19 @@ export const createListEmojisTool = (
     func: async ({ includeCategories = false }) => {
       try {
         const result = await getEmojis(includeCategories);
-        return JSON.stringify(result);
+        return {
+          success: true,
+          emojis: {
+            emoji: result.emoji,
+            categories: result.categories,
+          },
+        };
       } catch (error) {
         logger.error('Error listing emojis from Slack:', error);
-        throw error;
+        return {
+          success: false,
+          error,
+        };
       }
     },
   });
@@ -51,11 +60,17 @@ export const createGetReactionTool = (
     }),
     func: async ({ channelId, timestamp }) => {
       try {
-        const reaction = await getReaction(channelId, timestamp);
-        return JSON.stringify(reaction);
+        const reactions = await getReaction(channelId, timestamp);
+        return {
+          success: true,
+          reactions,
+        };
       } catch (error) {
         logger.error('Error getting reaction from Slack:', error);
-        throw error;
+        return {
+          success: false,
+          error,
+        };
       }
     },
   });
@@ -90,10 +105,16 @@ export const createAddReactionTool = (
         });
         const result = await addReaction(channelId, timestamp, reaction);
         logger.info('Reaction added to Slack:', { result });
-        return JSON.stringify(result);
+        return {
+          success: true,
+          reaction: result,
+        };
       } catch (error) {
         logger.error('Error adding reaction to Slack:', error);
-        throw error;
+        return {
+          success: false,
+          error,
+        };
       }
     },
   });
@@ -129,10 +150,16 @@ export const createRemoveReactionTool = (
         });
         const result = await removeReaction(channelId, timestamp, reaction);
         logger.info('Reaction removed from Slack:', { result });
-        return JSON.stringify(result);
+        return {
+          success: true,
+          reaction: result,
+        };
       } catch (error) {
         logger.error('Error removing reaction from Slack:', error);
-        throw error;
+        return {
+          success: false,
+          error,
+        };
       }
     },
   });

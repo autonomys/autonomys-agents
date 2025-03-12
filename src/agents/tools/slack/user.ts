@@ -73,9 +73,7 @@ export const createSetUserProfileTool = (
 ) =>
   new DynamicStructuredTool({
     name: 'set_user_profile',
-    description: `Set a user's profile information in Slack. Can update standard fields like status text and emoji, 
-    or any custom profile fields configured for the workspace. Note: Requires users.profile:write scope and 
-    appropriate admin permissions to modify other users' profiles.`,
+    description: `Set a user's profile information in Slack. Can update standard fields like status text and emoji, or any custom profile fields configured for the workspace. Note: Requires users.profile:write scope and appropriate admin permissions to modify other users' profiles.`,
     schema: z.object({
       userId: z.string().describe('The user ID whose profile to update.'),
       profile: z
