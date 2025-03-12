@@ -1,5 +1,5 @@
 import { EventSourceMessage } from '../types/types';
-import { API_BASE_URL } from './Api';
+import { API_BASE_URL, API_TOKEN, apiRequest } from './Api';
 
 const eventSources = new Map<string, any>();
 const messageCallbacks: Array<(message: EventSourceMessage) => void> = [];
@@ -7,8 +7,7 @@ let namespaces: string[] = [];
 
 export const fetchNamespaces = async (): Promise<string[]> => {
   try {
-    const response = await window.fetch(`${API_BASE_URL}/namespaces`);
-    const data = await response.json();
+    const data = await apiRequest<{ namespaces: string[] }>('/namespaces');
     namespaces = data.namespaces || [];
     return namespaces;
   } catch (error) {
@@ -26,7 +25,8 @@ export const subscribeToNamespace = (namespace: string): void => {
     return;
   }
 
-  const eventSource = new window.EventSource(`${API_BASE_URL}/${namespace}/logs`);
+  const tokenParam = API_TOKEN ? `?token=${encodeURIComponent(API_TOKEN)}` : '';
+  const eventSource = new window.EventSource(`${API_BASE_URL}/${namespace}/logs${tokenParam}`);
 
   eventSource.onmessage = event => {
     try {

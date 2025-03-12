@@ -1,5 +1,5 @@
 import { ScheduledTask } from '../types/types';
-import { API_BASE_URL, DEFAULT_NAMESPACE } from './Api';
+import { API_BASE_URL, API_TOKEN, DEFAULT_NAMESPACE, apiRequest } from './Api';
 import { TaskEventMessage } from '../types/types';
 
 type TaskUpdateCallback = (tasks: ScheduledTask[]) => void;
@@ -56,7 +56,8 @@ export const connectToTaskStream = (namespace: string = DEFAULT_NAMESPACE): void
   setConnectionStatus(ConnectionStatus.CONNECTING);
 
   try {
-    const url = `${API_BASE_URL}/${namespace}/taskStream`;
+    const tokenParam = API_TOKEN ? `?token=${encodeURIComponent(API_TOKEN)}` : '';
+    const url = `${API_BASE_URL}/${namespace}/taskStream${tokenParam}`;
     console.log(`Connecting to task stream at: ${url}`);
 
     taskEventSource = new EventSource(url);
@@ -193,14 +194,9 @@ export const deleteTask = async (
   namespace = DEFAULT_NAMESPACE,
 ): Promise<boolean> => {
   try {
-    const response = await fetch(`${API_BASE_URL}/${namespace}/task/${taskId}`, {
+    await apiRequest<void>(`/${namespace}/task/${taskId}`, {
       method: 'DELETE',
     });
-
-    if (!response.ok) {
-      throw new Error(`Failed to delete task: ${response.statusText}`);
-    }
-
     return true;
   } catch (error) {
     console.error('Error deleting task:', error);
