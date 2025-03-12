@@ -1,12 +1,12 @@
-import { createLogger } from '../../utils/logger.js';
-import { hexlify } from 'ethers';
-import { uploadFile, UploadFileOptions } from '@autonomys/auto-drive';
 import { blake3HashFromCid, stringToCid } from '@autonomys/auto-dag-data';
+import { uploadFile, UploadFileOptions } from '@autonomys/auto-drive';
+import { hexlify } from 'ethers';
 import { agentVersion, config } from '../../config/index.js';
-import { signMessage, wallet } from '../autoEvm/agentWallet.js';
+import { createLogger } from '../../utils/logger.js';
 import { getLastMemoryCid, setLastMemoryHash } from '../autoEvm/agentMemoryContract.js';
-import { withRetry } from './retry.js';
+import { signMessage, wallet } from '../autoEvm/agentWallet.js';
 import { autoDriveApi } from './autoDriveApi.js';
+import { withRetry } from './retry.js';
 
 const logger = createLogger('dsn-upload-tool');
 
@@ -49,11 +49,19 @@ export async function uploadToDsn(data: object) {
     logger.info('Upload to Dsn - DSN Data', { dsnData });
 
     const jsonBuffer = Buffer.from(JSON.stringify(dsnData, null, 2));
+    const username =
+      config.twitterConfig.USERNAME ||
+      config.characterConfig.name
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-z0-9]/g, '');
+    const fileName = `${username}-agent-memory-${timestamp}.json`;
     const file = {
       read: async function* () {
         yield jsonBuffer;
       },
-      name: `${config.twitterConfig.USERNAME}-agent-memory-${timestamp}.json`,
+      name: fileName,
       mimeType: 'application/json',
       size: jsonBuffer.length,
     };
