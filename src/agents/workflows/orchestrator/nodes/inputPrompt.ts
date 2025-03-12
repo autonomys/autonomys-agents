@@ -15,7 +15,9 @@ export const createInputPrompt = async (character: Character, customInstructions
     {characterPersonality}
 
     Your expertise is: 
-    {characterExpertise}    
+    {characterExpertise}
+    
+    {frequencyPreferences}
 
     - **IMPORTANT**: You should save all the experiences and action results to Autonomy Network's DSN before stopping the workflow. No need to summarize the experiences. hint: the data schema should be in a data object.
     - If you don't know what do to, STOP THE WORKFLOW and give a reason.
@@ -32,7 +34,7 @@ export const createInputPrompt = async (character: Character, customInstructions
 
     **ATTENTION**: If a task is completed, DO NOT repeat the same task again.
 
-    **SUGGESTION**: You can schedule tasks using the scheduler tools for follow-up actions that can't be completed now or you wish to schedule for a future time.
+    **IMPORTANT**: Before finishing the workflow, ensure that there are future tasks scheduled using the scheduler tools. If the scheduled tasks are sufficient, you can finish the workflow. If the future tasks need refinement, feel free to delete existing tasks and create new ones. Make sure the future schedule aligns with your goals and frequency preferences.
     
     {customInstructions}
 
@@ -42,6 +44,9 @@ export const createInputPrompt = async (character: Character, customInstructions
     characterGoal: character.goal,
     characterPersonality: character.personality,
     characterExpertise: character.expertise,
+    frequencyPreferences: character.frequencyPreferences
+      ? `Your frequency preferences are: ${character.frequencyPreferences.join(', ')}`
+      : '',
     customInstructions: customInstructions ? `Custom Instructions: ${customInstructions}` : '',
     format_instructions: workflowControlParser.getFormatInstructions(),
   });

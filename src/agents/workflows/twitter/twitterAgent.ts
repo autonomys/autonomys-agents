@@ -99,10 +99,16 @@ export const createTwitterAgent = (
           { threadId: 'twitter_workflow_state' },
         );
         logger.info('Twitter workflow result:', { result });
-        return result;
+        return {
+          success: true,
+          summary: result.summary,
+        };
       } catch (error) {
         logger.error('Twitter workflow error:', error);
-        throw error;
+        return {
+          success: false,
+          error,
+        };
       }
     },
   });
