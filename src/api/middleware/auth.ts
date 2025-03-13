@@ -18,12 +18,12 @@ export const authenticateToken = (req: Request, res: Response, next: NextFunctio
   }
 
   let token: string | undefined;
-  
+
   const authHeader = req.headers.authorization;
   if (authHeader) {
     token = authHeader.split(' ')[1];
   }
-  
+
   if (!token && req.query.token) {
     token = req.query.token as string;
   }

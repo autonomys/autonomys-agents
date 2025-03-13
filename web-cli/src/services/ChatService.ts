@@ -107,7 +107,7 @@ export const sendChatMessage = async (
         body: JSON.stringify({ message: content }),
         // Pass Response so we can check headers
         headers: getHeaders(),
-      }
+      },
     );
 
     // If we're getting a raw Response object (for streaming)
