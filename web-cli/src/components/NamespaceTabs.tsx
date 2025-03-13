@@ -65,6 +65,7 @@ interface NamespaceTabsProps {
   onNamespaceChange: (namespace: string) => void;
   onRefreshNamespaces: () => void;
   onClearLogs: () => void;
+  onShowSearch?: () => void; // Optional prop for showing search
 }
 
 const NamespaceTabs: React.FC<NamespaceTabsProps> = ({
@@ -74,6 +75,7 @@ const NamespaceTabs: React.FC<NamespaceTabsProps> = ({
   onNamespaceChange,
   onRefreshNamespaces,
   onClearLogs,
+  onShowSearch
 }) => {
   const [neonPink] = useToken('colors', ['brand.neonPink']);
   const [activeIndex, setActiveIndex] = useState(namespaces.indexOf(activeNamespace));
@@ -420,6 +422,51 @@ const NamespaceTabs: React.FC<NamespaceTabsProps> = ({
               CLEAR
             </Text>
           </Box>
+          
+          {/* Search Neural Node */}
+          {onShowSearch && (
+            <Box
+              onClick={onShowSearch}
+              position='relative'
+              cursor='pointer'
+              mx={4}
+              display='flex'
+              flexDirection='column'
+              alignItems='center'
+              width='50px'
+            >
+              {/* Neural Node */}
+              <Box
+                width='30px'
+                height='30px'
+                borderRadius='50%'
+                bg='rgba(255, 193, 7, 0.2)'
+                border='1px solid rgba(255, 193, 7, 0.5)'
+                display='flex'
+                alignItems='center'
+                justifyContent='center'
+                boxShadow='0 0 8px rgba(255, 193, 7, 0.3)'
+                transition='all 0.3s'
+                _hover={{
+                  bg: 'rgba(255, 193, 7, 0.3)',
+                  boxShadow: '0 0 15px rgba(255, 193, 7, 0.5)',
+                }}
+              >
+                <Text fontSize='16px' fontWeight='bold' color='rgba(255, 193, 7, 0.9)' lineHeight='1'>
+                  🔍
+                </Text>
+              </Box>
+              <Text
+                fontSize='14px'
+                color='rgba(255, 193, 7, 0.7)'
+                mt={2}
+                fontWeight='medium'
+                textAlign='center'
+              >
+                CTRL+F
+              </Text>
+            </Box>
+          )}
         </Flex>
       </Flex>
     </Box>

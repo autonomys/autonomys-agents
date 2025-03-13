@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { Box, Flex, Button } from '@chakra-ui/react';
 import { Resizable } from 're-resizable';
 import { OutputLogProps } from '../../types/types';
@@ -6,6 +6,7 @@ import { useNamespaces } from '../../hooks/useNamespaces';
 import { useLogMessages } from '../../hooks/useLogMessages';
 import NamespaceTabs from '../NamespaceTabs';
 import LogMessageList from './LogMessageList';
+import { LogSearch } from './components';
 import {
   outputLogContainer,
   outputLogFlexContainer,
@@ -18,6 +19,7 @@ import {
 const OutputLog: React.FC<OutputLogProps> = ({ messages }) => {
   const [size, setSize] = useState({ height: 400 });
   const containerRef = useRef<HTMLDivElement>(null);
+  const [isSearchVisible, setIsSearchVisible] = useState(false);
 
   const { namespaces, activeNamespace, subscribedNamespaces, changeNamespace, refreshNamespaces } =
     useNamespaces();
@@ -31,7 +33,30 @@ const OutputLog: React.FC<OutputLogProps> = ({ messages }) => {
     scrollToBottom,
     isAutoScrollEnabled,
     isScrolling,
+    searchTerm,
+    searchResults,
+    currentSearchIndex,
+    handleSearchChange,
+    searchInNamespace,
+    goToNextSearchResult,
+    goToPrevSearchResult
   } = useLogMessages();
+
+  // Handle keyboard shortcut for search (Ctrl+F)
+  const handleKeyDown = useCallback((e: KeyboardEvent) => {
+    if ((e.key === 'f' || e.key === 'F') && (e.ctrlKey || e.metaKey)) {
+      e.preventDefault();
+      setIsSearchVisible(true);
+    }
+  }, []);
+
+  // Add global keyboard listener
+  useEffect(() => {
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [handleKeyDown]);
 
   useEffect(() => {
     return () => {
@@ -41,16 +66,41 @@ const OutputLog: React.FC<OutputLogProps> = ({ messages }) => {
 
   const handleNamespaceChange = (namespace: string) => {
     changeNamespace(namespace);
+    if (searchTerm) {
+      searchInNamespace(namespace);
+    }
   };
 
   const handleClearLogs = () => {
     clearLogs(activeNamespace);
   };
 
+  const handleCloseSearch = () => {
+    setIsSearchVisible(false);
+  };
+
+  const handleShowSearch = () => {
+    setIsSearchVisible(true);
+  };
+
   const filteredMessages = getFilteredMessages(activeNamespace);
 
   return (
     <Box {...outputLogContainer}>
+      {/* Search overlay (visible when triggered) */}
+      <LogSearch
+        activeNamespace={activeNamespace}
+        searchTerm={searchTerm}
+        searchResults={searchResults}
+        currentSearchIndex={currentSearchIndex}
+        onSearchChange={handleSearchChange}
+        onSearch={searchInNamespace}
+        onNextResult={goToNextSearchResult}
+        onPrevResult={goToPrevSearchResult}
+        isVisible={isSearchVisible}
+        onClose={handleCloseSearch}
+      />
+
       <Resizable
         defaultSize={{
           width: '100%',
@@ -90,6 +140,7 @@ const OutputLog: React.FC<OutputLogProps> = ({ messages }) => {
             onNamespaceChange={handleNamespaceChange}
             onRefreshNamespaces={refreshNamespaces}
             onClearLogs={handleClearLogs}
+            onShowSearch={handleShowSearch}
           />
 
           <Box
@@ -101,9 +152,11 @@ const OutputLog: React.FC<OutputLogProps> = ({ messages }) => {
               filteredMessages={filteredMessages}
               legacyMessages={messages}
               setLogRef={() => {}}
+              searchTerm={searchTerm}
+              searchResults={searchResults}
+              currentSearchIndex={currentSearchIndex}
             />
 
-            {/* Scroll to bottom button */}
             {!isAutoScrollEnabled && filteredMessages.length > 0 && (
               <Button
                 {...scrollToBottomButton(isScrolling)}

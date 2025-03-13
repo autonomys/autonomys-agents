@@ -61,6 +61,9 @@ export interface LogMessageListProps {
   filteredMessages: EventSourceMessage[];
   legacyMessages?: string[];
   setLogRef: (ref: HTMLDivElement | null) => void;
+  searchTerm?: string;
+  currentSearchIndex?: number;
+  searchResults?: number[];
 }
 
 export interface TaskEventMessage {

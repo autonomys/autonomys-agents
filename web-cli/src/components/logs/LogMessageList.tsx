@@ -10,6 +10,7 @@ import {
   getLogMessageListLevel,
   logMessageListMessage,
   getLogMessageListMessageBox,
+  searchHighlight
 } from './styles/LogStyles';
 import { LogMessageListProps } from '../../types/types';
 
@@ -23,10 +24,25 @@ interface LogMessage {
   legacy?: boolean;
 }
 
+// Helper function to highlight search matches
+const highlightSearchMatches = (text: string, searchTerm: string): React.ReactNode => {
+  if (!searchTerm || !text) return text;
+
+  const parts = text.split(new RegExp(`(${searchTerm})`, 'gi'));
+  return parts.map((part, i) => 
+    part.toLowerCase() === searchTerm.toLowerCase() 
+      ? <Text as="span" key={i} {...searchHighlight}>{part}</Text> 
+      : part
+  );
+};
+
 export const LogMessageList: React.FC<LogMessageListProps> = ({
   filteredMessages,
   legacyMessages = [],
   setLogRef,
+  searchTerm = '',
+  currentSearchIndex = -1,
+  searchResults = []
 }) => {
   const formattedMessages = filteredMessages.map(
     msg =>
@@ -76,8 +92,8 @@ export const LogMessageList: React.FC<LogMessageListProps> = ({
       {allMessages
         .filter(msg => msg.legacy)
         .map((msg, index) => (
-          <Box key={`legacy-${index}`} {...logMessageListLegacyMessage}>
-            {msg.message}
+          <Box key={`legacy-${index}`} {...logMessageListLegacyMessage} data-log-index={index}>
+            {highlightSearchMatches(msg.message, searchTerm)}
           </Box>
         ))}
 
@@ -85,16 +101,20 @@ export const LogMessageList: React.FC<LogMessageListProps> = ({
         .filter(msg => !msg.legacy)
         .map((msg, index) => {
           const msgColor = getMessageColor(msg.level);
+          const isSearchMatch = searchResults.includes(index);
+          const isCurrentSearchMatch = searchResults[currentSearchIndex] === index;
 
           return (
-            <Box key={`log-${index}`} {...getLogMessageListMessageBox(msgColor)}>
+            <Box key={`log-${index}`} {...getLogMessageListMessageBox(msgColor, isSearchMatch, isCurrentSearchMatch)} data-log-index={index}>
               <Flex direction='row' wrap='wrap' gap={1} alignItems='baseline'>
                 <Text {...logMessageListTimestamp}>
                   [{msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString() : 'N/A'}]
                 </Text>
                 <Text {...logMessageListNamespace}>[{msg.namespace}]</Text>
                 <Text {...getLogMessageListLevel(msgColor)}>[{msg.level || 'INFO'}]</Text>
-                <Text {...logMessageListMessage}>{msg.message}</Text>
+                <Text {...logMessageListMessage}>
+                  {searchTerm ? highlightSearchMatches(msg.message, searchTerm) : msg.message}
+                </Text>
               </Flex>
 
               {msg.metadata && Object.keys(msg.metadata).length > 0 && (

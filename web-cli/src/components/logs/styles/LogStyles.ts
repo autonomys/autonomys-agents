@@ -1,4 +1,4 @@
-import { BoxProps, FlexProps, TextProps, ButtonProps } from '@chakra-ui/react';
+import { BoxProps, FlexProps, TextProps, ButtonProps, InputProps } from '@chakra-ui/react';
 
 // Styles for the MetaData component
 export const metaDataContainer: BoxProps = {
@@ -278,18 +278,30 @@ export const logMessageListLegacyMessage: BoxProps = {
   fontSize: ['xs', 'sm'],
 };
 
-export const getLogMessageListMessageBox = (color: string): BoxProps => ({
+// Styles for search functionality
+export const searchHighlight: TextProps = {
+  bg: 'yellow.500',
+  color: 'black',
+  fontWeight: 'bold',
+  px: '1px',
+  mx: '-1px',
+  borderRadius: '2px',
+  textShadow: 'none'
+};
+
+// Modify getLogMessageListMessageBox to handle search matches
+export const getLogMessageListMessageBox = (color: string, isSearchMatch: boolean = false, isCurrentSearchMatch: boolean = false): BoxProps => ({
   mb: 3,
   p: 3,
   borderRadius: 'md',
-  bg: 'rgba(0, 0, 0, 0.2)',
+  bg: isCurrentSearchMatch ? 'rgba(255, 204, 0, 0.08)' : isSearchMatch ? 'rgba(255, 204, 0, 0.05)' : 'rgba(0, 0, 0, 0.2)',
   borderLeft: '3px solid',
-  borderColor: color,
+  borderColor: isCurrentSearchMatch ? 'yellow.400' : color,
   position: 'relative',
   transition: 'all 0.2s ease',
   _hover: {
-    bg: 'rgba(0, 0, 0, 0.3)',
-    boxShadow: '0 0 12px rgba(0, 0, 0, 0.3)',
+    bg: isCurrentSearchMatch ? 'rgba(255, 204, 0, 0.12)' : isSearchMatch ? 'rgba(255, 204, 0, 0.08)' : 'rgba(0, 0, 0, 0.3)',
+    boxShadow: isCurrentSearchMatch ? '0 0 15px rgba(255, 204, 0, 0.2)' : '0 0 12px rgba(0, 0, 0, 0.3)',
   },
   _before: {
     content: '""',
@@ -298,8 +310,10 @@ export const getLogMessageListMessageBox = (color: string): BoxProps => ({
     left: 0,
     width: '3px',
     height: '100%',
-    bg: color,
-    boxShadow: `0 0 8px ${color}`,
+    bg: isCurrentSearchMatch ? 'yellow.400' : color,
+    boxShadow: isCurrentSearchMatch 
+      ? '0 0 8px rgba(255, 204, 0, 0.7)' 
+      : `0 0 8px ${color}`,
   },
 });
 
@@ -430,3 +444,71 @@ export const scrollToBottomButton = (isScrolling: boolean): ButtonProps => ({
   transition: 'all 0.2s ease',
   animation: isScrolling ? 'pulse 1s infinite' : 'none',
 });
+
+// Styles for LogSearch component
+export const logSearchContainer: BoxProps = {
+  p: 2,
+  mb: 2,
+  position: 'relative',
+  bg: 'rgba(20, 20, 40, 0.7)',
+  borderRadius: 'md',
+  borderBottom: '1px solid',
+  borderColor: 'gray.700',
+};
+
+export const logSearchInput: InputProps = {
+  bg: 'rgba(0, 0, 0, 0.3)',
+  borderColor: 'gray.700',
+  color: 'white',
+  pl: '35px',
+  _placeholder: { color: 'gray.500' },
+  _hover: {
+    borderColor: 'brand.neonPink'
+  },
+  _focus: {
+    borderColor: 'brand.neonPink',
+    boxShadow: '0 0 0 1px #ff00cc'
+  }
+};
+
+export const logSearchNavButton: ButtonProps = {
+  size: 'xs',
+  variant: 'ghost',
+  colorScheme: 'pink',
+  mx: 1
+};
+
+export const logSearchResultCount: TextProps = {
+  fontSize: 'xs',
+  color: 'gray.300',
+  flex: 1
+};
+
+// Styles for LogSearch component (floating overlay)
+export const logSearchOverlay: FlexProps = {
+  position: 'fixed',
+  top: '20px',
+  right: '20px',
+  transform: 'none',
+  width: 'auto',
+  maxWidth: '450px',
+  minWidth: '320px',
+  zIndex: 9999,
+  bg: 'rgba(10, 10, 25, 0.95)',
+  backdropFilter: 'blur(8px)',
+  p: 3,
+  borderRadius: 'md',
+  border: '1px solid',
+  borderColor: 'brand.neonPink',
+  boxShadow: '0 0 20px rgba(255, 0, 204, 0.3)',
+  alignItems: 'center',
+  _before: {
+    content: '""',
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: '1px',
+    bgGradient: 'linear(to-r, transparent, brand.neonPink, transparent)',
+  }
+};
