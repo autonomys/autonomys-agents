@@ -2,25 +2,17 @@ import { DynamicStructuredTool } from '@langchain/core/tools';
 import { RestEndpointMethodTypes } from '@octokit/rest';
 import { z } from 'zod';
 import { createLogger } from '../../../utils/logger.js';
+import { githubClient } from './utils/client.js';
 import {
-  CommentInfo,
-  CommitInfo,
   CreateCommentParams,
   CreateCommitParams,
   CreateIssueParams,
   CreatePRCommentParams,
   CreatePullRequestParams,
-  CreateReactionParams,
-  githubClient,
-  IssueInfo,
-  MentionInfo,
-  NotificationInfo,
-  PRCommentInfo,
-  PullRequestInfo,
-  ReactionInfo,
-  UserInfo,
-  WatchedRepoInfo,
-} from './client.js';
+  GitHubIssueAndPRState,
+  GitHubReactionType,
+  GithubResponse,
+} from './utils/types.js';
 
 const logger = createLogger('github-tools');
 
@@ -28,7 +20,11 @@ const logger = createLogger('github-tools');
  * Creates a tool to list GitHub issues
  */
 export const createListIssuesTools = (
-  listIssues: (state?: 'open' | 'closed' | 'all') => Promise<IssueInfo[]>,
+  listIssues: (
+    state: GitHubIssueAndPRState,
+  ) => Promise<
+    GithubResponse<RestEndpointMethodTypes['issues']['listForRepo']['response']['data']>
+  >,
 ) =>
   new DynamicStructuredTool({
     name: 'list_github_issues',
@@ -44,7 +40,6 @@ export const createListIssuesTools = (
     schema: z.object({
       state: z
         .enum(['open', 'closed', 'all'])
-        .optional()
         .describe('Filter issues by state. Default is "open".'),
     }),
     func: async ({ state = 'open' }) => {
@@ -66,7 +61,9 @@ export const createListIssuesTools = (
  * Creates a tool to create a new GitHub issue
  */
 export const createCreateIssueTool = (
-  createIssue: (params: CreateIssueParams) => Promise<IssueInfo>,
+  createIssue: (
+    params: CreateIssueParams,
+  ) => Promise<GithubResponse<RestEndpointMethodTypes['issues']['create']['response']['data']>>,
 ) =>
   new DynamicStructuredTool({
     name: 'create_github_issue',
@@ -106,7 +103,11 @@ export const createCreateIssueTool = (
  * Creates a tool to list comments on a GitHub issue
  */
 export const createListCommentsTools = (
-  listComments: (issue_number: number) => Promise<CommentInfo[]>,
+  listComments: (
+    issue_number: number,
+  ) => Promise<
+    GithubResponse<RestEndpointMethodTypes['issues']['listComments']['response']['data']>
+  >,
 ) =>
   new DynamicStructuredTool({
     name: 'list_github_comments',
@@ -140,7 +141,11 @@ export const createListCommentsTools = (
  * Creates a tool to add a comment to a GitHub issue
  */
 export const createCreateCommentTool = (
-  createComment: (params: CreateCommentParams) => Promise<CommentInfo>,
+  createComment: (
+    params: CreateCommentParams,
+  ) => Promise<
+    GithubResponse<RestEndpointMethodTypes['issues']['createComment']['response']['data']>
+  >,
 ) =>
   new DynamicStructuredTool({
     name: 'create_github_comment',
@@ -177,14 +182,19 @@ export const createCreateCommentTool = (
 /**
  * Creates a tool to add a reaction to a GitHub issue or comment
  */
-export const createCreateReactionTool = (
-  createReaction: (params: CreateReactionParams) => Promise<ReactionInfo>,
+export const createCreateReactionForIssueTool = (
+  createReaction: (
+    issue_number: number,
+    content: GitHubReactionType,
+  ) => Promise<
+    GithubResponse<RestEndpointMethodTypes['reactions']['createForIssue']['response']['data']>
+  >,
 ) =>
   new DynamicStructuredTool({
-    name: 'create_github_reaction',
-    description: `Create a reaction on a GitHub issue or comment in the configured repository.
+    name: 'create_github_reaction_for_issue',
+    description: `Create a reaction on a GitHub issue in the configured repository.
     USE THIS WHEN:
-    - You want to add an emoji reaction to an issue or comment
+    - You want to add an emoji reaction to an issue
     - You need to express sentiment or feedback through reactions
     Suggested behavior:
     - Don't leave reactions to your own comments or issues
@@ -195,17 +205,12 @@ export const createCreateReactionTool = (
         .describe('The type of reaction to add'),
       issue_number: z
         .number()
-        .optional()
         .describe('The number of the issue to react to. Required if not reacting to a comment'),
-      comment_id: z
-        .number()
-        .optional()
-        .describe('The ID of the comment to react to. Required if not reacting to an issue'),
     }),
-    func: async ({ content, issue_number, comment_id }) => {
+    func: async ({ content, issue_number }) => {
       try {
-        logger.info('Creating GitHub reaction:', { content, issue_number, comment_id });
-        const reaction = await createReaction({ content, issue_number, comment_id });
+        logger.info('Creating GitHub reaction:', { content, issue_number });
+        const reaction = await createReaction(issue_number, content);
         return {
           success: true,
           reaction,
@@ -220,7 +225,11 @@ export const createCreateReactionTool = (
 /**
  * Creates a tool to list GitHub mentions
  */
-export const createListMentionsTool = (listMentions: () => Promise<MentionInfo[]>) =>
+export const createListMentionsTool = (
+  listMentions: () => Promise<
+    GithubResponse<RestEndpointMethodTypes['search']['issuesAndPullRequests']['response']['data']>
+  >,
+) =>
   new DynamicStructuredTool({
     name: 'list_github_mentions',
     description: `List GitHub issues and pull requests where you are mentioned.
@@ -248,7 +257,13 @@ export const createListMentionsTool = (listMentions: () => Promise<MentionInfo[]
  * Creates a tool to list GitHub notifications
  */
 export const createListNotificationsTool = (
-  listNotifications: (all?: boolean) => Promise<NotificationInfo[]>,
+  listNotifications: (
+    all?: boolean,
+  ) => Promise<
+    GithubResponse<
+      RestEndpointMethodTypes['activity']['listNotificationsForAuthenticatedUser']['response']['data']
+    >
+  >,
 ) =>
   new DynamicStructuredTool({
     name: 'list_github_notifications',
@@ -282,7 +297,9 @@ export const createListNotificationsTool = (
  * Creates a tool to list GitHub pull requests
  */
 export const createListPullRequestsTool = (
-  listPullRequests: (state?: 'open' | 'closed' | 'all') => Promise<PullRequestInfo[]>,
+  listPullRequests: (
+    state: GitHubIssueAndPRState,
+  ) => Promise<GithubResponse<RestEndpointMethodTypes['pulls']['list']['response']['data']>>,
 ) =>
   new DynamicStructuredTool({
     name: 'list_github_pull_requests',
@@ -316,7 +333,9 @@ export const createListPullRequestsTool = (
  * Creates a tool to get a specific GitHub pull request
  */
 export const createGetPullRequestTool = (
-  getPullRequest: (pull_number: number) => Promise<PullRequestInfo>,
+  getPullRequest: (
+    pull_number: number,
+  ) => Promise<GithubResponse<RestEndpointMethodTypes['pulls']['get']['response']['data']>>,
 ) =>
   new DynamicStructuredTool({
     name: 'get_github_pull_request',
@@ -347,7 +366,16 @@ export const createGetPullRequestTool = (
  * Creates a tool to list comments on a GitHub pull request
  */
 export const createListPRCommentsTool = (
-  listPRComments: (pull_number: number) => Promise<PRCommentInfo[]>,
+  listPRComments: (
+    pull_number: number,
+  ) => Promise<
+    GithubResponse<
+      (
+        | RestEndpointMethodTypes['issues']['listComments']['response']['data'][number]
+        | RestEndpointMethodTypes['pulls']['listReviewComments']['response']['data'][number]
+      )[]
+    >
+  >,
 ) =>
   new DynamicStructuredTool({
     name: 'list_github_pr_comments',
@@ -381,7 +409,14 @@ export const createListPRCommentsTool = (
  * Creates a tool to comment on a GitHub pull request
  */
 export const createCreatePRCommentTool = (
-  createPRComment: (params: CreatePRCommentParams) => Promise<PRCommentInfo>,
+  createPRComment: (
+    params: CreatePRCommentParams,
+  ) => Promise<
+    GithubResponse<
+      | RestEndpointMethodTypes['issues']['createComment']['response']['data']
+      | RestEndpointMethodTypes['pulls']['createReviewComment']['response']['data']
+    >
+  >,
 ) =>
   new DynamicStructuredTool({
     name: 'create_github_pr_comment',
@@ -437,16 +472,19 @@ export const createCreatePRCommentTool = (
 /**
  * Creates a tool to add a reaction to a GitHub pull request comment
  */
-export const createCreatePRReactionTool = (
-  createPRReaction: (
-    params: CreateReactionParams & { pull_number: number },
-  ) => Promise<ReactionInfo>,
+export const createCreateReactionForPullRequestTool = (
+  createPullRequestReaction: (
+    pull_number: number,
+    content: GitHubReactionType,
+  ) => Promise<
+    GithubResponse<RestEndpointMethodTypes['reactions']['createForIssue']['response']['data']>
+  >,
 ) =>
   new DynamicStructuredTool({
     name: 'create_github_pr_reaction',
-    description: `Create a reaction on a GitHub pull request comment.
+    description: `Create a reaction on a GitHub pull request.
     USE THIS WHEN:
-    - You want to add an emoji reaction to a PR comment
+    - You want to add an emoji reaction to a PR
     - You need to express sentiment or feedback on a PR through reactions
     
     IMPORTANT: Before adding a reaction, consider whether you've already reacted to this PR comment. Avoid adding multiple reactions to the same content. Remember that you can only add each reaction type once per comment.
@@ -459,12 +497,11 @@ export const createCreatePRReactionTool = (
         .enum(['+1', '-1', 'laugh', 'confused', 'heart', 'hooray', 'rocket', 'eyes'])
         .describe('The type of reaction to add'),
       pull_number: z.number().describe('The number of the pull request'),
-      comment_id: z.number().describe('The ID of the comment to react to'),
     }),
-    func: async ({ content, pull_number, comment_id }) => {
+    func: async ({ content, pull_number }) => {
       try {
-        logger.info('Creating GitHub PR reaction:', { content, pull_number, comment_id });
-        const reaction = await createPRReaction({ content, pull_number, comment_id });
+        logger.info('Creating GitHub PR reaction:', { content, pull_number });
+        const reaction = await createPullRequestReaction(pull_number, content);
         return {
           success: true,
           reaction,
@@ -480,7 +517,13 @@ export const createCreatePRReactionTool = (
  * Creates a tool to watch a GitHub repository
  */
 export const createWatchRepoTool = (
-  watchRepo: (owner: string, repo: string, ignored?: boolean) => Promise<void>,
+  subscribeToRepo: (
+    owner: string,
+    repo: string,
+    ignored?: boolean,
+  ) => Promise<
+    GithubResponse<RestEndpointMethodTypes['activity']['setRepoSubscription']['response']['data']>
+  >,
 ) =>
   new DynamicStructuredTool({
     name: 'watch_github_repository',
@@ -504,7 +547,7 @@ export const createWatchRepoTool = (
     func: async ({ owner, repo, ignored = false }) => {
       try {
         logger.info('Watching GitHub repository:', { owner, repo, ignored });
-        await watchRepo(owner, repo, ignored);
+        await subscribeToRepo(owner, repo, ignored);
         return {
           success: true,
           message: `Successfully watched repository ${owner}/${repo}`,
@@ -520,7 +563,14 @@ export const createWatchRepoTool = (
  * Creates a tool to unwatch a GitHub repository
  */
 export const createUnwatchRepoTool = (
-  unwatchRepo: (owner: string, repo: string) => Promise<void>,
+  unsubscribeFromRepo: (
+    owner: string,
+    repo: string,
+  ) => Promise<
+    GithubResponse<
+      RestEndpointMethodTypes['activity']['deleteRepoSubscription']['response']['data']
+    >
+  >,
 ) =>
   new DynamicStructuredTool({
     name: 'unwatch_github_repository',
@@ -536,7 +586,7 @@ export const createUnwatchRepoTool = (
     func: async ({ owner, repo }) => {
       try {
         logger.info('Un-watching GitHub repository:', { owner, repo });
-        await unwatchRepo(owner, repo);
+        await unsubscribeFromRepo(owner, repo);
         return {
           success: true,
           message: `Successfully unwatched repository ${owner}/${repo}`,
@@ -551,7 +601,13 @@ export const createUnwatchRepoTool = (
 /**
  * Creates a tool to list watched GitHub repositories
  */
-export const createListWatchedReposTool = (listWatchedRepos: () => Promise<WatchedRepoInfo[]>) =>
+export const createListWatchedReposTool = (
+  listSubscriptions: () => Promise<
+    GithubResponse<
+      RestEndpointMethodTypes['activity']['listReposStarredByAuthenticatedUser']['response']['data']
+    >
+  >,
+) =>
   new DynamicStructuredTool({
     name: 'list_watched_github_repositories',
     description: `List all GitHub repositories you are watching.
@@ -563,7 +619,7 @@ export const createListWatchedReposTool = (listWatchedRepos: () => Promise<Watch
     func: async () => {
       try {
         logger.info('Listing watched GitHub repositories');
-        const repos = await listWatchedRepos();
+        const repos = await listSubscriptions();
         return {
           success: true,
           watched_repositories: repos,
@@ -579,7 +635,12 @@ export const createListWatchedReposTool = (listWatchedRepos: () => Promise<Watch
  * Creates a tool to search GitHub issues
  */
 export const createSearchIssuesTools = (
-  searchIssues: (query: string, state?: 'open' | 'closed' | 'all') => Promise<IssueInfo[]>,
+  searchIssues: (
+    query: string,
+    state: GitHubIssueAndPRState,
+  ) => Promise<
+    GithubResponse<RestEndpointMethodTypes['search']['issuesAndPullRequests']['response']['data']>
+  >,
 ) =>
   new DynamicStructuredTool({
     name: 'search_github_issues',
@@ -596,7 +657,6 @@ export const createSearchIssuesTools = (
       query: z.string().describe('Keywords to search for in issue titles and bodies'),
       state: z
         .enum(['open', 'closed', 'all'])
-        .optional()
         .describe('Filter issues by state. Default is "open".'),
     }),
     func: async ({ query, state = 'open' }) => {
@@ -617,7 +677,11 @@ export const createSearchIssuesTools = (
 /**
  * Creates a tool to get the authenticated GitHub user's information
  */
-export const createGetAuthenticatedUserTool = (getAuthenticatedUser: () => Promise<UserInfo>) =>
+export const createGetAuthenticatedUserTool = (
+  getAuthenticatedUser: () => Promise<
+    GithubResponse<RestEndpointMethodTypes['users']['getAuthenticated']['response']['data']>
+  >,
+) =>
   new DynamicStructuredTool({
     name: 'get_github_authenticated_user',
     description: `Get information about the authenticated GitHub user (yourself).
@@ -646,7 +710,7 @@ export const createGetAuthenticatedUserTool = (getAuthenticatedUser: () => Promi
 
 export const createListAuthenticatedUserReposTool = (
   listAuthenticatedUserRepos: () => Promise<
-    RestEndpointMethodTypes['repos']['listForAuthenticatedUser']['response']['data']
+    GithubResponse<RestEndpointMethodTypes['repos']['listForAuthenticatedUser']['response']['data']>
   >,
 ) =>
   new DynamicStructuredTool({
@@ -667,7 +731,7 @@ export const createListAuthenticatedUserReposTool = (
 export const createListUserReposTool = (
   listUserRepos: (
     username: string,
-  ) => Promise<RestEndpointMethodTypes['repos']['listForUser']['response']['data']>,
+  ) => Promise<GithubResponse<RestEndpointMethodTypes['repos']['listForUser']['response']['data']>>,
 ) =>
   new DynamicStructuredTool({
     name: 'list_user_repos',
@@ -689,7 +753,7 @@ export const createListUserReposTool = (
 export const createListOrgReposTool = (
   listOrgRepos: (
     org: string,
-  ) => Promise<RestEndpointMethodTypes['repos']['listForOrg']['response']['data']>,
+  ) => Promise<GithubResponse<RestEndpointMethodTypes['repos']['listForOrg']['response']['data']>>,
 ) =>
   new DynamicStructuredTool({
     name: 'list_org_repos',
@@ -712,7 +776,7 @@ export const createListForksTool = (
   listForks: (
     owner: string,
     repo: string,
-  ) => Promise<RestEndpointMethodTypes['repos']['listForks']['response']['data']>,
+  ) => Promise<GithubResponse<RestEndpointMethodTypes['repos']['listForks']['response']['data']>>,
 ) =>
   new DynamicStructuredTool({
     name: 'list_forks',
@@ -736,7 +800,7 @@ export const createForkRepoTool = (
   createFork: (
     owner: string,
     repo: string,
-  ) => Promise<RestEndpointMethodTypes['repos']['createFork']['response']['data']>,
+  ) => Promise<GithubResponse<RestEndpointMethodTypes['repos']['createFork']['response']['data']>>,
 ) =>
   new DynamicStructuredTool({
     name: 'fork_repo',
@@ -757,7 +821,10 @@ export const createForkRepoTool = (
   });
 
 export const createGetDefaultBranchTool = (
-  getDefaultBranch: (owner: string, repo: string) => Promise<string>,
+  getDefaultBranch: (
+    owner: string,
+    repo: string,
+  ) => Promise<GithubResponse<RestEndpointMethodTypes['repos']['get']['response']['data']>>,
 ) =>
   new DynamicStructuredTool({
     name: 'get_default_branch',
@@ -787,7 +854,7 @@ export const createCreateBranchTool = (
     repo: string,
     branchName: string,
     sourceBranch: string,
-  ) => Promise<RestEndpointMethodTypes['git']['createRef']['response']['data']>,
+  ) => Promise<GithubResponse<RestEndpointMethodTypes['git']['createRef']['response']['data']>>,
 ) =>
   new DynamicStructuredTool({
     name: 'create_branch',
@@ -822,7 +889,11 @@ export const createCreateBranchTool = (
   });
 
 export const createCommitTool = (
-  createCommit: (owner: string, repo: string, params: CreateCommitParams) => Promise<CommitInfo>,
+  createCommit: (
+    owner: string,
+    repo: string,
+    params: CreateCommitParams,
+  ) => Promise<GithubResponse<RestEndpointMethodTypes['git']['updateRef']['response']['data']>>,
 ) =>
   new DynamicStructuredTool({
     name: 'create_commit',
@@ -866,12 +937,10 @@ export const createCommitTool = (
     },
   });
 
-export const createPullRequestTool = (
+export const createCreatePullRequestTool = (
   createPullRequest: (
-    owner: string,
-    repo: string,
     params: CreatePullRequestParams,
-  ) => Promise<PullRequestInfo>,
+  ) => Promise<GithubResponse<RestEndpointMethodTypes['pulls']['create']['response']['data']>>,
 ) =>
   new DynamicStructuredTool({
     name: 'create_pull_request',
@@ -899,12 +968,12 @@ export const createPullRequestTool = (
         .optional()
         .describe('Whether maintainers can modify the pull request'),
     }),
-    func: async ({ owner, repo, ...params }) => {
+    func: async params => {
       try {
-        const pullRequest = await createPullRequest(owner, repo, params);
+        const pullRequest = await createPullRequest(params);
         return JSON.stringify(pullRequest, null, 2);
       } catch (error) {
-        logger.error(`Error creating pull request in repository ${owner}/${repo}:`, error);
+        logger.error(`Error creating pull request:`, error);
         throw error;
       }
     },
@@ -912,25 +981,27 @@ export const createPullRequestTool = (
 
 export const createGitHubTools = async (token: string, owner: string, repo: string) => {
   const github = await githubClient(token, owner, repo);
-  const listIssues = (state?: 'open' | 'closed' | 'all') => github.listIssues(state);
+  const listIssues = (state: GitHubIssueAndPRState) => github.listIssues(state);
   const createIssue = (params: CreateIssueParams) => github.createIssue(params);
-  const listComments = (issue_number: number) => github.listComments(issue_number);
-  const createComment = (params: CreateCommentParams) => github.createComment(params);
-  const createReaction = (params: CreateReactionParams) => github.createReaction(params);
+  const listComments = (issue_number: number) => github.listIssueComments(issue_number);
+  const createComment = (params: CreateCommentParams) => github.createIssueComment(params);
+  const createReaction = (issue_number: number, content: GitHubReactionType) =>
+    github.createIssueReaction(issue_number, content);
   const listMentions = () => github.listMentions();
   const listNotifications = (all?: boolean) => github.listNotifications(all);
-  const listPullRequests = (state?: 'open' | 'closed' | 'all') => github.listPullRequests(state);
+  const listPullRequests = (state: GitHubIssueAndPRState) => github.listPullRequests(state);
   const getPullRequest = (pull_number: number) => github.getPullRequest(pull_number);
-  const listPRComments = (pull_number: number) => github.listPRComments(pull_number);
-  const createPRComment = (params: CreatePRCommentParams) => github.createPRComment(params);
-  const createPRReaction = (params: CreateReactionParams & { pull_number: number }) =>
-    github.createPRReaction(params);
+  const listPRComments = (pull_number: number) => github.listPullRequestComments(pull_number);
+  const createPRComment = (params: CreatePRCommentParams) =>
+    github.createPullRequestComment(params);
+  const createPullRequestReaction = (pull_number: number, content: GitHubReactionType) =>
+    github.createPullRequestReaction(pull_number, content);
   const watchRepo = (targetOwner: string, targetRepo: string, ignored?: boolean) =>
-    github.watchRepo(targetOwner, targetRepo, ignored);
+    github.subscribeToRepo(targetOwner, targetRepo, ignored);
   const unwatchRepo = (targetOwner: string, targetRepo: string) =>
-    github.unwatchRepo(targetOwner, targetRepo);
-  const listWatchedRepos = () => github.listWatchedRepos();
-  const searchIssues = (query: string, state?: 'open' | 'closed' | 'all') =>
+    github.unsubscribeFromRepo(targetOwner, targetRepo);
+  const listWatchedRepos = () => github.listSubscriptions();
+  const searchIssues = (query: string, state: GitHubIssueAndPRState) =>
     github.searchIssues(query, state);
   const getAuthenticatedUser = () => github.getAuthenticatedUser();
   const listAuthenticatedUserRepos = () => github.listAuthenticatedUserRepos();
@@ -950,25 +1021,21 @@ export const createGitHubTools = async (token: string, owner: string, repo: stri
   ) => github.createBranch(targetOwner, targetRepo, branchName, sourceBranch);
   const createCommitFn = (targetOwner: string, targetRepo: string, params: CreateCommitParams) =>
     github.createCommit(targetOwner, targetRepo, params);
-  const createPullRequestFn = (
-    targetOwner: string,
-    targetRepo: string,
-    params: CreatePullRequestParams,
-  ) => github.createPullRequest(targetOwner, targetRepo, params);
+  const createPullRequestFn = (params: CreatePullRequestParams) => github.createPullRequest(params);
 
   return [
     createListIssuesTools(listIssues),
     createCreateIssueTool(createIssue),
     createListCommentsTools(listComments),
     createCreateCommentTool(createComment),
-    createCreateReactionTool(createReaction),
+    createCreateReactionForIssueTool(createReaction),
     createListMentionsTool(listMentions),
     createListNotificationsTool(listNotifications),
     createListPullRequestsTool(listPullRequests),
     createGetPullRequestTool(getPullRequest),
     createListPRCommentsTool(listPRComments),
     createCreatePRCommentTool(createPRComment),
-    createCreatePRReactionTool(createPRReaction),
+    createCreateReactionForPullRequestTool(createPullRequestReaction),
     createWatchRepoTool(watchRepo),
     createUnwatchRepoTool(unwatchRepo),
     createListWatchedReposTool(listWatchedRepos),
@@ -982,6 +1049,6 @@ export const createGitHubTools = async (token: string, owner: string, repo: stri
     createGetDefaultBranchTool(getDefaultBranch),
     createCreateBranchTool(createBranch),
     createCommitTool(createCommitFn),
-    createPullRequestTool(createPullRequestFn),
+    createCreatePullRequestTool(createPullRequestFn),
   ];
 };
