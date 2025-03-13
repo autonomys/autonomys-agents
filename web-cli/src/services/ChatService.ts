@@ -1,4 +1,4 @@
-import { API_BASE_URL } from './Api';
+import { API_BASE_URL, API_TOKEN, apiRequest, getHeaders } from './Api';
 export interface ChatMessage {
   id: string;
   sender: 'user' | 'agent';
@@ -50,7 +50,8 @@ export const connectToChatStream = (namespace: string): void => {
     return;
   }
 
-  const url = `${API_BASE_URL}/namespaces/${namespace}/chat/stream`;
+  const tokenParam = API_TOKEN ? `?token=${encodeURIComponent(API_TOKEN)}` : '';
+  const url = `${API_BASE_URL}/namespaces/${namespace}/chat/stream${tokenParam}`;
   const eventSource = new EventSource(url);
 
   eventSource.onmessage = event => {
@@ -98,32 +99,30 @@ export const sendChatMessage = async (
   namespace: string,
   content: string,
 ): Promise<{ streaming: boolean }> => {
-  const url = `${API_BASE_URL}/namespaces/${namespace}/chat`;
-
   try {
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
+    const response = await apiRequest<{ streaming: boolean } | Response>(
+      `/namespaces/${namespace}/chat`,
+      {
+        method: 'POST',
+        body: JSON.stringify({ message: content }),
+        // Pass Response so we can check headers
+        headers: getHeaders(),
       },
-      body: JSON.stringify({ message: content }),
-    });
+    );
 
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'Failed to send message');
-    }
-
-    if (response.headers.get('Content-Type')?.includes('text/event-stream')) {
-      const reader = response.body?.getReader();
-      if (!reader) {
-        throw new Error('Failed to get response reader');
+    // If we're getting a raw Response object (for streaming)
+    if (response instanceof Response) {
+      if (response.headers.get('Content-Type')?.includes('text/event-stream')) {
+        const reader = response.body?.getReader();
+        if (!reader) {
+          throw new Error('Failed to get response reader');
+        }
+        return { streaming: true };
       }
-
-      return { streaming: true };
+      return { streaming: false };
     }
 
-    return { streaming: false };
+    return response;
   } catch (error) {
     console.error('Error sending chat message:', error);
     throw error;
