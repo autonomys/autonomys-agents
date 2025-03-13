@@ -10,7 +10,7 @@ import {
   getLogMessageListLevel,
   logMessageListMessage,
   getLogMessageListMessageBox,
-  searchHighlight
+  searchHighlight,
 } from './styles/LogStyles';
 import { LogMessageListProps } from '../../types/types';
 
@@ -28,11 +28,18 @@ interface LogMessage {
 const highlightSearchMatches = (text: string, searchTerm: string): React.ReactNode => {
   if (!searchTerm || !text) return text;
 
-  const parts = text.split(new RegExp(`(${searchTerm})`, 'gi'));
-  return parts.map((part, i) => 
-    part.toLowerCase() === searchTerm.toLowerCase() 
-      ? <Text as="span" key={i} {...searchHighlight}>{part}</Text> 
-      : part
+  // Use a case-insensitive regex for more reliable matching
+  const regex = new RegExp(`(${searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+  const parts = text.split(regex);
+
+  return parts.map((part, i) =>
+    regex.test(part) ? (
+      <Text as='span' key={i} {...searchHighlight}>
+        {part}
+      </Text>
+    ) : (
+      part
+    ),
   );
 };
 
@@ -42,7 +49,7 @@ export const LogMessageList: React.FC<LogMessageListProps> = ({
   setLogRef,
   searchTerm = '',
   currentSearchIndex = -1,
-  searchResults = []
+  searchResults = [],
 }) => {
   const formattedMessages = filteredMessages.map(
     msg =>
@@ -105,7 +112,11 @@ export const LogMessageList: React.FC<LogMessageListProps> = ({
           const isCurrentSearchMatch = searchResults[currentSearchIndex] === index;
 
           return (
-            <Box key={`log-${index}`} {...getLogMessageListMessageBox(msgColor, isSearchMatch, isCurrentSearchMatch)} data-log-index={index}>
+            <Box
+              key={`log-${index}`}
+              {...getLogMessageListMessageBox(msgColor, isSearchMatch, isCurrentSearchMatch)}
+              data-log-index={index}
+            >
               <Flex direction='row' wrap='wrap' gap={1} alignItems='baseline'>
                 <Text {...logMessageListTimestamp}>
                   [{msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString() : 'N/A'}]

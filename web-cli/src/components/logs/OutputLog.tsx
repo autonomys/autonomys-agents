@@ -39,7 +39,7 @@ const OutputLog: React.FC<OutputLogProps> = ({ messages }) => {
     handleSearchChange,
     searchInNamespace,
     goToNextSearchResult,
-    goToPrevSearchResult
+    goToPrevSearchResult,
   } = useLogMessages();
 
   // Handle keyboard shortcut for search (Ctrl+F)
@@ -76,6 +76,7 @@ const OutputLog: React.FC<OutputLogProps> = ({ messages }) => {
   };
 
   const handleCloseSearch = () => {
+    handleSearchChange('');
     setIsSearchVisible(false);
   };
 

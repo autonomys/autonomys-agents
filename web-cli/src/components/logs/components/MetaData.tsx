@@ -72,11 +72,11 @@ export const MetaData: React.FC<MetaDataProps> = ({ data, label = 'Metadata' }) 
     }
 
     return Object.entries(data).map(([key, value], index) => (
-      <MetadataValue 
-        key={`${key}-${index}`} 
-        name={key} 
-        value={value} 
-        path={key} 
+      <MetadataValue
+        key={`${key}-${index}`}
+        name={key}
+        value={value}
+        path={key}
         fontSize={fontSize}
       />
     ));
@@ -92,44 +92,27 @@ export const MetaData: React.FC<MetaDataProps> = ({ data, label = 'Metadata' }) 
         </Text>
 
         {!isOpen && fieldCount > 0 && <Text {...metaDataPreviewText}>{getPreviewText()}</Text>}
-        
-        {isOpen && <Box flex="1" />}
-        
+
+        {isOpen && <Box flex='1' />}
+
         {isOpen && (
-          <Flex 
-            {...fontSizeControlsContainer}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <Text {...fontSizeLabel}>
-              TEXT_SIZE
-            </Text>
-            
-            <Button
-              {...getFontSizeButton(false)}
-              onClick={decreaseFontSize}
-            >
+          <Flex {...fontSizeControlsContainer} onClick={e => e.stopPropagation()}>
+            <Text {...fontSizeLabel}>TEXT_SIZE</Text>
+
+            <Button {...getFontSizeButton(false)} onClick={decreaseFontSize}>
               -
             </Button>
-            
-            <Text {...fontSizeDisplay}>
-              {fontSize}
-            </Text>
-            
-            <Button
-              {...getFontSizeButton(true)}
-              onClick={increaseFontSize}
-            >
+
+            <Text {...fontSizeDisplay}>{fontSize}</Text>
+
+            <Button {...getFontSizeButton(true)} onClick={increaseFontSize}>
               +
             </Button>
           </Flex>
         )}
       </Flex>
 
-      {isOpen && (
-        <Box {...metaDataContentContainer}>
-          {renderMetadata()}
-        </Box>
-      )}
+      {isOpen && <Box {...metaDataContentContainer}>{renderMetadata()}</Box>}
     </Box>
   );
 };

@@ -17,7 +17,13 @@ interface ObjectNodeProps {
   fontSize?: number;
 }
 
-export const ObjectNode: React.FC<ObjectNodeProps> = ({ name, value, path = '', depth = 0, fontSize }) => {
+export const ObjectNode: React.FC<ObjectNodeProps> = ({
+  name,
+  value,
+  path = '',
+  depth = 0,
+  fontSize,
+}) => {
   const [isOpen, setIsOpen] = useState(depth < 1);
   const newPath = path ? `${path}.${name}` : name;
   const isArray = Array.isArray(value);
@@ -34,7 +40,12 @@ export const ObjectNode: React.FC<ObjectNodeProps> = ({ name, value, path = '', 
           {isOpen ? '▼' : '▶'}
         </Button>
 
-        <Text fontWeight='bold' color={isArray ? 'brand.neonBlue' : 'cyan.300'} mr={1} fontSize={fontSize ? `${fontSize}px` : undefined}>
+        <Text
+          fontWeight='bold'
+          color={isArray ? 'brand.neonBlue' : 'cyan.300'}
+          mr={1}
+          fontSize={fontSize ? `${fontSize}px` : undefined}
+        >
           {name}
           {isArray ? ` (${entries.length})` : ''}:
         </Text>
@@ -59,7 +70,12 @@ export const ObjectNode: React.FC<ObjectNodeProps> = ({ name, value, path = '', 
           ))}
 
           {entries.length === 0 && (
-            <Text fontSize={fontSize ? `${fontSize}px` : 'sm'} color='gray.500' fontStyle='italic' ml={4}>
+            <Text
+              fontSize={fontSize ? `${fontSize}px` : 'sm'}
+              color='gray.500'
+              fontStyle='italic'
+              ml={4}
+            >
               {isArray ? 'Empty array' : 'Empty object'}
             </Text>
           )}

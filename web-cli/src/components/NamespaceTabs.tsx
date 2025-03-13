@@ -75,7 +75,7 @@ const NamespaceTabs: React.FC<NamespaceTabsProps> = ({
   onNamespaceChange,
   onRefreshNamespaces,
   onClearLogs,
-  onShowSearch
+  onShowSearch,
 }) => {
   const [neonPink] = useToken('colors', ['brand.neonPink']);
   const [activeIndex, setActiveIndex] = useState(namespaces.indexOf(activeNamespace));
@@ -422,7 +422,7 @@ const NamespaceTabs: React.FC<NamespaceTabsProps> = ({
               CLEAR
             </Text>
           </Box>
-          
+
           {/* Search Neural Node */}
           {onShowSearch && (
             <Box
@@ -452,7 +452,12 @@ const NamespaceTabs: React.FC<NamespaceTabsProps> = ({
                   boxShadow: '0 0 15px rgba(255, 193, 7, 0.5)',
                 }}
               >
-                <Text fontSize='16px' fontWeight='bold' color='rgba(255, 193, 7, 0.9)' lineHeight='1'>
+                <Text
+                  fontSize='16px'
+                  fontWeight='bold'
+                  color='rgba(255, 193, 7, 0.9)'
+                  lineHeight='1'
+                >
                   🔍
                 </Text>
               </Box>

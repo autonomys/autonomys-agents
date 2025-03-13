@@ -287,22 +287,36 @@ export const searchHighlight: TextProps = {
   px: '1px',
   mx: '-1px',
   borderRadius: '2px',
-  textShadow: 'none'
+  textShadow: 'none',
 };
 
 // Modify getLogMessageListMessageBox to handle search matches
-export const getLogMessageListMessageBox = (color: string, isSearchMatch: boolean = false, isCurrentSearchMatch: boolean = false): BoxProps => ({
+export const getLogMessageListMessageBox = (
+  color: string,
+  isSearchMatch: boolean = false,
+  isCurrentSearchMatch: boolean = false,
+): BoxProps => ({
   mb: 3,
   p: 3,
   borderRadius: 'md',
-  bg: isCurrentSearchMatch ? 'rgba(255, 204, 0, 0.08)' : isSearchMatch ? 'rgba(255, 204, 0, 0.05)' : 'rgba(0, 0, 0, 0.2)',
+  bg: isCurrentSearchMatch
+    ? 'rgba(255, 204, 0, 0.08)'
+    : isSearchMatch
+      ? 'rgba(255, 204, 0, 0.05)'
+      : 'rgba(0, 0, 0, 0.2)',
   borderLeft: '3px solid',
   borderColor: isCurrentSearchMatch ? 'yellow.400' : color,
   position: 'relative',
   transition: 'all 0.2s ease',
   _hover: {
-    bg: isCurrentSearchMatch ? 'rgba(255, 204, 0, 0.12)' : isSearchMatch ? 'rgba(255, 204, 0, 0.08)' : 'rgba(0, 0, 0, 0.3)',
-    boxShadow: isCurrentSearchMatch ? '0 0 15px rgba(255, 204, 0, 0.2)' : '0 0 12px rgba(0, 0, 0, 0.3)',
+    bg: isCurrentSearchMatch
+      ? 'rgba(255, 204, 0, 0.12)'
+      : isSearchMatch
+        ? 'rgba(255, 204, 0, 0.08)'
+        : 'rgba(0, 0, 0, 0.3)',
+    boxShadow: isCurrentSearchMatch
+      ? '0 0 15px rgba(255, 204, 0, 0.2)'
+      : '0 0 12px rgba(0, 0, 0, 0.3)',
   },
   _before: {
     content: '""',
@@ -312,9 +326,7 @@ export const getLogMessageListMessageBox = (color: string, isSearchMatch: boolea
     width: '3px',
     height: '100%',
     bg: isCurrentSearchMatch ? 'yellow.400' : color,
-    boxShadow: isCurrentSearchMatch 
-      ? '0 0 8px rgba(255, 204, 0, 0.7)' 
-      : `0 0 8px ${color}`,
+    boxShadow: isCurrentSearchMatch ? '0 0 8px rgba(255, 204, 0, 0.7)' : `0 0 8px ${color}`,
   },
 });
 
@@ -470,12 +482,12 @@ export const logSearchInput: InputProps = {
   letterSpacing: '0.02em',
   _placeholder: { color: 'gray.500' },
   _hover: {
-    borderColor: 'brand.neonPink'
+    borderColor: 'brand.neonPink',
   },
   _focus: {
     borderColor: 'brand.neonPink',
-    boxShadow: '0 0 0 1px #ff00cc'
-  }
+    boxShadow: '0 0 0 1px #ff00cc',
+  },
 };
 
 export const logSearchNavButton: ButtonProps = {
@@ -520,59 +532,59 @@ export const logSearchOverlay: FlexProps = {
     right: 0,
     height: '1px',
     bgGradient: 'linear(to-r, transparent, brand.neonPink, transparent)',
-  }
+  },
 };
 
 // Styles for font size controls in MetaData component
 export const fontSizeControlsContainer: FlexProps = {
-  ml: "auto",
-  alignItems: "center",
-  bg: "#121218",
-  borderRadius: "md",
-  overflow: "hidden",
-  border: "1px solid",
-  borderColor: "rgba(255, 0, 204, 0.4)",
-  position: "relative",
-  boxShadow: "0 0 10px rgba(0, 0, 0, 0.3)",
+  ml: 'auto',
+  alignItems: 'center',
+  bg: '#121218',
+  borderRadius: 'md',
+  overflow: 'hidden',
+  border: '1px solid',
+  borderColor: 'rgba(255, 0, 204, 0.4)',
+  position: 'relative',
+  boxShadow: '0 0 10px rgba(0, 0, 0, 0.3)',
 };
 
 export const fontSizeLabel: TextProps = {
-  fontSize: "xs",
-  color: "brand.neonPink",
+  fontSize: 'xs',
+  color: 'brand.neonPink',
   px: 2,
-  py: "3px",
-  bg: "rgba(25, 25, 35, 0.8)",
-  borderRight: "1px solid rgba(255, 0, 204, 0.4)",
-  fontWeight: "bold",
+  py: '3px',
+  bg: 'rgba(25, 25, 35, 0.8)',
+  borderRight: '1px solid rgba(255, 0, 204, 0.4)',
+  fontWeight: 'bold',
 };
 
 export const fontSizeDisplay: TextProps = {
-  fontSize: "sm",
-  fontWeight: "600",
+  fontSize: 'sm',
+  fontWeight: '600',
   px: 3,
-  color: "white",
-  minW: "30px",
-  textAlign: "center",
-  bg: "#171720",
+  color: 'white',
+  minW: '30px',
+  textAlign: 'center',
+  bg: '#171720',
 };
 
 export const getFontSizeButton = (isIncrease: boolean): ButtonProps => ({
-  "aria-label": isIncrease ? "Increase font size" : "Decrease font size",
-  height: "24px",
-  minW: "26px",
+  'aria-label': isIncrease ? 'Increase font size' : 'Decrease font size',
+  height: '24px',
+  minW: '26px',
   px: 1,
-  bg: "#222230",
-  color: "brand.neonPink",
+  bg: '#222230',
+  color: 'brand.neonPink',
   borderRadius: 0,
-  fontWeight: "bold",
-  fontSize: "16px",
-  borderRight: isIncrease ? undefined : "1px solid rgba(255, 0, 204, 0.2)",
-  borderLeft: isIncrease ? "1px solid rgba(255, 0, 204, 0.2)" : undefined,
+  fontWeight: 'bold',
+  fontSize: '16px',
+  borderRight: isIncrease ? undefined : '1px solid rgba(255, 0, 204, 0.2)',
+  borderLeft: isIncrease ? '1px solid rgba(255, 0, 204, 0.2)' : undefined,
   _hover: {
-    bg: "rgba(255, 0, 204, 0.15)"
+    bg: 'rgba(255, 0, 204, 0.15)',
   },
   _active: {
-    bg: "rgba(255, 0, 204, 0.3)"
+    bg: 'rgba(255, 0, 204, 0.3)',
   },
-  transition: "all 0.15s",
+  transition: 'all 0.15s',
 });
