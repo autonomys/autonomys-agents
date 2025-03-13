@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Box, Flex, Text } from '@chakra-ui/react';
+import { Box, Flex, Text, Button } from '@chakra-ui/react';
 import { MetadataValue } from './';
 import {
   metaDataContainer,
@@ -9,6 +9,10 @@ import {
   getMetaDataFieldCount,
   metaDataPreviewText,
   metaDataContentContainer,
+  fontSizeControlsContainer,
+  fontSizeLabel,
+  fontSizeDisplay,
+  getFontSizeButton,
 } from '../styles/LogStyles';
 
 interface MetaDataProps {
@@ -18,14 +22,23 @@ interface MetaDataProps {
 
 export const MetaData: React.FC<MetaDataProps> = ({ data, label = 'Metadata' }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [fontSize, setFontSize] = useState(14);
   const toggleMetadata = () => setIsOpen(!isOpen);
 
-  // Count of fields in the metadata
   const fieldCount = useMemo(() => {
     return Object.keys(data).length;
   }, [data]);
 
-  // Generate a preview of the metadata content
+  const increaseFontSize = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setFontSize(prev => Math.min(prev + 1, 20));
+  };
+
+  const decreaseFontSize = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setFontSize(prev => Math.max(prev - 1, 10));
+  };
+
   const getPreviewText = (): string => {
     if (fieldCount === 0) return 'Empty metadata';
 
@@ -49,7 +62,6 @@ export const MetaData: React.FC<MetaDataProps> = ({ data, label = 'Metadata' }) 
     return keys.length < fieldCount ? `${preview}, ...` : preview;
   };
 
-  // Render metadata as structured content
   const renderMetadata = () => {
     if (fieldCount === 0) {
       return (
@@ -60,7 +72,13 @@ export const MetaData: React.FC<MetaDataProps> = ({ data, label = 'Metadata' }) 
     }
 
     return Object.entries(data).map(([key, value], index) => (
-      <MetadataValue key={`${key}-${index}`} name={key} value={value} path={key} />
+      <MetadataValue 
+        key={`${key}-${index}`} 
+        name={key} 
+        value={value} 
+        path={key} 
+        fontSize={fontSize}
+      />
     ));
   };
 
@@ -74,9 +92,44 @@ export const MetaData: React.FC<MetaDataProps> = ({ data, label = 'Metadata' }) 
         </Text>
 
         {!isOpen && fieldCount > 0 && <Text {...metaDataPreviewText}>{getPreviewText()}</Text>}
+        
+        {isOpen && <Box flex="1" />}
+        
+        {isOpen && (
+          <Flex 
+            {...fontSizeControlsContainer}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <Text {...fontSizeLabel}>
+              TEXT_SIZE
+            </Text>
+            
+            <Button
+              {...getFontSizeButton(false)}
+              onClick={decreaseFontSize}
+            >
+              -
+            </Button>
+            
+            <Text {...fontSizeDisplay}>
+              {fontSize}
+            </Text>
+            
+            <Button
+              {...getFontSizeButton(true)}
+              onClick={increaseFontSize}
+            >
+              +
+            </Button>
+          </Flex>
+        )}
       </Flex>
 
-      {isOpen && <Box {...metaDataContentContainer}>{renderMetadata()}</Box>}
+      {isOpen && (
+        <Box {...metaDataContentContainer}>
+          {renderMetadata()}
+        </Box>
+      )}
     </Box>
   );
 };

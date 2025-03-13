@@ -6,7 +6,7 @@ import {
   objectNodeToggleButton,
   getObjectNodeChildrenContainer,
 } from '../styles/LogStyles';
-// Import MetadataValue from the index file to avoid circular references
+
 import { MetadataValue } from './';
 
 interface ObjectNodeProps {
@@ -14,15 +14,15 @@ interface ObjectNodeProps {
   value: any;
   path?: string;
   depth?: number;
+  fontSize?: number;
 }
 
-export const ObjectNode: React.FC<ObjectNodeProps> = ({ name, value, path = '', depth = 0 }) => {
+export const ObjectNode: React.FC<ObjectNodeProps> = ({ name, value, path = '', depth = 0, fontSize }) => {
   const [isOpen, setIsOpen] = useState(depth < 1);
   const newPath = path ? `${path}.${name}` : name;
   const isArray = Array.isArray(value);
   const entries = isArray ? value.map((item, i) => [i, item]) : Object.entries(value);
 
-  // Get the icon for the type (array or object)
   const getIcon = () => {
     return isArray ? '[]' : '{}';
   };
@@ -34,12 +34,12 @@ export const ObjectNode: React.FC<ObjectNodeProps> = ({ name, value, path = '', 
           {isOpen ? '▼' : '▶'}
         </Button>
 
-        <Text fontWeight='bold' color={isArray ? 'brand.neonBlue' : 'cyan.300'} mr={1}>
+        <Text fontWeight='bold' color={isArray ? 'brand.neonBlue' : 'cyan.300'} mr={1} fontSize={fontSize ? `${fontSize}px` : undefined}>
           {name}
           {isArray ? ` (${entries.length})` : ''}:
         </Text>
 
-        <Text as='span' fontSize='xs' color='gray.500'>
+        <Text as='span' fontSize={fontSize ? `${fontSize}px` : 'xs'} color='gray.500'>
           {getIcon()}
         </Text>
       </Flex>
@@ -54,11 +54,12 @@ export const ObjectNode: React.FC<ObjectNodeProps> = ({ name, value, path = '', 
               path={newPath}
               depth={depth + 1}
               index={isArray ? Number(key) : undefined}
+              fontSize={fontSize}
             />
           ))}
 
           {entries.length === 0 && (
-            <Text fontSize='sm' color='gray.500' fontStyle='italic' ml={4}>
+            <Text fontSize={fontSize ? `${fontSize}px` : 'sm'} color='gray.500' fontStyle='italic' ml={4}>
               {isArray ? 'Empty array' : 'Empty object'}
             </Text>
           )}

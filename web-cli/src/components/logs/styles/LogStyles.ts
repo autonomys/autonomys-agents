@@ -522,3 +522,57 @@ export const logSearchOverlay: FlexProps = {
     bgGradient: 'linear(to-r, transparent, brand.neonPink, transparent)',
   }
 };
+
+// Styles for font size controls in MetaData component
+export const fontSizeControlsContainer: FlexProps = {
+  ml: "auto",
+  alignItems: "center",
+  bg: "#121218",
+  borderRadius: "md",
+  overflow: "hidden",
+  border: "1px solid",
+  borderColor: "rgba(255, 0, 204, 0.4)",
+  position: "relative",
+  boxShadow: "0 0 10px rgba(0, 0, 0, 0.3)",
+};
+
+export const fontSizeLabel: TextProps = {
+  fontSize: "xs",
+  color: "brand.neonPink",
+  px: 2,
+  py: "3px",
+  bg: "rgba(25, 25, 35, 0.8)",
+  borderRight: "1px solid rgba(255, 0, 204, 0.4)",
+  fontWeight: "bold",
+};
+
+export const fontSizeDisplay: TextProps = {
+  fontSize: "sm",
+  fontWeight: "600",
+  px: 3,
+  color: "white",
+  minW: "30px",
+  textAlign: "center",
+  bg: "#171720",
+};
+
+export const getFontSizeButton = (isIncrease: boolean): ButtonProps => ({
+  "aria-label": isIncrease ? "Increase font size" : "Decrease font size",
+  height: "24px",
+  minW: "26px",
+  px: 1,
+  bg: "#222230",
+  color: "brand.neonPink",
+  borderRadius: 0,
+  fontWeight: "bold",
+  fontSize: "16px",
+  borderRight: isIncrease ? undefined : "1px solid rgba(255, 0, 204, 0.2)",
+  borderLeft: isIncrease ? "1px solid rgba(255, 0, 204, 0.2)" : undefined,
+  _hover: {
+    bg: "rgba(255, 0, 204, 0.15)"
+  },
+  _active: {
+    bg: "rgba(255, 0, 204, 0.3)"
+  },
+  transition: "all 0.15s",
+});

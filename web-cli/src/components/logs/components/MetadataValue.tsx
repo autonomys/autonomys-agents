@@ -18,6 +18,7 @@ interface MetadataValueProps {
   path?: string;
   depth?: number;
   index?: number;
+  fontSize?: number;
 }
 
 export const MetadataValue: React.FC<MetadataValueProps> = ({
@@ -26,12 +27,13 @@ export const MetadataValue: React.FC<MetadataValueProps> = ({
   path = '',
   depth = 0,
   index,
+  fontSize,
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const isLongString = typeof value === 'string' && value.length > 80;
 
   if (value !== null && typeof value === 'object') {
-    return <ObjectNode name={name} value={value} path={path} depth={depth} />;
+    return <ObjectNode name={name} value={value} path={path} depth={depth} fontSize={fontSize} />;
   }
   const getValueStyle = () => {
     if (value === null || value === undefined) {
@@ -79,12 +81,13 @@ export const MetadataValue: React.FC<MetadataValueProps> = ({
   return (
     <Box {...metadataValueContainer}>
       <Flex alignItems='baseline' flexWrap='wrap'>
-        {index !== undefined && <Text {...metadataValueIndexLabel}>[{index}]</Text>}
-        <Text {...metadataValueNameLabel}>{index === undefined ? `${name}:` : ''}</Text>
+        {index !== undefined && <Text {...metadataValueIndexLabel} fontSize={fontSize ? `${fontSize}px` : undefined}>[{index}]</Text>}
+        <Text {...metadataValueNameLabel} fontSize={fontSize ? `${fontSize}px` : undefined}>{index === undefined ? `${name}:` : ''}</Text>
         <Text
           as='span'
           {...(isExpanded ? { color: 'gray.500', fontStyle: 'italic' } : valueStyle)}
           {...getMetadataValueText(isExpanded, isLongString)}
+          fontSize={fontSize ? `${fontSize}px` : undefined}
         >
           {getDisplayValue()}
         </Text>
@@ -95,7 +98,7 @@ export const MetadataValue: React.FC<MetadataValueProps> = ({
             onClick={() => setIsExpanded(!isExpanded)}
             {...getMetadataValueExpandButton(isExpanded)}
           >
-            <Text fontSize='10px' mr={1}>
+            <Text fontSize={fontSize ? `${Math.max(10, fontSize - 4)}px` : '10px'} mr={1}>
               {isExpanded ? '▲' : '▼'}
             </Text>
             {isExpanded ? 'Collapse' : 'Expand'}
@@ -103,7 +106,7 @@ export const MetadataValue: React.FC<MetadataValueProps> = ({
         )}
 
         {(!isLongString || !isExpanded) && (
-          <Text as='span' {...metadataValueTypeLabel}>
+          <Text as='span' {...metadataValueTypeLabel} fontSize={fontSize ? `${Math.max(10, fontSize - 2)}px` : undefined}>
             {getTypeLabel()}
           </Text>
         )}
@@ -111,7 +114,7 @@ export const MetadataValue: React.FC<MetadataValueProps> = ({
 
       {isLongString && isExpanded && (
         <Box {...metadataValueExpandedContent}>
-          <Text as='span' {...metadataValueExpandedText}>
+          <Text as='span' {...metadataValueExpandedText} fontSize={fontSize ? `${fontSize}px` : undefined}>
             {value}
           </Text>
         </Box>
