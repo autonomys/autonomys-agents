@@ -4,10 +4,10 @@ import { OrchestratorStateType, Tools } from '../types.js';
 import { workflowControlParser } from './inputPrompt.js';
 import { LLMConfiguration } from '../../../../services/llm/types.js';
 import { ChatPromptTemplate } from '@langchain/core/prompts';
+import { Logger } from 'winston';
+import { attachLogger } from '../../../../api/server.js';
 
-const logger = createLogger('orchestrator-input-node');
-
-const parseWorkflowControl = async (content: unknown) => {
+const parseWorkflowControl = async (content: unknown, logger: Logger) => {
   if (
     typeof content === 'string' &&
     content != '' &&
@@ -31,11 +31,14 @@ export const createInputNode = ({
   modelConfig,
   inputPrompt,
   tools,
+  namespace,
 }: {
   modelConfig: LLMConfiguration;
   inputPrompt: ChatPromptTemplate;
   tools: Tools;
+  namespace: string;
 }) => {
+  const logger = attachLogger(createLogger(`${namespace}-input-node`), namespace);
   const runNode = async (state: OrchestratorStateType) => {
     logger.info('MODEL CONFIG:', { modelConfig });
     const { messages, executedTools } = state;
@@ -70,7 +73,7 @@ export const createInputNode = ({
       outputTokens: usage?.output_tokens,
     });
 
-    const workflowControl = await parseWorkflowControl(result.content);
+    const workflowControl = await parseWorkflowControl(result.content, logger);
 
     const newMessage = { messages: [result] };
     if (workflowControl) {

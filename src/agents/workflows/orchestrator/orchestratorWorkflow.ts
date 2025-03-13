@@ -221,6 +221,7 @@ export const createOrchestratorRunner = async (
       if (finalState?.finishWorkflow?.messages?.[0]?.content) {
         const { summary, schedule } = await parseFinishedWorkflow(
           finalState.finishWorkflow.messages[0].content,
+          workflowLogger,
         );
 
         const workflowSummary = `This action finished running at ${new Date().toISOString()}. Action summary: ${summary}`;
