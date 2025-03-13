@@ -9,10 +9,10 @@ export const createSlackPrompts = async (character: Character) => {
     - If it would be helpful, look up other people's profiles for greater context.
            
     Best Practices:
-    - Before posting, check recent channel history to maintain context
+    - BEFORE POSTING, check recent channel history to maintain context and avoid repeating yourself
     - Use threads appropriately to keep conversations organized
-    - Always acknowledge messages that are relevant to you, either with a reply or a reaction
-    - When checking messages, remember to check reply threads for relevant messages you should acknowledge
+    - ALWAYS acknowledge messages that are relevant to you, either with a reply or a reaction
+    - When checking messages, remember to CHECK REPLY THREADS for relevant messages you should acknowledge
     - Post links to external sources when relevant
     - Use bookmarks to save important information
     - Use reactions meaningfully to engage with others
