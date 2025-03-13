@@ -69,7 +69,11 @@ export const createInputPrompt = async (character: Character, customInstructions
 };
 
 const workflowControlSchema = z.object({
-  shouldStop: z.boolean().describe('Whether the workflow should stop. Set to true if the workflow should stop. Set to false if the workflow should continue.'),
+  shouldStop: z
+    .boolean()
+    .describe(
+      'Whether the workflow should stop. Set to true if the workflow should stop. Set to false if the workflow should continue.',
+    ),
   reason: z.string().describe('The detailed reason for stopping the workflow.'),
 });
 

@@ -37,7 +37,8 @@ export const createPostSlackMsgTool = (
       channelId: z.string().describe('The channel ID to post to.'),
       message: z.string().describe('The message to post to Slack'),
       blocks: z
-        .array(z.any())
+        .any()
+        .optional()
         .describe('The blocks to post to Slack using Slack block-kit (optional)'),
       threadTs: z.string().describe('The thread timestamp to post to if this is a reply.'),
     }),
@@ -48,7 +49,7 @@ export const createPostSlackMsgTool = (
         logger.info('Message posted to Slack:', { result });
         return {
           success: true,
-          message: result,  
+          message: result,
         };
       } catch (error) {
         logger.error('Error posting message to Slack:', error);
