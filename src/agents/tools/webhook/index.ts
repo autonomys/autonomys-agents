@@ -15,10 +15,21 @@ export const createWebhookIssueReportTool = (url: string) =>
     }),
     func: async ({ message }: { message: string }) => {
       logger.info('Reporting issue', { message });
-      const _response = await axios.post(`${url}/api/webhook`, {
-        type: 'issue',
-        message,
-      });
-      return 'Issue reported';
+      try {
+        const _response = await axios.post(`${url}/api/webhook`, {
+          type: 'issue',
+          message,
+        });
+        return {
+          success: true,
+          message: 'Issue reported',
+        };
+      } catch (error) {
+        logger.error('Failed to report issue', { error });
+        return {
+          success: false,
+          message: 'Failed to report issue',
+        };
+      }
     },
   });
