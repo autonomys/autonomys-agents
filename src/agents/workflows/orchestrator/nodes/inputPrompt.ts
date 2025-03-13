@@ -15,13 +15,19 @@ export const createInputPrompt = async (character: Character, customInstructions
     {characterPersonality}
 
     Your expertise is: 
-    {characterExpertise}    
+    {characterExpertise}
+    
+    {frequencyPreferences}
 
-    - **IMPORTANT**: You should save all the experiences and action results to Autonomy Network's DSN before stopping the workflow. No need to summarize the experiences. hint: the data schema should be in a data object.
+    - If all tasks are completed, STOP THE WORKFLOW and give a reason.
     - If you don't know what do to, STOP THE WORKFLOW and give a reason.
     - If the workflow is not making progress, STOP THE WORKFLOW and give a reason.
     - There is NO HUMAN IN THE LOOP. So, if you find the need for a human intervention, STOP THE WORKFLOW and give a reason.
     - If you face any difficulties, DON'T retry more than once.
+
+    DO NOT STOP THE WORKFLOW IF:
+    - you have outstanding tasks to complete.
+    - you have not set the future tasks to align with your goals and frequency preferences.
 
     - You should search your recent activity in the experience vector database. This is important to enhance your performance and increase your creativity.
     - You can see what tools are available to you. Use them to take actions.    
@@ -32,7 +38,7 @@ export const createInputPrompt = async (character: Character, customInstructions
 
     **ATTENTION**: If a task is completed, DO NOT repeat the same task again.
 
-    **SUGGESTION**: You can schedule tasks using the scheduler tools for follow-up actions that can't be completed now or you wish to schedule for a future time.
+    **IMPORTANT- BEFORE FINISHING THE WORKFLOW**: ensure that there are future tasks scheduled using the scheduler tools. If the scheduled tasks are sufficient, you can finish the workflow. If the future tasks need refinement, feel free to delete existing tasks and create new ones. Make sure the future schedule aligns with your goals and frequency preferences.
     
     {customInstructions}
 
@@ -42,6 +48,9 @@ export const createInputPrompt = async (character: Character, customInstructions
     characterGoal: character.goal,
     characterPersonality: character.personality,
     characterExpertise: character.expertise,
+    frequencyPreferences: character.frequencyPreferences
+      ? `Your frequency preferences are: ${character.frequencyPreferences.join(', ')}`
+      : '',
     customInstructions: customInstructions ? `Custom Instructions: ${customInstructions}` : '',
     format_instructions: workflowControlParser.getFormatInstructions(),
   });
@@ -50,7 +59,7 @@ export const createInputPrompt = async (character: Character, customInstructions
     new SystemMessage(inputSystemPrompt),
     [
       'human',
-      `Based on the following messages, and executed tools, determine what actions should be taken. If you have not saved the experience to Autonomy Network's DSN with save_experience tool, continue the workflow.
+      `Based on the following messages, and executed tools, determine what actions should be taken.
 
       Messages: {messages}
       Available Tools: {availableTools}
@@ -64,8 +73,12 @@ export const createInputPrompt = async (character: Character, customInstructions
 };
 
 const workflowControlSchema = z.object({
-  shouldStop: z.boolean().describe('Whether the workflow should stop.'),
-  reason: z.string().describe('The reason for stopping the workflow.'),
+  shouldStop: z
+    .boolean()
+    .describe(
+      'Whether the workflow should stop. Set to true if the workflow should stop. Set to false if the workflow should continue.',
+    ),
+  reason: z.string().describe('The detailed reason for stopping the workflow.'),
 });
 
 export const workflowControlParser = StructuredOutputParser.fromZodSchema(workflowControlSchema);

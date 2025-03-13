@@ -28,7 +28,7 @@ const formatMeta = (meta: any, _useColors: boolean = false) => {
     ? `\n${util.inspect(cleanMeta, {
         depth: 5,
         colors: _useColors,
-        maxStringLength: 1000,
+        maxStringLength: Infinity,
         breakLength: 80,
         compact: false,
       })}`

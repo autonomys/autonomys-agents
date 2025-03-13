@@ -36,26 +36,43 @@ The framework includes an interactive terminal-based UI for managing and monitor
 yarn cli <your-character-name>
 ```
 
-## Interactive Web CLI Interface (WIP)
+## Interactive Web CLI Interface
 
 A modern web-based interface for interacting with your agent. To start:
 
-```bash
-cd web-cli && yarn
-```
-Then, in the root folder:
+### Installation
 
-```bash
-yarn dev:all <your-character-name>
-```
+1. **Install Dependencies**
+   ```bash
+   cd web-cli && yarn
+   ```
 
-Features:
-- Tabbed namespace logs for organized output
-- Real-time log updates via Server-Sent Events
-- Color-coded messages by log level
-- Character-specific configuration
+2. **Configure Agent API**  
+   In your agent character's `.env` file, add these API settings:
+   ```
+   API_PORT=3010
+   API_TOKEN=your_api_token_min_32_chars_long_for_security
+   ENABLE_AUTH=true
+   CORS_ALLOWED_ORIGINS=http://localhost:3000,http://localhost:3001 
+   ```
 
-## Running with dev:all
+3. **Configure Web CLI**
+   ```bash
+   cp .env.sample .env
+   ```
+
+4. **Update Web CLI Environment**  
+   Edit the `.env` file with your configuration:
+   - `PORT`: The port for running the Web CLI interface
+   - `REACT_APP_API_BASE_URL`: Your Agent API address (e.g., http://localhost:3010/api)
+   - `REACT_APP_API_TOKEN`: The same token used in your agent configuration
+
+5. **Start the Web Interface**
+   ```bash
+   yarn start
+   ```
+
+## Running with dev:all (Web-CLI ONLY)
 
 The `dev:all` command launches both the main application and web interface concurrently:
 
@@ -69,9 +86,6 @@ This command:
 - Automatically uses the character's API port from its .env file
 - Provides color-coded output from both processes
 
-### Known Issues
-
-- This feature is in the very early stages of development and will be rapidly evolving. See https://github.com/autonomys/autonomys-agents/issues/242 for more information on planned features and known bugs.
 
 ## Examples
 

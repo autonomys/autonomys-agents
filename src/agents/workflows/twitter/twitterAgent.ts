@@ -17,7 +17,7 @@ const logger = createLogger('twitter-workflow');
 
 const defaultModelConfig: LLMConfiguration = {
   provider: 'anthropic',
-  model: 'claude-3-7-sonnet-latest',
+  model: 'claude-3-5-sonnet-latest',
   temperature: 0.8,
 };
 
@@ -99,10 +99,16 @@ export const createTwitterAgent = (
           { threadId: 'twitter_workflow_state' },
         );
         logger.info('Twitter workflow result:', { result });
-        return result;
+        return {
+          success: true,
+          summary: result.summary,
+        };
       } catch (error) {
         logger.error('Twitter workflow error:', error);
-        throw error;
+        return {
+          success: false,
+          error,
+        };
       }
     },
   });
