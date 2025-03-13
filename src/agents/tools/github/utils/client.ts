@@ -75,15 +75,19 @@ export const githubClient = async (token: string, owner: string, repo: string) =
     Reactions.listForPullRequestReviewComment(client, pull_number, comment_id);
   const createPullRequestReaction = (pull_number: number, content: GitHubReactionType) =>
     Reactions.createForIssue(client, pull_number, content);
+  const createPullRequestCommentReaction = (comment_id: number, content: GitHubReactionType) =>
+    Reactions.createForIssueComment(client, comment_id, content);
   const createPullRequestReviewCommentReaction = (
     pull_number: number,
     comment_id: number,
     content: GitHubReactionType,
   ) => Reactions.createForPullRequestReviewComment(client, pull_number, comment_id, content);
 
+  // Users
   const getAuthenticatedUser = async () => Users.getAuthenticatedUser(client);
   const listAuthenticatedUserRepos = async () => Users.listAuthenticatedUserRepos(client);
 
+  // Repos
   const listUserRepos = async (username: string) => Repos.listUserRepos(client, username);
   const listOrgRepos = async (org: string) => Repos.listOrgRepos(client, org);
   const listForks = async (targetOwner: string, targetRepo: string) =>
@@ -93,6 +97,7 @@ export const githubClient = async (token: string, owner: string, repo: string) =
   const getDefaultBranch = async (targetOwner: string, targetRepo: string) =>
     Repos.getDefaultBranch(client, targetOwner, targetRepo);
 
+  // Git
   const createBranch = async (
     targetOwner: string,
     targetRepo: string,
@@ -134,6 +139,7 @@ export const githubClient = async (token: string, owner: string, repo: string) =
     listPullRequestCommentReactions,
     listPullRequestReviewCommentReactions,
     createPullRequestReaction,
+    createPullRequestCommentReaction,
     createPullRequestReviewCommentReaction,
 
     getAuthenticatedUser,
