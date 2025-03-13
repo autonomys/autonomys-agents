@@ -17,24 +17,16 @@ export const list = async (
   GithubResponse<RestEndpointMethodTypes['issues']['listForRepo']['response']['data']>
 > => {
   const { githubClient, owner, repo } = client;
-  try {
-    const response = await githubClient.issues.listForRepo({
-      owner,
-      repo,
-      state,
-    });
+  const response = await githubClient.issues.listForRepo({
+    owner,
+    repo,
+    state,
+  });
 
-    return {
-      success: true,
-      data: response.data,
-    };
-  } catch (error) {
-    logger.error('Error listing GitHub issues:', error);
-    return {
-      success: false,
-      error: error as Error,
-    };
-  }
+  return {
+    success: true,
+    data: response.data,
+  };
 };
 
 export const search = async (
@@ -45,36 +37,28 @@ export const search = async (
   GithubResponse<RestEndpointMethodTypes['search']['issuesAndPullRequests']['response']['data']>
 > => {
   const { githubClient, owner, repo } = client;
-  try {
-    // Format the search query to include repo and state
-    const searchQuery = `repo:${owner}/${repo} is:issue state:${state} ${query}`;
+  // Format the search query to include repo and state
+  const searchQuery = `repo:${owner}/${repo} is:issue state:${state} ${query}`;
 
-    logger.info('Searching GitHub issues:', { query: searchQuery });
+  logger.info('Searching GitHub issues:', { query: searchQuery });
 
-    const response = await githubClient.search.issuesAndPullRequests({
-      q: searchQuery,
-      sort: 'updated',
-      order: 'desc',
-      per_page: 20,
-    });
+  const response = await githubClient.search.issuesAndPullRequests({
+    q: searchQuery,
+    sort: 'updated',
+    order: 'desc',
+    per_page: 20,
+  });
 
-    // Filter out pull requests, keep only issues
-    const items = response.data.items.filter(item => !item.pull_request);
-    return {
-      success: true,
-      data: {
-        total_count: items.length,
-        incomplete_results: response.data.incomplete_results,
-        items,
-      },
-    };
-  } catch (error) {
-    logger.error('Error searching GitHub issues:', error);
-    return {
-      success: false,
-      error: error as Error,
-    };
-  }
+  // Filter out pull requests, keep only issues
+  const items = response.data.items.filter(item => !item.pull_request);
+  return {
+    success: true,
+    data: {
+      total_count: items.length,
+      incomplete_results: response.data.incomplete_results,
+      items,
+    },
+  };
 };
 
 export const get = async (
@@ -82,24 +66,16 @@ export const get = async (
   issue_number: number,
 ): Promise<GithubResponse<RestEndpointMethodTypes['issues']['get']['response']['data']>> => {
   const { githubClient, owner, repo } = client;
-  try {
-    const response = await githubClient.issues.get({
-      owner,
-      repo,
-      issue_number,
-    });
+  const response = await githubClient.issues.get({
+    owner,
+    repo,
+    issue_number,
+  });
 
-    return {
-      success: true,
-      data: response.data,
-    };
-  } catch (error) {
-    logger.error('Error getting GitHub issue:', error);
-    return {
-      success: false,
-      error: error as Error,
-    };
-  }
+  return {
+    success: true,
+    data: response.data,
+  };
 };
 
 export const create = async (
@@ -107,27 +83,19 @@ export const create = async (
   params: CreateIssueParams,
 ): Promise<GithubResponse<RestEndpointMethodTypes['issues']['create']['response']['data']>> => {
   const { githubClient, owner, repo } = client;
-  try {
-    const response = await githubClient.issues.create({
-      owner,
-      repo,
-      title: params.title,
-      body: params.body,
-      labels: params.labels,
-      assignees: params.assignees,
-    });
+  const response = await githubClient.issues.create({
+    owner,
+    repo,
+    title: params.title,
+    body: params.body,
+    labels: params.labels,
+    assignees: params.assignees,
+  });
 
-    return {
-      success: true,
-      data: response.data,
-    };
-  } catch (error) {
-    logger.error('Error creating GitHub issue:', error);
-    return {
-      success: false,
-      error: error as Error,
-    };
-  }
+  return {
+    success: true,
+    data: response.data,
+  };
 };
 
 export const listComments = async (
@@ -137,24 +105,16 @@ export const listComments = async (
   GithubResponse<RestEndpointMethodTypes['issues']['listComments']['response']['data']>
 > => {
   const { githubClient, owner, repo } = client;
-  try {
-    const response = await githubClient.issues.listComments({
-      owner,
-      repo,
-      issue_number,
-    });
+  const response = await githubClient.issues.listComments({
+    owner,
+    repo,
+    issue_number,
+  });
 
-    return {
-      success: true,
-      data: response.data,
-    };
-  } catch (error) {
-    logger.error('Error listing GitHub issue comments:', error);
-    return {
-      success: false,
-      error: error as Error,
-    };
-  }
+  return {
+    success: true,
+    data: response.data,
+  };
 };
 
 export const createComment = async (
@@ -164,22 +124,14 @@ export const createComment = async (
   GithubResponse<RestEndpointMethodTypes['issues']['createComment']['response']['data']>
 > => {
   const { githubClient, owner, repo } = client;
-  try {
-    const response = await githubClient.issues.createComment({
-      owner,
-      repo,
-      issue_number: params.issue_number,
-      body: params.body,
-    });
-    return {
-      success: true,
-      data: response.data,
-    };
-  } catch (error) {
-    logger.error('Error creating GitHub issue comment:', error);
-    return {
-      success: false,
-      error: error as Error,
-    };
-  }
+  const response = await githubClient.issues.createComment({
+    owner,
+    repo,
+    issue_number: params.issue_number,
+    body: params.body,
+  });
+  return {
+    success: true,
+    data: response.data,
+  };
 };

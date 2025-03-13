@@ -28,14 +28,17 @@ export const createGetAuthenticatedUserTool = (
     func: async () => {
       try {
         logger.info('Getting authenticated GitHub user');
-        const user = await getAuthenticatedUser();
+        const { success, data } = await getAuthenticatedUser();
         return {
-          success: true,
-          user,
+          success,
+          data: JSON.stringify(data, null, 2),
         };
       } catch (error) {
         logger.error('Error getting authenticated GitHub user:', error);
-        throw error;
+        return {
+          success: false,
+          error: error as Error,
+        };
       }
     },
   });
@@ -51,11 +54,17 @@ export const createListAuthenticatedUserReposTool = (
     schema: z.object({}),
     func: async () => {
       try {
-        const repos = await listAuthenticatedUserRepos();
-        return JSON.stringify(repos, null, 2);
+        const { success, data } = await listAuthenticatedUserRepos();
+        return {
+          success,
+          data: JSON.stringify(data, null, 2),
+        };
       } catch (error) {
         logger.error('Error listing authenticated user repositories:', error);
-        throw error;
+        return {
+          success: false,
+          error: error as Error,
+        };
       }
     },
   });

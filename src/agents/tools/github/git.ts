@@ -37,14 +37,20 @@ export const createCreateBranchTool = (
     }),
     func: async ({ owner, repo, branchName, sourceBranch }) => {
       try {
-        const branch = await createBranch(owner, repo, branchName, sourceBranch);
-        return JSON.stringify(branch, null, 2);
+        const { success, data } = await createBranch(owner, repo, branchName, sourceBranch);
+        return {
+          success,
+          data: JSON.stringify(data, null, 2),
+        };
       } catch (error) {
         logger.error(
           `Error creating branch ${branchName} from ${sourceBranch} in repository ${owner}/${repo}:`,
           error,
         );
-        throw error;
+        return {
+          success: false,
+          error: error as Error,
+        };
       }
     },
   });
@@ -88,15 +94,21 @@ export const createCommitTool = (
     }),
     func: async ({ owner, repo, branch, message, changes }) => {
       try {
-        const commit = await createCommit(owner, repo, {
+        const { success, data } = await createCommit(owner, repo, {
           branch,
           message,
           changes,
         });
-        return JSON.stringify(commit, null, 2);
+        return {
+          success,
+          data: JSON.stringify(data, null, 2),
+        };
       } catch (error) {
         logger.error(`Error creating commit in repository ${owner}/${repo}:`, error);
-        throw error;
+        return {
+          success: false,
+          error: error as Error,
+        };
       }
     },
   });

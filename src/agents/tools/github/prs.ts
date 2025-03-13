@@ -36,14 +36,17 @@ export const createListPullRequestsTool = (
     func: async ({ state = 'open' }) => {
       try {
         logger.info('Listing GitHub pull requests');
-        const prs = await listPullRequests(state);
+        const { success, data } = await listPullRequests(state);
         return {
-          success: true,
-          pull_requests: prs,
+          success,
+          data: JSON.stringify(data, null, 2),
         };
       } catch (error) {
         logger.error('Error listing GitHub pull requests:', error);
-        throw error;
+        return {
+          success: false,
+          error: error as Error,
+        };
       }
     },
   });
@@ -79,14 +82,17 @@ export const createSearchPullRequestsTools = (
     func: async ({ query, state = 'open' }) => {
       try {
         logger.info('Searching GitHub pull requests:', { query, state });
-        const prs = await searchPullRequests(query, state);
+        const { success, data } = await searchPullRequests(query, state);
         return {
-          success: true,
-          pull_requests: prs,
+          success,
+          data: JSON.stringify(data, null, 2),
         };
       } catch (error) {
         logger.error('Error searching GitHub pull requests:', error);
-        throw error;
+        return {
+          success: false,
+          error: error as Error,
+        };
       }
     },
   });
@@ -112,14 +118,17 @@ export const createGetPullRequestTool = (
     func: async ({ pull_number }) => {
       try {
         logger.info('Getting GitHub pull request:', { pull_number });
-        const pr = await getPullRequest(pull_number);
+        const { success, data } = await getPullRequest(pull_number);
         return {
-          success: true,
-          pull_request: pr,
+          success,
+          data: JSON.stringify(data, null, 2),
         };
       } catch (error) {
         logger.error('Error getting GitHub pull request:', error);
-        throw error;
+        return {
+          success: false,
+          error: error as Error,
+        };
       }
     },
   });
@@ -160,11 +169,17 @@ export const createCreatePullRequestTool = (
     }),
     func: async params => {
       try {
-        const pullRequest = await createPullRequest(params);
-        return JSON.stringify(pullRequest, null, 2);
+        const { success, data } = await createPullRequest(params);
+        return {
+          success,
+          data: JSON.stringify(data, null, 2),
+        };
       } catch (error) {
         logger.error(`Error creating pull request:`, error);
-        throw error;
+        return {
+          success: false,
+          error: error as Error,
+        };
       }
     },
   });
@@ -200,14 +215,17 @@ export const createListPullRequestCommentsTool = (
     func: async ({ pull_number }) => {
       try {
         logger.info('Listing GitHub pull request comments:', { pull_number });
-        const comments = await listPRComments(pull_number);
+        const { success, data } = await listPRComments(pull_number);
         return {
-          success: true,
-          comments,
+          success,
+          data: JSON.stringify(data, null, 2),
         };
       } catch (error) {
         logger.error('Error listing GitHub pull request comments:', error);
-        throw error;
+        return {
+          success: false,
+          error: error as Error,
+        };
       }
     },
   });
@@ -264,7 +282,7 @@ export const createCreatePullRequestCommentTool = (
     func: async ({ pull_number, body, commit_id, path, line, side }) => {
       try {
         logger.info('Creating GitHub pull request comment:', { pull_number });
-        const comment = await createPullRequestComment({
+        const { success, data } = await createPullRequestComment({
           pull_number,
           body,
           commit_id,
@@ -273,12 +291,15 @@ export const createCreatePullRequestCommentTool = (
           side,
         });
         return {
-          success: true,
-          comment,
+          success,
+          data: JSON.stringify(data, null, 2),
         };
       } catch (error) {
         logger.error('Error creating GitHub pull request comment:', error);
-        throw error;
+        return {
+          success: false,
+          error: error as Error,
+        };
       }
     },
   });
@@ -306,14 +327,17 @@ export const createListPullRequestReactionsTool = (
     func: async ({ pull_number }) => {
       try {
         logger.info('Listing GitHub pull request reactions:', { pull_number });
-        const reaction = await listPullRequestReactions(pull_number);
+        const { success, data } = await listPullRequestReactions(pull_number);
         return {
-          success: true,
-          reaction,
+          success,
+          data: JSON.stringify(data, null, 2),
         };
       } catch (error) {
         logger.error('Error listing GitHub pull request reactions:', error);
-        throw error;
+        return {
+          success: false,
+          error: error as Error,
+        };
       }
     },
   });
@@ -341,14 +365,17 @@ export const createListPullRequestCommentReactionsTool = (
     func: async ({ comment_id }) => {
       try {
         logger.info('Listing GitHub pull request comment reactions:', { comment_id });
-        const reaction = await listPullRequestCommentReactions(comment_id);
+        const { success, data } = await listPullRequestCommentReactions(comment_id);
         return {
-          success: true,
-          reaction,
+          success,
+          data: JSON.stringify(data, null, 2),
         };
       } catch (error) {
         logger.error('Error listing GitHub pull request comment reactions:', error);
-        throw error;
+        return {
+          success: false,
+          error: error as Error,
+        };
       }
     },
   });
@@ -383,14 +410,20 @@ export const createListPullRequestReviewCommentReactionsTool = (
           pull_number,
           comment_id,
         });
-        const reaction = await listPullRequestReviewCommentReactions(pull_number, comment_id);
+        const { success, data } = await listPullRequestReviewCommentReactions(
+          pull_number,
+          comment_id,
+        );
         return {
-          success: true,
-          reaction,
+          success,
+          data: JSON.stringify(data, null, 2),
         };
       } catch (error) {
         logger.error('Error listing GitHub pull request review comment reactions:', error);
-        throw error;
+        return {
+          success: false,
+          error: error as Error,
+        };
       }
     },
   });
@@ -427,14 +460,17 @@ export const createCreateReactionForPullRequestTool = (
     func: async ({ content, pull_number }) => {
       try {
         logger.info('Creating GitHub PR reaction:', { content, pull_number });
-        const reaction = await createPullRequestReaction(pull_number, content);
+        const { success, data } = await createPullRequestReaction(pull_number, content);
         return {
-          success: true,
-          reaction,
+          success,
+          data: JSON.stringify(data, null, 2),
         };
       } catch (error) {
         logger.error('Error creating GitHub PR reaction:', error);
-        throw error;
+        return {
+          success: false,
+          error: error as Error,
+        };
       }
     },
   });
@@ -471,14 +507,17 @@ export const createCreateReactionForPullRequestCommentTool = (
     func: async ({ content, comment_id }) => {
       try {
         logger.info('Creating GitHub PR comment reaction:', { content, comment_id });
-        const reaction = await createPullRequestCommentReaction(comment_id, content);
+        const { success, data } = await createPullRequestCommentReaction(comment_id, content);
         return {
-          success: true,
-          reaction,
+          success,
+          data: JSON.stringify(data, null, 2),
         };
       } catch (error) {
         logger.error('Error creating GitHub PR comment reaction:', error);
-        throw error;
+        return {
+          success: false,
+          error: error as Error,
+        };
       }
     },
   });
@@ -521,18 +560,21 @@ export const createCreateReactionForPullRequestReviewCommentTool = (
           pull_number,
           comment_id,
         });
-        const reaction = await createPullRequestReviewCommentReaction(
+        const { success, data } = await createPullRequestReviewCommentReaction(
           pull_number,
           comment_id,
           content,
         );
         return {
-          success: true,
-          reaction,
+          success,
+          data: JSON.stringify(data, null, 2),
         };
       } catch (error) {
         logger.error('Error creating GitHub PR review comment reaction:', error);
-        throw error;
+        return {
+          success: false,
+          error: error as Error,
+        };
       }
     },
   });

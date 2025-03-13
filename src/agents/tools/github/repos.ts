@@ -22,11 +22,17 @@ export const createListUserReposTool = (
     }),
     func: async ({ username }) => {
       try {
-        const repos = await listUserRepos(username);
-        return JSON.stringify(repos, null, 2);
+        const { success, data } = await listUserRepos(username);
+        return {
+          success,
+          data: JSON.stringify(data, null, 2),
+        };
       } catch (error) {
         logger.error(`Error listing repositories for user ${username}:`, error);
-        throw error;
+        return {
+          success: false,
+          error: error as Error,
+        };
       }
     },
   });
@@ -47,11 +53,17 @@ export const createListOrgReposTool = (
     }),
     func: async ({ org }) => {
       try {
-        const repos = await listOrgRepos(org);
-        return JSON.stringify(repos, null, 2);
+        const { success, data } = await listOrgRepos(org);
+        return {
+          success,
+          data: JSON.stringify(data, null, 2),
+        };
       } catch (error) {
         logger.error(`Error listing repositories for organization ${org}:`, error);
-        throw error;
+        return {
+          success: false,
+          error: error as Error,
+        };
       }
     },
   });
@@ -74,11 +86,17 @@ export const createListForksTool = (
     }),
     func: async ({ owner, repo }) => {
       try {
-        const forks = await listForks(owner, repo);
-        return JSON.stringify(forks, null, 2);
+        const { success, data } = await listForks(owner, repo);
+        return {
+          success,
+          data: JSON.stringify(data, null, 2),
+        };
       } catch (error) {
         logger.error(`Error listing forks for repository ${owner}/${repo}:`, error);
-        throw error;
+        return {
+          success: false,
+          error: error as Error,
+        };
       }
     },
   });
@@ -101,11 +119,17 @@ export const createForkRepoTool = (
     }),
     func: async ({ owner, repo }) => {
       try {
-        const fork = await createFork(owner, repo);
-        return JSON.stringify(fork, null, 2);
+        const { success, data } = await createFork(owner, repo);
+        return {
+          success,
+          data: JSON.stringify(data, null, 2),
+        };
       } catch (error) {
         logger.error(`Error creating fork for repository ${owner}/${repo}:`, error);
-        throw error;
+        return {
+          success: false,
+          error: error as Error,
+        };
       }
     },
   });
@@ -132,11 +156,17 @@ export const createGetDefaultBranchTool = (
     }),
     func: async ({ owner, repo }) => {
       try {
-        const defaultBranch = await getDefaultBranch(owner, repo);
-        return JSON.stringify({ default_branch: defaultBranch }, null, 2);
+        const { success, data } = await getDefaultBranch(owner, repo);
+        return {
+          success,
+          data: JSON.stringify(data, null, 2),
+        };
       } catch (error) {
         logger.error(`Error getting default branch for repository ${owner}/${repo}:`, error);
-        throw error;
+        return {
+          success: false,
+          error: error as Error,
+        };
       }
     },
   });

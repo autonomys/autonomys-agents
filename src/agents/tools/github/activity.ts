@@ -23,14 +23,17 @@ export const createGetFeedTool = (
     func: async () => {
       try {
         logger.info('Getting GitHub feed');
-        const feed = await getFeed();
+        const { success, data } = await getFeed();
         return {
-          success: true,
-          feed,
+          success,
+          data: JSON.stringify(data, null, 2),
         };
       } catch (error) {
         logger.error('Error getting GitHub feed:', error);
-        throw error;
+        return {
+          success: false,
+          error: error as Error,
+        };
       }
     },
   });
@@ -63,14 +66,17 @@ export const createListNotificationsTool = (
     func: async ({ all = false }) => {
       try {
         logger.info('Listing GitHub notifications:', { all });
-        const notifications = await listNotifications(all);
+        const { success, data } = await listNotifications(all);
         return {
-          success: true,
-          notifications,
+          success,
+          data: JSON.stringify(data, null, 2),
         };
       } catch (error) {
         logger.error('Error listing GitHub notifications:', error);
-        throw error;
+        return {
+          success: false,
+          error: error as Error,
+        };
       }
     },
   });
@@ -109,14 +115,17 @@ export const createWatchRepoTool = (
     func: async ({ owner, repo, ignored = false }) => {
       try {
         logger.info('Watching GitHub repository:', { owner, repo, ignored });
-        await subscribeToRepo(owner, repo, ignored);
+        const { success, data } = await subscribeToRepo(owner, repo, ignored);
         return {
-          success: true,
-          message: `Successfully watched repository ${owner}/${repo}`,
+          success,
+          data: JSON.stringify(data, null, 2),
         };
       } catch (error) {
-        logger.error('Error watching GitHub repository:', error);
-        throw error;
+        logger.error('Error subscribing to GitHub repo:', error);
+        return {
+          success: false,
+          error: error as Error,
+        };
       }
     },
   });
@@ -148,14 +157,17 @@ export const createUnwatchRepoTool = (
     func: async ({ owner, repo }) => {
       try {
         logger.info('Un-watching GitHub repository:', { owner, repo });
-        await unsubscribeFromRepo(owner, repo);
+        const { success, data } = await unsubscribeFromRepo(owner, repo);
         return {
-          success: true,
-          message: `Successfully unwatched repository ${owner}/${repo}`,
+          success,
+          data: JSON.stringify(data, null, 2),
         };
       } catch (error) {
-        logger.error('Error un-watching GitHub repository:', error);
-        throw error;
+        logger.error('Error unsubscribing from GitHub repo:', error);
+        return {
+          success: false,
+          error: error as Error,
+        };
       }
     },
   });
@@ -181,14 +193,17 @@ export const createListWatchedReposTool = (
     func: async () => {
       try {
         logger.info('Listing watched GitHub repositories');
-        const repos = await listSubscriptions();
+        const { success, data } = await listSubscriptions();
         return {
-          success: true,
-          watched_repositories: repos,
+          success,
+          data: JSON.stringify(data, null, 2),
         };
       } catch (error) {
         logger.error('Error listing watched GitHub repositories:', error);
-        throw error;
+        return {
+          success: false,
+          error: error as Error,
+        };
       }
     },
   });
@@ -212,14 +227,17 @@ export const createListMentionsTool = (
     func: async () => {
       try {
         logger.info('Listing GitHub mentions');
-        const mentions = await listMentions();
+        const { success, data } = await listMentions();
         return {
-          success: true,
-          mentions,
+          success,
+          data: JSON.stringify(data, null, 2),
         };
       } catch (error) {
         logger.error('Error listing GitHub mentions:', error);
-        throw error;
+        return {
+          success: false,
+          error: error as Error,
+        };
       }
     },
   });

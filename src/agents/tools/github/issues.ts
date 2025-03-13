@@ -41,14 +41,17 @@ export const createListIssuesTools = (
     func: async ({ state = 'open' }) => {
       try {
         logger.info('Listing GitHub issues');
-        const issues = await listIssues(state);
+        const { success, data } = await listIssues(state);
         return {
-          success: true,
-          issues,
+          success,
+          data: JSON.stringify(data, null, 2),
         };
       } catch (error) {
         logger.error('Error listing GitHub issues:', error);
-        throw error;
+        return {
+          success: false,
+          error: error as Error,
+        };
       }
     },
   });
@@ -82,14 +85,17 @@ export const createSearchIssuesTools = (
     func: async ({ query, state = 'open' }) => {
       try {
         logger.info('Searching GitHub issues');
-        const issues = await searchIssues(query, state);
+        const { success, data } = await searchIssues(query, state);
         return {
-          success: true,
-          issues,
+          success,
+          data: JSON.stringify(data, null, 2),
         };
       } catch (error) {
         logger.error('Error searching GitHub issues:', error);
-        throw error;
+        return {
+          success: false,
+          error: error as Error,
+        };
       }
     },
   });
@@ -114,14 +120,17 @@ export const createGetIssueTools = (
     func: async ({ issue_number }) => {
       try {
         logger.info('Getting GitHub issue:', { issue_number });
-        const issue = await getIssue(issue_number);
+        const { success, data } = await getIssue(issue_number);
         return {
-          success: true,
-          issue,
+          success,
+          data: JSON.stringify(data, null, 2),
         };
       } catch (error) {
         logger.error('Error getting GitHub issue:', error);
-        throw error;
+        return {
+          success: false,
+          error: error as Error,
+        };
       }
     },
   });
@@ -156,14 +165,17 @@ export const createCreateIssueTool = (
     func: async ({ title, body, labels, assignees }) => {
       try {
         logger.info('Creating GitHub issue:', { title });
-        const issue = await createIssue({ title, body, labels, assignees });
+        const { success, data } = await createIssue({ title, body, labels, assignees });
         return {
-          success: true,
-          issue,
+          success,
+          data: JSON.stringify(data, null, 2),
         };
       } catch (error) {
         logger.error('Error creating GitHub issue:', error);
-        throw error;
+        return {
+          success: false,
+          error: error as Error,
+        };
       }
     },
   });
@@ -194,14 +206,17 @@ export const createListIssueCommentsTools = (
     func: async ({ issue_number }) => {
       try {
         logger.info('Listing GitHub comments:', { issue_number });
-        const comments = await listIssueComments(issue_number);
+        const { success, data } = await listIssueComments(issue_number);
         return {
-          success: true,
-          comments,
+          success,
+          data: JSON.stringify(data, null, 2),
         };
       } catch (error) {
         logger.error('Error listing GitHub comments:', error);
-        throw error;
+        return {
+          success: false,
+          error: error as Error,
+        };
       }
     },
   });
@@ -236,14 +251,17 @@ export const createCreateIssueCommentTool = (
     func: async ({ issue_number, body }) => {
       try {
         logger.info('Creating GitHub issue comment:', { issue_number });
-        const comment = await createIssueComment({ issue_number, body });
+        const { success, data } = await createIssueComment({ issue_number, body });
         return {
-          success: true,
-          comment,
+          success,
+          data: JSON.stringify(data, null, 2),
         };
       } catch (error) {
         logger.error('Error creating GitHub issue comment:', error);
-        throw error;
+        return {
+          success: false,
+          error: error as Error,
+        };
       }
     },
   });
@@ -272,14 +290,17 @@ export const createListIssueReactionsTools = (
     func: async ({ issue_number }) => {
       try {
         logger.info('Listing GitHub issue reactions:', { issue_number });
-        const reactions = await listIssueReactions(issue_number);
+        const { success, data } = await listIssueReactions(issue_number);
         return {
-          success: true,
-          reactions,
+          success,
+          data: JSON.stringify(data, null, 2),
         };
       } catch (error) {
         logger.error('Error listing GitHub issue reactions:', error);
-        throw error;
+        return {
+          success: false,
+          error: error as Error,
+        };
       }
     },
   });
@@ -308,14 +329,17 @@ export const createListIssueCommentReactionsTools = (
     func: async ({ comment_id }) => {
       try {
         logger.info('Listing GitHub issue comment reactions:', { comment_id });
-        const reactions = await listIssueCommentReactions(comment_id);
+        const { success, data } = await listIssueCommentReactions(comment_id);
         return {
-          success: true,
-          reactions,
+          success,
+          data: JSON.stringify(data, null, 2),
         };
       } catch (error) {
         logger.error('Error listing GitHub issue comment reactions:', error);
-        throw error;
+        return {
+          success: false,
+          error: error as Error,
+        };
       }
     },
   });
@@ -351,14 +375,17 @@ export const createCreateReactionForIssueTool = (
     func: async ({ content, issue_number }) => {
       try {
         logger.info('Creating GitHub reaction:', { content, issue_number });
-        const reaction = await createIssueReaction(issue_number, content);
+        const { success, data } = await createIssueReaction(issue_number, content);
         return {
-          success: true,
-          reaction,
+          success,
+          data: JSON.stringify(data, null, 2),
         };
       } catch (error) {
         logger.error('Error creating GitHub reaction:', error);
-        throw error;
+        return {
+          success: false,
+          error: error as Error,
+        };
       }
     },
   });
@@ -394,14 +421,17 @@ export const createCreateReactionForIssueCommentTool = (
     func: async ({ content, comment_id }) => {
       try {
         logger.info('Creating GitHub reaction:', { content, comment_id });
-        const reaction = await createIssueCommentReaction(comment_id, content);
+        const { success, data } = await createIssueCommentReaction(comment_id, content);
         return {
-          success: true,
-          reaction,
+          success,
+          data: JSON.stringify(data, null, 2),
         };
       } catch (error) {
         logger.error('Error creating GitHub reaction:', error);
-        throw error;
+        return {
+          success: false,
+          error: error as Error,
+        };
       }
     },
   });
