@@ -25,11 +25,6 @@ export const loadCharacter = (characterName: string): [number, number,string] =>
             apiPort = parseInt(portMatch[1], 10);
         }
 
-        const webCliPortMatch = envContent.match(/WEB_CLI_PORT=(\d+)/);
-        if (webCliPortMatch && webCliPortMatch[1]) {
-            webCliPort = parseInt(webCliPortMatch[1], 10);
-        }
-
         const characterYamlPath = join(characterPath, 'config', `${characterName}.yaml`);
         const characterYamlContent = readFileSync(characterYamlPath, 'utf8');
         const characterNameMatch = characterYamlContent.match(/name: '([^']+)'/);
@@ -44,7 +39,7 @@ export const loadCharacter = (characterName: string): [number, number,string] =>
     }
 };
 
-const [apiPort, webCliPort, characterName] = characterArg ? loadCharacter(characterArg) : [3001, 3000, "default"];
+const [apiPort, characterName] = characterArg ? loadCharacter(characterArg) : [3001, "default"];
 console.log(`Using API port ${apiPort} for character '${characterName}'`);
 
 const colors = {
@@ -72,9 +67,7 @@ const webCliProcess = spawn('yarn', ['start'], {
   cwd: `${rootDir}/web-cli`,
   env: { 
     ...process.env,
-    PORT: webCliPort.toString(),
     REACT_APP_API_PORT: apiPort.toString(),
-    REACT_APP_CHARACTER: characterName
   },
   shell: true,
 });
