@@ -28,7 +28,6 @@ const handleConditionalEdge = async (
   pruningParameters: PruningParameters,
   workflowLogger: Logger,
 ) => {
-  workflowLogger.debug('State in conditional edge', { state });
   if (state.workflowControl && state.workflowControl.shouldStop) {
     workflowLogger.info('Workflow stop requested', { reason: state.workflowControl.reason });
     return 'finishWorkflow';

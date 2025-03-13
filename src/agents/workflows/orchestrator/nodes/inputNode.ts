@@ -14,7 +14,7 @@ const parseWorkflowControl = async (content: unknown, logger: Logger) => {
     JSON.stringify(content).includes('shouldStop')
   ) {
     try {
-      logger.info('Parsing workflow control:', { content });
+      logger.info('Parsing workflow control - Input Node:', { content });
       return await workflowControlParser.parse(content);
     } catch (error) {
       logger.error('Failed to parse workflow control. Applying fallback termination.', {
@@ -40,12 +40,11 @@ export const createInputNode = ({
 }) => {
   const logger = attachLogger(createLogger(`${namespace}-input-node`), namespace);
   const runNode = async (state: OrchestratorStateType) => {
-    logger.info('MODEL CONFIG:', { modelConfig });
+    logger.info('MODEL CONFIG - Input Node:', { modelConfig });
     const { messages, executedTools } = state;
     logger.debug('Running input node with messages:', {
       messages: messages.map(message => message.content),
     });
-    logger.debug('Executed Tools:', { executedTools });
 
     const availableTools = tools.map(tool => ({ name: tool.name }));
 
@@ -55,7 +54,7 @@ export const createInputNode = ({
       availableTools: availableTools,
     });
 
-    logger.debug('Formatted Prompt:', { formattedPrompt });
+    logger.debug('Formatted Prompt - Input Node:', { formattedPrompt });
 
     const result = await LLMFactory.createModel(modelConfig)
       .bindTools(tools)
@@ -63,11 +62,11 @@ export const createInputNode = ({
 
     const toolCalls = result.tool_calls;
 
-    logger.debug('Tool Calls:', { toolCalls });
+    logger.debug('Tool Calls - Input Node:', { toolCalls });
     const usage = result.additional_kwargs?.usage as
       | { input_tokens: number; output_tokens: number }
       | undefined;
-    logger.info('Result:', {
+    logger.info('Result - Input Node:', {
       content: result.content,
       inputTokens: usage?.input_tokens,
       outputTokens: usage?.output_tokens,
