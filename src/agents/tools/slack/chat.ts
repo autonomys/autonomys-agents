@@ -29,12 +29,16 @@ export const createPostSlackMsgTool = (
     USE THIS WHEN: 
     - You want to report or highlight something to your colleagues.
     - You need to send a message to a specific channel.
-    FORMAT: Include links, messages, and any other relevant information. Avoid very long messages.`,
+    FORMAT: Include links, messages, and any other relevant information. Avoid very long messages.
+    BEFORE POSTING:
+    - use the list_slack_messages tool to check if a similar message has already been posted. If it has, do not post the same message again.
+    - After reviewing the list of messages, determine if the message would be best suited as a thread or a new message.`,
     schema: z.object({
       channelId: z.string().describe('The channel ID to post to.'),
       message: z.string().describe('The message to post to Slack'),
       blocks: z
-        .array(z.any())
+        .any()
+        .optional()
         .describe('The blocks to post to Slack using Slack block-kit (optional)'),
       threadTs: z.string().describe('The thread timestamp to post to if this is a reply.'),
     }),
@@ -43,10 +47,16 @@ export const createPostSlackMsgTool = (
         logger.info('Posting message to Slack - Received data:', message);
         const result = await postMessage(channelId, message, blocks, threadTs);
         logger.info('Message posted to Slack:', { result });
-        return JSON.stringify(result);
+        return {
+          success: true,
+          message: result,
+        };
       } catch (error) {
         logger.error('Error posting message to Slack:', error);
-        throw error;
+        return {
+          success: false,
+          error: error,
+        };
       }
     },
   });
