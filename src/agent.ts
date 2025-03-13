@@ -9,7 +9,7 @@ import { createTwitterAgent } from './agents/workflows/twitter/twitterAgent.js';
 import { config } from './config/index.js';
 import { createTwitterApi } from './services/twitter/client.js';
 import { withApiLogger } from './api/server.js';
-import { createSlackTools } from './agents/tools/slack/index.js';
+import { createSlackAgent } from './agents/workflows/slack/slackAgent.js';
 import { createAllSchedulerTools } from './agents/tools/scheduler/index.js';
 import { createGitHubTools } from './agents/tools/github/index.js';
 import { registerOrchestratorRunner } from './agents/workflows/registration.js';
@@ -23,22 +23,40 @@ const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
   const schedulerTools = createAllSchedulerTools();
 
   //Twitter agent config
-  const { USERNAME, PASSWORD, COOKIES_PATH } = config.twitterConfig;
-  const twitterApi = await createTwitterApi(USERNAME, PASSWORD, COOKIES_PATH);
-
-  const twitterAgentTool = createTwitterAgent(twitterApi, character, {
-    tools: [...webSearchTool, ...schedulerTools],
-    postTweets: config.twitterConfig.POST_TWEETS,
-    saveExperiences,
-    monitoring: {
-      enabled: monitoringEnabled,
-    },
-    modelConfigurations: config.twitterConfig.model_configurations,
-  });
+  const twitterAgentTool =
+    config.twitterConfig.USERNAME && config.twitterConfig.PASSWORD
+      ? [
+          createTwitterAgent(
+            await createTwitterApi(
+              config.twitterConfig.USERNAME,
+              config.twitterConfig.PASSWORD,
+              config.twitterConfig.COOKIES_PATH,
+            ),
+            character,
+            {
+              tools: [...webSearchTool, ...schedulerTools],
+              postTweets: config.twitterConfig.POST_TWEETS,
+              saveExperiences,
+              monitoring: {
+                enabled: monitoringEnabled,
+              },
+              modelConfigurations: config.twitterConfig.model_configurations,
+            },
+          ),
+        ]
+      : [];
 
   //If slack api key is provided, add slack tools
-  const slackTools = config.slackConfig.SLACK_APP_TOKEN
-    ? await createSlackTools(config.slackConfig.SLACK_APP_TOKEN)
+  const slackAgentTool = config.slackConfig.SLACK_APP_TOKEN
+    ? [
+        createSlackAgent(config.slackConfig.SLACK_APP_TOKEN, character, {
+          tools: [...schedulerTools],
+          saveExperiences,
+          monitoring: {
+            enabled: monitoringEnabled,
+          },
+        }),
+      ]
     : [];
 
   //If github api key is provided, add github tools
@@ -53,7 +71,13 @@ const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
 
   return {
     modelConfigurations: config.orchestratorConfig.model_configurations,
-    tools: [twitterAgentTool, ...webSearchTool, ...slackTools, ...githubTools, ...schedulerTools],
+    tools: [
+      ...twitterAgentTool,
+      ...slackAgentTool,
+      ...webSearchTool,
+      ...githubTools,
+      ...schedulerTools,
+    ],
     prompts,
     saveExperiences,
     monitoring: {
