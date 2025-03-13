@@ -1,12 +1,21 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Box, Flex } from '@chakra-ui/react';
 import CharacterBox from './CharacterBox';
 import LogoBox from './LogoBox';
 import ClockBox from './ClockBox';
-
-const characterName = process.env.REACT_APP_CHARACTER || 'default';
+import { getCharacterName } from '../../services/CharacterService';
 
 const HeaderArea: React.FC = () => {
+  const [characterName, setCharacterName] = useState<string>('');
+
+  useEffect(() => {
+    const fetchCharacterName = async () => {
+      const name = await getCharacterName();
+      setCharacterName(name);
+    };
+    fetchCharacterName();
+  }, []);
+
   return (
     <Box>
       <Flex
