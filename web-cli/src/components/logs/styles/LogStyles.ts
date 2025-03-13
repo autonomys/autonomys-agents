@@ -231,11 +231,12 @@ export const logMessageListContainer: BoxProps = {
   p: 4,
   bg: 'rgba(20, 20, 30, 0.7)',
   backdropFilter: 'blur(5px)',
-  fontFamily: "'Consolas', 'Monaco', monospace",
+  fontFamily: "'JetBrains Mono', 'Fira Code', 'Cascadia Code', 'Consolas', 'Monaco', monospace",
   color: 'white',
   whiteSpace: 'pre-wrap',
   fontSize: ['sm', 'md'],
   lineHeight: '1.6',
+  letterSpacing: '0.02em',
   css: {
     '&::-webkit-scrollbar': {
       width: '8px',
@@ -321,18 +322,21 @@ export const logMessageListTimestamp: TextProps = {
   color: 'gray.400',
   fontWeight: '500',
   fontSize: ['xs', 'sm'],
+  letterSpacing: '0.03em',
 };
 
 export const logMessageListNamespace: TextProps = {
   color: 'brand.neonBlue',
-  fontWeight: '500',
+  fontWeight: '600',
   fontSize: ['xs', 'sm'],
+  letterSpacing: '0.03em',
 };
 
 export const getLogMessageListLevel = (color: string): TextProps => ({
   color: color,
   fontWeight: '600',
   fontSize: ['xs', 'sm'],
+  letterSpacing: '0.03em',
   textShadow: `0 0 5px ${color}`,
 });
 
@@ -343,6 +347,7 @@ export const logMessageListMessage: TextProps = {
   fontSize: ['xs', 'sm'],
   fontWeight: 'normal',
   lineHeight: '1.6',
+  letterSpacing: '0.02em',
 };
 
 // Styles for OutputLog component
@@ -461,6 +466,8 @@ export const logSearchInput: InputProps = {
   borderColor: 'gray.700',
   color: 'white',
   pl: '35px',
+  fontFamily: "'JetBrains Mono', 'Fira Code', 'Cascadia Code', 'Consolas', 'Monaco', monospace",
+  letterSpacing: '0.02em',
   _placeholder: { color: 'gray.500' },
   _hover: {
     borderColor: 'brand.neonPink'
@@ -475,13 +482,16 @@ export const logSearchNavButton: ButtonProps = {
   size: 'xs',
   variant: 'ghost',
   colorScheme: 'pink',
-  mx: 1
+  mx: 1,
+  fontFamily: "'JetBrains Mono', 'Fira Code', 'Cascadia Code', 'Consolas', 'Monaco', monospace",
 };
 
 export const logSearchResultCount: TextProps = {
   fontSize: 'xs',
   color: 'gray.300',
-  flex: 1
+  flex: 1,
+  fontFamily: "'JetBrains Mono', 'Fira Code', 'Cascadia Code', 'Consolas', 'Monaco', monospace",
+  letterSpacing: '0.02em',
 };
 
 // Styles for LogSearch component (floating overlay)

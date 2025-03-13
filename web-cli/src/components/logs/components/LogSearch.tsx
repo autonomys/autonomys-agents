@@ -114,6 +114,8 @@ const LogSearch: React.FC<LogSearchProps> = ({
             value={localSearchTerm}
             onChange={handleInputChange}
             onKeyDown={handleKeyPress}
+            fontFamily="'JetBrains Mono', 'Fira Code', 'Cascadia Code', 'Consolas', 'Monaco', monospace"
+            letterSpacing="0.02em"
           />
           
           {localSearchTerm && (
