@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Box, Flex, Text } from '@chakra-ui/react';
-import { 
+import {
   metadataValueContainer,
   metadataValueIndexLabel,
   metadataValueNameLabel,
@@ -8,7 +8,7 @@ import {
   getMetadataValueExpandButton,
   metadataValueTypeLabel,
   metadataValueExpandedContent,
-  metadataValueExpandedText
+  metadataValueExpandedText,
 } from '../styles/LogStyles';
 import { ObjectNode } from './';
 
@@ -20,12 +20,12 @@ interface MetadataValueProps {
   index?: number;
 }
 
-export const MetadataValue: React.FC<MetadataValueProps> = ({ 
-  name, 
-  value, 
-  path = '', 
-  depth = 0, 
-  index 
+export const MetadataValue: React.FC<MetadataValueProps> = ({
+  name,
+  value,
+  path = '',
+  depth = 0,
+  index,
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const isLongString = typeof value === 'string' && value.length > 80;
@@ -38,17 +38,17 @@ export const MetadataValue: React.FC<MetadataValueProps> = ({
       return { color: 'gray.500', fontStyle: 'italic' };
     }
     switch (typeof value) {
-      case 'number': 
+      case 'number':
         return { color: 'green.300', fontWeight: 'medium' };
-      case 'boolean': 
+      case 'boolean':
         return { color: 'purple.300', fontWeight: 'medium' };
-      case 'string': 
+      case 'string':
         return { color: 'orange.300' };
-      default: 
+      default:
         return { color: 'gray.300' };
     }
   };
-  
+
   const getTypeLabel = () => {
     if (value === null) return 'null';
     if (value === undefined) return 'undefined';
@@ -57,71 +57,65 @@ export const MetadataValue: React.FC<MetadataValueProps> = ({
     }
     return typeof value;
   };
-  
+
   const valueStyle = getValueStyle();
-  
+
   const getDisplayValue = () => {
     if (typeof value !== 'string') {
       return String(value);
     }
-    
+
     if (!isLongString) {
       return `"${value}"`;
     }
-    
+
     if (isExpanded) {
-      return "[expanded below]";
+      return '[expanded below]';
     } else {
       return `"${value.substring(0, 77)}..."`;
     }
   };
-  
+
   return (
     <Box {...metadataValueContainer}>
-      <Flex alignItems="baseline" flexWrap="wrap">
-        {index !== undefined && (
-          <Text {...metadataValueIndexLabel}>
-            [{index}]
-          </Text>
-        )}
-        <Text {...metadataValueNameLabel}>
-          {index === undefined ? `${name}:` : ''}
-        </Text>
+      <Flex alignItems='baseline' flexWrap='wrap'>
+        {index !== undefined && <Text {...metadataValueIndexLabel}>[{index}]</Text>}
+        <Text {...metadataValueNameLabel}>{index === undefined ? `${name}:` : ''}</Text>
         <Text
-          as="span"
+          as='span'
           {...(isExpanded ? { color: 'gray.500', fontStyle: 'italic' } : valueStyle)}
           {...getMetadataValueText(isExpanded, isLongString)}
         >
           {getDisplayValue()}
         </Text>
-        
+
         {isLongString && (
-          <Box 
-            as="button"
+          <Box
+            as='button'
             onClick={() => setIsExpanded(!isExpanded)}
             {...getMetadataValueExpandButton(isExpanded)}
           >
-            <Text fontSize="10px" mr={1}>
-              {isExpanded ? "▲" : "▼"}
+            <Text fontSize='10px' mr={1}>
+              {isExpanded ? '▲' : '▼'}
             </Text>
-            {isExpanded ? "Collapse" : "Expand"}
+            {isExpanded ? 'Collapse' : 'Expand'}
           </Box>
         )}
-        
+
         {(!isLongString || !isExpanded) && (
-          <Text as="span" {...metadataValueTypeLabel}>
+          <Text as='span' {...metadataValueTypeLabel}>
             {getTypeLabel()}
           </Text>
         )}
       </Flex>
-      
+
       {isLongString && isExpanded && (
         <Box {...metadataValueExpandedContent}>
-          <Text as="span" {...metadataValueExpandedText}>
+          <Text as='span' {...metadataValueExpandedText}>
             {value}
           </Text>
         </Box>
       )}
     </Box>
   );
-}; 
+};

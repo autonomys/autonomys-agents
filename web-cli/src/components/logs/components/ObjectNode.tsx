@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { Box, Button, Flex, Text } from '@chakra-ui/react';
-import { 
+import {
   objectNodeContainer,
   getObjectNodeHeader,
   objectNodeToggleButton,
-  getObjectNodeChildrenContainer
+  getObjectNodeChildrenContainer,
 } from '../styles/LogStyles';
 // Import MetadataValue from the index file to avoid circular references
 import { MetadataValue } from './';
@@ -16,45 +16,34 @@ interface ObjectNodeProps {
   depth?: number;
 }
 
-export const ObjectNode: React.FC<ObjectNodeProps> = ({ 
-  name, 
-  value, 
-  path = '', 
-  depth = 0 
-}) => {
+export const ObjectNode: React.FC<ObjectNodeProps> = ({ name, value, path = '', depth = 0 }) => {
   const [isOpen, setIsOpen] = useState(depth < 1);
   const newPath = path ? `${path}.${name}` : name;
   const isArray = Array.isArray(value);
-  const entries = isArray
-    ? value.map((item, i) => [i, item])
-    : Object.entries(value);
-  
+  const entries = isArray ? value.map((item, i) => [i, item]) : Object.entries(value);
+
   // Get the icon for the type (array or object)
   const getIcon = () => {
     return isArray ? '[]' : '{}';
   };
-  
+
   return (
     <Box {...objectNodeContainer}>
       <Flex {...getObjectNodeHeader(depth)}>
-        <Button 
-          size="xs"
-          onClick={() => setIsOpen(!isOpen)}
-          {...objectNodeToggleButton}
-        >
+        <Button size='xs' onClick={() => setIsOpen(!isOpen)} {...objectNodeToggleButton}>
           {isOpen ? '▼' : '▶'}
         </Button>
-        
-        <Text fontWeight="bold" color={isArray ? "brand.neonBlue" : "cyan.300"} mr={1}>
+
+        <Text fontWeight='bold' color={isArray ? 'brand.neonBlue' : 'cyan.300'} mr={1}>
           {name}
           {isArray ? ` (${entries.length})` : ''}:
         </Text>
-        
-        <Text as="span" fontSize="xs" color="gray.500">
+
+        <Text as='span' fontSize='xs' color='gray.500'>
           {getIcon()}
         </Text>
       </Flex>
-      
+
       {isOpen && (
         <Box {...getObjectNodeChildrenContainer(isArray)}>
           {entries.map(([key, val], index) => (
@@ -67,9 +56,9 @@ export const ObjectNode: React.FC<ObjectNodeProps> = ({
               index={isArray ? Number(key) : undefined}
             />
           ))}
-          
+
           {entries.length === 0 && (
-            <Text fontSize="sm" color="gray.500" fontStyle="italic" ml={4}>
+            <Text fontSize='sm' color='gray.500' fontStyle='italic' ml={4}>
               {isArray ? 'Empty array' : 'Empty object'}
             </Text>
           )}
@@ -77,4 +66,4 @@ export const ObjectNode: React.FC<ObjectNodeProps> = ({
       )}
     </Box>
   );
-}; 
+};

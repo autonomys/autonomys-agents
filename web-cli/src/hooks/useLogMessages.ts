@@ -6,16 +6,33 @@ export const useLogMessages = () => {
   const [logMessages, setLogMessages] = useState<EventSourceMessage[]>([]);
   const [namespaceCount, setNamespaceCount] = useState<Record<string, number>>({});
   const logRef = useRef<HTMLDivElement | null>(null);
+  const [shouldAutoScroll, setShouldAutoScroll] = useState(true);
+  const isNearBottomRef = useRef<boolean>(true);
+  const [isScrolling, setIsScrolling] = useState(false);
 
   const setLogContainerRef = useCallback((ref: HTMLDivElement | null) => {
     logRef.current = ref;
+
+    if (ref) {
+      const handleScroll = () => {
+        if (!ref) return;
+
+        const isNearBottom = ref.scrollHeight - ref.clientHeight - ref.scrollTop < 50;
+        isNearBottomRef.current = isNearBottom;
+
+        setShouldAutoScroll(isNearBottom);
+      };
+
+      ref.addEventListener('scroll', handleScroll);
+      return () => ref.removeEventListener('scroll', handleScroll);
+    }
   }, []);
 
   useEffect(() => {
-    if (logRef.current) {
+    if (logRef.current && shouldAutoScroll) {
       logRef.current.scrollTop = logRef.current.scrollHeight;
     }
-  }, [logMessages]);
+  }, [logMessages, shouldAutoScroll]);
 
   const handleLogMessage = useCallback((message: EventSourceMessage) => {
     setLogMessages(prev => [...prev, message]);
@@ -51,6 +68,7 @@ export const useLogMessages = () => {
         return newCount;
       });
     }
+    setShouldAutoScroll(true);
   }, []);
 
   const getFilteredMessages = useCallback(
@@ -68,6 +86,22 @@ export const useLogMessages = () => {
     });
   }, []);
 
+  const scrollToBottom = useCallback(() => {
+    if (logRef.current) {
+      setIsScrolling(true);
+
+      logRef.current.scrollTo({
+        top: logRef.current.scrollHeight,
+        behavior: 'smooth',
+      });
+
+      setTimeout(() => {
+        setIsScrolling(false);
+        setShouldAutoScroll(true);
+      }, 500);
+    }
+  }, []);
+
   return {
     logMessages,
     namespaceCount,
@@ -75,5 +109,8 @@ export const useLogMessages = () => {
     clearLogs,
     getFilteredMessages,
     cleanUp,
+    scrollToBottom,
+    isAutoScrollEnabled: shouldAutoScroll,
+    isScrolling,
   };
 };

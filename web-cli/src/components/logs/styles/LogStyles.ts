@@ -1,5 +1,4 @@
-import { SystemStyleObject, BoxProps, FlexProps, TextProps, ButtonProps } from '@chakra-ui/react';
-import { ElementType } from 'react';
+import { BoxProps, FlexProps, TextProps, ButtonProps } from '@chakra-ui/react';
 
 // Styles for the MetaData component
 export const metaDataContainer: BoxProps = {
@@ -331,3 +330,103 @@ export const logMessageListMessage: TextProps = {
   fontWeight: 'normal',
   lineHeight: '1.6',
 };
+
+// Styles for OutputLog component
+export const outputLogContainer: BoxProps = {
+  position: 'relative',
+  zIndex: 10,
+  style: {
+    transform: 'translate3d(0, 0, 0)',
+    willChange: 'transform',
+  },
+};
+
+export const outputLogFlexContainer: FlexProps = {
+  direction: 'column',
+  h: '100%',
+  w: '100%',
+  bg: 'rgba(26, 26, 46, 0.8)',
+  borderRadius: 'lg',
+  overflow: 'visible',
+  boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)',
+  border: '1px solid',
+  borderColor: 'gray.700',
+  position: 'relative',
+  _before: {
+    content: '""',
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: '1px',
+    bgGradient: 'linear(to-r, transparent, brand.neonPink, transparent)',
+    zIndex: '1',
+  },
+};
+
+export const outputLogResizableHandleStyles = {
+  bottom: {
+    height: '8px',
+    borderRadius: '0 0 6px 6px',
+    backgroundColor: 'transparent',
+    backgroundImage: 'linear-gradient(to right, transparent, rgba(255, 0, 255, 0.4), transparent)',
+    bottom: '0px',
+    cursor: 'row-resize',
+    zIndex: 11,
+  },
+};
+
+export const outputLogResizableHandleBox: BoxProps = {
+  width: '100%',
+  height: '8px',
+  position: 'absolute',
+  bottom: '0',
+  cursor: 'row-resize',
+  borderRadius: '0 0 6px 6px',
+  zIndex: 11,
+  _hover: {
+    backgroundImage: 'linear-gradient(to right, transparent, rgba(255, 0, 255, 0.8), transparent)',
+    opacity: 0.7,
+  },
+};
+
+export const outputLogScrollBox: BoxProps = {
+  flex: '1',
+  overflowY: 'auto',
+  position: 'relative',
+  css: {
+    '&::-webkit-scrollbar': {
+      width: '8px',
+      borderRadius: '4px',
+    },
+    '&::-webkit-scrollbar-track': {
+      background: 'rgba(0, 0, 0, 0.1)',
+    },
+    '&::-webkit-scrollbar-thumb': {
+      background: 'rgba(255, 0, 255, 0.3)',
+      borderRadius: '4px',
+    },
+  },
+};
+
+export const scrollToBottomButton = (isScrolling: boolean): ButtonProps => ({
+  size: 'md',
+  position: 'fixed',
+  bottom: '30px',
+  right: '30px',
+  colorScheme: 'pink',
+  borderRadius: 'full',
+  boxShadow: `0 0 15px rgba(255, 0, 255, ${isScrolling ? '0.9' : '0.7'})`,
+  opacity: isScrolling ? 1 : 0.85,
+  _hover: {
+    opacity: 1,
+    transform: 'scale(1.1)',
+  },
+  fontSize: '18px',
+  width: '40px',
+  height: '40px',
+  padding: '0',
+  zIndex: 100,
+  transition: 'all 0.2s ease',
+  animation: isScrolling ? 'pulse 1s infinite' : 'none',
+});
