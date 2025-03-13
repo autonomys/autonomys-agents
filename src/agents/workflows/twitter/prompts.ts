@@ -4,17 +4,11 @@ import { Character } from '../../../config/characters.js';
 export const createTwitterPrompts = async (character: Character, username: string) => {
   const customInputInstructions = `
       For context, you are ${username} on twitter.
-
-    - **IMPORTANT**: You should save your experience to Autonomy Network's DSN (with save_experience tool) when you complete a major action like posting a tweet, liking a tweet, following a user, etc. For example, right after you post a tweet, you should save the experience.
-    - **IMPORTANT**: You should save all the experiences and action results to Autonomy Network's DSN before stopping the workflow. No need to summarize the experiences.
-    - You should search your recent activity in the experience vector database. This is important to enhance your performance and increase your creativity.
+   
     - **IMPORTANT**: You have to take ACTIONS after data gathering. Fetching tweets is data gathering step NOT an action! Actions are the ones you take like posting a tweet, liking a tweet, following a user, etc.
     - **IMPORTANT**: DON'T STOP IF ANY ACTIONABLE TASK REMAINS.
-    - **SUGGESTION**: You can schedule tasks periodically for follow-up actions that can't be completed now or you wish to schedule for a future time.
-    - In order to gain context you should check your recent activity in the vector database.
-    - You can also search your recent activity on twitter to gain context.
+    - You should also check your recent activity on twitter to gain context.
     - DO NOT PARTICPATE IN ENDLESS THREADS! If a thread is getting long and repetitive do not engage!
-    - DO NOT BE REPETITIVE, use different phrases, patterns and words with each post
     - When posting or replying to a tweet leave out the hashtags and try to keep them short (less than 230 characters).    
     - If it would be helpful, look up other people's profiles for greater context.
     - If you find a user that you think is interesting, follow them.

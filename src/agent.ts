@@ -1,6 +1,3 @@
-import { createGitHubTools } from './agents/tools/github/index.js';
-import { createAllSchedulerTools } from './agents/tools/scheduler/index.js';
-import { createSlackTools } from './agents/tools/slack/index.js';
 import { createWebSearchTool } from './agents/tools/webSearch/index.js';
 import {
   createOrchestratorRunner,
@@ -8,11 +5,14 @@ import {
 } from './agents/workflows/orchestrator/orchestratorWorkflow.js';
 import { createPrompts } from './agents/workflows/orchestrator/prompts.js';
 import { OrchestratorRunnerOptions } from './agents/workflows/orchestrator/types.js';
-import { registerOrchestratorRunner } from './agents/workflows/registration.js';
 import { createTwitterAgent } from './agents/workflows/twitter/twitterAgent.js';
-import { withApiLogger } from './api/server.js';
 import { config } from './config/index.js';
 import { createTwitterApi } from './services/twitter/client.js';
+import { withApiLogger } from './api/server.js';
+import { createSlackAgent } from './agents/workflows/slack/slackAgent.js';
+import { createAllSchedulerTools } from './agents/tools/scheduler/index.js';
+import { createGitHubTools } from './agents/tools/github/index.js';
+import { registerOrchestratorRunner } from './agents/workflows/registration.js';
 
 const character = config.characterConfig;
 const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
@@ -47,8 +47,16 @@ const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
       : [];
 
   //If slack api key is provided, add slack tools
-  const slackTools = config.slackConfig.SLACK_APP_TOKEN
-    ? await createSlackTools(config.slackConfig.SLACK_APP_TOKEN)
+  const slackAgentTool = config.slackConfig.SLACK_APP_TOKEN
+    ? [
+        createSlackAgent(config.slackConfig.SLACK_APP_TOKEN, character, {
+          tools: [...schedulerTools],
+          saveExperiences,
+          monitoring: {
+            enabled: monitoringEnabled,
+          },
+        }),
+      ]
     : [];
 
   //If github api key is provided, add github tools
@@ -65,8 +73,8 @@ const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
     modelConfigurations: config.orchestratorConfig.model_configurations,
     tools: [
       ...twitterAgentTool,
+      ...slackAgentTool,
       ...webSearchTool,
-      ...slackTools,
       ...githubTools,
       ...schedulerTools,
     ],

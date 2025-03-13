@@ -26,7 +26,10 @@ export const createListChannelsTool = (getUserChannels: () => Promise<ChannelInf
         };
       } catch (error) {
         logger.error('Error listing Slack channels:', error);
-        throw error;
+        return {
+          success: false,
+          error,
+        };
       }
     },
   });
