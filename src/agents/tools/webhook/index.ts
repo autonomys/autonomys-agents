@@ -28,7 +28,7 @@ export const createWebhookIssueReportTool = (url: string) =>
         logger.error('Failed to report issue', { error });
         return {
           success: false,
-          message: 'Failed to report issue',
+          message: `Failed to report issue: ${error}`,
         };
       }
     },
