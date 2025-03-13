@@ -1,10 +1,20 @@
-import { Block, UsersProfileSetArguments } from '@slack/web-api';
+import {
+  Block,
+  CanvasesEditArguments,
+  CanvasesSectionsLookupArguments,
+  UsersProfileSetArguments,
+} from '@slack/web-api';
 import {
   createAddBookmarkTool,
   createEditBookmarkTool,
   createListBookmarksTool,
   createRemoveBookmarkTool,
 } from './bookmark.js';
+import {
+  canvasSectionsLookupTool,
+  createChannelCanvasTool,
+  createEditChannelCanvasTool,
+} from './canvas.js';
 import { createListChannelsTool } from './channel.js';
 import {
   createEditMessageTool,
@@ -83,6 +93,17 @@ export const createSlackTools = async (slackToken: string) => {
     slack.editBookmark({ channel_id: channelId, bookmark_id: bookmarkId, title, emoji });
   const removeBookmark = (channelId: string, bookmarkId: string) =>
     slack.removeBookmark({ channel_id: channelId, bookmark_id: bookmarkId });
+  const createChannelCanvas = (channelId: string, markdown: string) =>
+    slack.createChannelCanvas(channelId, markdown);
+  const editChannelCanvas = (
+    channelId: string,
+    canvasId: string,
+    changes: CanvasesEditArguments['changes'],
+  ) => slack.editCanvas(canvasId, changes);
+  const canvasSectionsLookup = (
+    canvasId: string,
+    criteria: CanvasesSectionsLookupArguments['criteria'],
+  ) => slack.canvasSectionsLookup(canvasId, criteria);
 
   return [
     createPostSlackMsgTool(postMessage),
@@ -107,6 +128,9 @@ export const createSlackTools = async (slackToken: string) => {
     createAddBookmarkTool(addBookmark),
     createEditBookmarkTool(editBookmark),
     createRemoveBookmarkTool(removeBookmark),
+    createChannelCanvasTool(createChannelCanvas),
+    createEditChannelCanvasTool(editChannelCanvas),
+    canvasSectionsLookupTool(canvasSectionsLookup),
   ];
 };
 
