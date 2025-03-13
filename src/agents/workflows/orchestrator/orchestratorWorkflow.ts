@@ -91,7 +91,7 @@ export type OrchestratorRunner = Readonly<{
 
 const defaultModelConfiguration: LLMConfiguration = {
   provider: 'anthropic',
-  model: 'claude-3-7-sonnet-latest',
+  model: 'claude-3-5-sonnet-latest',
   temperature: 0.8,
 };
 
@@ -218,13 +218,13 @@ export const createOrchestratorRunner = async (
       }
 
       if (finalState?.finishWorkflow?.messages?.[0]?.content) {
-        const { summary, schedule } = await parseFinishedWorkflow(
+        const { summary } = await parseFinishedWorkflow(
           finalState.finishWorkflow.messages[0].content,
           workflowLogger,
         );
 
         const workflowSummary = `This action finished running at ${new Date().toISOString()}. Action summary: ${summary}`;
-        const result = { summary: workflowSummary, schedule };
+        const result = { summary: workflowSummary };
 
         taskQueue.updateTaskStatus(taskQueue.currentTask?.id || '', 'completed', result);
         closeVectorDB(defaultOptions.namespace);

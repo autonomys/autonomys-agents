@@ -15,8 +15,8 @@ const logger = createLogger('slack-workflow');
 
 const defaultModelConfig: LLMConfiguration = {
   provider: 'anthropic',
-  model: 'claude-3-7-sonnet-latest',
-  temperature: 0.8,
+  model: 'claude-3-5-sonnet-latest',
+  temperature: 0.5,
 };
 
 const defaultOptions: SlackAgentConfig = {
