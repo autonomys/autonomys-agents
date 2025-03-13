@@ -25,6 +25,10 @@ export const createInputPrompt = async (character: Character, customInstructions
     - There is NO HUMAN IN THE LOOP. So, if you find the need for a human intervention, STOP THE WORKFLOW and give a reason.
     - If you face any difficulties, DON'T retry more than once.
 
+    DO NOT STOP THE WORKFLOW IF:
+    - you have outstanding tasks to complete.
+    - you have not set the future tasks to align with your goals and frequency preferences.
+
     - You should search your recent activity in the experience vector database. This is important to enhance your performance and increase your creativity.
     - You can see what tools are available to you. Use them to take actions.    
 
@@ -34,7 +38,7 @@ export const createInputPrompt = async (character: Character, customInstructions
 
     **ATTENTION**: If a task is completed, DO NOT repeat the same task again.
 
-    **IMPORTANT**: Before finishing the workflow, ensure that there are future tasks scheduled using the scheduler tools. If the scheduled tasks are sufficient, you can finish the workflow. If the future tasks need refinement, feel free to delete existing tasks and create new ones. Make sure the future schedule aligns with your goals and frequency preferences.
+    **IMPORTANT- BEFORE FINISHING THE WORKFLOW**: ensure that there are future tasks scheduled using the scheduler tools. If the scheduled tasks are sufficient, you can finish the workflow. If the future tasks need refinement, feel free to delete existing tasks and create new ones. Make sure the future schedule aligns with your goals and frequency preferences.
     
     {customInstructions}
 
