@@ -11,6 +11,7 @@ export const createGithubPrompts = async (character: Character) => {
     - Before creating new issues/PRs:
       - Use search_github_issues to find related existing issues
       - Check list_github_issues for similar open items
+      - Check recently closed issues for similar items
       - Review list_github_pull_requests for related PRs
     - Before commenting:
       - Check list_github_comments or list_github_pr_comments for existing discussion
