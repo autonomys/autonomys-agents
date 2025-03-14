@@ -1,6 +1,7 @@
-import { createGitHubTools } from './agents/tools/github/index.js';
+import { GitHubToolsSubset } from './agents/tools/github/index.js';
 import { createAllSchedulerTools } from './agents/tools/scheduler/index.js';
 import { createWebSearchTool } from './agents/tools/webSearch/index.js';
+import { createGithubAgent } from './agents/workflows/github/githubAgent.js';
 import {
   createOrchestratorRunner,
   OrchestratorRunner,
@@ -60,8 +61,18 @@ const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
     : [];
 
   //If github api key is provided, add github tools
-  const { GITHUB_TOKEN } = config.githubConfig;
-  const githubTools = GITHUB_TOKEN ? await createGitHubTools(GITHUB_TOKEN) : [];
+  const githubToken = config.githubConfig.GITHUB_TOKEN;
+  const githubAgentTools = githubToken
+    ? [
+        createGithubAgent(githubToken, GitHubToolsSubset.ISSUES_CONTRIBUTOR, character, {
+          tools: [...schedulerTools],
+          saveExperiences,
+          monitoring: {
+            enabled: monitoringEnabled,
+          },
+        }),
+      ]
+    : [];
 
   //Orchestrator config
   const prompts = await createPrompts(character, { selfSchedule: true });
@@ -72,7 +83,7 @@ const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
       ...twitterAgentTool,
       ...slackAgentTool,
       ...webSearchTool,
-      ...githubTools,
+      ...githubAgentTools,
       ...schedulerTools,
     ],
     prompts,
