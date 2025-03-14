@@ -1,5 +1,5 @@
 import { HumanMessage } from '@langchain/core/messages';
-import { createGitHubTools } from '../../src/agents/tools/github/index.js';
+import { createGitHubTools, GitHubToolsSubset } from '../../src/agents/tools/github/index.js';
 import {
   createOrchestratorRunner,
   OrchestratorRunner,
@@ -17,7 +17,7 @@ const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
   if (!githubToken) {
     throw new Error('GITHUB_TOKEN is required in the environment variables');
   }
-  const githubTools = await createGitHubTools(githubToken);
+  const githubTools = await createGitHubTools(githubToken, GitHubToolsSubset.ISSUES_CONTRIBUTOR);
 
   //Orchestrator config
   //use default orchestrator prompts with character config

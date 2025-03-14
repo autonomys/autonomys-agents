@@ -5,7 +5,7 @@ import { withApiLogger } from '../../../api/server.js';
 import { Character } from '../../../config/characters.js';
 import { LLMConfiguration } from '../../../services/llm/types.js';
 import { createLogger } from '../../../utils/logger.js';
-import { createGitHubTools } from '../../tools/github/index.js';
+import { createGitHubTools, GitHubToolsSubset } from '../../tools/github/index.js';
 import { cleanMessageData } from '../orchestrator/cleanMessages.js';
 import { createOrchestratorRunner } from '../orchestrator/orchestratorWorkflow.js';
 import { registerOrchestratorRunner } from '../registration.js';
@@ -50,6 +50,7 @@ const createGithubAgentConfig = (options?: GithubAgentOptions): GithubAgentConfi
 
 export const createGithubAgent = (
   githubToken: string,
+  subset: GitHubToolsSubset,
   character: Character,
   options?: GithubAgentOptions,
 ) =>
@@ -69,7 +70,7 @@ export const createGithubAgent = (
         const namespace = 'github';
 
         const prompts = await createGithubPrompts(character);
-        const githubTools = await createGitHubTools(githubToken);
+        const githubTools = await createGitHubTools(githubToken, subset);
 
         const runner = createOrchestratorRunner(character, {
           modelConfigurations,
