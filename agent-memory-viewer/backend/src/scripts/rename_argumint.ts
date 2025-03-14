@@ -12,19 +12,19 @@ const __dirname = path.dirname(__filename);
 async function renameArgumintInDatabase() {
   try {
     // Get count of records before update
-    const countBefore = await pool.query("SELECT COUNT(*) FROM memory_records WHERE agent_name = '0xargumint'");
-    logger.info(`Found ${countBefore.rows[0].count} records with agent_name = '0xargumint'`);
+    const countBefore = await pool.query("SELECT COUNT(*) FROM memory_records WHERE agent_name = '0xagreemint'");
+    logger.info(`Found ${countBefore.rows[0].count} records with agent_name = '0xagreemint'`);
 
     // Run the update query
     await pool.query(`
       UPDATE memory_records
-      SET agent_name = 'argumint'
-      WHERE agent_name = '0xargumint'
+      SET agent_name = 'agreemint'
+      WHERE agent_name = '0xagreemint'
     `);
     
     // Get count of records after update
-    const countAfter = await pool.query("SELECT COUNT(*) FROM memory_records WHERE agent_name = 'argumint'");
-    logger.info(`Updated ${countAfter.rows[0].count} records to agent_name = 'argumint'`);
+    const countAfter = await pool.query("SELECT COUNT(*) FROM memory_records WHERE agent_name = 'agreemint'");
+    logger.info(`Updated ${countAfter.rows[0].count} records to agent_name = 'agreemint'`);
     
     return countBefore.rows[0].count;
   } catch (error) {
@@ -45,14 +45,14 @@ async function updateAgentConfig() {
     };
     
     // Check if we need to update
-    const needsUpdate = config.agents.some(agent => agent.username === '0xargumint');
+    const needsUpdate = config.agents.some(agent => agent.username === '0xagreemint');
     
     if (needsUpdate) {
       // Update the agent name
       config.agents = config.agents.map(agent => {
-        if (agent.username === '0xargumint') {
-          logger.info(`Updating agent name from '0xargumint' to 'argumint' in config`);
-          return { ...agent, username: 'argumint' };
+        if (agent.username === '0xagreemint') {
+          logger.info(`Updating agent name from '0xagreemint' to 'agreemint' in config`);
+          return { ...agent, username: 'agreemint' };
         }
         return agent;
       });
