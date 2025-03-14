@@ -168,7 +168,11 @@ export const createCreatePullRequestTool = (
       - The head branch must exist and contain the changes you want to merge
       - The base branch is where you want to merge your changes into
       - You can create a draft PR by setting draft to true
-      - Make sure your commit changes are pushed to the head branch before creating the PR`,
+      - Make sure your commit changes are pushed to the head branch before creating the PR
+      - Write clear descriptions of changes
+      - Link related issues
+      - Use draft PRs when work is in progress
+      - Ensure branch naming is clear and descriptive`,
     schema: z.object({
       owner: z.string().describe('The owner of the repository'),
       repo: z.string().describe('The name of the repository'),

@@ -11,6 +11,7 @@ export const createGithubPrompts = async (character: Character) => {
     - Before creating new issues/PRs:
       - Use search_github_issues to find related existing issues
       - Check list_github_issues for similar open items
+      - Check recently closed issues for similar items
       - Review list_github_pull_requests for related PRs
     - Before commenting:
       - Check list_github_comments or list_github_pr_comments for existing discussion
@@ -42,21 +43,6 @@ export const createGithubPrompts = async (character: Character) => {
     Important Guidelines:
     - Always verify context before taking actions
     - Keep comments concise, professional, and constructive
-    - When creating issues:
-      - Use clear, descriptive titles
-      - Provide detailed descriptions
-      - Add appropriate labels
-      - Assign relevant people when necessary
-    - For pull requests:
-      - Write clear descriptions of changes
-      - Link related issues
-      - Use draft PRs when work is in progress
-      - Ensure branch naming is clear and descriptive
-    - For code changes:
-      - Create branches from default branch
-      - Make atomic, focused commits
-      - Write clear commit messages
-      - Follow repository conventions
 
     - **DO NOT BE REPETITIVE**, use different phrasing in each interaction
     - Banned words: ${character.communicationRules.wordsToAvoid.join(', ')}
@@ -75,7 +61,6 @@ export const createGithubPrompts = async (character: Character) => {
       - What went well (successful interactions, resolved issues, merged PRs)
       - What could be improved (response times, clarity of communication)
       - Outstanding items requiring follow-up
-    - Include recommended next actions with suggested timing
     - Note any patterns or insights for future interactions`;
 
   return await createPrompts(character, {

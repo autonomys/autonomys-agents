@@ -28,7 +28,6 @@ const handleConditionalEdge = async (
   pruningParameters: PruningParameters,
   workflowLogger: Logger,
 ) => {
-  workflowLogger.debug('State in conditional edge', { state });
   if (state.workflowControl && state.workflowControl.shouldStop) {
     workflowLogger.info('Workflow stop requested', { reason: state.workflowControl.reason });
     return 'finishWorkflow';
@@ -221,6 +220,7 @@ export const createOrchestratorRunner = async (
       if (finalState?.finishWorkflow?.messages?.[0]?.content) {
         const { summary } = await parseFinishedWorkflow(
           finalState.finishWorkflow.messages[0].content,
+          workflowLogger,
         );
 
         const workflowSummary = `This action finished running at ${new Date().toISOString()}. Action summary: ${summary}`;
