@@ -5,6 +5,7 @@ import {
   CreatePullRequestParams,
   GithubClient,
   GitHubIssueAndPRState,
+  GitHubPullRequestReviewEvent,
   GithubResponse,
 } from './types.js';
 
@@ -173,4 +174,109 @@ export const createComment = async (
       data: response.data,
     };
   }
+};
+
+export const listReviews = async (
+  client: GithubClient,
+  owner: string,
+  repo: string,
+  pull_number: number,
+): Promise<GithubResponse<RestEndpointMethodTypes['pulls']['listReviews']['response']['data']>> => {
+  const response = await client.pulls.listReviews({
+    owner,
+    repo,
+    pull_number,
+  });
+  return {
+    success: true,
+    data: response.data,
+  };
+};
+
+export const createReview = async (
+  client: GithubClient,
+  owner: string,
+  repo: string,
+  pull_number: number,
+  event: GitHubPullRequestReviewEvent,
+  body?: string,
+) => {
+  const response = await client.pulls.createReview({
+    owner,
+    repo,
+    pull_number,
+    event,
+    body,
+  });
+  return {
+    success: true,
+    data: response.data,
+  };
+};
+
+export const updateReview = async (
+  client: GithubClient,
+  owner: string,
+  repo: string,
+  pull_number: number,
+  review_id: number,
+  event: GitHubPullRequestReviewEvent,
+  body: string,
+) => {
+  const response = await client.pulls.updateReview({
+    owner,
+    repo,
+    pull_number,
+    review_id,
+    event,
+    body,
+  });
+  return {
+    success: true,
+    data: response.data,
+  };
+};
+
+export const submitReview = async (
+  client: GithubClient,
+  owner: string,
+  repo: string,
+  pull_number: number,
+  review_id: number,
+  event: GitHubPullRequestReviewEvent,
+  body?: string,
+) => {
+  const response = await client.pulls.submitReview({
+    owner,
+    repo,
+    pull_number,
+    review_id,
+    event,
+    body,
+  });
+  return {
+    success: true,
+    data: response.data,
+  };
+};
+
+export const dismissReview = async (
+  client: GithubClient,
+  owner: string,
+  repo: string,
+  pull_number: number,
+  review_id: number,
+  message: string,
+) => {
+  const response = await client.pulls.dismissReview({
+    owner,
+    repo,
+    pull_number,
+    review_id,
+    message,
+  });
+  return {
+    success: true,
+    data: response.data,
+  };
 };

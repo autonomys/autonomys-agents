@@ -13,6 +13,7 @@ import {
   CreatePullRequestParams,
   GithubClient,
   GitHubIssueAndPRState,
+  GitHubPullRequestReviewEvent,
   GitHubReactionType,
 } from './types.js';
 import * as Users from './users.js';
@@ -123,6 +124,38 @@ export const githubClient = async (token: string) => {
       comment_id,
       content,
     );
+  const listPullRequestReviews = async (owner: string, repo: string, pull_number: number) =>
+    PRs.listReviews(client, owner, repo, pull_number);
+  const createPullRequestReview = async (
+    owner: string,
+    repo: string,
+    pull_number: number,
+    event: GitHubPullRequestReviewEvent,
+    body?: string,
+  ) => PRs.createReview(client, owner, repo, pull_number, event, body);
+  const updatePullRequestReview = async (
+    owner: string,
+    repo: string,
+    pull_number: number,
+    review_id: number,
+    event: GitHubPullRequestReviewEvent,
+    body: string,
+  ) => PRs.updateReview(client, owner, repo, pull_number, review_id, event, body);
+  const submitPullRequestReview = async (
+    owner: string,
+    repo: string,
+    pull_number: number,
+    review_id: number,
+    event: GitHubPullRequestReviewEvent,
+    body?: string,
+  ) => PRs.submitReview(client, owner, repo, pull_number, review_id, event, body);
+  const dismissPullRequestReview = async (
+    owner: string,
+    repo: string,
+    pull_number: number,
+    review_id: number,
+    message: string,
+  ) => PRs.dismissReview(client, owner, repo, pull_number, review_id, message);
 
   // Users
   const getAuthenticatedUser = async () => Users.getAuthenticatedUser(client);
@@ -145,8 +178,14 @@ export const githubClient = async (token: string) => {
     Repos.addCollaborator(client, owner, repo, username);
   const removeCollaborator = async (owner: string, repo: string, username: string) =>
     Repos.removeCollaborator(client, owner, repo, username);
+  const compareCommits = async (owner: string, repo: string, base: string, head: string) =>
+    Repos.compareCommits(client, owner, repo, base, head);
 
   // Git
+  const getCommit = async (owner: string, repo: string, commit_sha: string) =>
+    Git.getCommit(client, owner, repo, commit_sha);
+  const getRef = async (owner: string, repo: string, ref: string) =>
+    Git.getRef(client, owner, repo, ref);
   const createBranch = async (
     owner: string,
     repo: string,
@@ -187,6 +226,11 @@ export const githubClient = async (token: string) => {
     createPullRequestReaction,
     createPullRequestCommentReaction,
     createPullRequestReviewCommentReaction,
+    listPullRequestReviews,
+    createPullRequestReview,
+    updatePullRequestReview,
+    submitPullRequestReview,
+    dismissPullRequestReview,
 
     getAuthenticatedUser,
     listAuthenticatedUserRepos,
@@ -201,7 +245,10 @@ export const githubClient = async (token: string) => {
     listContributors,
     addCollaborator,
     removeCollaborator,
+    compareCommits,
 
+    getCommit,
+    getRef,
     createBranch,
     createCommit,
   };

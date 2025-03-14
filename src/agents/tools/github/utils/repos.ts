@@ -138,3 +138,19 @@ export const removeCollaborator = async (
     data: response.data,
   };
 };
+
+export const compareCommits = async (
+  client: GithubClient,
+  owner: string,
+  repo: string,
+  base: string,
+  head: string,
+): Promise<
+  GithubResponse<RestEndpointMethodTypes['repos']['compareCommits']['response']['data']>
+> => {
+  const response = await client.repos.compareCommits({ owner, repo, base, head });
+  return {
+    success: true,
+    data: response.data,
+  };
+};

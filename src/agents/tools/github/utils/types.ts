@@ -14,6 +14,8 @@ export type GithubResponse<T> = {
 
 export type GitHubIssueAndPRState = 'open' | 'closed' | 'all';
 
+export type GitHubPullRequestReviewEvent = 'REQUEST_CHANGES' | 'APPROVE' | 'COMMENT';
+
 export type GitHubReactionType =
   | '+1'
   | '-1'

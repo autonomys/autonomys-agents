@@ -6,6 +6,7 @@ import {
   CreatePRCommentParams,
   CreatePullRequestParams,
   GitHubIssueAndPRState,
+  GitHubPullRequestReviewEvent,
   GitHubReactionType,
   GithubResponse,
 } from './utils/types.js';
@@ -632,6 +633,240 @@ export const createCreateReactionForPullRequestReviewCommentTool = (
         };
       } catch (error) {
         logger.error('Error creating GitHub PR review comment reaction:', error);
+        return {
+          success: false,
+          error: error as Error,
+        };
+      }
+    },
+  });
+
+/**
+ * Creates a tool to list reviews on a GitHub pull request
+ */
+export const createListPullRequestReviewsTool = (
+  listPullRequestReviews: (
+    owner: string,
+    repo: string,
+    pull_number: number,
+  ) => Promise<GithubResponse<RestEndpointMethodTypes['pulls']['listReviews']['response']['data']>>,
+) =>
+  new DynamicStructuredTool({
+    name: 'list_github_pull_request_reviews',
+    description: `List reviews on a GitHub pull request.
+    USE THIS WHEN:
+    - You need to see all reviews on a pull request
+    - You want to check the status of existing reviews
+    - You need to find reviews you're assigned to or need to review`,
+    schema: z.object({
+      owner: z.string().describe('The owner of the repository'),
+      repo: z.string().describe('The name of the repository'),
+      pull_number: z.number().describe('The number of the pull request'),
+    }),
+    func: async ({ owner, repo, pull_number }) => {
+      try {
+        logger.info('Listing GitHub pull request reviews:', { owner, repo, pull_number });
+        const { success, data } = await listPullRequestReviews(owner, repo, pull_number);
+        return {
+          success,
+          data: JSON.stringify(data, null, 2),
+        };
+      } catch (error) {
+        logger.error('Error listing GitHub pull request reviews:', error);
+        return {
+          success: false,
+          error: error as Error,
+        };
+      }
+    },
+  });
+
+/**
+ * Creates a tool to create a review on a GitHub pull request
+ */
+export const createCreatePullRequestReviewTool = (
+  createPullRequestReview: (
+    owner: string,
+    repo: string,
+    pull_number: number,
+    event: GitHubPullRequestReviewEvent,
+    body?: string,
+  ) => Promise<
+    GithubResponse<RestEndpointMethodTypes['pulls']['createReview']['response']['data']>
+  >,
+) =>
+  new DynamicStructuredTool({
+    name: 'create_github_pull_request_review',
+    description: `Create a review on a GitHub pull request.
+    USE THIS WHEN:
+    - You need to create a review on a pull request
+    - You want to add a comment to a pull request review
+    - You need to submit a review on a pull request
+    
+    IMPORTANT: Before creating a review, consider whether you've already reviewed this PR. Avoid creating multiple reviews for the same content. Remember that you can only submit each review type once per PR.
+    
+    Suggested behavior:
+    - Don't leave reviews to your own PRs
+    Available review events: request_changes, comment, approve`,
+    schema: z.object({
+      owner: z.string().describe('The owner of the repository'),
+      repo: z.string().describe('The name of the repository'),
+      pull_number: z.number().describe('The number of the pull request'),
+      event: z.enum(['request_changes', 'comment', 'approve']).describe('The event to create'),
+      body: z.string().describe('The body of the review').optional(),
+    }),
+    func: async ({ owner, repo, pull_number, event, body }) => {
+      try {
+        logger.info('Creating GitHub pull request review:', {
+          owner,
+          repo,
+          pull_number,
+          event,
+          body,
+        });
+        const { success, data } = await createPullRequestReview(
+          owner,
+          repo,
+          pull_number,
+          event as GitHubPullRequestReviewEvent,
+          body,
+        );
+        return {
+          success,
+          data: JSON.stringify(data, null, 2),
+        };
+      } catch (error) {
+        logger.error('Error creating GitHub pull request review:', error);
+        return {
+          success: false,
+          error: error as Error,
+        };
+      }
+    },
+  });
+
+/**
+ * Creates a tool to
+ */
+export const createUpdatePullRequestReviewTool = (
+  updatePullRequestReview: (
+    owner: string,
+    repo: string,
+    pull_number: number,
+    review_id: number,
+    event: GitHubPullRequestReviewEvent,
+    body: string,
+  ) => Promise<
+    GithubResponse<RestEndpointMethodTypes['pulls']['updateReview']['response']['data']>
+  >,
+) =>
+  new DynamicStructuredTool({
+    name: 'update_github_pull_request_review',
+    description: `Update a review on a GitHub pull request.
+    USE THIS WHEN:
+    - You need to update a review on a pull request
+    - You want to add a comment to a pull request review
+    - You need to submit a review on a pull request
+    
+    IMPORTANT: Before updating a review, consider whether you've already reviewed this PR. Avoid updating multiple reviews for the same content. Remember that you can only submit each review type once per PR.
+    
+    Suggested behavior:
+    - Don't leave reviews to your own PRs
+    Available review events: request_changes, comment, approve`,
+    schema: z.object({
+      owner: z.string().describe('The owner of the repository'),
+      repo: z.string().describe('The name of the repository'),
+      pull_number: z.number().describe('The number of the pull request'),
+      review_id: z.number().describe('The ID of the review to update'),
+      event: z.enum(['request_changes', 'comment', 'approve']).describe('The event to update'),
+      body: z.string().describe('The body of the review'),
+    }),
+    func: async ({ owner, repo, pull_number, review_id, event, body }) => {
+      try {
+        logger.info('Updating GitHub pull request review:', {
+          owner,
+          repo,
+          pull_number,
+          review_id,
+          event,
+          body,
+        });
+        const { success, data } = await updatePullRequestReview(
+          owner,
+          repo,
+          pull_number,
+          review_id,
+          event as GitHubPullRequestReviewEvent,
+          body,
+        );
+        return {
+          success,
+          data: JSON.stringify(data, null, 2),
+        };
+      } catch (error) {
+        logger.error('Error updating GitHub pull request review:', error);
+        return {
+          success: false,
+          error: error as Error,
+        };
+      }
+    },
+  });
+
+/**
+ * Creates a tool to submit a review on a GitHub pull request
+ */
+export const createSubmitPullRequestReviewTool = (
+  submitPullRequestReview: (
+    owner: string,
+    repo: string,
+    pull_number: number,
+    review_id: number,
+    event: GitHubPullRequestReviewEvent,
+    body?: string,
+  ) => Promise<
+    GithubResponse<RestEndpointMethodTypes['pulls']['submitReview']['response']['data']>
+  >,
+) =>
+  new DynamicStructuredTool({
+    name: 'submit_github_pull_request_review',
+    description: `Submit a review on a GitHub pull request.
+    USE THIS WHEN:
+    - You need to submit a review on a pull request
+    - You want to add a comment to a pull request review
+    - You need to submit a review on a pull request`,
+    schema: z.object({
+      owner: z.string().describe('The owner of the repository'),
+      repo: z.string().describe('The name of the repository'),
+      pull_number: z.number().describe('The number of the pull request'),
+      review_id: z.number().describe('The ID of the review to submit'),
+      event: z.enum(['request_changes', 'comment', 'approve']).describe('The event to submit'),
+      body: z.string().describe('The body of the review').optional(),
+    }),
+    func: async ({ owner, repo, pull_number, review_id, event, body }) => {
+      try {
+        logger.info('Submitting GitHub pull request review:', {
+          owner,
+          repo,
+          pull_number,
+          review_id,
+          event,
+          body,
+        });
+        const { success, data } = await submitPullRequestReview(
+          owner,
+          repo,
+          pull_number,
+          review_id,
+          event as GitHubPullRequestReviewEvent,
+          body,
+        );
+        return {
+          success,
+          data: JSON.stringify(data, null, 2),
+        };
+      } catch (error) {
+        logger.error('Error submitting GitHub pull request review:', error);
         return {
           success: false,
           error: error as Error,

@@ -367,3 +367,45 @@ export const createRemoveCollaboratorTool = (
       }
     },
   });
+
+/**
+ * Creates a tool to compare two commits
+ */
+export const createCompareCommitsTool = (
+  compareCommits: (
+    owner: string,
+    repo: string,
+    base: string,
+    head: string,
+  ) => Promise<
+    GithubResponse<RestEndpointMethodTypes['repos']['compareCommits']['response']['data']>
+  >,
+) =>
+  new DynamicStructuredTool({
+    name: 'compare_commits',
+    description: 'Compares two commits',
+    schema: z.object({
+      owner: z.string().describe('The owner of the repository'),
+      repo: z.string().describe('The name of the repository'),
+      base: z.string().describe('The base commit'),
+      head: z.string().describe('The head commit'),
+    }),
+    func: async ({ owner, repo, base, head }) => {
+      try {
+        const { success, data } = await compareCommits(owner, repo, base, head);
+        return {
+          success,
+          data: JSON.stringify(data, null, 2),
+        };
+      } catch (error) {
+        logger.error(
+          `Error comparing commits ${base} and ${head} for repository ${owner}/${repo}:`,
+          error,
+        );
+        return {
+          success: false,
+          error: error as Error,
+        };
+      }
+    },
+  });

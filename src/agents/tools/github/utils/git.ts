@@ -1,6 +1,32 @@
 import { RestEndpointMethodTypes } from '@octokit/rest';
 import { CreateCommitParams, GithubClient, GithubResponse } from './types.js';
 
+export const getCommit = async (
+  client: GithubClient,
+  owner: string,
+  repo: string,
+  commit_sha: string,
+): Promise<GithubResponse<RestEndpointMethodTypes['git']['getCommit']['response']['data']>> => {
+  const response = await client.git.getCommit({ owner, repo, commit_sha });
+  return {
+    success: true,
+    data: response.data,
+  };
+};
+
+export const getRef = async (
+  client: GithubClient,
+  owner: string,
+  repo: string,
+  ref: string,
+): Promise<GithubResponse<RestEndpointMethodTypes['git']['getRef']['response']['data']>> => {
+  const response = await client.git.getRef({ owner, repo, ref });
+  return {
+    success: true,
+    data: response.data,
+  };
+};
+
 export const createBranch = async (
   client: GithubClient,
   owner: string,
