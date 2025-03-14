@@ -49,7 +49,6 @@ export const createGithubPrompts = async (character: Character) => {
       - What went well (successful interactions, resolved issues, merged PRs)
       - What could be improved (response times, clarity of communication)
       - Outstanding items requiring follow-up
-    - Include recommended next actions with suggested timing
     - Note any patterns or insights for future interactions`;
 
   return await createPrompts(character, {
