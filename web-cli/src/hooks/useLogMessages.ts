@@ -137,10 +137,8 @@ export const useLogMessages = () => {
     [searchTerm, getFilteredMessages],
   );
 
-  
   useEffect(() => {
     if (searchTerm && searchTerm.trim()) {
-  
       const activeNamespace =
         Object.keys(namespaceCount).find(ns => namespaceCount[ns] > 0) || 'all';
 
@@ -148,7 +146,6 @@ export const useLogMessages = () => {
     }
   }, [logMessages, searchTerm, searchInNamespace, namespaceCount]);
 
-  
   const goToNextSearchResult = useCallback(() => {
     if (searchResults.length === 0) return;
 

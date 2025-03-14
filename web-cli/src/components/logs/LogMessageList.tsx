@@ -1,6 +1,6 @@
 import React from 'react';
 import { Box, Flex, Text } from '@chakra-ui/react';
-import { MetaData } from './components';
+import { Metadata } from './components';
 import {
   logMessageListContainer,
   logMessageListWelcomeText,
@@ -129,7 +129,7 @@ export const LogMessageList: React.FC<LogMessageListProps> = ({
               </Flex>
 
               {msg.metadata && Object.keys(msg.metadata).length > 0 && (
-                <MetaData data={msg.metadata} />
+                <Metadata data={msg.metadata} />
               )}
             </Box>
           );

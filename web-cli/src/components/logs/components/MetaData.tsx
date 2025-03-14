@@ -1,26 +1,26 @@
 import React, { useState, useMemo } from 'react';
 import { Box, Flex, Text, Button } from '@chakra-ui/react';
-import { MetadataValue } from './';
+import { MetadataValue } from '.';
 import {
-  metaDataContainer,
-  getMetaDataToggleButton,
-  metaDataToggleIcon,
-  metaDataToggleLabel,
-  getMetaDataFieldCount,
-  metaDataPreviewText,
-  metaDataContentContainer,
+  metadataContainer,
+  getMetadataToggleButton,
+  metadataToggleIcon,
+  metadataToggleLabel,
+  getMetadataFieldCount,
+  metadataPreviewText,
+  metadataContentContainer,
   fontSizeControlsContainer,
   fontSizeLabel,
   fontSizeDisplay,
   getFontSizeButton,
 } from '../styles/LogStyles';
 
-interface MetaDataProps {
+interface MetadataProps {
   data: Record<string, any>;
   label?: string;
 }
 
-export const MetaData: React.FC<MetaDataProps> = ({ data, label = 'Metadata' }) => {
+export const Metadata: React.FC<MetadataProps> = ({ data, label = 'Metadata' }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [fontSize, setFontSize] = useState(14);
   const toggleMetadata = () => setIsOpen(!isOpen);
@@ -83,15 +83,15 @@ export const MetaData: React.FC<MetaDataProps> = ({ data, label = 'Metadata' }) 
   };
 
   return (
-    <Box {...metaDataContainer}>
-      <Flex {...getMetaDataToggleButton(isOpen)} onClick={toggleMetadata}>
-        <Text {...metaDataToggleIcon}>{isOpen ? '▼' : '▶'}</Text>
-        <Text {...metaDataToggleLabel}>{label}</Text>
-        <Text {...getMetaDataFieldCount(isOpen)}>
+    <Box {...metadataContainer}>
+      <Flex {...getMetadataToggleButton(isOpen)} onClick={toggleMetadata}>
+        <Text {...metadataToggleIcon}>{isOpen ? '▼' : '▶'}</Text>
+        <Text {...metadataToggleLabel}>{label}</Text>
+        <Text {...getMetadataFieldCount(isOpen)}>
           ({fieldCount} {fieldCount === 1 ? 'field' : 'fields'})
         </Text>
 
-        {!isOpen && fieldCount > 0 && <Text {...metaDataPreviewText}>{getPreviewText()}</Text>}
+        {!isOpen && fieldCount > 0 && <Text {...metadataPreviewText}>{getPreviewText()}</Text>}
 
         {isOpen && <Box flex='1' />}
 
@@ -112,7 +112,7 @@ export const MetaData: React.FC<MetaDataProps> = ({ data, label = 'Metadata' }) 
         )}
       </Flex>
 
-      {isOpen && <Box {...metaDataContentContainer}>{renderMetadata()}</Box>}
+      {isOpen && <Box {...metadataContentContainer}>{renderMetadata()}</Box>}
     </Box>
   );
 };

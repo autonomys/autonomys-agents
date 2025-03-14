@@ -1,13 +1,13 @@
 import { BoxProps, FlexProps, TextProps, ButtonProps, InputProps } from '@chakra-ui/react';
 
-// Styles for the MetaData component
-export const metaDataContainer: BoxProps = {
+// Styles for the Metadata component
+export const metadataContainer: BoxProps = {
   mt: '2',
   ml: '5',
   fontSize: ['xs', 'sm'],
 };
 
-export const getMetaDataToggleButton = (isOpen: boolean): FlexProps => ({
+export const getMetadataToggleButton = (isOpen: boolean): FlexProps => ({
   as: 'button',
   display: 'flex',
   alignItems: 'center',
@@ -27,7 +27,7 @@ export const getMetaDataToggleButton = (isOpen: boolean): FlexProps => ({
   boxShadow: isOpen ? '0 0 3px rgba(255, 0, 204, 0.3)' : 'none',
 });
 
-export const metaDataToggleIcon: TextProps = {
+export const metadataToggleIcon: TextProps = {
   color: 'brand.neonPink',
   fontStyle: 'italic',
   fontWeight: 'normal',
@@ -36,14 +36,14 @@ export const metaDataToggleIcon: TextProps = {
   mr: 2,
 };
 
-export const metaDataToggleLabel: TextProps = {
+export const metadataToggleLabel: TextProps = {
   color: 'brand.neonPink',
   fontStyle: 'italic',
   fontWeight: 'normal',
   mr: 2,
 };
 
-export const getMetaDataFieldCount = (isOpen: boolean): TextProps => ({
+export const getMetadataFieldCount = (isOpen: boolean): TextProps => ({
   as: 'span',
   fontWeight: 'light',
   opacity: isOpen ? 0.9 : 0.7,
@@ -53,7 +53,7 @@ export const getMetaDataFieldCount = (isOpen: boolean): TextProps => ({
   _groupHover: { opacity: 0.9 },
 });
 
-export const metaDataPreviewText: TextProps = {
+export const metadataPreviewText: TextProps = {
   as: 'span',
   ml: 3,
   color: 'gray.400',
@@ -65,7 +65,7 @@ export const metaDataPreviewText: TextProps = {
   display: 'inline-block',
 };
 
-export const metaDataContentContainer: BoxProps = {
+export const metadataContentContainer: BoxProps = {
   maxH: '400px',
   overflowY: 'auto',
   bg: 'rgba(10, 10, 15, 0.4)',
@@ -535,7 +535,7 @@ export const logSearchOverlay: FlexProps = {
   },
 };
 
-// Styles for font size controls in MetaData component
+// Styles for font size controls in Metadata component
 export const fontSizeControlsContainer: FlexProps = {
   ml: 'auto',
   alignItems: 'center',
