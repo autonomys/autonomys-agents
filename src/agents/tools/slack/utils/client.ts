@@ -2,6 +2,8 @@ import {
   BookmarksAddArguments,
   BookmarksEditArguments,
   BookmarksRemoveArguments,
+  CanvasesEditArguments,
+  CanvasesSectionsLookupArguments,
   ChatPostMessageArguments,
   ChatScheduleMessageArguments,
   ChatUpdateArguments,
@@ -11,12 +13,12 @@ import {
 } from '@slack/web-api';
 import { createLogger } from '../../../../utils/logger.js';
 import * as Bookmark from './bookmark.js';
+import * as Canvas from './canvas.js';
 import * as Channel from './channel.js';
 import * as Chat from './chat.js';
 import * as Pin from './pin.js';
 import * as Reaction from './reaction.js';
 import * as User from './user.js';
-
 export const logger = createLogger('slack-client');
 
 export const slackClient = async (token: string) => {
@@ -76,6 +78,16 @@ export const slackClient = async (token: string) => {
   const removePin = async (channelId: string, timestamp: string) =>
     await Pin.remove(client, channelId, timestamp);
 
+  // Canvases
+  const createChannelCanvas = async (channelId: string, markdown: string) =>
+    await Canvas.createChannel(client, channelId, markdown);
+  const editCanvas = async (canvasId: string, changes: CanvasesEditArguments['changes']) =>
+    await Canvas.edit(client, canvasId, changes);
+  const canvasSectionsLookup = async (
+    canvasId: string,
+    criteria: CanvasesSectionsLookupArguments['criteria'],
+  ) => await Canvas.sectionsLookup(client, canvasId, criteria);
+
   return {
     client,
     userId: botId,
@@ -101,6 +113,9 @@ export const slackClient = async (token: string) => {
     addBookmark,
     editBookmark,
     removeBookmark,
+    createChannelCanvas,
+    editCanvas,
+    canvasSectionsLookup,
   };
 };
 
