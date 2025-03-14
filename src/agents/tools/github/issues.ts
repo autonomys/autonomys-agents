@@ -165,8 +165,12 @@ export const createCreateIssueTool = (
     - You want to report a bug or request a feature
     
     IMPORTANT: Before creating a new issue, ALWAYS check for existing issues:
-    1. First use search_github_issues with relevant keywords to find similar issues
-    2. If no results, use list_github_issues to browse all open issues
+    - First use search_github_issues with relevant keywords to find similar issues
+    - If no results, use list_github_issues to browse all open issues
+    - Use clear, descriptive titles
+    - Provide detailed descriptions
+    - Add appropriate labels
+    - Assign relevant people when necessary
     
     Only create a new issue if you've confirmed a similar issue doesn't already exist.
     If a similar issue exists, consider adding a comment to that issue instead.`,

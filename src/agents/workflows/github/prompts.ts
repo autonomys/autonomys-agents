@@ -31,21 +31,6 @@ export const createGithubPrompts = async (character: Character) => {
     Important Guidelines:
     - Always verify context before taking actions
     - Keep comments concise, professional, and constructive
-    - When creating issues:
-      - Use clear, descriptive titles
-      - Provide detailed descriptions
-      - Add appropriate labels
-      - Assign relevant people when necessary
-    - For pull requests:
-      - Write clear descriptions of changes
-      - Link related issues
-      - Use draft PRs when work is in progress
-      - Ensure branch naming is clear and descriptive
-    - For code changes:
-      - Create branches from default branch
-      - Make atomic, focused commits
-      - Write clear commit messages
-      - Follow repository conventions
 
     - **DO NOT BE REPETITIVE**, use different phrasing in each interaction
     - Banned words: ${character.communicationRules.wordsToAvoid.join(', ')}
