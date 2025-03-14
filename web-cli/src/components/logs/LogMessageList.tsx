@@ -50,6 +50,7 @@ export const LogMessageList: React.FC<LogMessageListProps> = ({
   searchTerm = '',
   currentSearchIndex = -1,
   searchResults = [],
+  showDebugLogs = true,
 }) => {
   const formattedMessages = filteredMessages.map(
     msg =>
@@ -78,6 +79,12 @@ export const LogMessageList: React.FC<LogMessageListProps> = ({
 
   const allMessages = [...formattedMessages, ...legacyFormattedMessages];
 
+  // We're keeping this in place for legacy messages and making sure our component props work
+  // correctly, but the main filtering is now done at the useLogMessages hook level
+  const filteredByLevelMessages = showDebugLogs
+    ? allMessages
+    : allMessages.filter(msg => msg.level?.toLowerCase() !== 'debug');
+
   const getMessageColor = (level: string) => {
     switch (level.toLowerCase()) {
       case 'error':
@@ -92,11 +99,11 @@ export const LogMessageList: React.FC<LogMessageListProps> = ({
 
   return (
     <Box {...logMessageListContainer} ref={setLogRef}>
-      {allMessages.length === 0 && (
+      {filteredByLevelMessages.length === 0 && (
         <Text {...logMessageListWelcomeText}>Welcome to Autonomys Agents Web CLI</Text>
       )}
 
-      {allMessages
+      {filteredByLevelMessages
         .filter(msg => msg.legacy)
         .map((msg, index) => (
           <Box key={`legacy-${index}`} {...logMessageListLegacyMessage} data-log-index={index}>
@@ -104,7 +111,7 @@ export const LogMessageList: React.FC<LogMessageListProps> = ({
           </Box>
         ))}
 
-      {allMessages
+      {filteredByLevelMessages
         .filter(msg => !msg.legacy)
         .map((msg, index) => {
           const msgColor = getMessageColor(msg.level);

@@ -40,6 +40,8 @@ const OutputLog: React.FC<OutputLogProps> = ({ messages }) => {
     searchInNamespace,
     goToNextSearchResult,
     goToPrevSearchResult,
+    showDebugLogs,
+    setShowDebugLogs,
   } = useLogMessages();
 
   // Handle keyboard shortcut for search (Ctrl+F)
@@ -82,6 +84,14 @@ const OutputLog: React.FC<OutputLogProps> = ({ messages }) => {
 
   const handleShowSearch = () => {
     setIsSearchVisible(true);
+  };
+
+  const handleToggleDebugLogs = () => {
+    setShowDebugLogs(prev => !prev);
+    // Re-run search to update results based on debug visibility
+    if (searchTerm) {
+      searchInNamespace(activeNamespace);
+    }
   };
 
   const filteredMessages = getFilteredMessages(activeNamespace);
@@ -142,6 +152,8 @@ const OutputLog: React.FC<OutputLogProps> = ({ messages }) => {
             onRefreshNamespaces={refreshNamespaces}
             onClearLogs={handleClearLogs}
             onShowSearch={handleShowSearch}
+            showDebugLogs={showDebugLogs}
+            onToggleDebugLogs={handleToggleDebugLogs}
           />
 
           <Box
@@ -156,6 +168,7 @@ const OutputLog: React.FC<OutputLogProps> = ({ messages }) => {
               searchTerm={searchTerm}
               searchResults={searchResults}
               currentSearchIndex={currentSearchIndex}
+              showDebugLogs={showDebugLogs}
             />
 
             {!isAutoScrollEnabled && filteredMessages.length > 0 && (

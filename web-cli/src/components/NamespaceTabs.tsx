@@ -65,7 +65,9 @@ interface NamespaceTabsProps {
   onNamespaceChange: (namespace: string) => void;
   onRefreshNamespaces: () => void;
   onClearLogs: () => void;
-  onShowSearch?: () => void; // Optional prop for showing search
+  onShowSearch?: () => void;
+  showDebugLogs?: boolean;
+  onToggleDebugLogs?: () => void;
 }
 
 const NamespaceTabs: React.FC<NamespaceTabsProps> = ({
@@ -76,6 +78,8 @@ const NamespaceTabs: React.FC<NamespaceTabsProps> = ({
   onRefreshNamespaces,
   onClearLogs,
   onShowSearch,
+  showDebugLogs = true,
+  onToggleDebugLogs,
 }) => {
   const [neonPink] = useToken('colors', ['brand.neonPink']);
   const [activeIndex, setActiveIndex] = useState(namespaces.indexOf(activeNamespace));
@@ -331,6 +335,60 @@ const NamespaceTabs: React.FC<NamespaceTabsProps> = ({
 
         {/* Control Node Group */}
         <Flex ml='auto' align='center' minW='auto'>
+          {/* Debug Mode Neural Node */}
+          {onToggleDebugLogs && (
+            <Box
+              onClick={onToggleDebugLogs}
+              position='relative'
+              cursor='pointer'
+              mx={4}
+              display='flex'
+              flexDirection='column'
+              alignItems='center'
+              width='50px'
+            >
+              {/* Neural Node */}
+              <Box
+                width='30px'
+                height='30px'
+                borderRadius='50%'
+                bg={showDebugLogs ? 'rgba(138, 43, 226, 0.3)' : 'rgba(138, 43, 226, 0.2)'}
+                border='1px solid rgba(138, 43, 226, 0.5)'
+                display='flex'
+                alignItems='center'
+                justifyContent='center'
+                boxShadow={
+                  showDebugLogs
+                    ? '0 0 12px rgba(138, 43, 226, 0.5)'
+                    : '0 0 8px rgba(138, 43, 226, 0.3)'
+                }
+                transition='all 0.3s'
+                _hover={{
+                  bg: 'rgba(138, 43, 226, 0.4)',
+                  boxShadow: '0 0 15px rgba(138, 43, 226, 0.6)',
+                }}
+              >
+                <Text
+                  fontSize='16px'
+                  fontWeight='bold'
+                  color='rgba(138, 43, 226, 0.9)'
+                  lineHeight='1'
+                >
+                  {showDebugLogs ? '🛠️' : '🔧'}
+                </Text>
+              </Box>
+              <Text
+                fontSize='14px'
+                color={showDebugLogs ? 'rgba(138, 43, 226, 0.9)' : 'rgba(138, 43, 226, 0.7)'}
+                mt={2}
+                fontWeight='medium'
+                textAlign='center'
+              >
+                DEBUG
+              </Text>
+            </Box>
+          )}
+
           {/* Refresh Neural Node */}
           <Box
             onClick={onRefreshNamespaces}

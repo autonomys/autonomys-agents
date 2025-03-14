@@ -64,6 +64,7 @@ export interface LogMessageListProps {
   searchTerm?: string;
   currentSearchIndex?: number;
   searchResults?: number[];
+  showDebugLogs?: boolean;
 }
 
 export interface TaskEventMessage {

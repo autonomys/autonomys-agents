@@ -9,6 +9,7 @@ export const useLogMessages = () => {
   const [shouldAutoScroll, setShouldAutoScroll] = useState(true);
   const isNearBottomRef = useRef<boolean>(true);
   const [isScrolling, setIsScrolling] = useState(false);
+  const [showDebugLogs, setShowDebugLogs] = useState(true);
 
   const [searchTerm, setSearchTerm] = useState('');
   const [searchResults, setSearchResults] = useState<number[]>([]);
@@ -83,9 +84,11 @@ export const useLogMessages = () => {
       const namespaceFiltered =
         namespace === 'all' ? logMessages : logMessages.filter(msg => msg.namespace === namespace);
 
-      return namespaceFiltered;
+      return showDebugLogs
+        ? namespaceFiltered
+        : namespaceFiltered.filter(msg => msg.level?.toLowerCase() !== 'debug');
     },
-    [logMessages],
+    [logMessages, showDebugLogs],
   );
 
   const cleanUp = useCallback((subscribedNamespaces: Set<string>) => {
@@ -113,11 +116,13 @@ export const useLogMessages = () => {
         return [];
       }
 
-      const messages = getFilteredMessages(namespace);
+      // Get messages filtered by namespace and debug status
+      const filteredMessages = getFilteredMessages(namespace);
+
       const escapedSearchTerm = searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
       const searchRegex = new RegExp(escapedSearchTerm, 'i');
 
-      const results = messages
+      const results = filteredMessages
         .map((msg, index) => {
           const messageContent = msg.message || '';
           const metaString = msg.meta ? JSON.stringify(msg.meta) : '';
@@ -144,7 +149,7 @@ export const useLogMessages = () => {
 
       searchInNamespace(activeNamespace);
     }
-  }, [logMessages, searchTerm, searchInNamespace, namespaceCount]);
+  }, [showDebugLogs, searchTerm, searchInNamespace, namespaceCount]);
 
   const goToNextSearchResult = useCallback(() => {
     if (searchResults.length === 0) return;
@@ -211,5 +216,7 @@ export const useLogMessages = () => {
     searchInNamespace,
     goToNextSearchResult,
     goToPrevSearchResult,
+    showDebugLogs,
+    setShowDebugLogs,
   };
 };
