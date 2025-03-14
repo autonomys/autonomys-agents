@@ -43,7 +43,7 @@ export const createGetFeedTool = (
  */
 export const createListNotificationsTool = (
   listNotifications: (
-    all?: boolean,
+    all: boolean,
   ) => Promise<
     GithubResponse<
       RestEndpointMethodTypes['activity']['listNotificationsForAuthenticatedUser']['response']['data']
@@ -60,7 +60,6 @@ export const createListNotificationsTool = (
     schema: z.object({
       all: z
         .boolean()
-        .optional()
         .describe('If true, show all notifications. If false, show only unread notifications.'),
     }),
     func: async ({ all = false }) => {
@@ -88,7 +87,7 @@ export const createWatchRepoTool = (
   subscribeToRepo: (
     owner: string,
     repo: string,
-    ignored?: boolean,
+    ignored: boolean,
   ) => Promise<
     GithubResponse<RestEndpointMethodTypes['activity']['setRepoSubscription']['response']['data']>
   >,
@@ -107,7 +106,6 @@ export const createWatchRepoTool = (
       repo: z.string().describe('The name of the repository to watch'),
       ignored: z
         .boolean()
-        .optional()
         .describe(
           'If true, watch the repository but do not receive notifications. Default is false.',
         ),

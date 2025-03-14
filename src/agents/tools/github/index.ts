@@ -1,3 +1,11 @@
+import {
+  createGetFeedTool,
+  createListMentionsTool,
+  createListNotificationsTool,
+  createListWatchedReposTool,
+  createUnwatchRepoTool,
+  createWatchRepoTool,
+} from './activity.js';
 import { createCommitTool, createCreateBranchTool } from './git.js';
 import {
   createCreateIssueCommentTool,
@@ -108,7 +116,25 @@ export const createGitHubTools = async (token: string, owner: string, repo: stri
   const createCommit = (targetOwner: string, targetRepo: string, params: CreateCommitParams) =>
     github.createCommit(targetOwner, targetRepo, params);
 
+  // Activity
+  const getFeed = () => github.getFeed();
+  const listNotifications = (all: boolean) => github.listNotifications(all);
+  const subscribeToRepo = (owner: string, repo: string, ignored: boolean) =>
+    github.subscribeToRepo(owner, repo, ignored);
+  const unsubscribeFromRepo = (owner: string, repo: string) =>
+    github.unsubscribeFromRepo(owner, repo);
+  const listSubscriptions = () => github.listSubscriptions();
+  const listMentions = () => github.listMentions();
+
   return [
+    // Activity
+    createGetFeedTool(getFeed),
+    createListNotificationsTool(listNotifications),
+    createWatchRepoTool(subscribeToRepo),
+    createUnwatchRepoTool(unsubscribeFromRepo),
+    createListWatchedReposTool(listSubscriptions),
+    createListMentionsTool(listMentions),
+
     // Issues
     createListIssuesTools(listIssues),
     createSearchIssuesTools(searchIssues),
