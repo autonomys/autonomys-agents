@@ -10,15 +10,10 @@ export const createPrompts = async (
     inputInstructions?: string;
     messageSummaryInstructions?: string;
     finishWorkflowInstructions?: string;
-    selfSchedule?: boolean;
   },
 ): Promise<OrchestratorPrompts> => {
-  const {
-    inputInstructions,
-    messageSummaryInstructions,
-    finishWorkflowInstructions,
-    selfSchedule,
-  } = customInstructions || {};
+  const { inputInstructions, messageSummaryInstructions, finishWorkflowInstructions } =
+    customInstructions || {};
   const inputPrompt = await createInputPrompt(character, inputInstructions);
   const messageSummaryPrompt = await createMessageSummaryPrompt(
     character,
@@ -27,7 +22,6 @@ export const createPrompts = async (
   const finishWorkflowPrompt = await createFinishWorkflowPrompt(
     character,
     finishWorkflowInstructions,
-    selfSchedule,
   );
 
   return {

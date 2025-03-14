@@ -58,7 +58,7 @@ const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
 
   //Orchestrator config
   //use default orchestrator prompts with a "responsible" character config specific for the orchestrator
-  const prompts = await createPrompts(orchestratorCharacter, { selfSchedule: true });
+  const prompts = await createPrompts(orchestratorCharacter);
 
   //override default model configurations for summary and finish workflow nodes
   const modelConfigurations = {
@@ -105,12 +105,11 @@ const main = async () => {
     while (true) {
       const result = await runner.runWorkflow({ messages: [new HumanMessage(message)] });
 
-      message = `${result.summary}
-      ${result.schedule?.nextWorkflowPrompt}`;
+      message = `${result.summary}`;
 
       logger.info('Workflow execution result:', { result });
 
-      const nextDelaySeconds = result.schedule?.secondsUntilNextWorkflow ?? 3600;
+      const nextDelaySeconds = 3600;
       logger.info('Workflow execution completed successfully for character:', {
         characterName: config.characterConfig.name,
         runFinished: new Date().toISOString(),
