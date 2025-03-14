@@ -219,7 +219,12 @@ export const createGetRepoRefContentTool = (
 ) =>
   new DynamicStructuredTool({
     name: 'get_repo_ref_content',
-    description: 'Gets the content of a specific branch of a repository',
+    description: `Gets the content of a specific branch of a repository
+    USE THIS WHEN:
+    - You need to get the content of a specific file in a repository
+    - You need to get the content of a specific directory in a repository
+    This will return the content of the file or directory in the branch specified by the ref parameter and path parameter
+    `,
     schema: z.object({
       owner: z.string().describe('The owner of the repository'),
       repo: z.string().describe('The name of the repository'),

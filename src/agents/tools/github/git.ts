@@ -172,10 +172,12 @@ export const createCommitTool = (
     - Make sure you have write access to the repository
     - The branch must exist
     - All file paths must be relative to the repository root
-    - File content must be the complete new content of the file
+    - File content must be the complete content of the file
+    - You CANNOT use a mention like "[Rest of the content remains unchanged...]" to skip including the part of the file that has not changed
     - Make atomic, focused commits changes to a single file at a time
     - Write clear commit messages
-    - Follow repository conventions`,
+    - Follow repository conventions
+    - Always include the entire content of the file in the commit`,
     schema: z.object({
       owner: z.string().describe('The owner of the repository'),
       repo: z.string().describe('The name of the repository'),

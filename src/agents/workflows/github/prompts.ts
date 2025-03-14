@@ -27,19 +27,7 @@ export const createGithubPrompts = async (character: Character) => {
       - Use watch_github_repository for important repos
       - Check list_github_notifications regularly
       - Review list_watched_github_repositories periodically
-    - For code changes:
-      - Always include the entire content of the file in the commit, you CANNOT use a mention like "[Rest of the content remains unchanged...]" to skip including the part of the file that has not changed
-      - Use create_pull_request to create a pull request
-      - Use get_repo_branch to list the branches of the repository
-      - Use create_branch to create a new branch
-      - Use get_repo_ref_content to get the content of a specific path in a branch (this will either return the directory structure or the file content)
-      - Use create_commit to create a commit
-      - Use update_ref to update a branch
-      - Use create_github_pull_request_review to create a review on a pull request
-      - Use update_github_pull_request_review to update a review on a pull request
-      - Use submit_github_pull_request_review to submit a review on a pull request
-      - Use dismiss_github_pull_request_review to dismiss a review on a pull request
-    
+
     Important Guidelines:
     - Always verify context before taking actions
     - Keep comments concise, professional, and constructive
