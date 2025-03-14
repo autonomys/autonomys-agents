@@ -10,26 +10,32 @@ export const createNodes = async ({
   tools,
   prompts,
   pruningParameters,
+  namespace,
 }: OrchestratorConfig) => {
   const { inputPrompt, messageSummaryPrompt, finishWorkflowPrompt } = prompts;
   const { inputModelConfig, messageSummaryModelConfig, finishWorkflowModelConfig } =
     modelConfigurations;
+
   const inputNode = createInputNode({
     modelConfig: inputModelConfig,
     inputPrompt,
     tools,
+    namespace,
   });
   const messageSummaryNode = createMessageSummaryNode({
     modelConfig: messageSummaryModelConfig,
     messageSummaryPrompt,
     pruningParameters,
+    namespace,
   });
   const finishWorkflowNode = createFinishWorkflowNode({
     modelConfig: finishWorkflowModelConfig,
     finishWorkflowPrompt,
+    namespace,
   });
   const toolExecutionNode = createToolExecutionNode({
     tools: tools as DynamicStructuredTool[],
+    namespace,
   });
   return {
     inputNode,

@@ -1,21 +1,64 @@
-import React, { useEffect, useState, useRef } from 'react';
-import { Box, Flex } from '@chakra-ui/react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
+import { Box, Flex, Button } from '@chakra-ui/react';
 import { Resizable } from 're-resizable';
 import { OutputLogProps } from '../../types/types';
 import { useNamespaces } from '../../hooks/useNamespaces';
 import { useLogMessages } from '../../hooks/useLogMessages';
 import NamespaceTabs from '../NamespaceTabs';
 import LogMessageList from './LogMessageList';
+import { LogSearch } from './components';
+import {
+  outputLogContainer,
+  outputLogFlexContainer,
+  outputLogResizableHandleStyles,
+  outputLogResizableHandleBox,
+  outputLogScrollBox,
+  scrollToBottomButton,
+} from './styles/LogStyles';
 
 const OutputLog: React.FC<OutputLogProps> = ({ messages }) => {
   const [size, setSize] = useState({ height: 400 });
   const containerRef = useRef<HTMLDivElement>(null);
+  const [isSearchVisible, setIsSearchVisible] = useState(false);
 
   const { namespaces, activeNamespace, subscribedNamespaces, changeNamespace, refreshNamespaces } =
     useNamespaces();
 
-  const { namespaceCount, setLogContainerRef, clearLogs, getFilteredMessages, cleanUp } =
-    useLogMessages();
+  const {
+    namespaceCount,
+    setLogContainerRef,
+    clearLogs,
+    getFilteredMessages,
+    cleanUp,
+    scrollToBottom,
+    isAutoScrollEnabled,
+    isScrolling,
+    searchTerm,
+    searchResults,
+    currentSearchIndex,
+    handleSearchChange,
+    searchInNamespace,
+    goToNextSearchResult,
+    goToPrevSearchResult,
+    showDebugLogs,
+    setShowDebugLogs,
+  } = useLogMessages();
+
+  // Handle keyboard shortcut for search (Ctrl+F)
+  const handleKeyDown = useCallback((e: KeyboardEvent) => {
+    if ((e.key === 'f' || e.key === 'F') && (e.ctrlKey || e.metaKey)) {
+      e.preventDefault();
+      setIsSearchVisible(true);
+    }
+  }, []);
+
+  // Add global keyboard listener
+  useEffect(() => {
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [handleKeyDown]);
 
   useEffect(() => {
     return () => {
@@ -25,23 +68,50 @@ const OutputLog: React.FC<OutputLogProps> = ({ messages }) => {
 
   const handleNamespaceChange = (namespace: string) => {
     changeNamespace(namespace);
+    if (searchTerm) {
+      searchInNamespace(namespace);
+    }
   };
 
   const handleClearLogs = () => {
     clearLogs(activeNamespace);
   };
 
+  const handleCloseSearch = () => {
+    handleSearchChange('');
+    setIsSearchVisible(false);
+  };
+
+  const handleShowSearch = () => {
+    setIsSearchVisible(true);
+  };
+
+  const handleToggleDebugLogs = () => {
+    setShowDebugLogs(prev => !prev);
+    // Re-run search to update results based on debug visibility
+    if (searchTerm) {
+      searchInNamespace(activeNamespace);
+    }
+  };
+
   const filteredMessages = getFilteredMessages(activeNamespace);
 
   return (
-    <Box
-      position='relative'
-      zIndex={10}
-      style={{
-        transform: 'translate3d(0, 0, 0)',
-        willChange: 'transform',
-      }}
-    >
+    <Box {...outputLogContainer}>
+      {/* Search overlay (visible when triggered) */}
+      <LogSearch
+        activeNamespace={activeNamespace}
+        searchTerm={searchTerm}
+        searchResults={searchResults}
+        currentSearchIndex={currentSearchIndex}
+        onSearchChange={handleSearchChange}
+        onSearch={searchInNamespace}
+        onNextResult={goToNextSearchResult}
+        onPrevResult={goToPrevSearchResult}
+        isVisible={isSearchVisible}
+        onClose={handleCloseSearch}
+      />
+
       <Resizable
         defaultSize={{
           width: '100%',
@@ -68,60 +138,12 @@ const OutputLog: React.FC<OutputLogProps> = ({ messages }) => {
           bottomLeft: false,
           topLeft: false,
         }}
-        handleStyles={{
-          bottom: {
-            height: '8px',
-            borderRadius: '0 0 6px 6px',
-            backgroundColor: 'transparent',
-            backgroundImage:
-              'linear-gradient(to right, transparent, rgba(255, 0, 255, 0.4), transparent)',
-            bottom: '0px',
-            cursor: 'row-resize',
-            zIndex: 11,
-          },
-        }}
+        handleStyles={outputLogResizableHandleStyles}
         handleComponent={{
-          bottom: (
-            <Box
-              width='100%'
-              height='8px'
-              position='absolute'
-              bottom='0'
-              cursor='row-resize'
-              borderRadius='0 0 6px 6px'
-              zIndex={11}
-              _hover={{
-                backgroundImage:
-                  'linear-gradient(to right, transparent, rgba(255, 0, 255, 0.8), transparent)',
-                opacity: 0.7,
-              }}
-            />
-          ),
+          bottom: <Box {...outputLogResizableHandleBox} />,
         }}
       >
-        <Flex
-          ref={containerRef}
-          direction='column'
-          h='100%'
-          w='100%'
-          bg='rgba(26, 26, 46, 0.8)'
-          borderRadius='lg'
-          overflow='visible'
-          boxShadow='0 8px 32px rgba(0, 0, 0, 0.4)'
-          border='1px solid'
-          borderColor='gray.700'
-          position='relative'
-          _before={{
-            content: '""',
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            height: '1px',
-            bgGradient: 'linear(to-r, transparent, brand.neonPink, transparent)',
-            zIndex: '1',
-          }}
-        >
+        <Flex ref={containerRef} {...outputLogFlexContainer}>
           <NamespaceTabs
             namespaces={namespaces}
             activeNamespace={activeNamespace}
@@ -129,32 +151,36 @@ const OutputLog: React.FC<OutputLogProps> = ({ messages }) => {
             onNamespaceChange={handleNamespaceChange}
             onRefreshNamespaces={refreshNamespaces}
             onClearLogs={handleClearLogs}
+            onShowSearch={handleShowSearch}
+            showDebugLogs={showDebugLogs}
+            onToggleDebugLogs={handleToggleDebugLogs}
           />
 
           <Box
             ref={(ref: HTMLDivElement | null) => setLogContainerRef(ref)}
-            flex='1'
-            overflowY='auto'
-            maxHeight={size.height - 50} // Account for NamespaceTabs height
-            css={{
-              '&::-webkit-scrollbar': {
-                width: '8px',
-                borderRadius: '4px',
-              },
-              '&::-webkit-scrollbar-track': {
-                background: 'rgba(0, 0, 0, 0.1)',
-              },
-              '&::-webkit-scrollbar-thumb': {
-                background: 'rgba(255, 0, 255, 0.3)',
-                borderRadius: '4px',
-              },
-            }}
+            {...outputLogScrollBox}
+            maxHeight={size.height - 50}
           >
             <LogMessageList
               filteredMessages={filteredMessages}
               legacyMessages={messages}
-              setLogRef={() => {}} // This is handled by the parent Box's ref now
+              setLogRef={() => {}}
+              searchTerm={searchTerm}
+              searchResults={searchResults}
+              currentSearchIndex={currentSearchIndex}
+              showDebugLogs={showDebugLogs}
             />
+
+            {!isAutoScrollEnabled && filteredMessages.length > 0 && (
+              <Button
+                {...scrollToBottomButton(isScrolling)}
+                onClick={scrollToBottom}
+                title='Scroll to bottom'
+                aria-label='Scroll to bottom'
+              >
+                ↓
+              </Button>
+            )}
           </Box>
         </Flex>
       </Resizable>

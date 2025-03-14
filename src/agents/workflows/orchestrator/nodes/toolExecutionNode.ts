@@ -2,10 +2,16 @@ import { DynamicStructuredTool } from '@langchain/core/tools';
 import { createLogger } from '../../../../utils/logger.js';
 import { OrchestratorStateType } from '../types.js';
 import { AIMessage } from '@langchain/core/messages';
+import { attachLogger } from '../../../../api/server.js';
 
-const logger = createLogger('tool-execution-node');
-
-export const createToolExecutionNode = ({ tools }: { tools: DynamicStructuredTool[] }) => {
+export const createToolExecutionNode = ({
+  tools,
+  namespace,
+}: {
+  tools: DynamicStructuredTool[];
+  namespace: string;
+}) => {
+  const logger = attachLogger(createLogger(`${namespace}-tool-execution-node`), namespace);
   const toolByNames = tools.map(tool => ({ name: tool.name, tool }));
 
   const runNode = async (state: OrchestratorStateType) => {

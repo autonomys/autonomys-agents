@@ -42,10 +42,14 @@ export default [
         // Network API globals
         fetch: 'readonly',
         EventSource: 'readonly',
+        RequestInit: 'readonly',
+        Response: 'readonly',
 
         // Node.js globals
         process: 'readonly',
         NodeJS: 'readonly',
+
+
       },
     },
     plugins: {
