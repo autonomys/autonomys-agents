@@ -45,8 +45,6 @@ const slackConfigSchema = z.object({
 
 const githubConfigSchema = z.object({
   GITHUB_TOKEN: z.string().optional(),
-  GITHUB_OWNER: z.string().optional(),
-  GITHUB_REPO: z.string().optional(),
 });
 
 const notionConfigSchema = z.object({

@@ -1,5 +1,7 @@
 import { HumanMessage } from '@langchain/core/messages';
-import { createGitHubTools } from '../../src/agents/tools/github/index.js';
+import { GitHubToolsSubset } from '../../src/agents/tools/github/index.js';
+import { createAllSchedulerTools } from '../../src/agents/tools/scheduler/index.js';
+import { createGithubAgent } from '../../src/agents/workflows/github/githubAgent.js';
 import {
   createOrchestratorRunner,
   OrchestratorRunner,
@@ -13,22 +15,32 @@ const logger = createLogger('autonomous-web3-agent');
 
 const character = config.characterConfig;
 const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
+  const saveExperiences = config.autoDriveConfig.AUTO_DRIVE_SAVE_EXPERIENCES;
+  const monitoringEnabled = config.autoDriveConfig.AUTO_DRIVE_MONITORING;
+  const schedulerTools = createAllSchedulerTools();
+
   const githubToken = config.githubConfig.GITHUB_TOKEN;
-  const githubOwner = config.githubConfig.GITHUB_OWNER;
-  const githubRepo = config.githubConfig.GITHUB_REPO;
-  if (!githubToken || !githubOwner || !githubRepo) {
-    throw new Error(
-      'GITHUB_TOKEN, GITHUB_OWNER, and GITHUB_REPO are required in the environment variables',
-    );
+  if (!githubToken) {
+    throw new Error('GITHUB_TOKEN is required in the environment variables');
   }
-  const githubTools = await createGitHubTools(githubToken, githubOwner, githubRepo);
+  const githubAgentTools = githubToken
+    ? [
+        createGithubAgent(githubToken, GitHubToolsSubset.ISSUES_CONTRIBUTOR, character, {
+          tools: [...schedulerTools],
+          saveExperiences,
+          monitoring: {
+            enabled: monitoringEnabled,
+          },
+        }),
+      ]
+    : [];
 
   //Orchestrator config
   //use default orchestrator prompts with character config
   const prompts = await createPrompts(character);
 
   return {
-    tools: [...githubTools],
+    tools: [...githubAgentTools],
     prompts,
   };
 };
