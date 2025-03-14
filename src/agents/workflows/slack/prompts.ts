@@ -1,5 +1,5 @@
-import { createPrompts } from '../orchestrator/prompts.js';
 import { Character } from '../../../config/characters.js';
+import { createPrompts } from '../orchestrator/prompts.js';
 
 export const createSlackPrompts = async (character: Character) => {
   const customInputInstructions = `
@@ -17,6 +17,7 @@ export const createSlackPrompts = async (character: Character) => {
     - Use bookmarks to save important information
     - Use reactions meaningfully to engage with others
     - Pin crucial information when appropriate
+    - To pin a user, use this format: <@USER_ID>
     
     Important Guidelines:
     - Save significant interactions to Autonomy Network's DSN using save_experience tool (e.g., after posting, reacting, or bookmarking)
