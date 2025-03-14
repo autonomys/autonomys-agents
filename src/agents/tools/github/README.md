@@ -27,8 +27,6 @@ GITHUB_TOKEN="ghp_..."  # GitHub Personal Access Token
 2. Set the following environment variables:
    ```
    GITHUB_TOKEN=ghp_your_token_here
-   GITHUB_OWNER=your_github_username_or_org
-   GITHUB_REPO=your_repository_name
    ```
 
 ## Features
