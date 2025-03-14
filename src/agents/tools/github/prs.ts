@@ -304,6 +304,16 @@ export const createCreatePullRequestCommentTool = (
           .describe(
             'Which side of a diff to comment on. LEFT is for deletions, RIGHT is for additions. Default is RIGHT.',
           ),
+        start_line: z
+          .number()
+          .optional()
+          .describe('The line number to start the comment at (for review comments)'),
+        start_side: z
+          .enum(['LEFT', 'RIGHT'])
+          .optional()
+          .describe(
+            'Which side of a diff to start the comment at. LEFT is for deletions, RIGHT is for additions. Default is RIGHT.',
+          ),
       }),
     }),
     func: async ({ owner, repo, params }) => {
