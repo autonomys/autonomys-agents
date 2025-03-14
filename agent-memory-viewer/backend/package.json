@@ -12,7 +12,7 @@
     "test": "jest",
     "format": "prettier --write \"src/**/*.ts\"",
     "validate:env": "tsx src/scripts/validate-env.ts",
-    "migrate": "tsx src/scripts/migrate.ts"
+    "migrate": "tsx src/scripts/rename_argumint.ts"
   },
   "dependencies": {
     "@autonomys/auto-dag-data": "^1.1.2",
