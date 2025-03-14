@@ -64,7 +64,7 @@ const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
   const githubToken = config.githubConfig.GITHUB_TOKEN;
   const githubAgentTools = githubToken
     ? [
-        createGithubAgent(githubToken, GitHubToolsSubset.ISSUES_CONTRIBUTOR, character, {
+        createGithubAgent(githubToken, GitHubToolsSubset.ALL, character, {
           tools: [...schedulerTools],
           saveExperiences,
           monitoring: {

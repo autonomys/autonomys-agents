@@ -7,6 +7,99 @@ import { CreateCommitParams, GithubResponse } from './utils/types.js';
 const logger = createLogger('github-git-tools');
 
 /**
+ * Creates a tool to get a commit from a repository
+ */
+export const createGetCommitTool = (
+  getCommit: (
+    owner: string,
+    repo: string,
+    commit_sha: string,
+  ) => Promise<GithubResponse<RestEndpointMethodTypes['git']['getCommit']['response']['data']>>,
+) =>
+  new DynamicStructuredTool({
+    name: 'get_commit',
+    description: `Gets a commit from a repository.
+    USE THIS WHEN:
+    - You need to get a commit from a repository
+    - You need to get the details of a specific commit
+    
+    IMPORTANT:
+    - Make sure you have read access to the repository
+    - The commit must exist
+    - The commit must be in the repository
+    - The commit must be in the branch
+    - The commit must include the entire content of the file
+
+    The commit must be in the repository.`,
+    schema: z.object({
+      owner: z.string().describe('The owner of the repository'),
+      repo: z.string().describe('The name of the repository'),
+      commit_sha: z.string().describe('The SHA of the commit to get'),
+    }),
+    func: async ({ owner, repo, commit_sha }) => {
+      try {
+        const { success, data } = await getCommit(owner, repo, commit_sha);
+        return {
+          success,
+          data: JSON.stringify(data, null, 2),
+        };
+      } catch (error) {
+        logger.error(`Error getting commit ${commit_sha} in repository ${owner}/${repo}:`, error);
+        return {
+          success: false,
+          error: error as Error,
+        };
+      }
+    },
+  });
+
+/**
+ * Creates a tool to get a reference from a repository
+ */
+export const createGetRefTool = (
+  getRef: (
+    owner: string,
+    repo: string,
+    ref: string,
+  ) => Promise<GithubResponse<RestEndpointMethodTypes['git']['getRef']['response']['data']>>,
+) =>
+  new DynamicStructuredTool({
+    name: 'get_ref',
+    description: `Gets a reference from a repository.
+    USE THIS WHEN:
+    - You need to get a reference from a repository
+    - You need to get the details of a specific reference
+
+    IMPORTANT:
+    - Make sure you have read access to the repository
+    - The reference must exist
+    - The reference must be in the repository
+    - The reference must be in the branch
+
+    The reference must be in the repository.`,
+    schema: z.object({
+      owner: z.string().describe('The owner of the repository'),
+      repo: z.string().describe('The name of the repository'),
+      ref: z.string().describe('The reference to get'),
+    }),
+    func: async ({ owner, repo, ref }) => {
+      try {
+        const { success, data } = await getRef(owner, repo, ref);
+        return {
+          success,
+          data: JSON.stringify(data, null, 2),
+        };
+      } catch (error) {
+        logger.error(`Error getting reference ${ref} in repository ${owner}/${repo}:`, error);
+        return {
+          success: false,
+          error: error as Error,
+        };
+      }
+    },
+  });
+
+/**
  * Creates a tool to create a new branch in a repository
  */
 export const createCreateBranchTool = (
@@ -77,10 +170,12 @@ export const createCommitTool = (
     - Make sure you have write access to the repository
     - The branch must exist
     - All file paths must be relative to the repository root
-    - File content must be the complete new content of the file
+    - File content must be the complete content of the file
+    - You CANNOT use a mention like "[Rest of the content remains unchanged...]" to skip including the part of the file that has not changed
     - Make atomic, focused commits changes to a single file at a time
     - Write clear commit messages
-    - Follow repository conventions`,
+    - Follow repository conventions
+    - Always include the entire content of the file in the commit`,
     schema: z.object({
       owner: z.string().describe('The owner of the repository'),
       repo: z.string().describe('The name of the repository'),

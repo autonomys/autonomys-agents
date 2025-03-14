@@ -7,7 +7,12 @@ import {
   createUnwatchRepoTool,
   createWatchRepoTool,
 } from './activity.js';
-import { createCommitTool, createCreateBranchTool } from './git.js';
+import {
+  createCommitTool,
+  createCreateBranchTool,
+  createGetCommitTool,
+  createGetRefTool,
+} from './git.js';
 import {
   createCreateIssueCommentTool,
   createCreateIssueTool,
@@ -22,6 +27,7 @@ import {
 } from './issues.js';
 import {
   createCreatePullRequestCommentTool,
+  createCreatePullRequestReviewTool,
   createCreatePullRequestTool,
   createCreateReactionForPullRequestCommentTool,
   createCreateReactionForPullRequestReviewCommentTool,
@@ -31,14 +37,24 @@ import {
   createListPullRequestCommentsTool,
   createListPullRequestReactionsTool,
   createListPullRequestReviewCommentReactionsTool,
+  createListPullRequestReviewsTool,
   createListPullRequestsTool,
   createSearchPullRequestsTools,
+  createSubmitPullRequestReviewTool,
+  createUpdatePullRequestReviewTool,
 } from './prs.js';
 import {
+  createAddCollaboratorTool,
+  createCompareCommitsTool,
   createForkRepoTool,
+  createGetDefaultBranchTool,
+  createGetRepoBranchTool,
+  createGetRepoRefContentTool,
+  createListContributorsTool,
   createListForksTool,
   createListOrgReposTool,
   createListUserReposTool,
+  createRemoveCollaboratorTool,
 } from './repos.js';
 import { createGetAuthenticatedUserTool, createListAuthenticatedUserReposTool } from './users.js';
 import { githubClient } from './utils/client.js';
@@ -49,6 +65,7 @@ import {
   CreatePRCommentParams,
   CreatePullRequestParams,
   GitHubIssueAndPRState,
+  GitHubPullRequestReviewEvent,
   GitHubReactionType,
 } from './utils/types.js';
 
@@ -218,9 +235,12 @@ export const createGitHubTools = async (
     ) => github.searchPullRequests(owner, repo, query, state);
     const createPullRequestComment = (owner: string, repo: string, params: CreatePRCommentParams) =>
       github.createPullRequestComment(owner, repo, params);
+    const listPullRequestReviews = (owner: string, repo: string, pull_number: number) =>
+      github.listPullRequestReviews(owner, repo, pull_number);
     tools.push(
       createSearchPullRequestsTools(searchPullRequests),
       createCreatePullRequestCommentTool(createPullRequestComment),
+      createListPullRequestReviewsTool(listPullRequestReviews),
     );
   }
   if (subsetOrder(subset) >= subsetOrder(GitHubToolsSubset.ISSUES_CONTRIBUTOR)) {
@@ -233,19 +253,77 @@ export const createGitHubTools = async (
     // Pull Requests
     const createPullRequest = (owner: string, repo: string, params: CreatePullRequestParams) =>
       github.createPullRequest(owner, repo, params);
-    tools.push(createCreatePullRequestTool(createPullRequest));
+    const createPullRequestReview = (
+      owner: string,
+      repo: string,
+      pull_number: number,
+      event: GitHubPullRequestReviewEvent,
+      body?: string,
+    ) => github.createPullRequestReview(owner, repo, pull_number, event, body);
+    const updatePullRequestReview = (
+      owner: string,
+      repo: string,
+      pull_number: number,
+      review_id: number,
+      event: GitHubPullRequestReviewEvent,
+      body: string,
+    ) => github.updatePullRequestReview(owner, repo, pull_number, review_id, event, body);
+    const submitPullRequestReview = (
+      owner: string,
+      repo: string,
+      pull_number: number,
+      review_id: number,
+      event: GitHubPullRequestReviewEvent,
+      body?: string,
+    ) => github.submitPullRequestReview(owner, repo, pull_number, review_id, event, body);
+    tools.push(
+      createCreatePullRequestTool(createPullRequest),
+      createCreatePullRequestReviewTool(createPullRequestReview),
+      createUpdatePullRequestReviewTool(updatePullRequestReview),
+      createSubmitPullRequestReviewTool(submitPullRequestReview),
+    );
 
     // Repos
     const listForks = (owner: string, repo: string) => github.listForks(owner, repo);
     const createFork = (owner: string, repo: string) => github.createFork(owner, repo);
-    tools.push(createListForksTool(listForks), createForkRepoTool(createFork));
+    const getDefaultBranch = (owner: string, repo: string) => github.getDefaultBranch(owner, repo);
+    const getRepoBranch = (owner: string, repo: string, branch: string) =>
+      github.getRepoBranch(owner, repo, branch);
+    const getRepoRefContent = (owner: string, repo: string, path: string, ref: string) =>
+      github.getRepoRefContent(owner, repo, path, ref);
+    const listContributors = (owner: string, repo: string) => github.listContributors(owner, repo);
+    const addCollaborator = (owner: string, repo: string, username: string) =>
+      github.addCollaborator(owner, repo, username);
+    const removeCollaborator = (owner: string, repo: string, username: string) =>
+      github.removeCollaborator(owner, repo, username);
+    const compareCommits = (owner: string, repo: string, base: string, head: string) =>
+      github.compareCommits(owner, repo, base, head);
+    tools.push(
+      createListForksTool(listForks),
+      createForkRepoTool(createFork),
+      createGetDefaultBranchTool(getDefaultBranch),
+      createGetRepoBranchTool(getRepoBranch),
+      createGetRepoRefContentTool(getRepoRefContent),
+      createListContributorsTool(listContributors),
+      createAddCollaboratorTool(addCollaborator),
+      createRemoveCollaboratorTool(removeCollaborator),
+      createCompareCommitsTool(compareCommits),
+    );
 
     // Git
+    const getCommit = (owner: string, repo: string, commit_sha: string) =>
+      github.getCommit(owner, repo, commit_sha);
+    const getRef = (owner: string, repo: string, ref: string) => github.getRef(owner, repo, ref);
     const createBranch = (owner: string, repo: string, branchName: string, sourceBranch: string) =>
       github.createBranch(owner, repo, branchName, sourceBranch);
     const createCommit = (owner: string, repo: string, params: CreateCommitParams) =>
       github.createCommit(owner, repo, params);
-    tools.push(createCreateBranchTool(createBranch), createCommitTool(createCommit));
+    tools.push(
+      createGetCommitTool(getCommit),
+      createGetRefTool(getRef),
+      createCreateBranchTool(createBranch),
+      createCommitTool(createCommit),
+    );
   }
 
   return tools as DynamicStructuredTool[];

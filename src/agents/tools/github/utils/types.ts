@@ -14,6 +14,8 @@ export type GithubResponse<T> = {
 
 export type GitHubIssueAndPRState = 'open' | 'closed' | 'all';
 
+export type GitHubPullRequestReviewEvent = 'REQUEST_CHANGES' | 'APPROVE' | 'COMMENT';
+
 export type GitHubReactionType =
   | '+1'
   | '-1'
@@ -43,6 +45,8 @@ export interface CreatePRCommentParams {
   path?: string;
   line?: number;
   side?: 'LEFT' | 'RIGHT';
+  start_line?: number;
+  start_side?: 'LEFT' | 'RIGHT';
 }
 
 export interface CreateCommitParams {

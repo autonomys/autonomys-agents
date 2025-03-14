@@ -27,7 +27,7 @@ export const createGithubPrompts = async (character: Character) => {
       - Use watch_github_repository for important repos
       - Check list_github_notifications regularly
       - Review list_watched_github_repositories periodically
-    
+
     Important Guidelines:
     - Always verify context before taking actions
     - Keep comments concise, professional, and constructive
