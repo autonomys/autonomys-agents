@@ -1,3 +1,5 @@
+import { createGitHubTools } from './agents/tools/github/index.js';
+import { createAllSchedulerTools } from './agents/tools/scheduler/index.js';
 import { createWebSearchTool } from './agents/tools/webSearch/index.js';
 import {
   createOrchestratorRunner,
@@ -5,14 +7,12 @@ import {
 } from './agents/workflows/orchestrator/orchestratorWorkflow.js';
 import { createPrompts } from './agents/workflows/orchestrator/prompts.js';
 import { OrchestratorRunnerOptions } from './agents/workflows/orchestrator/types.js';
+import { registerOrchestratorRunner } from './agents/workflows/registration.js';
+import { createSlackAgent } from './agents/workflows/slack/slackAgent.js';
 import { createTwitterAgent } from './agents/workflows/twitter/twitterAgent.js';
+import { withApiLogger } from './api/server.js';
 import { config } from './config/index.js';
 import { createTwitterApi } from './services/twitter/client.js';
-import { withApiLogger } from './api/server.js';
-import { createSlackAgent } from './agents/workflows/slack/slackAgent.js';
-import { createAllSchedulerTools } from './agents/tools/scheduler/index.js';
-import { createGitHubTools } from './agents/tools/github/index.js';
-import { registerOrchestratorRunner } from './agents/workflows/registration.js';
 
 const character = config.characterConfig;
 const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
@@ -60,11 +60,8 @@ const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
     : [];
 
   //If github api key is provided, add github tools
-  const { GITHUB_TOKEN, GITHUB_OWNER, GITHUB_REPO } = config.githubConfig;
-  const githubTools =
-    GITHUB_TOKEN && GITHUB_OWNER && GITHUB_REPO
-      ? await createGitHubTools(GITHUB_TOKEN, GITHUB_OWNER, GITHUB_REPO)
-      : [];
+  const { GITHUB_TOKEN } = config.githubConfig;
+  const githubTools = GITHUB_TOKEN ? await createGitHubTools(GITHUB_TOKEN) : [];
 
   //Orchestrator config
   const prompts = await createPrompts(character, { selfSchedule: true });

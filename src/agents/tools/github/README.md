@@ -6,8 +6,6 @@ This is a GitHub integration that allows interaction with GitHub repositories, s
 
 ```env
 GITHUB_TOKEN="ghp_..."  # GitHub Personal Access Token
-GITHUB_OWNER="owner"    # Repository owner (user or organization)
-GITHUB_REPO="repo"      # Repository name
 ```
 
 ## Setup

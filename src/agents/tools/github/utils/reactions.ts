@@ -1,14 +1,15 @@
 import { RestEndpointMethodTypes } from '@octokit/rest';
-import { GithubClientWithOptions, GitHubReactionType, GithubResponse } from './types.js';
+import { GithubClient, GitHubReactionType, GithubResponse } from './types.js';
 
 export const listForIssue = async (
-  client: GithubClientWithOptions,
+  client: GithubClient,
+  owner: string,
+  repo: string,
   issue_number: number,
 ): Promise<
   GithubResponse<RestEndpointMethodTypes['reactions']['listForIssue']['response']['data']>
 > => {
-  const { githubClient, owner, repo } = client;
-  const response = await githubClient.reactions.listForIssue({
+  const response = await client.reactions.listForIssue({
     owner,
     repo,
     issue_number,
@@ -20,13 +21,14 @@ export const listForIssue = async (
 };
 
 export const listForIssueComment = async (
-  client: GithubClientWithOptions,
+  client: GithubClient,
+  owner: string,
+  repo: string,
   comment_id: number,
 ): Promise<
   GithubResponse<RestEndpointMethodTypes['reactions']['listForIssueComment']['response']['data']>
 > => {
-  const { githubClient, owner, repo } = client;
-  const response = await githubClient.reactions.listForIssueComment({
+  const response = await client.reactions.listForIssueComment({
     owner,
     repo,
     comment_id,
@@ -38,7 +40,9 @@ export const listForIssueComment = async (
 };
 
 export const listForPullRequestReviewComment = async (
-  client: GithubClientWithOptions,
+  client: GithubClient,
+  owner: string,
+  repo: string,
   pull_number: number,
   comment_id: number,
 ): Promise<
@@ -46,8 +50,7 @@ export const listForPullRequestReviewComment = async (
     RestEndpointMethodTypes['reactions']['listForPullRequestReviewComment']['response']['data']
   >
 > => {
-  const { githubClient, owner, repo } = client;
-  const response = await githubClient.reactions.listForPullRequestReviewComment({
+  const response = await client.reactions.listForPullRequestReviewComment({
     owner,
     repo,
     pull_number,
@@ -60,14 +63,15 @@ export const listForPullRequestReviewComment = async (
 };
 
 export const createForIssue = async (
-  client: GithubClientWithOptions,
+  client: GithubClient,
+  owner: string,
+  repo: string,
   issue_number: number,
   content: GitHubReactionType,
 ): Promise<
   GithubResponse<RestEndpointMethodTypes['reactions']['createForIssue']['response']['data']>
 > => {
-  const { githubClient, owner, repo } = client;
-  const response = await githubClient.reactions.createForIssue({
+  const response = await client.reactions.createForIssue({
     owner,
     repo,
     issue_number,
@@ -80,14 +84,15 @@ export const createForIssue = async (
 };
 
 export const createForIssueComment = async (
-  client: GithubClientWithOptions,
+  client: GithubClient,
+  owner: string,
+  repo: string,
   comment_id: number,
   content: GitHubReactionType,
 ): Promise<
   GithubResponse<RestEndpointMethodTypes['reactions']['createForIssueComment']['response']['data']>
 > => {
-  const { githubClient, owner, repo } = client;
-  const response = await githubClient.reactions.createForIssueComment({
+  const response = await client.reactions.createForIssueComment({
     owner,
     repo,
     comment_id,
@@ -100,7 +105,9 @@ export const createForIssueComment = async (
 };
 
 export const createForPullRequestReviewComment = async (
-  client: GithubClientWithOptions,
+  client: GithubClient,
+  owner: string,
+  repo: string,
   pull_number: number,
   comment_id: number,
   content: GitHubReactionType,
@@ -109,8 +116,7 @@ export const createForPullRequestReviewComment = async (
     RestEndpointMethodTypes['reactions']['createForPullRequestReviewComment']['response']['data']
   >
 > => {
-  const { githubClient, owner, repo } = client;
-  const response = await githubClient.reactions.createForPullRequestReviewComment({
+  const response = await client.reactions.createForPullRequestReviewComment({
     owner,
     repo,
     pull_number,

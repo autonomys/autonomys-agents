@@ -50,8 +50,6 @@ const createGithubAgentConfig = (options?: GithubAgentOptions): GithubAgentConfi
 
 export const createGithubAgent = (
   githubToken: string,
-  owner: string,
-  repo: string,
   character: Character,
   options?: GithubAgentOptions,
 ) =>
@@ -71,7 +69,7 @@ export const createGithubAgent = (
         const namespace = 'github';
 
         const prompts = await createGithubPrompts(character);
-        const githubTools = await createGitHubTools(githubToken, owner, repo);
+        const githubTools = await createGitHubTools(githubToken);
 
         const runner = createOrchestratorRunner(character, {
           modelConfigurations,

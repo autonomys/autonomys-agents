@@ -1,13 +1,12 @@
 import { RestEndpointMethodTypes } from '@octokit/rest';
-import { GithubClientWithOptions, GithubResponse } from './types.js';
+import { GithubClient, GithubResponse } from './types.js';
 
 export const getAuthenticatedUser = async (
-  client: GithubClientWithOptions,
+  client: GithubClient,
 ): Promise<
   GithubResponse<RestEndpointMethodTypes['users']['getAuthenticated']['response']['data']>
 > => {
-  const { githubClient } = client;
-  const response = await githubClient.users.getAuthenticated();
+  const response = await client.users.getAuthenticated();
   return {
     success: true,
     data: response.data,
@@ -15,12 +14,11 @@ export const getAuthenticatedUser = async (
 };
 
 export const listAuthenticatedUserRepos = async (
-  client: GithubClientWithOptions,
+  client: GithubClient,
 ): Promise<
   GithubResponse<RestEndpointMethodTypes['repos']['listForAuthenticatedUser']['response']['data']>
 > => {
-  const { githubClient } = client;
-  const response = await githubClient.repos.listForAuthenticatedUser();
+  const response = await client.repos.listForAuthenticatedUser();
   return {
     success: true,
     data: response.data,

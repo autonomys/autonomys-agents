@@ -17,6 +17,8 @@ const logger = createLogger('github-prs-tools');
  */
 export const createListPullRequestsTool = (
   listPullRequests: (
+    owner: string,
+    repo: string,
     state: GitHubIssueAndPRState,
   ) => Promise<GithubResponse<RestEndpointMethodTypes['pulls']['list']['response']['data']>>,
 ) =>
@@ -28,15 +30,17 @@ export const createListPullRequestsTool = (
     - You want to check the status of existing PRs
     - You need to find PRs you're assigned to or need to review`,
     schema: z.object({
+      owner: z.string().describe('The owner of the repository'),
+      repo: z.string().describe('The name of the repository'),
       state: z
         .enum(['open', 'closed', 'all'])
         .optional()
         .describe('Filter pull requests by state. Default is "open".'),
     }),
-    func: async ({ state = 'open' }) => {
+    func: async ({ owner, repo, state = 'open' }) => {
       try {
         logger.info('Listing GitHub pull requests');
-        const { success, data } = await listPullRequests(state);
+        const { success, data } = await listPullRequests(owner, repo, state);
         return {
           success,
           data: JSON.stringify(data, null, 2),
@@ -56,6 +60,8 @@ export const createListPullRequestsTool = (
  */
 export const createSearchPullRequestsTools = (
   searchPullRequests: (
+    owner: string,
+    repo: string,
     query: string,
     state: GitHubIssueAndPRState,
   ) => Promise<
@@ -74,15 +80,17 @@ export const createSearchPullRequestsTools = (
       This is more effective than just listing all pull requests, as it allows you to find pull requests by keywords.
       Search for keywords related to the pull request you're considering creating.`,
     schema: z.object({
+      owner: z.string().describe('The owner of the repository'),
+      repo: z.string().describe('The name of the repository'),
       query: z.string().describe('Keywords to search for in pull request titles and bodies'),
       state: z
         .enum(['open', 'closed', 'all'])
         .describe('Filter pull requests by state. Default is "open".'),
     }),
-    func: async ({ query, state = 'open' }) => {
+    func: async ({ owner, repo, query, state = 'open' }) => {
       try {
         logger.info('Searching GitHub pull requests:', { query, state });
-        const { success, data } = await searchPullRequests(query, state);
+        const { success, data } = await searchPullRequests(owner, repo, query, state);
         return {
           success,
           data: JSON.stringify(data, null, 2),
@@ -102,6 +110,8 @@ export const createSearchPullRequestsTools = (
  */
 export const createGetPullRequestTool = (
   getPullRequest: (
+    owner: string,
+    repo: string,
     pull_number: number,
   ) => Promise<GithubResponse<RestEndpointMethodTypes['pulls']['get']['response']['data']>>,
 ) =>
@@ -113,12 +123,14 @@ export const createGetPullRequestTool = (
     - You want to check who is assigned or reviewing a PR
     - You need to verify the current state of a PR`,
     schema: z.object({
+      owner: z.string().describe('The owner of the repository'),
+      repo: z.string().describe('The name of the repository'),
       pull_number: z.number().describe('The number of the pull request to get'),
     }),
-    func: async ({ pull_number }) => {
+    func: async ({ owner, repo, pull_number }) => {
       try {
         logger.info('Getting GitHub pull request:', { pull_number });
-        const { success, data } = await getPullRequest(pull_number);
+        const { success, data } = await getPullRequest(owner, repo, pull_number);
         return {
           success,
           data: JSON.stringify(data, null, 2),
@@ -138,6 +150,8 @@ export const createGetPullRequestTool = (
  */
 export const createCreatePullRequestTool = (
   createPullRequest: (
+    owner: string,
+    repo: string,
     params: CreatePullRequestParams,
   ) => Promise<GithubResponse<RestEndpointMethodTypes['pulls']['create']['response']['data']>>,
 ) =>
@@ -157,19 +171,21 @@ export const createCreatePullRequestTool = (
     schema: z.object({
       owner: z.string().describe('The owner of the repository'),
       repo: z.string().describe('The name of the repository'),
-      title: z.string().describe('The title of the pull request'),
-      body: z.string().optional().describe('The description of the pull request'),
-      head: z.string().describe('The name of the branch where your changes are implemented'),
-      base: z.string().describe('The name of the branch you want your changes pulled into'),
-      draft: z.boolean().optional().describe('Whether to create the pull request as a draft'),
-      maintainer_can_modify: z
-        .boolean()
-        .optional()
-        .describe('Whether maintainers can modify the pull request'),
+      params: z.object({
+        title: z.string().describe('The title of the pull request'),
+        body: z.string().optional().describe('The description of the pull request'),
+        head: z.string().describe('The name of the branch where your changes are implemented'),
+        base: z.string().describe('The name of the branch you want your changes pulled into'),
+        draft: z.boolean().optional().describe('Whether to create the pull request as a draft'),
+        maintainer_can_modify: z
+          .boolean()
+          .optional()
+          .describe('Whether maintainers can modify the pull request'),
+      }),
     }),
-    func: async params => {
+    func: async ({ owner, repo, params }) => {
       try {
-        const { success, data } = await createPullRequest(params);
+        const { success, data } = await createPullRequest(owner, repo, params);
         return {
           success,
           data: JSON.stringify(data, null, 2),
@@ -189,6 +205,8 @@ export const createCreatePullRequestTool = (
  */
 export const createListPullRequestCommentsTool = (
   listPRComments: (
+    owner: string,
+    repo: string,
     pull_number: number,
   ) => Promise<
     GithubResponse<
@@ -210,12 +228,14 @@ export const createListPullRequestCommentsTool = (
     
     IMPORTANT: ALWAYS USE THIS TOOL to check for existing comments BEFORE creating a new comment on a pull request. This helps prevent duplicate comments and ensures you're responding to the latest information.`,
     schema: z.object({
+      owner: z.string().describe('The owner of the repository'),
+      repo: z.string().describe('The name of the repository'),
       pull_number: z.number().describe('The number of the pull request to list comments for'),
     }),
-    func: async ({ pull_number }) => {
+    func: async ({ owner, repo, pull_number }) => {
       try {
         logger.info('Listing GitHub pull request comments:', { pull_number });
-        const { success, data } = await listPRComments(pull_number);
+        const { success, data } = await listPRComments(owner, repo, pull_number);
         return {
           success,
           data: JSON.stringify(data, null, 2),
@@ -235,6 +255,8 @@ export const createListPullRequestCommentsTool = (
  */
 export const createCreatePullRequestCommentTool = (
   createPullRequestComment: (
+    owner: string,
+    repo: string,
     params: CreatePRCommentParams,
   ) => Promise<
     GithubResponse<
@@ -258,38 +280,35 @@ export const createCreatePullRequestCommentTool = (
     
     Avoid posting duplicate or very similar comments on the same pull request.`,
     schema: z.object({
-      pull_number: z.number().describe('The number of the pull request to comment on'),
-      body: z.string().describe('The content of the comment'),
-      commit_id: z
-        .string()
-        .optional()
-        .describe('The SHA of the commit to comment on (for review comments)'),
-      path: z
-        .string()
-        .optional()
-        .describe('The relative file path to comment on (for review comments)'),
-      line: z
-        .number()
-        .optional()
-        .describe('The line number in the file to comment on (for review comments)'),
-      side: z
-        .enum(['LEFT', 'RIGHT'])
-        .optional()
-        .describe(
-          'Which side of a diff to comment on. LEFT is for deletions, RIGHT is for additions. Default is RIGHT.',
-        ),
+      owner: z.string().describe('The owner of the repository'),
+      repo: z.string().describe('The name of the repository'),
+      params: z.object({
+        pull_number: z.number().describe('The number of the pull request to comment on'),
+        body: z.string().describe('The content of the comment'),
+        commit_id: z
+          .string()
+          .optional()
+          .describe('The SHA of the commit to comment on (for review comments)'),
+        path: z
+          .string()
+          .optional()
+          .describe('The relative file path to comment on (for review comments)'),
+        line: z
+          .number()
+          .optional()
+          .describe('The line number in the file to comment on (for review comments)'),
+        side: z
+          .enum(['LEFT', 'RIGHT'])
+          .optional()
+          .describe(
+            'Which side of a diff to comment on. LEFT is for deletions, RIGHT is for additions. Default is RIGHT.',
+          ),
+      }),
     }),
-    func: async ({ pull_number, body, commit_id, path, line, side }) => {
+    func: async ({ owner, repo, params }) => {
       try {
-        logger.info('Creating GitHub pull request comment:', { pull_number });
-        const { success, data } = await createPullRequestComment({
-          pull_number,
-          body,
-          commit_id,
-          path,
-          line,
-          side,
-        });
+        logger.info('Creating GitHub pull request comment:', { owner, repo, params });
+        const { success, data } = await createPullRequestComment(owner, repo, params);
         return {
           success,
           data: JSON.stringify(data, null, 2),
@@ -309,6 +328,8 @@ export const createCreatePullRequestCommentTool = (
  */
 export const createListPullRequestReactionsTool = (
   listPullRequestReactions: (
+    owner: string,
+    repo: string,
     pull_number: number,
   ) => Promise<
     GithubResponse<RestEndpointMethodTypes['reactions']['listForIssue']['response']['data']>
@@ -322,12 +343,14 @@ export const createListPullRequestReactionsTool = (
     - You need to check if someone has already reacted to a pull request
     - You want to read the reactions on a pull request before responding`,
     schema: z.object({
+      owner: z.string().describe('The owner of the repository'),
+      repo: z.string().describe('The name of the repository'),
       pull_number: z.number().describe('The number of the pull request'),
     }),
-    func: async ({ pull_number }) => {
+    func: async ({ owner, repo, pull_number }) => {
       try {
-        logger.info('Listing GitHub pull request reactions:', { pull_number });
-        const { success, data } = await listPullRequestReactions(pull_number);
+        logger.info('Listing GitHub pull request reactions:', { owner, repo, pull_number });
+        const { success, data } = await listPullRequestReactions(owner, repo, pull_number);
         return {
           success,
           data: JSON.stringify(data, null, 2),
@@ -347,6 +370,8 @@ export const createListPullRequestReactionsTool = (
  */
 export const createListPullRequestCommentReactionsTool = (
   listPullRequestCommentReactions: (
+    owner: string,
+    repo: string,
     comment_id: number,
   ) => Promise<
     GithubResponse<RestEndpointMethodTypes['reactions']['listForIssueComment']['response']['data']>
@@ -360,12 +385,14 @@ export const createListPullRequestCommentReactionsTool = (
       - You need to check if someone has already reacted to a pull request comment
       - You want to read the reactions on a pull request comment before responding`,
     schema: z.object({
+      owner: z.string().describe('The owner of the repository'),
+      repo: z.string().describe('The name of the repository'),
       comment_id: z.number().describe('The number of the pull request comment'),
     }),
-    func: async ({ comment_id }) => {
+    func: async ({ owner, repo, comment_id }) => {
       try {
-        logger.info('Listing GitHub pull request comment reactions:', { comment_id });
-        const { success, data } = await listPullRequestCommentReactions(comment_id);
+        logger.info('Listing GitHub pull request comment reactions:', { owner, repo, comment_id });
+        const { success, data } = await listPullRequestCommentReactions(owner, repo, comment_id);
         return {
           success,
           data: JSON.stringify(data, null, 2),
@@ -385,6 +412,8 @@ export const createListPullRequestCommentReactionsTool = (
  */
 export const createListPullRequestReviewCommentReactionsTool = (
   listPullRequestReviewCommentReactions: (
+    owner: string,
+    repo: string,
     pull_number: number,
     comment_id: number,
   ) => Promise<
@@ -401,16 +430,22 @@ export const createListPullRequestReviewCommentReactionsTool = (
         - You need to check if someone has already reacted to a pull request review comment
         - You want to read the reactions on a pull request review comment before responding`,
     schema: z.object({
+      owner: z.string().describe('The owner of the repository'),
+      repo: z.string().describe('The name of the repository'),
       pull_number: z.number().describe('The number of the pull request'),
       comment_id: z.number().describe('The number of the pull request review comment'),
     }),
-    func: async ({ pull_number, comment_id }) => {
+    func: async ({ owner, repo, pull_number, comment_id }) => {
       try {
         logger.info('Listing GitHub pull request review comment reactions:', {
+          owner,
+          repo,
           pull_number,
           comment_id,
         });
         const { success, data } = await listPullRequestReviewCommentReactions(
+          owner,
+          repo,
           pull_number,
           comment_id,
         );
@@ -433,6 +468,8 @@ export const createListPullRequestReviewCommentReactionsTool = (
  */
 export const createCreateReactionForPullRequestTool = (
   createPullRequestReaction: (
+    owner: string,
+    repo: string,
     pull_number: number,
     content: GitHubReactionType,
   ) => Promise<
@@ -452,15 +489,22 @@ export const createCreateReactionForPullRequestTool = (
     - Don't leave reactions to your own PRs
     Available reactions: +1, -1, laugh, confused, heart, hooray, rocket, eyes`,
     schema: z.object({
+      owner: z.string().describe('The owner of the repository'),
+      repo: z.string().describe('The name of the repository'),
       content: z
         .enum(['+1', '-1', 'laugh', 'confused', 'heart', 'hooray', 'rocket', 'eyes'])
         .describe('The type of reaction to add'),
       pull_number: z.number().describe('The number of the pull request'),
     }),
-    func: async ({ content, pull_number }) => {
+    func: async ({ owner, repo, content, pull_number }) => {
       try {
-        logger.info('Creating GitHub PR reaction:', { content, pull_number });
-        const { success, data } = await createPullRequestReaction(pull_number, content);
+        logger.info('Creating GitHub PR reaction:', { owner, repo, content, pull_number });
+        const { success, data } = await createPullRequestReaction(
+          owner,
+          repo,
+          pull_number,
+          content,
+        );
         return {
           success,
           data: JSON.stringify(data, null, 2),
@@ -480,6 +524,8 @@ export const createCreateReactionForPullRequestTool = (
  */
 export const createCreateReactionForPullRequestCommentTool = (
   createPullRequestCommentReaction: (
+    owner: string,
+    repo: string,
     comment_id: number,
     content: GitHubReactionType,
   ) => Promise<
@@ -499,15 +545,22 @@ export const createCreateReactionForPullRequestCommentTool = (
     - Don't leave reactions to your own comments
     Available reactions: +1, -1, laugh, confused, heart, hooray, rocket, eyes`,
     schema: z.object({
+      owner: z.string().describe('The owner of the repository'),
+      repo: z.string().describe('The name of the repository'),
       content: z
         .enum(['+1', '-1', 'laugh', 'confused', 'heart', 'hooray', 'rocket', 'eyes'])
         .describe('The type of reaction to add'),
       comment_id: z.number().describe('The number of the pull request comment'),
     }),
-    func: async ({ content, comment_id }) => {
+    func: async ({ owner, repo, content, comment_id }) => {
       try {
-        logger.info('Creating GitHub PR comment reaction:', { content, comment_id });
-        const { success, data } = await createPullRequestCommentReaction(comment_id, content);
+        logger.info('Creating GitHub PR comment reaction:', { owner, repo, content, comment_id });
+        const { success, data } = await createPullRequestCommentReaction(
+          owner,
+          repo,
+          comment_id,
+          content,
+        );
         return {
           success,
           data: JSON.stringify(data, null, 2),
@@ -527,6 +580,8 @@ export const createCreateReactionForPullRequestCommentTool = (
  */
 export const createCreateReactionForPullRequestReviewCommentTool = (
   createPullRequestReviewCommentReaction: (
+    owner: string,
+    repo: string,
     pull_number: number,
     comment_id: number,
     content: GitHubReactionType,
@@ -547,20 +602,26 @@ export const createCreateReactionForPullRequestReviewCommentTool = (
     - Don't leave reactions to your own comments
     Available reactions: +1, -1, laugh, confused, heart, hooray, rocket, eyes`,
     schema: z.object({
+      owner: z.string().describe('The owner of the repository'),
+      repo: z.string().describe('The name of the repository'),
       content: z
         .enum(['+1', '-1', 'laugh', 'confused', 'heart', 'hooray', 'rocket', 'eyes'])
         .describe('The type of reaction to add'),
       pull_number: z.number().describe('The number of the pull request'),
       comment_id: z.number().describe('The number of the pull request review comment'),
     }),
-    func: async ({ content, pull_number, comment_id }) => {
+    func: async ({ owner, repo, content, pull_number, comment_id }) => {
       try {
         logger.info('Creating GitHub PR review comment reaction:', {
+          owner,
+          repo,
           content,
           pull_number,
           comment_id,
         });
         const { success, data } = await createPullRequestReviewCommentReaction(
+          owner,
+          repo,
           pull_number,
           comment_id,
           content,

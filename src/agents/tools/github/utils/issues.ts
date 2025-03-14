@@ -3,7 +3,7 @@ import { createLogger } from '../../../../utils/logger.js';
 import {
   CreateCommentParams,
   CreateIssueParams,
-  GithubClientWithOptions,
+  GithubClient,
   GitHubIssueAndPRState,
   GithubResponse,
 } from './types.js';
@@ -11,13 +11,14 @@ import {
 const logger = createLogger('github-issues');
 
 export const list = async (
-  client: GithubClientWithOptions,
+  client: GithubClient,
+  owner: string,
+  repo: string,
   state: GitHubIssueAndPRState = 'open',
 ): Promise<
   GithubResponse<RestEndpointMethodTypes['issues']['listForRepo']['response']['data']>
 > => {
-  const { githubClient, owner, repo } = client;
-  const response = await githubClient.issues.listForRepo({
+  const response = await client.issues.listForRepo({
     owner,
     repo,
     state,
@@ -30,19 +31,20 @@ export const list = async (
 };
 
 export const search = async (
-  client: GithubClientWithOptions,
+  client: GithubClient,
+  owner: string,
+  repo: string,
   query: string,
   state: GitHubIssueAndPRState = 'open',
 ): Promise<
   GithubResponse<RestEndpointMethodTypes['search']['issuesAndPullRequests']['response']['data']>
 > => {
-  const { githubClient, owner, repo } = client;
   // Format the search query to include repo and state
   const searchQuery = `repo:${owner}/${repo} is:issue state:${state} ${query}`;
 
   logger.info('Searching GitHub issues:', { query: searchQuery });
 
-  const response = await githubClient.search.issuesAndPullRequests({
+  const response = await client.search.issuesAndPullRequests({
     q: searchQuery,
     sort: 'updated',
     order: 'desc',
@@ -62,11 +64,12 @@ export const search = async (
 };
 
 export const get = async (
-  client: GithubClientWithOptions,
+  client: GithubClient,
+  owner: string,
+  repo: string,
   issue_number: number,
 ): Promise<GithubResponse<RestEndpointMethodTypes['issues']['get']['response']['data']>> => {
-  const { githubClient, owner, repo } = client;
-  const response = await githubClient.issues.get({
+  const response = await client.issues.get({
     owner,
     repo,
     issue_number,
@@ -79,11 +82,12 @@ export const get = async (
 };
 
 export const create = async (
-  client: GithubClientWithOptions,
+  client: GithubClient,
+  owner: string,
+  repo: string,
   params: CreateIssueParams,
 ): Promise<GithubResponse<RestEndpointMethodTypes['issues']['create']['response']['data']>> => {
-  const { githubClient, owner, repo } = client;
-  const response = await githubClient.issues.create({
+  const response = await client.issues.create({
     owner,
     repo,
     title: params.title,
@@ -99,13 +103,14 @@ export const create = async (
 };
 
 export const listComments = async (
-  client: GithubClientWithOptions,
+  client: GithubClient,
+  owner: string,
+  repo: string,
   issue_number: number,
 ): Promise<
   GithubResponse<RestEndpointMethodTypes['issues']['listComments']['response']['data']>
 > => {
-  const { githubClient, owner, repo } = client;
-  const response = await githubClient.issues.listComments({
+  const response = await client.issues.listComments({
     owner,
     repo,
     issue_number,
@@ -118,13 +123,14 @@ export const listComments = async (
 };
 
 export const createComment = async (
-  client: GithubClientWithOptions,
+  client: GithubClient,
+  owner: string,
+  repo: string,
   params: CreateCommentParams,
 ): Promise<
   GithubResponse<RestEndpointMethodTypes['issues']['createComment']['response']['data']>
 > => {
-  const { githubClient, owner, repo } = client;
-  const response = await githubClient.issues.createComment({
+  const response = await client.issues.createComment({
     owner,
     repo,
     issue_number: params.issue_number,

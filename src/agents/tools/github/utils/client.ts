@@ -12,76 +12,117 @@ import {
   CreatePRCommentParams,
   CreatePullRequestParams,
   GithubClient,
-  GithubClientWithOptions,
   GitHubIssueAndPRState,
   GitHubReactionType,
 } from './types.js';
 import * as Users from './users.js';
 
-export const githubClient = async (token: string, owner: string, repo: string) => {
-  const githubClient = new Octokit({ auth: token }) as GithubClient;
-
-  const client: GithubClientWithOptions = {
-    githubClient,
-    owner,
-    repo,
-  };
+export const githubClient = async (token: string) => {
+  const client = new Octokit({ auth: token }) as GithubClient;
 
   // Activity
   const getFeed = async () => Activity.getFeed(client);
   const listNotifications = async (all: boolean = false) => Activity.listNotifications(client, all);
-  const subscribeToRepo = async (
-    targetOwner: string,
-    targetRepo: string,
-    ignored: boolean = false,
-  ) => Activity.subscribeToRepo(client, targetOwner, targetRepo, ignored);
-  const unsubscribeFromRepo = async (targetOwner: string, targetRepo: string) =>
-    Activity.unsubscribeFromRepo(client, targetOwner, targetRepo);
+  const subscribeToRepo = async (owner: string, repo: string, ignored: boolean = false) =>
+    Activity.subscribeToRepo(client, owner, repo, ignored);
+  const unsubscribeFromRepo = async (owner: string, repo: string) =>
+    Activity.unsubscribeFromRepo(client, owner, repo);
   const listSubscriptions = async () => Activity.listSubscriptions(client);
   const listMentions = async () => Activity.listMentions(client);
 
   // Issues
-  const listIssues = async (state: GitHubIssueAndPRState) => Issues.list(client, state);
-  const searchIssues = async (query: string, state: GitHubIssueAndPRState) =>
-    Issues.search(client, query, state);
-  const getIssue = async (issue_number: number) => Issues.get(client, issue_number);
-  const createIssue = async (params: CreateIssueParams) => Issues.create(client, params);
-  const listIssueComments = (issue_number: number) => Issues.listComments(client, issue_number);
-  const createIssueComment = (params: CreateCommentParams) => Issues.createComment(client, params);
+  const listIssues = async (owner: string, repo: string, state: GitHubIssueAndPRState) =>
+    Issues.list(client, owner, repo, state);
+  const searchIssues = async (
+    owner: string,
+    repo: string,
+    query: string,
+    state: GitHubIssueAndPRState,
+  ) => Issues.search(client, owner, repo, query, state);
+  const getIssue = async (owner: string, repo: string, issue_number: number) =>
+    Issues.get(client, owner, repo, issue_number);
+  const createIssue = async (owner: string, repo: string, params: CreateIssueParams) =>
+    Issues.create(client, owner, repo, params);
+  const listIssueComments = async (owner: string, repo: string, issue_number: number) =>
+    Issues.listComments(client, owner, repo, issue_number);
+  const createIssueComment = async (owner: string, repo: string, params: CreateCommentParams) =>
+    Issues.createComment(client, owner, repo, params);
 
-  const listIssueReactions = (issue_number: number) => Reactions.listForIssue(client, issue_number);
-  const listIssueCommentReactions = (comment_id: number) =>
-    Reactions.listForIssueComment(client, comment_id);
-  const createIssueReaction = (issue_number: number, content: GitHubReactionType) =>
-    Reactions.createForIssue(client, issue_number, content);
-  const createIssueCommentReaction = (comment_id: number, content: GitHubReactionType) =>
-    Reactions.createForIssueComment(client, comment_id, content);
+  const listIssueReactions = async (owner: string, repo: string, issue_number: number) =>
+    Reactions.listForIssue(client, owner, repo, issue_number);
+  const listIssueCommentReactions = async (owner: string, repo: string, comment_id: number) =>
+    Reactions.listForIssueComment(client, owner, repo, comment_id);
+  const createIssueReaction = async (
+    owner: string,
+    repo: string,
+    issue_number: number,
+    content: GitHubReactionType,
+  ) => Reactions.createForIssue(client, owner, repo, issue_number, content);
+  const createIssueCommentReaction = async (
+    owner: string,
+    repo: string,
+    comment_id: number,
+    content: GitHubReactionType,
+  ) => Reactions.createForIssueComment(client, owner, repo, comment_id, content);
 
   // PRs
-  const listPullRequests = async (state: GitHubIssueAndPRState) => PRs.list(client, state);
-  const searchPullRequests = async (query: string, state: GitHubIssueAndPRState) =>
-    PRs.search(client, query, state);
-  const getPullRequest = async (pull_number: number) => PRs.get(client, pull_number);
-  const createPullRequest = async (params: CreatePullRequestParams) => PRs.create(client, params);
-  const listPullRequestComments = (pull_number: number) => PRs.listComments(client, pull_number);
-  const createPullRequestComment = (params: CreatePRCommentParams) =>
-    PRs.createComment(client, params);
+  const listPullRequests = async (owner: string, repo: string, state: GitHubIssueAndPRState) =>
+    PRs.list(client, owner, repo, state);
+  const searchPullRequests = async (
+    owner: string,
+    repo: string,
+    query: string,
+    state: GitHubIssueAndPRState,
+  ) => PRs.search(client, owner, repo, query, state);
+  const getPullRequest = async (owner: string, repo: string, pull_number: number) =>
+    PRs.get(client, owner, repo, pull_number);
+  const createPullRequest = async (owner: string, repo: string, params: CreatePullRequestParams) =>
+    PRs.create(client, owner, repo, params);
+  const listPullRequestComments = async (owner: string, repo: string, pull_number: number) =>
+    PRs.listComments(client, owner, repo, pull_number);
+  const createPullRequestComment = async (
+    owner: string,
+    repo: string,
+    params: CreatePRCommentParams,
+  ) => PRs.createComment(client, owner, repo, params);
 
-  const listPullRequestReactions = (pull_number: number) =>
-    Reactions.listForIssue(client, pull_number);
-  const listPullRequestCommentReactions = (comment_id: number) =>
-    Reactions.listForIssueComment(client, comment_id);
-  const listPullRequestReviewCommentReactions = (pull_number: number, comment_id: number) =>
-    Reactions.listForPullRequestReviewComment(client, pull_number, comment_id);
-  const createPullRequestReaction = (pull_number: number, content: GitHubReactionType) =>
-    Reactions.createForIssue(client, pull_number, content);
-  const createPullRequestCommentReaction = (comment_id: number, content: GitHubReactionType) =>
-    Reactions.createForIssueComment(client, comment_id, content);
-  const createPullRequestReviewCommentReaction = (
+  const listPullRequestReactions = async (owner: string, repo: string, pull_number: number) =>
+    Reactions.listForIssue(client, owner, repo, pull_number);
+  const listPullRequestCommentReactions = async (owner: string, repo: string, comment_id: number) =>
+    Reactions.listForIssueComment(client, owner, repo, comment_id);
+  const listPullRequestReviewCommentReactions = async (
+    owner: string,
+    repo: string,
+    pull_number: number,
+    comment_id: number,
+  ) => Reactions.listForPullRequestReviewComment(client, owner, repo, pull_number, comment_id);
+  const createPullRequestReaction = async (
+    owner: string,
+    repo: string,
+    pull_number: number,
+    content: GitHubReactionType,
+  ) => Reactions.createForIssue(client, owner, repo, pull_number, content);
+  const createPullRequestCommentReaction = async (
+    owner: string,
+    repo: string,
+    comment_id: number,
+    content: GitHubReactionType,
+  ) => Reactions.createForIssueComment(client, owner, repo, comment_id, content);
+  const createPullRequestReviewCommentReaction = async (
+    owner: string,
+    repo: string,
     pull_number: number,
     comment_id: number,
     content: GitHubReactionType,
-  ) => Reactions.createForPullRequestReviewComment(client, pull_number, comment_id, content);
+  ) =>
+    Reactions.createForPullRequestReviewComment(
+      client,
+      owner,
+      repo,
+      pull_number,
+      comment_id,
+      content,
+    );
 
   // Users
   const getAuthenticatedUser = async () => Users.getAuthenticatedUser(client);
@@ -90,25 +131,20 @@ export const githubClient = async (token: string, owner: string, repo: string) =
   // Repos
   const listUserRepos = async (username: string) => Repos.listUserRepos(client, username);
   const listOrgRepos = async (org: string) => Repos.listOrgRepos(client, org);
-  const listForks = async (targetOwner: string, targetRepo: string) =>
-    Repos.listForks(client, targetOwner, targetRepo);
-  const createFork = async (targetOwner: string, targetRepo: string) =>
-    Repos.createFork(client, targetOwner, targetRepo);
-  const getDefaultBranch = async (targetOwner: string, targetRepo: string) =>
-    Repos.getDefaultBranch(client, targetOwner, targetRepo);
+  const listForks = async (owner: string, repo: string) => Repos.listForks(client, owner, repo);
+  const createFork = async (owner: string, repo: string) => Repos.createFork(client, owner, repo);
+  const getDefaultBranch = async (owner: string, repo: string) =>
+    Repos.getDefaultBranch(client, owner, repo);
 
   // Git
   const createBranch = async (
-    targetOwner: string,
-    targetRepo: string,
+    owner: string,
+    repo: string,
     branchName: string,
     sourceBranch: string,
-  ) => Git.createBranch(client, targetOwner, targetRepo, branchName, sourceBranch);
-  const createCommit = async (
-    targetOwner: string,
-    targetRepo: string,
-    params: CreateCommitParams,
-  ) => Git.createCommit(client, targetOwner, targetRepo, params);
+  ) => Git.createBranch(client, owner, repo, branchName, sourceBranch);
+  const createCommit = async (owner: string, repo: string, params: CreateCommitParams) =>
+    Git.createCommit(client, owner, repo, params);
 
   return {
     getFeed,

@@ -3,7 +3,7 @@ import { createLogger } from '../../../../utils/logger.js';
 import {
   CreatePRCommentParams,
   CreatePullRequestParams,
-  GithubClientWithOptions,
+  GithubClient,
   GitHubIssueAndPRState,
   GithubResponse,
 } from './types.js';
@@ -11,11 +11,12 @@ import {
 const logger = createLogger('github-prs');
 
 export const list = async (
-  client: GithubClientWithOptions,
+  client: GithubClient,
+  owner: string,
+  repo: string,
   state: GitHubIssueAndPRState = 'open',
 ): Promise<GithubResponse<RestEndpointMethodTypes['pulls']['list']['response']['data']>> => {
-  const { githubClient, owner, repo } = client;
-  const response = await githubClient.pulls.list({
+  const response = await client.pulls.list({
     owner,
     repo,
     state,
@@ -27,19 +28,20 @@ export const list = async (
 };
 
 export const search = async (
-  client: GithubClientWithOptions,
+  client: GithubClient,
+  owner: string,
+  repo: string,
   query: string,
   state: 'open' | 'closed' | 'all' = 'open',
 ): Promise<
   GithubResponse<RestEndpointMethodTypes['search']['issuesAndPullRequests']['response']['data']>
 > => {
-  const { githubClient, owner, repo } = client;
   // Format the search query to include repo and state
   const searchQuery = `repo:${owner}/${repo} is:pr state:${state} ${query}`;
 
   logger.info('Searching GitHub PRs:', { query: searchQuery });
 
-  const response = await githubClient.search.issuesAndPullRequests({
+  const response = await client.search.issuesAndPullRequests({
     q: searchQuery,
     sort: 'updated',
     order: 'desc',
@@ -59,11 +61,12 @@ export const search = async (
 };
 
 export const get = async (
-  client: GithubClientWithOptions,
+  client: GithubClient,
+  owner: string,
+  repo: string,
   pull_number: number,
 ): Promise<GithubResponse<RestEndpointMethodTypes['pulls']['get']['response']['data']>> => {
-  const { githubClient, owner, repo } = client;
-  const response = await githubClient.pulls.get({
+  const response = await client.pulls.get({
     owner,
     repo,
     pull_number,
@@ -75,11 +78,12 @@ export const get = async (
 };
 
 export const create = async (
-  client: GithubClientWithOptions,
+  client: GithubClient,
+  owner: string,
+  repo: string,
   params: CreatePullRequestParams,
 ): Promise<GithubResponse<RestEndpointMethodTypes['pulls']['create']['response']['data']>> => {
-  const { githubClient, owner, repo } = client;
-  const response = await githubClient.pulls.create({
+  const response = await client.pulls.create({
     owner,
     repo,
     title: params.title,
@@ -96,7 +100,9 @@ export const create = async (
 };
 
 export const listComments = async (
-  client: GithubClientWithOptions,
+  client: GithubClient,
+  owner: string,
+  repo: string,
   pull_number: number,
 ): Promise<
   GithubResponse<
@@ -106,13 +112,12 @@ export const listComments = async (
     )[]
   >
 > => {
-  const { githubClient, owner, repo } = client;
-  const generalCommentsResponse = await githubClient.issues.listComments({
+  const generalCommentsResponse = await client.issues.listComments({
     owner,
     repo,
     issue_number: pull_number,
   });
-  const reviewCommentsResponse = await githubClient.pulls.listReviewComments({
+  const reviewCommentsResponse = await client.pulls.listReviewComments({
     owner,
     repo,
     pull_number,
@@ -129,7 +134,9 @@ export const listComments = async (
 };
 
 export const createComment = async (
-  client: GithubClientWithOptions,
+  client: GithubClient,
+  owner: string,
+  repo: string,
   params: CreatePRCommentParams,
 ): Promise<
   GithubResponse<
@@ -137,10 +144,9 @@ export const createComment = async (
     | RestEndpointMethodTypes['pulls']['createReviewComment']['response']['data']
   >
 > => {
-  const { githubClient, owner, repo } = client;
   if (params.path && params.line) {
     // Create a review comment on a specific line
-    const response = await githubClient.pulls.createReviewComment({
+    const response = await client.pulls.createReviewComment({
       owner,
       repo,
       pull_number: params.pull_number,
@@ -156,7 +162,7 @@ export const createComment = async (
     };
   } else {
     // Create a regular PR comment
-    const response = await githubClient.issues.createComment({
+    const response = await client.issues.createComment({
       owner,
       repo,
       issue_number: params.pull_number,

@@ -6,12 +6,6 @@ export type GithubClient = Octokit &
     paginate: PaginateInterface;
   };
 
-export type GithubClientWithOptions = {
-  githubClient: GithubClient;
-  owner: string;
-  repo: string;
-};
-
 export type GithubResponse<T> = {
   success: boolean;
   data?: T;

@@ -14,14 +14,10 @@ const logger = createLogger('autonomous-web3-agent');
 const character = config.characterConfig;
 const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
   const githubToken = config.githubConfig.GITHUB_TOKEN;
-  const githubOwner = config.githubConfig.GITHUB_OWNER;
-  const githubRepo = config.githubConfig.GITHUB_REPO;
-  if (!githubToken || !githubOwner || !githubRepo) {
-    throw new Error(
-      'GITHUB_TOKEN, GITHUB_OWNER, and GITHUB_REPO are required in the environment variables',
-    );
+  if (!githubToken) {
+    throw new Error('GITHUB_TOKEN is required in the environment variables');
   }
-  const githubTools = await createGitHubTools(githubToken, githubOwner, githubRepo);
+  const githubTools = await createGitHubTools(githubToken);
 
   //Orchestrator config
   //use default orchestrator prompts with character config

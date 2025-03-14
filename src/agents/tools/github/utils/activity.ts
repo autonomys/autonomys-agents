@@ -1,11 +1,10 @@
 import { RestEndpointMethodTypes } from '@octokit/rest';
-import { GithubClientWithOptions, GithubResponse } from './types.js';
+import { GithubClient, GithubResponse } from './types.js';
 
 export const getFeed = async (
-  client: GithubClientWithOptions,
+  client: GithubClient,
 ): Promise<GithubResponse<RestEndpointMethodTypes['activity']['getFeeds']['response']['data']>> => {
-  const { githubClient } = client;
-  const response = await githubClient.activity.getFeeds();
+  const response = await client.activity.getFeeds();
   return {
     success: true,
     data: response.data,
@@ -13,15 +12,14 @@ export const getFeed = async (
 };
 
 export const listNotifications = async (
-  client: GithubClientWithOptions,
+  client: GithubClient,
   all: boolean = false,
 ): Promise<
   GithubResponse<
     RestEndpointMethodTypes['activity']['listNotificationsForAuthenticatedUser']['response']['data']
   >
 > => {
-  const { githubClient } = client;
-  const response = await githubClient.activity.listNotificationsForAuthenticatedUser({ all });
+  const response = await client.activity.listNotificationsForAuthenticatedUser({ all });
   return {
     success: true,
     data: response.data,
@@ -29,19 +27,18 @@ export const listNotifications = async (
 };
 
 export const subscribeToRepo = async (
-  client: GithubClientWithOptions,
-  targetOwner: string,
-  targetRepo: string,
+  client: GithubClient,
+  owner: string,
+  repo: string,
   ignored: boolean = false,
 ): Promise<
   GithubResponse<RestEndpointMethodTypes['activity']['setRepoSubscription']['response']['data']>
 > => {
-  const { githubClient } = client;
-  const response = await githubClient.activity.setRepoSubscription({
-    owner: targetOwner,
-    repo: targetRepo,
+  const response = await client.activity.setRepoSubscription({
+    owner,
+    repo,
     subscribed: true,
-    ignored: ignored,
+    ignored,
   });
   return {
     success: true,
@@ -50,16 +47,15 @@ export const subscribeToRepo = async (
 };
 
 export const unsubscribeFromRepo = async (
-  client: GithubClientWithOptions,
-  targetOwner: string,
-  targetRepo: string,
+  client: GithubClient,
+  owner: string,
+  repo: string,
 ): Promise<
   GithubResponse<RestEndpointMethodTypes['activity']['deleteRepoSubscription']['response']['data']>
 > => {
-  const { githubClient } = client;
-  const response = await githubClient.activity.deleteRepoSubscription({
-    owner: targetOwner,
-    repo: targetRepo,
+  const response = await client.activity.deleteRepoSubscription({
+    owner,
+    repo,
   });
   return {
     success: true,
@@ -68,14 +64,13 @@ export const unsubscribeFromRepo = async (
 };
 
 export const listSubscriptions = async (
-  client: GithubClientWithOptions,
+  client: GithubClient,
 ): Promise<
   GithubResponse<
     RestEndpointMethodTypes['activity']['listReposStarredByAuthenticatedUser']['response']['data']
   >
 > => {
-  const { githubClient } = client;
-  const response = await githubClient.activity.listReposStarredByAuthenticatedUser();
+  const response = await client.activity.listReposStarredByAuthenticatedUser();
   return {
     success: true,
     data: response.data,
@@ -83,14 +78,13 @@ export const listSubscriptions = async (
 };
 
 export const listMentions = async (
-  client: GithubClientWithOptions,
+  client: GithubClient,
 ): Promise<
   GithubResponse<RestEndpointMethodTypes['search']['issuesAndPullRequests']['response']['data']>
 > => {
-  const { githubClient } = client;
   // Search for issues and PRs where the authenticated user is mentioned
-  const response = await githubClient.search.issuesAndPullRequests({
-    q: `mentions:${(await githubClient.users.getAuthenticated()).data.login}`,
+  const response = await client.search.issuesAndPullRequests({
+    q: `mentions:${(await client.users.getAuthenticated()).data.login}`,
     sort: 'updated',
     order: 'desc',
     per_page: 20,

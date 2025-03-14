@@ -1,12 +1,11 @@
 import { RestEndpointMethodTypes } from '@octokit/rest';
-import { GithubClientWithOptions, GithubResponse } from './types.js';
+import { GithubClient, GithubResponse } from './types.js';
 
 export const listUserRepos = async (
-  client: GithubClientWithOptions,
+  client: GithubClient,
   username: string,
 ): Promise<GithubResponse<RestEndpointMethodTypes['repos']['listForUser']['response']['data']>> => {
-  const { githubClient } = client;
-  const response = await githubClient.repos.listForUser({ username });
+  const response = await client.repos.listForUser({ username });
   return {
     success: true,
     data: response.data,
@@ -14,11 +13,10 @@ export const listUserRepos = async (
 };
 
 export const listOrgRepos = async (
-  client: GithubClientWithOptions,
+  client: GithubClient,
   org: string,
 ): Promise<GithubResponse<RestEndpointMethodTypes['repos']['listForOrg']['response']['data']>> => {
-  const { githubClient } = client;
-  const response = await githubClient.repos.listForOrg({ org });
+  const response = await client.repos.listForOrg({ org });
   return {
     success: true,
     data: response.data,
@@ -26,14 +24,13 @@ export const listOrgRepos = async (
 };
 
 export const listForks = async (
-  client: GithubClientWithOptions,
-  targetOwner: string,
-  targetRepo: string,
+  client: GithubClient,
+  owner: string,
+  repo: string,
 ): Promise<GithubResponse<RestEndpointMethodTypes['repos']['listForks']['response']['data']>> => {
-  const { githubClient } = client;
-  const response = await githubClient.repos.listForks({
-    owner: targetOwner,
-    repo: targetRepo,
+  const response = await client.repos.listForks({
+    owner,
+    repo,
   });
   return {
     success: true,
@@ -42,14 +39,13 @@ export const listForks = async (
 };
 
 export const createFork = async (
-  client: GithubClientWithOptions,
-  targetOwner: string,
-  targetRepo: string,
+  client: GithubClient,
+  owner: string,
+  repo: string,
 ): Promise<GithubResponse<RestEndpointMethodTypes['repos']['createFork']['response']['data']>> => {
-  const { githubClient } = client;
-  const response = await githubClient.repos.createFork({
-    owner: targetOwner,
-    repo: targetRepo,
+  const response = await client.repos.createFork({
+    owner,
+    repo,
   });
   return {
     success: true,
@@ -58,14 +54,13 @@ export const createFork = async (
 };
 
 export const getDefaultBranch = async (
-  client: GithubClientWithOptions,
-  targetOwner: string,
-  targetRepo: string,
+  client: GithubClient,
+  owner: string,
+  repo: string,
 ): Promise<GithubResponse<RestEndpointMethodTypes['repos']['get']['response']['data']>> => {
-  const { githubClient } = client;
-  const response = await githubClient.repos.get({
-    owner: targetOwner,
-    repo: targetRepo,
+  const response = await client.repos.get({
+    owner,
+    repo,
   });
 
   return {

@@ -17,6 +17,8 @@ const logger = createLogger('github-issues-tools');
  */
 export const createListIssuesTools = (
   listIssues: (
+    owner: string,
+    repo: string,
     state: GitHubIssueAndPRState,
   ) => Promise<
     GithubResponse<RestEndpointMethodTypes['issues']['listForRepo']['response']['data']>
@@ -34,14 +36,16 @@ export const createListIssuesTools = (
     IMPORTANT: Always use this tool to check for existing issues before creating a new issue.
     This helps prevent duplicate issues and ensures you're working with the latest information.`,
     schema: z.object({
+      owner: z.string().describe('The owner of the repository'),
+      repo: z.string().describe('The name of the repository'),
       state: z
         .enum(['open', 'closed', 'all'])
         .describe('Filter issues by state. Default is "open".'),
     }),
-    func: async ({ state = 'open' }) => {
+    func: async ({ owner, repo, state = 'open' }) => {
       try {
         logger.info('Listing GitHub issues');
-        const { success, data } = await listIssues(state);
+        const { success, data } = await listIssues(owner, repo, state);
         return {
           success,
           data: JSON.stringify(data, null, 2),
@@ -61,6 +65,8 @@ export const createListIssuesTools = (
  */
 export const createSearchIssuesTools = (
   searchIssues: (
+    owner: string,
+    repo: string,
     query: string,
     state: GitHubIssueAndPRState,
   ) => Promise<
@@ -77,15 +83,17 @@ export const createSearchIssuesTools = (
       IMPORTANT: Always use this tool to check for existing issues before creating a new issue.
       This helps prevent duplicate issues and ensures you're working with the latest information.`,
     schema: z.object({
+      owner: z.string().describe('The owner of the repository'),
+      repo: z.string().describe('The name of the repository'),
       query: z.string().describe('The query to search for'),
       state: z
         .enum(['open', 'closed', 'all'])
         .describe('Filter issues by state. Default is "open".'),
     }),
-    func: async ({ query, state = 'open' }) => {
+    func: async ({ owner, repo, query, state = 'open' }) => {
       try {
         logger.info('Searching GitHub issues');
-        const { success, data } = await searchIssues(query, state);
+        const { success, data } = await searchIssues(owner, repo, query, state);
         return {
           success,
           data: JSON.stringify(data, null, 2),
@@ -105,6 +113,8 @@ export const createSearchIssuesTools = (
  */
 export const createGetIssueTools = (
   getIssue: (
+    owner: string,
+    repo: string,
     issue_number: number,
   ) => Promise<GithubResponse<RestEndpointMethodTypes['issues']['get']['response']['data']>>,
 ) =>
@@ -115,12 +125,14 @@ export const createGetIssueTools = (
         - You need to get a specific issue in the repository
         - You want to see the details of a specific issue`,
     schema: z.object({
+      owner: z.string().describe('The owner of the repository'),
+      repo: z.string().describe('The name of the repository'),
       issue_number: z.number().describe('The number of the issue to get'),
     }),
-    func: async ({ issue_number }) => {
+    func: async ({ owner, repo, issue_number }) => {
       try {
         logger.info('Getting GitHub issue:', { issue_number });
-        const { success, data } = await getIssue(issue_number);
+        const { success, data } = await getIssue(owner, repo, issue_number);
         return {
           success,
           data: JSON.stringify(data, null, 2),
@@ -140,6 +152,8 @@ export const createGetIssueTools = (
  */
 export const createCreateIssueTool = (
   createIssue: (
+    owner: string,
+    repo: string,
     params: CreateIssueParams,
   ) => Promise<GithubResponse<RestEndpointMethodTypes['issues']['create']['response']['data']>>,
 ) =>
@@ -157,15 +171,22 @@ export const createCreateIssueTool = (
     Only create a new issue if you've confirmed a similar issue doesn't already exist.
     If a similar issue exists, consider adding a comment to that issue instead.`,
     schema: z.object({
+      owner: z.string().describe('The owner of the repository'),
+      repo: z.string().describe('The name of the repository'),
       title: z.string().describe('The title of the issue'),
       body: z.string().optional().describe('The body/description of the issue'),
       labels: z.array(z.string()).optional().describe('Labels to apply to the issue'),
       assignees: z.array(z.string()).optional().describe('GitHub usernames to assign to the issue'),
     }),
-    func: async ({ title, body, labels, assignees }) => {
+    func: async ({ owner, repo, title, body, labels, assignees }) => {
       try {
         logger.info('Creating GitHub issue:', { title });
-        const { success, data } = await createIssue({ title, body, labels, assignees });
+        const { success, data } = await createIssue(owner, repo, {
+          title,
+          body,
+          labels,
+          assignees,
+        });
         return {
           success,
           data: JSON.stringify(data, null, 2),
@@ -185,6 +206,8 @@ export const createCreateIssueTool = (
  */
 export const createListIssueCommentsTools = (
   listIssueComments: (
+    owner: string,
+    repo: string,
     issue_number: number,
   ) => Promise<
     GithubResponse<RestEndpointMethodTypes['issues']['listComments']['response']['data']>
@@ -201,12 +224,14 @@ export const createListIssueCommentsTools = (
     
     IMPORTANT: ALWAYS use this tool to check for existing comments before creating a new comment on an issue. This helps prevent duplicate comments and ensures you're responding to the latest information.`,
     schema: z.object({
+      owner: z.string().describe('The owner of the repository'),
+      repo: z.string().describe('The name of the repository'),
       issue_number: z.number().describe('The number of the issue to list comments for'),
     }),
-    func: async ({ issue_number }) => {
+    func: async ({ owner, repo, issue_number }) => {
       try {
         logger.info('Listing GitHub comments:', { issue_number });
-        const { success, data } = await listIssueComments(issue_number);
+        const { success, data } = await listIssueComments(owner, repo, issue_number);
         return {
           success,
           data: JSON.stringify(data, null, 2),
@@ -226,6 +251,8 @@ export const createListIssueCommentsTools = (
  */
 export const createCreateIssueCommentTool = (
   createIssueComment: (
+    owner: string,
+    repo: string,
     params: CreateCommentParams,
   ) => Promise<
     GithubResponse<RestEndpointMethodTypes['issues']['createComment']['response']['data']>
@@ -245,13 +272,18 @@ export const createCreateIssueCommentTool = (
     DO NOT USE THIS TOOL IF YOU HAVE NOT ALREADY CHECKED FOR EXISTING COMMENTS USING list_github_comments.
     Avoid posting duplicate or very similar comments on the same issue.`,
     schema: z.object({
+      owner: z.string().describe('The owner of the repository'),
+      repo: z.string().describe('The name of the repository'),
       issue_number: z.number().describe('The number of the issue to comment on'),
       body: z.string().describe('The content of the comment'),
     }),
-    func: async ({ issue_number, body }) => {
+    func: async ({ owner, repo, issue_number, body }) => {
       try {
         logger.info('Creating GitHub issue comment:', { issue_number });
-        const { success, data } = await createIssueComment({ issue_number, body });
+        const { success, data } = await createIssueComment(owner, repo, {
+          issue_number,
+          body,
+        });
         return {
           success,
           data: JSON.stringify(data, null, 2),
@@ -271,6 +303,8 @@ export const createCreateIssueCommentTool = (
  */
 export const createListIssueReactionsTools = (
   listIssueReactions: (
+    owner: string,
+    repo: string,
     issue_number: number,
   ) => Promise<
     GithubResponse<RestEndpointMethodTypes['reactions']['listForIssue']['response']['data']>
@@ -285,12 +319,14 @@ export const createListIssueReactionsTools = (
     - You want to read the reactions on an issue before responding
     Available reactions: +1, -1, laugh, confused, heart, hooray, rocket, eyes`,
     schema: z.object({
+      owner: z.string().describe('The owner of the repository'),
+      repo: z.string().describe('The name of the repository'),
       issue_number: z.number().describe('The number of the issue to list reactions for'),
     }),
-    func: async ({ issue_number }) => {
+    func: async ({ owner, repo, issue_number }) => {
       try {
         logger.info('Listing GitHub issue reactions:', { issue_number });
-        const { success, data } = await listIssueReactions(issue_number);
+        const { success, data } = await listIssueReactions(owner, repo, issue_number);
         return {
           success,
           data: JSON.stringify(data, null, 2),
@@ -310,6 +346,8 @@ export const createListIssueReactionsTools = (
  */
 export const createListIssueCommentReactionsTools = (
   listIssueCommentReactions: (
+    owner: string,
+    repo: string,
     comment_id: number,
   ) => Promise<
     GithubResponse<RestEndpointMethodTypes['reactions']['listForIssueComment']['response']['data']>
@@ -324,12 +362,14 @@ export const createListIssueCommentReactionsTools = (
       - You want to read the reactions on an issue comment before responding
       Available reactions: +1, -1, laugh, confused, heart, hooray, rocket, eyes`,
     schema: z.object({
+      owner: z.string().describe('The owner of the repository'),
+      repo: z.string().describe('The name of the repository'),
       comment_id: z.number().describe('The ID of the comment to list reactions for'),
     }),
-    func: async ({ comment_id }) => {
+    func: async ({ owner, repo, comment_id }) => {
       try {
         logger.info('Listing GitHub issue comment reactions:', { comment_id });
-        const { success, data } = await listIssueCommentReactions(comment_id);
+        const { success, data } = await listIssueCommentReactions(owner, repo, comment_id);
         return {
           success,
           data: JSON.stringify(data, null, 2),
@@ -349,6 +389,8 @@ export const createListIssueCommentReactionsTools = (
  */
 export const createCreateReactionForIssueTool = (
   createIssueReaction: (
+    owner: string,
+    repo: string,
     issue_number: number,
     content: GitHubReactionType,
   ) => Promise<
@@ -365,6 +407,8 @@ export const createCreateReactionForIssueTool = (
     - Don't leave reactions to your own comments or issues
     Available reactions: +1, -1, laugh, confused, heart, hooray, rocket, eyes`,
     schema: z.object({
+      owner: z.string().describe('The owner of the repository'),
+      repo: z.string().describe('The name of the repository'),
       content: z
         .enum(['+1', '-1', 'laugh', 'confused', 'heart', 'hooray', 'rocket', 'eyes'])
         .describe('The type of reaction to add'),
@@ -372,10 +416,10 @@ export const createCreateReactionForIssueTool = (
         .number()
         .describe('The number of the issue to react to. Required if not reacting to a comment'),
     }),
-    func: async ({ content, issue_number }) => {
+    func: async ({ owner, repo, content, issue_number }) => {
       try {
         logger.info('Creating GitHub reaction:', { content, issue_number });
-        const { success, data } = await createIssueReaction(issue_number, content);
+        const { success, data } = await createIssueReaction(owner, repo, issue_number, content);
         return {
           success,
           data: JSON.stringify(data, null, 2),
@@ -395,6 +439,8 @@ export const createCreateReactionForIssueTool = (
  */
 export const createCreateReactionForIssueCommentTool = (
   createIssueCommentReaction: (
+    owner: string,
+    repo: string,
     comment_id: number,
     content: GitHubReactionType,
   ) => Promise<
@@ -411,6 +457,8 @@ export const createCreateReactionForIssueCommentTool = (
     - Don't leave reactions to your own comments or issues
     Available reactions: +1, -1, laugh, confused, heart, hooray, rocket, eyes`,
     schema: z.object({
+      owner: z.string().describe('The owner of the repository'),
+      repo: z.string().describe('The name of the repository'),
       content: z
         .enum(['+1', '-1', 'laugh', 'confused', 'heart', 'hooray', 'rocket', 'eyes'])
         .describe('The type of reaction to add'),
@@ -418,10 +466,15 @@ export const createCreateReactionForIssueCommentTool = (
         .number()
         .describe('The ID of the comment to react to. Required if not reacting to an issue'),
     }),
-    func: async ({ content, comment_id }) => {
+    func: async ({ owner, repo, content, comment_id }) => {
       try {
         logger.info('Creating GitHub reaction:', { content, comment_id });
-        const { success, data } = await createIssueCommentReaction(comment_id, content);
+        const { success, data } = await createIssueCommentReaction(
+          owner,
+          repo,
+          comment_id,
+          content,
+        );
         return {
           success,
           data: JSON.stringify(data, null, 2),
