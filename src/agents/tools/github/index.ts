@@ -133,7 +133,6 @@ export const createGitHubTools = async (
       createListIssuesTools(listIssues),
       createGetIssueTools(getIssue),
       createListIssueCommentsTools(listIssueComments),
-      createListIssueCommentsTools(listIssueComments),
       createListIssueReactionsTools(listIssueReactions),
       createListIssueCommentReactionsTools(listIssueCommentReactions),
       createCreateReactionForIssueTool(createIssueReaction),
