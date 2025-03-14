@@ -29,6 +29,7 @@ export const createGetCommitTool = (
     - The commit must be in the repository
     - The commit must be in the branch
     - The commit must be in the repository
+    - The commit must include the entire content of the file
 
     The commit must be in the repository.`,
     schema: z.object({
