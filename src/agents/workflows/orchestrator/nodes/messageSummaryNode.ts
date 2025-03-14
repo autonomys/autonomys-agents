@@ -5,18 +5,20 @@ import { LLMFactory } from '../../../../services/llm/factory.js';
 import { LLMConfiguration } from '../../../../services/llm/types.js';
 import { PruningParameters } from '../types.js';
 import { ChatPromptTemplate } from '@langchain/core/prompts';
-
-const logger = createLogger('message-summary-node');
+import { attachLogger } from '../../../../api/server.js';
 
 export const createMessageSummaryNode = ({
   modelConfig,
   messageSummaryPrompt,
   pruningParameters,
+  namespace,
 }: {
   modelConfig: LLMConfiguration;
   messageSummaryPrompt: ChatPromptTemplate;
   pruningParameters: PruningParameters;
+  namespace: string;
 }) => {
+  const logger = attachLogger(createLogger(`${namespace}-message-summary-node`), namespace);
   const runNode = async (state: OrchestratorStateType) => {
     logger.info('MessageSummary Node');
     logger.info('State size:', { size: state.messages.length });
