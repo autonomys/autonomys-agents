@@ -134,6 +134,13 @@ const orchestratorConfigSchema = z.object({
 
 const SERPAPI_API_KEY = z.string().optional();
 
+// Add API security configuration schema
+const apiSecurityConfigSchema = z.object({
+  API_TOKEN: z.string().min(32).optional(),
+  ENABLE_AUTH: z.boolean().default(false),
+  CORS_ALLOWED_ORIGINS: z.array(z.string()).default(['*']),
+});
+
 export const configSchema = z.object({
   twitterConfig: twitterConfigSchema,
   llmConfig: llmConfigSchema,
@@ -145,6 +152,7 @@ export const configSchema = z.object({
   slackConfig: slackConfigSchema,
   githubConfig: githubConfigSchema,
   notionConfig: notionConfigSchema,
+  apiSecurityConfig: apiSecurityConfigSchema,
   SERPAPI_API_KEY: SERPAPI_API_KEY,
   NODE_ENV: z.enum(['development', 'production', 'test']),
   API_PORT: z.number().int().positive().default(3001),

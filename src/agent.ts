@@ -75,7 +75,7 @@ const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
     : [];
 
   //Orchestrator config
-  const prompts = await createPrompts(character, { selfSchedule: true });
+  const prompts = await createPrompts(character);
 
   return {
     modelConfigurations: config.orchestratorConfig.model_configurations,
