@@ -57,7 +57,6 @@ import {
 // USER -> REACTIONS -> COMMENTS -> ISSUES_CONTRIBUTOR -> CODE_CONTRIBUTOR -> ALL
 // Meaning, if you create the tools with subset ISSUES_CONTRIBUTOR, you will have USER, REACTIONS and COMMENTS tools also available
 export enum GitHubToolsSubset {
-  NONE = 'none',
   USER = 'user',
   REACTIONS = 'reactions',
   COMMENTS = 'comments',
