@@ -1,41 +1,11 @@
 import { Scraper, SearchMode, Tweet } from 'agent-twitter-client';
-import { existsSync, readFileSync, writeFileSync } from 'fs';
 import { isValidTweet } from './convertFromTimeline.js';
 import { convertTimelineTweetToTweet } from './convertFromTimeline.js';
 import { TwitterApi } from './types.js';
 import { createLogger } from '../../utils/logger.js';
+import { createAuthenticatedScraper } from './auth.js';
+
 const logger = createLogger('twitter-api');
-
-const loadCookies = async (scraper: Scraper, cookiesPath: string): Promise<void> => {
-  logger.info('Loading existing cookies');
-  const cookies = readFileSync(cookiesPath, 'utf8');
-  try {
-    const parsedCookies = JSON.parse(cookies).map(
-      (
-        cookie: any, // eslint-disable-line @typescript-eslint/no-explicit-any
-      ) => `${cookie.key}=${cookie.value}; Domain=${cookie.domain}; Path=${cookie.path}`,
-    );
-    await scraper.setCookies(parsedCookies);
-    logger.info('Loaded existing cookies from file');
-  } catch (error) {
-    logger.error('Error loading cookies:', error);
-    throw error;
-  }
-};
-
-const login = async (
-  scraper: Scraper,
-  username: string,
-  password: string,
-  cookiesPath: string,
-): Promise<void> => {
-  logger.info('No existing cookies found, proceeding with login');
-  await scraper.login(username, password);
-
-  const newCookies = await scraper.getCookies();
-  writeFileSync(cookiesPath, JSON.stringify(newCookies, null, 2));
-  logger.info('New cookies saved to file');
-};
 
 /// Helper function
 const breakCircularReferences = (tweet: Tweet): Tweet => {
@@ -122,6 +92,7 @@ const getMyRecentReplies = async (
   }
   return replies;
 };
+
 const getReplyThread = (tweet: Tweet, conversation: Tweet[], maxThreadDepth: number): Tweet[] => {
   const replyThread: Tweet[] = [];
   let currentTweet = tweet;
@@ -276,31 +247,11 @@ export const createTwitterApi = async (
   password: string,
   cookiesPath: string = 'cookies.json',
 ): Promise<TwitterApi> => {
-  const scraper = new Scraper();
+  // Create an authenticated scraper using the new auth module
+  const scraper = await createAuthenticatedScraper(username, password, cookiesPath);
 
-  // Initialize authentication
-  if (existsSync(cookiesPath)) {
-    await loadCookies(scraper, cookiesPath);
-  } else {
-    await login(scraper, username, password, cookiesPath);
-  }
-
-  const isLoggedIn = await scraper.isLoggedIn();
-  logger.info(`Login status: ${isLoggedIn}`);
-
-  if (!isLoggedIn) {
-    logger.info(`Previous cookies is likely expired or invalid, logging in again`);
-    try {
-      await login(scraper, username, password, cookiesPath);
-      const isSecondLoginSuccessful = await scraper.isLoggedIn();
-      logger.info(`Login status: ${isSecondLoginSuccessful}`);
-      if (!isSecondLoginSuccessful) {
-        throw new Error('Failed to initialize Twitter Api - not logged in');
-      }
-    } catch {
-      throw new Error('Failed to initialize Twitter Api - not logged in');
-    }
-  }
+  // Get user ID after successful authentication
+  const userId = await scraper.getUserIdByScreenName(username);
 
   const cleanTimelineTweets = (tweets: unknown[], count: number) => {
     const cleanedTweets = tweets
@@ -315,8 +266,6 @@ export const createTwitterApi = async (
         : cleanedTweets;
     return trimmedTweets;
   };
-
-  const userId = await scraper.getUserIdByScreenName(username);
 
   return {
     scraper,
