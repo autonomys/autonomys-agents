@@ -170,3 +170,200 @@ export const createGetDefaultBranchTool = (
       }
     },
   });
+
+/**
+ * Creates a tool to get a specific branch of a repository
+ */
+export const createGetRepoBranchTool = (
+  getRepoBranch: (
+    owner: string,
+    repo: string,
+    branch: string,
+  ) => Promise<GithubResponse<RestEndpointMethodTypes['repos']['getBranch']['response']['data']>>,
+) =>
+  new DynamicStructuredTool({
+    name: 'get_repo_branch',
+    description: 'Gets a specific branch of a repository',
+    schema: z.object({
+      owner: z.string().describe('The owner of the repository'),
+      repo: z.string().describe('The name of the repository'),
+      branch: z.string().describe('The name of the branch to get (e.g., main, master, etc.)'),
+    }),
+    func: async ({ owner, repo, branch }) => {
+      try {
+        const { success, data } = await getRepoBranch(owner, repo, branch);
+        return {
+          success,
+          data: JSON.stringify(data, null, 2),
+        };
+      } catch (error) {
+        logger.error(`Error getting branch ${branch} for repository ${owner}/${repo}:`, error);
+        return {
+          success: false,
+          error: error as Error,
+        };
+      }
+    },
+  });
+
+/**
+ * Creates a tool to get the content of a specific branch of a repository
+ */
+export const createGetRepoRefContentTool = (
+  getRepoRefContent: (
+    owner: string,
+    repo: string,
+    path: string,
+    ref: string,
+  ) => Promise<GithubResponse<RestEndpointMethodTypes['repos']['getContent']['response']['data']>>,
+) =>
+  new DynamicStructuredTool({
+    name: 'get_repo_ref_content',
+    description: 'Gets the content of a specific branch of a repository',
+    schema: z.object({
+      owner: z.string().describe('The owner of the repository'),
+      repo: z.string().describe('The name of the repository'),
+      path: z.string().describe('The path to the file to get'),
+      ref: z.string().describe('The reference to the branch to get (e.g., main, master, etc.)'),
+    }),
+    func: async ({ owner, repo, path, ref }) => {
+      try {
+        const { success, data } = await getRepoRefContent(owner, repo, path, ref);
+        // The content is Base64 encoded
+        if (data && 'content' in data)
+          return {
+            success,
+            data: Buffer.from(data.content, 'base64').toString(),
+          };
+        // The content is likely a directory
+        return {
+          success,
+          data: JSON.stringify(data, null, 2),
+        };
+      } catch (error) {
+        logger.error(
+          `Error getting content for repository ${owner}/${repo} at path ${path} and ref ${ref}:`,
+          error,
+        );
+        return {
+          success: false,
+          error: error as Error,
+        };
+      }
+    },
+  });
+
+/**
+ * Creates a tool to list contributors to a repository
+ */
+export const createListContributorsTool = (
+  listContributors: (
+    owner: string,
+    repo: string,
+  ) => Promise<
+    GithubResponse<RestEndpointMethodTypes['repos']['listContributors']['response']['data']>
+  >,
+) =>
+  new DynamicStructuredTool({
+    name: 'list_contributors',
+    description: 'Lists contributors to a repository',
+    schema: z.object({
+      owner: z.string().describe('The owner of the repository'),
+      repo: z.string().describe('The name of the repository'),
+    }),
+    func: async ({ owner, repo }) => {
+      try {
+        const { success, data } = await listContributors(owner, repo);
+        return {
+          success,
+          data: JSON.stringify(data, null, 2),
+        };
+      } catch (error) {
+        logger.error(`Error listing contributors for repository ${owner}/${repo}:`, error);
+        return {
+          success: false,
+          error: error as Error,
+        };
+      }
+    },
+  });
+
+/**
+ * Creates a tool to add a collaborator to a repository
+ */
+export const createAddCollaboratorTool = (
+  addCollaborator: (
+    owner: string,
+    repo: string,
+    username: string,
+  ) => Promise<
+    GithubResponse<RestEndpointMethodTypes['repos']['addCollaborator']['response']['data']>
+  >,
+) =>
+  new DynamicStructuredTool({
+    name: 'add_collaborator',
+    description: 'Adds a collaborator to a repository',
+    schema: z.object({
+      owner: z.string().describe('The owner of the repository'),
+      repo: z.string().describe('The name of the repository'),
+      username: z.string().describe('The username of the collaborator to add'),
+    }),
+    func: async ({ owner, repo, username }) => {
+      try {
+        const { success, data } = await addCollaborator(owner, repo, username);
+        return {
+          success,
+          data: JSON.stringify(data, null, 2),
+        };
+      } catch (error) {
+        logger.error(
+          `Error adding collaborator ${username} to repository ${owner}/${repo}:`,
+          error,
+        );
+        return {
+          success: false,
+          error: error as Error,
+        };
+      }
+    },
+  });
+
+/**
+ * Creates a tool to remove a collaborator from a repository
+ */
+export const createRemoveCollaboratorTool = (
+  removeCollaborator: (
+    owner: string,
+    repo: string,
+    username: string,
+  ) => Promise<
+    GithubResponse<RestEndpointMethodTypes['repos']['removeCollaborator']['response']['data']>
+  >,
+) =>
+  new DynamicStructuredTool({
+    name: 'remove_collaborator',
+    description: 'Removes a collaborator from a repository',
+    schema: z.object({
+      owner: z.string().describe('The owner of the repository'),
+      repo: z.string().describe('The name of the repository'),
+      username: z.string().describe('The username of the collaborator to remove'),
+    }),
+    func: async ({ owner, repo, username }) => {
+      try {
+        const { success, data } = await removeCollaborator(owner, repo, username);
+        return {
+          success,
+          data: JSON.stringify(data, null, 2),
+        };
+      } catch (error) {
+        logger.error(
+          `Error removing collaborator ${username} from repository ${owner}/${repo}:`,
+          error,
+        );
+        return {
+          success: false,
+          error: error as Error,
+        };
+      }
+    },
+  });

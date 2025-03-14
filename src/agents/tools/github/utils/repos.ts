@@ -62,7 +62,77 @@ export const getDefaultBranch = async (
     owner,
     repo,
   });
+  return {
+    success: true,
+    data: response.data,
+  };
+};
 
+export const getRepoBranch = async (
+  client: GithubClient,
+  owner: string,
+  repo: string,
+  branch: string,
+): Promise<GithubResponse<RestEndpointMethodTypes['repos']['getBranch']['response']['data']>> => {
+  const response = await client.repos.getBranch({ owner, repo, branch });
+  return {
+    success: true,
+    data: response.data,
+  };
+};
+
+export const getRepoRefContent = async (
+  client: GithubClient,
+  owner: string,
+  repo: string,
+  path: string,
+  ref: string,
+): Promise<GithubResponse<RestEndpointMethodTypes['repos']['getContent']['response']['data']>> => {
+  const { data } = await client.repos.getContent({ owner, repo, path, ref });
+  return {
+    success: true,
+    data: data,
+  };
+};
+
+export const listContributors = async (
+  client: GithubClient,
+  owner: string,
+  repo: string,
+): Promise<
+  GithubResponse<RestEndpointMethodTypes['repos']['listContributors']['response']['data']>
+> => {
+  const response = await client.repos.listContributors({ owner, repo });
+  return {
+    success: true,
+    data: response.data,
+  };
+};
+
+export const addCollaborator = async (
+  client: GithubClient,
+  owner: string,
+  repo: string,
+  username: string,
+): Promise<
+  GithubResponse<RestEndpointMethodTypes['repos']['addCollaborator']['response']['data']>
+> => {
+  const response = await client.repos.addCollaborator({ owner, repo, username });
+  return {
+    success: true,
+    data: response.data,
+  };
+};
+
+export const removeCollaborator = async (
+  client: GithubClient,
+  owner: string,
+  repo: string,
+  username: string,
+): Promise<
+  GithubResponse<RestEndpointMethodTypes['repos']['removeCollaborator']['response']['data']>
+> => {
+  const response = await client.repos.removeCollaborator({ owner, repo, username });
   return {
     success: true,
     data: response.data,

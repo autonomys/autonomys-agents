@@ -135,6 +135,16 @@ export const githubClient = async (token: string) => {
   const createFork = async (owner: string, repo: string) => Repos.createFork(client, owner, repo);
   const getDefaultBranch = async (owner: string, repo: string) =>
     Repos.getDefaultBranch(client, owner, repo);
+  const getRepoBranch = async (owner: string, repo: string, branch: string) =>
+    Repos.getRepoBranch(client, owner, repo, branch);
+  const getRepoRefContent = async (owner: string, repo: string, path: string, ref: string) =>
+    Repos.getRepoRefContent(client, owner, repo, path, ref);
+  const listContributors = async (owner: string, repo: string) =>
+    Repos.listContributors(client, owner, repo);
+  const addCollaborator = async (owner: string, repo: string, username: string) =>
+    Repos.addCollaborator(client, owner, repo, username);
+  const removeCollaborator = async (owner: string, repo: string, username: string) =>
+    Repos.removeCollaborator(client, owner, repo, username);
 
   // Git
   const createBranch = async (
@@ -185,8 +195,13 @@ export const githubClient = async (token: string) => {
     listOrgRepos,
     listForks,
     createFork,
-
     getDefaultBranch,
+    getRepoBranch,
+    getRepoRefContent,
+    listContributors,
+    addCollaborator,
+    removeCollaborator,
+
     createBranch,
     createCommit,
   };

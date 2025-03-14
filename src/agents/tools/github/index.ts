@@ -35,10 +35,16 @@ import {
   createSearchPullRequestsTools,
 } from './prs.js';
 import {
+  createAddCollaboratorTool,
   createForkRepoTool,
+  createGetDefaultBranchTool,
+  createGetRepoBranchTool,
+  createGetRepoRefContentTool,
+  createListContributorsTool,
   createListForksTool,
   createListOrgReposTool,
   createListUserReposTool,
+  createRemoveCollaboratorTool,
 } from './repos.js';
 import { createGetAuthenticatedUserTool, createListAuthenticatedUserReposTool } from './users.js';
 import { githubClient } from './utils/client.js';
@@ -239,8 +245,26 @@ export const createGitHubTools = async (
     // Repos
     const listForks = (owner: string, repo: string) => github.listForks(owner, repo);
     const createFork = (owner: string, repo: string) => github.createFork(owner, repo);
-    tools.push(createListForksTool(listForks), createForkRepoTool(createFork));
-
+    const getDefaultBranch = (owner: string, repo: string) => github.getDefaultBranch(owner, repo);
+    const getRepoBranch = (owner: string, repo: string, branch: string) =>
+      github.getRepoBranch(owner, repo, branch);
+    const getRepoRefContent = (owner: string, repo: string, path: string, ref: string) =>
+      github.getRepoRefContent(owner, repo, path, ref);
+    const listContributors = (owner: string, repo: string) => github.listContributors(owner, repo);
+    const addCollaborator = (owner: string, repo: string, username: string) =>
+      github.addCollaborator(owner, repo, username);
+    const removeCollaborator = (owner: string, repo: string, username: string) =>
+      github.removeCollaborator(owner, repo, username);
+    tools.push(
+      createListForksTool(listForks),
+      createForkRepoTool(createFork),
+      createGetDefaultBranchTool(getDefaultBranch),
+      createGetRepoBranchTool(getRepoBranch),
+      createGetRepoRefContentTool(getRepoRefContent),
+      createListContributorsTool(listContributors),
+      createAddCollaboratorTool(addCollaborator),
+      createRemoveCollaboratorTool(removeCollaborator),
+    );
     // Git
     const createBranch = (owner: string, repo: string, branchName: string, sourceBranch: string) =>
       github.createBranch(owner, repo, branchName, sourceBranch);
