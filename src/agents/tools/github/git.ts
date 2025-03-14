@@ -28,7 +28,6 @@ export const createGetCommitTool = (
     - The commit must exist
     - The commit must be in the repository
     - The commit must be in the branch
-    - The commit must be in the repository
     - The commit must include the entire content of the file
 
     The commit must be in the repository.`,
@@ -76,7 +75,6 @@ export const createGetRefTool = (
     - The reference must exist
     - The reference must be in the repository
     - The reference must be in the branch
-    - The reference must be in the repository
 
     The reference must be in the repository.`,
     schema: z.object({
