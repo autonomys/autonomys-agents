@@ -2,7 +2,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { createLogger } from '../../../../utils/logger.js';
 import { ScheduledTask, TaskQueue } from './types.js';
 import { broadcastTaskUpdate } from '../../../../api/server.js';
-import * as DbController from './db/dbController.js';
+import * as dbController from './db/dbController.js';
 
 const logger = createLogger('task-scheduler');
 
@@ -21,18 +21,18 @@ export const createTaskQueue = (namespace: string): TaskQueue => {
   let currentTask: ScheduledTask | undefined = undefined;
 
   try {
-    const dbProcessingTasks = DbController.getTasks({
+    const dbProcessingTasks = dbController.getTasks({
       namespace,
       status: 'processing',
     });
 
-    const dbScheduledTasks = DbController.getTasks({
+    const dbScheduledTasks = dbController.getTasks({
       namespace,
       status: 'scheduled',
       limit: MAX_SCHEDULED_TASKS,
     });
 
-    const dbCompletedTasks = DbController.getTasks({
+    const dbCompletedTasks = dbController.getTasks({
       namespace,
       status: ['completed', 'failed'],
       limit: MAX_COMPLETED_TASKS,
@@ -58,7 +58,7 @@ export const createTaskQueue = (namespace: string): TaskQueue => {
         task.status = 'scheduled';
         scheduledTasks.push(task);
 
-        DbController.updateTaskStatus({
+        dbController.updateTaskStatus({
           id: task.id,
           namespace,
           status: 'scheduled',
@@ -114,7 +114,7 @@ export const createTaskQueue = (namespace: string): TaskQueue => {
       scheduledTasks.sort((a, b) => a.scheduledFor.getTime() - b.scheduledFor.getTime());
 
       try {
-        DbController.createTask({
+        dbController.createTask({
           id: taskId,
           namespace,
           message,
@@ -160,7 +160,7 @@ export const createTaskQueue = (namespace: string): TaskQueue => {
             taskId: nextTask.id,
           });
 
-          DbController.markTaskAsProcessing(namespace, nextTask.id);
+          dbController.markTaskAsProcessing(namespace, nextTask.id);
         } catch (error) {
           logger.error(
             `Failed to update task status in database: ${error instanceof Error ? error.message : String(error)}`,
@@ -229,7 +229,7 @@ export const createTaskQueue = (namespace: string): TaskQueue => {
       try {
         switch (status) {
           case 'completed':
-            DbController.markTaskAsCompleted(namespace, id, result);
+            dbController.markTaskAsCompleted(namespace, id, result);
             break;
 
           case 'failed':
@@ -239,11 +239,11 @@ export const createTaskQueue = (namespace: string): TaskQueue => {
                 : result
                   ? JSON.stringify(result)
                   : 'Task failed without specific error';
-            DbController.markTaskAsFailed(namespace, id, errorMsg);
+            dbController.markTaskAsFailed(namespace, id, errorMsg);
             break;
 
           case 'processing':
-            DbController.markTaskAsProcessing(namespace, id);
+            dbController.markTaskAsProcessing(namespace, id);
             break;
 
           default:
@@ -267,7 +267,7 @@ export const createTaskQueue = (namespace: string): TaskQueue => {
         completedTasks.push(deletedTask);
 
         try {
-          DbController.deleteTask(namespace, id);
+          dbController.deleteTask(namespace, id);
         } catch (error) {
           logger.error(
             `Failed to delete task from database: ${error instanceof Error ? error.message : String(error)}`,
