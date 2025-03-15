@@ -198,6 +198,10 @@ export const createExperienceVectorDbQueryContentTool = (
           sqlQuery,
           error: error.message,
         });
+        return {
+          success: false,
+          message: `SQL query rejected: ${error}`,
+        };
       }
     },
   });
