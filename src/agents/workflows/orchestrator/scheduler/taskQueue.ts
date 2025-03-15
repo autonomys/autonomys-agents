@@ -245,7 +245,7 @@ export const createTaskQueue = (namespace: string): TaskQueue => {
           case 'processing':
             DbController.markTaskAsProcessing(namespace, id);
             break;
-            
+
           default:
             throw new Error(`Unknown task status: ${status}`);
         }

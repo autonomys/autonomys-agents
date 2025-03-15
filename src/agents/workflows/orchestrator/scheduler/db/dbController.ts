@@ -3,11 +3,11 @@ import { createLogger } from '../../../../../utils/logger.js';
 import { getSchedulerDatabase } from './schedulerDb.js';
 import {
   CreateTaskParams,
-  ScheduledTask,
   GetTasksParams,
+  ScheduledTask,
+  TaskRow,
   TaskStatus,
   UpdateTaskStatusParams,
-  TaskRow,
 } from '../types.js';
 
 const logger = createLogger('task-repository');
