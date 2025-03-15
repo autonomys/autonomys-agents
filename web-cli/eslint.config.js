@@ -48,8 +48,6 @@ export default [
         // Node.js globals
         process: 'readonly',
         NodeJS: 'readonly',
-
-
       },
     },
     plugins: {
