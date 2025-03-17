@@ -4,6 +4,7 @@ characters/*
 .google/
 memories/
 !src/config/
+certs/
 # Python bytecode
 __pycache__/
 *.py[cod]
