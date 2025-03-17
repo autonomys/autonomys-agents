@@ -24,7 +24,7 @@ Autonomys Agents is an **EXPERIMENTAL** framework for building AI agents. Curren
    - Update `config.yaml` with applicable configuration
    - Update `{your-character-name}.yaml` with applicable personality configuration (See Character System below).
 4. Agent API
-   - The Agent API uses HTTP/2 protocol exclusively, requiring SSL certificates. Generate these by running `yarn generate-certs <your-character-name>`
+   - The Agent API uses HTTP/2 protocol exclusively, requiring SSL certificates. Generate these by running `yarn generate-certs`
 5. Run your character:
    - For dev purposes in watch mode: `yarn dev <your-character-name>`
    - For production build and run: `yarn start <your-character-name>`
