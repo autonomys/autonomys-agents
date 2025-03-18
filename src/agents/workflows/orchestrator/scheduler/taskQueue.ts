@@ -1,6 +1,6 @@
 import { v4 as uuidv4 } from 'uuid';
 import { createLogger } from '../../../../utils/logger.js';
-import { ScheduledTask, TaskQueue } from './types.js';
+import { Task, TaskQueue } from './types.js';
 import { broadcastTaskUpdate } from '../../../../api/server.js';
 import * as dbController from './db/dbController.js';
 
@@ -16,9 +16,9 @@ export const createTaskQueue = (namespace: string): TaskQueue => {
     return taskQueues.get(namespace) as TaskQueue;
   }
 
-  const scheduledTasks: ScheduledTask[] = [];
-  const completedTasks: ScheduledTask[] = [];
-  let currentTask: ScheduledTask | undefined = undefined;
+  const scheduledTasks: Task[] = [];
+  const completedTasks: Task[] = [];
+  let currentTask: Task | undefined = undefined;
 
   try {
     const dbProcessingTasks = dbController.getTasks({
@@ -39,7 +39,7 @@ export const createTaskQueue = (namespace: string): TaskQueue => {
     });
 
     for (const dbTask of [...dbScheduledTasks, ...dbProcessingTasks, ...dbCompletedTasks]) {
-      const task: ScheduledTask = {
+      const task: Task = {
         id: dbTask.id,
         namespace,
         message: dbTask.message,
@@ -94,11 +94,11 @@ export const createTaskQueue = (namespace: string): TaskQueue => {
       );
     },
 
-    scheduleTask(message: string, executeAt: Date): ScheduledTask {
+    scheduleTask(message: string, executeAt: Date): Task {
       const taskId = uuidv4();
       const now = new Date();
 
-      const task: ScheduledTask = {
+      const task: Task = {
         id: taskId,
         namespace,
         message,
@@ -135,7 +135,7 @@ export const createTaskQueue = (namespace: string): TaskQueue => {
       return task;
     },
 
-    getNextDueTask(): ScheduledTask | undefined {
+    getNextDueTask(): Task | undefined {
       if (currentTask) {
         logger.info(`Cannot get next task, a task is already running in namespace: ${namespace}`, {
           runningTaskId: currentTask.id,
@@ -187,8 +187,8 @@ export const createTaskQueue = (namespace: string): TaskQueue => {
       return undefined;
     },
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    updateTaskStatus(id: string, status: ScheduledTask['status'], result?: any): void {
-      let task: ScheduledTask | undefined;
+    updateTaskStatus(id: string, status: Task['status'], result?: any): void {
+      let task: Task | undefined;
       let isCurrentTask = false;
 
       if (currentTask?.id === id) {

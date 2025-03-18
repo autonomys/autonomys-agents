@@ -1,7 +1,7 @@
 import { SqliteService } from '../../../../services/sqlite/SqliteDB.js';
 
 export type TaskStatus = 'scheduled' | 'processing' | 'completed' | 'failed' | 'deleted';
-export interface ScheduledTask {
+export interface Task {
   id: string;
   namespace: string;
   message: string;
@@ -15,26 +15,26 @@ export interface ScheduledTask {
 }
 
 export interface TaskQueue {
-  currentTask?: ScheduledTask;
-  scheduledTasks: ScheduledTask[];
-  completedTasks: ScheduledTask[];
+  currentTask?: Task;
+  scheduledTasks: Task[];
+  completedTasks: Task[];
 
-  scheduleTask: (message: string, executeAt: Date) => ScheduledTask;
+  scheduleTask: (message: string, executeAt: Date) => Task;
 
-  getNextDueTask: () => ScheduledTask | undefined;
+  getNextDueTask: () => Task | undefined;
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  updateTaskStatus: (id: string, status: ScheduledTask['status'], result?: any) => void;
+  updateTaskStatus: (id: string, status: Task['status'], result?: any) => void;
 
   deleteTask: (id: string) => void;
 
   getAllTasks: (limit?: number) => {
-    current: ScheduledTask | undefined;
-    scheduled: ScheduledTask[];
-    completed: ScheduledTask[];
+    current: Task | undefined;
+    scheduled: Task[];
+    completed: Task[];
   };
 
-  getTimeUntilNextTask: () => { nextTask?: ScheduledTask; msUntilNext: number | null };
+  getTimeUntilNextTask: () => { nextTask?: Task; msUntilNext: number | null };
 }
 
 export interface SchedulerDatabase {
