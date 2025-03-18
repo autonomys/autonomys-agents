@@ -6,6 +6,7 @@ import { orchestratorRunners } from '../../workflows/registration.js';
 const logger = createLogger('scheduler-tool');
 
 // Helper function to serialize dates in task objects
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const serializeTaskDates = (task: any) => {
   if (!task) return task;
 
@@ -26,6 +27,7 @@ const serializeTaskDates = (task: any) => {
 };
 
 // Helper function to serialize an array of tasks
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const serializeTaskList = (tasks: any[]) => {
   return tasks.map(serializeTaskDates);
 };
@@ -153,8 +155,10 @@ export const createSchedulerGetCompletedTasksTool = () =>
         - Use to review your upcoming work
         - Helpful when you need to prioritize or manage your schedule
       `,
-    schema: z.object({}),
-    func: async () => {
+    schema: z.object({
+      limit: z.number().optional().describe('The maximum number of completed tasks to retrieve'),
+    }),
+    func: async ({ limit }) => {
       try {
         const runner = orchestratorRunners.get('orchestrator');
         if (!runner) {
@@ -163,7 +167,7 @@ export const createSchedulerGetCompletedTasksTool = () =>
             error: 'Orchestrator runner not found',
           };
         }
-        const tasks = runner.getTaskQueue().completed;
+        const tasks = runner.getTaskQueue(limit).completed;
 
         logger.info('Retrieved task list', {
           completedTaskCount: tasks.length,

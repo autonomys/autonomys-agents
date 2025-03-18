@@ -89,7 +89,9 @@ export const createTaskQueue = (namespace: string): TaskQueue => {
       );
     },
     get completedTasks() {
-      return [...completedTasks];
+      return [...completedTasks].sort(
+        (a, b) => (a.completedAt?.getTime() || 0) - (b.completedAt?.getTime() || 0),
+      );
     },
 
     scheduleTask(message: string, executeAt: Date): ScheduledTask {
@@ -278,11 +280,11 @@ export const createTaskQueue = (namespace: string): TaskQueue => {
       broadcastTaskUpdate(namespace);
     },
 
-    getAllTasks() {
+    getAllTasks(limit?: number) {
       return {
         current: currentTask,
         scheduled: this.scheduledTasks,
-        completed: [...completedTasks].slice(-MAX_COMPLETED_TASKS),
+        completed: [...completedTasks].slice(-(limit || MAX_COMPLETED_TASKS)),
       };
     },
 

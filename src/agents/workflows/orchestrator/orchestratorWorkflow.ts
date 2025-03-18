@@ -84,7 +84,7 @@ export type OrchestratorRunner = Readonly<{
   // Scheduled task management methods
   scheduleTask: (message: string, executeAt: Date) => ScheduledTask;
   getNextDueTask: () => ScheduledTask | undefined;
-  getTaskQueue: () => ReturnType<TaskQueue['getAllTasks']>;
+  getTaskQueue: (limit?: number) => ReturnType<TaskQueue['getAllTasks']>;
   getTimeUntilNextTask: () => { nextTask?: ScheduledTask; msUntilNext: number | null };
   deleteTask: (id: string) => void;
 }>;
@@ -246,8 +246,8 @@ export const createOrchestratorRunner = async (
       return taskQueue.getNextDueTask();
     },
 
-    getTaskQueue: () => {
-      return taskQueue.getAllTasks();
+    getTaskQueue: (limit?: number) => {
+      return taskQueue.getAllTasks(limit);
     },
 
     getTimeUntilNextTask: () => {

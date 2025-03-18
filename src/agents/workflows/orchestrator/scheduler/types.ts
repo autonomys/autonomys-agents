@@ -28,7 +28,7 @@ export interface TaskQueue {
 
   deleteTask: (id: string) => void;
 
-  getAllTasks: () => {
+  getAllTasks: (limit?: number) => {
     current: ScheduledTask | undefined;
     scheduled: ScheduledTask[];
     completed: ScheduledTask[];
