@@ -28,15 +28,6 @@ Autonomys Agents is an **EXPERIMENTAL** framework for building AI agents. Curren
 5. Run your character:
    - For dev purposes in watch mode: `yarn dev <your-character-name>`
    - For production build and run: `yarn start <your-character-name>`
-   - For interactive CLI interface: `yarn cli <your-character-name>`
-
-## Interactive CLI Interface 
-
-The framework includes an interactive terminal-based UI for managing and monitoring your AI agent. To start the interface:
-
-```bash
-yarn cli <your-character-name>
-```
 
 ## Interactive Web CLI Interface
 
@@ -74,7 +65,7 @@ A modern web-based interface for interacting with your agent. To start:
    yarn start
    ```
 
-## Running with dev:all (Web-CLI ONLY)
+## Running with dev:all (Web-CLI And Agent)
 
 The `dev:all` command launches both the main application and web interface concurrently:
 
