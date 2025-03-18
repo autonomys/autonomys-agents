@@ -1,3 +1,15 @@
+export interface InstallOptions {
+  cid?: string;
+  version?: string;
+  local?: boolean;
+}
+
+export interface ToolInstallInfo {
+  name: string;
+  cid: string;
+  version?: string;
+}
+
 // Tool Registry Types
 export interface ToolMetadata {
   name: string;
