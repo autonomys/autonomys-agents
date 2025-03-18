@@ -5,6 +5,33 @@ import { orchestratorRunners } from '../../workflows/registration.js';
 
 const logger = createLogger('scheduler-tool');
 
+// Helper function to serialize dates in task objects
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const serializeTaskDates = (task: any) => {
+  if (!task) return task;
+
+  const serializedTask = { ...task };
+  if (serializedTask.createdAt instanceof Date) {
+    serializedTask.createdAt = serializedTask.createdAt.toISOString();
+  }
+  if (serializedTask.scheduledFor instanceof Date) {
+    serializedTask.scheduledFor = serializedTask.scheduledFor.toISOString();
+  }
+  if (serializedTask.startedAt instanceof Date) {
+    serializedTask.startedAt = serializedTask.startedAt.toISOString();
+  }
+  if (serializedTask.completedAt instanceof Date) {
+    serializedTask.completedAt = serializedTask.completedAt.toISOString();
+  }
+  return serializedTask;
+};
+
+// Helper function to serialize an array of tasks
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const serializeTaskList = (tasks: any[]) => {
+  return tasks.map(serializeTaskDates);
+};
+
 export const createSchedulerAddTaskTool = () =>
   new DynamicStructuredTool({
     name: 'scheduler_add_task',
@@ -74,54 +101,6 @@ export const createSchedulerAddTaskTool = () =>
     },
   });
 
-export const createSchedulerGetTasksTool = () =>
-  new DynamicStructuredTool({
-    name: 'scheduler_get_tasks',
-    description: `
-      Retrieve your current task list including scheduled, current, and completed tasks.
-      Use this tool to check what tasks are already scheduled to avoid creating duplicate tasks.
-      
-      USAGE GUIDANCE:
-      - Check this before scheduling similar tasks that might already be planned
-      - Use to review your upcoming work
-      - Helpful when you need to prioritize or manage your schedule
-    `,
-    schema: z.object({}),
-    func: async () => {
-      try {
-        const runner = orchestratorRunners.get('orchestrator');
-        if (!runner) {
-          return {
-            success: false,
-            error: 'Orchestrator runner not found',
-          };
-        }
-        const tasks = runner.getTaskQueue();
-
-        logger.info('Retrieved task list', {
-          currentTaskCount: tasks.current ? 1 : 0,
-          scheduledTaskCount: tasks.scheduled.length,
-          completedTaskCount: tasks.completed.length,
-        });
-
-        return {
-          success: true,
-          tasks: tasks,
-        };
-      } catch (error) {
-        logger.error('Failed to get tasks', {
-          error: error instanceof Error ? error.message : String(error),
-        });
-
-        return {
-          success: false,
-          error:
-            error instanceof Error ? error.message : 'Unknown error occurred when retrieving tasks',
-        };
-      }
-    },
-  });
-
 export const createSchedulerDeleteTasksTool = () =>
   new DynamicStructuredTool({
     name: 'scheduler_delete_task',
@@ -164,10 +143,152 @@ export const createSchedulerDeleteTasksTool = () =>
     },
   });
 
+export const createSchedulerGetCompletedTasksTool = () =>
+  new DynamicStructuredTool({
+    name: 'scheduler_get_completed_tasks',
+    description: `
+        Retrieve your completed task list.
+        Use this tool to check what tasks are already scheduled to avoid creating duplicate tasks.
+        
+        USAGE GUIDANCE:
+        - Check this before scheduling similar tasks that might already be planned
+        - Use to review your upcoming work
+        - Helpful when you need to prioritize or manage your schedule
+      `,
+    schema: z.object({
+      limit: z.number().optional().describe('The maximum number of completed tasks to retrieve'),
+    }),
+    func: async ({ limit }) => {
+      try {
+        const runner = orchestratorRunners.get('orchestrator');
+        if (!runner) {
+          return {
+            success: false,
+            error: 'Orchestrator runner not found',
+          };
+        }
+        const tasks = runner.getTaskQueue(limit).completed;
+
+        logger.info('Retrieved task list', {
+          completedTaskCount: tasks.length,
+        });
+
+        return {
+          success: true,
+          tasks: serializeTaskList(tasks),
+        };
+      } catch (error) {
+        logger.error('Failed to get tasks', {
+          error: error instanceof Error ? error.message : String(error),
+        });
+
+        return {
+          success: false,
+          error:
+            error instanceof Error ? error.message : 'Unknown error occurred when retrieving tasks',
+        };
+      }
+    },
+  });
+
+export const createSchedulerGetScheduledTasksTool = () =>
+  new DynamicStructuredTool({
+    name: 'scheduler_get_scheduled_tasks',
+    description: `
+          Retrieve your scheduled task list.
+          Use this tool to check what tasks are already scheduled to avoid creating duplicate tasks.
+          
+          USAGE GUIDANCE:
+          - Check this before scheduling similar tasks that might already be planned
+          - Use to review your upcoming work
+          - Helpful when you need to prioritize or manage your schedule
+        `,
+    schema: z.object({}),
+    func: async () => {
+      try {
+        const runner = orchestratorRunners.get('orchestrator');
+        if (!runner) {
+          return {
+            success: false,
+            error: 'Orchestrator runner not found',
+          };
+        }
+        const tasks = runner.getTaskQueue().scheduled;
+
+        logger.info('Retrieved task list', {
+          scheduledTaskCount: tasks.length,
+        });
+
+        return {
+          success: true,
+          tasks: serializeTaskList(tasks),
+        };
+      } catch (error) {
+        logger.error('Failed to get tasks', {
+          error: error instanceof Error ? error.message : String(error),
+        });
+
+        return {
+          success: false,
+          error:
+            error instanceof Error ? error.message : 'Unknown error occurred when retrieving tasks',
+        };
+      }
+    },
+  });
+
+export const createSchedulerGetCurrentTaskTool = () =>
+  new DynamicStructuredTool({
+    name: 'scheduler_get_current_task',
+    description: `
+            Retrieve your current task that is running.
+            Use this tool to check what task is currently being executed.
+            
+            USAGE GUIDANCE:
+            - Check this before scheduling similar tasks that might already be planned
+            - Use to review your upcoming work
+            - Helpful when you need to prioritize or manage your schedule
+          `,
+    schema: z.object({}),
+    func: async () => {
+      try {
+        const runner = orchestratorRunners.get('orchestrator');
+        if (!runner) {
+          return {
+            success: false,
+            error: 'Orchestrator runner not found',
+          };
+        }
+        const task = runner.getTaskQueue().current;
+
+        logger.info('Retrieved task list', {
+          currentTask: task,
+        });
+
+        return {
+          success: true,
+          task: serializeTaskDates(task),
+        };
+      } catch (error) {
+        logger.error('Failed to get tasks', {
+          error: error instanceof Error ? error.message : String(error),
+        });
+
+        return {
+          success: false,
+          error:
+            error instanceof Error ? error.message : 'Unknown error occurred when retrieving tasks',
+        };
+      }
+    },
+  });
+
 export const createAllSchedulerTools = () => {
   return [
     createSchedulerAddTaskTool(),
-    createSchedulerGetTasksTool(),
     createSchedulerDeleteTasksTool(),
+    createSchedulerGetCompletedTasksTool(),
+    createSchedulerGetScheduledTasksTool(),
+    createSchedulerGetCurrentTaskTool(),
   ];
 };

@@ -4,7 +4,7 @@ import { getSchedulerDatabase } from './schedulerDb.js';
 import {
   CreateTaskParams,
   GetTasksParams,
-  ScheduledTask,
+  Task,
   TaskRow,
   TaskStatus,
   UpdateTaskStatusParams,
@@ -13,7 +13,7 @@ import {
 const logger = createLogger('task-repository');
 const schedulerDb = getSchedulerDatabase();
 
-const rowToTask = (row: TaskRow, namespace: string): ScheduledTask => {
+const rowToTask = (row: TaskRow, namespace: string): Task => {
   return {
     id: row.id,
     namespace,
@@ -28,7 +28,7 @@ const rowToTask = (row: TaskRow, namespace: string): ScheduledTask => {
   };
 };
 
-export const createTask = (params: CreateTaskParams): ScheduledTask => {
+export const createTask = (params: CreateTaskParams): Task => {
   schedulerDb.ensureNamespaceTable(params.namespace);
 
   const db = schedulerDb.getSqliteService().getDatabase();
@@ -60,11 +60,7 @@ export const createTask = (params: CreateTaskParams): ScheduledTask => {
   }
 };
 
-export const scheduleTask = (
-  namespace: string,
-  message: string,
-  scheduledFor: Date,
-): ScheduledTask => {
+export const scheduleTask = (namespace: string, message: string, scheduledFor: Date): Task => {
   const taskId = uuidv4();
   const now = new Date();
 
@@ -157,7 +153,7 @@ export const deleteTask = (namespace: string, taskId: string): void => {
   }
 };
 
-export const getTaskById = (namespace: string, taskId: string): ScheduledTask | null => {
+export const getTaskById = (namespace: string, taskId: string): Task | null => {
   schedulerDb.ensureNamespaceTable(namespace);
 
   const db = schedulerDb.getSqliteService().getDatabase();
@@ -178,7 +174,7 @@ export const getTaskById = (namespace: string, taskId: string): ScheduledTask | 
   }
 };
 
-export const getTasks = (params: GetTasksParams): ScheduledTask[] => {
+export const getTasks = (params: GetTasksParams): Task[] => {
   schedulerDb.ensureNamespaceTable(params.namespace);
 
   const db = schedulerDb.getSqliteService().getDatabase();
@@ -250,7 +246,7 @@ const buildTaskQueryParams = (params: GetTasksParams): (string | number | TaskSt
   return queryParams;
 };
 
-export const getNextDueTasks = (namespace: string, limit: number = 10): ScheduledTask[] => {
+export const getNextDueTasks = (namespace: string, limit: number = 10): Task[] => {
   schedulerDb.ensureNamespaceTable(namespace);
 
   const db = schedulerDb.getSqliteService().getDatabase();

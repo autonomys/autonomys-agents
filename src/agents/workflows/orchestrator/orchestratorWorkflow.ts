@@ -20,7 +20,7 @@ import {
   PruningParameters,
 } from './types.js';
 import { createTaskQueue } from './scheduler/taskQueue.js';
-import { ScheduledTask, TaskQueue } from './scheduler/types.js';
+import { Task, TaskQueue } from './scheduler/types.js';
 import { closeVectorDB } from '../../../services/vectorDb/vectorDBPool.js';
 
 const handleConditionalEdge = async (
@@ -82,10 +82,10 @@ export type OrchestratorRunner = Readonly<{
   ) => Promise<FinishedWorkflow>;
 
   // Scheduled task management methods
-  scheduleTask: (message: string, executeAt: Date) => ScheduledTask;
-  getNextDueTask: () => ScheduledTask | undefined;
-  getTaskQueue: () => ReturnType<TaskQueue['getAllTasks']>;
-  getTimeUntilNextTask: () => { nextTask?: ScheduledTask; msUntilNext: number | null };
+  scheduleTask: (message: string, executeAt: Date) => Task;
+  getNextDueTask: () => Task | undefined;
+  getTaskQueue: (limit?: number) => ReturnType<TaskQueue['getAllTasks']>;
+  getTimeUntilNextTask: () => { nextTask?: Task; msUntilNext: number | null };
   deleteTask: (id: string) => void;
 }>;
 
@@ -238,16 +238,16 @@ export const createOrchestratorRunner = async (
       }
     },
 
-    scheduleTask: (message: string, executeAt: Date): ScheduledTask => {
+    scheduleTask: (message: string, executeAt: Date): Task => {
       return taskQueue.scheduleTask(message, executeAt);
     },
 
-    getNextDueTask: (): ScheduledTask | undefined => {
+    getNextDueTask: (): Task | undefined => {
       return taskQueue.getNextDueTask();
     },
 
-    getTaskQueue: () => {
-      return taskQueue.getAllTasks();
+    getTaskQueue: (limit?: number) => {
+      return taskQueue.getAllTasks(limit);
     },
 
     getTimeUntilNextTask: () => {
