@@ -67,4 +67,3 @@ export const getToolInstallDir = async (
     installDir: TOOLS_DIR,
   };
 };
-
