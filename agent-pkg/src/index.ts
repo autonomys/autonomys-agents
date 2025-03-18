@@ -5,7 +5,7 @@ import { publish } from './commands/publish.js';
 import { list } from './commands/list.js';
 import { config } from './commands/config.js';
 import { clean } from './commands/clean.js';
-import { initializeConfigAndCredentials, credentialsExist } from './utils/config.js';
+import { initializeConfigAndCredentials, credentialsExist } from './config/index.js';
 
 const checkMasterPassword = async () => {
   const isConfigCommand = process.argv.length > 2 && process.argv[2] === 'config';

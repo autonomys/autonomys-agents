@@ -2,10 +2,10 @@ import fs from 'fs/promises';
 import path from 'path';
 import extract from 'extract-zip';
 import ora from 'ora';
-import { PACKAGES_DIR, getToolInstallDir } from './path.js';
-import { getToolFromRegistry, getToolVersionFromRegistry } from './registry.js';
-import { downloadFileFromDsn } from './autoDriveClient.js';
-import { ToolInstallInfo, InstallOptions } from '../types/index.js';
+import { PACKAGES_DIR, getToolInstallDir } from '../../shared/path.js';
+import { getToolFromRegistry, getToolVersionFromRegistry } from '../../registry.js';
+import { downloadFileFromDsn } from '../../autoDrive/autoDriveClient.js';
+import { ToolInstallInfo, InstallOptions } from '../../../types/index.js';
 
 /**
  * Downloads a tool package from Autonomys DSN to the local cache

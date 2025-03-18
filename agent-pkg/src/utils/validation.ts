@@ -1,11 +1,7 @@
 import fs from 'fs/promises';
 import path from 'path';
-import { ToolManifest } from '../types/index.js';
+import { ToolManifest, ValidationResult } from '../types/index.js';
 
-interface ValidationResult {
-  valid: boolean;
-  message?: string;
-}
 
 /**
  * Validates a tool structure to ensure it follows the required format

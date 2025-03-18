@@ -44,3 +44,8 @@ export interface CommandResult {
   message: string;
   data?: any;
 }
+
+export interface ValidationResult {
+  valid: boolean;
+  message?: string;
+}

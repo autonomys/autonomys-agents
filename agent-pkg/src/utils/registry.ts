@@ -1,4 +1,3 @@
-import path from 'path';
 import fs from 'fs/promises';
 import { ToolMetadata, ToolRegistry } from '../types/index.js';
 import {
@@ -10,48 +9,9 @@ import {
   registerTool,
   addToolVersion,
   isToolOwner,
-} from './contractClient.js';
+} from './blockchain/contractClient.js';
 import chalk from 'chalk';
-
-// Local cache location
-const CACHE_DIR = path.join(process.env.HOME || process.env.USERPROFILE || '', '.autoOS');
-const REGISTRY_CACHE_PATH = path.join(CACHE_DIR, 'registry.json');
-
-// Initialize cache directory
-const ensureCacheDir = async () => {
-  try {
-    await fs.mkdir(CACHE_DIR, { recursive: true });
-  } catch (error) {
-    // Directory already exists
-  }
-};
-
-// Get registry from cache or fetch from blockchain
-export const getRegistry = async (): Promise<ToolRegistry> => {
-  await ensureCacheDir();
-
-  try {
-    // Try to read from cache first for faster response
-    const cacheData = await fs.readFile(REGISTRY_CACHE_PATH, 'utf8');
-    const cachedRegistry = JSON.parse(cacheData) as ToolRegistry;
-
-    // Check if cache is recent (less than 1 hour old)
-    const cacheTime = new Date(cachedRegistry.updated);
-    const now = new Date();
-    const cacheAge = now.getTime() - cacheTime.getTime();
-    const oneHour = 60 * 60 * 1000;
-
-    if (cacheAge < oneHour) {
-      return cachedRegistry;
-    }
-
-    // Cache is older than 1 hour, fetch from blockchain
-    return await fetchRegistryFromBlockchain();
-  } catch (error) {
-    // Cache miss or invalid, fetch from blockchain
-    return await fetchRegistryFromBlockchain();
-  }
-};
+import { REGISTRY_CACHE_PATH } from './shared/path.js';
 
 const fetchRegistryFromBlockchain = async (): Promise<ToolRegistry> => {
   try {
@@ -102,6 +62,47 @@ const fetchRegistryFromBlockchain = async (): Promise<ToolRegistry> => {
     };
 
     return emptyRegistry;
+  }
+};
+
+const getLocalRegistryCache = async (): Promise<ToolRegistry> => {
+
+  try {
+    const cacheData = await fs.readFile(REGISTRY_CACHE_PATH, 'utf8');
+    return JSON.parse(cacheData) as ToolRegistry;
+  } catch (error) {
+    return {
+      version: '1.0.0',
+      updated: new Date().toISOString(),
+      tools: {},
+    };
+  }
+};
+
+
+// Get registry from cache or fetch from blockchain
+export const getRegistry = async (): Promise<ToolRegistry> => {
+
+  try {
+    // Try to read from cache first for faster response
+    const cacheData = await fs.readFile(REGISTRY_CACHE_PATH, 'utf8');
+    const cachedRegistry = JSON.parse(cacheData) as ToolRegistry;
+
+    // Check if cache is recent (less than 1 hour old)
+    const cacheTime = new Date(cachedRegistry.updated);
+    const now = new Date();
+    const cacheAge = now.getTime() - cacheTime.getTime();
+    const oneHour = 60 * 60 * 1000;
+
+    if (cacheAge < oneHour) {
+      return cachedRegistry;
+    }
+
+    // Cache is older than 1 hour, fetch from blockchain
+    return await fetchRegistryFromBlockchain();
+  } catch (error) {
+    // Cache miss or invalid, fetch from blockchain
+    return await fetchRegistryFromBlockchain();
   }
 };
 
@@ -202,21 +203,12 @@ export const getToolVersionFromRegistry = async (
   }
 };
 
-const getLocalRegistryCache = async (): Promise<ToolRegistry> => {
-  await ensureCacheDir();
 
-  try {
-    const cacheData = await fs.readFile(REGISTRY_CACHE_PATH, 'utf8');
-    return JSON.parse(cacheData) as ToolRegistry;
-  } catch (error) {
-    return {
-      version: '1.0.0',
-      updated: new Date().toISOString(),
-      tools: {},
-    };
-  }
-};
-
+/**
+ * Update the registry on the blockchain
+ * @param toolMetadata Tool metadata to update
+ * @returns Transaction hash of the update
+ */
 export const updateRegistry = async (toolMetadata: ToolMetadata): Promise<string> => {
   try {
     console.log(chalk.blue('Updating registry on blockchain...'));

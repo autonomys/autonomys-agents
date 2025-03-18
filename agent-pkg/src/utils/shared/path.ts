@@ -16,6 +16,9 @@ export const TOOLS_DIR = path.join(AUTOOS_DIR, 'tools');
 
 export const DEFAULT_PROJECT_TOOLS_PATH = 'src/agents/tools';
 
+export const REGISTRY_CACHE_PATH = path.join(AUTOOS_DIR, 'registry.json');
+
+
 /**
  * Detects the root directory of the current project
  * @returns Path to the project root or undefined if not found

@@ -4,7 +4,7 @@ import {
   downloadFile,
   UploadFileOptions,
 } from '@autonomys/auto-drive';
-import { initializeConfigAndCredentials } from './config.js';
+import { initializeConfigAndCredentials } from '../../config/index.js';
 
 const createApiClient = async () => {
   const { config, credentials } = await initializeConfigAndCredentials();

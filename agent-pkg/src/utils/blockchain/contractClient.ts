@@ -1,5 +1,5 @@
 import { ethers } from 'ethers';
-import { initializeConfigAndCredentials } from './config.js';
+import { initializeConfigAndCredentials } from '../../config/index.js';
 import chalk from 'chalk';
 
 // ABI for AutonomysPackageRegistry

@@ -3,7 +3,7 @@ import ora from 'ora';
 import { CommandResult } from '../types/index.js';
 import { updateRegistry } from '../utils/registry.js';
 import { validateToolStructure } from '../utils/validation.js';
-import { packageAndUploadTool } from '../utils/packageAndUpload.js';
+import { packageAndUploadTool } from '../utils/commands/publish/toolPublish.js';
 
 export const publish = async (toolPath: string, options: any = {}): Promise<CommandResult> => {
   const spinner = ora(`Publishing tool from ${toolPath}...`).start();

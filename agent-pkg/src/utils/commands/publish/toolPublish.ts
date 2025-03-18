@@ -2,8 +2,8 @@ import fs from 'fs/promises';
 import path from 'path';
 import archiver from 'archiver';
 import { UploadFileOptions } from '@autonomys/auto-drive';
-import { ToolManifest, ToolMetadata } from '../types/index.js';
-import { uploadFileToDsn } from './autoDriveClient.js';
+import { ToolManifest, ToolMetadata } from '../../../types/index.js';
+import { uploadFileToDsn } from '../../autoDrive/autoDriveClient.js';
 
 /**
  * Creates a zip archive of a tool directory
