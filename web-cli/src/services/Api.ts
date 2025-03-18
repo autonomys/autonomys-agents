@@ -1,4 +1,4 @@
-export const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || `http://localhost:3010/api`;
+export const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || `https://localhost:3010/api`;
 export const API_TOKEN = process.env.REACT_APP_API_TOKEN || '';
 
 export const DEFAULT_NAMESPACE = 'orchestrator';

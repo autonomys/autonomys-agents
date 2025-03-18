@@ -1,10 +1,11 @@
 import { Express } from 'express';
 import { Server } from 'http';
 import { Logger } from 'winston';
+import { Http2SecureServer } from 'http2';
 
 export interface ApiServer {
   app: Express;
-  server: Server;
+  server: Server | Http2SecureServer;
   broadcastLog: (namespace: string, level: string, message: string, meta?: LogMetadata) => void;
   broadcastTaskUpdate: (namespace: string) => void;
   attachLogger: (logger: Logger, namespace: string) => Logger;

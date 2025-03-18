@@ -11,16 +11,25 @@ import { getRegisteredNamespaces } from './controller/WorkflowController.js';
 import { authenticateToken, securityHeaders } from './middleware/auth.js';
 import { corsMiddleware } from './middleware/cors.js';
 import helmet from 'helmet';
+import http2 from 'http2';
+import fs from 'fs';
+import path from 'path';
+import http2Express from 'http2-express-bridge';
+import { Express } from 'express';
 
 const logger = createLogger('api-server');
 
 let apiServer: ApiServer | null = null;
 
 const createSingletonApiServer = (): ApiServer => {
-  const app = express();
+  const app = http2Express(express) as unknown as Express;
 
   app.use(corsMiddleware);
-  app.use(helmet());
+  app.use(
+    helmet({
+      contentSecurityPolicy: false,
+    }),
+  );
   app.use(securityHeaders);
   app.use(express.json({ limit: '1mb' }));
   app.use(express.urlencoded({ extended: true, limit: '1mb' }));
@@ -36,10 +45,34 @@ const createSingletonApiServer = (): ApiServer => {
   }
 
   const PORT = config.API_PORT;
-  const server = app.listen(PORT, () => {
-    logger.info(`API server started on port ${PORT}`);
-    logger.info(`API security: ${config.apiSecurityConfig.ENABLE_AUTH ? 'Enabled' : 'Disabled'}`);
-  });
+  let server;
+
+  const certsDir = path.join(process.cwd(), 'certs');
+  const certFile = path.join(certsDir, 'server.cert');
+  const keyFile = path.join(certsDir, 'server.key');
+
+  try {
+    if (fs.existsSync(certFile) && fs.existsSync(keyFile)) {
+      const options = {
+        key: fs.readFileSync(keyFile),
+        cert: fs.readFileSync(certFile),
+        allowHTTP1: true,
+      };
+      server = http2.createSecureServer(options, app);
+      server.listen(PORT, () => {
+        logger.info(`API server started with HTTP/2 support on port ${PORT}`);
+        logger.info(
+          `API security: ${config.apiSecurityConfig.ENABLE_AUTH ? 'Enabled' : 'Disabled'}`,
+        );
+        logger.info(`Access the API at: https://localhost:${PORT}/api`);
+      });
+    } else {
+      throw new Error('SSL certificates not found');
+    }
+  } catch (error) {
+    logger.error('Error starting HTTP/2 server, falling back to HTTP/1.1', error);
+    throw error;
+  }
 
   return {
     app,
