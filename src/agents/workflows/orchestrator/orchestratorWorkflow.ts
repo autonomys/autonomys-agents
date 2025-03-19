@@ -86,6 +86,8 @@ export type OrchestratorRunner = Readonly<{
   getNextDueTask: () => Task | undefined;
   getTaskQueue: (limit?: number) => ReturnType<TaskQueue['getAllTasks']>;
   getTimeUntilNextTask: () => { nextTask?: Task; msUntilNext: number | null };
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  updateTaskStatus: (id: string, status: Task['status'], result?: any) => void;
   deleteTask: (id: string) => void;
 }>;
 
@@ -252,6 +254,10 @@ export const createOrchestratorRunner = async (
 
     getTimeUntilNextTask: () => {
       return taskQueue.getTimeUntilNextTask();
+    },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    updateTaskStatus: (id: string, status: Task['status'], result?: any) => {
+      return taskQueue.updateTaskStatus(id, status, result);
     },
 
     deleteTask: (id: string) => {

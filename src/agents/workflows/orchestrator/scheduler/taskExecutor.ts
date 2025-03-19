@@ -12,9 +12,9 @@ export const startTaskExecutor = (
   let running = true;
 
   const executeNextTask = async () => {
-    try {
-      const dueTask = runner.getNextDueTask();
+    const dueTask = runner.getNextDueTask();
 
+    try {
       if (dueTask) {
         logger.info(`Executing scheduled task ${dueTask.id}`, {
           scheduledFor: dueTask.scheduledFor.toISOString(),
@@ -40,6 +40,9 @@ export const startTaskExecutor = (
       logger.error('Error executing scheduled task', {
         error: error instanceof Error ? error.message : String(error),
       });
+      if (error instanceof Error && error.message.includes('Recursion limit') && dueTask) {
+        runner.updateTaskStatus(dueTask.id, 'failed', error.message);
+      }
     }
   };
 

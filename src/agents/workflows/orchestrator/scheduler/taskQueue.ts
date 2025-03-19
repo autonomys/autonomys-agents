@@ -140,7 +140,7 @@ export const createTaskQueue = (namespace: string): TaskQueue => {
         logger.info(`Cannot get next task, a task is already running in namespace: ${namespace}`, {
           runningTaskId: currentTask.id,
         });
-        return undefined;
+        return currentTask;
       }
 
       if (scheduledTasks.length === 0) {
