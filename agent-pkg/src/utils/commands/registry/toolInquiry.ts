@@ -63,7 +63,6 @@ const fetchRegistryFromBlockchain = async (): Promise<ToolRegistry> => {
 };
 
 export const getLocalRegistryCache = async (): Promise<ToolRegistry> => {
-
   try {
     const cacheData = await fs.readFile(REGISTRY_CACHE_PATH, 'utf8');
     return JSON.parse(cacheData) as ToolRegistry;
@@ -76,10 +75,8 @@ export const getLocalRegistryCache = async (): Promise<ToolRegistry> => {
   }
 };
 
-
 // Get registry from cache or fetch from blockchain
 export const getRegistry = async (): Promise<ToolRegistry> => {
-
   try {
     // Try to read from cache first for faster response
     const cacheData = await fs.readFile(REGISTRY_CACHE_PATH, 'utf8');

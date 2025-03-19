@@ -1,13 +1,10 @@
 import fs from 'fs/promises';
 import path from 'path';
-import os from 'os';
 import chalk from 'chalk';
 import ora from 'ora';
 import inquirer from 'inquirer';
 import { CommandResult } from '../types/index.js';
-
-const AUTOOS_DIR = path.join(os.homedir(), '.autoOS');
-const PACKAGES_DIR = path.join(AUTOOS_DIR, 'packages');
+import { PACKAGES_DIR } from '../utils/shared/path.js';
 
 /**
  * Clean cached packages and other temporary files
@@ -19,18 +16,6 @@ export const clean = async (options: any = {}): Promise<CommandResult> => {
   spinner.stop();
 
   try {
-    // Check if packages directory exists
-    try {
-      await fs.access(PACKAGES_DIR);
-    } catch (error) {
-      console.log(chalk.blue('No cache directory found. Nothing to clean.'));
-      return {
-        success: true,
-        message: 'No cache directory found. Nothing to clean.',
-      };
-    }
-
-    // Get all files in the packages directory
     const files = await fs.readdir(PACKAGES_DIR);
 
     if (files.length === 0) {
@@ -41,7 +26,6 @@ export const clean = async (options: any = {}): Promise<CommandResult> => {
       };
     }
 
-    // Count packages and calculate size
     let totalSize = 0;
     for (const file of files) {
       const filePath = path.join(PACKAGES_DIR, file);
@@ -49,10 +33,8 @@ export const clean = async (options: any = {}): Promise<CommandResult> => {
       totalSize += stats.size;
     }
 
-    // Convert bytes to MB for display
     const sizeMB = (totalSize / (1024 * 1024)).toFixed(2);
 
-    // Ask for confirmation unless force option is used
     if (!options.force) {
       const { confirm } = await inquirer.prompt([
         {
@@ -72,11 +54,9 @@ export const clean = async (options: any = {}): Promise<CommandResult> => {
       }
     }
 
-    // Restart spinner for deletion process
     spinner.text = `Removing ${files.length} cached packages (${sizeMB} MB)...`;
     spinner.start();
 
-    // Delete all files in the packages directory
     for (const file of files) {
       const filePath = path.join(PACKAGES_DIR, file);
       await fs.unlink(filePath);

@@ -9,7 +9,6 @@ import { DEFAULT_CONFIG } from './default.js';
  * Load the configuration file
  */
 export const loadConfig = async () => {
-
   try {
     const data = await fs.readFile(CONFIG_FILE, 'utf8');
     return { ...DEFAULT_CONFIG, ...JSON.parse(data) };

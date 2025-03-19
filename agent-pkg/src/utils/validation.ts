@@ -2,7 +2,6 @@ import fs from 'fs/promises';
 import path from 'path';
 import { ToolManifest, ValidationResult } from '../types/index.js';
 
-
 /**
  * Validates a tool structure to ensure it follows the required format
  * @param toolPath Path to the tool directory

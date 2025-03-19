@@ -21,7 +21,6 @@ export const REGISTRY_CACHE_PATH = path.join(AUTOOS_DIR, 'registry.json');
 export const CONFIG_FILE = path.join(AUTOOS_DIR, 'config.json');
 export const CREDENTIALS_FILE = path.join(AUTOOS_DIR, 'credentials.enc');
 
-
 export const ensureAutoOSDir = async () => {
   try {
     await fs.access(AUTOOS_DIR);

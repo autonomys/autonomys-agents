@@ -50,7 +50,6 @@ export interface ValidationResult {
   message?: string;
 }
 
-
 export interface Credentials {
   autoDriveApiKey?: string;
   autoDriveEncryptionPassword?: string;
