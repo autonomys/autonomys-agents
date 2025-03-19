@@ -132,7 +132,6 @@ export const getTaskStream = (req: Request, res: Response) => {
 
   res.setHeader('Content-Type', 'text/event-stream');
   res.setHeader('Cache-Control', 'no-cache');
-  res.setHeader('Connection', 'keep-alive');
 
   res.write(
     `data: ${JSON.stringify({
