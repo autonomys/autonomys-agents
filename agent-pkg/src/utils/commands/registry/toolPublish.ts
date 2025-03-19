@@ -4,6 +4,7 @@ import archiver from 'archiver';
 import { UploadFileOptions } from '@autonomys/auto-drive';
 import { ToolManifest, ToolMetadata } from '../../../types/index.js';
 import { uploadFileToDsn } from '../../autoDrive/autoDriveClient.js';
+import { getCredentials } from '../../credential/index.js';
 
 /**
  * Creates a zip archive of a tool directory
@@ -48,6 +49,7 @@ const uploadToolPackage = async (
   packageBuffer: Buffer,
   manifest: ToolManifest,
 ): Promise<string> => {
+  const credentials = await getCredentials();
   const file = {
     read: async function* () {
       yield packageBuffer;
@@ -56,10 +58,9 @@ const uploadToolPackage = async (
     mimeType: 'application/zip',
     size: packageBuffer.length,
   };
-
   const options: UploadFileOptions = {
     compression: true,
-    password: process.env.AUTO_DRIVE_ENCRYPTION_PASSWORD,
+    password: credentials.autoDriveEncryptionPassword,
   };
 
   return await uploadFileToDsn(file, options);

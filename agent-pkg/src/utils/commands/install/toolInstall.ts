@@ -6,6 +6,7 @@ import { getToolInstallDir, PACKAGES_DIR } from '../../shared/path.js';
 import { getToolFromRegistry, getToolVersionFromRegistry } from '../registry/toolInquiry.js';
 import { downloadFileFromDsn } from '../../autoDrive/autoDriveClient.js';
 import { InstallOptions, ToolInstallInfo, ToolMetadata } from '../../../types/index.js';
+import { getCredentials } from '../../credential/index.js';
 
 /**
  * Downloads a tool package from Autonomys DSN to the local cache
@@ -13,12 +14,12 @@ import { InstallOptions, ToolInstallInfo, ToolMetadata } from '../../../types/in
  * @returns Path to the downloaded package file
  */
 export const fetchToolPackage = async (cid: string): Promise<string> => {
-  await fs.mkdir(PACKAGES_DIR, { recursive: true });
+  const credentials = await getCredentials();
   const packagePath = path.join(PACKAGES_DIR, `${cid}.zip`);
 
   try {
     console.log(`Downloading tool package with CID: ${cid}`);
-    const fileStream = await downloadFileFromDsn(cid);
+    const fileStream = await downloadFileFromDsn(cid, credentials.autoDriveEncryptionPassword);
 
     const chunks: Buffer[] = [];
     for await (const chunk of fileStream) {
