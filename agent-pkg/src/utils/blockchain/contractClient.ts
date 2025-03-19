@@ -238,6 +238,7 @@ export const isToolOwner = async (name: string): Promise<boolean> => {
       const toolInfo = await getToolInfo(name);
       return toolInfo.owner.toLowerCase() === address.toLowerCase();
     } catch (error) {
+      console.error(`Error checking ownership for tool ${name}:`, error);
       return false;
     }
   } catch (error) {

@@ -3,7 +3,7 @@ import chalk from 'chalk';
 import inquirer from 'inquirer';
 import { Credentials } from '../types/index.js';
 import { credentialsExist, loadCredentials, saveCredentials } from '../utils/credential/index.js';
-import { saveToKeychain, deleteFromKeychain } from '../utils/vault/keychain.js';
+import { saveToKeychain } from '../utils/vault/keychain.js';
 
 /**
  * Prompt user for required configuration
@@ -76,12 +76,12 @@ export const promptForCredentials = async (): Promise<Credentials> => {
 
         return credentials;
       } catch (error) {
-        console.error(chalk.red('Failed to decrypt credentials. Please try again.'));
+        console.error(chalk.red('Failed to decrypt credentials. Please try again.', error));
         return await promptForCredentials();
       }
     }
   } else {
-    const { password, confirmPassword } = await inquirer.prompt([
+    const { password } = await inquirer.prompt([
       {
         type: 'password',
         name: 'password',
@@ -99,7 +99,7 @@ export const promptForCredentials = async (): Promise<Credentials> => {
         name: 'confirmPassword',
         message: 'Confirm master password:',
         mask: '*',
-        validate: (input: string, answers: any) => {
+        validate: (input: string, answers: { password: string }) => {
           if (input !== answers.password) {
             return 'Passwords do not match';
           }
@@ -107,7 +107,6 @@ export const promptForCredentials = async (): Promise<Credentials> => {
         },
       },
     ]);
-
     masterPassword = password;
 
     // Inform user about keychain storage

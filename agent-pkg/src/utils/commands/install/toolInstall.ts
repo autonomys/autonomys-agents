@@ -2,10 +2,10 @@ import fs from 'fs/promises';
 import path from 'path';
 import extract from 'extract-zip';
 import ora from 'ora';
-import { PACKAGES_DIR, getToolInstallDir } from '../../shared/path.js';
+import { getToolInstallDir, PACKAGES_DIR } from '../../shared/path.js';
 import { getToolFromRegistry, getToolVersionFromRegistry } from '../registry/toolInquiry.js';
 import { downloadFileFromDsn } from '../../autoDrive/autoDriveClient.js';
-import { ToolInstallInfo, InstallOptions } from '../../../types/index.js';
+import { InstallOptions, ToolInstallInfo, ToolMetadata } from '../../../types/index.js';
 
 /**
  * Downloads a tool package from Autonomys DSN to the local cache
@@ -110,7 +110,7 @@ export function validateVersionOption(version: string | undefined): asserts vers
  * @param registryInfo Registry tool information
  * @returns Formatted tool installation info
  */
-export const createToolInfoFromRegistry = (registryInfo: any): ToolInstallInfo => {
+export const createToolInfoFromRegistry = (registryInfo: ToolMetadata): ToolInstallInfo => {
   return {
     name: registryInfo.name,
     cid: registryInfo.cid,

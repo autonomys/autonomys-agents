@@ -16,6 +16,7 @@ export const validateToolStructure = async (toolPath: string): Promise<Validatio
         return { valid: false, message: `${toolPath} is not a directory` };
       }
     } catch (error) {
+      console.error(`Error checking if directory exists: ${error}`);
       return { valid: false, message: `Directory ${toolPath} does not exist` };
     }
 
@@ -28,6 +29,7 @@ export const validateToolStructure = async (toolPath: string): Promise<Validatio
       try {
         manifest = JSON.parse(manifestData) as ToolManifest;
       } catch (parseError) {
+        console.error(`Error parsing manifest.json: ${parseError}`);
         return { valid: false, message: 'manifest.json contains invalid JSON' };
       }
 
@@ -51,6 +53,7 @@ export const validateToolStructure = async (toolPath: string): Promise<Validatio
       try {
         await fs.access(mainFilePath);
       } catch (mainError) {
+        console.error(`Error checking if main file exists: ${mainError}`);
         return { valid: false, message: `Main file ${manifest.main} does not exist` };
       }
 
@@ -59,6 +62,7 @@ export const validateToolStructure = async (toolPath: string): Promise<Validatio
 
       return { valid: true };
     } catch (manifestError) {
+      console.error(`Error validating manifest.json: ${manifestError}`);
       return { valid: false, message: 'manifest.json is missing' };
     }
   } catch (error) {

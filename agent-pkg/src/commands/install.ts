@@ -2,7 +2,7 @@ import chalk from 'chalk';
 import ora from 'ora';
 import { CommandResult } from '../types/index.js';
 import { InstallOptions } from '../types/index.js';
-import { resolveToolInfo, performToolInstallation } from '../utils/commands/install/toolInstall.js';
+import { performToolInstallation, resolveToolInfo } from '../utils/commands/install/toolInstall.js';
 
 /**
  * Main entry point for the install command

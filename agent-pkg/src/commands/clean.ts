@@ -3,7 +3,7 @@ import path from 'path';
 import chalk from 'chalk';
 import ora from 'ora';
 import inquirer from 'inquirer';
-import { CommandResult } from '../types/index.js';
+import { CleanOptions, CommandResult } from '../types/index.js';
 import { PACKAGES_DIR } from '../utils/shared/path.js';
 
 /**
@@ -11,7 +11,7 @@ import { PACKAGES_DIR } from '../utils/shared/path.js';
  * @param options Command options
  * @returns Command result
  */
-export const clean = async (options: any = {}): Promise<CommandResult> => {
+export const clean = async (options: CleanOptions): Promise<CommandResult> => {
   const spinner = ora('Cleaning autoOS cache...').start();
   spinner.stop();
 

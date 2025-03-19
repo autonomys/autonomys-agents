@@ -4,8 +4,7 @@ import inquirer from 'inquirer';
 import chalk from 'chalk';
 import { Credentials } from '../../types/index.js';
 import { CREDENTIALS_FILE } from '../shared/path.js';
-import { loadConfig, saveConfig } from '../../config/index.js';
-import { saveToKeychain, getFromKeychain, deleteFromKeychain } from '../vault/keychain.js';
+import { deleteFromKeychain, getFromKeychain, saveToKeychain } from '../vault/keychain.js';
 import { promptForCredentials } from '../../config/prompts.js';
 
 /**
@@ -46,7 +45,7 @@ const decryptCredentials = async (
 
     return JSON.parse(decrypted) as Credentials;
   } catch (error) {
-    throw new Error('Failed to decrypt credentials. Incorrect password? ' + error);
+    throw new Error(`Failed to decrypt credentials. Incorrect password? ${error}`);
   }
 };
 
@@ -82,6 +81,7 @@ export const credentialsExist = async (): Promise<boolean> => {
     await fs.access(CREDENTIALS_FILE);
     return true;
   } catch (error) {
+    console.error('Error checking if credentials exist:', error);
     return false;
   }
 };
@@ -102,10 +102,10 @@ export const getCredentials = async (): Promise<Credentials> => {
         const credentials = await loadCredentials(keychainPassword);
         return credentials;
       } catch (error) {
+        console.error('Error loading credentials from keychain:', error);
         console.error(
           chalk.red('System keychain password is no longer valid. Will prompt for password.'),
         );
-        // Remove invalid password from keychain
         await deleteFromKeychain();
       }
     }
@@ -130,6 +130,7 @@ export const getCredentials = async (): Promise<Credentials> => {
 
       return credentials;
     } catch (error) {
+      console.error('Failed to decrypt credentials:', error);
       console.error(chalk.red('Failed to decrypt credentials. Please try again.'));
       return getCredentials();
     }

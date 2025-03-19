@@ -1,10 +1,10 @@
 import fs from 'fs/promises';
 import { ToolMetadata } from '../../../types/index.js';
 import {
-  getToolInfo,
-  registerTool,
   addToolVersion,
+  getToolInfo,
   isToolOwner,
+  registerTool,
 } from '../../../utils/blockchain/contractClient.js';
 import chalk from 'chalk';
 import { REGISTRY_CACHE_PATH } from '../../../utils/shared/path.js';
@@ -52,6 +52,7 @@ export const updateRegistry = async (toolMetadata: ToolMetadata): Promise<string
         );
       }
     } catch (error) {
+      console.error(`Error updating registry:`, error);
       console.log(chalk.green(`Registering new tool ${toolMetadata.name}`));
       txHash = await registerTool(
         toolMetadata.name,

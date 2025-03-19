@@ -42,7 +42,7 @@ export interface ToolManifest {
 export interface CommandResult {
   success: boolean;
   message: string;
-  data?: any;
+  data?: object;
 }
 
 export interface ValidationResult {
@@ -59,4 +59,25 @@ export interface Credentials {
 export interface PasswordCache {
   password: string;
   timestamp: number;
+}
+
+export interface CleanOptions {
+  force?: boolean;
+}
+
+export interface ConfigOptions {
+  credentials?: boolean;
+  settings?: boolean;
+}
+
+export interface PublishOptions {
+  registry?: boolean;
+}
+
+export interface Config {
+  autoDriveApiKey?: string;
+  autoDriveEncryptionPassword?: string;
+  autoEvmPrivateKey?: string;
+  packageRegistryAddress?: string;
+  taurusRpcUrl?: string;
 }

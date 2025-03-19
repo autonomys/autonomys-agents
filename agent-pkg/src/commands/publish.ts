@@ -1,6 +1,6 @@
 import chalk from 'chalk';
 import ora from 'ora';
-import { CommandResult } from '../types/index.js';
+import { CommandResult, PublishOptions } from '../types/index.js';
 import { updateRegistry } from '../utils/commands/registry/updateRegistry.js';
 import { validateToolStructure } from '../utils/validation.js';
 import { packageAndUploadTool } from '../utils/commands/registry/toolPublish.js';
@@ -11,7 +11,10 @@ import { packageAndUploadTool } from '../utils/commands/registry/toolPublish.js'
  * @param options Command options
  * @returns Command result
  */
-export const publish = async (toolPath: string, options: any = {}): Promise<CommandResult> => {
+export const publish = async (
+  toolPath: string,
+  options: PublishOptions,
+): Promise<CommandResult> => {
   const spinner = ora(`Publishing tool from ${toolPath}...`).start();
 
   try {

@@ -25,6 +25,7 @@ export const ensureAutoOSDir = async () => {
   try {
     await fs.access(AUTOOS_DIR);
   } catch (error) {
+    console.error('Error ensuring autoOS directory:', error);
     await fs.mkdir(AUTOOS_DIR, { recursive: true });
   }
 };
@@ -49,7 +50,7 @@ export const detectProjectRoot = async (): Promise<string | undefined> => {
 
       currentDir = path.dirname(currentDir);
     } catch (error) {
-      // If we can't read the directory, move up
+      console.error('Error detecting project root:', error);
       currentDir = path.dirname(currentDir);
     }
   }

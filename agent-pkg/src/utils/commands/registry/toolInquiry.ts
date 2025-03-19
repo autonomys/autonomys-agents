@@ -1,11 +1,11 @@
 import fs from 'fs/promises';
 import { ToolMetadata, ToolRegistry } from '../../../types/index.js';
 import {
+  getAllToolNames,
+  getLatestToolVersion,
   getToolInfo,
   getToolVersion,
   getToolVersions,
-  getLatestToolVersion,
-  getAllToolNames,
 } from '../../blockchain/contractClient.js';
 import chalk from 'chalk';
 import { REGISTRY_CACHE_PATH } from '../../shared/path.js';
@@ -31,8 +31,8 @@ const fetchRegistryFromBlockchain = async (): Promise<ToolRegistry> => {
       try {
         const metadataObj = JSON.parse(latestVersionInfo.metadata);
         description = metadataObj.description || '';
-      } catch (e) {
-        // TODO
+      } catch (error) {
+        console.error(`Error parsing metadata for tool ${name}:`, error);
       }
 
       registry.tools[name] = {
@@ -67,6 +67,7 @@ export const getLocalRegistryCache = async (): Promise<ToolRegistry> => {
     const cacheData = await fs.readFile(REGISTRY_CACHE_PATH, 'utf8');
     return JSON.parse(cacheData) as ToolRegistry;
   } catch (error) {
+    console.error('Error reading registry cache:', error);
     return {
       version: '1.0.0',
       updated: new Date().toISOString(),
@@ -95,7 +96,7 @@ export const getRegistry = async (): Promise<ToolRegistry> => {
     // Cache is older than 1 hour, fetch from blockchain
     return await fetchRegistryFromBlockchain();
   } catch (error) {
-    // Cache miss or invalid, fetch from blockchain
+    console.error('Error fetching registry from blockchain:', error);
     return await fetchRegistryFromBlockchain();
   }
 };
@@ -111,8 +112,8 @@ export const getToolFromRegistry = async (toolName: string): Promise<ToolMetadat
       try {
         const metadataObj = JSON.parse(latestVersionInfo.metadata);
         description = metadataObj.description || '';
-      } catch (e) {
-        // TODO
+      } catch (error) {
+        console.error(`Error parsing metadata for tool ${toolName}:`, error);
       }
 
       // Return tool metadata
@@ -168,8 +169,8 @@ export const getToolVersionFromRegistry = async (
     try {
       const metadataObj = JSON.parse(versionInfo.metadata);
       description = metadataObj.description || '';
-    } catch (e) {
-      // Fallback if metadata can't be parsed
+    } catch (error) {
+      console.error(`Error parsing metadata for tool ${toolName}:`, error);
     }
 
     // Return tool metadata for specific version

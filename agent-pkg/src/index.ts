@@ -8,6 +8,7 @@ import { clean } from './commands/clean.js';
 import { initializeConfigAndCredentials } from './config/index.js';
 import { credentialsExist } from './utils/credential/index.js';
 import { ensureAutoOSDir } from './utils/shared/path.js';
+import { CleanOptions, ConfigOptions, InstallOptions, PublishOptions } from './types/index.js';
 
 const checkMasterPassword = async () => {
   const isConfigCommand = process.argv.length > 2 && process.argv[2] === 'config';
@@ -27,20 +28,24 @@ ensureAutoOSDir()
     return Promise.all([initializeConfigAndCredentials(), checkMasterPassword()]);
   })
   .then(() => {
-    const installWrapper = async (...args: any[]) => {
-      await install(args[0], args[1]);
+    const installWrapper = async (toolName: string, options: InstallOptions) => {
+      await install(toolName, options);
     };
-    const publishWrapper = async (...args: any[]) => {
-      await publish(args[0], args[1]);
+
+    const publishWrapper = async (toolPath: string, options: PublishOptions) => {
+      await publish(toolPath, options);
     };
-    const listWrapper = async (...args: any[]) => {
-      await list(args[0]);
+
+    const listWrapper = async (options: { detailed?: boolean }) => {
+      await list(options);
     };
-    const configWrapper = async (...args: any[]) => {
-      await config(args[0]);
+
+    const configWrapper = async (options: ConfigOptions) => {
+      await config(options);
     };
-    const cleanWrapper = async (...args: any[]) => {
-      await clean(args[0]);
+
+    const cleanWrapper = async (options: CleanOptions) => {
+      await clean(options);
     };
 
     program

@@ -1,7 +1,7 @@
 import {
   createAutoDriveApi,
-  uploadFile,
   downloadFile,
+  uploadFile,
   UploadFileOptions,
 } from '@autonomys/auto-drive';
 import { initializeConfigAndCredentials } from '../../config/index.js';
@@ -64,7 +64,7 @@ export const uploadFileToDsn = async (
  * @returns Promise resolving to the CID
  */
 export const uploadObjectToDsn = async (
-  object: any,
+  object: unknown,
   name: string,
   options?: UploadFileOptions,
 ): Promise<string> => {

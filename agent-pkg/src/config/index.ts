@@ -1,8 +1,8 @@
 import fs from 'fs/promises';
-import { Credentials } from '../types/index.js';
+import { Config, Credentials } from '../types/index.js';
 import { CONFIG_FILE } from '../utils/shared/path.js';
 import { getFromKeychain } from '../utils/vault/keychain.js';
-import { credentialsExist, loadCredentials, getCredentials } from '../utils/credential/index.js';
+import { credentialsExist, getCredentials, loadCredentials } from '../utils/credential/index.js';
 import { DEFAULT_CONFIG } from './default.js';
 
 /**
@@ -13,7 +13,7 @@ export const loadConfig = async () => {
     const data = await fs.readFile(CONFIG_FILE, 'utf8');
     return { ...DEFAULT_CONFIG, ...JSON.parse(data) };
   } catch (error) {
-    // If file doesn't exist, create default config
+    console.log('No config file found, creating default config', error);
     const config = { ...DEFAULT_CONFIG };
     await saveConfig(config);
     return config;
@@ -23,7 +23,7 @@ export const loadConfig = async () => {
 /**
  * Save the configuration file
  */
-export const saveConfig = async (config: any) => {
+export const saveConfig = async (config: Config) => {
   await fs.writeFile(CONFIG_FILE, JSON.stringify(config, null, 2));
 };
 
@@ -49,7 +49,7 @@ export const initializeConfigAndCredentials = async () => {
         );
       }
     } catch (error) {
-      console.log('Will prompt for credentials when needed');
+      console.log('Will prompt for credentials when needed', error);
     }
   }
 
