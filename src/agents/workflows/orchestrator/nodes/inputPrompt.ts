@@ -93,10 +93,10 @@ export const createInputPrompt = async (character: Character, customInstructions
 };
 
 const workflowControlSchema = z.object({
-  shouldStop: z
+    shouldStop: z
     .boolean()
     .describe(
-      "Set to TRUE when: (1) you've done everything possible with your available tools, (2) you face tool limitations, (3) you need to wait for anything, or (4) you've scheduled appropriate follow-ups. Set to FALSE ONLY when you have immediate actions to take using your available tools.",
+      'Set to TRUE when: (1) you\'ve done everything possible with your available tools, (2) you face tool limitations, (3) you need to wait for anything, or (4) you\'ve scheduled appropriate follow-ups. Set to FALSE ONLY when you have immediate actions to take using your available tools.',
     ),
   reason: z.string().describe('The detailed reason for stopping the workflow.'),
 });
