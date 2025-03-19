@@ -36,12 +36,16 @@ export const startTaskExecutor = (
 
         broadcastTaskUpdate(namespace);
       }
-    } catch (error: unknown) {
+    } catch (error) {
       logger.error('Error executing scheduled task', {
         error: error instanceof Error ? error.message : String(error),
       });
-      if (error instanceof Error && error.message.includes('Recursion limit') && dueTask) {
-        runner.updateTaskStatus(dueTask.id, 'failed', error.message);
+      if (dueTask) {
+        runner.updateTaskStatus(
+          dueTask.id,
+          'failed',
+          error instanceof Error ? error.message : String(error),
+        );
       }
     }
   };
