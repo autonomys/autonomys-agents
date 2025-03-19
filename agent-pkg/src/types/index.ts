@@ -49,3 +49,15 @@ export interface ValidationResult {
   valid: boolean;
   message?: string;
 }
+
+
+export interface Credentials {
+  autoDriveApiKey?: string;
+  autoDriveEncryptionPassword?: string;
+  autoEvmPrivateKey?: string;
+}
+
+export interface PasswordCache {
+  password: string;
+  timestamp: number;
+}
