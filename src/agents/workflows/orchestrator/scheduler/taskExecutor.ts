@@ -12,9 +12,9 @@ export const startTaskExecutor = (
   let running = true;
 
   const executeNextTask = async () => {
-    try {
-      const dueTask = runner.getNextDueTask();
+    const dueTask = runner.getNextDueTask();
 
+    try {
       if (dueTask) {
         logger.info(`Executing scheduled task ${dueTask.id}`, {
           scheduledFor: dueTask.scheduledFor.toISOString(),
@@ -36,10 +36,17 @@ export const startTaskExecutor = (
 
         broadcastTaskUpdate(namespace);
       }
-    } catch (error: unknown) {
+    } catch (error) {
       logger.error('Error executing scheduled task', {
         error: error instanceof Error ? error.message : String(error),
       });
+      if (dueTask) {
+        runner.updateTaskStatus(
+          dueTask.id,
+          'failed',
+          error instanceof Error ? error.message : String(error),
+        );
+      }
     }
   };
 

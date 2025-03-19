@@ -23,8 +23,7 @@ export interface TaskQueue {
 
   getNextDueTask: () => Task | undefined;
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  updateTaskStatus: (id: string, status: Task['status'], result?: any) => void;
+  updateTaskStatus: (id: string, status: Task['status'], result?: string) => void;
 
   deleteTask: (id: string) => void;
 
