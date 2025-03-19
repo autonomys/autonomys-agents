@@ -3,11 +3,17 @@ pragma solidity ^0.8.28;
 
 /**
  * @title AutonomysPackageRegistry
- * @dev Smart contract for managing tool package registrations on Autonomys DSN
+ * @dev Smart contract for managing registration of tool packages stored on the Autonomys DSN.
  */
 contract AutonomysPackageRegistry {
     address public owner;
 
+    // Constants for validation
+    uint256 private constant MAX_NAME_LENGTH = 100;
+    uint256 private constant MAX_VERSION_LENGTH = 32;
+    uint256 private constant MAX_CID_LENGTH = 59;  // Fixed CID length from BLAKE3
+    uint256 private constant MAX_METADATA_LENGTH = 10000;  // 10KB
+    
     // Events
     event ToolRegistered(string name, string version, string cid, address publisher, uint256 timestamp);
     event ToolUpdated(string name, string version, string cid, address publisher, uint256 timestamp);
@@ -27,7 +33,6 @@ contract AutonomysPackageRegistry {
         string[] versionList;       // List of all versions
         mapping(string => ToolVersion) versions;  // Version string => ToolVersion
         string latestVersion;       // Latest version string
-        bool exists;                // Whether the tool exists
     }
 
     // Tool name => Tool
@@ -58,7 +63,7 @@ contract AutonomysPackageRegistry {
      * @dev Modifier to check if a tool exists
      */
     modifier toolExists(string memory name) {
-        require(tools[name].exists, "Tool does not exist");
+        require(tools[name].owner != address(0), "Tool does not exist");
         _;
     }
 
@@ -68,6 +73,48 @@ contract AutonomysPackageRegistry {
     modifier onlyToolOwner(string memory name) {
         require(tools[name].owner == msg.sender, "Caller is not the tool owner");
         _;
+    }
+    
+    /**
+     * @dev Validate tool name format
+     * @param name Tool name to validate
+     */
+    function validateToolName(string memory name) internal pure {
+        bytes memory nameBytes = bytes(name);
+        require(nameBytes.length > 0, "Tool name cannot be empty");
+        require(nameBytes.length <= MAX_NAME_LENGTH, "Tool name too long");
+    }
+    
+    /**
+     * @dev Validate semantic version format (simplified)
+     * @param version Version string to validate
+     */
+    function validateVersion(string memory version) internal pure {
+        bytes memory versionBytes = bytes(version);
+        require(versionBytes.length > 0, "Version cannot be empty");
+        require(versionBytes.length <= MAX_VERSION_LENGTH, "Version too long");
+    }
+    
+    /**
+     * @dev Validate CID format 
+     * @param cid CID string to validate
+     */
+    function validateCID(string memory cid) internal pure {
+        bytes memory cidBytes = bytes(cid);
+        require(cidBytes.length > 0, "CID cannot be empty");
+        require(cidBytes.length <= MAX_CID_LENGTH, "CID too long");
+    }
+    
+    /**
+     * @dev Validate metadata
+     * @param metadata Metadata string to validate
+     */
+    function validateMetadata(string memory metadata) internal pure {
+        bytes memory metadataBytes = bytes(metadata);
+        // Only check length
+        if (metadataBytes.length > 0) {
+            require(metadataBytes.length <= MAX_METADATA_LENGTH, "Metadata too large");
+        }
     }
 
     /**
@@ -83,15 +130,15 @@ contract AutonomysPackageRegistry {
         string memory cid,
         string memory metadata
     ) external {
-        // Check for empty values
-        require(bytes(name).length > 0, "Tool name cannot be empty");
-        require(bytes(version).length > 0, "Version cannot be empty");
-        require(bytes(cid).length > 0, "CID cannot be empty");
+        // Validate all inputs
+        validateToolName(name);
+        validateVersion(version);
+        validateCID(cid);
+        validateMetadata(metadata);
 
         // New tool
-        if (!tools[name].exists) {
+        if (tools[name].owner == address(0)) {
             tools[name].owner = msg.sender;
-            tools[name].exists = true;
             tools[name].latestVersion = version;
             
             // Add to publisher's tools
@@ -139,6 +186,9 @@ contract AutonomysPackageRegistry {
         string memory metadata
     ) external toolExists(name) onlyToolOwner(name) {
         require(versionExists(name, version), "Version does not exist");
+        
+        // Validate metadata
+        validateMetadata(metadata);
         
         tools[name].versions[version].metadata = metadata;
         
@@ -216,7 +266,7 @@ contract AutonomysPackageRegistry {
      * @param version Version to check
      */
     function versionExists(string memory name, string memory version) public view returns (bool) {
-        if (!tools[name].exists) {
+        if (tools[name].owner == address(0)) {
             return false;
         }
         
@@ -282,16 +332,39 @@ contract AutonomysPackageRegistry {
     }
 
     /**
-     * @dev Get a list of tools owned by a publisher
+     * @dev Get a paginated list of tools owned by a publisher
      * @param publisher Publisher address
-     * @return Array of tool names
+     * @param offset Starting index in the publisher's tools array
+     * @param limit Maximum number of tools to return
+     * @return Array of tool names within the specified range
      */
-    function getPublisherTools(address publisher) 
+    function getPublisherTools(address publisher, uint256 offset, uint256 limit) 
         external 
         view 
         returns (string[] memory) 
     {
-        return publisherTools[publisher];
+        // Check if offset is valid when array is not empty
+        if (publisherTools[publisher].length > 0) {
+            require(offset < publisherTools[publisher].length, "Offset out of bounds");
+        }
+        
+        // If array is empty or offset is invalid, return empty array
+        if (publisherTools[publisher].length == 0 || offset >= publisherTools[publisher].length) {
+            return new string[](0);
+        }
+        
+        // Calculate how many items to return (don't exceed array bounds)
+        uint256 size = (offset + limit > publisherTools[publisher].length) 
+            ? publisherTools[publisher].length - offset 
+            : limit;
+            
+        string[] memory result = new string[](size);
+        
+        for (uint256 i = 0; i < size; i++) {
+            result[i] = publisherTools[publisher][offset + i];
+        }
+        
+        return result;
     }
 
     /**
@@ -329,11 +402,34 @@ contract AutonomysPackageRegistry {
     }
 
     /**
-     * @dev Get all registered tool names
-     * @return Array of all tool names
+     * @dev Get registered tool names with pagination
+     * @param offset Starting index in the tools array
+     * @param limit Maximum number of tools to return
+     * @return Array of tool names within the specified range
      */
-    function getAllTools() external view returns (string[] memory) {
-        return allToolNames;
+    function getAllTools(uint256 offset, uint256 limit) external view returns (string[] memory) {
+        // Check if offset is valid when array is not empty
+        if (allToolNames.length > 0) {
+            require(offset < allToolNames.length, "Offset out of bounds");
+        }
+        
+        // If array is empty or offset is invalid, return empty array
+        if (allToolNames.length == 0 || offset >= allToolNames.length) {
+            return new string[](0);
+        }
+        
+        // Calculate how many items to return (don't exceed array bounds)
+        uint256 size = (offset + limit > allToolNames.length) 
+            ? allToolNames.length - offset 
+            : limit;
+            
+        string[] memory result = new string[](size);
+        
+        for (uint256 i = 0; i < size; i++) {
+            result[i] = allToolNames[offset + i];
+        }
+        
+        return result;
     }
     
     /**
