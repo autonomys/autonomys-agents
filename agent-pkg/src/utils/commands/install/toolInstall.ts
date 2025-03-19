@@ -3,7 +3,7 @@ import path from 'path';
 import extract from 'extract-zip';
 import ora from 'ora';
 import { PACKAGES_DIR, getToolInstallDir } from '../../shared/path.js';
-import { getToolFromRegistry, getToolVersionFromRegistry } from '../../registry.js';
+import { getToolFromRegistry, getToolVersionFromRegistry } from '../registry/toolInquiry.js';
 import { downloadFileFromDsn } from '../../autoDrive/autoDriveClient.js';
 import { ToolInstallInfo, InstallOptions } from '../../../types/index.js';
 

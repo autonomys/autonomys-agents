@@ -1,6 +1,6 @@
 import chalk from 'chalk';
 import { CommandResult, ToolMetadata } from '../types/index.js';
-import { getRegistry } from '../utils/registry.js';
+import { getRegistry } from '../utils/commands/registry/toolInquiry.js';
 
 export const list = async (options: { detailed?: boolean }): Promise<CommandResult> => {
   console.log(chalk.blue('Fetching available tools from registry...'));
