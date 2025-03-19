@@ -7,7 +7,7 @@ import { config } from './commands/config.js';
 import { clean } from './commands/clean.js';
 import { initializeConfigAndCredentials } from './config/index.js';
 import { credentialsExist } from './utils/credential/index.js';
-
+import { ensureAutoOSDir } from './utils/shared/path.js';
 
 const checkMasterPassword = async () => {
   const isConfigCommand = process.argv.length > 2 && process.argv[2] === 'config';
@@ -15,22 +15,17 @@ const checkMasterPassword = async () => {
     process.argv.length > 2 && (process.argv[2] === '-h' || process.argv[2] === '--help');
 
   if ((await credentialsExist()) && !isConfigCommand && !isHelpCommand) {
-    if (!process.env.AUTOOS_MASTER_PASSWORD) {
-      console.log(chalk.blue('\nℹ️  Information: You have stored credentials'));
-      console.log(
-        chalk.yellow(
-          'You can set your master password as an environment variable to avoid prompts:',
-        ),
-      );
-      console.log(chalk.cyan('\n  export AUTOOS_MASTER_PASSWORD="your-master-password"\n'));
-      console.log(chalk.yellow('Or you can simply enter it when prompted.\n'));
-    }
+    console.log(chalk.blue('\nℹ️  Information: You have stored credentials'));
+    console.log(chalk.yellow('Your master password is securely stored in the system keychain.\n'));
   }
 };
 
 const program = new Command();
 
-Promise.all([initializeConfigAndCredentials(), checkMasterPassword()])
+ensureAutoOSDir()
+  .then(() => {
+    return Promise.all([initializeConfigAndCredentials(), checkMasterPassword()]);
+  })
   .then(() => {
     const installWrapper = async (...args: any[]) => {
       await install(args[0], args[1]);

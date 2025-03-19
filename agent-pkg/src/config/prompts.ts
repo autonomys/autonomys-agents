@@ -1,11 +1,9 @@
-import { saveConfig } from ".";
+import { loadConfig, saveConfig } from "./index.js";
 import chalk from "chalk";
-import { loadConfig } from ".";
 import inquirer from "inquirer";
 import { Credentials } from "../types/index.js";
 import { credentialsExist, loadCredentials, saveCredentials } from "../utils/credential/index.js";
 import { saveToKeychain, deleteFromKeychain } from "../utils/vault/keychain.js";
-import { cachePassword } from "../utils/vault/cache.js";
 
 
 /**
@@ -36,18 +34,7 @@ export const promptForConfig = async () => {
         message: 'Package Registry contract address:',
         default: currentConfig.packageRegistryAddress,
       },
-      {
-        type: 'confirm',
-        name: 'useKeychain',
-        message: 'Store master password in system keychain?',
-        default: currentConfig.useKeychain === undefined ? true : currentConfig.useKeychain,
-      },
     ]);
-  
-    // If keychain setting changed from true to false, remove any existing keychain entry
-    if (currentConfig.useKeychain && !answers.useKeychain) {
-      await deleteFromKeychain();
-    }
   
     await saveConfig({ ...currentConfig, ...answers });
     console.log(chalk.green('Configuration saved successfully'));
@@ -84,14 +71,9 @@ export const promptForConfig = async () => {
       if (action === 'Use existing credentials') {
         try {
           const credentials = await loadCredentials(masterPassword);
-          // Cache the password for future use
-          cachePassword(masterPassword);
   
-          // Save to keychain if enabled
-          const config = await loadConfig();
-          if (config.useKeychain) {
-            await saveToKeychain(masterPassword);
-          }
+          // Always save to keychain
+          await saveToKeychain(masterPassword);
   
           return credentials;
         } catch (error) {
@@ -100,7 +82,7 @@ export const promptForConfig = async () => {
         }
       }
     } else {
-      const { password, useKeychain } = await inquirer.prompt([
+      const { password, confirmPassword } = await inquirer.prompt([
         {
           type: 'password',
           name: 'password',
@@ -108,7 +90,7 @@ export const promptForConfig = async () => {
           mask: '*',
           validate: (input: string) => {
             if (input.length < 8) {
-              return 'Password must be at least 8 characters';
+              return 'Password must be at least 8 characters long';
             }
             return true;
           },
@@ -125,22 +107,12 @@ export const promptForConfig = async () => {
             return true;
           },
         },
-        {
-          type: 'confirm',
-          name: 'useKeychain',
-          message: 'Store master password in system keychain?',
-          default: true,
-        },
       ]);
   
       masterPassword = password;
-  
-      // Update config with keychain preference
-      const currentConfig = await loadConfig();
-      await saveConfig({
-        ...currentConfig,
-        useKeychain,
-      });
+      
+      // Inform user about keychain storage
+      console.log(chalk.green('Your master password will be securely stored in the system keychain.'));
     }
   
     // Prompt for credentials

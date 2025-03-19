@@ -1,6 +1,6 @@
 import chalk from 'chalk';
 import { CommandResult } from '../types/index.js';
-import { promptForConfig, promptForCredentials } from '../config/index.js';
+import { promptForConfig, promptForCredentials } from '../config/prompts.js';
 
 /**
  * Configure the autoOS CLI

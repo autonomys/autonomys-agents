@@ -18,7 +18,7 @@ export const fetchToolPackage = async (cid: string): Promise<string> => {
 
   try {
     console.log(`Downloading tool package with CID: ${cid}`);
-    const fileStream = await downloadFileFromDsn(cid, process.env.AUTO_DRIVE_ENCRYPTION_PASSWORD);
+    const fileStream = await downloadFileFromDsn(cid);
 
     const chunks: Buffer[] = [];
     for await (const chunk of fileStream) {

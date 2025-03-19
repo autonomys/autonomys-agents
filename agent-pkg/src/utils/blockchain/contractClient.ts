@@ -1,6 +1,7 @@
 import { ethers } from 'ethers';
 import { initializeConfigAndCredentials } from '../../config/index.js';
 import chalk from 'chalk';
+import { ABI } from './contractABI.js';
 
 /**
  * Initialize a contract instance for the AutonomysPackageRegistry

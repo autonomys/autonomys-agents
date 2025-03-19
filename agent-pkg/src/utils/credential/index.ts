@@ -1,4 +1,3 @@
-
 import fs from 'fs/promises';
 import { createCipheriv, createDecipheriv, randomBytes, scryptSync } from 'crypto';
 import inquirer from 'inquirer';
@@ -7,7 +6,6 @@ import { Credentials } from '../../types/index.js';
 import { CREDENTIALS_FILE } from '../shared/path.js';
 import { loadConfig, saveConfig } from '../../config/index.js';
 import { saveToKeychain, getFromKeychain, deleteFromKeychain } from '../vault/keychain.js';
-import { cachePassword, getCachedPassword } from '../vault/cache.js';
 import { promptForCredentials } from '../../config/prompts.js';
 
 
@@ -57,19 +55,11 @@ const encryptCredentials = async (
  * Save credentials to an encrypted file
  */
 export const saveCredentials = async (credentials: Credentials, masterPassword: string) => {
-
     const encrypted = await encryptCredentials(credentials, masterPassword);
     await fs.writeFile(CREDENTIALS_FILE, encrypted);
   
-    // Cache the password
-    cachePassword(masterPassword);
-  
-    // Get the current config to check if keychain is enabled
-    const config = await loadConfig();
-    if (config.useKeychain) {
-      // Save to keychain
-      await saveToKeychain(masterPassword);
-    }
+    // Always save to keychain
+    await saveToKeychain(masterPassword);
   };
   
   /**
@@ -106,77 +96,30 @@ export const getCredentials = async (): Promise<Credentials> => {
     if (await credentialsExist()) {
       console.log('Credentials exist, checking for master password');
   
-      // First check if we have a cached password
-      const cachedPassword = getCachedPassword();
-      if (cachedPassword) {
-        console.log('Using cached master password');
+      // First try to get the password from keychain
+      const keychainPassword = await getFromKeychain();
+      if (keychainPassword) {
+        console.log('Using master password from system keychain');
         try {
-          return await loadCredentials(cachedPassword);
-        } catch (error) {
-          console.error(chalk.red('Cached password is no longer valid. Will try other methods.'));          
-        }
-      }
-  
-      // Then check system keychain
-      const config = await loadConfig();
-      if (config.useKeychain) {
-        const keychainPassword = await getFromKeychain();
-        if (keychainPassword) {
-          console.log('Using master password from system keychain');
-          try {
-            const credentials = await loadCredentials(keychainPassword);
-            // Cache the password for this session
-            cachePassword(keychainPassword);
-            return credentials;
-          } catch (error) {
-            console.error(
-              chalk.red('System keychain password is no longer valid. Will try other methods.'),
-            );
-            // Remove invalid password from keychain
-            await deleteFromKeychain();
-          }
-        }
-      }
-  
-      if (process.env.AUTOOS_MASTER_PASSWORD) {
-        console.log('Using master password from environment variable');
-        try {
-          const credentials = await loadCredentials(process.env.AUTOOS_MASTER_PASSWORD);
-          // Cache the password for future use
-          cachePassword(process.env.AUTOOS_MASTER_PASSWORD);
-  
-          // Save to keychain if enabled
-          if (config.useKeychain) {
-            await saveToKeychain(process.env.AUTOOS_MASTER_PASSWORD);
-          }
-  
+          const credentials = await loadCredentials(keychainPassword);
           return credentials;
         } catch (error) {
           console.error(
-            chalk.red('Environment variable password is not valid. Will prompt for password.'),
+            chalk.red('System keychain password is no longer valid. Will prompt for password.'),
           );
+          // Remove invalid password from keychain
+          await deleteFromKeychain();
         }
       }
   
-      // Finally, prompt the user interactively
+      // Prompt the user interactively
       console.log('Prompting for master password');
-      const { password, rememberChoice } = await inquirer.prompt([
+      const { password } = await inquirer.prompt([
         {
           type: 'password',
           name: 'password',
           message: 'Enter your master password:',
           mask: '*',
-        },
-        {
-          type: 'list',
-          name: 'rememberChoice',
-          message: 'Remember this password?',
-          choices: [
-            { name: 'Yes, store in system keychain', value: 'keychain' },
-            { name: 'Yes, for this session only', value: 'session' },
-            { name: 'No, ask me each time', value: 'never' },
-          ],
-          default: config.useKeychain ? 'keychain' : 'session',
         },
       ]);
   
@@ -184,22 +127,8 @@ export const getCredentials = async (): Promise<Credentials> => {
       try {
         const credentials = await loadCredentials(password);
   
-        // Handle password storage based on user choice
-        if (rememberChoice === 'keychain') {
-          await saveToKeychain(password);
-          // Also update the config to use keychain if not already set
-          if (!config.useKeychain) {
-            await saveConfig({
-              ...config,
-              useKeychain: true,
-            });
-          }
-        }
-  
-        if (rememberChoice === 'keychain' || rememberChoice === 'session') {
-          // Cache the password for this session
-          cachePassword(password);
-        }
+        // Always save to keychain
+        await saveToKeychain(password);
   
         return credentials;
       } catch (error) {

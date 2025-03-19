@@ -22,6 +22,14 @@ export const CONFIG_FILE = path.join(AUTOOS_DIR, 'config.json');
 export const CREDENTIALS_FILE = path.join(AUTOOS_DIR, 'credentials.enc');
 
 
+export const ensureAutoOSDir = async () => {
+  try {
+    await fs.access(AUTOOS_DIR);
+  } catch (error) {
+    await fs.mkdir(AUTOOS_DIR, { recursive: true });
+  }
+};
+
 /**
  * Detects the root directory of the current project
  * @returns Path to the project root or undefined if not found

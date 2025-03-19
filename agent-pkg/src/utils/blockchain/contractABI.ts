@@ -1,4 +1,4 @@
-const ABI = [
+export const ABI = [
     'function registerTool(string memory name, string memory version, string memory cid, string memory metadata) external',
     'function updateToolMetadata(string memory name, string memory version, string memory metadata) external',
     'function setLatestVersion(string memory name, string memory version) external',
