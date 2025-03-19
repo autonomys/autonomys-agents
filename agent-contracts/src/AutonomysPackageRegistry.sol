@@ -1,169 +1,174 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.28;
 
-/**
- * @title AutonomysPackageRegistry
- * @dev Smart contract for managing registration of tool packages stored on the Autonomys DSN.
- */
 contract AutonomysPackageRegistry {
     address public owner;
-
-    // Constants for validation
-    uint256 private constant MAX_NAME_LENGTH = 100;
-    uint256 private constant MAX_VERSION_LENGTH = 32;
-    uint256 private constant MAX_CID_LENGTH = 59;  // Fixed CID length from BLAKE3
-    uint256 private constant MAX_METADATA_LENGTH = 10000;  // 10KB
-    
-    // Events
-    event ToolRegistered(string name, string version, string cid, address publisher, uint256 timestamp);
-    event ToolUpdated(string name, string version, string cid, address publisher, uint256 timestamp);
+   
+    event ToolRegistered(string name, string version, bytes32 cid, address publisher, uint256 timestamp);
+    event ToolUpdated(string name, string version, bytes32 cid, address publisher, uint256 timestamp);
     event OwnershipTransferred(string name, address previousOwner, address newOwner);
 
-    // Tool version struct
+    struct Version {
+        uint256 major;
+        uint256 minor;
+        uint256 patch;
+    }
+
     struct ToolVersion {
-        string version;     // Semantic version
-        string cid;         // Content ID on Autonomys DSN
-        uint256 timestamp;  // Publication timestamp
-        string metadata;    // JSON string with additional metadata (description, keywords, etc.)
+        string version;
+        bytes32 cid;   
+        uint256 timestamp; 
+        bytes32 metadata;  
     }
 
-    // Tool struct
     struct Tool {
-        address owner;              // Tool owner address
-        string[] versionList;       // List of all versions
-        mapping(string => ToolVersion) versions;  // Version string => ToolVersion
-        string latestVersion;       // Latest version string
+        address owner;
+        string[] versionList;
+        mapping(string => ToolVersion) versions;
+        string latestVersion;
     }
 
-    // Tool name => Tool
     mapping(string => Tool) private tools;
     
-    // Publisher address => array of tool names
     mapping(address => string[]) private publisherTools;
     
-    // Array of all registered tool names
     string[] private allToolNames;
 
-    /**
-     * @dev Constructor
-     */
     constructor() {
         owner = msg.sender;
     }
 
-    /**
-     * @dev Modifier to check if sender is the contract owner
-     */
     modifier onlyOwner() {
         require(msg.sender == owner, "Caller is not the owner");
         _;
     }
 
-    /**
-     * @dev Modifier to check if a tool exists
-     */
     modifier toolExists(string memory name) {
         require(tools[name].owner != address(0), "Tool does not exist");
         _;
     }
 
-    /**
-     * @dev Modifier to check if sender is the tool owner
-     */
     modifier onlyToolOwner(string memory name) {
         require(tools[name].owner == msg.sender, "Caller is not the tool owner");
         _;
     }
     
-    /**
-     * @dev Validate tool name format
-     * @param name Tool name to validate
-     */
     function validateToolName(string memory name) internal pure {
         bytes memory nameBytes = bytes(name);
         require(nameBytes.length > 0, "Tool name cannot be empty");
-        require(nameBytes.length <= MAX_NAME_LENGTH, "Tool name too long");
     }
     
-    /**
-     * @dev Validate semantic version format (simplified)
-     * @param version Version string to validate
-     */
     function validateVersion(string memory version) internal pure {
         bytes memory versionBytes = bytes(version);
         require(versionBytes.length > 0, "Version cannot be empty");
-        require(versionBytes.length <= MAX_VERSION_LENGTH, "Version too long");
-    }
-    
-    /**
-     * @dev Validate CID format 
-     * @param cid CID string to validate
-     */
-    function validateCID(string memory cid) internal pure {
-        bytes memory cidBytes = bytes(cid);
-        require(cidBytes.length > 0, "CID cannot be empty");
-        require(cidBytes.length <= MAX_CID_LENGTH, "CID too long");
-    }
-    
-    /**
-     * @dev Validate metadata
-     * @param metadata Metadata string to validate
-     */
-    function validateMetadata(string memory metadata) internal pure {
-        bytes memory metadataBytes = bytes(metadata);
-        // Only check length
-        if (metadataBytes.length > 0) {
-            require(metadataBytes.length <= MAX_METADATA_LENGTH, "Metadata too large");
+        
+        if (keccak256(versionBytes) == keccak256(bytes("0.0.0"))) {
+            revert("Version 0.0.0 is not permitted");
         }
     }
+    
+    function validateCID(bytes32 cid) internal pure {
+        require(cid != bytes32(0), "CID cannot be empty");
+    }
+    
+    function validateMetadata(bytes32 metadata) internal pure {
+        require(metadata != bytes32(0), "Metadata cannot be empty");
+    }
 
-    /**
-     * @dev Register a new tool
-     * @param name Tool name
-     * @param version Tool version
-     * @param cid Content ID on Autonomys DSN
-     * @param metadata Additional metadata as JSON string
-     */
+    function versionExists(string memory name, string memory version) public view returns (bool) {
+        if (tools[name].owner == address(0)) {
+            return false;
+        }        
+        return tools[name].versions[version].cid != bytes32(0);
+    }
+
+    function isToolNameRegistered(string memory name) public view returns (bool) {
+        return tools[name].owner != address(0);
+    }
+
+    function parseVersion(string memory version) public pure returns (Version memory) {
+        Version memory result;
+        bytes memory versionBytes = bytes(version);
+        uint256 versionLength = versionBytes.length;
+        
+        uint256 firstDot = 0;
+        while (firstDot < versionLength && versionBytes[firstDot] != ".") {
+            firstDot++;
+        }
+        
+        if (firstDot > 0) {
+            result.major = parseVersionComponent(versionBytes, 0, firstDot);
+        }
+        
+        uint256 secondDot = firstDot + 1;
+        while (secondDot < versionLength && versionBytes[secondDot] != ".") {
+            secondDot++;
+        }
+        
+        if (secondDot > firstDot + 1) {
+            result.minor = parseVersionComponent(versionBytes, firstDot + 1, secondDot);
+        }
+        
+        if (secondDot < versionLength - 1) {
+            result.patch = parseVersionComponent(versionBytes, secondDot + 1, versionLength);
+        }
+
+        require(result.major > 0 || result.minor > 0 || result.patch > 0, "Version 0.0.0 is not permitted");
+        
+        return result;
+    }
+    
+    function parseVersionComponent(bytes memory versionBytes, uint256 start, uint256 end) 
+        private 
+        pure 
+        returns (uint256) 
+    {
+        uint256 value = 0;
+        for (uint256 i = start; i < end; i++) {
+            uint8 digit = uint8(versionBytes[i]) - 48;
+            require(digit <= 9, "Invalid version character");
+            value = value * 10 + digit;
+        }
+        return value;
+    }
+    
+    function compareVersions(string memory a, string memory b) public pure returns (int) {
+        Version memory vA = parseVersion(a);
+        Version memory vB = parseVersion(b);
+        
+        if (vA.major > vB.major) return 1;
+        if (vA.major < vB.major) return -1;
+        
+        if (vA.minor > vB.minor) return 1;
+        if (vA.minor < vB.minor) return -1;
+        
+        if (vA.patch > vB.patch) return 1;
+        if (vA.patch < vB.patch) return -1;
+        
+        return 0;
+    }
+
     function registerTool(
         string memory name,
         string memory version,
-        string memory cid,
-        string memory metadata
+        bytes32 cid,
+        bytes32 metadata
     ) external {
-        // Validate all inputs
         validateToolName(name);
         validateVersion(version);
         validateCID(cid);
         validateMetadata(metadata);
 
-        // New tool
         if (tools[name].owner == address(0)) {
+            require(!isToolNameRegistered(name), "Tool name already registered");
+
             tools[name].owner = msg.sender;
+            
             tools[name].latestVersion = version;
             
-            // Add to publisher's tools
             publisherTools[msg.sender].push(name);
-            
-            // Add to the global list of all tools
             allToolNames.push(name);
             
-            emit ToolRegistered(name, version, cid, msg.sender, block.timestamp);
-        } else {
-            // Updating existing tool
-            require(tools[name].owner == msg.sender, "Not the tool owner");
-            tools[name].latestVersion = version;
-            
-            emit ToolUpdated(name, version, cid, msg.sender, block.timestamp);
-        }
-
-        // Store version
-        if (versionExists(name, version)) {
-            // Update existing version
-            tools[name].versions[version].cid = cid;
-            tools[name].versions[version].timestamp = block.timestamp;
-            tools[name].versions[version].metadata = metadata;
-        } else {
-            // Add new version
             tools[name].versions[version] = ToolVersion(
                 version,
                 cid,
@@ -171,23 +176,37 @@ contract AutonomysPackageRegistry {
                 metadata
             );
             tools[name].versionList.push(version);
+            
+            emit ToolRegistered(name, version, cid, msg.sender, block.timestamp);
+        } else {
+            require(tools[name].owner == msg.sender, "Not the tool owner");
+            
+            require(!versionExists(name, version), "Version already exists");
+            
+            require(compareVersions(version, tools[name].latestVersion) > 0, 
+                "New version must be higher than the latest version");
+            
+            tools[name].versions[version] = ToolVersion(
+                version,
+                cid,
+                block.timestamp,
+                metadata
+            );
+            tools[name].versionList.push(version);
+            
+            tools[name].latestVersion = version;
+            
+            emit ToolUpdated(name, version, cid, msg.sender, block.timestamp);
         }
     }
 
-    /**
-     * @dev Update tool metadata without creating a new version
-     * @param name Tool name
-     * @param version Tool version
-     * @param metadata New metadata
-     */
     function updateToolMetadata(
         string memory name,
         string memory version, 
-        string memory metadata
+        bytes32 metadata
     ) external toolExists(name) onlyToolOwner(name) {
         require(versionExists(name, version), "Version does not exist");
         
-        // Validate metadata
         validateMetadata(metadata);
         
         tools[name].versions[version].metadata = metadata;
@@ -201,33 +220,6 @@ contract AutonomysPackageRegistry {
         );
     }
 
-    /**
-     * @dev Set the latest version of a tool
-     * @param name Tool name
-     * @param version Version to set as latest
-     */
-    function setLatestVersion(
-        string memory name, 
-        string memory version
-    ) external toolExists(name) onlyToolOwner(name) {
-        require(versionExists(name, version), "Version does not exist");
-        
-        tools[name].latestVersion = version;
-        
-        emit ToolUpdated(
-            name, 
-            version, 
-            tools[name].versions[version].cid, 
-            msg.sender, 
-            block.timestamp
-        );
-    }
-
-    /**
-     * @dev Transfer ownership of a tool
-     * @param name Tool name
-     * @param newOwner Address of new owner
-     */
     function transferToolOwnership(
         string memory name, 
         address newOwner
@@ -238,48 +230,21 @@ contract AutonomysPackageRegistry {
         address previousOwner = tools[name].owner;
         tools[name].owner = newOwner;
         
-        // Update publisher arrays
-        bool found = false;
-        
-        // Remove from previous owner's list
         for (uint i = 0; i < publisherTools[previousOwner].length; i++) {
             if (keccak256(bytes(publisherTools[previousOwner][i])) == keccak256(bytes(name))) {
-                // Replace with the last element then pop
                 if (i < publisherTools[previousOwner].length - 1) {
                     publisherTools[previousOwner][i] = publisherTools[previousOwner][publisherTools[previousOwner].length - 1];
                 }
                 publisherTools[previousOwner].pop();
-                found = true;
                 break;
             }
         }
         
-        // Add to new owner's list
         publisherTools[newOwner].push(name);
         
         emit OwnershipTransferred(name, previousOwner, newOwner);
     }
 
-    /**
-     * @dev Check if version exists
-     * @param name Tool name
-     * @param version Version to check
-     */
-    function versionExists(string memory name, string memory version) public view returns (bool) {
-        if (tools[name].owner == address(0)) {
-            return false;
-        }
-        
-        return bytes(tools[name].versions[version].cid).length > 0;
-    }
-
-    /**
-     * @dev Get tool information
-     * @param name Tool name
-     * @return toolOwner Owner address
-     * @return versionCount Number of versions
-     * @return latestVersion Latest version string
-     */
     function getToolInfo(string memory name) 
         external 
         view 
@@ -293,19 +258,11 @@ contract AutonomysPackageRegistry {
         );
     }
 
-    /**
-     * @dev Get tool version information
-     * @param name Tool name
-     * @param version Version to get
-     * @return cid Content ID
-     * @return timestamp Publication timestamp
-     * @return metadata Additional metadata
-     */
     function getToolVersion(string memory name, string memory version) 
         external 
         view 
         toolExists(name) 
-        returns (string memory cid, uint256 timestamp, string memory metadata) 
+        returns (bytes32 cid, uint256 timestamp, bytes32 metadata) 
     {
         require(versionExists(name, version), "Version does not exist");
         
@@ -317,11 +274,6 @@ contract AutonomysPackageRegistry {
         );
     }
 
-    /**
-     * @dev Get all versions of a tool
-     * @param name Tool name
-     * @return List of version strings
-     */
     function getToolVersions(string memory name) 
         external 
         view 
@@ -331,29 +283,19 @@ contract AutonomysPackageRegistry {
         return tools[name].versionList;
     }
 
-    /**
-     * @dev Get a paginated list of tools owned by a publisher
-     * @param publisher Publisher address
-     * @param offset Starting index in the publisher's tools array
-     * @param limit Maximum number of tools to return
-     * @return Array of tool names within the specified range
-     */
     function getPublisherTools(address publisher, uint256 offset, uint256 limit) 
         external 
         view 
         returns (string[] memory) 
     {
-        // Check if offset is valid when array is not empty
         if (publisherTools[publisher].length > 0) {
             require(offset < publisherTools[publisher].length, "Offset out of bounds");
         }
         
-        // If array is empty or offset is invalid, return empty array
         if (publisherTools[publisher].length == 0 || offset >= publisherTools[publisher].length) {
             return new string[](0);
         }
         
-        // Calculate how many items to return (don't exceed array bounds)
         uint256 size = (offset + limit > publisherTools[publisher].length) 
             ? publisherTools[publisher].length - offset 
             : limit;
@@ -367,22 +309,14 @@ contract AutonomysPackageRegistry {
         return result;
     }
 
-    /**
-     * @dev Get latest version information for a tool
-     * @param name Tool name
-     * @return version Latest version
-     * @return cid Content ID
-     * @return timestamp Publication timestamp
-     * @return metadata Additional metadata
-     */
     function getLatestVersion(string memory name) 
         external 
         view 
         toolExists(name) 
-        returns (string memory version, string memory cid, uint256 timestamp, string memory metadata) 
+        returns (string memory version, bytes32 cid, uint256 timestamp, bytes32 metadata) 
     {
-        string memory latestVersion = tools[name].latestVersion;
-        ToolVersion storage toolVersion = tools[name].versions[latestVersion];
+        string memory latestVersionStr = tools[name].latestVersion;
+        ToolVersion storage toolVersion = tools[name].versions[latestVersionStr];
         
         return (
             toolVersion.version,
@@ -392,33 +326,20 @@ contract AutonomysPackageRegistry {
         );
     }
 
-    /**
-     * @dev Transfer contract ownership
-     * @param newOwner Address of new contract owner
-     */
     function transferContractOwnership(address newOwner) external onlyOwner {
         require(newOwner != address(0), "New owner cannot be zero address");
         owner = newOwner;
     }
 
-    /**
-     * @dev Get registered tool names with pagination
-     * @param offset Starting index in the tools array
-     * @param limit Maximum number of tools to return
-     * @return Array of tool names within the specified range
-     */
     function getAllTools(uint256 offset, uint256 limit) external view returns (string[] memory) {
-        // Check if offset is valid when array is not empty
         if (allToolNames.length > 0) {
             require(offset < allToolNames.length, "Offset out of bounds");
         }
         
-        // If array is empty or offset is invalid, return empty array
         if (allToolNames.length == 0 || offset >= allToolNames.length) {
             return new string[](0);
         }
         
-        // Calculate how many items to return (don't exceed array bounds)
         uint256 size = (offset + limit > allToolNames.length) 
             ? allToolNames.length - offset 
             : limit;
@@ -432,10 +353,6 @@ contract AutonomysPackageRegistry {
         return result;
     }
     
-    /**
-     * @dev Get the total number of registered tools
-     * @return Total count of registered tools
-     */
     function getToolCount() external view returns (uint256) {
         return allToolNames.length;
     }

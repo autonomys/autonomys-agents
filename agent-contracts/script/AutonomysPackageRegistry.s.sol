@@ -6,9 +6,12 @@ import "../src/AutonomysPackageRegistry.sol";
 
 contract DeployAutonomysPackageRegistry is Script {
     function run() public {
-        uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
+        // Log deployment info
+        console.log("Deploying AutonomysPackageRegistry contract");
+        console.log("Deployer address:", msg.sender);
+        console.log("Chain ID:", block.chainid);
         
-        vm.startBroadcast(deployerPrivateKey);
+        vm.startBroadcast();
         
         // Deploy the registry contract
         AutonomysPackageRegistry registry = new AutonomysPackageRegistry();

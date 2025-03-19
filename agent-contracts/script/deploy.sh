@@ -59,13 +59,13 @@ deploy_package_registry() {
     echo -e "${BLUE}Deploying AutonomysPackageRegistry to $network network... ${rpc_url}${NC}"
     
     if [ -n "$evm_version" ]; then
-        forge script script/DeployAutonomysPackageRegistry.s.sol:DeployAutonomysPackageRegistry \
+        forge script script/AutonomysPackageRegistry.s.sol:AutonomysPackageRegistry \
             --rpc-url $rpc_url \
             --private-key $private_key \
             --evm-version $evm_version \
             --broadcast
     else
-        forge script script/DeployAutonomysPackageRegistry.s.sol:DeployAutonomysPackageRegistry \
+        forge script script/AutonomysPackageRegistry.s.sol:AutonomysPackageRegistry \
             --rpc-url $rpc_url \
             --private-key $private_key \
             --broadcast
@@ -100,10 +100,10 @@ case $NETWORK in
     "taurus")
         case $CONTRACT in
             "agent-memory")
-                deploy_agent_memory "Taurus" $TAURUS_RPC_URL $PRIVATE_KEY "london"
+                deploy_agent_memory "Taurus" $TAURUS_RPC_URL $TAURUS_PRIVATE_KEY "london"
                 ;;
             "package-registry")
-                deploy_package_registry "Taurus" $TAURUS_RPC_URL $PRIVATE_KEY "london"
+                deploy_package_registry "Taurus" $TAURUS_RPC_URL $TAURUS_PRIVATE_KEY "london"
                 ;;
             *)
                 echo "Invalid contract type. Choose 'agent-memory' or 'package-registry'"
