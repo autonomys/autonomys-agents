@@ -28,38 +28,53 @@ export const updateRegistry = async (toolMetadata: ToolMetadata): Promise<string
 
     try {
       const exists = await getToolInfo(toolMetadata.name);
+      const isOwner = exists.latestVersion ? await isToolOwner(toolMetadata.name) : false;
 
-      if (exists.latestVersion && (await isToolOwner(toolMetadata.name))) {
-        console.log(
-          chalk.yellow(
-            `Tool ${toolMetadata.name} already exists. Adding new version ${toolMetadata.version}`,
-          ),
-        );
-        txHash = await addToolVersion(
-          toolMetadata.name,
-          toolMetadata.cid,
-          toolMetadata.version,
-          metadata,
-        );
-      } else if (exists.latestVersion) {
-        throw new Error(`Tool ${toolMetadata.name} already exists and you're not the owner`);
-      } else {
-        txHash = await registerTool(
-          toolMetadata.name,
-          toolMetadata.cid,
-          toolMetadata.version,
-          metadata,
-        );
+      const registryCase = exists.latestVersion
+        ? isOwner
+          ? 'UPDATE_EXISTING'
+          : 'NOT_OWNER'
+        : 'REGISTER_NEW';
+
+      switch (registryCase) {
+        case 'UPDATE_EXISTING':
+          console.log(
+            chalk.yellow(
+              `Tool ${toolMetadata.name} already exists. Adding new version ${toolMetadata.version}`,
+            ),
+          );
+          txHash = await addToolVersion(
+            toolMetadata.name,
+            toolMetadata.cid,
+            toolMetadata.version,
+            metadata,
+          );
+          console.log(
+            chalk.green(
+              `Tool ${toolMetadata.name} updated with CID: ${toolMetadata.cid}, txHash: ${txHash}`,
+            ),
+          );
+          break;
+
+        case 'NOT_OWNER':
+          throw new Error(`Tool ${toolMetadata.name} already exists and you're not the owner`);
+
+        case 'REGISTER_NEW':
+          txHash = await registerTool(
+            toolMetadata.name,
+            toolMetadata.cid,
+            toolMetadata.version,
+            metadata,
+          );
+          console.log(
+            chalk.green(
+              `Tool ${toolMetadata.name} registered with CID: ${toolMetadata.cid}, txHash: ${txHash}`,
+            ),
+          );
+          break;
       }
     } catch (error) {
       console.error(`Error updating registry:`, error);
-      console.log(chalk.green(`Registering new tool ${toolMetadata.name}`));
-      txHash = await registerTool(
-        toolMetadata.name,
-        toolMetadata.cid,
-        toolMetadata.version,
-        metadata,
-      );
     }
 
     const registry = await getLocalRegistryCache();
