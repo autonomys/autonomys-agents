@@ -4,7 +4,7 @@ import { getToolVersions } from '../utils/blockchain/contractClient.js';
 import { ToolCommandParams } from '../types/index.js';
 
 
-export const tool = async (params: ToolCommandParams): Promise<void> => {
+const tool = async (params: ToolCommandParams): Promise<void> => {
   const { name, version, action } = params;
   
   if (version && action === 'metadata') {
@@ -37,3 +37,5 @@ export const tool = async (params: ToolCommandParams): Promise<void> => {
     }
   }
 };
+
+export { tool };

@@ -1,27 +1,17 @@
 import path from 'path';
 import fs from 'fs/promises';
 
-/**
- * The user's home directory
- */
-export const HOME_DIR = process.env.HOME || process.env.USERPROFILE || '';
 
-/**
- * Root directory for all autoOS files
- */
-export const AUTOOS_DIR = path.join(HOME_DIR, '.autoOS');
+ const HOME_DIR = process.env.HOME || process.env.USERPROFILE || '';
+ const AUTOOS_DIR = path.join(HOME_DIR, '.autoOS');
+ const PACKAGES_DIR = path.join(AUTOOS_DIR, 'packages');
+ const TOOLS_DIR = path.join(AUTOOS_DIR, 'tools');
+ const DEFAULT_PROJECT_TOOLS_PATH = 'src/agents/tools';
+ const REGISTRY_CACHE_PATH = path.join(AUTOOS_DIR, 'registry.json');
+ const CONFIG_FILE = path.join(AUTOOS_DIR, 'config.json');
+ const CREDENTIALS_FILE = path.join(AUTOOS_DIR, 'credentials.enc');
 
-export const PACKAGES_DIR = path.join(AUTOOS_DIR, 'packages');
-export const TOOLS_DIR = path.join(AUTOOS_DIR, 'tools');
-
-export const DEFAULT_PROJECT_TOOLS_PATH = 'src/agents/tools';
-
-export const REGISTRY_CACHE_PATH = path.join(AUTOOS_DIR, 'registry.json');
-
-export const CONFIG_FILE = path.join(AUTOOS_DIR, 'config.json');
-export const CREDENTIALS_FILE = path.join(AUTOOS_DIR, 'credentials.enc');
-
-export const ensureAutoOSDir = async () => {
+ const ensureAutoOSDir = async () => {
   try {
     await fs.access(AUTOOS_DIR);
   } catch (error) {
@@ -30,11 +20,8 @@ export const ensureAutoOSDir = async () => {
   }
 };
 
-/**
- * Detects the root directory of the current project
- * @returns Path to the project root or undefined if not found
- */
-export const detectProjectRoot = async (): Promise<string | undefined> => {
+
+ const detectProjectRoot = async (): Promise<string | undefined> => {
   let currentDir = process.cwd();
 
   while (currentDir && currentDir !== HOME_DIR && currentDir !== path.parse(currentDir).root) {
@@ -58,13 +45,8 @@ export const detectProjectRoot = async (): Promise<string | undefined> => {
   return undefined;
 };
 
-/**
- * Determines the installation directory for a tool
- * @param isLocalInstall Whether to install locally or globally
- * @returns Object containing the installation directory and type
- * @throws Error if project root cannot be detected for local installation
- */
-export const getToolInstallDir = async (
+
+ const getToolInstallDir = async (
   isLocalInstall: boolean,
 ): Promise<{ installDir: string }> => {
   if (isLocalInstall) {
@@ -81,3 +63,16 @@ export const getToolInstallDir = async (
     installDir: TOOLS_DIR,
   };
 };
+
+export {
+  HOME_DIR,
+  AUTOOS_DIR,
+  PACKAGES_DIR,
+  TOOLS_DIR,
+  DEFAULT_PROJECT_TOOLS_PATH,
+  REGISTRY_CACHE_PATH,
+  CONFIG_FILE,
+  CREDENTIALS_FILE,
+  ensureAutoOSDir,
+  getToolInstallDir,
+}

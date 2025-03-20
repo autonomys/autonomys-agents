@@ -9,13 +9,8 @@ import chalk from 'chalk';
 import { REGISTRY_CACHE_PATH } from '../../../utils/shared/path.js';
 import { getLocalRegistryCache } from './toolInquiry.js';
 
-/**
- * Update the registry on the blockchain
- * @param toolMetadata Tool metadata to update
- * @param metadataCid CID of the metadata file
- * @returns Transaction hash of the update
- */
-export const updateRegistry = async (toolMetadata: ToolMetadata, metadataCid: string): Promise<string> => {
+
+const updateRegistry = async (toolMetadata: ToolMetadata, metadataCid: string): Promise<string> => {
   try {
     console.log(chalk.blue('Updating registry on blockchain...'));
 
@@ -65,3 +60,5 @@ export const updateRegistry = async (toolMetadata: ToolMetadata, metadataCid: st
     throw error;
   }
 };
+
+export {updateRegistry}

@@ -4,10 +4,8 @@ import inquirer from 'inquirer';
 import { Credentials } from '../types/index.js';
 import { credentialsExist, loadCredentials, saveCredentials } from '../utils/credential/index.js';
 
-/**
- * Prompt user for required configuration
- */
-export const promptForConfig = async () => {
+
+const promptForConfig = async () => {
   console.log(chalk.blue('Configuration setup for autoOS CLI'));
 
   const currentConfig = await loadConfig();
@@ -38,10 +36,8 @@ export const promptForConfig = async () => {
   console.log(chalk.green('Configuration saved successfully'));
 };
 
-/**
- * Prompt user for required credentials
- */
-export const promptForCredentials = async (): Promise<Credentials> => {
+
+const promptForCredentials = async (): Promise<Credentials> => {
   console.log(chalk.blue('Credential setup for autoOS CLI'));
 
   const hasExistingCredentials = await credentialsExist();
@@ -163,3 +159,5 @@ export const promptForCredentials = async (): Promise<Credentials> => {
 
   return credentials;
 };
+
+export { promptForConfig, promptForCredentials };

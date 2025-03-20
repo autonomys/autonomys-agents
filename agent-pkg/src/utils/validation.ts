@@ -2,14 +2,9 @@ import fs from 'fs/promises';
 import path from 'path';
 import { ToolManifest, ValidationResult } from '../types/index.js';
 
-/**
- * Validates a tool structure to ensure it follows the required format
- * @param toolPath Path to the tool directory
- * @returns ValidationResult indicating if the tool structure is valid
- */
-export const validateToolStructure = async (toolPath: string): Promise<ValidationResult> => {
+
+const validateToolStructure = async (toolPath: string): Promise<ValidationResult> => {
   try {
-    // Check if directory exists
     try {
       const stats = await fs.stat(toolPath);
       if (!stats.isDirectory()) {
@@ -20,7 +15,6 @@ export const validateToolStructure = async (toolPath: string): Promise<Validatio
       return { valid: false, message: `Directory ${toolPath} does not exist` };
     }
 
-    // Check for manifest.json
     const manifestPath = path.join(toolPath, 'manifest.json');
     try {
       const manifestData = await fs.readFile(manifestPath, 'utf8');
@@ -33,7 +27,6 @@ export const validateToolStructure = async (toolPath: string): Promise<Validatio
         return { valid: false, message: 'manifest.json contains invalid JSON' };
       }
 
-      // Validate manifest fields
       const requiredFields: (keyof ToolManifest)[] = [
         'name',
         'version',
@@ -48,7 +41,6 @@ export const validateToolStructure = async (toolPath: string): Promise<Validatio
         }
       }
 
-      // Check main file exists
       const mainFilePath = path.join(toolPath, manifest.main);
       try {
         await fs.access(mainFilePath);
@@ -72,3 +64,5 @@ export const validateToolStructure = async (toolPath: string): Promise<Validatio
     };
   }
 };
+
+export { validateToolStructure };

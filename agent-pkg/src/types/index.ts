@@ -1,3 +1,5 @@
+// TODO - It would be nice to have each type in its own file
+
 export interface InstallOptions {
   cid?: string;
   version?: string;
@@ -31,7 +33,6 @@ export interface ToolRegistry {
   tools: Record<string, ToolMetadata>;
 }
 
-// Tool Manifest Type (for individual tools)
 export interface ToolManifest {
   name: string;
   version: string;

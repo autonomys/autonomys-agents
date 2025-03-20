@@ -66,7 +66,7 @@ const uploadToolMetadata = async (metadata: ToolMetadata): Promise<string> => {
   return await uploadObjectToDsn(metadata, `${metadata.name}-${metadata.version}-metadata.json`, options);
 };
 
-export const packageAndUploadTool = async (
+const packageAndUploadTool = async (
   toolPath: string,
 ): Promise<{ cid: string; metadataCid: string; metadata: ToolMetadata }> => {
   const manifestPath = path.join(toolPath, 'manifest.json');
@@ -93,3 +93,5 @@ export const packageAndUploadTool = async (
   metadata.metadataCid = metadataCid;
   return { cid, metadataCid, metadata };
 };
+
+export {packageAndUploadTool}

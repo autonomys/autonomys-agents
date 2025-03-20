@@ -4,10 +4,7 @@ import { CommandResult } from '../types/index.js';
 import { InstallOptions } from '../types/index.js';
 import { performToolInstallation, resolveToolInfo } from '../utils/commands/install/toolInstall.js';
 
-/**
- * Main entry point for the install command
- */
-export const install = async (
+const install = async (
   toolName: string,
   options: InstallOptions,
 ): Promise<CommandResult> => {
@@ -37,3 +34,5 @@ export const install = async (
     };
   }
 };
+
+export { install };

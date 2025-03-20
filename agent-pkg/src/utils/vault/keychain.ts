@@ -2,9 +2,6 @@ import chalk from 'chalk';
 import keytar from 'keytar';
 import { KEYCHAIN_ACCOUNT, KEYCHAIN_SERVICE } from '../../config/default.js';
 
-/**
- * Save the master password to the system keychain
- */
 const saveToKeychain = async (password: string): Promise<boolean> => {
   try {
     await keytar.setPassword(KEYCHAIN_SERVICE, KEYCHAIN_ACCOUNT, password);
@@ -18,9 +15,6 @@ const saveToKeychain = async (password: string): Promise<boolean> => {
   }
 };
 
-/**
- * Get the master password from the system keychain
- */
 const getFromKeychain = async (): Promise<string | null> => {
   try {
     const password = await keytar.getPassword(KEYCHAIN_SERVICE, KEYCHAIN_ACCOUNT);
@@ -32,9 +26,6 @@ const getFromKeychain = async (): Promise<string | null> => {
   }
 };
 
-/**
- * Delete the master password from the system keychain
- */
 const deleteFromKeychain = async (): Promise<boolean> => {
   try {
     return await keytar.deletePassword(KEYCHAIN_SERVICE, KEYCHAIN_ACCOUNT);

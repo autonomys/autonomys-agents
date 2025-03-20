@@ -5,6 +5,5 @@ export const DEFAULT_CONFIG = {
   autoSaveCredentials: true,
 };
 
-// Service name for keytar (system keychain)
 export const KEYCHAIN_SERVICE = 'autoOS-cli';
 export const KEYCHAIN_ACCOUNT = 'masterPassword';

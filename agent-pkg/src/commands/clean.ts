@@ -6,12 +6,8 @@ import inquirer from 'inquirer';
 import { CleanOptions, CommandResult } from '../types/index.js';
 import { PACKAGES_DIR } from '../utils/shared/path.js';
 
-/**
- * Clean cached packages and other temporary files
- * @param options Command options
- * @returns Command result
- */
-export const clean = async (options: CleanOptions): Promise<CommandResult> => {
+
+const clean = async (options: CleanOptions): Promise<CommandResult> => {
   const spinner = ora('Cleaning autoOS cache...').start();
   spinner.stop();
 
@@ -81,3 +77,5 @@ export const clean = async (options: CleanOptions): Promise<CommandResult> => {
     };
   }
 };
+
+export { clean };

@@ -5,13 +5,8 @@ import { updateRegistry } from '../utils/commands/registry/updateRegistry.js';
 import { validateToolStructure } from '../utils/validation.js';
 import { packageAndUploadTool } from '../utils/commands/registry/toolPublish.js';
 
-/**
- * Publish a tool to the Autonomys DSN
- * @param toolPath Path to the tool to publish
- * @param options Command options
- * @returns Command result
- */
-export const publish = async (
+
+const publish = async (
   toolPath: string,
   options: PublishOptions,
 ): Promise<CommandResult> => {
@@ -54,3 +49,5 @@ export const publish = async (
     return { success: false, message: `Failed to publish tool: ${error}` };
   }
 };
+
+export { publish };

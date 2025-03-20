@@ -57,7 +57,7 @@ const fetchRegistryFromBlockchain = async (): Promise<ToolRegistry> => {
   }
 };
 
-export const getLocalRegistryCache = async (): Promise<ToolRegistry> => {
+const getLocalRegistryCache = async (): Promise<ToolRegistry> => {
   try {
     const cacheData = await fs.readFile(REGISTRY_CACHE_PATH, 'utf8');
     return JSON.parse(cacheData) as ToolRegistry;
@@ -71,7 +71,7 @@ export const getLocalRegistryCache = async (): Promise<ToolRegistry> => {
   }
 };
 
-export const getRegistry = async (): Promise<ToolRegistry> => {
+const getRegistry = async (): Promise<ToolRegistry> => {
   try {
 
     const cacheData = await fs.readFile(REGISTRY_CACHE_PATH, 'utf8');
@@ -94,7 +94,7 @@ export const getRegistry = async (): Promise<ToolRegistry> => {
   }
 };
 
-export const getToolFromRegistry = async (toolName: string): Promise<ToolMetadata | null> => {
+const getToolFromRegistry = async (toolName: string): Promise<ToolMetadata | null> => {
   try {
     const toolInfo = await getToolInfo(toolName);
     if (!toolInfo) {
@@ -122,13 +122,8 @@ export const getToolFromRegistry = async (toolName: string): Promise<ToolMetadat
   }
 };
 
-/**
- * Get a specific version of a tool from the registry
- * @param toolName Name of the tool
- * @param version Specific version to retrieve
- * @returns Tool metadata for the specified version, or null if not found
- */
-export const getToolVersionFromRegistry = async (
+
+const getToolVersionFromRegistry = async (
   toolName: string,
   version: string,
 ): Promise<ToolMetadata | null> => {
@@ -173,7 +168,7 @@ export const getToolVersionFromRegistry = async (
   }
 };
 
-export const getToolMetadata = async (toolName: string, version?: string): Promise<string | null> => {
+const getToolMetadata = async (toolName: string, version?: string): Promise<string | null> => {
   if (version) {
     const versionInfo = await getToolVersionFromRegistry(toolName, version);
     if (!versionInfo) {
@@ -191,3 +186,11 @@ export const getToolMetadata = async (toolName: string, version?: string): Promi
   const metadata = await downloadObjectFromDsn(cid);
   return JSON.stringify(metadata);
 };
+
+export {
+  getLocalRegistryCache,
+  getRegistry,
+  getToolVersionFromRegistry,
+  getToolFromRegistry,
+  getToolMetadata
+}

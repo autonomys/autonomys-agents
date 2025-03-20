@@ -5,10 +5,8 @@ import { getFromKeychain } from '../utils/vault/keychain.js';
 import { credentialsExist, loadCredentials } from '../utils/credential/index.js';
 import { DEFAULT_CONFIG } from './default.js';
 
-/**
- * Load the configuration file
- */
-export const loadConfig = async () => {
+
+const loadConfig = async () => {
   try {
     const data = await fs.readFile(CONFIG_FILE, 'utf8');
     return { ...DEFAULT_CONFIG, ...JSON.parse(data) };
@@ -20,18 +18,11 @@ export const loadConfig = async () => {
   }
 };
 
-/**
- * Save the configuration file
- */
-export const saveConfig = async (config: Config) => {
+const saveConfig = async (config: Config) => {
   await fs.writeFile(CONFIG_FILE, JSON.stringify(config, null, 2));
 };
 
-/**
- * Initialize configuration and credentials
- * @returns Object with all necessary configuration and credentials
- */
-export const initializeConfigAndCredentials = async () => {
+const initializeConfigAndCredentials = async () => {
   const config = await loadConfig();
 
   let credentials: Credentials = {};
@@ -57,3 +48,5 @@ export const initializeConfigAndCredentials = async () => {
     credentials,
   };
 };
+
+export { loadConfig, saveConfig, initializeConfigAndCredentials };

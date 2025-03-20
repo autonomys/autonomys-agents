@@ -40,14 +40,14 @@ const decryptCredentials = async (
   }
 };
 
-export const saveCredentials = async (credentials: Credentials, masterPassword: string) => {
+const saveCredentials = async (credentials: Credentials, masterPassword: string) => {
   const encrypted = await encryptCredentials(credentials, masterPassword);
   await fs.writeFile(CREDENTIALS_FILE, encrypted);
   await saveToKeychain(masterPassword);
 };
 
 
-export const loadCredentials = async (): Promise<Credentials> => {
+const loadCredentials = async (): Promise<Credentials> => {
   try {
     const masterPassword = await getFromKeychain();
     if (!masterPassword) {
@@ -62,7 +62,7 @@ export const loadCredentials = async (): Promise<Credentials> => {
   }
 };
 
-export const credentialsExist = async (): Promise<boolean> => {
+const credentialsExist = async (): Promise<boolean> => {
   try {
     await fs.access(CREDENTIALS_FILE);
     return true;
@@ -72,3 +72,8 @@ export const credentialsExist = async (): Promise<boolean> => {
   }
 };
 
+export {
+  saveCredentials,
+  loadCredentials,
+  credentialsExist
+}

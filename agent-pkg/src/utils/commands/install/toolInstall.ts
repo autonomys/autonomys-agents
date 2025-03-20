@@ -9,12 +9,8 @@ import { InstallOptions, ToolInstallInfo, ToolMetadata } from '../../../types/in
 import { loadCredentials } from '../../credential/index.js';
 import { getCidFromHash } from '../../blockchain/utils.js';
 
-/**
- * Downloads a tool package from Autonomys DSN to the local cache
- * @param cid Content identifier for the tool package
- * @returns Path to the downloaded package file
- */
-export const fetchToolPackage = async (cidHash: string): Promise<string> => {
+
+const fetchToolPackage = async (cidHash: string): Promise<string> => {
   const cid = getCidFromHash(cidHash);
   const credentials = await loadCredentials();
   const packagePath = path.join(PACKAGES_DIR, `${cid}.zip`);
@@ -40,14 +36,8 @@ export const fetchToolPackage = async (cidHash: string): Promise<string> => {
   }
 };
 
-/**
- * Extracts a zip package to the target installation directory
- * @param packagePath Path to the downloaded package file
- * @param toolName Name of the tool
- * @param targetDir Target directory for installation
- * @returns Path to the extracted tool directory
- */
-export const unpackToolToDirectory = async (
+
+const unpackToolToDirectory = async (
   packagePath: string,
   toolName: string,
   targetDir: string,
@@ -65,13 +55,8 @@ export const unpackToolToDirectory = async (
   }
 };
 
-/**
- * Executes the complete tool installation process
- * @param toolInfo Tool metadata for installation
- * @param isLocalInstall Whether to install locally
- * @returns Path to the installed tool directory
- */
-export const performToolInstallation = async (
+
+const performToolInstallation = async (
   toolInfo: ToolInstallInfo,
   isLocalInstall: boolean,
 ): Promise<string> => {
@@ -87,33 +72,23 @@ export const performToolInstallation = async (
   }
 };
 
-/**
- * Validates options for CID-based installation
- * @param cid The Content ID to validate
- * @throws Error if CID is missing
- */
-export function validateCidOption(cid: string | undefined): asserts cid is string {
+
+const validateCidOption = (cid: string | undefined): string => {
   if (!cid) {
     throw new Error('CID is required when installing a tool by CID');
   }
+  return cid;
 }
 
-/**
- * Validates options for version-based installation
- * @param version The version string to validate
- * @throws Error if version is missing
- */
-export function validateVersionOption(version: string | undefined): asserts version is string {
+
+const validateVersionOption = (version: string | undefined): string => {
   if (!version) {
     throw new Error('Version is required when installing a specific version');
   }
+  return version;
 }
 
-/**
- * Creates tool info from a registry lookup result
- * @param registryInfo Registry tool information
- * @returns Formatted tool installation info
- */
+
 export const createToolInfoFromRegistry = (registryInfo: ToolMetadata): ToolInstallInfo => {
   return {
     name: registryInfo.name,
@@ -122,13 +97,8 @@ export const createToolInfoFromRegistry = (registryInfo: ToolMetadata): ToolInst
   };
 };
 
-/**
- * Resolves installation info for a tool using its CID
- * @param toolName Name of the tool
- * @param cid Content identifier
- * @returns Tool info and version display text
- */
-export const resolveCidInstallation = (
+
+const resolveCidInstallation = (
   toolName: string,
   cid: string,
 ): {
@@ -144,14 +114,8 @@ export const resolveCidInstallation = (
   };
 };
 
-/**
- * Resolves installation info for a specific version of a tool
- * @param toolName Name of the tool
- * @param version Version to install
- * @param spinner Progress spinner
- * @returns Tool info and version display text
- */
-export const resolveVersionInstallation = async (
+
+const resolveVersionInstallation = async (
   toolName: string,
   version: string,
   spinner: ReturnType<typeof ora>,
@@ -172,13 +136,8 @@ export const resolveVersionInstallation = async (
   };
 };
 
-/**
- * Resolves installation info for the latest version of a tool
- * @param toolName Name of the tool
- * @param spinner Progress spinner
- * @returns Tool info and version display text
- */
-export const resolveLatestInstallation = async (
+
+const resolveLatestInstallation = async (
   toolName: string,
   spinner: ReturnType<typeof ora>,
 ): Promise<{ toolInfo: ToolInstallInfo; versionDisplay: string }> => {
@@ -197,14 +156,8 @@ export const resolveLatestInstallation = async (
   };
 };
 
-/**
- * Updates spinner text with installation source info
- * @param spinner The progress spinner
- * @param toolName Name of the tool being installed
- * @param versionDisplay Version information to display
- * @param installType Installation type (locally/globally)
- */
-export const updateSpinnerWithInstallInfo = (
+
+const updateSpinnerWithInstallInfo = (
   spinner: ReturnType<typeof ora>,
   toolName: string,
   versionDisplay: string,
@@ -213,14 +166,8 @@ export const updateSpinnerWithInstallInfo = (
   spinner.text = `Installing ${toolName} ${versionDisplay} ${installType} from registry...`;
 };
 
-/**
- * Resolves tool information from different sources (CID, version, latest)
- * @param toolName Name of the tool to install
- * @param options Installation options
- * @param spinner Progress spinner for UI updates
- * @returns Tool information and descriptive version display text
- */
-export const resolveToolInfo = async (
+
+const resolveToolInfo = async (
   toolName: string,
   options: InstallOptions,
   spinner: ReturnType<typeof ora>,
@@ -229,15 +176,15 @@ export const resolveToolInfo = async (
 
   // Handle CID-based installation
   if (options.cid) {
-    validateCidOption(options.cid);
-    spinner.text = `Installing ${toolName} ${installType} using CID: ${options.cid}`;
-    return resolveCidInstallation(toolName, options.cid);
+    const validCid = validateCidOption(options.cid);
+    spinner.text = `Installing ${toolName} ${installType} using CID: ${validCid}`;
+    return resolveCidInstallation(toolName, validCid);
   }
 
   // Handle version-based installation
   if (options.version) {
-    validateVersionOption(options.version);
-    const result = await resolveVersionInstallation(toolName, options.version, spinner);
+    const validVersion = validateVersionOption(options.version);
+    const result = await resolveVersionInstallation(toolName, validVersion, spinner);
     updateSpinnerWithInstallInfo(spinner, toolName, result.versionDisplay, installType);
     return result;
   }
@@ -247,3 +194,12 @@ export const resolveToolInfo = async (
   updateSpinnerWithInstallInfo(spinner, toolName, result.versionDisplay, installType);
   return result;
 };
+
+export {
+  fetchToolPackage,
+  unpackToolToDirectory,
+  performToolInstallation,
+  validateCidOption,
+  validateVersionOption,
+  resolveToolInfo
+}

@@ -5,11 +5,9 @@ import chalk from 'chalk';
 import { getHashFromCid } from './utils.js';
 import AutonomysPackageRegistry from './AutonomysPackageRegistry.abi.json' assert { type: "json" };
 import { getWalletAddress } from './utils.js';
-/**
- * Initialize a contract instance for the AutonomysPackageRegistry
- * @returns An ethers.js Contract instance
- */
-export const getRegistryContract = async (readOnly: boolean = false) => {
+
+
+const getRegistryContract = async (readOnly: boolean = false) => {
   try {
     const config = await loadConfig();
     const credentials = await loadCredentials();
@@ -43,15 +41,8 @@ export const getRegistryContract = async (readOnly: boolean = false) => {
   }
 };
 
-/**
- * Register a new tool in the AutonomysPackageRegistry
- * @param name Tool name
- * @param cid Content identifier
- * @param version Version string
- * @param metadataCid Additional metadata (description, keywords, etc.)
- * @returns Transaction hash
- */
-export const registerTool = async (
+
+const registerTool = async (
   name: string,
   cid: string,
   version: string,
@@ -72,12 +63,8 @@ export const registerTool = async (
   }
 };
 
-/**
- * Get information about a tool
- * @param name Tool name
- * @returns Tool information including owner, version count, and latest version, or null if tool doesn't exist
- */
-export const getToolInfo = async (
+
+const getToolInfo = async (
   name: string,
 ): Promise<{
   owner: string;
@@ -104,13 +91,8 @@ export const getToolInfo = async (
   }
 };
 
-/**
- * Get information about a specific version of a tool
- * @param name Tool name
- * @param version Version string
- * @returns Version information including CID, timestamp, and metadata
- */
-export const getToolVersion = async (
+
+const getToolVersion = async (
   name: string,
   version: string,
 ): Promise<{
@@ -130,12 +112,8 @@ export const getToolVersion = async (
   }
 };
 
-/**
- * Get all versions of a tool
- * @param name Tool name
- * @returns Array of version strings
- */
-export const getToolVersions = async (name: string): Promise<string[]> => {
+
+const getToolVersions = async (name: string): Promise<string[]> => {
   try {
     const contract = await getRegistryContract(true);
     
@@ -148,12 +126,8 @@ export const getToolVersions = async (name: string): Promise<string[]> => {
   }
 };
 
-/**
- * Get the latest version information for a tool
- * @param name Tool name
- * @returns Latest version information
- */
-export const getLatestToolVersion = async (
+
+const getLatestToolVersion = async (
   name: string,
 ): Promise<{
   version: string;
@@ -181,13 +155,8 @@ export const getLatestToolVersion = async (
   }
 };
 
-/**
- * Get registered tool names with pagination
- * @param offset Starting index
- * @param limit Maximum number of tools to return
- * @returns Array of tool names
- */
-export const getAllToolNames = async (
+
+const getAllToolNames = async (
   offset: number = 0, 
   limit: number = 100
 ): Promise<string[]> => {
@@ -206,12 +175,8 @@ export const getAllToolNames = async (
 };
 
 
-/**
- * Check if the connected account is the owner of a tool
- * @param name Tool name
- * @returns Boolean indicating ownership
- */
-export const isToolOwner = async (name: string): Promise<boolean> => {
+
+const isToolOwner = async (name: string): Promise<boolean> => {
   try {
     const contract = await getRegistryContract(true);
     const toolInfo = await contract.getToolInfo(name);
@@ -229,3 +194,5 @@ export const isToolOwner = async (name: string): Promise<boolean> => {
     return false;
   }
 };
+
+export { getRegistryContract, registerTool, getToolInfo, getToolVersion, getToolVersions, getLatestToolVersion, getAllToolNames, isToolOwner };

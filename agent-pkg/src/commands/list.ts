@@ -2,7 +2,7 @@ import chalk from 'chalk';
 import { CommandResult, ToolMetadata } from '../types/index.js';
 import { getRegistry } from '../utils/commands/registry/toolInquiry.js';
 
-export const list = async (): Promise<CommandResult> => {
+const list = async (): Promise<CommandResult> => {
   console.log(chalk.blue('Fetching available tools from registry...'));
 
   try {
@@ -34,3 +34,5 @@ export const list = async (): Promise<CommandResult> => {
     return { success: false, message: `Error fetching registry: ${error}` };
   }
 };
+
+export { list };
