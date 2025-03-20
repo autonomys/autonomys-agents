@@ -7,21 +7,28 @@ import {
 import { loadConfig } from '../../config/index.js';
 import { loadCredentials } from '../credential/index.js';
 
+// TODO: Another design choice is to create a const function in a state file? then, change the function signature of uploading and downloading to include the apiClientInstance.
+let apiClientInstance: ReturnType<typeof createAutoDriveApi> | null = null;
+
 const createApiClient = async () => {
+  if (apiClientInstance) {
+    return apiClientInstance;
+  }
+
   const config = await loadConfig();
   const credentials = await loadCredentials();
 
   if (credentials.autoDriveApiKey) {
-    return createAutoDriveApi({
+    apiClientInstance = createAutoDriveApi({
       apiKey: credentials.autoDriveApiKey,
-      network: config.autoDriveNetwork === 'taurus' ? 'taurus' : 'mainnet',
+      network: config.autoDriveNetwork,
     });
+    return apiClientInstance;
   }
   throw new Error(
     "Missing Auto Drive API key. Please run 'autoOS config' to set up your credentials.",
   );
 };
-
 
 const uploadFileToDsn = async (
   file: {
@@ -100,7 +107,6 @@ const downloadFileFromDsn = async (
     throw error;
   }
 };
-
 
 const downloadObjectFromDsn = async <T>(cid: string, password?: string): Promise<T> => {
   try {
