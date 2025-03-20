@@ -1,8 +1,9 @@
 import { ethers } from 'ethers';
 import { initializeConfigAndCredentials } from '../../config/index.js';
 import chalk from 'chalk';
-import { ABI } from './contractABI.js';
-
+import { getHashFromCid } from './utils.js';
+import AutonomysPackageRegistry from './AutonomysPackageRegistry.abi.json' assert { type: "json" };
+import { getWalletAddress } from './utils.js';
 /**
  * Initialize a contract instance for the AutonomysPackageRegistry
  * @returns An ethers.js Contract instance
@@ -16,7 +17,7 @@ export const getRegistryContract = async (readOnly: boolean = false) => {
     const provider = new ethers.JsonRpcProvider(rpcUrl);
 
     if (readOnly) {
-      return new ethers.Contract(contractAddress, ABI, provider);
+      return new ethers.Contract(contractAddress, AutonomysPackageRegistry, provider);
     } else {
       let privateKey: string | undefined;
 
@@ -33,7 +34,7 @@ export const getRegistryContract = async (readOnly: boolean = false) => {
       }
 
       const wallet = new ethers.Wallet(privateKey, provider);
-      return new ethers.Contract(contractAddress, ABI, wallet);
+      return new ethers.Contract(contractAddress, AutonomysPackageRegistry, wallet);
     }
   } catch (error) {
     console.error('Error initializing contract instance:', error);
@@ -53,11 +54,15 @@ export const registerTool = async (
   name: string,
   cid: string,
   version: string,
-  metadata: string = '{}',
+  metadataCid: string,
 ): Promise<string> => {
   try {
     const contract = await getRegistryContract();
-    const tx = await contract.registerTool(name, version, cid, metadata);
+    
+    const cidHash = getHashFromCid(cid);
+    const metadataHash = getHashFromCid(metadataCid);
+    
+    const tx = await contract.registerTool(name, version, cidHash, metadataHash);
     const receipt = await tx.wait();
     return receipt.hash;
   } catch (error) {
@@ -67,39 +72,9 @@ export const registerTool = async (
 };
 
 /**
- * Add a new version for an existing tool
- * @param name Tool name
- * @param cid Content identifier
- * @param version Version string
- * @param metadata Additional metadata (description, keywords, etc.)
- * @returns Transaction hash
- */
-export const addToolVersion = async (
-  name: string,
-  cid: string,
-  version: string,
-  metadata: string = '{}',
-): Promise<string> => {
-  try {
-    const contract = await getRegistryContract();
-
-    if (!(await isToolOwner(name))) {
-      throw new Error(`You are not the owner of tool '${name}'`);
-    }
-
-    const tx = await contract.registerTool(name, version, cid, metadata);
-    const receipt = await tx.wait();
-    return receipt.hash;
-  } catch (error) {
-    console.error(`Error adding version ${version} for tool ${name}:`, error);
-    throw error;
-  }
-};
-
-/**
  * Get information about a tool
  * @param name Tool name
- * @returns Tool information including owner, version count, and latest version
+ * @returns Tool information including owner, version count, and latest version, or null if tool doesn't exist
  */
 export const getToolInfo = async (
   name: string,
@@ -107,16 +82,22 @@ export const getToolInfo = async (
   owner: string;
   versionCount: number;
   latestVersion: string;
-}> => {
+} | null> => {
   try {
     const contract = await getRegistryContract(true);
     const [owner, versionCount, latestVersion] = await contract.getToolInfo(name);
+    
     return {
       owner,
       versionCount: Number(versionCount),
       latestVersion,
     };
-  } catch (error) {
+  } catch (error: unknown) {
+    // TODO - We have to handle this with proper types and return results
+    if (typeof error === 'object' && error !== null && 'reason' in error && error.reason === "Tool does not exist") {
+      return null;
+    }
+    
     console.error(`Error getting info for tool ${name}:`, error);
     throw error;
   }
@@ -138,7 +119,9 @@ export const getToolVersion = async (
 }> => {
   try {
     const contract = await getRegistryContract(true);
+    
     const [cid, timestamp, metadata] = await contract.getToolVersion(name, version);
+    
     return { cid, timestamp: Number(timestamp), metadata };
   } catch (error) {
     console.error(`Error getting version ${version} for tool ${name}:`, error);
@@ -154,6 +137,7 @@ export const getToolVersion = async (
 export const getToolVersions = async (name: string): Promise<string[]> => {
   try {
     const contract = await getRegistryContract(true);
+    
     return await contract.getToolVersions(name);
   } catch (error) {
     console.error(`Error getting versions for tool ${name}:`, error);
@@ -175,7 +159,8 @@ export const getLatestToolVersion = async (
   metadata: string;
 }> => {
   try {
-    const contract = await getRegistryContract(true);
+    const contract = await getRegistryContract(true);    
+    
     const result = await contract.getLatestVersion(name);
     const version = result[0];
     const cid = result[1];
@@ -194,15 +179,25 @@ export const getLatestToolVersion = async (
 };
 
 /**
- * Get all registered tool names
+ * Get registered tool names with pagination
+ * @param offset Starting index
+ * @param limit Maximum number of tools to return
  * @returns Array of tool names
  */
-export const getAllToolNames = async (): Promise<string[]> => {
+export const getAllToolNames = async (
+  offset: number = 0, 
+  limit: number = 100
+): Promise<string[]> => {
   try {
+    console.log(chalk.blue(`Getting all tool names with offset ${offset} and limit ${limit}`));
     const contract = await getRegistryContract(true);
-    return await contract.getAllTools();
+    const safeOffset = Math.max(0, offset);
+    const safeLimit = Math.max(1, Math.min(limit, 100));
+    const toolNames = await contract.getAllTools(safeOffset, safeLimit);  
+
+    return toolNames;
   } catch (error) {
-    console.error('Error getting all tool names:', error);
+    console.error('Error getting tool names:', error);
     throw error;
   }
 };
@@ -214,29 +209,16 @@ export const getAllToolNames = async (): Promise<string[]> => {
  */
 export const isToolOwner = async (name: string): Promise<boolean> => {
   try {
-    const { credentials, getCredentials } = await initializeConfigAndCredentials();
-    let privateKey: string | undefined;
-
-    if (credentials.autoEvmPrivateKey) {
-      privateKey = credentials.autoEvmPrivateKey;
-    } else {
-      const newCredentials = await getCredentials();
-      privateKey = newCredentials.autoEvmPrivateKey;
-    }
-
-    if (!privateKey) {
-      return false;
-    }
-
-    const provider = new ethers.JsonRpcProvider(
-      (await initializeConfigAndCredentials()).config.taurusRpcUrl,
-    );
-    const wallet = new ethers.Wallet(privateKey, provider);
-    const address = await wallet.getAddress();
-
+    const contract = await getRegistryContract(true);
+    const ownerAddress = await contract.getToolOwner(name);
+    const address = await getWalletAddress();
     try {
       const toolInfo = await getToolInfo(name);
-      return toolInfo.owner.toLowerCase() === address.toLowerCase();
+      if (!toolInfo) {
+        return false;
+      }
+      
+      return ownerAddress.toLowerCase() === address.toLowerCase();
     } catch (error) {
       console.error(`Error checking ownership for tool ${name}:`, error);
       return false;

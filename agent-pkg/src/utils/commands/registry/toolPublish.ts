@@ -3,14 +3,9 @@ import path from 'path';
 import archiver from 'archiver';
 import { UploadFileOptions } from '@autonomys/auto-drive';
 import { ToolManifest, ToolMetadata } from '../../../types/index.js';
-import { uploadFileToDsn } from '../../autoDrive/autoDriveClient.js';
+import { uploadFileToDsn, uploadObjectToDsn } from '../../autoDrive/autoDriveClient.js';
 import { getCredentials } from '../../credential/index.js';
 
-/**
- * Creates a zip archive of a tool directory
- * @param toolPath Path to the tool directory
- * @returns Buffer containing the zip archive
- */
 const createToolPackage = async (toolPath: string): Promise<Buffer> => {
   return new Promise((resolve, reject) => {
     try {
@@ -39,12 +34,7 @@ const createToolPackage = async (toolPath: string): Promise<Buffer> => {
   });
 };
 
-/**
- * Uploads a tool package to Autonomys DSN
- * @param packageBuffer Buffer containing the packaged tool
- * @param manifest Tool manifest
- * @returns CID of the uploaded package
- */
+
 const uploadToolPackage = async (
   packageBuffer: Buffer,
   manifest: ToolManifest,
@@ -66,14 +56,19 @@ const uploadToolPackage = async (
   return await uploadFileToDsn(file, options);
 };
 
-/**
- * Packages a tool directory and uploads it to Autonomys DSN
- * @param toolPath Path to the tool directory
- * @returns Object containing the CID and tool metadata
- */
+const uploadToolMetadata = async (metadata: ToolMetadata): Promise<string> => {
+  const credentials = await getCredentials();
+  const options: UploadFileOptions = {
+    compression: true,
+    password: credentials.autoDriveEncryptionPassword,
+  };
+  console.log('Uploading tool metadata...');
+  return await uploadObjectToDsn(metadata, `${metadata.name}-${metadata.version}-metadata.json`, options);
+};
+
 export const packageAndUploadTool = async (
   toolPath: string,
-): Promise<{ cid: string; metadata: ToolMetadata }> => {
+): Promise<{ cid: string; metadataCid: string; metadata: ToolMetadata }> => {
   const manifestPath = path.join(toolPath, 'manifest.json');
   const manifestData = await fs.readFile(manifestPath, 'utf8');
   const manifest = JSON.parse(manifestData) as ToolManifest;
@@ -88,11 +83,13 @@ export const packageAndUploadTool = async (
   const metadata: ToolMetadata = {
     name: manifest.name,
     version: manifest.version,
-    description: manifest.description,
     author: manifest.author,
     cid: cid,
+    metadataCid: '',
     updated: new Date().toISOString(),
   };
 
-  return { cid, metadata };
+  const metadataCid = await uploadToolMetadata(metadata);
+  metadata.metadataCid = metadataCid;
+  return { cid, metadataCid, metadata };
 };

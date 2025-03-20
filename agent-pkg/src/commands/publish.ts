@@ -26,11 +26,11 @@ export const publish = async (
     }
 
     spinner.text = 'Packaging and uploading tool...';
-    const { cid, metadata } = await packageAndUploadTool(toolPath);
+    const { cid, metadataCid, metadata } = await packageAndUploadTool(toolPath);
 
     if (options.registry !== false) {
       spinner.text = 'Updating registry...';
-      await updateRegistry(metadata);
+      await updateRegistry(metadata, metadataCid);
       spinner.succeed(`Successfully published ${metadata.name}`);
       console.log(chalk.green(`\nTool published with CID: ${cid}`));
     } else {

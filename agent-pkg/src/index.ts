@@ -36,8 +36,8 @@ ensureAutoOSDir()
       await publish(toolPath, options);
     };
 
-    const listWrapper = async (options: { detailed?: boolean }) => {
-      await list(options);
+    const listWrapper = async () => {
+      await list();
     };
 
     const configWrapper = async (options: ConfigOptions) => {

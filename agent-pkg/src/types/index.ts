@@ -14,16 +14,15 @@ export interface ToolInstallInfo {
 export interface ToolMetadata {
   name: string;
   version: string;
-  description: string;
   author: string;
   cid: string;
+  metadataCid: string;
   updated: string;
 }
 
 export interface ToolRegistry {
   version: string;
   updated: string;
-  previousRegistryCid?: string;
   tools: Record<string, ToolMetadata>;
 }
 

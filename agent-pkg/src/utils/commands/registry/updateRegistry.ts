@@ -1,7 +1,6 @@
 import fs from 'fs/promises';
 import { ToolMetadata } from '../../../types/index.js';
 import {
-  addToolVersion,
   getToolInfo,
   isToolOwner,
   registerTool,
@@ -9,53 +8,30 @@ import {
 import chalk from 'chalk';
 import { REGISTRY_CACHE_PATH } from '../../../utils/shared/path.js';
 import { getLocalRegistryCache } from './toolInquiry.js';
+
 /**
  * Update the registry on the blockchain
  * @param toolMetadata Tool metadata to update
+ * @param metadataCid CID of the metadata file
  * @returns Transaction hash of the update
  */
-export const updateRegistry = async (toolMetadata: ToolMetadata): Promise<string> => {
+export const updateRegistry = async (toolMetadata: ToolMetadata, metadataCid: string): Promise<string> => {
   try {
     console.log(chalk.blue('Updating registry on blockchain...'));
 
     let txHash = '';
 
-    const metadata = JSON.stringify({
-      description: toolMetadata.description || '',
-      author: toolMetadata.author || '',
-      updated: toolMetadata.updated || new Date().toISOString(),
-    });
-
     try {
       const exists = await getToolInfo(toolMetadata.name);
-      const isOwner = exists.latestVersion ? await isToolOwner(toolMetadata.name) : false;
-
-      const registryCase = exists.latestVersion
+      const isOwner = exists?.latestVersion ? await isToolOwner(toolMetadata.name) : false;
+      const registryCase = exists?.latestVersion
         ? isOwner
-          ? 'UPDATE_EXISTING'
+          ? 'UPDATE_EXISTING' // TODO: Implement update existing
           : 'NOT_OWNER'
         : 'REGISTER_NEW';
 
+      console.log(chalk.blue(`Registry case: ${registryCase}`));
       switch (registryCase) {
-        case 'UPDATE_EXISTING':
-          console.log(
-            chalk.yellow(
-              `Tool ${toolMetadata.name} already exists. Adding new version ${toolMetadata.version}`,
-            ),
-          );
-          txHash = await addToolVersion(
-            toolMetadata.name,
-            toolMetadata.cid,
-            toolMetadata.version,
-            metadata,
-          );
-          console.log(
-            chalk.green(
-              `Tool ${toolMetadata.name} updated with CID: ${toolMetadata.cid}, txHash: ${txHash}`,
-            ),
-          );
-          break;
-
         case 'NOT_OWNER':
           throw new Error(`Tool ${toolMetadata.name} already exists and you're not the owner`);
 
@@ -64,7 +40,7 @@ export const updateRegistry = async (toolMetadata: ToolMetadata): Promise<string
             toolMetadata.name,
             toolMetadata.cid,
             toolMetadata.version,
-            metadata,
+            metadataCid,
           );
           console.log(
             chalk.green(

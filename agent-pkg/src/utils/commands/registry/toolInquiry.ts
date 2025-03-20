@@ -24,23 +24,17 @@ const fetchRegistryFromBlockchain = async (): Promise<ToolRegistry> => {
 
     for (const name of toolNames) {
       const toolInfo = await getToolInfo(name);
-
-      const latestVersionInfo = await getLatestToolVersion(name);
-
-      let description = '';
-      try {
-        const metadataObj = JSON.parse(latestVersionInfo.metadata);
-        description = metadataObj.description || '';
-      } catch (error) {
-        console.error(`Error parsing metadata for tool ${name}:`, error);
+      if (!toolInfo) {
+        continue;
       }
+      const latestVersionInfo = await getLatestToolVersion(name);
 
       registry.tools[name] = {
         name,
         version: toolInfo.latestVersion,
-        description: description,
         author: toolInfo.owner,
         cid: latestVersionInfo.cid,
+        metadataCid: latestVersionInfo.metadata,
         updated: new Date(latestVersionInfo.timestamp * 1000).toISOString(),
       };
     }
@@ -97,6 +91,7 @@ export const getRegistry = async (): Promise<ToolRegistry> => {
     return await fetchRegistryFromBlockchain();
   } catch (error) {
     console.error('Error fetching registry from blockchain:', error);
+    
     return await fetchRegistryFromBlockchain();
   }
 };
@@ -104,23 +99,17 @@ export const getRegistry = async (): Promise<ToolRegistry> => {
 export const getToolFromRegistry = async (toolName: string): Promise<ToolMetadata | null> => {
   try {
     const toolInfo = await getToolInfo(toolName);
-
+    if (!toolInfo) {
+      return null;
+    }
     if (toolInfo.latestVersion) {
       const latestVersionInfo = await getLatestToolVersion(toolName);
-
-      let description = '';
-      try {
-        const metadataObj = JSON.parse(latestVersionInfo.metadata);
-        description = metadataObj.description || '';
-      } catch (error) {
-        console.error(`Error parsing metadata for tool ${toolName}:`, error);
-      }
 
       // Return tool metadata
       return {
         name: toolName,
         version: toolInfo.latestVersion,
-        description: description,
+        metadataCid: latestVersionInfo.metadata,
         author: toolInfo.owner,
         cid: latestVersionInfo.cid,
         updated: new Date(latestVersionInfo.timestamp * 1000).toISOString(),
@@ -149,6 +138,9 @@ export const getToolVersionFromRegistry = async (
   try {
     // First check if the tool exists
     const toolInfo = await getToolInfo(toolName);
+    if (!toolInfo) {
+      return null;
+    }
 
     if (!toolInfo.latestVersion) {
       console.error(`Tool ${toolName} not found in registry`);
@@ -165,19 +157,11 @@ export const getToolVersionFromRegistry = async (
     // Get the specific version info
     const versionInfo = await getToolVersion(toolName, version);
 
-    let description = '';
-    try {
-      const metadataObj = JSON.parse(versionInfo.metadata);
-      description = metadataObj.description || '';
-    } catch (error) {
-      console.error(`Error parsing metadata for tool ${toolName}:`, error);
-    }
-
     // Return tool metadata for specific version
     return {
       name: toolName,
       version: version,
-      description: description,
+      metadataCid: versionInfo.metadata,
       author: toolInfo.owner,
       cid: versionInfo.cid,
       updated: new Date(versionInfo.timestamp * 1000).toISOString(),
