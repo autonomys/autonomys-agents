@@ -1,32 +1,36 @@
 import {
   createAutoDriveApi,
-  uploadFile,
   downloadFile,
+  uploadFile,
   UploadFileOptions,
 } from '@autonomys/auto-drive';
-import { initializeConfigAndCredentials } from './config.js';
+import { loadConfig } from '../../config/index.js';
+import { loadCredentials } from '../credential/index.js';
+
+// TODO: Another design choice is to create a const function in a state file? then, change the function signature of uploading and downloading to include the apiClientInstance.
+let apiClientInstance: ReturnType<typeof createAutoDriveApi> | null = null;
 
 const createApiClient = async () => {
-  const { config, credentials } = await initializeConfigAndCredentials();
+  if (apiClientInstance) {
+    return apiClientInstance;
+  }
+
+  const config = await loadConfig();
+  const credentials = await loadCredentials();
 
   if (credentials.autoDriveApiKey) {
-    return createAutoDriveApi({
+    apiClientInstance = createAutoDriveApi({
       apiKey: credentials.autoDriveApiKey,
-      network: config.autoDriveNetwork === 'taurus' ? 'taurus' : 'mainnet',
+      network: config.autoDriveNetwork,
     });
+    return apiClientInstance;
   }
   throw new Error(
     "Missing Auto Drive API key. Please run 'autoOS config' to set up your credentials.",
   );
 };
 
-/**
- * Upload a file to Autonomys DSN
- * @param file File object with read generator
- * @param options Upload options
- * @returns Promise resolving to the CID
- */
-export const uploadFileToDsn = async (
+const uploadFileToDsn = async (
   file: {
     read: () => AsyncGenerator<Buffer>;
     name: string;
@@ -39,7 +43,7 @@ export const uploadFileToDsn = async (
     console.log(`Uploading file: ${file.name}`);
 
     const api = await createApiClient();
-    const { credentials } = await initializeConfigAndCredentials();
+    const credentials = await loadCredentials();
 
     let uploadOptions = options || { compression: true };
 
@@ -56,15 +60,8 @@ export const uploadFileToDsn = async (
   }
 };
 
-/**
- * Upload an object as JSON to Autonomys DSN
- * @param object The object to upload as JSON
- * @param name Filename to use
- * @param options Upload options
- * @returns Promise resolving to the CID
- */
-export const uploadObjectToDsn = async (
-  object: any,
+const uploadObjectToDsn = async (
+  object: unknown,
   name: string,
   options?: UploadFileOptions,
 ): Promise<string> => {
@@ -88,13 +85,7 @@ export const uploadObjectToDsn = async (
   }
 };
 
-/**
- * Download a file from Autonomys DSN
- * @param cid Content identifier
- * @param password Optional password for encrypted files
- * @returns AsyncIterable of file chunks
- */
-export const downloadFileFromDsn = async (
+const downloadFileFromDsn = async (
   cid: string,
   password?: string,
 ): Promise<AsyncIterable<Buffer>> => {
@@ -104,7 +95,7 @@ export const downloadFileFromDsn = async (
     const api = await createApiClient();
 
     if (!password) {
-      const { credentials } = await initializeConfigAndCredentials();
+      const credentials = await loadCredentials();
 
       if (credentials.autoDriveEncryptionPassword) {
         password = credentials.autoDriveEncryptionPassword;
@@ -117,13 +108,7 @@ export const downloadFileFromDsn = async (
   }
 };
 
-/**
- * Download and parse a JSON object from Autonomys DSN
- * @param cid Content identifier for the JSON object
- * @param password Optional password for encrypted files
- * @returns Parsed object
- */
-export const downloadObjectFromDsn = async <T>(cid: string, password?: string): Promise<T> => {
+const downloadObjectFromDsn = async <T>(cid: string, password?: string): Promise<T> => {
   try {
     const fileStream = await downloadFileFromDsn(cid, password);
 
@@ -139,3 +124,5 @@ export const downloadObjectFromDsn = async <T>(cid: string, password?: string): 
     throw error;
   }
 };
+
+export { uploadFileToDsn, uploadObjectToDsn, downloadFileFromDsn, downloadObjectFromDsn };

@@ -1,13 +1,8 @@
 import chalk from 'chalk';
-import { CommandResult } from '../types/index.js';
-import { promptForConfig, promptForCredentials } from '../utils/config.js';
+import { CommandResult, ConfigOptions } from '../types/index.js';
+import { promptForConfig, promptForCredentials } from '../config/prompts.js';
 
-/**
- * Configure the autoOS CLI
- * @param options Command options
- * @returns Command result
- */
-export const config = async (options: any = {}): Promise<CommandResult> => {
+const config = async (options: ConfigOptions): Promise<CommandResult> => {
   console.log(chalk.blue.bold('autoOS CLI Configuration\n'));
 
   const configureSettings = !options.credentials || options.settings;
@@ -37,3 +32,5 @@ export const config = async (options: any = {}): Promise<CommandResult> => {
 
   return { success: true, message: 'Configuration updated successfully' };
 };
+
+export { config };

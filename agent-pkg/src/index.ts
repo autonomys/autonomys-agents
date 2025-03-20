@@ -5,7 +5,17 @@ import { publish } from './commands/publish.js';
 import { list } from './commands/list.js';
 import { config } from './commands/config.js';
 import { clean } from './commands/clean.js';
-import { initializeConfigAndCredentials, credentialsExist } from './utils/config.js';
+import { tool } from './commands/tool.js';
+import { initializeConfigAndCredentials } from './config/index.js';
+import { credentialsExist } from './utils/credential/index.js';
+import { ensureAutoOSDir } from './utils/shared/path.js';
+import {
+  CleanOptions,
+  ConfigOptions,
+  InstallOptions,
+  PublishOptions,
+  ToolCommandParams,
+} from './types/index.js';
 
 const checkMasterPassword = async () => {
   const isConfigCommand = process.argv.length > 2 && process.argv[2] === 'config';
@@ -13,37 +23,40 @@ const checkMasterPassword = async () => {
     process.argv.length > 2 && (process.argv[2] === '-h' || process.argv[2] === '--help');
 
   if ((await credentialsExist()) && !isConfigCommand && !isHelpCommand) {
-    if (!process.env.AUTOOS_MASTER_PASSWORD) {
-      console.log(chalk.blue('\nℹ️  Information: You have stored credentials'));
-      console.log(
-        chalk.yellow(
-          'You can set your master password as an environment variable to avoid prompts:',
-        ),
-      );
-      console.log(chalk.cyan('\n  export AUTOOS_MASTER_PASSWORD="your-master-password"\n'));
-      console.log(chalk.yellow('Or you can simply enter it when prompted.\n'));
-    }
+    console.log(chalk.blue('\nℹ️  Information: You have stored credentials'));
+    console.log(chalk.yellow('Your master password is securely stored in the system keychain.\n'));
   }
 };
 
 const program = new Command();
 
-Promise.all([initializeConfigAndCredentials(), checkMasterPassword()])
+ensureAutoOSDir()
   .then(() => {
-    const installWrapper = async (...args: any[]) => {
-      await install(args[0], args[1]);
+    return Promise.all([initializeConfigAndCredentials(), checkMasterPassword()]);
+  })
+  .then(() => {
+    const installWrapper = async (toolName: string, options: InstallOptions) => {
+      await install(toolName, options);
     };
-    const publishWrapper = async (...args: any[]) => {
-      await publish(args[0], args[1]);
+
+    const publishWrapper = async (toolPath: string, options: PublishOptions) => {
+      await publish(toolPath, options);
     };
-    const listWrapper = async (...args: any[]) => {
-      await list(args[0]);
+
+    const listWrapper = async () => {
+      await list();
     };
-    const configWrapper = async (...args: any[]) => {
-      await config(args[0]);
+
+    const configWrapper = async (options: ConfigOptions) => {
+      await config(options);
     };
-    const cleanWrapper = async (...args: any[]) => {
-      await clean(args[0]);
+
+    const cleanWrapper = async (options: CleanOptions) => {
+      await clean(options);
+    };
+
+    const toolWrapper = async (options: ToolCommandParams) => {
+      await tool(options);
     };
 
     program
@@ -75,6 +88,14 @@ Promise.all([initializeConfigAndCredentials(), checkMasterPassword()])
       .description('List available tools in the registry')
       .option('-d, --detailed', 'Show detailed information')
       .action(listWrapper);
+
+    program
+      .command('tool')
+      .description('Inquire about a tool')
+      .requiredOption('-n, --name <name>', 'Name of the tool to inquire about')
+      .option('-v, --version <version>', 'Specific version to inquire about')
+      .option('-a, --action <action>', 'Action to perform for example metadata')
+      .action(toolWrapper);
 
     program
       .command('config')

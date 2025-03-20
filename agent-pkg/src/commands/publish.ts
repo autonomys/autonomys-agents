@@ -1,15 +1,14 @@
 import chalk from 'chalk';
 import ora from 'ora';
-import { CommandResult } from '../types/index.js';
-import { updateRegistry } from '../utils/registry.js';
+import { CommandResult, PublishOptions } from '../types/index.js';
+import { updateRegistry } from '../utils/commands/registry/updateRegistry.js';
 import { validateToolStructure } from '../utils/validation.js';
-import { packageAndUploadTool } from '../utils/packageAndUpload.js';
+import { packageAndUploadTool } from '../utils/commands/registry/toolPublish.js';
 
-export const publish = async (toolPath: string, options: any = {}): Promise<CommandResult> => {
+const publish = async (toolPath: string, options: PublishOptions): Promise<CommandResult> => {
   const spinner = ora(`Publishing tool from ${toolPath}...`).start();
 
   try {
-    // 1. Validate the tool structure
     const validationResult = await validateToolStructure(toolPath);
 
     if (!validationResult.valid) {
@@ -17,14 +16,12 @@ export const publish = async (toolPath: string, options: any = {}): Promise<Comm
       return { success: false, message: `Invalid tool structure: ${validationResult.message}` };
     }
 
-    // 2. Package and upload the tool
     spinner.text = 'Packaging and uploading tool...';
-    const { cid, metadata } = await packageAndUploadTool(toolPath);
+    const { cid, metadataCid, metadata } = await packageAndUploadTool(toolPath);
 
-    // 3. Update the registry (unless skipped)
     if (options.registry !== false) {
       spinner.text = 'Updating registry...';
-      await updateRegistry(metadata);
+      await updateRegistry(metadata, metadataCid);
       spinner.succeed(`Successfully published ${metadata.name}`);
       console.log(chalk.green(`\nTool published with CID: ${cid}`));
     } else {
@@ -48,3 +45,5 @@ export const publish = async (toolPath: string, options: any = {}): Promise<Comm
     return { success: false, message: `Failed to publish tool: ${error}` };
   }
 };
+
+export { publish };

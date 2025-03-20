@@ -1,8 +1,8 @@
 import chalk from 'chalk';
 import { CommandResult, ToolMetadata } from '../types/index.js';
-import { getRegistry } from '../utils/registry.js';
+import { getRegistry } from '../utils/commands/registry/toolInquiry.js';
 
-export const list = async (options: { detailed?: boolean }): Promise<CommandResult> => {
+const list = async (): Promise<CommandResult> => {
   console.log(chalk.blue('Fetching available tools from registry...'));
 
   try {
@@ -18,13 +18,6 @@ export const list = async (options: { detailed?: boolean }): Promise<CommandResu
 
     tools.forEach(tool => {
       console.log(`\n${chalk.bold(tool.name)} (${tool.version})`);
-
-      if (options.detailed) {
-        console.log(`  ${chalk.dim('Description:')} ${tool.description}`);
-        console.log(`  ${chalk.dim('Author:')} ${tool.author}`);
-        console.log(`  ${chalk.dim('Updated:')} ${new Date(tool.updated).toLocaleString()}`);
-        console.log(`  ${chalk.dim('CID:')} ${tool.cid}`);
-      }
     });
 
     return {
@@ -41,3 +34,5 @@ export const list = async (options: { detailed?: boolean }): Promise<CommandResu
     return { success: false, message: `Error fetching registry: ${error}` };
   }
 };
+
+export { list };
