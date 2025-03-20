@@ -19,26 +19,39 @@ export const createInputPrompt = async (character: Character, customInstructions
     
     {frequencyPreferences}
 
-    - If all tasks are completed, STOP THE WORKFLOW and give a reason.
-    - If you don't know what do to, STOP THE WORKFLOW and give a reason.
-    - If the workflow is not making progress, STOP THE WORKFLOW and give a reason.
-    - There is NO HUMAN IN THE LOOP. So, if you find the need for a human intervention, STOP THE WORKFLOW and give a reason.
-    - If you face any difficulties, DON'T retry more than once.
+    UNIVERSAL WORKFLOW CONTROL RULES:
+    
+    COMPLETE WORKFLOW (shouldStop = TRUE) WHEN:
+    1. You've accomplished your immediate task OR scheduled future tasks for follow-up
+    2. You're waiting for anything to complete
+    3. You encounter limitations in your current tools
+    4. You need to monitor something (schedule it instead)
+    5. You need investigation (schedule it instead)
+    6. You identify tasks you cannot handle with your current tools
+    
+    TOOL CAPABILITY ASSESSMENT:
+    1. First, examine your "Available Tools" list
+    2. Determine what you can actually accomplish with these tools
+    3. For tasks beyond your current tools, schedule them for later or for another agent
+    
+    STOP CONDITIONS (shouldStop = TRUE):
+    - Login or technical issues exist
+    - Task requires tools not in your "Available Tools" list
+    - Monitoring is needed (schedule for later instead)
+    - You've done what you can with your available tools
+    - You've scheduled appropriate follow-up tasks
 
-    DO NOT STOP THE WORKFLOW IF:
-    - you have outstanding tasks to complete.
-    - you have not set the future tasks to align with your goals and frequency preferences.
+    CONTINUE CONDITIONS ( shouldStop = FALSE):
+    - You have NEW actions to take right now
+    - These actions use tools from your "Available Tools" list
+    - These actions can be completed immediately
+    - No waiting or monitoring is required
 
-    - You should search your recent activity in the experience vector database. This is important to enhance your performance and increase your creativity.
-    - You can see what tools are available to you. Use them to take actions.    
-
-    **REMEMBER: Every once in a while you get summarized version of your previous messages. IT'S UPDATED CONTENT, YOU CAN EASE YOUR MIND THAT YOU HAVE THE LATEST DATA.
-
-    **DATE AND TIME**: If you need to know the date and time, use the get_current_time tool. THIS IS RELIABLE.
-
-    **ATTENTION**: If a task is completed, DO NOT repeat the same task again.
-
-    **IMPORTANT- BEFORE FINISHING THE WORKFLOW**: ensure that there are future tasks scheduled using the scheduler tools. If the scheduled tasks are sufficient, you can finish the workflow. If the future tasks need refinement, feel free to delete existing tasks and create new ones. Make sure the future schedule aligns with your goals and frequency preferences.
+    EXAMPLE DECISIONS:
+    1. "Need to respond to Slack messages" but no Slack tools → Schedule +  shouldStop = TRUE
+    2. "Need to post tweets" with Twitter posting tools → Do it + shouldStop = FALSE until done
+    3. "Need to investigate issue" → Schedule investigation + shouldStop = TRUE
+    4. "Waiting for task to complete" → shouldStop = TRUE
     
     {customInstructions}
 
@@ -59,12 +72,19 @@ export const createInputPrompt = async (character: Character, customInstructions
     new SystemMessage(inputSystemPrompt),
     [
       'human',
-      `Based on the following messages, and executed tools, determine what actions should be taken.
+      `Based on the following messages, executed tools, and available tools, determine what actions should be taken.
 
       Messages: {messages}
       Available Tools: {availableTools}
       Executed Tools: {executedTools}
-
+      
+      DECISION PROCESS:
+      1. Examine what tools you actually have available
+      2. Check if you face any stopping conditions (login issues, waiting, tool limitations)
+      3. Determine if you can complete tasks with your available tools
+      4. If you can't complete tasks with available tools, schedule them and set shouldStop = TRUE
+      5. If you can complete tasks with available tools and haven't done so yet, set shouldStop = FALSE
+      6. After completing all possible tasks with your tools, set shouldStop = TRUE
       `,
     ],
   ]);
@@ -76,7 +96,7 @@ const workflowControlSchema = z.object({
   shouldStop: z
     .boolean()
     .describe(
-      'Whether the workflow should stop. Set to true if the workflow should stop. Set to false if the workflow should continue.',
+      "Set to TRUE when: (1) you've done everything possible with your available tools, (2) you face tool limitations, (3) you need to wait for anything, or (4) you've scheduled appropriate follow-ups. Set to FALSE ONLY when you have immediate actions to take using your available tools.",
     ),
   reason: z.string().describe('The detailed reason for stopping the workflow.'),
 });
