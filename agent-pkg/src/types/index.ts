@@ -10,7 +10,12 @@ export interface ToolInstallInfo {
   version?: string;
 }
 
-// Tool Registry Types
+export interface ToolCommandParams {
+  name: string;
+  version?: string;
+  action?: string;
+}
+
 export interface ToolMetadata {
   name: string;
   version: string;

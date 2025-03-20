@@ -35,7 +35,8 @@ export const updateRegistry = async (toolMetadata: ToolMetadata, metadataCid: st
         case 'NOT_OWNER':
           throw new Error(`Tool ${toolMetadata.name} already exists and you're not the owner`);
 
-        case 'REGISTER_NEW':
+        case 'REGISTER_NEW': 
+        case 'UPDATE_EXISTING':
           txHash = await registerTool(
             toolMetadata.name,
             toolMetadata.cid,

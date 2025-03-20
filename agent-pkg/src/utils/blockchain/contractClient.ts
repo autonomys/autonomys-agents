@@ -15,7 +15,6 @@ export const getRegistryContract = async (readOnly: boolean = false) => {
     const credentials = await loadCredentials();
     const rpcUrl = config.taurusRpcUrl;
     const contractAddress = config.packageRegistryAddress;
-
     const provider = new ethers.JsonRpcProvider(rpcUrl);
 
     if (readOnly) {
@@ -140,7 +139,9 @@ export const getToolVersions = async (name: string): Promise<string[]> => {
   try {
     const contract = await getRegistryContract(true);
     
-    return await contract.getToolVersions(name);
+    const versions = await contract.getToolVersions(name);
+    console.log(chalk.green(`Found ${versions.length} versions for tool ${name}`));
+    return versions;
   } catch (error) {
     console.error(`Error getting versions for tool ${name}:`, error);
     throw error;
@@ -213,14 +214,11 @@ export const getAllToolNames = async (
 export const isToolOwner = async (name: string): Promise<boolean> => {
   try {
     const contract = await getRegistryContract(true);
-    const ownerAddress = await contract.getToolOwner(name);
+    const toolInfo = await contract.getToolInfo(name);
+    const ownerAddress = toolInfo[0];
     const address = await getWalletAddress();
     try {
-      const toolInfo = await getToolInfo(name);
-      if (!toolInfo) {
-        return false;
-      }
-      
+
       return ownerAddress.toLowerCase() === address.toLowerCase();
     } catch (error) {
       console.error(`Error checking ownership for tool ${name}:`, error);

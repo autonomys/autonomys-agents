@@ -5,11 +5,11 @@ import { publish } from './commands/publish.js';
 import { list } from './commands/list.js';
 import { config } from './commands/config.js';
 import { clean } from './commands/clean.js';
+import { tool } from './commands/tool.js';
 import { initializeConfigAndCredentials } from './config/index.js';
 import { credentialsExist } from './utils/credential/index.js';
 import { ensureAutoOSDir } from './utils/shared/path.js';
-import { CleanOptions, ConfigOptions, InstallOptions, PublishOptions, ToolMetadataOptions } from './types/index.js';
-import { getToolMetadata } from './utils/commands/registry/toolInquiry.js';
+import { CleanOptions, ConfigOptions, InstallOptions, PublishOptions, ToolCommandParams } from './types/index.js';
 
 const checkMasterPassword = async () => {
   const isConfigCommand = process.argv.length > 2 && process.argv[2] === 'config';
@@ -45,17 +45,12 @@ ensureAutoOSDir()
       await config(options);
     };
 
-    const toolMetadataWrapper = async (toolName: string, options: ToolMetadataOptions) => {
-      const metadata = await getToolMetadata(toolName, options.version);
-      if (metadata) {
-        console.log(metadata);
-      } else {
-        console.log(chalk.red('Tool not found'));
-      }
-    };
-
     const cleanWrapper = async (options: CleanOptions) => {
       await clean(options);
+    };
+
+    const toolWrapper = async (options: ToolCommandParams) => {
+      await tool(options);
     };
 
     program
@@ -91,12 +86,10 @@ ensureAutoOSDir()
     program
       .command('tool')
       .description('Inquire about a tool')
-      .argument('<tool-name>', 'Name of the tool to inquire about')
-      .option(
-        '-v, --version <version>',
-        'Specific version to inquire about',
-      )
-      .action(toolMetadataWrapper);
+      .requiredOption('-n, --name <name>', 'Name of the tool to inquire about')
+      .option('-v, --version <version>', 'Specific version to inquire about')
+      .option('-a, --action <action>', 'Action to perform for example metadata')
+      .action(toolWrapper);
 
     program
       .command('config')
