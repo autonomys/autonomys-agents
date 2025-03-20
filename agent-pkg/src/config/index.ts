@@ -2,7 +2,7 @@ import fs from 'fs/promises';
 import { Config, Credentials } from '../types/index.js';
 import { CONFIG_FILE } from '../utils/shared/path.js';
 import { getFromKeychain } from '../utils/vault/keychain.js';
-import { credentialsExist, getCredentials, loadCredentials } from '../utils/credential/index.js';
+import { credentialsExist, loadCredentials } from '../utils/credential/index.js';
 import { DEFAULT_CONFIG } from './default.js';
 
 /**
@@ -38,11 +38,10 @@ export const initializeConfigAndCredentials = async () => {
 
   if (await credentialsExist()) {
     try {
-      // Try to get password from keychain
       const keychainPassword = await getFromKeychain();
       if (keychainPassword) {
         console.log('Using system keychain password for initialization');
-        credentials = await loadCredentials(keychainPassword);
+        credentials = await loadCredentials();
       } else {
         console.log(
           'No password found in system keychain, will prompt during operations that need credentials',
@@ -56,6 +55,5 @@ export const initializeConfigAndCredentials = async () => {
   return {
     config,
     credentials,
-    getCredentials,
   };
 };

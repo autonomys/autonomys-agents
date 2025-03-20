@@ -1,5 +1,6 @@
 import { ethers } from 'ethers';
-import { initializeConfigAndCredentials } from '../../config/index.js';
+import { loadConfig } from '../../config/index.js';
+import { loadCredentials } from '../credential/index.js';
 import chalk from 'chalk';
 import { getHashFromCid } from './utils.js';
 import AutonomysPackageRegistry from './AutonomysPackageRegistry.abi.json' assert { type: "json" };
@@ -10,7 +11,8 @@ import { getWalletAddress } from './utils.js';
  */
 export const getRegistryContract = async (readOnly: boolean = false) => {
   try {
-    const { config, credentials } = await initializeConfigAndCredentials();
+    const config = await loadConfig();
+    const credentials = await loadCredentials();
     const rpcUrl = config.taurusRpcUrl;
     const contractAddress = config.packageRegistryAddress;
 

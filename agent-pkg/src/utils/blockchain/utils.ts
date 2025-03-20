@@ -1,35 +1,24 @@
 import { cidFromBlakeHash, cidToString } from '@autonomys/auto-dag-data';
 import { blake3HashFromCid, stringToCid } from '@autonomys/auto-dag-data';
 import { ethers, hexlify } from 'ethers';
-import { initializeConfigAndCredentials } from '../../config/index.js';
+import { loadCredentials } from '../credential/index.js';
 import chalk from 'chalk';
 
 export const getWalletAddress = async (): Promise<string> => {
-    try {
-        const { config, credentials } = await initializeConfigAndCredentials();
-        const rpcUrl = config.taurusRpcUrl;
-        const provider = new ethers.JsonRpcProvider(rpcUrl);
+    const credentials = await loadCredentials();
 
-        let privateKey: string | undefined;
-    
-        if (credentials.autoEvmPrivateKey) {
+    let privateKey: string | undefined;
+
+    if (credentials.autoEvmPrivateKey) {
         privateKey = credentials.autoEvmPrivateKey;
-        } else {
-        console.log(
-            chalk.yellow('Private key not found. Blockchain operation requires authentication.'),
-        );
-        }
-
-        if (!privateKey) {
-        throw new Error('Auto-EVM private key is required for this operation');
-        }
-    
-        const wallet = new ethers.Wallet(privateKey, provider);
+        const wallet = new ethers.Wallet(privateKey);
         return wallet.getAddress();
-        } catch (error) {
-            console.error('Error getting wallet address:', error);
-            throw error;
-        }
+    } else {
+    console.log(
+        chalk.yellow('Private key not found. Blockchain operation requires authentication.'),
+    );
+    }
+    throw new Error('Auto-EVM private key is required for this operation');
 }
 
 export const getCidFromHash = (hash: string): string => {

@@ -4,10 +4,12 @@ import {
   uploadFile,
   UploadFileOptions,
 } from '@autonomys/auto-drive';
-import { initializeConfigAndCredentials } from '../../config/index.js';
+import { loadConfig } from '../../config/index.js';
+import { loadCredentials } from '../credential/index.js';
 
 const createApiClient = async () => {
-  const { config, credentials } = await initializeConfigAndCredentials();
+  const config = await loadConfig();
+  const credentials = await loadCredentials();
 
   if (credentials.autoDriveApiKey) {
     return createAutoDriveApi({
@@ -39,7 +41,7 @@ export const uploadFileToDsn = async (
     console.log(`Uploading file: ${file.name}`);
 
     const api = await createApiClient();
-    const { credentials } = await initializeConfigAndCredentials();
+    const credentials = await loadCredentials();
 
     let uploadOptions = options || { compression: true };
 
@@ -104,7 +106,7 @@ export const downloadFileFromDsn = async (
     const api = await createApiClient();
 
     if (!password) {
-      const { credentials } = await initializeConfigAndCredentials();
+      const credentials = await loadCredentials();
 
       if (credentials.autoDriveEncryptionPassword) {
         password = credentials.autoDriveEncryptionPassword;

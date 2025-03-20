@@ -3,7 +3,6 @@ import chalk from 'chalk';
 import inquirer from 'inquirer';
 import { Credentials } from '../types/index.js';
 import { credentialsExist, loadCredentials, saveCredentials } from '../utils/credential/index.js';
-import { saveToKeychain } from '../utils/vault/keychain.js';
 
 /**
  * Prompt user for required configuration
@@ -65,21 +64,17 @@ export const promptForCredentials = async (): Promise<Credentials> => {
       },
     ]);
 
-    masterPassword = password;
-
     if (action === 'Use existing credentials') {
       try {
-        const credentials = await loadCredentials(masterPassword);
-
-        // Always save to keychain
-        await saveToKeychain(masterPassword);
-
+        const credentials = await loadCredentials();
         return credentials;
       } catch (error) {
         console.error(chalk.red('Failed to decrypt credentials. Please try again.', error));
         return await promptForCredentials();
       }
     }
+    masterPassword = password;
+
   } else {
     const { password } = await inquirer.prompt([
       {
@@ -109,7 +104,6 @@ export const promptForCredentials = async (): Promise<Credentials> => {
     ]);
     masterPassword = password;
 
-    // Inform user about keychain storage
     console.log(
       chalk.green('Your master password will be securely stored in the system keychain.'),
     );
@@ -158,17 +152,14 @@ export const promptForCredentials = async (): Promise<Credentials> => {
     autoEvmPrivateKey: answers.autoEvmPrivateKey,
   };
 
-  if (answers.saveCredentials) {
     await saveCredentials(credentials, masterPassword);
     console.log(chalk.green('Credentials saved successfully'));
 
-    // Update config
     const currentConfig = await loadConfig();
     await saveConfig({
       ...currentConfig,
       autoSaveCredentials: true,
     });
-  }
 
   return credentials;
 };

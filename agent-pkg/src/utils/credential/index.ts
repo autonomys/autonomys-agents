@@ -1,15 +1,9 @@
 import fs from 'fs/promises';
 import { createCipheriv, createDecipheriv, randomBytes, scryptSync } from 'crypto';
-import inquirer from 'inquirer';
-import chalk from 'chalk';
 import { Credentials } from '../../types/index.js';
 import { CREDENTIALS_FILE } from '../shared/path.js';
-import { deleteFromKeychain, getFromKeychain, saveToKeychain } from '../vault/keychain.js';
-import { promptForCredentials } from '../../config/prompts.js';
+import { getFromKeychain, saveToKeychain } from '../vault/keychain.js';
 
-/**
- * Encrypt credentials with a master password
- */
 const encryptCredentials = async (
   credentials: Credentials,
   masterPassword: string,
@@ -24,9 +18,6 @@ const encryptCredentials = async (
   return encrypted;
 };
 
-/**
- * Decrypt credentials with a master password
- */
 const decryptCredentials = async (
   encryptedData: Buffer,
   masterPassword: string,
@@ -49,33 +40,28 @@ const decryptCredentials = async (
   }
 };
 
-/**
- * Save credentials to an encrypted file
- */
 export const saveCredentials = async (credentials: Credentials, masterPassword: string) => {
   const encrypted = await encryptCredentials(credentials, masterPassword);
   await fs.writeFile(CREDENTIALS_FILE, encrypted);
-
-  // Always save to keychain
   await saveToKeychain(masterPassword);
 };
 
-/**
- * Load credentials from an encrypted file
- */
-export const loadCredentials = async (masterPassword: string): Promise<Credentials> => {
+
+export const loadCredentials = async (): Promise<Credentials> => {
   try {
+    const masterPassword = await getFromKeychain();
+    if (!masterPassword) {
+      throw new Error('No master password found in keychain');
+    }
     const encryptedData = await fs.readFile(CREDENTIALS_FILE);
-    return await decryptCredentials(encryptedData, masterPassword);
+    const credentials = await decryptCredentials(encryptedData, masterPassword);
+    return credentials;
   } catch (error) {
     console.log('Error loading credentials:', error);
     return {};
   }
 };
 
-/**
- * Check if credentials exist
- */
 export const credentialsExist = async (): Promise<boolean> => {
   try {
     await fs.access(CREDENTIALS_FILE);
@@ -86,56 +72,3 @@ export const credentialsExist = async (): Promise<boolean> => {
   }
 };
 
-/**
- * Get credentials - either from file or by prompting
- */
-export const getCredentials = async (): Promise<Credentials> => {
-  console.log('getCredentials called');
-  if (await credentialsExist()) {
-    console.log('Credentials exist, checking for master password');
-
-    // First try to get the password from keychain
-    const keychainPassword = await getFromKeychain();
-    if (keychainPassword) {
-      console.log('Using master password from system keychain');
-      try {
-        const credentials = await loadCredentials(keychainPassword);
-        return credentials;
-      } catch (error) {
-        console.error('Error loading credentials from keychain:', error);
-        console.error(
-          chalk.red('System keychain password is no longer valid. Will prompt for password.'),
-        );
-        await deleteFromKeychain();
-      }
-    }
-
-    // Prompt the user interactively
-    console.log('Prompting for master password');
-    const { password } = await inquirer.prompt([
-      {
-        type: 'password',
-        name: 'password',
-        message: 'Enter your master password:',
-        mask: '*',
-      },
-    ]);
-
-    console.log('Password received, attempting to decrypt');
-    try {
-      const credentials = await loadCredentials(password);
-
-      // Always save to keychain
-      await saveToKeychain(password);
-
-      return credentials;
-    } catch (error) {
-      console.error('Failed to decrypt credentials:', error);
-      console.error(chalk.red('Failed to decrypt credentials. Please try again.'));
-      return getCredentials();
-    }
-  } else {
-    console.log('No credentials exist, prompting for new credentials');
-    return promptForCredentials();
-  }
-};

@@ -6,7 +6,7 @@ import { getToolInstallDir, PACKAGES_DIR } from '../../shared/path.js';
 import { getToolFromRegistry, getToolVersionFromRegistry } from '../registry/toolInquiry.js';
 import { downloadFileFromDsn } from '../../autoDrive/autoDriveClient.js';
 import { InstallOptions, ToolInstallInfo, ToolMetadata } from '../../../types/index.js';
-import { getCredentials } from '../../credential/index.js';
+import { loadCredentials } from '../../credential/index.js';
 import { getCidFromHash } from '../../blockchain/utils.js';
 
 /**
@@ -16,7 +16,7 @@ import { getCidFromHash } from '../../blockchain/utils.js';
  */
 export const fetchToolPackage = async (cidHash: string): Promise<string> => {
   const cid = getCidFromHash(cidHash);
-  const credentials = await getCredentials();
+  const credentials = await loadCredentials();
   const packagePath = path.join(PACKAGES_DIR, `${cid}.zip`);
 
   try {

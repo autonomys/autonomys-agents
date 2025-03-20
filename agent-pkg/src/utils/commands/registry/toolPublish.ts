@@ -4,7 +4,7 @@ import archiver from 'archiver';
 import { UploadFileOptions } from '@autonomys/auto-drive';
 import { ToolManifest, ToolMetadata } from '../../../types/index.js';
 import { uploadFileToDsn, uploadObjectToDsn } from '../../autoDrive/autoDriveClient.js';
-import { getCredentials } from '../../credential/index.js';
+import { loadCredentials } from '../../credential/index.js';
 
 const createToolPackage = async (toolPath: string): Promise<Buffer> => {
   return new Promise((resolve, reject) => {
@@ -39,7 +39,7 @@ const uploadToolPackage = async (
   packageBuffer: Buffer,
   manifest: ToolManifest,
 ): Promise<string> => {
-  const credentials = await getCredentials();
+  const credentials = await loadCredentials();
   const file = {
     read: async function* () {
       yield packageBuffer;
@@ -57,7 +57,7 @@ const uploadToolPackage = async (
 };
 
 const uploadToolMetadata = async (metadata: ToolMetadata): Promise<string> => {
-  const credentials = await getCredentials();
+  const credentials = await loadCredentials();
   const options: UploadFileOptions = {
     compression: true,
     password: credentials.autoDriveEncryptionPassword,
