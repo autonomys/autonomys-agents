@@ -140,7 +140,7 @@ export const createTaskQueue = (namespace: string): TaskQueue => {
         logger.info(`Cannot get next task, a task is already running in namespace: ${namespace}`, {
           runningTaskId: currentTask.id,
         });
-        return undefined;
+        return currentTask;
       }
 
       if (scheduledTasks.length === 0) {
@@ -186,8 +186,8 @@ export const createTaskQueue = (namespace: string): TaskQueue => {
 
       return undefined;
     },
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    updateTaskStatus(id: string, status: Task['status'], result?: any): void {
+
+    updateTaskStatus(id: string, status: Task['status'], result?: string): void {
       let task: Task | undefined;
       let isCurrentTask = false;
 

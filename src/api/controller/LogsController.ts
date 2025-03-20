@@ -11,7 +11,6 @@ export const getLogs = (req: Request, res: Response) => {
   const { namespace } = req.params;
   res.setHeader('Content-Type', 'text/event-stream');
   res.setHeader('Cache-Control', 'no-cache');
-  res.setHeader('Connection', 'keep-alive');
 
   res.write(
     `data: ${JSON.stringify({ type: 'connection', message: 'Connected to log stream' })}\n\n`,

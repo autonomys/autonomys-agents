@@ -86,6 +86,7 @@ export type OrchestratorRunner = Readonly<{
   getNextDueTask: () => Task | undefined;
   getTaskQueue: (limit?: number) => ReturnType<TaskQueue['getAllTasks']>;
   getTimeUntilNextTask: () => { nextTask?: Task; msUntilNext: number | null };
+  updateTaskStatus: (id: string, status: Task['status'], result?: string) => void;
   deleteTask: (id: string) => void;
 }>;
 
@@ -226,7 +227,7 @@ export const createOrchestratorRunner = async (
         const workflowSummary = `This action finished running at ${new Date().toISOString()}. Action summary: ${summary}`;
         const result = { summary: workflowSummary };
 
-        taskQueue.updateTaskStatus(taskQueue.currentTask?.id || '', 'completed', result);
+        taskQueue.updateTaskStatus(taskQueue.currentTask?.id || '', 'completed', result.summary);
         closeVectorDB(defaultOptions.namespace);
         return result;
       } else {
@@ -252,6 +253,10 @@ export const createOrchestratorRunner = async (
 
     getTimeUntilNextTask: () => {
       return taskQueue.getTimeUntilNextTask();
+    },
+
+    updateTaskStatus: (id: string, status: Task['status'], result?: string) => {
+      return taskQueue.updateTaskStatus(id, status, result);
     },
 
     deleteTask: (id: string) => {
