@@ -73,7 +73,6 @@ const getLocalRegistryCache = async (): Promise<ToolRegistry> => {
 
 const getRegistry = async (): Promise<ToolRegistry> => {
   try {
-
     const cacheData = await fs.readFile(REGISTRY_CACHE_PATH, 'utf8');
     const cachedRegistry = JSON.parse(cacheData) as ToolRegistry;
 
@@ -89,7 +88,7 @@ const getRegistry = async (): Promise<ToolRegistry> => {
     return await fetchRegistryFromBlockchain();
   } catch (error) {
     console.error('Error fetching registry from blockchain:', error);
-    
+
     return await fetchRegistryFromBlockchain();
   }
 };
@@ -121,7 +120,6 @@ const getToolFromRegistry = async (toolName: string): Promise<ToolMetadata | nul
     return registry.tools[toolName] || null;
   }
 };
-
 
 const getToolVersionFromRegistry = async (
   toolName: string,
@@ -192,5 +190,5 @@ export {
   getRegistry,
   getToolVersionFromRegistry,
   getToolFromRegistry,
-  getToolMetadata
-}
+  getToolMetadata,
+};

@@ -3,10 +3,9 @@ import { getToolMetadata } from '../utils/commands/registry/toolInquiry.js';
 import { getToolVersions } from '../utils/blockchain/contractClient.js';
 import { ToolCommandParams } from '../types/index.js';
 
-
 const tool = async (params: ToolCommandParams): Promise<void> => {
   const { name, version, action } = params;
-  
+
   if (version && action === 'metadata') {
     const metadata = await getToolMetadata(name, version);
     if (metadata) {

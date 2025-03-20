@@ -46,7 +46,6 @@ const saveCredentials = async (credentials: Credentials, masterPassword: string)
   await saveToKeychain(masterPassword);
 };
 
-
 const loadCredentials = async (): Promise<Credentials> => {
   try {
     const masterPassword = await getFromKeychain();
@@ -72,8 +71,4 @@ const credentialsExist = async (): Promise<boolean> => {
   }
 };
 
-export {
-  saveCredentials,
-  loadCredentials,
-  credentialsExist
-}
+export { saveCredentials, loadCredentials, credentialsExist };

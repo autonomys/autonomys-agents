@@ -1,17 +1,16 @@
 import path from 'path';
 import fs from 'fs/promises';
 
+const HOME_DIR = process.env.HOME || process.env.USERPROFILE || '';
+const AUTOOS_DIR = path.join(HOME_DIR, '.autoOS');
+const PACKAGES_DIR = path.join(AUTOOS_DIR, 'packages');
+const TOOLS_DIR = path.join(AUTOOS_DIR, 'tools');
+const DEFAULT_PROJECT_TOOLS_PATH = 'src/agents/tools';
+const REGISTRY_CACHE_PATH = path.join(AUTOOS_DIR, 'registry.json');
+const CONFIG_FILE = path.join(AUTOOS_DIR, 'config.json');
+const CREDENTIALS_FILE = path.join(AUTOOS_DIR, 'credentials.enc');
 
- const HOME_DIR = process.env.HOME || process.env.USERPROFILE || '';
- const AUTOOS_DIR = path.join(HOME_DIR, '.autoOS');
- const PACKAGES_DIR = path.join(AUTOOS_DIR, 'packages');
- const TOOLS_DIR = path.join(AUTOOS_DIR, 'tools');
- const DEFAULT_PROJECT_TOOLS_PATH = 'src/agents/tools';
- const REGISTRY_CACHE_PATH = path.join(AUTOOS_DIR, 'registry.json');
- const CONFIG_FILE = path.join(AUTOOS_DIR, 'config.json');
- const CREDENTIALS_FILE = path.join(AUTOOS_DIR, 'credentials.enc');
-
- const ensureAutoOSDir = async () => {
+const ensureAutoOSDir = async () => {
   try {
     await fs.access(AUTOOS_DIR);
   } catch (error) {
@@ -20,8 +19,7 @@ import fs from 'fs/promises';
   }
 };
 
-
- const detectProjectRoot = async (): Promise<string | undefined> => {
+const detectProjectRoot = async (): Promise<string | undefined> => {
   let currentDir = process.cwd();
 
   while (currentDir && currentDir !== HOME_DIR && currentDir !== path.parse(currentDir).root) {
@@ -45,10 +43,7 @@ import fs from 'fs/promises';
   return undefined;
 };
 
-
- const getToolInstallDir = async (
-  isLocalInstall: boolean,
-): Promise<{ installDir: string }> => {
+const getToolInstallDir = async (isLocalInstall: boolean): Promise<{ installDir: string }> => {
   if (isLocalInstall) {
     const projectRoot = await detectProjectRoot();
     if (!projectRoot) {
@@ -75,4 +70,4 @@ export {
   CREDENTIALS_FILE,
   ensureAutoOSDir,
   getToolInstallDir,
-}
+};

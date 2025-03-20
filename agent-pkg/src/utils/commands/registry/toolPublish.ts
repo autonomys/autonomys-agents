@@ -34,7 +34,6 @@ const createToolPackage = async (toolPath: string): Promise<Buffer> => {
   });
 };
 
-
 const uploadToolPackage = async (
   packageBuffer: Buffer,
   manifest: ToolManifest,
@@ -63,7 +62,11 @@ const uploadToolMetadata = async (metadata: ToolMetadata): Promise<string> => {
     password: credentials.autoDriveEncryptionPassword,
   };
   console.log('Uploading tool metadata...');
-  return await uploadObjectToDsn(metadata, `${metadata.name}-${metadata.version}-metadata.json`, options);
+  return await uploadObjectToDsn(
+    metadata,
+    `${metadata.name}-${metadata.version}-metadata.json`,
+    options,
+  );
 };
 
 const packageAndUploadTool = async (
@@ -94,4 +97,4 @@ const packageAndUploadTool = async (
   return { cid, metadataCid, metadata };
 };
 
-export {packageAndUploadTool}
+export { packageAndUploadTool };

@@ -3,9 +3,8 @@ import { loadConfig } from '../../config/index.js';
 import { loadCredentials } from '../credential/index.js';
 import chalk from 'chalk';
 import { getHashFromCid } from './utils.js';
-import AutonomysPackageRegistry from './AutonomysPackageRegistry.abi.json' assert { type: "json" };
+import AutonomysPackageRegistry from './AutonomysPackageRegistry.abi.json' assert { type: 'json' };
 import { getWalletAddress } from './utils.js';
-
 
 const getRegistryContract = async (readOnly: boolean = false) => {
   try {
@@ -41,7 +40,6 @@ const getRegistryContract = async (readOnly: boolean = false) => {
   }
 };
 
-
 const registerTool = async (
   name: string,
   cid: string,
@@ -50,10 +48,10 @@ const registerTool = async (
 ): Promise<string> => {
   try {
     const contract = await getRegistryContract();
-    
+
     const cidHash = getHashFromCid(cid);
     const metadataHash = getHashFromCid(metadataCid);
-    
+
     const tx = await contract.registerTool(name, version, cidHash, metadataHash);
     const receipt = await tx.wait();
     return receipt.hash;
@@ -62,7 +60,6 @@ const registerTool = async (
     throw error;
   }
 };
-
 
 const getToolInfo = async (
   name: string,
@@ -74,7 +71,7 @@ const getToolInfo = async (
   try {
     const contract = await getRegistryContract(true);
     const [owner, versionCount, latestVersion] = await contract.getToolInfo(name);
-    
+
     return {
       owner,
       versionCount: Number(versionCount),
@@ -82,15 +79,19 @@ const getToolInfo = async (
     };
   } catch (error: unknown) {
     // TODO - We have to handle this with proper types and return results
-    if (typeof error === 'object' && error !== null && 'reason' in error && error.reason === "Tool does not exist") {
+    if (
+      typeof error === 'object' &&
+      error !== null &&
+      'reason' in error &&
+      error.reason === 'Tool does not exist'
+    ) {
       return null;
     }
-    
+
     console.error(`Error getting info for tool ${name}:`, error);
     throw error;
   }
 };
-
 
 const getToolVersion = async (
   name: string,
@@ -102,9 +103,9 @@ const getToolVersion = async (
 }> => {
   try {
     const contract = await getRegistryContract(true);
-    
+
     const [cid, timestamp, metadataCid] = await contract.getToolVersion(name, version);
-    
+
     return { cid, timestamp: Number(timestamp), metadataCid };
   } catch (error) {
     console.error(`Error getting version ${version} for tool ${name}:`, error);
@@ -112,11 +113,10 @@ const getToolVersion = async (
   }
 };
 
-
 const getToolVersions = async (name: string): Promise<string[]> => {
   try {
     const contract = await getRegistryContract(true);
-    
+
     const versions = await contract.getToolVersions(name);
     console.log(chalk.green(`Found ${versions.length} versions for tool ${name}`));
     return versions;
@@ -125,7 +125,6 @@ const getToolVersions = async (name: string): Promise<string[]> => {
     throw error;
   }
 };
-
 
 const getLatestToolVersion = async (
   name: string,
@@ -136,8 +135,8 @@ const getLatestToolVersion = async (
   metadataCid: string;
 }> => {
   try {
-    const contract = await getRegistryContract(true);    
-    
+    const contract = await getRegistryContract(true);
+
     const result = await contract.getLatestVersion(name);
     const version = result[0];
     const cid = result[1];
@@ -155,17 +154,13 @@ const getLatestToolVersion = async (
   }
 };
 
-
-const getAllToolNames = async (
-  offset: number = 0, 
-  limit: number = 100
-): Promise<string[]> => {
+const getAllToolNames = async (offset: number = 0, limit: number = 100): Promise<string[]> => {
   try {
     console.log(chalk.blue(`Getting all tool names with offset ${offset} and limit ${limit}`));
     const contract = await getRegistryContract(true);
     const safeOffset = Math.max(0, offset);
     const safeLimit = Math.max(1, Math.min(limit, 100));
-    const toolNames = await contract.getAllTools(safeOffset, safeLimit);  
+    const toolNames = await contract.getAllTools(safeOffset, safeLimit);
 
     return toolNames;
   } catch (error) {
@@ -174,8 +169,6 @@ const getAllToolNames = async (
   }
 };
 
-
-
 const isToolOwner = async (name: string): Promise<boolean> => {
   try {
     const contract = await getRegistryContract(true);
@@ -183,7 +176,6 @@ const isToolOwner = async (name: string): Promise<boolean> => {
     const ownerAddress = toolInfo[0];
     const address = await getWalletAddress();
     try {
-
       return ownerAddress.toLowerCase() === address.toLowerCase();
     } catch (error) {
       console.error(`Error checking ownership for tool ${name}:`, error);
@@ -195,4 +187,13 @@ const isToolOwner = async (name: string): Promise<boolean> => {
   }
 };
 
-export { getRegistryContract, registerTool, getToolInfo, getToolVersion, getToolVersions, getLatestToolVersion, getAllToolNames, isToolOwner };
+export {
+  getRegistryContract,
+  registerTool,
+  getToolInfo,
+  getToolVersion,
+  getToolVersions,
+  getLatestToolVersion,
+  getAllToolNames,
+  isToolOwner,
+};

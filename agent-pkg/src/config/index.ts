@@ -5,7 +5,6 @@ import { getFromKeychain } from '../utils/vault/keychain.js';
 import { credentialsExist, loadCredentials } from '../utils/credential/index.js';
 import { DEFAULT_CONFIG } from './default.js';
 
-
 const loadConfig = async () => {
   try {
     const data = await fs.readFile(CONFIG_FILE, 'utf8');

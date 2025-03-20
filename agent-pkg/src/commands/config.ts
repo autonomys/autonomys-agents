@@ -2,7 +2,6 @@ import chalk from 'chalk';
 import { CommandResult, ConfigOptions } from '../types/index.js';
 import { promptForConfig, promptForCredentials } from '../config/prompts.js';
 
-
 const config = async (options: ConfigOptions): Promise<CommandResult> => {
   console.log(chalk.blue.bold('autoOS CLI Configuration\n'));
 

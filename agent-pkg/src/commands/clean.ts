@@ -6,7 +6,6 @@ import inquirer from 'inquirer';
 import { CleanOptions, CommandResult } from '../types/index.js';
 import { PACKAGES_DIR } from '../utils/shared/path.js';
 
-
 const clean = async (options: CleanOptions): Promise<CommandResult> => {
   const spinner = ora('Cleaning autoOS cache...').start();
   spinner.stop();

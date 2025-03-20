@@ -4,10 +4,7 @@ import { CommandResult } from '../types/index.js';
 import { InstallOptions } from '../types/index.js';
 import { performToolInstallation, resolveToolInfo } from '../utils/commands/install/toolInstall.js';
 
-const install = async (
-  toolName: string,
-  options: InstallOptions,
-): Promise<CommandResult> => {
+const install = async (toolName: string, options: InstallOptions): Promise<CommandResult> => {
   const spinner = ora(`Installing ${toolName}...`).start();
   const isLocalInstall = !!options.local;
   const installType = isLocalInstall ? 'locally' : 'globally';

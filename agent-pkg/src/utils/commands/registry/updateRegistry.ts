@@ -9,7 +9,6 @@ import chalk from 'chalk';
 import { REGISTRY_CACHE_PATH } from '../../../utils/shared/path.js';
 import { getLocalRegistryCache } from './toolInquiry.js';
 
-
 const updateRegistry = async (toolMetadata: ToolMetadata, metadataCid: string): Promise<string> => {
   try {
     console.log(chalk.blue('Updating registry on blockchain...'));
@@ -30,7 +29,7 @@ const updateRegistry = async (toolMetadata: ToolMetadata, metadataCid: string): 
         case 'NOT_OWNER':
           throw new Error(`Tool ${toolMetadata.name} already exists and you're not the owner`);
 
-        case 'REGISTER_NEW': 
+        case 'REGISTER_NEW':
         case 'UPDATE_EXISTING':
           txHash = await registerTool(
             toolMetadata.name,
@@ -61,4 +60,4 @@ const updateRegistry = async (toolMetadata: ToolMetadata, metadataCid: string): 
   }
 };
 
-export {updateRegistry}
+export { updateRegistry };

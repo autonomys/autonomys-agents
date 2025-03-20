@@ -9,7 +9,6 @@ import { InstallOptions, ToolInstallInfo, ToolMetadata } from '../../../types/in
 import { loadCredentials } from '../../credential/index.js';
 import { getCidFromHash } from '../../blockchain/utils.js';
 
-
 const fetchToolPackage = async (cidHash: string): Promise<string> => {
   const cid = getCidFromHash(cidHash);
   const credentials = await loadCredentials();
@@ -36,7 +35,6 @@ const fetchToolPackage = async (cidHash: string): Promise<string> => {
   }
 };
 
-
 const unpackToolToDirectory = async (
   packagePath: string,
   toolName: string,
@@ -55,7 +53,6 @@ const unpackToolToDirectory = async (
   }
 };
 
-
 const performToolInstallation = async (
   toolInfo: ToolInstallInfo,
   isLocalInstall: boolean,
@@ -72,22 +69,19 @@ const performToolInstallation = async (
   }
 };
 
-
 const validateCidOption = (cid: string | undefined): string => {
   if (!cid) {
     throw new Error('CID is required when installing a tool by CID');
   }
   return cid;
-}
-
+};
 
 const validateVersionOption = (version: string | undefined): string => {
   if (!version) {
     throw new Error('Version is required when installing a specific version');
   }
   return version;
-}
-
+};
 
 export const createToolInfoFromRegistry = (registryInfo: ToolMetadata): ToolInstallInfo => {
   return {
@@ -96,7 +90,6 @@ export const createToolInfoFromRegistry = (registryInfo: ToolMetadata): ToolInst
     version: registryInfo.version,
   };
 };
-
 
 const resolveCidInstallation = (
   toolName: string,
@@ -113,7 +106,6 @@ const resolveCidInstallation = (
     versionDisplay: '',
   };
 };
-
 
 const resolveVersionInstallation = async (
   toolName: string,
@@ -136,7 +128,6 @@ const resolveVersionInstallation = async (
   };
 };
 
-
 const resolveLatestInstallation = async (
   toolName: string,
   spinner: ReturnType<typeof ora>,
@@ -156,7 +147,6 @@ const resolveLatestInstallation = async (
   };
 };
 
-
 const updateSpinnerWithInstallInfo = (
   spinner: ReturnType<typeof ora>,
   toolName: string,
@@ -165,7 +155,6 @@ const updateSpinnerWithInstallInfo = (
 ): void => {
   spinner.text = `Installing ${toolName} ${versionDisplay} ${installType} from registry...`;
 };
-
 
 const resolveToolInfo = async (
   toolName: string,
@@ -201,5 +190,5 @@ export {
   performToolInstallation,
   validateCidOption,
   validateVersionOption,
-  resolveToolInfo
-}
+  resolveToolInfo,
+};

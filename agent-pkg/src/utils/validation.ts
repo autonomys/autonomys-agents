@@ -2,7 +2,6 @@ import fs from 'fs/promises';
 import path from 'path';
 import { ToolManifest, ValidationResult } from '../types/index.js';
 
-
 const validateToolStructure = async (toolPath: string): Promise<ValidationResult> => {
   try {
     try {

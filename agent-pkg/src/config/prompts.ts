@@ -4,7 +4,6 @@ import inquirer from 'inquirer';
 import { Credentials } from '../types/index.js';
 import { credentialsExist, loadCredentials, saveCredentials } from '../utils/credential/index.js';
 
-
 const promptForConfig = async () => {
   console.log(chalk.blue('Configuration setup for autoOS CLI'));
 
@@ -35,7 +34,6 @@ const promptForConfig = async () => {
   await saveConfig({ ...currentConfig, ...answers });
   console.log(chalk.green('Configuration saved successfully'));
 };
-
 
 const promptForCredentials = async (): Promise<Credentials> => {
   console.log(chalk.blue('Credential setup for autoOS CLI'));
@@ -70,7 +68,6 @@ const promptForCredentials = async (): Promise<Credentials> => {
       }
     }
     masterPassword = password;
-
   } else {
     const { password } = await inquirer.prompt([
       {
@@ -148,14 +145,14 @@ const promptForCredentials = async (): Promise<Credentials> => {
     autoEvmPrivateKey: answers.autoEvmPrivateKey,
   };
 
-    await saveCredentials(credentials, masterPassword);
-    console.log(chalk.green('Credentials saved successfully'));
+  await saveCredentials(credentials, masterPassword);
+  console.log(chalk.green('Credentials saved successfully'));
 
-    const currentConfig = await loadConfig();
-    await saveConfig({
-      ...currentConfig,
-      autoSaveCredentials: true,
-    });
+  const currentConfig = await loadConfig();
+  await saveConfig({
+    ...currentConfig,
+    autoSaveCredentials: true,
+  });
 
   return credentials;
 };

@@ -9,7 +9,13 @@ import { tool } from './commands/tool.js';
 import { initializeConfigAndCredentials } from './config/index.js';
 import { credentialsExist } from './utils/credential/index.js';
 import { ensureAutoOSDir } from './utils/shared/path.js';
-import { CleanOptions, ConfigOptions, InstallOptions, PublishOptions, ToolCommandParams } from './types/index.js';
+import {
+  CleanOptions,
+  ConfigOptions,
+  InstallOptions,
+  PublishOptions,
+  ToolCommandParams,
+} from './types/index.js';
 
 const checkMasterPassword = async () => {
   const isConfigCommand = process.argv.length > 2 && process.argv[2] === 'config';
