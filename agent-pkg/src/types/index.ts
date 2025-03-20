@@ -33,7 +33,7 @@ export interface ToolManifest {
   description: string;
   author: string;
   dependencies: string[];
-  main: string; // Main entry file
+  main: string;
   keywords: string[];
 }
 
@@ -71,6 +71,10 @@ export interface ConfigOptions {
 
 export interface PublishOptions {
   registry?: boolean;
+}
+
+export interface ToolMetadataOptions {
+  version?: string;
 }
 
 export interface Config {

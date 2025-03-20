@@ -8,7 +8,8 @@ import { clean } from './commands/clean.js';
 import { initializeConfigAndCredentials } from './config/index.js';
 import { credentialsExist } from './utils/credential/index.js';
 import { ensureAutoOSDir } from './utils/shared/path.js';
-import { CleanOptions, ConfigOptions, InstallOptions, PublishOptions } from './types/index.js';
+import { CleanOptions, ConfigOptions, InstallOptions, PublishOptions, ToolMetadataOptions } from './types/index.js';
+import { getToolMetadata } from './utils/commands/registry/toolInquiry.js';
 
 const checkMasterPassword = async () => {
   const isConfigCommand = process.argv.length > 2 && process.argv[2] === 'config';
@@ -44,6 +45,15 @@ ensureAutoOSDir()
       await config(options);
     };
 
+    const toolMetadataWrapper = async (toolName: string, options: ToolMetadataOptions) => {
+      const metadata = await getToolMetadata(toolName, options.version);
+      if (metadata) {
+        console.log(metadata);
+      } else {
+        console.log(chalk.red('Tool not found'));
+      }
+    };
+
     const cleanWrapper = async (options: CleanOptions) => {
       await clean(options);
     };
@@ -77,6 +87,16 @@ ensureAutoOSDir()
       .description('List available tools in the registry')
       .option('-d, --detailed', 'Show detailed information')
       .action(listWrapper);
+
+    program
+      .command('tool')
+      .description('Inquire about a tool')
+      .argument('<tool-name>', 'Name of the tool to inquire about')
+      .option(
+        '-v, --version <version>',
+        'Specific version to inquire about',
+      )
+      .action(toolMetadataWrapper);
 
     program
       .command('config')

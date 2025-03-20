@@ -9,6 +9,8 @@ import {
 } from '../../blockchain/contractClient.js';
 import chalk from 'chalk';
 import { REGISTRY_CACHE_PATH } from '../../shared/path.js';
+import { downloadObjectFromDsn } from '../../autoDrive/autoDriveClient.js';
+import { getCidFromHash } from '../../blockchain/utils.js';
 
 const fetchRegistryFromBlockchain = async (): Promise<ToolRegistry> => {
   try {
@@ -34,12 +36,11 @@ const fetchRegistryFromBlockchain = async (): Promise<ToolRegistry> => {
         version: toolInfo.latestVersion,
         author: toolInfo.owner,
         cid: latestVersionInfo.cid,
-        metadataCid: latestVersionInfo.metadata,
+        metadataCid: latestVersionInfo.metadataCid,
         updated: new Date(latestVersionInfo.timestamp * 1000).toISOString(),
       };
     }
 
-    // Save to cache
     await fs.writeFile(REGISTRY_CACHE_PATH, JSON.stringify(registry, null, 2));
 
     return registry;
@@ -70,14 +71,12 @@ export const getLocalRegistryCache = async (): Promise<ToolRegistry> => {
   }
 };
 
-// Get registry from cache or fetch from blockchain
 export const getRegistry = async (): Promise<ToolRegistry> => {
   try {
-    // Try to read from cache first for faster response
+
     const cacheData = await fs.readFile(REGISTRY_CACHE_PATH, 'utf8');
     const cachedRegistry = JSON.parse(cacheData) as ToolRegistry;
 
-    // Check if cache is recent (less than 1 hour old)
     const cacheTime = new Date(cachedRegistry.updated);
     const now = new Date();
     const cacheAge = now.getTime() - cacheTime.getTime();
@@ -87,7 +86,6 @@ export const getRegistry = async (): Promise<ToolRegistry> => {
       return cachedRegistry;
     }
 
-    // Cache is older than 1 hour, fetch from blockchain
     return await fetchRegistryFromBlockchain();
   } catch (error) {
     console.error('Error fetching registry from blockchain:', error);
@@ -105,11 +103,10 @@ export const getToolFromRegistry = async (toolName: string): Promise<ToolMetadat
     if (toolInfo.latestVersion) {
       const latestVersionInfo = await getLatestToolVersion(toolName);
 
-      // Return tool metadata
       return {
         name: toolName,
         version: toolInfo.latestVersion,
-        metadataCid: latestVersionInfo.metadata,
+        metadataCid: latestVersionInfo.metadataCid,
         author: toolInfo.owner,
         cid: latestVersionInfo.cid,
         updated: new Date(latestVersionInfo.timestamp * 1000).toISOString(),
@@ -136,7 +133,6 @@ export const getToolVersionFromRegistry = async (
   version: string,
 ): Promise<ToolMetadata | null> => {
   try {
-    // First check if the tool exists
     const toolInfo = await getToolInfo(toolName);
     if (!toolInfo) {
       return null;
@@ -147,21 +143,18 @@ export const getToolVersionFromRegistry = async (
       return null;
     }
 
-    // Check if the specified version exists
     const versions = await getToolVersions(toolName);
     if (!versions.includes(version)) {
       console.error(`Version ${version} of tool ${toolName} not found`);
       return null;
     }
 
-    // Get the specific version info
     const versionInfo = await getToolVersion(toolName, version);
 
-    // Return tool metadata for specific version
     return {
       name: toolName,
       version: version,
-      metadataCid: versionInfo.metadata,
+      metadataCid: versionInfo.metadataCid,
       author: toolInfo.owner,
       cid: versionInfo.cid,
       updated: new Date(versionInfo.timestamp * 1000).toISOString(),
@@ -169,15 +162,32 @@ export const getToolVersionFromRegistry = async (
   } catch (error) {
     console.error(`Error getting version ${version} of tool ${toolName} from registry:`, error);
 
-    // Try to fall back to local cache if possible
     const registry = await getLocalRegistryCache();
     const tool = registry.tools[toolName];
 
-    // Only return from cache if it matches the requested version
     if (tool && tool.version === version) {
       return tool;
     }
 
     return null;
   }
+};
+
+export const getToolMetadata = async (toolName: string, version?: string): Promise<string | null> => {
+  if (version) {
+    const versionInfo = await getToolVersionFromRegistry(toolName, version);
+    if (!versionInfo) {
+      return null;
+    }
+    const cid = getCidFromHash(versionInfo.metadataCid);
+    const metadata = await downloadObjectFromDsn(cid);
+    return JSON.stringify(metadata);
+  }
+  const toolInfo = await getToolFromRegistry(toolName);
+  if (!toolInfo) {
+    return null;
+  }
+  const cid = getCidFromHash(toolInfo.metadataCid);
+  const metadata = await downloadObjectFromDsn(cid);
+  return JSON.stringify(metadata);
 };

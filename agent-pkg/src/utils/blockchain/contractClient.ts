@@ -47,7 +47,7 @@ export const getRegistryContract = async (readOnly: boolean = false) => {
  * @param name Tool name
  * @param cid Content identifier
  * @param version Version string
- * @param metadata Additional metadata (description, keywords, etc.)
+ * @param metadataCid Additional metadata (description, keywords, etc.)
  * @returns Transaction hash
  */
 export const registerTool = async (
@@ -115,14 +115,14 @@ export const getToolVersion = async (
 ): Promise<{
   cid: string;
   timestamp: number;
-  metadata: string;
+  metadataCid: string;
 }> => {
   try {
     const contract = await getRegistryContract(true);
     
-    const [cid, timestamp, metadata] = await contract.getToolVersion(name, version);
+    const [cid, timestamp, metadataCid] = await contract.getToolVersion(name, version);
     
-    return { cid, timestamp: Number(timestamp), metadata };
+    return { cid, timestamp: Number(timestamp), metadataCid };
   } catch (error) {
     console.error(`Error getting version ${version} for tool ${name}:`, error);
     throw error;
@@ -156,7 +156,7 @@ export const getLatestToolVersion = async (
   version: string;
   cid: string;
   timestamp: number;
-  metadata: string;
+  metadataCid: string;
 }> => {
   try {
     const contract = await getRegistryContract(true);    
@@ -165,12 +165,12 @@ export const getLatestToolVersion = async (
     const version = result[0];
     const cid = result[1];
     const timestamp = Number(result[2]);
-    const metadata = result[3];
+    const metadataCid = result[3];
     return {
       version,
       cid,
       timestamp,
-      metadata,
+      metadataCid,
     };
   } catch (error) {
     console.error(`Error getting latest version for tool ${name}:`, error);
@@ -201,6 +201,7 @@ export const getAllToolNames = async (
     throw error;
   }
 };
+
 
 /**
  * Check if the connected account is the owner of a tool
