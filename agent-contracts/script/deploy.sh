@@ -59,13 +59,13 @@ deploy_package_registry() {
     echo -e "${BLUE}Deploying AutonomysPackageRegistry to $network network... ${rpc_url}${NC}"
     
     if [ -n "$evm_version" ]; then
-        forge script script/AutonomysPackageRegistry.s.sol:AutonomysPackageRegistry \
+        forge script script/AutonomysPackageRegistry.s.sol:DeployScript \
             --rpc-url $rpc_url \
             --private-key $private_key \
             --evm-version $evm_version \
             --broadcast
     else
-        forge script script/AutonomysPackageRegistry.s.sol:AutonomysPackageRegistry \
+        forge script script/AutonomysPackageRegistry.s.sol:DeployScript \
             --rpc-url $rpc_url \
             --private-key $private_key \
             --broadcast

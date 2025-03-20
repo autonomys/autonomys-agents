@@ -489,7 +489,7 @@ contract AutonomysPackageRegistryTest is Test {
     }
     
     // Test version format handling
-    function testVersionFormatHandling() public {
+    function testVersionFormatHandling() public view {
         // Test partial version format (should be handled according to implementation)
         try registry.parseVersion("1.0") {
             // If it doesn't revert, that's fine
@@ -506,7 +506,7 @@ contract AutonomysPackageRegistryTest is Test {
     }
     
     // Test with large version numbers to check for overflows
-    function testLargeVersionNumbers() public {
+    function testLargeVersionNumbers() public view {
         registry.parseVersion("65535.65535.65535");
         registry.parseVersion("65536.65536.65536");
         registry.parseVersion("999999.999999.999999");
