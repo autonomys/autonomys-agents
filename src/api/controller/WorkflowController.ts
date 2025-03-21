@@ -45,5 +45,3 @@ export const externalStopWorkflow = asyncHandler(async (req: Request, res: Respo
 export const getRegisteredNamespaces = (): string[] => {
   return Array.from(orchestratorRunners.keys());
 };
-
-

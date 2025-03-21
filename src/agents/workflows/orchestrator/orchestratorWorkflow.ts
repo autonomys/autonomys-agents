@@ -23,8 +23,7 @@ import { createTaskQueue } from './scheduler/taskQueue.js';
 import { Task, TaskQueue } from './scheduler/types.js';
 import { closeVectorDB } from '../../../services/vectorDb/vectorDBPool.js';
 
-const terminationState = new Map<string, { shouldStop: boolean, reason: string }>();
-
+const terminationState = new Map<string, { shouldStop: boolean; reason: string }>();
 
 const handleConditionalEdge = async (
   state: OrchestratorStateType,
@@ -32,10 +31,11 @@ const handleConditionalEdge = async (
   workflowLogger: Logger,
   namespace: string,
 ) => {
-
   const terminationKey = `${namespace}:terminate`;
   if (terminationState.has(terminationKey)) {
-    workflowLogger.info('Workflow stop requested', { reason: terminationState.get(terminationKey)?.reason });
+    workflowLogger.info('Workflow stop requested', {
+      reason: terminationState.get(terminationKey)?.reason,
+    });
     terminationState.delete(terminationKey);
     return 'finishWorkflow';
   }
@@ -291,7 +291,6 @@ export const createOrchestratorRunner = async (
       } else {
         workflowLogger.info('No current task to terminate');
       }
-      
     },
   };
 };
