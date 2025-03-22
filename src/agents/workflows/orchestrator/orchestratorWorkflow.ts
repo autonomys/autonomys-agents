@@ -23,11 +23,23 @@ import { createTaskQueue } from './scheduler/taskQueue.js';
 import { Task, TaskQueue } from './scheduler/types.js';
 import { closeVectorDB } from '../../../services/vectorDb/vectorDBPool.js';
 
+const terminationState = new Map<string, { shouldStop: boolean; reason: string }>();
+
 const handleConditionalEdge = async (
   state: OrchestratorStateType,
   pruningParameters: PruningParameters,
   workflowLogger: Logger,
+  namespace: string,
 ) => {
+  const terminationKey = `${namespace}:terminate`;
+  if (terminationState.has(terminationKey)) {
+    workflowLogger.info('Workflow stop requested', {
+      reason: terminationState.get(terminationKey)?.reason,
+    });
+    terminationState.delete(terminationKey);
+    return 'finishWorkflow';
+  }
+
   if (state.workflowControl && state.workflowControl.shouldStop) {
     workflowLogger.info('Workflow stop requested', { reason: state.workflowControl.reason });
     return 'finishWorkflow';
@@ -58,6 +70,7 @@ const createOrchestratorWorkflow = async (
   nodes: Awaited<ReturnType<typeof createNodes>>,
   pruningParameters: PruningParameters,
   workflowLogger: Logger,
+  namespace: string,
 ) => {
   const workflow = new StateGraph(OrchestratorState(pruningParameters))
     .addNode('input', nodes.inputNode)
@@ -66,7 +79,7 @@ const createOrchestratorWorkflow = async (
     .addNode('toolExecution', nodes.toolExecutionNode)
     .addEdge(START, 'input')
     .addConditionalEdges('input', state =>
-      handleConditionalEdge(state, pruningParameters, workflowLogger),
+      handleConditionalEdge(state, pruningParameters, workflowLogger, namespace),
     )
     .addEdge('toolExecution', 'input')
     .addEdge('messageSummary', 'input')
@@ -80,6 +93,9 @@ export type OrchestratorRunner = Readonly<{
     input?: OrchestratorInput,
     options?: { threadId?: string },
   ) => Promise<FinishedWorkflow>;
+
+  // Stop the workflow
+  externalStopWorkflow: (reason?: string) => void;
 
   // Scheduled task management methods
   scheduleTask: (message: string, executeAt: Date) => Task;
@@ -166,12 +182,13 @@ export const createOrchestratorRunner = async (
     nodes,
     runnerConfig.pruningParameters,
     workflowLogger,
+    runnerConfig.namespace,
   );
 
   const memoryStore = new MemorySaver();
   const app = workflow.compile({ checkpointer: memoryStore });
 
-  const namespace = runnerConfig.namespace || 'orchestrator';
+  const namespace = runnerConfig.namespace;
   const taskQueue = createTaskQueue(namespace);
 
   return {
@@ -179,7 +196,7 @@ export const createOrchestratorRunner = async (
       input?: OrchestratorInput,
       options?: { threadId?: string },
     ): Promise<FinishedWorkflow> => {
-      const threadId = `${options?.threadId || 'orchestrator'}-${Date.now()}`;
+      const threadId = `${options?.threadId}-${Date.now()}`;
       workflowLogger.info('Starting orchestrator workflow', { threadId });
 
       const config = {
@@ -261,6 +278,19 @@ export const createOrchestratorRunner = async (
 
     deleteTask: (id: string) => {
       return taskQueue.deleteTask(id);
+    },
+
+    externalStopWorkflow: async (reason?: string): Promise<void> => {
+      workflowLogger.info('Stopping orchestrator workflow', { reason });
+      const currentTask = taskQueue.currentTask;
+      if (currentTask) {
+        taskQueue.updateTaskStatus(currentTask.id, 'failed', `Terminated by user: ${reason}`);
+        workflowLogger.info('Terminated current task', { taskId: currentTask.id });
+        const terminationKey = `${namespace}:terminate`;
+        terminationState.set(terminationKey, { shouldStop: true, reason: reason || 'Unknown' });
+      } else {
+        workflowLogger.info('No current task to terminate');
+      }
     },
   };
 };
