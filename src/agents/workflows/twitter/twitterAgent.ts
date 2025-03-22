@@ -3,7 +3,10 @@ import { HumanMessage } from '@langchain/core/messages';
 import { Character } from '../../../config/characters.js';
 import { TwitterApi } from '../../../services/twitter/types.js';
 import { createAllTwitterTools } from '../../tools/twitter/index.js';
-import { createOrchestratorRunner } from '../orchestrator/orchestratorWorkflow.js';
+import {
+  createOrchestratorRunner,
+  workflowControlState,
+} from '../orchestrator/orchestratorWorkflow.js';
 import { createTwitterPrompts } from './prompts.js';
 import { LLMConfiguration } from '../../../services/llm/types.js';
 import { withApiLogger } from '../../../api/server.js';
@@ -12,7 +15,7 @@ import { z } from 'zod';
 import { TwitterAgentConfig, TwitterAgentOptions } from './types.js';
 import { cleanTwitterMessageData } from './cleanMessages.js';
 import { registerOrchestratorRunner } from '../../workflows/registration.js';
-
+import { createStopWorkflowTool } from '../../tools/stopWorkflow/index.js';
 const logger = createLogger('twitter-workflow');
 
 const defaultModelConfig: LLMConfiguration = {
@@ -81,9 +84,10 @@ export const createTwitterAgent = (
         const twitterTools = createAllTwitterTools(twitterApi, maxThreadDepth, postTweets);
         const prompts = await createTwitterPrompts(character, twitterApi.username);
 
+        const stopWorkflowTool = createStopWorkflowTool(workflowControlState, namespace);
         const runner = createOrchestratorRunner(character, {
           modelConfigurations,
-          tools: [...twitterTools, ...tools],
+          tools: [...twitterTools, ...tools, stopWorkflowTool],
           prompts,
           namespace,
           saveExperiences,

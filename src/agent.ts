@@ -5,6 +5,7 @@ import { createGithubAgent } from './agents/workflows/github/githubAgent.js';
 import {
   createOrchestratorRunner,
   OrchestratorRunner,
+  workflowControlState,
 } from './agents/workflows/orchestrator/orchestratorWorkflow.js';
 import { createPrompts } from './agents/workflows/orchestrator/prompts.js';
 import { OrchestratorRunnerOptions } from './agents/workflows/orchestrator/types.js';
@@ -14,6 +15,7 @@ import { createTwitterAgent } from './agents/workflows/twitter/twitterAgent.js';
 import { withApiLogger } from './api/server.js';
 import { config } from './config/index.js';
 import { createTwitterApi } from './services/twitter/client.js';
+import { createStopWorkflowTool } from './agents/tools/stopWorkflow/index.js';
 
 const character = config.characterConfig;
 const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
@@ -100,10 +102,11 @@ export const orchestratorRunner = (() => {
   return async () => {
     if (!runnerPromise) {
       const namespace = 'orchestrator';
-
+      const stopWorkflowTool = createStopWorkflowTool(workflowControlState, namespace);
       runnerPromise = createOrchestratorRunner(character, {
         ...orchestrationConfig,
         ...withApiLogger(namespace),
+        tools: [...(orchestrationConfig.tools || []), stopWorkflowTool],
       });
       const runner = await runnerPromise;
       registerOrchestratorRunner(namespace, runner);
