@@ -24,6 +24,7 @@ import { Task, TaskQueue } from './scheduler/types.js';
 import { closeVectorDB } from '../../../services/vectorDb/vectorDBPool.js';
 
 const terminationState = new Map<string, { shouldStop: boolean; reason: string }>();
+export const workflowControlState = new Map<string, { shouldStop: boolean; reason: string }>();
 
 const handleConditionalEdge = async (
   state: OrchestratorStateType,
@@ -40,8 +41,11 @@ const handleConditionalEdge = async (
     return 'finishWorkflow';
   }
 
-  if (state.workflowControl && state.workflowControl.shouldStop) {
-    workflowLogger.info('Workflow stop requested', { reason: state.workflowControl.reason });
+  if (workflowControlState.has(namespace)) {
+    workflowLogger.info('Workflow stop requested', {
+      reason: workflowControlState.get(namespace)?.reason,
+    });
+    workflowControlState.delete(namespace);
     return 'finishWorkflow';
   }
 
@@ -93,7 +97,6 @@ export type OrchestratorRunner = Readonly<{
     input?: OrchestratorInput,
     options?: { threadId?: string },
   ) => Promise<FinishedWorkflow>;
-
   // Stop the workflow
   externalStopWorkflow: (reason?: string) => void;
 
