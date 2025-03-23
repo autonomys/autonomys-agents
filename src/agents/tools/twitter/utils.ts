@@ -1,4 +1,4 @@
-import { createLogger } from '../../utils/logger.js';
+import { createLogger } from '../../../utils/logger.js';
 
 const logger = createLogger('twitter-api');
 

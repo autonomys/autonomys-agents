@@ -1,4 +1,4 @@
-import { Tweet } from '../../../../services/twitter/types.js';
+import { Tweet } from '../types.js';
 
 export type MinimalTweet = {
   id?: string;

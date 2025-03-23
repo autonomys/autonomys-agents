@@ -1,6 +1,6 @@
 import { DynamicStructuredTool } from '@langchain/core/tools';
 import { z } from 'zod';
-import { TwitterApi } from '../../../services/twitter/types.js';
+import { TwitterApi } from './types.js';
 import { cleanTweetForCircularReferences, tweetToMinimalTweet } from './utils/utils.js';
 import { createLogger } from '../../../utils/logger.js';
 
@@ -44,7 +44,7 @@ export const createFetchTimelineTool = (twitterApi: TwitterApi) =>
         return {
           success: false,
           error: errorMessage(error),
-          data: { tweets: [] }
+          data: { tweets: [] },
         };
       }
     },
@@ -80,7 +80,7 @@ export const createFetchFollowingTimelineTool = (twitterApi: TwitterApi) =>
         return {
           success: false,
           error: errorMessage(error),
-          data: { tweets: [] }
+          data: { tweets: [] },
         };
       }
     },
@@ -104,14 +104,14 @@ export const createFetchMentionsTool = (twitterApi: TwitterApi, maxThreadDepth: 
               const tweet = cleanTweetForCircularReferences(t);
               return tweetToMinimalTweet(tweet);
             }),
-          }
+          },
         };
       } catch (error) {
         logger.error('Error in fetchMentionsTool:', error);
         return {
           success: false,
           error: errorMessage(error),
-          data: { mentions: [] }
+          data: { mentions: [] },
         };
       }
     },
@@ -145,14 +145,14 @@ export const createFetchMyRecentTweetsAndRepliesTool = (twitterApi: TwitterApi) 
           data: {
             myTweets: myRecentTweets.map(t => tweetToMinimalTweet(t)),
             myReplies: myRecentReplies.map(t => tweetToMinimalTweet(t)),
-          }
+          },
         };
       } catch (error) {
         logger.error('Error in fetchRecentTweetsTool:', error);
         return {
           success: false,
           error: errorMessage(error),
-          data: { myTweets: [], myReplies: [] }
+          data: { myTweets: [], myReplies: [] },
         };
       }
     },
@@ -172,7 +172,7 @@ export const createFetchFollowingTool = (twitterApi: TwitterApi) =>
         return {
           success: false,
           error: errorMessage(error),
-          data: { following: [] }
+          data: { following: [] },
         };
       }
     },
@@ -192,7 +192,7 @@ export const createFetchProfileTool = (twitterApi: TwitterApi) =>
         return {
           success: false,
           error: errorMessage(error),
-          data: { profile: null }
+          data: { profile: null },
         };
       }
     },
@@ -212,7 +212,7 @@ export const createFetchTweetTool = (twitterApi: TwitterApi) =>
         return {
           success: false,
           error: errorMessage(error),
-          data: { tweet: null }
+          data: { tweet: null },
         };
       }
     },
@@ -232,7 +232,7 @@ export const createSearchTweetsTool = (twitterApi: TwitterApi) =>
         return {
           success: false,
           error: error instanceof Error ? error.message : 'Unknown error',
-          data: { tweets: [] }
+          data: { tweets: [] },
         };
       }
     },
@@ -249,14 +249,14 @@ export const createLikeTweetTool = (twitterApi: TwitterApi) =>
         await twitterApi.likeTweet(tweetId);
         return {
           success: true,
-          data: { tweetId }
+          data: { tweetId },
         };
       } catch (error) {
         logger.error('Error liking tweet:', error);
         return {
           success: false,
           error: errorMessage(error),
-          data: { tweetId }
+          data: { tweetId },
         };
       }
     },
@@ -266,7 +266,10 @@ export const createPostTweetTool = (twitterApi: TwitterApi, postTweets: boolean 
   new DynamicStructuredTool({
     name: 'post_tweet',
     description: 'Post a tweet',
-    schema: z.object({ text: z.string().describe('The text you want to post'), inReplyTo: z.string().describe('The ID of the tweet you want to reply to').optional() }),
+    schema: z.object({
+      text: z.string().describe('The text you want to post'),
+      inReplyTo: z.string().describe('The ID of the tweet you want to reply to').optional(),
+    }),
     func: async ({ text, inReplyTo }: { text: string; inReplyTo?: string }) => {
       try {
         if (postTweets) {
@@ -278,7 +281,7 @@ export const createPostTweetTool = (twitterApi: TwitterApi, postTweets: boolean 
               return {
                 success: false,
                 error: 'Already replied to this tweet',
-                data: { text, inReplyTo }
+                data: { text, inReplyTo },
               };
             }
           }
@@ -288,14 +291,15 @@ export const createPostTweetTool = (twitterApi: TwitterApi, postTweets: boolean 
           });
           return {
             success: true,
-            data: { postedTweetId, text, inReplyTo }
+            data: { postedTweetId, text, inReplyTo },
           };
         } else {
           logger.info('Tweet not posted', { text });
           return {
             success: false,
-            error: 'The posting of tweets is disabled for testing purposes. Continue as if it was enabled',
-            data: { text, inReplyTo }
+            error:
+              'The posting of tweets is disabled for testing purposes. Continue as if it was enabled',
+            data: { text, inReplyTo },
           };
         }
       } catch (error) {
@@ -303,7 +307,7 @@ export const createPostTweetTool = (twitterApi: TwitterApi, postTweets: boolean 
         return {
           success: false,
           error: errorMessage(error),
-          data: { text, inReplyTo }
+          data: { text, inReplyTo },
         };
       }
     },
@@ -323,14 +327,15 @@ export const createQuoteTweetTool = (twitterApi: TwitterApi, postTweets: boolean
           const postedTweetId = await twitterApi.quoteTweet(text, quoteTweetId);
           return {
             success: true,
-            data: { quoteTweetId, text, postedTweetId }
+            data: { quoteTweetId, text, postedTweetId },
           };
         } else {
           logger.info('Quote tweet not posted', { text, quoteTweetId });
           return {
             success: false,
-            error: 'The posting of tweets is disabled for testing purposes. Continue as if it was enabled',
-            data: { quoteTweetId, text }
+            error:
+              'The posting of tweets is disabled for testing purposes. Continue as if it was enabled',
+            data: { quoteTweetId, text },
           };
         }
       } catch (error) {
@@ -338,7 +343,7 @@ export const createQuoteTweetTool = (twitterApi: TwitterApi, postTweets: boolean
         return {
           success: false,
           error: errorMessage(error),
-          data: { quoteTweetId, text }
+          data: { quoteTweetId, text },
         };
       }
     },
@@ -354,14 +359,14 @@ export const createFollowUserTool = (twitterApi: TwitterApi) =>
         await twitterApi.followUser(username);
         return {
           success: true,
-          data: { username }
+          data: { username },
         };
       } catch (error) {
         logger.error('Error following user:', error);
         return {
           success: false,
           error: errorMessage(error),
-          data: { username }
+          data: { username },
         };
       }
     },

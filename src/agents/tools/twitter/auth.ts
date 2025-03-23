@@ -1,7 +1,7 @@
 import { Scraper } from 'agent-twitter-client';
 import { existsSync, readFileSync, writeFileSync } from 'fs';
 import { Cookie } from 'tough-cookie';
-import { createLogger } from '../../utils/logger.js';
+import { createLogger } from '../../../utils/logger.js';
 import { retryWithBackoff } from './utils.js';
 const logger = createLogger('twitter-api');
 

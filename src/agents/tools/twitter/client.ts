@@ -2,7 +2,7 @@ import { Scraper, SearchMode, Tweet } from 'agent-twitter-client';
 import { isValidTweet } from './convertFromTimeline.js';
 import { convertTimelineTweetToTweet } from './convertFromTimeline.js';
 import { TwitterApi } from './types.js';
-import { createLogger } from '../../utils/logger.js';
+import { createLogger } from '../../../utils/logger.js';
 import { createAuthenticatedScraper } from './auth.js';
 
 const logger = createLogger('twitter-api');
