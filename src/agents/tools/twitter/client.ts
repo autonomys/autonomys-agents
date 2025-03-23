@@ -1,6 +1,5 @@
 import { Scraper, SearchMode, Tweet } from 'agent-twitter-client';
-import { isValidTweet } from './convertFromTimeline.js';
-import { convertTimelineTweetToTweet } from './convertFromTimeline.js';
+import { isValidTweet, convertTimelineTweetToTweet } from './utils/utils.js';
 import { TwitterApi } from './types.js';
 import { createLogger } from '../../../utils/logger.js';
 import { createAuthenticatedScraper } from './auth.js';
