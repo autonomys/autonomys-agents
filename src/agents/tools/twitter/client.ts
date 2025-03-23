@@ -246,7 +246,6 @@ export const createTwitterApi = async (
   password: string,
   cookiesPath: string = 'cookies.json',
 ): Promise<TwitterApi> => {
-  // Create an authenticated scraper using the new auth module
   const scraper = await createAuthenticatedScraper(username, password, cookiesPath);
 
   // Get user ID after successful authentication
