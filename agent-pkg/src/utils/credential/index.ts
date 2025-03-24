@@ -8,12 +8,18 @@ const encryptCredentials = async (
   credentials: Credentials,
   masterPassword: string,
 ): Promise<Buffer> => {
-  const key = scryptSync(masterPassword, 'salt', 32);
+  const salt = randomBytes(16);
+  const key = scryptSync(masterPassword, salt, 32);
   const iv = randomBytes(16);
   const cipher = createCipheriv('aes-256-cbc', key, iv);
 
   const data = JSON.stringify(credentials);
-  const encrypted = Buffer.concat([iv, cipher.update(data, 'utf8'), cipher.final()]);
+  const encrypted = Buffer.concat([
+    salt,
+    iv,
+    cipher.update(data, 'utf8'),
+    cipher.final()
+  ]);
 
   return encrypted;
 };
@@ -23,10 +29,11 @@ const decryptCredentials = async (
   masterPassword: string,
 ): Promise<Credentials> => {
   try {
-    const iv = encryptedData.subarray(0, 16);
-    const encryptedCredentials = encryptedData.subarray(16);
+    const salt = encryptedData.subarray(0, 16);
+    const iv = encryptedData.subarray(16, 32);
+    const encryptedCredentials = encryptedData.subarray(32);
 
-    const key = scryptSync(masterPassword, 'salt', 32);
+    const key = scryptSync(masterPassword, salt, 32);
     const decipher = createDecipheriv('aes-256-cbc', key, iv);
 
     const decrypted = Buffer.concat([
