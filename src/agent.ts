@@ -13,7 +13,7 @@ import { createSlackAgent } from './agents/workflows/slack/slackAgent.js';
 import { createTwitterAgent } from './agents/workflows/twitter/twitterAgent.js';
 import { withApiLogger } from './api/server.js';
 import { config } from './config/index.js';
-import { createTwitterApi } from './services/twitter/client.js';
+import { createTwitterApi } from './agents/tools/twitter/client.js';
 
 const character = config.characterConfig;
 const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
