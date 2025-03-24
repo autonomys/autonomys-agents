@@ -1,8 +1,4 @@
-import {
-  createAutoDriveApi,
-  UploadFileOptions,
-  
-} from '@autonomys/auto-drive';
+import { createAutoDriveApi, UploadFileOptions } from '@autonomys/auto-drive';
 import { loadConfig } from '../../config/index.js';
 import { loadCredentials } from '../credential/index.js';
 

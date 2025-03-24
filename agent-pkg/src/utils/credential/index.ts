@@ -14,12 +14,7 @@ const encryptCredentials = async (
   const cipher = createCipheriv('aes-256-cbc', key, iv);
 
   const data = JSON.stringify(credentials);
-  const encrypted = Buffer.concat([
-    salt,
-    iv,
-    cipher.update(data, 'utf8'),
-    cipher.final()
-  ]);
+  const encrypted = Buffer.concat([salt, iv, cipher.update(data, 'utf8'), cipher.final()]);
 
   return encrypted;
 };
