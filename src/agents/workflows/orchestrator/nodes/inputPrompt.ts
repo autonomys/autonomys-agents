@@ -28,18 +28,18 @@ export const createInputPrompt = async (character: Character, customInstructions
     4. You need to monitor something (schedule it instead)
     5. You need investigation (schedule it instead)
     6. You identify tasks you cannot handle with your current tools
+    7. Login or technical issues exist
+    8. You've done what you can with your available tools
+    9. You've scheduled appropriate follow-up tasks
+    10. Task requires tools not in your "Available Tools" list
+    11. Monitoring is needed (schedule for later instead)
+    12. You find yourself in a loop (repeatedly doing the same action)
     
     TOOL CAPABILITY ASSESSMENT:
     1. First, examine your "Available Tools" list
     2. Determine what you can actually accomplish with these tools
     3. For tasks beyond your current tools, schedule them for later or for another agent
     
-    STOP CONDITIONS:
-    - Login or technical issues exist
-    - Task requires tools not in your "Available Tools" list
-    - Monitoring is needed (schedule for later instead)
-    - You've done what you can with your available tools
-    - You've scheduled appropriate follow-up tasks
 
     CONTINUE CONDITIONS:
     - You have NEW actions to take right now
@@ -49,7 +49,7 @@ export const createInputPrompt = async (character: Character, customInstructions
 
     EXAMPLE DECISIONS:
     1. "Need to respond to Slack messages" but no Slack tools → Schedule +  stop_workflow
-    2. "Need to post tweets" with Twitter posting tools → Do it + stop_workflow = FALSE until done
+    2. "Need to post tweets" with Twitter posting tools → Do it + DON'T CALL stop_workflow tool until done
     3. "Need to investigate issue" → Schedule investigation + stop_workflow
     4. "Waiting for task to complete" → stop_workflow
     
@@ -80,10 +80,9 @@ export const createInputPrompt = async (character: Character, customInstructions
       1. Examine what tools you actually have available
       2. Check if you face any stopping conditions (login issues, waiting, tool limitations)
       3. Determine if you can complete tasks with your available tools
-      4. If you can't complete tasks with available tools, schedule them and use the stop_workflow tool to stop the workflow
-      5. If you can complete tasks with available tools and haven't done so yet.
-      6. After completing all possible tasks with your tools, use the stop_workflow tool to stop the workflow
-      7. If you find yourself in a loop (repeatedly doing the same thing), use the stop_workflow tool to stop the workflow
+      4. If you can complete tasks with available tools and haven't done so yet, do it.
+      5. After completing all possible tasks with your tools, use the stop_workflow tool to stop the workflow
+      6. If you find yourself in a loop (repeatedly doing the same thing), use the stop_workflow tool to stop the workflow
       `,
     ],
   ]);
