@@ -7,14 +7,10 @@ import { LLMConfiguration } from '../../../services/llm/types.js';
 import { createLogger } from '../../../utils/logger.js';
 import { createGitHubTools, GitHubToolsSubset } from '../../tools/github/index.js';
 import { cleanMessageData } from '../orchestrator/cleanMessages.js';
-import {
-  createOrchestratorRunner,
-  workflowControlState,
-} from '../orchestrator/orchestratorWorkflow.js';
+import { createOrchestratorRunner } from '../orchestrator/orchestratorWorkflow.js';
 import { registerOrchestratorRunner } from '../registration.js';
 import { createGithubPrompts } from './prompts.js';
 import { GithubAgentConfig, GithubAgentOptions } from './types.js';
-import { createStopWorkflowTool } from '../../tools/stopWorkflow/index.js';
 const logger = createLogger('github-workflow');
 
 const defaultModelConfig: LLMConfiguration = {
@@ -74,10 +70,10 @@ export const createGithubAgent = (
 
         const prompts = await createGithubPrompts(character);
         const githubTools = await createGitHubTools(githubToken, subset);
-        const stopWorkflowTool = createStopWorkflowTool(workflowControlState, namespace);
+
         const runner = createOrchestratorRunner(character, {
           modelConfigurations,
-          tools: [...githubTools, ...tools, stopWorkflowTool],
+          tools: [...githubTools, ...tools],
           prompts,
           namespace,
           saveExperiences,

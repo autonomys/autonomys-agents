@@ -154,7 +154,7 @@ const createOrchestratorRunnerConfig = async (
 
   const tools = [
     ...(options?.tools || []),
-    ...createDefaultOrchestratorTools(mergedOptions.saveExperiences),
+    ...createDefaultOrchestratorTools(mergedOptions.saveExperiences, mergedOptions.namespace),
   ];
   const prompts = options?.prompts || (await createPrompts(character));
   const monitoring = {
