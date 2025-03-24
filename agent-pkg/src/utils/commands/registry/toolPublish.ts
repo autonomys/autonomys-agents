@@ -3,7 +3,7 @@ import path from 'path';
 import archiver from 'archiver';
 import { UploadFileOptions } from '@autonomys/auto-drive';
 import { ToolManifest, ToolMetadata } from '../../../types/index.js';
-import { uploadFileToDsn, uploadObjectToDsn } from '../../autoDrive/autoDriveClient.js';
+import { uploadFileToDsn, uploadMetadataToDsn } from '../../autoDrive/autoDriveClient.js';
 import { loadCredentials } from '../../credential/index.js';
 
 const createToolPackage = async (toolPath: string): Promise<Buffer> => {
@@ -62,7 +62,7 @@ const uploadToolMetadata = async (metadata: ToolMetadata): Promise<string> => {
     password: credentials.autoDriveEncryptionPassword,
   };
   console.log('Uploading tool metadata...');
-  return await uploadObjectToDsn(
+  return await uploadMetadataToDsn(
     metadata,
     `${metadata.name}-${metadata.version}-metadata.json`,
     options,

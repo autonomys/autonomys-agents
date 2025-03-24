@@ -9,7 +9,7 @@ import {
 } from '../../blockchain/contractClient.js';
 import chalk from 'chalk';
 import { REGISTRY_CACHE_PATH } from '../../shared/path.js';
-import { downloadObjectFromDsn } from '../../autoDrive/autoDriveClient.js';
+import { downloadMetadataFromDsn } from '../../autoDrive/autoDriveClient.js';
 import { getCidFromHash } from '../../blockchain/utils.js';
 
 const fetchRegistryFromBlockchain = async (): Promise<ToolRegistry> => {
@@ -173,7 +173,7 @@ const getToolMetadata = async (toolName: string, version?: string): Promise<stri
       return null;
     }
     const cid = getCidFromHash(versionInfo.metadataCid);
-    const metadata = await downloadObjectFromDsn(cid);
+    const metadata = await downloadMetadataFromDsn(cid);
     return JSON.stringify(metadata);
   }
   const toolInfo = await getToolFromRegistry(toolName);
@@ -181,7 +181,7 @@ const getToolMetadata = async (toolName: string, version?: string): Promise<stri
     return null;
   }
   const cid = getCidFromHash(toolInfo.metadataCid);
-  const metadata = await downloadObjectFromDsn(cid);
+  const metadata = await downloadMetadataFromDsn(cid);
   return JSON.stringify(metadata);
 };
 

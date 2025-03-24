@@ -1,8 +1,7 @@
 import {
   createAutoDriveApi,
-  downloadFile,
-  uploadFile,
   UploadFileOptions,
+  
 } from '@autonomys/auto-drive';
 import { loadConfig } from '../../config/index.js';
 import { loadCredentials } from '../credential/index.js';
@@ -51,7 +50,7 @@ const uploadFileToDsn = async (
       uploadOptions.password = credentials.autoDriveEncryptionPassword;
     }
 
-    const cid = await uploadFile(api, file, uploadOptions);
+    const cid = await api.uploadFile(file, uploadOptions);
     console.log(`Upload successful. CID: ${cid}`);
     return cid;
   } catch (error) {
@@ -60,25 +59,24 @@ const uploadFileToDsn = async (
   }
 };
 
-const uploadObjectToDsn = async (
+const uploadMetadataToDsn = async (
   object: unknown,
   name: string,
   options?: UploadFileOptions,
 ): Promise<string> => {
   try {
-    const jsonData = JSON.stringify(object, null, 2);
-    const buffer = Buffer.from(jsonData);
+    const api = await createApiClient();
+    const credentials = await loadCredentials();
 
-    const file = {
-      read: async function* () {
-        yield buffer;
-      },
-      name,
-      mimeType: 'application/json',
-      size: buffer.length,
-    };
+    let uploadOptions = options || { compression: true };
 
-    return await uploadFileToDsn(file, options || { compression: true });
+    if (!uploadOptions.password && credentials.autoDriveEncryptionPassword) {
+      uploadOptions.password = credentials.autoDriveEncryptionPassword;
+    }
+
+    const cid = await api.uploadObjectAsJSON(object, name, uploadOptions);
+    console.log(`Upload successful. CID: ${cid}`);
+    return cid;
   } catch (error) {
     console.error('Error uploading object to DSN:', error);
     throw error;
@@ -101,14 +99,14 @@ const downloadFileFromDsn = async (
         password = credentials.autoDriveEncryptionPassword;
       }
     }
-    return await downloadFile(api, cid, password);
+    return await api.downloadFile(cid, password);
   } catch (error) {
     console.error('Error downloading from Auto Drive:', error);
     throw error;
   }
 };
 
-const downloadObjectFromDsn = async <T>(cid: string, password?: string): Promise<T> => {
+const downloadMetadataFromDsn = async (cid: string, password?: string): Promise<unknown> => {
   try {
     const fileStream = await downloadFileFromDsn(cid, password);
 
@@ -118,11 +116,11 @@ const downloadObjectFromDsn = async <T>(cid: string, password?: string): Promise
     }
 
     const jsonData = Buffer.concat(chunks).toString('utf8');
-    return JSON.parse(jsonData) as T;
+    return JSON.parse(jsonData);
   } catch (error) {
     console.error('Error downloading object from DSN:', error);
     throw error;
   }
 };
 
-export { uploadFileToDsn, uploadObjectToDsn, downloadFileFromDsn, downloadObjectFromDsn };
+export { uploadFileToDsn, uploadMetadataToDsn, downloadFileFromDsn, downloadMetadataFromDsn };
