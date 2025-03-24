@@ -72,7 +72,6 @@
     "http2-express-bridge": "^1.0.7",
     "inquirer": "^10.2.0",
     "sqlite3": "^5.1.7",
-    "tough-cookie": "^5.1.2",
     "vectorlite": "^0.2.0",
     "winston": "^3.11.0",
     "xml2js": "^0.6.2",

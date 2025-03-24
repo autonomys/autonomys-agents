@@ -1,8 +1,7 @@
 import { Scraper, SearchMode, Tweet } from 'agent-twitter-client';
-import { isValidTweet } from './convertFromTimeline.js';
-import { convertTimelineTweetToTweet } from './convertFromTimeline.js';
+import { convertTimelineTweetToTweet, isValidTweet } from './utils/utils.js';
 import { TwitterApi } from './types.js';
-import { createLogger } from '../../utils/logger.js';
+import { createLogger } from '../../../utils/logger.js';
 import { createAuthenticatedScraper } from './auth.js';
 
 const logger = createLogger('twitter-api');
@@ -247,7 +246,6 @@ export const createTwitterApi = async (
   password: string,
   cookiesPath: string = 'cookies.json',
 ): Promise<TwitterApi> => {
-  // Create an authenticated scraper using the new auth module
   const scraper = await createAuthenticatedScraper(username, password, cookiesPath);
 
   // Get user ID after successful authentication
