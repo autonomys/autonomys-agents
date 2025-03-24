@@ -1,0 +1,42 @@
+# Node.js dependencies and build artifacts
+node_modules
+npm-debug.log
+yarn-debug.log
+yarn-error.log
+dist
+
+# Git and version control
+.git
+.gitignore
+.github
+
+# Directories not needed for runtime
+agent-contracts
+agent-memory-viewer
+agent-pkg
+characters
+tests
+examples
+.github
+
+# Temporary files
+.DS_Store
+*.swp
+*.swo
+*.tmp
+*~
+
+# Environment variables and secrets
+.env
+.env.*
+cookies.json
+.cookies
+
+# Local development configuration
+.vscode
+.idea
+*.log
+logs
+
+# Only include the character.example directory
+!characters/character.example

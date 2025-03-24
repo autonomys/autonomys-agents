@@ -1,0 +1,35 @@
+services:
+  autonomys-agent:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    platform: linux/amd64
+    image: autonomys-agent:${TAG:-latest}
+    container_name: autonomys-agent
+    volumes:
+      # Mount character configurations from host
+      - ./characters:/app/characters
+      # Mount logs directory for persistence
+      - ./logs:/app/logs
+      # Mount cookies directory for persistence
+      - ./.cookies:/app/.cookies
+      # Mount certificates for HTTPS/HTTP2
+      - ./certs:/app/certs
+    ports:
+      - "3010:3010"
+    restart: unless-stopped
+    env_file:
+      # Base environment variables
+      - .env
+    command: >
+      sh -c "if [ -f /app/characters/${CHARACTER_NAME:-test}/config/.env ]; then export $(grep -v '^#' /app/characters/${CHARACTER_NAME:-test}/config/.env | xargs -0); fi && node dist/index.js ${CHARACTER_NAME:-test}"
+    environment:
+      # Default environment variables, can be overridden by .env file
+      - CHARACTER_NAME=${CHARACTER_NAME:-test}
+    healthcheck:
+      # Load the character's .env file and use API_TOKEN for authentication
+      test: ["CMD", "sh", "-c", "if [ -f /app/characters/${CHARACTER_NAME:-test}/config/.env ]; then export $(grep -v '^#' /app/characters/${CHARACTER_NAME:-test}/config/.env | xargs -d '\\n'); fi && if [ \"$ENABLE_AUTH\" = \"true\" ]; then curl -k -f -H \"Authorization: Bearer $API_TOKEN\" https://localhost:3010/health || exit 1; else curl -k -f https://localhost:3010/health || exit 1; fi"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
