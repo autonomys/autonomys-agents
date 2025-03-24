@@ -1,7 +1,10 @@
 import { DynamicStructuredTool } from '@langchain/core/tools';
 import { HumanMessage } from '@langchain/core/messages';
 import { Character } from '../../../config/characters.js';
-import { createOrchestratorRunner } from '../orchestrator/orchestratorWorkflow.js';
+import {
+  createOrchestratorRunner,
+  workflowControlState,
+} from '../orchestrator/orchestratorWorkflow.js';
 import { createSlackTools } from '../../tools/slack/index.js';
 import { createSlackPrompts } from './prompts.js';
 import { LLMConfiguration } from '../../../services/llm/types.js';
@@ -11,6 +14,7 @@ import { z } from 'zod';
 import { SlackAgentConfig, SlackAgentOptions } from './types.js';
 import { registerOrchestratorRunner } from '../registration.js';
 import { cleanMessageData } from '../orchestrator/cleanMessages.js';
+import { createStopWorkflowTool } from '../../tools/stopWorkflow/index.js';
 const logger = createLogger('slack-workflow');
 
 const defaultModelConfig: LLMConfiguration = {
@@ -69,10 +73,10 @@ export const createSlackAgent = (
 
         const prompts = await createSlackPrompts(character);
         const slackTools = await createSlackTools(slackToken);
-
+        const stopWorkflowTool = createStopWorkflowTool(workflowControlState, namespace);
         const runner = createOrchestratorRunner(character, {
           modelConfigurations,
-          tools: [...slackTools, ...tools],
+          tools: [...slackTools, ...tools, stopWorkflowTool],
           prompts,
           namespace,
           saveExperiences,
