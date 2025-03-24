@@ -17,17 +17,12 @@ const getRegistryContract = async (readOnly: boolean = false) => {
     if (readOnly) {
       return new ethers.Contract(contractAddress, AutonomysPackageRegistry, provider);
     } else {
-      let privateKey: string | undefined;
+      const privateKey = credentials.autoEvmPrivateKey ?? credentials.autoEvmPrivateKey;
 
-      if (credentials.autoEvmPrivateKey) {
-        privateKey = credentials.autoEvmPrivateKey;
-      } else {
+      if (!privateKey) {
         console.log(
           chalk.yellow('Private key not found. Blockchain operation requires authentication.'),
         );
-      }
-
-      if (!privateKey) {
         throw new Error('Auto-EVM private key is required for this operation');
       }
 
