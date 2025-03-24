@@ -72,12 +72,12 @@ jobs:
       - name: Build project 🔧
         run: yarn build
 
-  build-agent-pkg:
+  build-agent-package-manager:
     runs-on: ubuntu-latest
     name: Build Agent Pkg
     defaults:
       run:
-        working-directory: agent-pkg
+        working-directory: agent-package-manager
     steps:
       - name: Checkout 🛎️
         uses: actions/checkout@v3
