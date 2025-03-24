@@ -8,7 +8,7 @@ autoOS CLI is a command-line interface for managing Autonomys agent tools. It al
 
 - Install agent tools from the registry
 - Publish new tools to the registry
-- List available tools
+- List registered tools
 - Configure tool settings
 - Securely manage credentials
 
@@ -55,6 +55,11 @@ This interactive wizard will guide you through:
 
 ## Core Commands
 
+### Helo
+```bash
+autoOS -h
+```
+
 ### Install a Tool
 
 ```bash
@@ -81,14 +86,27 @@ autoOS publish <tool-path>
 autoOS publish <tool-path> --no-registry
 ```
 
-### List Available Tools
+### List Registered Tools
 
 ```bash
 # List tools with basic information
 autoOS list
+```
 
-# List tools with detailed information
-autoOS list -d
+### Tool Inquiry
+
+```bash
+# Get information about a tool
+autoOS tool -n <tool-name>
+
+# Get information about a specific version
+autoOS tool -n <tool-name> -v <version>
+
+# Perform a specific action on a tool
+autoOS tool -n <tool-name> -a <action>
+
+# Example: Get metadata for a specific version
+autoOS tool -n slack-tool -v 1.0.0 -a metadata
 ```
 
 ### Configure Settings
@@ -116,30 +134,30 @@ autoOS clean --force
 
 ## Secure Credential Management
 
-autoOS CLI provides several secure options for managing your credentials:
+autoOS CLI securely manages all your credentials through your system's native keychain:
 
-### System Keychain Storage
+### System Keychain Integration
 
-By default, your master password is securely stored in your system's keychain (macOS Keychain, Windows Credential Manager, or Linux Secret Service). This allows you to:
+Your credentials are automatically stored in your system's secure keychain:
+- macOS: Keychain Access
+- Windows: Credential Manager 
+- Linux: Secret Service API (GNOME Keyring, KWallet, etc.)
 
-- Access your credentials without re-entering your password
-- Maintain security without environment variables
-- Keep credentials encrypted at rest
+This approach provides several security benefits:
+- OS-level security with encryption at rest
+- No need for environment variables
+- Credentials are never stored in plaintext
+- Automatic authentication without re-entering passwords
+- Separation from application code
 
-### Password Caching
+### Credential Types
 
-If you choose not to use the system keychain, your password can be:
-- Cached in memory for the current session (10-minute timeout)
-- Prompted for each operation
-- Set via environment variable
+The following credentials are securely managed:
+- Auto Drive API key
+- Auto Drive encryption password
+- Auto-EVM private key
 
-### Environment Variable
-
-For CI/CD or automated scripts, you can set your master password as an environment variable:
-
-```bash
-export AUTOOS_MASTER_PASSWORD="your-master-password"
-```
+All credentials are encrypted and accessible only through the autoOS CLI with proper authentication.
 
 ## Tool Structure
 
@@ -292,30 +310,17 @@ const agent = new <Agent-Instantiation>({
 - Ensure you're using the correct master password
 - Try running `autoOS config --credentials` to reset your credentials
 
-#### "Master password not set"
-
-- Set the `AUTOOS_MASTER_PASSWORD` environment variable, or
-- Use the system keychain integration by running `autoOS config`
-
 #### API Key Issues
 
 - Verify your API key at https://ai3.storage
 - Ensure your network settings match your API key (mainnet or Taurus)
 
-### Logs
-
-Verbose logs can help diagnose issues:
-
-```bash
-DEBUG=autoOS:* autoOS <command>
-```
 
 ## Privacy and Security
 
 - All credentials are encrypted with AES-256-CBC
 - The master password is never stored in plaintext
 - System keychain integration leverages OS-level security
-- Network communication uses secure protocols
 
 ## License
 
