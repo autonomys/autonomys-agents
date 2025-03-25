@@ -1,19 +1,14 @@
 import { BaseMessage } from '@langchain/core/messages';
 import { END, MemorySaver, START, StateGraph } from '@langchain/langgraph';
-import { uploadToDsn } from '../../../blockchain/autoDrive/autoDriveUpload.js';
 import { Character } from '../../../config/characters.js';
-import { LLMConfiguration } from '../../../services/llm/types.js';
 import { createLogger } from '../../../utils/logger.js';
 import { Logger } from 'winston';
 import { cleanMessageData } from './cleanMessages.js';
 import { createNodes } from './nodes.js';
 import { parseFinishedWorkflow } from './nodes/finishWorkflowNode.js';
 import { FinishedWorkflow } from './nodes/finishWorkflowPrompt.js';
-import { createPrompts } from './prompts.js';
 import { OrchestratorState } from './state.js';
-import { createDefaultOrchestratorTools } from './tools.js';
 import {
-  OrchestratorConfig,
   OrchestratorInput,
   OrchestratorRunnerOptions,
   OrchestratorStateType,
@@ -22,9 +17,13 @@ import {
 import { createTaskQueue } from './scheduler/taskQueue.js';
 import { Task, TaskQueue } from './scheduler/types.js';
 import { closeVectorDB } from '../../../services/vectorDb/vectorDBPool.js';
+import { createOrchestratorConfig, defaultOrchestratorOptions } from './config.js';
 
 const terminationState = new Map<string, { shouldStop: boolean; reason: string }>();
 
+/**
+ * Handles the conditional edge routing in the workflow graph based on current state
+ */
 const handleConditionalEdge = async (
   state: OrchestratorStateType,
   pruningParameters: PruningParameters,
@@ -66,6 +65,9 @@ const handleConditionalEdge = async (
   return 'input';
 };
 
+/**
+ * Creates the workflow graph for the orchestrator
+ */
 const createOrchestratorWorkflow = async (
   nodes: Awaited<ReturnType<typeof createNodes>>,
   pruningParameters: PruningParameters,
@@ -106,73 +108,15 @@ export type OrchestratorRunner = Readonly<{
   deleteTask: (id: string) => void;
 }>;
 
-const defaultModelConfiguration: LLMConfiguration = {
-  provider: 'anthropic',
-  model: 'claude-3-5-sonnet-latest',
-  temperature: 0.8,
-};
-
-const defaultOptions = {
-  modelConfigurations: {
-    inputModelConfig: defaultModelConfiguration,
-    messageSummaryModelConfig: defaultModelConfiguration,
-    finishWorkflowModelConfig: defaultModelConfiguration,
-  },
-  namespace: 'orchestrator',
-  pruningParameters: {
-    maxWindowSummary: 30,
-    maxQueueSize: 50,
-  },
-  saveExperiences: false,
-  monitoring: {
-    enabled: false,
-    messageCleaner: cleanMessageData,
-  },
-  recursionLimit: 100,
-};
-
-const createOrchestratorRunnerConfig = async (
-  character: Character,
-  options?: OrchestratorRunnerOptions,
-): Promise<OrchestratorConfig> => {
-  const mergedOptions = { ...defaultOptions, ...options };
-
-  const modelConfigurations = {
-    inputModelConfig:
-      options?.modelConfigurations?.inputModelConfig ||
-      defaultOptions.modelConfigurations.inputModelConfig,
-    messageSummaryModelConfig:
-      options?.modelConfigurations?.messageSummaryModelConfig ||
-      defaultOptions.modelConfigurations.messageSummaryModelConfig,
-    finishWorkflowModelConfig:
-      options?.modelConfigurations?.finishWorkflowModelConfig ||
-      defaultOptions.modelConfigurations.finishWorkflowModelConfig,
-  };
-
-  const tools = [
-    ...(options?.tools || []),
-    ...createDefaultOrchestratorTools(mergedOptions.saveExperiences),
-  ];
-  const prompts = options?.prompts || (await createPrompts(character));
-  const monitoring = {
-    ...defaultOptions.monitoring,
-    ...options?.monitoring,
-  };
-  return {
-    ...mergedOptions,
-    tools,
-    modelConfigurations,
-    prompts,
-    monitoring,
-    logger: options?.logger,
-  };
-};
-
+/**
+ * Creates an orchestrator runner with the given configuration
+ */
 export const createOrchestratorRunner = async (
   character: Character,
   options?: OrchestratorRunnerOptions,
 ): Promise<OrchestratorRunner> => {
-  const runnerConfig = await createOrchestratorRunnerConfig(character, options);
+  const runnerConfig = await createOrchestratorConfig(character, options);
+  const { namespace, pruningParameters, recursionLimit, monitoringConfig } = runnerConfig;
 
   const workflowLogger =
     options?.logger || createLogger(`orchestrator-workflow-${runnerConfig.namespace}`);
@@ -180,15 +124,14 @@ export const createOrchestratorRunner = async (
   const nodes = await createNodes(runnerConfig);
   const workflow = await createOrchestratorWorkflow(
     nodes,
-    runnerConfig.pruningParameters,
+    pruningParameters,
     workflowLogger,
-    runnerConfig.namespace,
+    namespace,
   );
 
   const memoryStore = new MemorySaver();
   const app = workflow.compile({ checkpointer: memoryStore });
 
-  const namespace = runnerConfig.namespace;
   const taskQueue = createTaskQueue(namespace);
 
   return {
@@ -200,9 +143,9 @@ export const createOrchestratorRunner = async (
       workflowLogger.info('Starting orchestrator workflow', { threadId });
 
       const config = {
-        recursionLimit: runnerConfig.recursionLimit,
+        recursionLimit,
         configurable: {
-          ...runnerConfig.pruningParameters,
+          ...pruningParameters,
           thread_id: threadId,
         },
       };
@@ -221,15 +164,17 @@ export const createOrchestratorRunner = async (
         threadId,
       });
 
-      if (runnerConfig.monitoring.enabled) {
+      if (monitoringConfig.enabled) {
         const rawMessages: BaseMessage[] | undefined = (await memoryStore.getTuple(config))
           ?.checkpoint.channel_values.messages as BaseMessage[];
 
-        const cleanedMessages = runnerConfig.monitoring.messageCleaner?.(rawMessages);
+        const cleanedMessages = monitoringConfig.messageCleaner
+          ? monitoringConfig.messageCleaner(rawMessages)
+          : cleanMessageData(rawMessages);
 
-        const dsnUpload = await uploadToDsn({
+        const dsnUpload = await monitoringConfig.monitoringExperienceManager.saveExperience({
           messages: cleanedMessages,
-          namespace: runnerConfig.namespace,
+          namespace,
           type: 'monitoring',
         });
         workflowLogger.info('Dsn upload', { dsnUpload });
@@ -245,7 +190,7 @@ export const createOrchestratorRunner = async (
         const result = { summary: workflowSummary };
 
         taskQueue.updateTaskStatus(taskQueue.currentTask?.id || '', 'completed', result.summary);
-        closeVectorDB(defaultOptions.namespace);
+        closeVectorDB(namespace);
         return result;
       } else {
         workflowLogger.error('Workflow completed but no finished workflow data found', {
@@ -253,6 +198,19 @@ export const createOrchestratorRunner = async (
           content: finalState?.finishWorkflow?.content,
         });
         return { summary: 'Extracting workflow data failed' };
+      }
+    },
+
+    externalStopWorkflow: async (reason?: string): Promise<void> => {
+      workflowLogger.info('Stopping orchestrator workflow', { reason });
+      const currentTask = taskQueue.currentTask;
+      if (currentTask) {
+        taskQueue.updateTaskStatus(currentTask.id, 'failed', `Terminated by user: ${reason}`);
+        workflowLogger.info('Terminated current task', { taskId: currentTask.id });
+        const terminationKey = `${namespace}:terminate`;
+        terminationState.set(terminationKey, { shouldStop: true, reason: reason || 'Unknown' });
+      } else {
+        workflowLogger.info('No current task to terminate');
       }
     },
 
@@ -279,27 +237,17 @@ export const createOrchestratorRunner = async (
     deleteTask: (id: string) => {
       return taskQueue.deleteTask(id);
     },
-
-    externalStopWorkflow: async (reason?: string): Promise<void> => {
-      workflowLogger.info('Stopping orchestrator workflow', { reason });
-      const currentTask = taskQueue.currentTask;
-      if (currentTask) {
-        taskQueue.updateTaskStatus(currentTask.id, 'failed', `Terminated by user: ${reason}`);
-        workflowLogger.info('Terminated current task', { taskId: currentTask.id });
-        const terminationKey = `${namespace}:terminate`;
-        terminationState.set(terminationKey, { shouldStop: true, reason: reason || 'Unknown' });
-      } else {
-        workflowLogger.info('No current task to terminate');
-      }
-    },
   };
 };
 
+/**
+ * Gets or creates an orchestrator runner for a specific namespace
+ */
 export const getOrchestratorRunner = (() => {
   const runners: Map<string, Promise<OrchestratorRunner>> = new Map();
 
   return (character: Character, runnerOptions: OrchestratorRunnerOptions) => {
-    const namespace = runnerOptions.namespace ?? defaultOptions.namespace;
+    const namespace = runnerOptions.namespace ?? defaultOrchestratorOptions.namespace;
 
     if (!runners.has(namespace)) {
       const runnerPromise = createOrchestratorRunner(character, runnerOptions);
