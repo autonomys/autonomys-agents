@@ -4,7 +4,7 @@ import { createLogger } from '../../../utils/logger.js';
 import { VectorDB } from '../../../services/vectorDb/VectorDB.js';
 import { ExperienceManager } from '../../../blockchain/agentExperience/types.js';
 
-export const logger = createLogger('auto-drive-tools');
+export const logger = createLogger('agent-experience-tools');
 
 export const createSaveExperienceTool = (
   updateVectorDb: (data: unknown) => Promise<boolean>,

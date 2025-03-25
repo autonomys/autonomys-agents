@@ -11,6 +11,12 @@ import {
 } from '@autonomys/auto-dag-data';
 import { retryWithBackoff } from '../../utils/retry.js';
 
+const hashToCid = (hash: string): string => {
+  const hashBuffer = Buffer.from(hash.slice(2), 'hex');
+  const cid = cidFromBlakeHash(hashBuffer);
+  return cidToString(cid);
+};
+
 const saveHashLocally = (hash: string, location: string): void => {
   try {
     const data: StoredHash = {
@@ -100,14 +106,12 @@ const lastMemoryCid = async (
 ): Promise<string> => {
   const localHash = getLocalHash(location);
   if (localHash) {
-    return localHash;
+    return hashToCid(localHash);
   }
 
   const blockchainHash = await contract.getLastMemoryHash(wallet.address);
   saveHashLocally(blockchainHash, location);
-
-  const cid = cidFromBlakeHash(Buffer.from(blockchainHash.slice(2), 'hex'));
-  return cidToString(cid);
+  return hashToCid(blockchainHash);
 };
 
 export const createCidManager = async (agentPath: string, walletOptions: EvmOptions) => {
@@ -120,9 +124,9 @@ export const createCidManager = async (agentPath: string, walletOptions: EvmOpti
   }
 
   const provider = new ethers.JsonRpcProvider(walletOptions.rpcUrl);
-  const contract = new ethers.Contract(walletOptions.contractAddress, MEMORY_ABI, provider);
-
   const wallet = new ethers.Wallet(walletOptions.privateKey, provider);
+
+  const contract = new ethers.Contract(walletOptions.contractAddress, MEMORY_ABI, wallet);
 
   const localHashStatus = await validateLocalHash(provider, contract, wallet, localHashLocation);
 
