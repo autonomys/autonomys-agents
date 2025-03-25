@@ -1,3 +1,5 @@
+import { ethers } from 'ethers';
+
 export type ExperienceHeader = {
   agentVersion: string;
   //TODO: when we have an identity scheme update to use an identifier for the agent
@@ -10,6 +12,14 @@ export type AgentExperience = {
   header: ExperienceHeader;
   data: unknown;
   signature: string;
+};
+
+export type AgentExperienceV0 = {
+  timestamp: string;
+  previousCid: string;
+  agentVersion: string;
+  signature: string;
+  [key: string]: unknown;
 };
 
 export type StoredHash = {
@@ -34,9 +44,9 @@ export type EvmOptions = {
 };
 
 export type AgentOptions = {
-  agentVersion: string;
   agentName: string;
   agentPath: string;
+  agentVersion?: string;
 };
 
 export type ExperienceManagerOptions = {
@@ -46,10 +56,18 @@ export type ExperienceManagerOptions = {
   agentOptions: AgentOptions;
 };
 
+export type CidManager = {
+  getLastMemoryCid: () => Promise<string>;
+  saveLastMemoryCid: (cid: string) => Promise<ethers.TransactionReceipt>;
+  localHashStatus: { message: string };
+};
+
 export type ExperienceManager = {
   saveExperience: (data: unknown) => Promise<{
     cid: string;
     previousCid: string | null;
     evmHash: string;
   }>;
+  retrieveExperience: (cid: string) => Promise<AgentExperience | AgentExperienceV0>;
+  cidManager: CidManager;
 };

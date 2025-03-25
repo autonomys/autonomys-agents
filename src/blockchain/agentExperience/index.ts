@@ -1,7 +1,14 @@
-import { AutoDriveApi, createAutoDriveApi, uploadObjectAsJSON } from '@autonomys/auto-drive';
-import { ExperienceHeader, ExperienceManagerOptions, ExperienceUploadOptions } from './types.js';
+import { AutoDriveApi, createAutoDriveApi } from '@autonomys/auto-drive';
+import {
+  AgentExperience,
+  ExperienceHeader,
+  ExperienceManager,
+  ExperienceManagerOptions,
+  ExperienceUploadOptions,
+} from './types.js';
 import { ethers } from 'ethers';
 import { createCidManager } from './cidManager.js';
+import { retryWithBackoff } from '../../utils/retry.js';
 
 const uploadExperience = async (
   autoDriveApi: AutoDriveApi,
@@ -13,11 +20,26 @@ const uploadExperience = async (
   const fileName = `${header.agentName}-agent-${header.agentVersion}-memory-${header.timestamp}.json`;
 
   const signature = await wallet.signMessage(JSON.stringify({ header, data }));
-  const cid = await uploadObjectAsJSON(autoDriveApi, { header, data, signature }, fileName, {
+  const cid = await autoDriveApi.uploadObjectAsJSON({ header, data, signature }, fileName, {
     compression,
     password,
   });
   return cid;
+};
+
+const downloadExperience = async (
+  autoDriveApi: AutoDriveApi,
+  cid: string,
+): Promise<AgentExperience> => {
+  const stream = await autoDriveApi.downloadFile(cid);
+  let file = Buffer.alloc(0);
+  for await (const chunk of stream) {
+    file = Buffer.concat([file, chunk]);
+  }
+
+  const jsonString = new TextDecoder().decode(file);
+  const data = JSON.parse(jsonString);
+  return data;
 };
 
 export const createExperienceManager = async ({
@@ -25,7 +47,7 @@ export const createExperienceManager = async ({
   uploadOptions,
   walletOptions,
   agentOptions,
-}: ExperienceManagerOptions) => {
+}: ExperienceManagerOptions): Promise<ExperienceManager> => {
   const autoDriveApi = createAutoDriveApi(autoDriveApiOptions);
   const provider = new ethers.JsonRpcProvider(walletOptions.rpcUrl);
   const wallet = new ethers.Wallet(walletOptions.privateKey, provider);
@@ -34,7 +56,7 @@ export const createExperienceManager = async ({
   const saveExperience = async (data: unknown) => {
     const previousCid = await cidManager.getLastMemoryCid();
     const header = {
-      agentVersion: agentOptions.agentVersion,
+      agentVersion: agentOptions.agentVersion || 'unknown',
       agentName: agentOptions.agentName,
       timestamp: new Date().toISOString(),
       previousCid,
@@ -48,5 +70,22 @@ export const createExperienceManager = async ({
     };
   };
 
-  return { saveExperience };
+  const retrieveExperience = async (cid: string) => {
+    return retryWithBackoff(
+      async () => {
+        const experience = await downloadExperience(autoDriveApi, cid);
+        return experience;
+      },
+      {
+        shouldRetry: error => {
+          const errorMessage = error instanceof Error ? error.message : String(error);
+          return !(
+            errorMessage.includes('Not Found') || errorMessage.includes('incorrect header check')
+          );
+        },
+      },
+    );
+  };
+
+  return { saveExperience, retrieveExperience, cidManager };
 };

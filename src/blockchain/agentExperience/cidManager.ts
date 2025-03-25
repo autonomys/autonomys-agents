@@ -1,7 +1,7 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs';
 import { join } from 'path';
 import { ethers } from 'ethers';
-import { EvmOptions, StoredHash } from './types.js';
+import { CidManager, EvmOptions, StoredHash } from './types.js';
 import { MEMORY_ABI } from './abi/memory.js';
 import {
   blake3HashFromCid,
@@ -76,7 +76,7 @@ const validateLocalHash = async (
   contract: ethers.Contract,
   wallet: ethers.Wallet,
   location: string,
-): Promise<any> => {
+): Promise<{ message: string }> => {
   try {
     if (!existsSync(location)) {
       return { message: 'No local hash found' };
@@ -99,22 +99,10 @@ const validateLocalHash = async (
   }
 };
 
-const lastMemoryCid = async (
-  contract: ethers.Contract,
-  wallet: ethers.Wallet,
-  location: string,
-): Promise<string> => {
-  const localHash = getLocalHash(location);
-  if (localHash) {
-    return hashToCid(localHash);
-  }
-
-  const blockchainHash = await contract.getLastMemoryHash(wallet.address);
-  saveHashLocally(blockchainHash, location);
-  return hashToCid(blockchainHash);
-};
-
-export const createCidManager = async (agentPath: string, walletOptions: EvmOptions) => {
+export const createCidManager = async (
+  agentPath: string,
+  walletOptions: EvmOptions,
+): Promise<CidManager> => {
   const memoriesDir = join(agentPath, 'memories');
   const localHashLocation = join(memoriesDir, 'last-memory-hash.json');
 
@@ -131,7 +119,14 @@ export const createCidManager = async (agentPath: string, walletOptions: EvmOpti
   const localHashStatus = await validateLocalHash(provider, contract, wallet, localHashLocation);
 
   const getLastMemoryCid = async (): Promise<string> => {
-    return await lastMemoryCid(contract, wallet, localHashLocation);
+    const localHash = getLocalHash(localHashLocation);
+    if (localHash) {
+      return hashToCid(localHash);
+    }
+
+    const blockchainHash = await contract.getLastMemoryHash(wallet.address);
+    saveHashLocally(blockchainHash, localHashLocation);
+    return hashToCid(blockchainHash);
   };
 
   const saveLastMemoryCid = async (cid: string) => {
