@@ -113,6 +113,9 @@ export const broadcastTaskUpdate = (namespace: string) => {
 };
 
 export const attachLogger = (logger: Logger, namespace: string) => {
+  if (!config.ENABLE_API) {
+    return logger;
+  }
   const api = createApiServer();
   return api.attachLogger(logger, namespace);
 };
@@ -120,8 +123,8 @@ export const attachLogger = (logger: Logger, namespace: string) => {
 // Helper function
 export const withApiLogger = (namespace: string) => {
   const logger = createLogger(`orchestrator-workflow-${namespace}`);
-  const enhancedLogger = attachLogger(logger, namespace);
 
+  const enhancedLogger = attachLogger(logger, namespace);
   return {
     logger: enhancedLogger,
   };
