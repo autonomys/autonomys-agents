@@ -111,9 +111,12 @@ const lastMemoryCid = async (
 };
 
 export const createCidManager = async (agentPath: string, walletOptions: EvmOptions) => {
-  const localHashLocation = join(agentPath, 'memories', 'last-memory-hash.json');
-  if (!existsSync(localHashLocation)) {
-    mkdirSync(join(agentPath, 'memories'));
+  const memoriesDir = join(agentPath, 'memories');
+  const localHashLocation = join(memoriesDir, 'last-memory-hash.json');
+
+  // First check if the memories directory exists and create it if it doesn't
+  if (!existsSync(memoriesDir)) {
+    mkdirSync(memoriesDir, { recursive: true });
   }
 
   const provider = new ethers.JsonRpcProvider(walletOptions.rpcUrl);
