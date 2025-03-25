@@ -243,7 +243,7 @@ export const createOrchestratorRunner = async (
 /**
  * Gets or creates an orchestrator runner for a specific namespace
  */
-export const getOrchestratorRunner = (() => {
+export const getOrCreateOrchestratorRunner = (() => {
   const runners: Map<string, Promise<OrchestratorRunner>> = new Map();
 
   return (character: Character, runnerOptions: OrchestratorRunnerOptions) => {
