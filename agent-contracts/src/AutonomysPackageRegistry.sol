@@ -2,219 +2,207 @@
 pragma solidity ^0.8.28;
 
 contract AutonomysPackageRegistry {
+    
+    error OnlyOwner();
+    error ToolNotFound();
+    error NotToolOwner();
+    error EmptyToolName();
+    error InvalidVersion();
+    error EmptyCidHash();
+    error EmptyMetadataHash();
+    error VersionNotExists();
+    error ToolNameAlreadyRegistered();
+    error VersionAlreadyExists();
+    error InvalidVersionOrder();
+    error ZeroAddressNotAllowed();
+    error SameOwner();
+    error OffsetOutOfBounds();
+    error InvalidNameHash();
+
     address public owner;
    
-    event ToolRegistered(string name, string version, bytes32 cid, address publisher, uint256 timestamp);
-    event ToolUpdated(string name, string version, bytes32 cid, address publisher, uint256 timestamp);
-    event OwnershipTransferred(string name, address previousOwner, address newOwner);
+    event ToolRegistered(string indexed name, uint256 major, uint256 minor, uint256 patch, bytes32 cidHash, address publisher, uint256 timestamp);
+    event ToolUpdated(string indexed name, uint256 major, uint256 minor, uint256 patch, bytes32 cidHash, address publisher, uint256 timestamp);
+    event OwnershipTransferred(string indexed name, address previousOwner, address newOwner);
 
     struct Version {
-        uint256 major;
-        uint256 minor;
-        uint256 patch;
+        uint64 major;
+        uint64 minor;
+        uint64 patch;
     }
 
     struct ToolVersion {
-        string version;
-        bytes32 cid;   
+        Version version;
+        bytes32 cidHash;   
         uint256 timestamp; 
-        bytes32 metadata;  
+        bytes32 metadataHash;  
     }
 
     struct Tool {
         address owner;
-        string[] versionList;
-        mapping(string => ToolVersion) versions;
-        string latestVersion;
+        bytes32[] versionHashes;
+        mapping(bytes32 => ToolVersion) versions;
+        Version latestVersion;
     }
 
-    mapping(string => Tool) private tools;
+    mapping(bytes32 => Tool) private tools;
     
-    mapping(address => string[]) private publisherTools;
+    mapping(address =>  bytes32[]) private publisherTools;
     
-    string[] private allToolNames;
+    bytes32[] private allToolNames;
 
     constructor() {
         owner = msg.sender;
     }
 
     modifier onlyOwner() {
-        require(msg.sender == owner, "Caller is not the owner");
+        if (msg.sender != owner) revert OnlyOwner();
         _;
     }
 
-    modifier toolExists(string memory name) {
-        require(tools[name].owner != address(0), "Tool does not exist");
+    modifier toolExists(bytes32 name) {
+        if (tools[name].owner == address(0)) revert ToolNotFound();
         _;
     }
 
-    modifier onlyToolOwner(string memory name) {
-        require(tools[name].owner == msg.sender, "Caller is not the tool owner");
+    modifier onlyToolOwner(bytes32 name) {
+        if (tools[name].owner != msg.sender) revert NotToolOwner();
         _;
     }
     
-    function validateToolName(string memory name) internal pure {
-        bytes memory nameBytes = bytes(name);
-        require(nameBytes.length > 0, "Tool name cannot be empty");
+    modifier validVersion(Version memory version) {
+        if (version.major == 0 && version.minor == 0 && version.patch == 0) revert InvalidVersion();
+        _;
     }
     
-    function validateVersion(string memory version) internal pure {
-        bytes memory versionBytes = bytes(version);
-        require(versionBytes.length > 0, "Version cannot be empty");
-        
-        if (keccak256(versionBytes) == keccak256(bytes("0.0.0"))) {
-            revert("Version 0.0.0 is not permitted");
-        }
+    modifier validCidHash(bytes32 cidHash) {
+        if (cidHash == bytes32(0)) revert EmptyCidHash();
+        _;
     }
     
-    function validateCID(bytes32 cid) internal pure {
-        require(cid != bytes32(0), "CID cannot be empty");
+    modifier validMetadataHash(bytes32 metadataHash) {
+        if (metadataHash == bytes32(0)) revert EmptyMetadataHash();
+        _;
     }
     
-    function validateMetadata(bytes32 metadata) internal pure {
-        require(metadata != bytes32(0), "Metadata cannot be empty");
+    modifier versionMustExist(bytes32 name, Version memory version) {
+        bytes32 versionHash = getVersionHash(version);
+        if (tools[name].versions[versionHash].cidHash == bytes32(0)) revert VersionNotExists();
+        _;
     }
 
-    function versionExists(string memory name, string memory version) public view returns (bool) {
+    modifier checkNameHash(string memory name, bytes32 nameHash) {
+        if (keccak256(bytes(name)) != nameHash) revert InvalidNameHash();
+        _;
+    }
+    
+    function getVersionHash(Version memory version) internal pure returns (bytes32) {
+        return keccak256(abi.encodePacked(version.major, version.minor, version.patch));
+    }
+    
+    function versionExists(bytes32 name, Version memory version) public view returns (bool) {
         if (tools[name].owner == address(0)) {
             return false;
-        }        
-        return tools[name].versions[version].cid != bytes32(0);
+        }
+        bytes32 versionHash = getVersionHash(version);        
+        return tools[name].versions[versionHash].cidHash != bytes32(0);
     }
 
-    function isToolNameRegistered(string memory name) public view returns (bool) {
+    function isToolNameRegistered(bytes32 name) public view returns (bool) {
         return tools[name].owner != address(0);
     }
-
-    function parseVersion(string memory version) public pure returns (Version memory) {
-        Version memory result;
-        bytes memory versionBytes = bytes(version);
-        uint256 versionLength = versionBytes.length;
-        
-        uint256 firstDot = 0;
-        while (firstDot < versionLength && versionBytes[firstDot] != ".") {
-            firstDot++;
-        }
-        
-        if (firstDot > 0) {
-            result.major = parseVersionComponent(versionBytes, 0, firstDot);
-        }
-        
-        uint256 secondDot = firstDot + 1;
-        while (secondDot < versionLength && versionBytes[secondDot] != ".") {
-            secondDot++;
-        }
-        
-        if (secondDot > firstDot + 1) {
-            result.minor = parseVersionComponent(versionBytes, firstDot + 1, secondDot);
-        }
-        
-        if (secondDot < versionLength - 1) {
-            result.patch = parseVersionComponent(versionBytes, secondDot + 1, versionLength);
-        }
-
-        require(result.major > 0 || result.minor > 0 || result.patch > 0, "Version 0.0.0 is not permitted");
-        
-        return result;
-    }
     
-    function parseVersionComponent(bytes memory versionBytes, uint256 start, uint256 end) 
-        private 
-        pure 
-        returns (uint256) 
-    {
-        uint256 value = 0;
-        for (uint256 i = start; i < end; i++) {
-            uint8 digit = uint8(versionBytes[i]) - 48;
-            require(digit <= 9, "Invalid version character");
-            value = value * 10 + digit;
-        }
-        return value;
-    }
-    
-    function compareVersions(string memory a, string memory b) public pure returns (int) {
-        Version memory vA = parseVersion(a);
-        Version memory vB = parseVersion(b);
+    function compareVersions(Version memory a, Version memory b) internal pure returns (int) {
+        if (a.major > b.major) return 1;
+        if (a.major < b.major) return -1;
         
-        if (vA.major > vB.major) return 1;
-        if (vA.major < vB.major) return -1;
+        if (a.minor > b.minor) return 1;
+        if (a.minor < b.minor) return -1;
         
-        if (vA.minor > vB.minor) return 1;
-        if (vA.minor < vB.minor) return -1;
-        
-        if (vA.patch > vB.patch) return 1;
-        if (vA.patch < vB.patch) return -1;
+        if (a.patch > b.patch) return 1;
+        if (a.patch < b.patch) return -1;
         
         return 0;
     }
 
+    function computeNameHash(string memory name) public pure returns (bytes32) {
+        return keccak256(bytes(name));
+    }
+
     function registerTool(
         string memory name,
-        string memory version,
-        bytes32 cid,
-        bytes32 metadata
-    ) external {
-        validateToolName(name);
-        validateVersion(version);
-        validateCID(cid);
-        validateMetadata(metadata);
+        Version calldata version,
+        bytes32 cidHash,
+        bytes32 metadataHash
+    ) external 
+        validVersion(version) 
+        validCidHash(cidHash) 
+        validMetadataHash(metadataHash) 
+    {
+        bytes32 versionHash = getVersionHash(version);
+        bytes32 nameHash = computeNameHash(name);
+        if (tools[nameHash].owner == address(0)) {
+            if (isToolNameRegistered(nameHash)) revert ToolNameAlreadyRegistered();
 
-        if (tools[name].owner == address(0)) {
-            require(!isToolNameRegistered(name), "Tool name already registered");
-
-            tools[name].owner = msg.sender;
+            tools[nameHash].owner = msg.sender;
             
-            tools[name].latestVersion = version;
+            tools[nameHash].latestVersion = version;
             
-            publisherTools[msg.sender].push(name);
-            allToolNames.push(name);
+            publisherTools[msg.sender].push(nameHash);
+            allToolNames.push(nameHash);
             
-            tools[name].versions[version] = ToolVersion(
+            tools[nameHash].versions[versionHash] = ToolVersion(
                 version,
-                cid,
+                cidHash,
                 block.timestamp,
-                metadata
+                metadataHash
             );
-            tools[name].versionList.push(version);
+            tools[nameHash].versionHashes.push(versionHash);
             
-            emit ToolRegistered(name, version, cid, msg.sender, block.timestamp);
+            emit ToolRegistered(name, version.major, version.minor, version.patch, cidHash, msg.sender, block.timestamp);
         } else {
-            require(tools[name].owner == msg.sender, "Not the tool owner");
+            if (tools[nameHash].owner != msg.sender) revert NotToolOwner();
             
-            require(!versionExists(name, version), "Version already exists");
+            if (versionExists(nameHash, version)) revert VersionAlreadyExists();
             
-            require(compareVersions(version, tools[name].latestVersion) > 0, 
-                "New version must be higher than the latest version");
+            if (compareVersions(version, tools[nameHash].latestVersion) <= 0) revert InvalidVersionOrder();
             
-            tools[name].versions[version] = ToolVersion(
+            tools[nameHash].versions[versionHash] = ToolVersion(
                 version,
-                cid,
+                cidHash,
                 block.timestamp,
-                metadata
+                metadataHash
             );
-            tools[name].versionList.push(version);
+            tools[nameHash].versionHashes.push(versionHash);
             
-            tools[name].latestVersion = version;
+            tools[nameHash].latestVersion = version;
             
-            emit ToolUpdated(name, version, cid, msg.sender, block.timestamp);
+            emit ToolUpdated(name, version.major, version.minor, version.patch, cidHash, msg.sender, block.timestamp);
         }
     }
 
     function updateToolMetadata(
         string memory name,
-        string memory version, 
-        bytes32 metadata
-    ) external toolExists(name) onlyToolOwner(name) {
-        require(versionExists(name, version), "Version does not exist");
+        bytes32 nameHash,
+        Version calldata version,
+        bytes32 metadataHash
+    ) external 
+        checkNameHash(name, nameHash)
+        toolExists(nameHash) 
+        onlyToolOwner(nameHash)
+        validMetadataHash(metadataHash)
+        versionMustExist(nameHash, version)
+    {
+        bytes32 versionHash = getVersionHash(version);
         
-        validateMetadata(metadata);
-        
-        tools[name].versions[version].metadata = metadata;
+        tools[nameHash].versions[versionHash].metadataHash = metadataHash;
         
         emit ToolUpdated(
             name, 
-            version, 
-            tools[name].versions[version].cid, 
+            version.major,
+            version.minor,
+            version.patch,
+            tools[nameHash].versions[versionHash].cidHash, 
             msg.sender, 
             block.timestamp
         );
@@ -222,16 +210,17 @@ contract AutonomysPackageRegistry {
 
     function transferToolOwnership(
         string memory name, 
+        bytes32 nameHash,
         address newOwner
-    ) external toolExists(name) onlyToolOwner(name) {
-        require(newOwner != address(0), "New owner cannot be zero address");
-        require(newOwner != msg.sender, "New owner cannot be the same as current");
+    ) external toolExists(nameHash) onlyToolOwner(nameHash) {
+        if (newOwner == address(0)) revert ZeroAddressNotAllowed();
+        if (newOwner == msg.sender) revert SameOwner();
         
-        address previousOwner = tools[name].owner;
-        tools[name].owner = newOwner;
+        address previousOwner = tools[nameHash].owner;
+        tools[nameHash].owner = newOwner;
         
         for (uint i = 0; i < publisherTools[previousOwner].length; i++) {
-            if (keccak256(bytes(publisherTools[previousOwner][i])) == keccak256(bytes(name))) {
+            if (publisherTools[previousOwner][i] == nameHash) {
                 if (i < publisherTools[previousOwner].length - 1) {
                     publisherTools[previousOwner][i] = publisherTools[previousOwner][publisherTools[previousOwner].length - 1];
                 }
@@ -240,67 +229,74 @@ contract AutonomysPackageRegistry {
             }
         }
         
-        publisherTools[newOwner].push(name);
+        publisherTools[newOwner].push(nameHash);
         
         emit OwnershipTransferred(name, previousOwner, newOwner);
     }
 
-    function getToolInfo(string memory name) 
+    function getToolInfo(bytes32 name) 
         external 
         view 
         toolExists(name) 
-        returns (address toolOwner, uint256 versionCount, string memory latestVersion) 
+        returns (address toolOwner, uint256 versionCount, Version memory latestVersion) 
     {
         return (
             tools[name].owner,
-            tools[name].versionList.length,
+            tools[name].versionHashes.length,
             tools[name].latestVersion
         );
     }
 
-    function getToolVersion(string memory name, string memory version) 
+    function getToolVersion(bytes32 name, Version calldata version) 
         external 
         view 
-        toolExists(name) 
-        returns (bytes32 cid, uint256 timestamp, bytes32 metadata) 
+        toolExists(name)
+        versionMustExist(name, version)
+        returns (Version memory retrievedVersion, bytes32 cidHash, uint256 timestamp, bytes32 metadataHash) 
     {
-        require(versionExists(name, version), "Version does not exist");
+        bytes32 versionHash = getVersionHash(version);
         
-        ToolVersion storage toolVersion = tools[name].versions[version];
+        ToolVersion storage toolVersion = tools[name].versions[versionHash];
         return (
-            toolVersion.cid,
+            toolVersion.version,
+            toolVersion.cidHash,
             toolVersion.timestamp,
-            toolVersion.metadata
+            toolVersion.metadataHash
         );
     }
 
-    function getToolVersions(string memory name) 
+    function getToolVersions(bytes32 name) 
         external 
         view 
         toolExists(name) 
-        returns (string[] memory) 
+        returns (Version[] memory) 
     {
-        return tools[name].versionList;
-    }
-
-    function getPublisherTools(address publisher, uint256 offset, uint256 limit) 
-        external 
-        view 
-        returns (string[] memory) 
-    {
-        if (publisherTools[publisher].length > 0) {
-            require(offset < publisherTools[publisher].length, "Offset out of bounds");
+        bytes32[] storage versionHashes = tools[name].versionHashes;
+        Version[] memory result = new Version[](versionHashes.length);
+        
+        for (uint256 i = 0; i < versionHashes.length; i++) {
+            result[i] = tools[name].versions[versionHashes[i]].version;
         }
         
-        if (publisherTools[publisher].length == 0 || offset >= publisherTools[publisher].length) {
-            return new string[](0);
+        return result;
+    }
+
+    function getPublisherToolsPaginated(address publisher, uint256 offset, uint256 limit) 
+        external 
+        view 
+        returns (bytes32[] memory) 
+    {
+        if (publisherTools[publisher].length == 0) {
+            return new bytes32[](0);
         }
+        
+        if (offset >= publisherTools[publisher].length) revert OffsetOutOfBounds();
         
         uint256 size = (offset + limit > publisherTools[publisher].length) 
             ? publisherTools[publisher].length - offset 
             : limit;
             
-        string[] memory result = new string[](size);
+        bytes32[] memory result = new bytes32[](size);
         
         for (uint256 i = 0; i < size; i++) {
             result[i] = publisherTools[publisher][offset + i];
@@ -309,43 +305,41 @@ contract AutonomysPackageRegistry {
         return result;
     }
 
-    function getLatestVersion(string memory name) 
+    function getLatestVersion(bytes32 name) 
         external 
         view 
         toolExists(name) 
-        returns (string memory version, bytes32 cid, uint256 timestamp, bytes32 metadata) 
+        returns (Version memory version, bytes32 cidHash, uint256 timestamp, bytes32 metadataHash) 
     {
-        string memory latestVersionStr = tools[name].latestVersion;
-        ToolVersion storage toolVersion = tools[name].versions[latestVersionStr];
+        Version memory latestVersion = tools[name].latestVersion;
+        bytes32 versionHash = getVersionHash(latestVersion);
+        ToolVersion storage toolVersion = tools[name].versions[versionHash];
         
         return (
             toolVersion.version,
-            toolVersion.cid,
+            toolVersion.cidHash,
             toolVersion.timestamp,
-            toolVersion.metadata
+            toolVersion.metadataHash
         );
     }
 
     function transferContractOwnership(address newOwner) external onlyOwner {
-        require(newOwner != address(0), "New owner cannot be zero address");
+        if (newOwner == address(0)) revert ZeroAddressNotAllowed();
         owner = newOwner;
     }
 
-    function getAllTools(uint256 offset, uint256 limit) external view returns (string[] memory) {
-        if (allToolNames.length > 0) {
-            require(offset < allToolNames.length, "Offset out of bounds");
+    function getAllToolsPaginated(uint256 offset, uint256 limit) external view returns (bytes32[] memory) {
+        if (allToolNames.length == 0) {
+            return new bytes32[](0);
         }
         
-        if (allToolNames.length == 0 || offset >= allToolNames.length) {
-            return new string[](0);
-        }
+        if (offset >= allToolNames.length) revert OffsetOutOfBounds();
         
         uint256 size = (offset + limit > allToolNames.length) 
             ? allToolNames.length - offset 
             : limit;
             
-        string[] memory result = new string[](size);
-        
+        bytes32[] memory result = new bytes32[](size);   
         for (uint256 i = 0; i < size; i++) {
             result[i] = allToolNames[offset + i];
         }
