@@ -44,7 +44,7 @@ const getLocalHash = (location: string): string | undefined => {
 const getLastMemoryHashSetTimestamp = async (
   provider: ethers.JsonRpcProvider,
   contract: ethers.Contract,
-  wallet: ethers.Wallet,
+  walletAddress: string,
 ): Promise<{
   timestamp: number;
   hash: string;
@@ -53,7 +53,7 @@ const getLastMemoryHashSetTimestamp = async (
     const currentBlock = await provider.getBlockNumber();
     const fromBlock = Math.max(0, currentBlock - 5000);
 
-    const filter = contract.filters.LastMemoryHashSet(wallet.address);
+    const filter = contract.filters.LastMemoryHashSet(walletAddress);
     const events = await contract.queryFilter(filter, fromBlock, currentBlock);
 
     if (events.length === 0) {
@@ -74,7 +74,7 @@ const getLastMemoryHashSetTimestamp = async (
 const validateLocalHash = async (
   provider: ethers.JsonRpcProvider,
   contract: ethers.Contract,
-  wallet: ethers.Wallet,
+  walletAddress: string,
   location: string,
 ): Promise<{ message: string }> => {
   try {
@@ -85,7 +85,7 @@ const validateLocalHash = async (
     const { timestamp: eventTimestamp, hash: eventHash } = await getLastMemoryHashSetTimestamp(
       provider,
       contract,
-      wallet,
+      walletAddress,
     );
     const localTimestamp = new Date(data.timestamp).getTime() / 1000;
 
@@ -113,10 +113,14 @@ export const createCidManager = async (
 
   const provider = new ethers.JsonRpcProvider(walletOptions.rpcUrl);
   const wallet = new ethers.Wallet(walletOptions.privateKey, provider);
-
   const contract = new ethers.Contract(walletOptions.contractAddress, MEMORY_ABI, wallet);
 
-  const localHashStatus = await validateLocalHash(provider, contract, wallet, localHashLocation);
+  const localHashStatus = await validateLocalHash(
+    provider,
+    contract,
+    wallet.address,
+    localHashLocation,
+  );
 
   const getLastMemoryCid = async (): Promise<string> => {
     const localHash = getLocalHash(localHashLocation);

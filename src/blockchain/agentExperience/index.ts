@@ -49,8 +49,7 @@ export const createExperienceManager = async ({
   agentOptions,
 }: ExperienceManagerOptions): Promise<ExperienceManager> => {
   const autoDriveApi = createAutoDriveApi(autoDriveApiOptions);
-  const provider = new ethers.JsonRpcProvider(walletOptions.rpcUrl);
-  const wallet = new ethers.Wallet(walletOptions.privateKey, provider);
+  const wallet = new ethers.Wallet(walletOptions.privateKey);
   const cidManager = await createCidManager(agentOptions.agentPath, walletOptions);
 
   const saveExperience = async (data: unknown) => {
