@@ -12,9 +12,10 @@ contract AutonomysPackageRegistryTest is Test {
 
     // Helper variables for testing
     string public testToolName;
-    string public version1;
-    string public version2;
-    string public version3;
+    bytes32 public testToolNameHash;
+    AutonomysPackageRegistry.Version public version1;
+    AutonomysPackageRegistry.Version public version2;
+    AutonomysPackageRegistry.Version public version3;
     bytes32 public cidHash;
     bytes32 public metadataHash;
 
@@ -28,56 +29,15 @@ contract AutonomysPackageRegistryTest is Test {
         
         // Set up common test values
         testToolName = "test-tool";
-        version1 = "1.0.0";
-        version2 = "1.1.0";
-        version3 = "2.0.0";
+        testToolNameHash = keccak256(bytes(testToolName));
+        
+        // Setup versions as structs
+        version1 = AutonomysPackageRegistry.Version(1, 0, 0);
+        version2 = AutonomysPackageRegistry.Version(1, 1, 0);
+        version3 = AutonomysPackageRegistry.Version(2, 0, 0);
+        
         cidHash = keccak256(bytes("bafybeigdyrzt5sfp7udm7hu76uh7y26nf3efuylqabf3oclgtqy55fbzdi"));
         metadataHash = keccak256(bytes('{"description":"A test tool"}'));
-    }
-
-    // Test version parsing and comparison
-    function testVersionParsing() public view {
-        // Test parseVersion function
-        AutonomysPackageRegistry.Version memory v1 = registry.parseVersion("1.0.0");
-        AutonomysPackageRegistry.Version memory v2 = registry.parseVersion("1.1.0");
-        AutonomysPackageRegistry.Version memory v3 = registry.parseVersion("2.0.0");
-        AutonomysPackageRegistry.Version memory v4 = registry.parseVersion("0.1.0");
-        AutonomysPackageRegistry.Version memory v5 = registry.parseVersion("1.10.0");
-        AutonomysPackageRegistry.Version memory v6 = registry.parseVersion("10.0.0");
-        
-        // Verify that semantic ordering is correct
-        assertTrue(v2.major == v1.major && v2.minor > v1.minor, "1.1.0 should have higher minor than 1.0.0");
-        assertTrue(v3.major > v2.major, "2.0.0 should have higher major than 1.1.0");
-        assertTrue(v1.major > v4.major, "1.0.0 should have higher major than 0.1.0");
-        assertTrue(v5.major == v2.major && v5.minor > v2.minor, "1.10.0 should have higher minor than 1.1.0");
-        assertTrue(v6.major > v3.major, "10.0.0 should have higher major than 2.0.0");
-    }
-    
-    // Test version comparison function
-    function testVersionComparison() public view {
-        // String comparisons
-        assertEq(registry.compareVersions(version1, version1), 0, "Same versions should be equal");
-        assertEq(registry.compareVersions(version2, version1), 1, "1.1.0 should be greater than 1.0.0");
-        assertEq(registry.compareVersions(version1, version2), -1, "1.0.0 should be less than 1.1.0");
-        assertEq(registry.compareVersions(version3, version2), 1, "2.0.0 should be greater than 1.1.0");
-        
-        // More complex tests
-        string memory v110 = "1.10.0";
-        string memory v101 = "1.0.1";
-        string memory v20 = "2.0.0";
-        string memory v100 = "10.0.0";
-        
-        assertEq(registry.compareVersions(v110, "1.2.0"), 1, "1.10.0 should be greater than 1.2.0");
-        assertEq(registry.compareVersions(v101, version1), 1, "1.0.1 should be greater than 1.0.0");
-        assertEq(registry.compareVersions(v20, v110), 1, "2.0.0 should be greater than 1.10.0");
-        assertEq(registry.compareVersions(v100, v20), 1, "10.0.0 should be greater than 2.0.0");
-    }
-    
-    // Test invalid versions (0.0.0)
-    function testInvalidVersions() public {
-        // 0.0.0 should revert
-        vm.expectRevert("Version 0.0.0 is not permitted");
-        registry.parseVersion("0.0.0");
     }
 
     // Test registering a tool
@@ -85,21 +45,26 @@ contract AutonomysPackageRegistryTest is Test {
         // Register a tool from user1
         vm.startPrank(user1);
         registry.registerTool(
-            testToolName, 
-            version1, 
+            testToolName,
+            version1,
             cidHash, 
             metadataHash
         );
         vm.stopPrank();
         
         // Verify tool exists
-        (address toolOwner, uint256 versionCount, string memory latestVersion) = registry.getToolInfo(testToolName);
+        (address toolOwner, uint256 versionCount, AutonomysPackageRegistry.Version memory latestVersion) = registry.getToolInfo(testToolNameHash);
         assertEq(toolOwner, user1);
         assertEq(versionCount, 1);
-        assertEq(latestVersion, version1);
+        assertEq(latestVersion.major, version1.major);
+        assertEq(latestVersion.minor, version1.minor);
+        assertEq(latestVersion.patch, version1.patch);
         
         // Verify tool version information
-        (bytes32 cid, uint256 timestamp, bytes32 metadata) = registry.getToolVersion(testToolName, version1);
+        (AutonomysPackageRegistry.Version memory retrievedVersion, bytes32 cid, uint256 timestamp, bytes32 metadata) = registry.getToolVersion(testToolNameHash, version1);
+        assertEq(retrievedVersion.major, version1.major);
+        assertEq(retrievedVersion.minor, version1.minor);
+        assertEq(retrievedVersion.patch, version1.patch);
         assertEq(cid, cidHash);
         assertTrue(timestamp > 0);
         assertEq(metadata, metadataHash);
@@ -129,12 +94,14 @@ contract AutonomysPackageRegistryTest is Test {
         vm.stopPrank();
         
         // Verify both versions exist
-        string[] memory versions = registry.getToolVersions(testToolName);
+        AutonomysPackageRegistry.Version[] memory versions = registry.getToolVersions(testToolNameHash);
         assertEq(versions.length, 2);
         
         // Verify latest version is set correctly
-        (string memory version, bytes32 cid, uint256 timestamp, bytes32 metadata) = registry.getLatestVersion(testToolName);
-        assertEq(version, version2);
+        (AutonomysPackageRegistry.Version memory version, bytes32 cid, uint256 timestamp, bytes32 metadata) = registry.getLatestVersion(testToolNameHash);
+        assertEq(version.major, version2.major);
+        assertEq(version.minor, version2.minor);
+        assertEq(version.patch, version2.patch);
         assertEq(cid, cidHash2);
         assertEq(metadata, metadataHash2);
         assertTrue(timestamp > 0);
@@ -147,7 +114,7 @@ contract AutonomysPackageRegistryTest is Test {
         registry.registerTool(testToolName, version2, cidHash, metadataHash);
         
         // Try to register a lower version (should fail)
-        vm.expectRevert("New version must be higher than the latest version");
+        vm.expectRevert(AutonomysPackageRegistry.InvalidVersionOrder.selector);
         registry.registerTool(
             testToolName, 
             version1,  // 1.0.0 is lower than current 1.1.0
@@ -173,13 +140,14 @@ contract AutonomysPackageRegistryTest is Test {
         // Update metadata
         registry.updateToolMetadata(
             testToolName,
+            testToolNameHash,
             version1,
             newMetadataHash
         );
         vm.stopPrank();
         
         // Verify metadata was updated
-        (,, bytes32 metadata) = registry.getToolVersion(testToolName, version1);
+        (,,, bytes32 metadata) = registry.getToolVersion(testToolNameHash, version1);
         assertEq(metadata, newMetadataHash);
     }
     
@@ -195,22 +163,36 @@ contract AutonomysPackageRegistryTest is Test {
         );
         
         // Transfer ownership to user2
-        registry.transferToolOwnership(testToolName, user2);
+        registry.transferToolOwnership(
+            testToolName,
+            testToolNameHash, 
+            user2
+        );
         vm.stopPrank();
         
         // Verify new owner
-        (address toolOwner,,) = registry.getToolInfo(testToolName);
+        (address toolOwner,,) = registry.getToolInfo(testToolNameHash);
         assertEq(toolOwner, user2);
         
         // Verify old owner can't update tool
         vm.startPrank(user1);
-        vm.expectRevert("Caller is not the tool owner");
-        registry.updateToolMetadata(testToolName, version1, keccak256(bytes('{"description":"Unauthorized update"}')));
+        vm.expectRevert(AutonomysPackageRegistry.NotToolOwner.selector);
+        registry.updateToolMetadata(
+            testToolName, 
+            testToolNameHash,
+            version1, 
+            keccak256(bytes('{"description":"Unauthorized update"}'))
+        );
         vm.stopPrank();
         
         // Verify new owner can update tool
         vm.startPrank(user2);
-        registry.updateToolMetadata(testToolName, version1, keccak256(bytes('{"description":"Authorized update"}')));
+        registry.updateToolMetadata(
+            testToolName, 
+            testToolNameHash,
+            version1, 
+            keccak256(bytes('{"description":"Authorized update"}'))
+        );
         vm.stopPrank();
     }
     
@@ -220,7 +202,11 @@ contract AutonomysPackageRegistryTest is Test {
         string memory toolName2 = "tool2";
         string memory toolName3 = "tool3";
         
-        bytes32 cidHash1 = keccak256(bytes("bafybeicid1"));
+        bytes32 toolNameHash1 = keccak256(bytes(toolName1));
+        bytes32 toolNameHash2 = keccak256(bytes(toolName2));
+        bytes32 toolNameHash3 = keccak256(bytes(toolName3));
+        
+        bytes32 cidHash1 = keccak256(bytes("bafybeiid1s"));
         bytes32 cidHash2 = keccak256(bytes("bafybeicid2"));
         bytes32 cidHash3 = keccak256(bytes("bafybeicid3"));
         
@@ -236,7 +222,7 @@ contract AutonomysPackageRegistryTest is Test {
         vm.stopPrank();
         
         // Verify publisher tools
-        string[] memory publisherTools = registry.getPublisherTools(user1, 0, 10);
+        bytes32[] memory publisherTools = registry.getPublisherToolsPaginated(user1, 0, 10);
         assertEq(publisherTools.length, 3);
         
         // Check that all tools are included (order may vary)
@@ -245,9 +231,9 @@ contract AutonomysPackageRegistryTest is Test {
         bool found3 = false;
         
         for (uint i = 0; i < publisherTools.length; i++) {
-            if (keccak256(bytes(publisherTools[i])) == keccak256(bytes(toolName1))) found1 = true;
-            if (keccak256(bytes(publisherTools[i])) == keccak256(bytes(toolName2))) found2 = true;
-            if (keccak256(bytes(publisherTools[i])) == keccak256(bytes(toolName3))) found3 = true;
+            if (publisherTools[i] == toolNameHash1) found1 = true;
+            if (publisherTools[i] == toolNameHash2) found2 = true;
+            if (publisherTools[i] == toolNameHash3) found3 = true;
         }
         
         assertTrue(found1 && found2 && found3, "All published tools should be included");
@@ -256,8 +242,11 @@ contract AutonomysPackageRegistryTest is Test {
     // Test pagination of publisher tools
     function testGetPublisherToolsPagination() public {
         string[] memory toolNames = new string[](5);
+        bytes32[] memory toolNameHashes = new bytes32[](5);
+        
         for (uint i = 0; i < 5; i++) {
             toolNames[i] = string(abi.encodePacked("tool", i+1));
+            toolNameHashes[i] = keccak256(bytes(toolNames[i]));
         }
         
         // Register 5 tools from user1
@@ -273,19 +262,19 @@ contract AutonomysPackageRegistryTest is Test {
         vm.stopPrank();
         
         // Test first page (2 items)
-        string[] memory page1 = registry.getPublisherTools(user1, 0, 2);
+        bytes32[] memory page1 = registry.getPublisherToolsPaginated(user1, 0, 2);
         assertEq(page1.length, 2);
         
         // Test second page (2 items)
-        string[] memory page2 = registry.getPublisherTools(user1, 2, 2);
+        bytes32[] memory page2 = registry.getPublisherToolsPaginated(user1, 2, 2);
         assertEq(page2.length, 2);
         
         // Test last page (1 item)
-        string[] memory page3 = registry.getPublisherTools(user1, 4, 2);
+        bytes32[] memory page3 = registry.getPublisherToolsPaginated(user1, 4, 2);
         assertEq(page3.length, 1);
         
         // Verify we get all 5 tools with one query
-        string[] memory allTools = registry.getPublisherTools(user1, 0, 10);
+        bytes32[] memory allTools = registry.getPublisherToolsPaginated(user1, 0, 10);
         assertEq(allTools.length, 5);
     }
     
@@ -298,7 +287,7 @@ contract AutonomysPackageRegistryTest is Test {
         assertEq(registry.owner(), user1);
         
         // Original owner can't call owner-only functions anymore
-        vm.expectRevert("Caller is not the owner");
+        vm.expectRevert(AutonomysPackageRegistry.OnlyOwner.selector);
         registry.transferContractOwnership(user2);
         
         // New owner can call owner-only functions
@@ -319,7 +308,7 @@ contract AutonomysPackageRegistryTest is Test {
         
         // Try to register same name by user2
         vm.startPrank(user2);
-        vm.expectRevert("Not the tool owner");
+        vm.expectRevert(AutonomysPackageRegistry.NotToolOwner.selector);
         registry.registerTool(testToolName, version1, cidHash, metadataHash);
         vm.stopPrank();
     }
@@ -334,7 +323,7 @@ contract AutonomysPackageRegistryTest is Test {
         bytes32 newCidHash = keccak256(bytes("bafybeinewcid"));
         bytes32 newMetadataHash = keccak256(bytes('{"description":"New metadata for same version"}'));
         
-        vm.expectRevert("Version already exists");
+        vm.expectRevert(AutonomysPackageRegistry.VersionAlreadyExists.selector);
         registry.registerTool(testToolName, version1, newCidHash, newMetadataHash);
         vm.stopPrank();
     }
@@ -344,6 +333,10 @@ contract AutonomysPackageRegistryTest is Test {
         string memory toolName1 = "all-tools-test-1";
         string memory toolName2 = "all-tools-test-2";
         string memory toolName3 = "all-tools-test-3";
+        
+        bytes32 toolNameHash1 = keccak256(bytes(toolName1));
+        bytes32 toolNameHash2 = keccak256(bytes(toolName2));
+        bytes32 toolNameHash3 = keccak256(bytes(toolName3));
         
         // Register tools by different users
         vm.startPrank(user1);
@@ -356,7 +349,7 @@ contract AutonomysPackageRegistryTest is Test {
         vm.stopPrank();
         
         // Get all tools
-        string[] memory allTools = registry.getAllTools(0, 10);
+        bytes32[] memory allTools = registry.getAllToolsPaginated(0, 10);
         
         // Verify all tools are included
         assertEq(allTools.length, 3);
@@ -366,9 +359,9 @@ contract AutonomysPackageRegistryTest is Test {
         bool found3 = false;
         
         for (uint i = 0; i < allTools.length; i++) {
-            if (keccak256(bytes(allTools[i])) == keccak256(bytes(toolName1))) found1 = true;
-            if (keccak256(bytes(allTools[i])) == keccak256(bytes(toolName2))) found2 = true;
-            if (keccak256(bytes(allTools[i])) == keccak256(bytes(toolName3))) found3 = true;
+            if (allTools[i] == toolNameHash1) found1 = true;
+            if (allTools[i] == toolNameHash2) found2 = true;
+            if (allTools[i] == toolNameHash3) found3 = true;
         }
         
         assertTrue(found1 && found2 && found3, "All tools should be included");
@@ -378,9 +371,11 @@ contract AutonomysPackageRegistryTest is Test {
     function testGetAllToolsPagination() public {
         // Create and register 5 tools
         string[] memory toolNames = new string[](5);
+        bytes32[] memory toolNameHashes = new bytes32[](5);
         
         for (uint i = 0; i < 5; i++) {
             toolNames[i] = string(abi.encodePacked("pagination-test", i+1));
+            toolNameHashes[i] = keccak256(bytes(toolNames[i]));
             
             vm.startPrank(user1);
             registry.registerTool(
@@ -393,19 +388,19 @@ contract AutonomysPackageRegistryTest is Test {
         }
         
         // Test first page (2 items)
-        string[] memory page1 = registry.getAllTools(0, 2);
+        bytes32[] memory page1 = registry.getAllToolsPaginated(0, 2);
         assertEq(page1.length, 2);
         
         // Test second page (2 items)
-        string[] memory page2 = registry.getAllTools(2, 2);
+        bytes32[] memory page2 = registry.getAllToolsPaginated(2, 2);
         assertEq(page2.length, 2);
         
         // Test third page (1 item)
-        string[] memory page3 = registry.getAllTools(4, 2);
+        bytes32[] memory page3 = registry.getAllToolsPaginated(4, 2);
         assertEq(page3.length, 1);
         
         // Verify we get all 5 tools
-        string[] memory allTools = registry.getAllTools(0, 10);
+        bytes32[] memory allTools = registry.getAllToolsPaginated(0, 10);
         assertEq(allTools.length, 5);
     }
     
@@ -427,33 +422,28 @@ contract AutonomysPackageRegistryTest is Test {
         vm.stopPrank();
     }
     
-    // Test the edge cases for version comparisons with different components
-    function testVersionComponentComparisons() public view {
-        string memory v1_0_0 = "1.0.0";
-        string memory v1_1_0 = "1.1.0";
-        string memory v1_0_1 = "1.0.1";
-        string memory v2_0_0 = "2.0.0";
-        string memory v0_1_0 = "0.1.0";
-        string memory v0_0_1 = "0.0.1";
+    // Test internal compareVersions function by creating a version that should be higher
+    function testVersionOrdering() public {
+        // Create versions for testing
+        AutonomysPackageRegistry.Version memory lowerVersion = AutonomysPackageRegistry.Version(1, 0, 0);
+        AutonomysPackageRegistry.Version memory higherVersion = AutonomysPackageRegistry.Version(2, 0, 0);
         
-        // Major version takes precedence
-        assertEq(registry.compareVersions(v2_0_0, v1_1_0), 1, "2.0.0 > 1.1.0");
-        assertEq(registry.compareVersions(v1_0_0, v2_0_0), -1, "1.0.0 < 2.0.0");
+        // Register tool with lower version
+        vm.startPrank(user1);
+        registry.registerTool(testToolName, lowerVersion, cidHash, metadataHash);
         
-        // Minor version takes precedence when major is the same
-        assertEq(registry.compareVersions(v1_1_0, v1_0_1), 1, "1.1.0 > 1.0.1");
-        assertEq(registry.compareVersions(v1_0_0, v1_1_0), -1, "1.0.0 < 1.1.0");
+        // Should succeed with higher version
+        registry.registerTool(testToolName, higherVersion, cidHash, metadataHash);
         
-        // Patch version only matters when major and minor are the same
-        assertEq(registry.compareVersions(v1_0_1, v1_0_0), 1, "1.0.1 > 1.0.0");
-        assertEq(registry.compareVersions(v1_0_0, v1_0_1), -1, "1.0.0 < 1.0.1");
+        // Verify higher version is latest
+        (,, AutonomysPackageRegistry.Version memory latestVersion) = registry.getToolInfo(testToolNameHash);
+        assertEq(latestVersion.major, higherVersion.major);
+        assertEq(latestVersion.minor, higherVersion.minor);
+        assertEq(latestVersion.patch, higherVersion.patch);
         
-        // Comparing versions with 0 components
-        assertEq(registry.compareVersions(v1_0_0, v0_1_0), 1, "1.0.0 > 0.1.0");
-        assertEq(registry.compareVersions(v0_1_0, v0_0_1), 1, "0.1.0 > 0.0.1");
-        assertEq(registry.compareVersions(v0_0_1, v0_1_0), -1, "0.0.1 < 0.1.0");
+        vm.stopPrank();
     }
-
+    
     // Test updating tool metadata
     function testUpdateToolMetadataWorkflow() public {
         bytes32 newMetadataHash = keccak256(bytes('{"description":"New metadata"}'));
@@ -466,54 +456,23 @@ contract AutonomysPackageRegistryTest is Test {
         registry.registerTool(testToolName, version2, cidHash, metadataHash);
         
         // Current latest version should be version2 (1.1.0)
-        (,, string memory currentLatest) = registry.getToolInfo(testToolName);
-        assertEq(currentLatest, version2);
+        (,, AutonomysPackageRegistry.Version memory currentLatest) = registry.getToolInfo(testToolNameHash);
+        assertEq(currentLatest.major, version2.major);
+        assertEq(currentLatest.minor, version2.minor);
+        assertEq(currentLatest.patch, version2.patch);
         
         // Update metadata only (not setting as latest)
-        registry.updateToolMetadata(testToolName, version1, newMetadataHash);
+        registry.updateToolMetadata(testToolName, testToolNameHash, version1, newMetadataHash);
         
         // Verify metadata updated but latest version is still version2
-        (,, bytes32 metadata) = registry.getToolVersion(testToolName, version1);
+        (,,, bytes32 metadata) = registry.getToolVersion(testToolNameHash, version1);
         assertEq(metadata, newMetadataHash);
-        (,, string memory latestAfterUpdate) = registry.getToolInfo(testToolName);
-        assertEq(latestAfterUpdate, version2);
+        (,, AutonomysPackageRegistry.Version memory latestAfterUpdate) = registry.getToolInfo(testToolNameHash);
+        assertEq(latestAfterUpdate.major, version2.major);
+        assertEq(latestAfterUpdate.minor, version2.minor);
+        assertEq(latestAfterUpdate.patch, version2.patch);
         
         vm.stopPrank();
-    }
-    
-    // Test handling of malformed versions
-    function testMalformedVersions() public {
-        // Test with non-numeric characters
-        vm.expectRevert("Invalid version character");
-        registry.parseVersion("1.a.0");
-    }
-    
-    // Test version format handling
-    function testVersionFormatHandling() public view {
-        // Test partial version format (should be handled according to implementation)
-        try registry.parseVersion("1.0") {
-            // If it doesn't revert, that's fine
-        } catch {
-            // If it reverts, that's also an acceptable implementation
-        }
-        
-        // Test extra version components (should be handled according to implementation)
-        try registry.parseVersion("1.0.0.0") {
-            // If it doesn't revert, that's fine
-        } catch {
-            // If it reverts, that's also an acceptable implementation
-        }
-    }
-    
-    // Test with large version numbers to check for overflows
-    function testLargeVersionNumbers() public view {
-        registry.parseVersion("65535.65535.65535");
-        registry.parseVersion("65536.65536.65536");
-        registry.parseVersion("999999.999999.999999");
-        
-        // Ensure proper ordering is maintained with large numbers
-        assertEq(registry.compareVersions("65536.0.0", "65535.0.0"), 1, "65536.x should be > 65535.x");
-        assertEq(registry.compareVersions("999999.0.0", "65536.0.0"), 1, "999999.x should be > 65536.x");
     }
     
     // Test updating metadata with non-existent versions
@@ -523,9 +482,9 @@ contract AutonomysPackageRegistryTest is Test {
         registry.registerTool(testToolName, version1, cidHash, metadataHash);
         
         // Try to update metadata for a version that doesn't exist
-        string memory nonExistentVersion = "9.9.9";
-        vm.expectRevert("Version does not exist");
-        registry.updateToolMetadata(testToolName, nonExistentVersion, metadataHash);
+        AutonomysPackageRegistry.Version memory nonExistentVersion = AutonomysPackageRegistry.Version(9, 9, 9);
+        vm.expectRevert(AutonomysPackageRegistry.VersionNotExists.selector);
+        registry.updateToolMetadata(testToolName, testToolNameHash, nonExistentVersion, metadataHash);
         vm.stopPrank();
     }
     
@@ -534,7 +493,7 @@ contract AutonomysPackageRegistryTest is Test {
         vm.startPrank(user1);
         
         // Test with empty metadata (should fail)
-        vm.expectRevert("Metadata cannot be empty");
+        vm.expectRevert(AutonomysPackageRegistry.EmptyMetadataHash.selector);
         registry.registerTool(testToolName, version1, cidHash, bytes32(0));
         
         vm.stopPrank();
@@ -555,24 +514,21 @@ contract AutonomysPackageRegistryTest is Test {
         vm.stopPrank();
         
         // Test with offset out of bounds
-        vm.expectRevert("Offset out of bounds");
-        registry.getPublisherTools(user1, 10, 2);
+        vm.expectRevert(AutonomysPackageRegistry.OffsetOutOfBounds.selector);
+        registry.getPublisherToolsPaginated(user1, 10, 2);
         
         // Test with offset out of bounds for all tools
-        vm.expectRevert("Offset out of bounds");
-        registry.getAllTools(10, 2);
-        
-        // Test with zero limit (should return empty array)
-        string[] memory emptyResults = registry.getPublisherTools(user1, 0, 0);
-        assertEq(emptyResults.length, 0);
+        vm.expectRevert(AutonomysPackageRegistry.OffsetOutOfBounds.selector);
+        registry.getAllToolsPaginated(10, 2);
     }
     
     // Test complex workflow with multiple versions and updates
     function testComplexToolWorkflow() public {
         string memory toolName = "complex-tool";
-        string memory versionA = "0.1.0";
-        string memory versionB = "0.2.0";
-        string memory versionC = "1.0.0";
+        bytes32 toolNameHash = keccak256(bytes(toolName));
+        AutonomysPackageRegistry.Version memory versionA = AutonomysPackageRegistry.Version(0, 1, 0);
+        AutonomysPackageRegistry.Version memory versionB = AutonomysPackageRegistry.Version(0, 2, 0);
+        AutonomysPackageRegistry.Version memory versionC = AutonomysPackageRegistry.Version(1, 0, 0);
         
         // First publisher registers tool
         vm.startPrank(user1);
@@ -584,7 +540,7 @@ contract AutonomysPackageRegistryTest is Test {
         
         // Transfer ownership
         vm.startPrank(user1);
-        registry.transferToolOwnership(toolName, user2);
+        registry.transferToolOwnership(toolName, toolNameHash, user2);
         vm.stopPrank();
         
         // New owner adds a major version
@@ -593,13 +549,15 @@ contract AutonomysPackageRegistryTest is Test {
         vm.stopPrank();
         
         // Verify history and final state
-        string[] memory versions = registry.getToolVersions(toolName);
+        AutonomysPackageRegistry.Version[] memory versions = registry.getToolVersions(toolNameHash);
         assertEq(versions.length, 3);
         
-        (address currentOwner, uint256 versionCount, string memory latestVersion) = registry.getToolInfo(toolName);
+        (address currentOwner, uint256 versionCount, AutonomysPackageRegistry.Version memory latestVersion) = registry.getToolInfo(toolNameHash);
         assertEq(currentOwner, user2);
         assertEq(versionCount, 3);
-        assertEq(latestVersion, versionC);
+        assertEq(latestVersion.major, versionC.major);
+        assertEq(latestVersion.minor, versionC.minor);
+        assertEq(latestVersion.patch, versionC.patch);
     }
     
     // Test CID validation
@@ -607,7 +565,7 @@ contract AutonomysPackageRegistryTest is Test {
         vm.startPrank(user1);
         
         // Test with empty CID (should fail)
-        vm.expectRevert("CID cannot be empty");
+        vm.expectRevert(AutonomysPackageRegistry.EmptyCidHash.selector);
         registry.registerTool(testToolName, version1, bytes32(0), metadataHash);
         
         vm.stopPrank();
@@ -620,40 +578,51 @@ contract AutonomysPackageRegistryTest is Test {
         registry.registerTool(testToolName, version1, cidHash, metadataHash);
         
         // Try to transfer to zero address
-        vm.expectRevert("New owner cannot be zero address");
-        registry.transferToolOwnership(testToolName, address(0));
+        vm.expectRevert(AutonomysPackageRegistry.ZeroAddressNotAllowed.selector);
+        registry.transferToolOwnership(testToolName, testToolNameHash, address(0));
         
         // Try to transfer to self
-        vm.expectRevert("New owner cannot be the same as current");
-        registry.transferToolOwnership(testToolName, user1);
+        vm.expectRevert(AutonomysPackageRegistry.SameOwner.selector);
+        registry.transferToolOwnership(testToolName, testToolNameHash, user1);
         
         vm.stopPrank();
         
         // Try transferring contract ownership to zero address
-        vm.expectRevert("New owner cannot be zero address");
+        vm.expectRevert(AutonomysPackageRegistry.ZeroAddressNotAllowed.selector);
         registry.transferContractOwnership(address(0));
     }
     
     // Test non-existent tool operations
     function testNonExistentToolOperations() public {
         string memory nonExistentTool = "non-existent-tool";
+        bytes32 nonExistentToolHash = keccak256(bytes(nonExistentTool));
         
         // Try to get info about non-existent tool
-        vm.expectRevert("Tool does not exist");
-        registry.getToolInfo(nonExistentTool);
+        vm.expectRevert(AutonomysPackageRegistry.ToolNotFound.selector);
+        registry.getToolInfo(nonExistentToolHash);
         
         // Try to get versions of non-existent tool
-        vm.expectRevert("Tool does not exist");
-        registry.getToolVersions(nonExistentTool);
+        vm.expectRevert(AutonomysPackageRegistry.ToolNotFound.selector);
+        registry.getToolVersions(nonExistentToolHash);
         
         // Try to get latest version of non-existent tool
-        vm.expectRevert("Tool does not exist");
-        registry.getLatestVersion(nonExistentTool);
+        vm.expectRevert(AutonomysPackageRegistry.ToolNotFound.selector);
+        registry.getLatestVersion(nonExistentToolHash);
         
         // Try to transfer ownership of non-existent tool
         vm.startPrank(user1);
-        vm.expectRevert("Tool does not exist");
-        registry.transferToolOwnership(nonExistentTool, user2);
+        vm.expectRevert(AutonomysPackageRegistry.ToolNotFound.selector);
+        registry.transferToolOwnership(nonExistentTool, nonExistentToolHash, user2);
+        vm.stopPrank();
+    }
+    
+    // Test the name hash validation
+    function testInvalidNameHash() public {
+        vm.startPrank(user1);
+        // Try to use incorrect name hash
+        bytes32 incorrectHash = keccak256(bytes("wrong-name"));
+        vm.expectRevert(AutonomysPackageRegistry.InvalidNameHash.selector);
+        registry.updateToolMetadata(testToolName, incorrectHash, version1, metadataHash);
         vm.stopPrank();
     }
 } 
