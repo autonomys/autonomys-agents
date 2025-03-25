@@ -188,25 +188,38 @@ const run = async () => {
         : 'Starting memory resurrection (fetching all memories)...',
     );
     const character = config.characterConfig;
-    const experienceManager = await createExperienceManager({
-      autoDriveApiOptions: {
-        apiKey: config.autoDriveConfig.AUTO_DRIVE_API_KEY!,
-        network: config.autoDriveConfig.AUTO_DRIVE_NETWORK,
-      },
-      uploadOptions: {
-        compression: true,
-        password: config.autoDriveConfig.AUTO_DRIVE_ENCRYPTION_PASSWORD,
-      },
-      walletOptions: {
-        privateKey: config.blockchainConfig.PRIVATE_KEY!,
-        rpcUrl: config.blockchainConfig.RPC_URL!,
-        contractAddress: config.blockchainConfig.CONTRACT_ADDRESS!,
-      },
-      agentOptions: {
-        agentName: characterName,
-        agentPath: character.characterPath,
-      },
-    });
+    const hasNecessaryConfig =
+      config.blockchainConfig.PRIVATE_KEY &&
+      config.blockchainConfig.RPC_URL &&
+      config.blockchainConfig.CONTRACT_ADDRESS &&
+      config.autoDriveConfig.AUTO_DRIVE_API_KEY;
+    const experienceManager =
+      hasNecessaryConfig ??
+      (await createExperienceManager({
+        autoDriveApiOptions: {
+          apiKey: config.autoDriveConfig.AUTO_DRIVE_API_KEY!,
+          network: config.autoDriveConfig.AUTO_DRIVE_NETWORK,
+        },
+        uploadOptions: {
+          compression: true,
+          password: config.autoDriveConfig.AUTO_DRIVE_ENCRYPTION_PASSWORD,
+        },
+        walletOptions: {
+          privateKey: config.blockchainConfig.PRIVATE_KEY!,
+          rpcUrl: config.blockchainConfig.RPC_URL!,
+          contractAddress: config.blockchainConfig.CONTRACT_ADDRESS!,
+        },
+        agentOptions: {
+          agentName: characterName,
+          agentPath: character.characterPath,
+        },
+      }));
+
+    if (!experienceManager) {
+      logger.error('Missing configuration for experience manager');
+      await cleanupOnApplicationClose();
+      return;
+    }
 
     const latestCid = await experienceManager.cidManager.getLastMemoryCid();
     if (!latestCid) {
