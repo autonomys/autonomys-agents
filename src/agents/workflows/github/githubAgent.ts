@@ -9,7 +9,6 @@ import { createOrchestratorRunner } from '../orchestrator/orchestratorWorkflow.j
 import { registerOrchestratorRunner } from '../registration.js';
 import { createGithubPrompts } from './prompts.js';
 import { GithubAgentConfig, GithubAgentOptions } from './types.js';
-import { cleanGithubMessageData } from './cleanMessages.js';
 import {
   createExperienceConfig,
   createModelConfigurations,
