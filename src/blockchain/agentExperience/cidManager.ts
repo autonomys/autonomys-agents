@@ -66,7 +66,7 @@ const getLastMemoryHashSetTimestamp = async (
       timestamp: block.timestamp,
       hash: (lastEvent as ethers.EventLog).args.hash,
     };
-  } catch (error) {
+  } catch {
     return { timestamp: 0, hash: '' };
   }
 };

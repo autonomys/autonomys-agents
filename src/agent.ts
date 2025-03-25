@@ -23,10 +23,14 @@ const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
   const saveExperiences = config.autoDriveConfig.AUTO_DRIVE_SAVE_EXPERIENCES;
   const monitoringEnabled = config.autoDriveConfig.AUTO_DRIVE_MONITORING;
   const experienceManager =
-    saveExperiences || monitoringEnabled
+    (saveExperiences || monitoringEnabled) &&
+    config.blockchainConfig.PRIVATE_KEY &&
+    config.blockchainConfig.RPC_URL &&
+    config.blockchainConfig.CONTRACT_ADDRESS &&
+    config.autoDriveConfig.AUTO_DRIVE_API_KEY
       ? await createExperienceManager({
           autoDriveApiOptions: {
-            apiKey: config.autoDriveConfig.AUTO_DRIVE_API_KEY!,
+            apiKey: config.autoDriveConfig.AUTO_DRIVE_API_KEY,
             network: config.autoDriveConfig.AUTO_DRIVE_NETWORK,
           },
           uploadOptions: {
@@ -34,9 +38,9 @@ const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
             password: config.autoDriveConfig.AUTO_DRIVE_ENCRYPTION_PASSWORD,
           },
           walletOptions: {
-            privateKey: config.blockchainConfig.PRIVATE_KEY!,
-            rpcUrl: config.blockchainConfig.RPC_URL!,
-            contractAddress: config.blockchainConfig.CONTRACT_ADDRESS!,
+            privateKey: config.blockchainConfig.PRIVATE_KEY,
+            rpcUrl: config.blockchainConfig.RPC_URL,
+            contractAddress: config.blockchainConfig.CONTRACT_ADDRESS,
           },
           agentOptions: {
             agentVersion: agentVersion,
@@ -90,6 +94,7 @@ const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
         ]
       : [];
 
+  // TODO: add slack and github model configurations when updating agent tool configurations
   // If slack api key is provided, add slack tools
   const slackAgentTool = config.slackConfig.SLACK_APP_TOKEN
     ? [
@@ -97,11 +102,6 @@ const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
           tools: [...schedulerTools],
           experienceConfig,
           monitoringConfig,
-          // Use orchestrator model configurations if Slack-specific ones are not available
-          modelConfigurations:
-            'model_configurations' in config.slackConfig
-              ? (config.slackConfig as any).model_configurations
-              : config.orchestratorConfig.model_configurations,
         }),
       ]
     : [];
@@ -114,11 +114,6 @@ const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
           tools: [...schedulerTools],
           experienceConfig,
           monitoringConfig,
-          // Use orchestrator model configurations if GitHub-specific ones are not available
-          modelConfigurations:
-            'model_configurations' in config.githubConfig
-              ? (config.githubConfig as any).model_configurations
-              : config.orchestratorConfig.model_configurations,
         }),
       ]
     : [];
