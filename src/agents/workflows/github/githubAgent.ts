@@ -3,51 +3,76 @@ import { DynamicStructuredTool } from '@langchain/core/tools';
 import { z } from 'zod';
 import { withApiLogger } from '../../../api/server.js';
 import { Character } from '../../../config/characters.js';
-import { LLMConfiguration } from '../../../services/llm/types.js';
 import { createLogger } from '../../../utils/logger.js';
 import { createGitHubTools, GitHubToolsSubset } from '../../tools/github/index.js';
-import { cleanMessageData } from '../orchestrator/cleanMessages.js';
 import { createOrchestratorRunner } from '../orchestrator/orchestratorWorkflow.js';
 import { registerOrchestratorRunner } from '../registration.js';
 import { createGithubPrompts } from './prompts.js';
 import { GithubAgentConfig, GithubAgentOptions } from './types.js';
+import { cleanGithubMessageData } from './cleanMessages.js';
+import {
+  createExperienceConfig,
+  createModelConfigurations,
+  createMonitoringConfig,
+  createPruningParameters,
+} from '../orchestrator/config.js';
 
 const logger = createLogger('github-workflow');
 
-const defaultModelConfig: LLMConfiguration = {
-  provider: 'anthropic',
-  model: 'claude-3-5-sonnet-latest',
-  temperature: 0.8,
+// GitHub-specific default configuration values
+const defaultGithubOptions = {
+  namespace: 'github',
 };
 
-const defaultOptions: GithubAgentConfig = {
-  tools: [],
-  modelConfigurations: {
-    inputModelConfig: defaultModelConfig,
-    messageSummaryModelConfig: defaultModelConfig,
-    finishWorkflowModelConfig: defaultModelConfig,
-  },
-  saveExperiences: false,
-  monitoring: {
-    enabled: false,
-    messageCleaner: cleanMessageData,
-  },
-  recursionLimit: 100,
-};
-
-const createGithubAgentConfig = (options?: GithubAgentOptions): GithubAgentConfig => {
-  const modelConfigurations = {
-    ...defaultOptions.modelConfigurations,
-    ...options?.modelConfigurations,
-  };
-  const monitoring = {
-    ...defaultOptions.monitoring,
-    ...options?.monitoring,
+/**
+ * Creates a complete GitHub agent configuration by extending the orchestrator configuration
+ */
+const createGithubAgentConfig = async (
+  githubToken: string,
+  toolsSubset: GitHubToolsSubset,
+  character: Character,
+  options?: GithubAgentOptions,
+): Promise<GithubAgentConfig> => {
+  // Create a base config with GitHub-specific fields
+  const baseConfig = {
+    namespace: options?.namespace ?? defaultGithubOptions.namespace,
+    recursionLimit: options?.recursionLimit ?? 100,
+    githubToken,
+    toolsSubset,
+    logger: options?.logger,
   };
 
-  return { ...defaultOptions, ...options, modelConfigurations, monitoring };
+  // Reuse the orchestrator's configuration utilities
+  const modelConfigurations = createModelConfigurations(options);
+  const experienceConfig = createExperienceConfig(options);
+
+  // Create a monitoring config without custom message cleaner
+  const monitoringConfig = createMonitoringConfig(options);
+
+  const pruningParameters = createPruningParameters(options);
+
+  // Get GitHub-specific tools and prompts
+  const githubTools = await createGitHubTools(githubToken, toolsSubset);
+  const prompts = await createGithubPrompts(character);
+
+  // Combine all tools
+  const tools = [...githubTools, ...(options?.tools || [])];
+
+  // Return the complete configuration
+  return {
+    ...baseConfig,
+    modelConfigurations,
+    tools,
+    prompts,
+    pruningParameters,
+    experienceConfig,
+    monitoringConfig,
+  };
 };
 
+/**
+ * Creates a GitHub agent tool that can be used by other agents
+ */
 export const createGithubAgent = (
   githubToken: string,
   subset: GitHubToolsSubset,
@@ -64,22 +89,17 @@ export const createGithubAgent = (
     schema: z.object({ instructions: z.string().describe('Instructions for the workflow') }),
     func: async ({ instructions }: { instructions: string }) => {
       try {
-        const { tools, modelConfigurations, saveExperiences, monitoring, recursionLimit } =
-          createGithubAgentConfig(options);
+        const githubAgentConfig = await createGithubAgentConfig(
+          githubToken,
+          subset,
+          character,
+          options,
+        );
         const messages = [new HumanMessage(instructions)];
-        const namespace = 'github';
-
-        const prompts = await createGithubPrompts(character);
-        const githubTools = await createGitHubTools(githubToken, subset);
+        const { namespace } = githubAgentConfig;
 
         const runner = createOrchestratorRunner(character, {
-          modelConfigurations,
-          tools: [...githubTools, ...tools],
-          prompts,
-          namespace,
-          saveExperiences,
-          monitoring,
-          recursionLimit,
+          ...githubAgentConfig,
           ...withApiLogger(namespace),
         });
 

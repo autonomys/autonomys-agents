@@ -1,30 +1,31 @@
-import { LLMConfiguration } from '../../../services/llm/types.js';
-import {
-  ModelConfigurations,
-  MonitoringConfig,
-  MonitoringOptions,
-  Tools,
-} from '../orchestrator/types.js';
+import { OrchestratorConfig, OrchestratorRunnerOptions } from '../orchestrator/types.js';
 
-export type TwitterAgentOptions = {
-  tools?: Tools;
-  modelConfigurations?: {
-    inputModelConfig?: LLMConfiguration;
-    messageSummaryModelConfig?: LLMConfiguration;
-    finishWorkflowModelConfig?: LLMConfiguration;
-  };
+/**
+ * Twitter-specific options that extend the base orchestrator options
+ */
+export type TwitterAgentOptions = OrchestratorRunnerOptions & {
+  /**
+   * Whether Twitter tweets should be actually posted (false for testing)
+   */
   postTweets?: boolean;
-  saveExperiences?: boolean;
-  monitoring?: MonitoringOptions;
-  recursionLimit?: number;
+
+  /**
+   * Maximum depth of thread replies to process
+   */
+  maxThreadDepth?: number;
 };
 
-export type TwitterAgentConfig = {
-  tools: Tools;
-  modelConfigurations: ModelConfigurations;
+/**
+ * Twitter agent config that extends the base orchestrator config
+ */
+export type TwitterAgentConfig = OrchestratorConfig & {
+  /**
+   * Whether Twitter tweets should be actually posted
+   */
   postTweets: boolean;
+
+  /**
+   * Maximum depth of thread replies to process
+   */
   maxThreadDepth: number;
-  saveExperiences: boolean;
-  monitoring: MonitoringConfig;
-  recursionLimit: number;
 };
