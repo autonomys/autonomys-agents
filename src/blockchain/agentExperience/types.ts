@@ -5,7 +5,7 @@ export type ExperienceHeader = {
   //TODO: when we have an identity scheme update to use an identifier for the agent
   agentName: string;
   timestamp: string;
-  previousCid: string;
+  previousCid?: string;
 };
 
 export type AgentExperience = {

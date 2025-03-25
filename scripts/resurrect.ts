@@ -127,15 +127,17 @@ const fetchMemoryChain = async (
       ? content.header.previousCid
       : content.previousCid;
 
-    return fetchMemoryChain(
-      previousCid,
-      memoriesToFetch,
-      outputDir,
-      vectorDb,
-      experienceManager,
-      failedCid,
-      processedCount,
-    );
+    if (previousCid) {
+      return fetchMemoryChain(
+        previousCid,
+        memoriesToFetch,
+        outputDir,
+        vectorDb,
+        experienceManager,
+        failedCid,
+        processedCount,
+      );
+    }
   } catch (error) {
     logger.error(`Failed to fetch or write memory ${currentCid}:`, error);
     failedCid.add(currentCid);
