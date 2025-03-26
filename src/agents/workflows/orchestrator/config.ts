@@ -157,6 +157,7 @@ export const createOrchestratorConfig = async (
   const tools: Tools = [
     ...(options?.tools || []),
     ...createDefaultOrchestratorTools(
+      baseConfig.namespace,
       experienceConfig.saveExperiences ? experienceConfig.experienceManager : undefined,
     ),
   ];

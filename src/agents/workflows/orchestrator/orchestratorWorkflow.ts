@@ -19,7 +19,7 @@ import { Task, TaskQueue } from './scheduler/types.js';
 import { closeVectorDB } from '../../../services/vectorDb/vectorDBPool.js';
 import { createOrchestratorConfig, defaultOrchestratorOptions } from './config.js';
 
-const terminationState = new Map<string, { shouldStop: boolean; reason: string }>();
+export const workflowControlState = new Map<string, { shouldStop: boolean; reason: string }>();
 
 /**
  * Handles the conditional edge routing in the workflow graph based on current state
@@ -30,17 +30,13 @@ const handleConditionalEdge = async (
   workflowLogger: Logger,
   namespace: string,
 ) => {
-  const terminationKey = `${namespace}:terminate`;
-  if (terminationState.has(terminationKey)) {
+  const externalTerminationKey = `${namespace}:external-stop`;
+  if (workflowControlState.has(namespace) || workflowControlState.has(externalTerminationKey)) {
+    const key = workflowControlState.has(namespace) ? namespace : externalTerminationKey;
     workflowLogger.info('Workflow stop requested', {
-      reason: terminationState.get(terminationKey)?.reason,
+      reason: workflowControlState.get(key)?.reason,
     });
-    terminationState.delete(terminationKey);
-    return 'finishWorkflow';
-  }
-
-  if (state.workflowControl && state.workflowControl.shouldStop) {
-    workflowLogger.info('Workflow stop requested', { reason: state.workflowControl.reason });
+    workflowControlState.delete(key);
     return 'finishWorkflow';
   }
 
@@ -95,7 +91,6 @@ export type OrchestratorRunner = Readonly<{
     input?: OrchestratorInput,
     options?: { threadId?: string },
   ) => Promise<FinishedWorkflow>;
-
   // Stop the workflow
   externalStopWorkflow: (reason?: string) => void;
 
@@ -207,8 +202,11 @@ export const createOrchestratorRunner = async (
       if (currentTask) {
         taskQueue.updateTaskStatus(currentTask.id, 'failed', `Terminated by user: ${reason}`);
         workflowLogger.info('Terminated current task', { taskId: currentTask.id });
-        const terminationKey = `${namespace}:terminate`;
-        terminationState.set(terminationKey, { shouldStop: true, reason: reason || 'Unknown' });
+        const externalTerminationKey = `${namespace}:external-stop`;
+        workflowControlState.set(externalTerminationKey, {
+          shouldStop: true,
+          reason: reason || 'Unknown',
+        });
       } else {
         workflowLogger.info('No current task to terminate');
       }
