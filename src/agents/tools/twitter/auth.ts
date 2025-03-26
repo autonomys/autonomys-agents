@@ -85,14 +85,21 @@ export const createAuthenticatedScraper = async (
   const cookieScraper = await retryWithBackoff(
     async () => {
       const scraper = await authenticateWithCookies(cookiesPath);
-      if (!scraper?.isLoggedIn()) throw new Error('Cookie authentication failed');
+      const isLoggedIn = await scraper?.isLoggedIn();
+      if (!isLoggedIn) {
+        logger.error('Cookie authentication failed');
+        throw new Error('Cookie authentication failed');
+      }
       return scraper;
     },
     {
       maxRetries: 4,
       initialDelay: 2000,
     },
-  ).catch(() => undefined);
+  ).catch(error => {
+    logger.error('Error during cookie authentication:', error);
+    return undefined;
+  });
 
   if (cookieScraper) {
     logger.info('Successfully authenticated with cookies');
@@ -105,14 +112,21 @@ export const createAuthenticatedScraper = async (
   const loginScraper = await retryWithBackoff(
     async () => {
       const scraper = await authenticateWithLogin(username, password, cookiesPath);
-      if (!scraper?.isLoggedIn()) throw new Error('Login authentication failed');
+      const isLoggedIn = await scraper?.isLoggedIn();
+      if (!isLoggedIn) {
+        logger.error('Login authentication failed');
+        throw new Error('Login authentication failed');
+      }
       return scraper;
     },
     {
       maxRetries: 3,
       initialDelay: 2000,
     },
-  ).catch(() => undefined);
+  ).catch(error => {
+    logger.error('Error during fresh login:', error);
+    return undefined;
+  });
 
   if (loginScraper) {
     logger.info('Successfully authenticated with fresh login');
