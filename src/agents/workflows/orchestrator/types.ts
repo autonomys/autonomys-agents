@@ -2,7 +2,6 @@ import { BaseMessage } from '@langchain/core/messages';
 import { ChatPromptTemplate } from '@langchain/core/prompts';
 import { ToolNode } from '@langchain/langgraph/prebuilt';
 import { LLMConfiguration } from '../../../services/llm/types.js';
-import { WorkflowControl } from './nodes/inputPrompt.js';
 import { Logger } from 'winston';
 
 export type OrchestratorPrompts = {
@@ -62,7 +61,6 @@ export type OrchestratorInput = {
 export type OrchestratorStateType = {
   messages: readonly BaseMessage[];
   error: Error | null;
-  workflowControl: WorkflowControl | null;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   toolCalls: any[] | null;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

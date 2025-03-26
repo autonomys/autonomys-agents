@@ -11,7 +11,6 @@ import { createOrchestratorRunner } from '../orchestrator/orchestratorWorkflow.j
 import { registerOrchestratorRunner } from '../registration.js';
 import { createGithubPrompts } from './prompts.js';
 import { GithubAgentConfig, GithubAgentOptions } from './types.js';
-
 const logger = createLogger('github-workflow');
 
 const defaultModelConfig: LLMConfiguration = {

@@ -100,7 +100,6 @@ export const orchestratorRunner = (() => {
   return async () => {
     if (!runnerPromise) {
       const namespace = 'orchestrator';
-
       runnerPromise = createOrchestratorRunner(character, {
         ...orchestrationConfig,
         ...withApiLogger(namespace),

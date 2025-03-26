@@ -1,5 +1,4 @@
 import { Annotation } from '@langchain/langgraph/web';
-import { WorkflowControl } from './nodes/inputPrompt.js';
 import { PruningParameters } from './types.js';
 import { BaseMessage } from '@langchain/core/messages';
 
@@ -24,10 +23,6 @@ export const OrchestratorState = (pruningParameters: PruningParameters) =>
       default: () => [],
     }),
     error: Annotation<Error | null>({
-      default: () => null,
-      reducer: (_, update) => update,
-    }),
-    workflowControl: Annotation<WorkflowControl | null>({
       default: () => null,
       reducer: (_, update) => update,
     }),

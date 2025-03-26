@@ -12,7 +12,6 @@ import { z } from 'zod';
 import { TwitterAgentConfig, TwitterAgentOptions } from './types.js';
 import { cleanTwitterMessageData } from './cleanMessages.js';
 import { registerOrchestratorRunner } from '../../workflows/registration.js';
-
 const logger = createLogger('twitter-workflow');
 
 const defaultModelConfig: LLMConfiguration = {

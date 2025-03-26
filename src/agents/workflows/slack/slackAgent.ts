@@ -69,7 +69,6 @@ export const createSlackAgent = (
 
         const prompts = await createSlackPrompts(character);
         const slackTools = await createSlackTools(slackToken);
-
         const runner = createOrchestratorRunner(character, {
           modelConfigurations,
           tools: [...slackTools, ...tools],
