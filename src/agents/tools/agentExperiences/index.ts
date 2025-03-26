@@ -33,7 +33,13 @@ export const createSaveExperienceTool = (
     Note: The field names shown are examples only. You may structure the data object with any relevant field names that best describe your experience data, as long as it's provided within the "data" property.
     `,
     schema: z.object({
-      data: z.any(),
+      data: z.record(z.string(), z.any()).describe(
+        `
+        A JSON object with any key-value pairs.
+        The keys are strings that describe the type of data being stored.
+        The values are the actual data being stored.
+        `,
+      ),
     }),
     func: async ({ data }) => {
       try {
