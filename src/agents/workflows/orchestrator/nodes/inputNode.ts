@@ -34,9 +34,8 @@ export const createInputNode = ({
 
     logger.debug('Formatted Prompt - Input Node:', { formattedPrompt });
 
-    // TODO: The below method is specificly for Anthropic. tool_choice: 'required  is for open ai that can be added later.
     const result = await LLMFactory.createModel(modelConfig)
-      .bindTools(tools, { tool_choice: 'any' })
+      .bindTools(tools)
       .invoke(formattedPrompt);
 
     const toolCalls = result.tool_calls;
