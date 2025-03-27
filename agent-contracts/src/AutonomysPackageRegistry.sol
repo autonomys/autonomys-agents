@@ -60,13 +60,13 @@ contract AutonomysPackageRegistry {
         _;
     }
 
-    modifier toolExists(bytes32 name) {
-        if (tools[name].owner == address(0)) revert ToolNotFound();
+    modifier toolExists(bytes32 nameHash) {
+        if (tools[nameHash].owner == address(0)) revert ToolNotFound();
         _;
     }
 
-    modifier onlyToolOwner(bytes32 name) {
-        if (tools[name].owner != msg.sender) revert NotToolOwner();
+    modifier onlyToolOwner(bytes32 nameHash) {
+        if (tools[nameHash].owner != msg.sender) revert NotToolOwner();
         _;
     }
     
@@ -85,9 +85,9 @@ contract AutonomysPackageRegistry {
         _;
     }
     
-    modifier versionMustExist(bytes32 name, Version memory version) {
+    modifier versionMustExist(bytes32 nameHash, Version memory version) {
         bytes32 versionHash = getVersionHash(version);
-        if (tools[name].versions[versionHash].cidHash == bytes32(0)) revert VersionNotExists();
+        if (tools[nameHash].versions[versionHash].cidHash == bytes32(0)) revert VersionNotExists();
         _;
     }
 
@@ -100,16 +100,16 @@ contract AutonomysPackageRegistry {
         return keccak256(abi.encodePacked(version.major, version.minor, version.patch));
     }
     
-    function versionExists(bytes32 name, Version memory version) public view returns (bool) {
-        if (tools[name].owner == address(0)) {
+    function versionExists(bytes32 nameHash, Version memory version) public view returns (bool) {
+        if (tools[nameHash].owner == address(0)) {
             return false;
         }
         bytes32 versionHash = getVersionHash(version);        
-        return tools[name].versions[versionHash].cidHash != bytes32(0);
+        return tools[nameHash].versions[versionHash].cidHash != bytes32(0);
     }
 
-    function isToolNameRegistered(bytes32 name) public view returns (bool) {
-        return tools[name].owner != address(0);
+    function isToolNameRegistered(bytes32 nameHash) public view returns (bool) {
+        return tools[nameHash].owner != address(0);
     }
     
     function compareVersions(Version memory a, Version memory b) internal pure returns (int) {
