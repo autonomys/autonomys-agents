@@ -111,14 +111,14 @@ export async function getAllDsn(
           content,
           created_at,
           agent_name,
-          content->>'timestamp' as timestamp
+          COALESCE(content->'header'->>'timestamp', content->>'timestamp') as timestamp
         FROM memory_records
     `;
     if (conditions.length > 0) {
       query += ' WHERE ' + conditions.join(' AND ');
     }
 
-    query += ` ORDER BY (content->>'timestamp')::timestamp DESC LIMIT $${params.length + 1} OFFSET $${params.length + 2}`;
+    query += ` ORDER BY COALESCE((content->'header'->>'timestamp')::timestamp, (content->>'timestamp')::timestamp) DESC LIMIT $${params.length + 1} OFFSET $${params.length + 2}`;
 
     const queryParams = [...params, limit, offset];
     const result = await pool.query(query, queryParams);
