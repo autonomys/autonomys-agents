@@ -4,49 +4,72 @@ import { Character } from '../../../config/characters.js';
 import { createOrchestratorRunner } from '../orchestrator/orchestratorWorkflow.js';
 import { createSlackTools } from '../../tools/slack/index.js';
 import { createSlackPrompts } from './prompts.js';
-import { LLMConfiguration } from '../../../services/llm/types.js';
 import { withApiLogger } from '../../../api/server.js';
 import { createLogger } from '../../../utils/logger.js';
 import { z } from 'zod';
 import { SlackAgentConfig, SlackAgentOptions } from './types.js';
 import { registerOrchestratorRunner } from '../registration.js';
-import { cleanMessageData } from '../orchestrator/cleanMessages.js';
+import {
+  createExperienceConfig,
+  createModelConfigurations,
+  createMonitoringConfig,
+  createPruningParameters,
+} from '../orchestrator/config.js';
+
 const logger = createLogger('slack-workflow');
 
-const defaultModelConfig: LLMConfiguration = {
-  provider: 'anthropic',
-  model: 'claude-3-5-sonnet-latest',
-  temperature: 0.5,
+// Slack-specific default configuration values
+const defaultSlackOptions = {
+  namespace: 'slack',
 };
 
-const defaultOptions: SlackAgentConfig = {
-  tools: [],
-  modelConfigurations: {
-    inputModelConfig: defaultModelConfig,
-    messageSummaryModelConfig: defaultModelConfig,
-    finishWorkflowModelConfig: defaultModelConfig,
-  },
-  saveExperiences: false,
-  monitoring: {
-    enabled: false,
-    messageCleaner: cleanMessageData,
-  },
-  recursionLimit: 100,
-};
-
-const createSlackAgentConfig = (options?: SlackAgentOptions): SlackAgentConfig => {
-  const modelConfigurations = {
-    ...defaultOptions.modelConfigurations,
-    ...options?.modelConfigurations,
-  };
-  const monitoring = {
-    ...defaultOptions.monitoring,
-    ...options?.monitoring,
+/**
+ * Creates a complete Slack agent configuration by extending the orchestrator configuration
+ */
+const createSlackAgentConfig = async (
+  slackToken: string,
+  character: Character,
+  options?: SlackAgentOptions,
+): Promise<SlackAgentConfig> => {
+  // Create a base config with Slack-specific fields
+  const baseConfig = {
+    namespace: options?.namespace ?? defaultSlackOptions.namespace,
+    recursionLimit: options?.recursionLimit ?? 100,
+    slackToken,
+    logger: options?.logger,
   };
 
-  return { ...defaultOptions, ...options, modelConfigurations, monitoring };
+  // Reuse the orchestrator's configuration utilities
+  const modelConfigurations = createModelConfigurations(options);
+  const experienceConfig = createExperienceConfig(options);
+
+  // Create a monitoring config without custom message cleaner
+  const monitoringConfig = createMonitoringConfig(options);
+
+  const pruningParameters = createPruningParameters(options);
+
+  // Get Slack-specific tools and prompts
+  const slackTools = await createSlackTools(slackToken);
+  const prompts = await createSlackPrompts(character);
+
+  // Combine all tools
+  const tools = [...slackTools, ...(options?.tools || [])];
+
+  // Return the complete configuration
+  return {
+    ...baseConfig,
+    modelConfigurations,
+    tools,
+    prompts,
+    pruningParameters,
+    experienceConfig,
+    monitoringConfig,
+  };
 };
 
+/**
+ * Creates a Slack agent tool that can be used by other agents
+ */
 export const createSlackAgent = (
   slackToken: string,
   character: Character,
@@ -62,21 +85,12 @@ export const createSlackAgent = (
     schema: z.object({ instructions: z.string().describe('Instructions for the workflow') }),
     func: async ({ instructions }: { instructions: string }) => {
       try {
-        const { tools, modelConfigurations, saveExperiences, monitoring, recursionLimit } =
-          createSlackAgentConfig(options);
+        const slackAgentConfig = await createSlackAgentConfig(slackToken, character, options);
         const messages = [new HumanMessage(instructions)];
-        const namespace = 'slack';
+        const { namespace } = slackAgentConfig;
 
-        const prompts = await createSlackPrompts(character);
-        const slackTools = await createSlackTools(slackToken);
         const runner = createOrchestratorRunner(character, {
-          modelConfigurations,
-          tools: [...slackTools, ...tools],
-          prompts,
-          namespace,
-          saveExperiences,
-          monitoring,
-          recursionLimit,
+          ...slackAgentConfig,
           ...withApiLogger(namespace),
         });
 

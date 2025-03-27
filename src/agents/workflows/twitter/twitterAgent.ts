@@ -5,49 +5,83 @@ import { TwitterApi } from '../../tools/twitter/types.js';
 import { createAllTwitterTools } from '../../tools/twitter/index.js';
 import { createOrchestratorRunner } from '../orchestrator/orchestratorWorkflow.js';
 import { createTwitterPrompts } from './prompts.js';
-import { LLMConfiguration } from '../../../services/llm/types.js';
 import { withApiLogger } from '../../../api/server.js';
 import { createLogger } from '../../../utils/logger.js';
 import { z } from 'zod';
 import { TwitterAgentConfig, TwitterAgentOptions } from './types.js';
 import { cleanTwitterMessageData } from './cleanMessages.js';
 import { registerOrchestratorRunner } from '../../workflows/registration.js';
+import {
+  createExperienceConfig,
+  createModelConfigurations,
+  createMonitoringConfig,
+  createPruningParameters,
+} from '../orchestrator/config.js';
+
 const logger = createLogger('twitter-workflow');
 
-const defaultModelConfig: LLMConfiguration = {
-  provider: 'anthropic',
-  model: 'claude-3-5-sonnet-latest',
-  temperature: 0.8,
-};
-
-const defaultOptions: TwitterAgentConfig = {
-  tools: [],
-  modelConfigurations: {
-    inputModelConfig: defaultModelConfig,
-    messageSummaryModelConfig: defaultModelConfig,
-    finishWorkflowModelConfig: defaultModelConfig,
-  },
+// Twitter-specific default configuration values
+const defaultTwitterOptions = {
   maxThreadDepth: 5,
   postTweets: false,
-  saveExperiences: false,
-  monitoring: {
-    enabled: false,
-    messageCleaner: cleanTwitterMessageData,
-  },
-  recursionLimit: 100,
+  namespace: 'twitter',
 };
 
-const createTwitterAgentConfig = (options?: TwitterAgentOptions): TwitterAgentConfig => {
-  const modelConfigurations = {
-    ...defaultOptions.modelConfigurations,
-    ...options?.modelConfigurations,
-  };
-  const monitoring = {
-    ...defaultOptions.monitoring,
-    ...options?.monitoring,
+/**
+ * Creates a complete Twitter agent configuration by extending the orchestrator configuration
+ */
+const createTwitterAgentConfig = async (
+  character: Character,
+  twitterApi: TwitterApi,
+  options?: TwitterAgentOptions,
+): Promise<TwitterAgentConfig> => {
+  // Create a base config with Twitter-specific fields
+  const baseConfig = {
+    namespace: options?.namespace ?? defaultTwitterOptions.namespace,
+    recursionLimit: options?.recursionLimit ?? 100,
+    postTweets: options?.postTweets ?? defaultTwitterOptions.postTweets,
+    maxThreadDepth: options?.maxThreadDepth ?? defaultTwitterOptions.maxThreadDepth,
+    logger: options?.logger,
   };
 
-  return { ...defaultOptions, ...options, modelConfigurations, monitoring };
+  const monitoringOptions = options?.monitoringConfig?.enabled
+    ? {
+        ...options.monitoringConfig,
+        messageCleaner: cleanTwitterMessageData,
+      }
+    : undefined;
+
+  // Reuse the orchestrator's configuration utilities
+  const modelConfigurations = createModelConfigurations(options);
+  const experienceConfig = createExperienceConfig(options);
+  const monitoringConfig = createMonitoringConfig({
+    ...options,
+    monitoringConfig: monitoringOptions,
+  });
+  const pruningParameters = createPruningParameters(options);
+
+  // Get Twitter-specific tools and prompts
+  const twitterTools = createAllTwitterTools(
+    twitterApi,
+    baseConfig.maxThreadDepth,
+    baseConfig.postTweets,
+  );
+
+  const prompts = await createTwitterPrompts(character, twitterApi.username);
+
+  // Combine all tools
+  const tools = [...twitterTools, ...(options?.tools || [])];
+
+  // Return the complete configuration
+  return {
+    ...baseConfig,
+    modelConfigurations,
+    tools,
+    prompts,
+    pruningParameters,
+    experienceConfig,
+    monitoringConfig,
+  };
 };
 
 export const createTwitterAgent = (
@@ -65,29 +99,11 @@ export const createTwitterAgent = (
     schema: z.object({ instructions: z.string().describe('Instructions for the workflow') }),
     func: async ({ instructions }: { instructions: string }) => {
       try {
-        const {
-          tools,
-          modelConfigurations,
-          postTweets,
-          maxThreadDepth,
-          saveExperiences,
-          monitoring,
-          recursionLimit,
-        } = createTwitterAgentConfig(options);
+        const twitterAgentConfig = await createTwitterAgentConfig(character, twitterApi, options);
         const messages = [new HumanMessage(instructions)];
-        const namespace = 'twitter';
-
-        const twitterTools = createAllTwitterTools(twitterApi, maxThreadDepth, postTweets);
-        const prompts = await createTwitterPrompts(character, twitterApi.username);
-
+        const { namespace } = twitterAgentConfig;
         const runner = createOrchestratorRunner(character, {
-          modelConfigurations,
-          tools: [...twitterTools, ...tools],
-          prompts,
-          namespace,
-          saveExperiences,
-          monitoring,
-          recursionLimit,
+          ...twitterAgentConfig,
           ...withApiLogger(namespace),
         });
 

@@ -5,10 +5,10 @@ import { validateMemorySignature } from './signature.js';
 
 const logger = createLogger('memory-validation');
 
-export async function validateMemoryMetadata(
+export const validateMemoryMetadata = async (
   api: any,
   cid: string,
-): Promise<{ isValid: boolean; agentName?: string }> {
+): Promise<{ isValid: boolean; agentName?: string }> => {
   try {
     const metadata = await getObjectMetadata(api, { cid });
 
@@ -47,9 +47,12 @@ export async function validateMemoryMetadata(
     }
     throw error;
   }
-}
+};
 
-export async function validateMemoryData(memoryData: any, agentAddress: string): Promise<boolean> {
+export const validateMemoryData = async (
+  memoryData: any,
+  agentAddress: string,
+): Promise<boolean> => {
   if (!memoryData || typeof memoryData !== 'object') {
     logger.warn('Memory rejected: Invalid memory data format', {
       type: typeof memoryData,
@@ -58,4 +61,4 @@ export async function validateMemoryData(memoryData: any, agentAddress: string):
   }
   logger.info('Verifying experience signature');
   return await validateMemorySignature(memoryData, agentAddress);
-}
+};

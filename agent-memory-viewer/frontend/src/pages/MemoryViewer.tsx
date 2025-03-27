@@ -15,6 +15,11 @@ function MemoryViewer() {
     if (error) return <Text color="red.500">Error loading memory: {error.message}</Text>
     if (!memory) return <Text>No Experience found</Text>
 
+    // Make it compatible for agent version after 0.4.0
+    const previousCid = memory.previousCid || memory.header?.previousCid
+    const agentVersion = memory.agentVersion || memory.header?.agentVersion
+    const memoryTimestamp = memory.timestamp || memory.header?.timestamp
+    
     return (
         <VStack spacing={6} align="stretch">
             {/* Navigation Bar */}
@@ -87,7 +92,7 @@ function MemoryViewer() {
                                 <HStack spacing={2}>
                                    
                                     <Text color="green.400" fontFamily="mono">
-                                        v{memory.agentVersion}
+                                        v{agentVersion}
                                     </Text>
                                 </HStack>
                             </VStack>
@@ -98,10 +103,10 @@ function MemoryViewer() {
                         {/* Timestamp and Links */}
                         <HStack justify="space-between" wrap="wrap" spacing={4}>
                             <HStack spacing={4}>
-                                {memory.previousCid && (
+                                {previousCid && (
                                     <Link
                                         as={RouterLink}
-                                        to={`/memory/${memory.previousCid}`}
+                                        to={`/memory/${previousCid}`}
                                         color="green.400"
                                         _hover={{ color: 'green.300' }}
                                     >
@@ -120,10 +125,10 @@ function MemoryViewer() {
                                     View in Explorer <ExternalLinkIcon mx="2px" />
                                 </Link>
                             </HStack>
-                            <Tooltip label={new Date(memory.timestamp).toLocaleString()}>
+                            <Tooltip label={new Date(memoryTimestamp).toLocaleString()}>
                                 <HStack color="gray.400">
                                     <TimeIcon />
-                                    <Text>{utcToLocalRelativeTime(memory.timestamp)}</Text>
+                                    <Text>{utcToLocalRelativeTime(memoryTimestamp)}</Text>
                                 </HStack>
                             </Tooltip>
                         </HStack>

@@ -3,6 +3,7 @@ import { ChatPromptTemplate } from '@langchain/core/prompts';
 import { ToolNode } from '@langchain/langgraph/prebuilt';
 import { LLMConfiguration } from '../../../services/llm/types.js';
 import { Logger } from 'winston';
+import { ExperienceManager } from '../../../blockchain/agentExperience/types.js';
 
 export type OrchestratorPrompts = {
   inputPrompt: ChatPromptTemplate;
@@ -16,15 +17,27 @@ export type ModelConfigurations = {
   finishWorkflowModelConfig: LLMConfiguration;
 };
 
-export type MonitoringOptions = {
-  enabled?: boolean;
-  messageCleaner?: (messages: BaseMessage[]) => unknown;
-};
+export type MonitoringConfig =
+  | {
+      enabled: true;
+      monitoringExperienceManager: ExperienceManager;
+      messageCleaner?: (messages: BaseMessage[]) => unknown;
+    }
+  | {
+      enabled: false;
+      monitoringExperienceManager?: never;
+      messageCleaner?: never;
+    };
 
-export type MonitoringConfig = {
-  enabled: boolean;
-  messageCleaner: (messages: BaseMessage[]) => unknown;
-};
+export type ExperienceConfig =
+  | {
+      saveExperiences: true;
+      experienceManager: ExperienceManager;
+    }
+  | {
+      saveExperiences: false;
+      experienceManager?: never;
+    };
 
 export type OrchestratorRunnerOptions = {
   modelConfigurations?: {
@@ -36,8 +49,8 @@ export type OrchestratorRunnerOptions = {
   prompts?: OrchestratorPrompts;
   namespace?: string;
   pruningParameters?: PruningParameters;
-  saveExperiences?: boolean;
-  monitoring?: MonitoringOptions;
+  experienceConfig?: ExperienceConfig;
+  monitoringConfig?: MonitoringConfig;
   recursionLimit?: number;
   logger?: Logger;
 };
@@ -48,8 +61,8 @@ export type OrchestratorConfig = {
   prompts: OrchestratorPrompts;
   namespace: string;
   pruningParameters: PruningParameters;
-  saveExperiences: boolean;
-  monitoring: MonitoringConfig;
+  experienceConfig: ExperienceConfig;
+  monitoringConfig: MonitoringConfig;
   recursionLimit: number;
   logger?: Logger;
 };

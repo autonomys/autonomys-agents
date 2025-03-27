@@ -1,27 +1,32 @@
-import { LLMConfiguration } from '../../../services/llm/types.js';
-import {
-  ModelConfigurations,
-  MonitoringConfig,
-  MonitoringOptions,
-  Tools,
-} from '../orchestrator/types.js';
+import { OrchestratorConfig, OrchestratorRunnerOptions } from '../orchestrator/types.js';
+import { GitHubToolsSubset } from '../../tools/github/index.js';
 
-export type GithubAgentOptions = {
-  tools?: Tools;
-  modelConfigurations?: {
-    inputModelConfig?: LLMConfiguration;
-    messageSummaryModelConfig?: LLMConfiguration;
-    finishWorkflowModelConfig?: LLMConfiguration;
-  };
-  saveExperiences?: boolean;
-  monitoring?: MonitoringOptions;
-  recursionLimit?: number;
+/**
+ * GitHub-specific options that extend the base orchestrator options
+ */
+export type GithubAgentOptions = OrchestratorRunnerOptions & {
+  /**
+   * GitHub token for authentication with GitHub API
+   */
+  githubToken?: string;
+
+  /**
+   * Subset of GitHub tools to use
+   */
+  toolsSubset?: GitHubToolsSubset;
 };
 
-export type GithubAgentConfig = {
-  tools: Tools;
-  modelConfigurations: ModelConfigurations;
-  saveExperiences: boolean;
-  monitoring: MonitoringConfig;
-  recursionLimit: number;
+/**
+ * GitHub agent config that extends the base orchestrator config
+ */
+export type GithubAgentConfig = OrchestratorConfig & {
+  /**
+   * GitHub token for authentication with GitHub API
+   */
+  githubToken: string;
+
+  /**
+   * Subset of GitHub tools to use
+   */
+  toolsSubset: GitHubToolsSubset;
 };

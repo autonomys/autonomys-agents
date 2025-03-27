@@ -6,7 +6,7 @@ import { config } from '../config/index.js';
 
 const logger = createLogger('resurrection');
 
-export async function resurrection() {
+export const resurrection = async () => {
   logger.info('Starting resurrection');
 
   // Process resurrection for each configured agent
@@ -19,9 +19,9 @@ export async function resurrection() {
       logger.error(`Error during resurrection for agent ${agent.username}:`, error);
     }
   }
-}
+};
 
-async function saveMemoryBatch(memories: { hash: string; data: any }[], agentName: string) {
+const saveMemoryBatch = async (memories: { hash: string; data: any }[], agentName: string) => {
   for (let i = memories.length - 1; i >= 0; i--) {
     const { hash, data } = memories[i];
     try {
@@ -35,9 +35,9 @@ async function saveMemoryBatch(memories: { hash: string; data: any }[], agentNam
       });
     }
   }
-}
+};
 
-async function processResurrection(startHash: string, agentName: string) {
+const processResurrection = async (startHash: string, agentName: string) => {
   const BATCH_SIZE = 10;
   let currentBatch: { hash: string; data: any }[] = [];
   let hash = startHash;
@@ -93,4 +93,4 @@ async function processResurrection(startHash: string, agentName: string) {
     agent: agentName,
     memoriesProcessed: totalProcessed,
   });
-}
+};

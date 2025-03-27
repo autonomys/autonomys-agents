@@ -6,7 +6,7 @@ const logger = createLogger('websocket');
 
 let wss: WebSocketServer | null = null;
 
-export function createWebSocketServer() {
+export const createWebSocketServer = () => {
   if (wss) {
     logger.info('WebSocket server already exists, closing...');
     wss.close(() => {
@@ -42,11 +42,11 @@ export function createWebSocketServer() {
   });
 
   return wss;
-}
+};
 
 const clients = new Set<WebSocket>();
 
-export function broadcastNewMemory(memory: any) {
+export const broadcastNewMemory = (memory: any) => {
   if (!wss) return;
 
   clients.forEach(client => {
@@ -59,9 +59,9 @@ export function broadcastNewMemory(memory: any) {
       );
     }
   });
-}
+};
 
-export function closeWebSocketServer() {
+export const closeWebSocketServer = () => {
   return new Promise<void>(resolve => {
     if (!wss) {
       resolve();
@@ -74,4 +74,4 @@ export function closeWebSocketServer() {
       resolve();
     });
   });
-}
+};
