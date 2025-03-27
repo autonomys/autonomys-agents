@@ -18,7 +18,7 @@ const isVersionLessThanOrEqual = (version1: string, version2: string): boolean =
   }
 
   return true; // Equal versions should return true for "less than or equal"
-}
+};
 
 export const validateMemorySignature = async (
   memoryData: any,
@@ -97,7 +97,7 @@ export const validateMemorySignature = async (
     });
     return false;
   }
-}
+};
 
 const verifySignature = async (
   messageObject: any,
@@ -128,4 +128,4 @@ const verifySignature = async (
 
   logger.info('Signature verified successfully');
   return true;
-}
+};

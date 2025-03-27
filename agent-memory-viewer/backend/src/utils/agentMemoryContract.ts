@@ -218,14 +218,14 @@ class AgentWatcher {
   }
 }
 
-function hashToCid(hash: Uint8Array): string {
+const hashToCid = (hash: Uint8Array): string => {
   const cid = cidFromBlakeHash(Buffer.from(hash));
   return cid.toString();
-}
+};
 
-export async function watchMemoryHashUpdates(
+export const watchMemoryHashUpdates = async (
   callback: (agent: string, cid: string) => Promise<void>,
-): Promise<() => Promise<void>> {
+): Promise<() => Promise<void>> => {
   const watchers = new Map<string, AgentWatcher>();
 
   // Create a watcher for each agent
@@ -243,9 +243,9 @@ export async function watchMemoryHashUpdates(
     watchers.clear();
     logger.info('All memory watchers stopped');
   };
-}
+};
 
-export async function getLastMemoryHash(agentAddress: string): Promise<string> {
+export const getLastMemoryHash = async (agentAddress: string): Promise<string> => {
   const provider = new ethers.WebSocketProvider(config.WS_RPC_URL);
   const wallet = ethers.Wallet.createRandom(provider);
   const contract = new Contract(CONTRACT_ADDRESS, MEMORY_ABI, wallet);
@@ -256,4 +256,4 @@ export async function getLastMemoryHash(agentAddress: string): Promise<string> {
   } finally {
     await provider.destroy();
   }
-}
+};

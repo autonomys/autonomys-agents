@@ -80,7 +80,7 @@ const main = async () => {
     await closeWebSocketServer();
     process.exit(1);
   }
-}
+};
 
 main().catch(async error => {
   logger.error('Fatal error:', error);
