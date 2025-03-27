@@ -8,7 +8,7 @@ const logger = createLogger('migration');
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-async function runMigration() {
+const runMigration = async () => {
   try {
     const migrationPath = path.join(__dirname, '../db/migrations/001_add_agent_name.sql');
     const migration = await fs.readFile(migrationPath, 'utf8');
@@ -19,6 +19,6 @@ async function runMigration() {
     logger.error('Migration failed:', error);
     throw error;
   }
-}
+};
 
 runMigration().catch(console.error);
