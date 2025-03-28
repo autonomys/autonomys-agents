@@ -63,11 +63,13 @@ deploy_package_registry() {
             --rpc-url $rpc_url \
             --private-key $private_key \
             --evm-version $evm_version \
+            --via-ir \
             --broadcast
     else
         forge script script/AutonomysPackageRegistry.s.sol:DeployScript \
             --rpc-url $rpc_url \
             --private-key $private_key \
+            --via-ir \
             --broadcast
     fi
 }
