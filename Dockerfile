@@ -89,7 +89,9 @@ echo "Starting agent with character: $CHARACTER_NAME"\n\
 \n\
 # Load the character configuration\n\
 if [ -f /app/characters/$CHARACTER_NAME/config/.env ]; then\n\
-  export $(grep -v "^#" /app/characters/$CHARACTER_NAME/config/.env | xargs -0)\n\
+  set -a\n\
+  . /app/characters/$CHARACTER_NAME/config/.env\n\
+  set +a\n\
 fi\n\
 \n\
 # Ensure character directories exist and are properly secured\n\
