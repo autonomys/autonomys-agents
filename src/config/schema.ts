@@ -156,4 +156,5 @@ export const configSchema = z.object({
   SERPAPI_API_KEY: SERPAPI_API_KEY,
   NODE_ENV: z.enum(['development', 'production', 'test']),
   API_PORT: z.number().int().positive().default(3001),
+  ENABLE_API: z.boolean().default(true),
 });

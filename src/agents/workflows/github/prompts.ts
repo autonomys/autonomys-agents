@@ -1,7 +1,8 @@
 import { Character } from '../../../config/characters.js';
 import { createPrompts } from '../orchestrator/prompts.js';
+import { OrchestratorPrompts } from '../orchestrator/types.js';
 
-export const createGithubPrompts = async (character: Character) => {
+export const createGithubPrompts = async (character: Character): Promise<OrchestratorPrompts> => {
   const customInputInstructions = `
     - **IMPORTANT**: You have to take ACTIONS after data gathering. Fetching issues/PRs is data gathering NOT an action! Actions are creating/commenting on issues, reacting to comments, etc.
     - Before taking any action, always check existing context using appropriate search and list tools.

@@ -1,28 +1,21 @@
-import { LLMConfiguration } from '../../../services/llm/types.js';
-import {
-  ModelConfigurations,
-  MonitoringConfig,
-  MonitoringOptions,
-  Tools,
-} from '../orchestrator/types.js';
+import { OrchestratorConfig, OrchestratorRunnerOptions } from '../orchestrator/types.js';
 
-export type SlackAgentOptions = {
-  tools?: Tools;
-  modelConfigurations?: {
-    inputModelConfig?: LLMConfiguration;
-    messageSummaryModelConfig?: LLMConfiguration;
-    finishWorkflowModelConfig?: LLMConfiguration;
-  };
-  postTweets?: boolean;
-  saveExperiences?: boolean;
-  monitoring?: MonitoringOptions;
-  recursionLimit?: number;
+/**
+ * Slack-specific options that extend the base orchestrator options
+ */
+export type SlackAgentOptions = OrchestratorRunnerOptions & {
+  /**
+   * Slack token for authentication with Slack API
+   */
+  slackToken?: string;
 };
 
-export type SlackAgentConfig = {
-  tools: Tools;
-  modelConfigurations: ModelConfigurations;
-  saveExperiences: boolean;
-  monitoring: MonitoringConfig;
-  recursionLimit: number;
+/**
+ * Slack agent config that extends the base orchestrator config
+ */
+export type SlackAgentConfig = OrchestratorConfig & {
+  /**
+   * Slack token for authentication with Slack API
+   */
+  slackToken: string;
 };

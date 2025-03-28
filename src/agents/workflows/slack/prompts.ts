@@ -1,7 +1,8 @@
 import { Character } from '../../../config/characters.js';
 import { createPrompts } from '../orchestrator/prompts.js';
+import { OrchestratorPrompts } from '../orchestrator/types.js';
 
-export const createSlackPrompts = async (character: Character) => {
+export const createSlackPrompts = async (character: Character): Promise<OrchestratorPrompts> => {
   const customInputInstructions = `
     - **IMPORTANT**: You have to take ACTIONS after data gathering. Fetching messages is data gathering step NOT an action! Actions are the ones you take like posting a message, reacting to a message, etc.
     - In order to gain context you should check your recent activity in the vector database.

@@ -1,14 +1,14 @@
 import { DynamicStructuredTool } from '@langchain/core/tools';
 import { z } from 'zod';
-import { uploadToDsn } from '../../../blockchain/autoDrive/autoDriveUpload.js';
 import { createLogger } from '../../../utils/logger.js';
 import { VectorDB } from '../../../services/vectorDb/VectorDB.js';
+import { ExperienceManager } from '../../../blockchain/agentExperience/types.js';
 
-export const logger = createLogger('auto-drive-tools');
+export const logger = createLogger('agent-experience-tools');
 
 export const createSaveExperienceTool = (
-  saveExperiences: boolean = false,
   updateVectorDb: (data: unknown) => Promise<boolean>,
+  experienceManager?: ExperienceManager,
 ) =>
   new DynamicStructuredTool({
     name: 'save_experience',
@@ -33,7 +33,13 @@ export const createSaveExperienceTool = (
     Note: The field names shown are examples only. You may structure the data object with any relevant field names that best describe your experience data, as long as it's provided within the "data" property.
     `,
     schema: z.object({
-      data: z.any(),
+      data: z.record(z.string(), z.any()).describe(
+        `
+        A JSON object with any key-value pairs.
+        The keys are strings that describe the type of data being stored.
+        The values are the actual data being stored.
+        `,
+      ),
     }),
     func: async ({ data }) => {
       try {
@@ -45,14 +51,14 @@ export const createSaveExperienceTool = (
         } catch (error) {
           logger.error('Error updating experiences VectorDB:', error);
         }
-        if (saveExperiences) {
-          const upload: { success: boolean; cid: string; previousCid: string | null } =
-            await uploadToDsn(data);
-          logger.info('Uploading data to DSN - Upload info:', JSON.stringify(upload, null, 2));
+        if (experienceManager) {
+          const { cid, previousCid, evmHash } = await experienceManager.saveExperience(data);
+          logger.info('Uploaded data to DSN - Upload info:', { cid, previousCid, evmHash });
           return {
             success: true,
-            cid: upload.cid,
-            previousCid: upload.previousCid,
+            cid,
+            previousCid,
+            evmHash,
             message: 'Uploaded data to DSN',
           };
         }
@@ -206,14 +212,16 @@ export const createExperienceVectorDbQueryContentTool = (
     },
   });
 
-export const createAgentExperienceTools = (saveExperiences: boolean, vectorDb: VectorDB) => {
+export const createAgentExperienceTools = (
+  vectorDb: VectorDB,
+  experienceManager?: ExperienceManager,
+) => {
   const search = (params: { query: string; sqlFilter?: string; limit?: number }) =>
     vectorDb.search(params);
   const queryContent = (sqlQuery: string) => vectorDb.queryContent(sqlQuery);
   const updateVectorDb = (data: unknown) => vectorDb.insert(JSON.stringify(data));
-
   return [
-    createSaveExperienceTool(saveExperiences, updateVectorDb),
+    createSaveExperienceTool(updateVectorDb, experienceManager),
     createExperienceVectorDbSearchTool(search),
     createExperienceVectorDbQueryContentTool(queryContent),
   ];

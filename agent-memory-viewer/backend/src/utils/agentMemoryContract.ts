@@ -54,14 +54,14 @@ class AgentWatcher {
         const timeoutPromise = new Promise((_, reject) => {
           setTimeout(() => reject(new Error('Health check timeout')), 5000);
         });
-        
+
         const healthCheckPromise = this.contract.getLastMemoryHash(this.agentAddress);
-        
+
         await Promise.race([healthCheckPromise, timeoutPromise]);
         logger.info(`Health check passed for agent ${this.agentName}`);
       } catch (error) {
         logger.warn(`Health check failed for agent ${this.agentName}, reconnecting...`, {
-          error: error instanceof Error ? error.message : String(error)
+          error: error instanceof Error ? error.message : String(error),
         });
         this.handleConnectionError(error as Error);
       }
@@ -83,34 +83,36 @@ class AgentWatcher {
     const currentRetryCount = Math.min(this.retryCount, MAX_RETRY_COUNT);
     const delay = Math.min(
       RECONNECT_DELAY * Math.pow(2, currentRetryCount),
-      60000 // Max 1 minute delay
+      60000, // Max 1 minute delay
     );
-    
+
     this.retryCount++;
 
-    logger.info(`Attempting to reconnect for agent ${this.agentName} (attempt ${this.retryCount}, delay: ${delay}ms)`);
+    logger.info(
+      `Attempting to reconnect for agent ${this.agentName} (attempt ${this.retryCount}, delay: ${delay}ms)`,
+    );
 
     this.reconnectTimeout = setTimeout(async () => {
       try {
         await this.stop();
-        
+
         // Clear any existing state
         if (this.healthCheckInterval) {
           clearInterval(this.healthCheckInterval);
           this.healthCheckInterval = undefined;
         }
-        
+
         // Reinitialize everything
         await this.initializeConnection();
         await this.start();
-        
+
         this.retryCount = 0; // Reset retry count on successful reconnection
         logger.info(`Successfully reconnected for agent ${this.agentName}`);
       } catch (error) {
         logger.error(`Reconnection failed for agent ${this.agentName}:`, error);
         // Ensure we're in a clean state before trying again
-        await this.stop().catch(stopError => 
-          logger.error(`Error stopping during reconnection for ${this.agentName}:`, stopError)
+        await this.stop().catch(stopError =>
+          logger.error(`Error stopping during reconnection for ${this.agentName}:`, stopError),
         );
         this.reconnect(); // Schedule next reconnection attempt
       }
@@ -216,14 +218,14 @@ class AgentWatcher {
   }
 }
 
-function hashToCid(hash: Uint8Array): string {
+const hashToCid = (hash: Uint8Array): string => {
   const cid = cidFromBlakeHash(Buffer.from(hash));
   return cid.toString();
-}
+};
 
-export async function watchMemoryHashUpdates(
+export const watchMemoryHashUpdates = async (
   callback: (agent: string, cid: string) => Promise<void>,
-): Promise<() => Promise<void>> {
+): Promise<() => Promise<void>> => {
   const watchers = new Map<string, AgentWatcher>();
 
   // Create a watcher for each agent
@@ -241,9 +243,9 @@ export async function watchMemoryHashUpdates(
     watchers.clear();
     logger.info('All memory watchers stopped');
   };
-}
+};
 
-export async function getLastMemoryHash(agentAddress: string): Promise<string> {
+export const getLastMemoryHash = async (agentAddress: string): Promise<string> => {
   const provider = new ethers.WebSocketProvider(config.WS_RPC_URL);
   const wallet = ethers.Wallet.createRandom(provider);
   const contract = new Contract(CONTRACT_ADDRESS, MEMORY_ABI, wallet);
@@ -254,4 +256,4 @@ export async function getLastMemoryHash(agentAddress: string): Promise<string> {
   } finally {
     await provider.destroy();
   }
-}
+};

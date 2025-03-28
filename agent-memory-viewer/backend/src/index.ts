@@ -22,7 +22,7 @@ process.on('unhandledRejection', async (reason, promise) => {
   process.exit(1);
 });
 
-async function main() {
+const main = async () => {
   try {
     await initialize();
     resurrection();
@@ -39,7 +39,7 @@ async function main() {
             const savedMemory = await saveMemoryRecord(
               cid,
               memory?.memoryData,
-              memory?.memoryData?.previousCid,
+              memory?.memoryData?.previousCid || memory?.memoryData?.header?.previousCid,
               agentConfig?.username || 'unknown_agent',
             );
             logger.info('Memory processed successfully', {
@@ -80,7 +80,7 @@ async function main() {
     await closeWebSocketServer();
     process.exit(1);
   }
-}
+};
 
 main().catch(async error => {
   logger.error('Fatal error:', error);

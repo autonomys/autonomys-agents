@@ -33,9 +33,11 @@ const copyCharacterFile = async (characterName: string): Promise<void> => {
 
 const start = async () => {
   const characterName = process.argv[2];
+  const isHeadless = process.argv[3] === '--headless';
 
   if (!characterName) {
     console.error('Please provide a character name');
+    console.error('Usage: yarn start <character-name> [--headless]');
     process.exit(1);
   }
 
@@ -46,8 +48,13 @@ const start = async () => {
     // Run copy-character script
     await copyCharacterFile(characterName);
 
-    // Run the main program
-    const mainProcess = spawn('node', ['dist/index.js', characterName], { stdio: 'inherit' });
+    const nodeArgs = ['dist/index.js', characterName];
+    if (isHeadless) {
+      nodeArgs.push('--headless');
+    }
+
+    // Run the main program with all arguments
+    const mainProcess = spawn('node', nodeArgs, { stdio: 'inherit' });
 
     mainProcess.on('error', err => {
       console.error('Failed to start main process:', err);
