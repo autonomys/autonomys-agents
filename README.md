@@ -29,6 +29,55 @@ Autonomys Agents is an **EXPERIMENTAL** framework for building AI agents. Curren
    - For dev purposes in watch mode: `yarn dev <your-character-name>`
    - For production build and run: `yarn start <your-character-name>`
 
+## Docker Deployment
+
+You can also run your agents using Docker. This provides isolation and makes it easy to run multiple agents simultaneously.
+
+### Prerequisites
+- Docker and Docker Compose installed on your system
+- Character configuration set up (follow steps 2-3 from Getting Started)
+
+### Running with Docker
+
+1. Generate your character's docker-compose file:
+
+   First:
+   ```bash
+   chmod +x ./generate-compose.sh
+   ```
+   
+   Then:
+   ```bash
+   ./generate-compose.sh <your-character-name> [HOST_PORT] [API_PORT]
+   ```
+   Example:
+   ```bash
+   # Run Alice on port 3011
+   ./generate-compose.sh Alice 3011 3011
+   
+   # Run Bob on port 3012
+   ./generate-compose.sh Bob 3012 3011
+   ```
+
+2. The script will generate a `docker-compose-{character-name}.yml` file and show you the available commands:
+   - Build and start the container
+   - Stop and remove the container
+   - View container logs
+   - Access container shell
+
+### Running Multiple Agents
+
+You can run multiple agents simultaneously by:
+1. Creating different character configurations
+2. Generating separate compose files for each character
+3. Using different `HOST_PORT` for each agent
+
+Each agent will:
+- Have its own isolated environment
+- Use its own character configuration
+- Store data in separate volumes
+- Be accessible on its designated port
+
 ## Interactive Web CLI Interface
 
 A modern web-based interface for interacting with your agent. To start:
