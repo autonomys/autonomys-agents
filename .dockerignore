@@ -13,7 +13,6 @@ dist
 # Directories not needed for runtime
 agent-contracts
 agent-memory-viewer
-agent-pkg
 tests
 examples
 .github
