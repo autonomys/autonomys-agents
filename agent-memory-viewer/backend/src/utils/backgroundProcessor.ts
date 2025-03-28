@@ -4,7 +4,7 @@ import { createLogger } from './logger.js';
 
 const logger = createLogger('background-processor');
 
-export async function processPreviousCids(startCid: string, agentName: string) {
+export const processPreviousCids = async (startCid: string, agentName: string) => {
   // Run in next tick to not block the main thread
   process.nextTick(async () => {
     try {
@@ -51,4 +51,4 @@ export async function processPreviousCids(startCid: string, agentName: string) {
       });
     }
   });
-}
+};

@@ -20,11 +20,14 @@ try {
 }
 
 export const characterName = process.argv[2];
+
 if (!characterName) {
   console.error('Please provide a character name');
+  console.error('Usage: yarn start <character-name> [--headless]');
   // Force immediate exit of the entire process group
   process.kill(0, 'SIGKILL');
 }
+const isHeadless = process.argv[3] === '--headless';
 
 const characterConfig = loadCharacter(characterName);
 // Load root .env
@@ -163,6 +166,8 @@ export const config = (() => {
           ? process.env.CORS_ALLOWED_ORIGINS.split(',')
           : ['*'],
       },
+
+      ENABLE_API: !isHeadless,
     };
     return configSchema.parse(rawConfig);
   } catch (error) {

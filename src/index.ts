@@ -1,5 +1,4 @@
 import { createLogger } from './utils/logger.js';
-import { validateLocalHash } from './blockchain/localHashStorage.js';
 import { orchestratorRunner } from './agent.js';
 import { startTaskExecutor } from './agents/workflows/orchestrator/scheduler/taskExecutor.js';
 import { closeAllVectorDBs } from './services/vectorDb/vectorDBPool.js';
@@ -19,7 +18,6 @@ process.on('SIGTERM', () => {
 
 const main = async () => {
   try {
-    await validateLocalHash();
     logger.info('Initializing orchestrator runner...');
     const runner = await orchestratorRunner();
 

@@ -2,12 +2,16 @@ import { join } from 'path';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs';
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
-import { getLastMemoryCid } from '../src/blockchain/autoEvm/agentMemoryContract.js';
-import { download } from '../src/blockchain/autoDrive/autoDriveDownload.js';
-import { config } from '../src/config/index.js';
+import { createExperienceManager } from '../src/blockchain/agentExperience/index.js';
+import { characterName, config } from '../src/config/index.js';
 import { createLogger } from '../src/utils/logger.js';
 import { VectorDB } from '../src/services/vectorDb/VectorDB.js';
 import { getVectorDB, closeVectorDB } from '../src/services/vectorDb/vectorDBPool.js';
+import {
+  ExperienceManager,
+  AgentExperience,
+  AgentExperienceV0,
+} from '../src/blockchain/agentExperience/types.js';
 
 const logger = createLogger('resurrect-cli');
 let vectorDb: VectorDB;
@@ -53,6 +57,7 @@ if (process.argv.includes('--help') || process.argv.includes('-h')) {
   setupYargs().showHelp();
   process.exit(0);
 }
+const isAgentExperience = (x: any): x is AgentExperience => 'header' in x;
 
 const getLastProcessedCid = (cidTrackingFile: string): string | null => {
   try {
@@ -77,13 +82,14 @@ const saveLastProcessedCid = (cidTrackingFile: string, cid: string): void => {
 };
 
 const processMemory = async (
-  memory: any,
+  memory: AgentExperience | AgentExperienceV0,
   cid: string,
   outputDir: string,
   vectorDb: VectorDB,
 ): Promise<void> => {
   try {
-    await vectorDb.insert(JSON.stringify(memory), memory.timestamp);
+    const timestamp = isAgentExperience(memory) ? memory.header.timestamp : memory.timestamp;
+    await vectorDb.insert(JSON.stringify(memory), timestamp);
     const filename = `${cid}.json`;
     const filepath = join(outputDir, filename);
     writeFileSync(filepath, JSON.stringify(memory, null, 2));
@@ -100,6 +106,7 @@ const fetchMemoryChain = async (
   memoriesToFetch: number | null,
   outputDir: string,
   vectorDb: VectorDB,
+  experienceManager: ExperienceManager,
   failedCid: Set<string> = new Set(),
   processedCount = 0,
 ): Promise<{ processedCount: number; failedCid: Set<string> }> => {
@@ -112,16 +119,21 @@ const fetchMemoryChain = async (
   }
 
   try {
-    const content = await download(currentCid);
+    const content = await experienceManager.retrieveExperience(currentCid);
     await processMemory(content, currentCid, outputDir, vectorDb);
     processedCount++;
 
-    if (content.previousCid) {
+    const previousCid = isAgentExperience(content)
+      ? content.header.previousCid
+      : content.previousCid;
+
+    if (previousCid) {
       return fetchMemoryChain(
-        content.previousCid,
+        previousCid,
         memoriesToFetch,
         outputDir,
         vectorDb,
+        experienceManager,
         failedCid,
         processedCount,
       );
@@ -175,8 +187,41 @@ const run = async () => {
         ? `Starting memory resurrection (fetching ${options.memoriesToFetch} memories)...`
         : 'Starting memory resurrection (fetching all memories)...',
     );
+    const character = config.characterConfig;
 
-    const latestCid = await getLastMemoryCid();
+    const experienceManager =
+      config.blockchainConfig.PRIVATE_KEY &&
+      config.blockchainConfig.RPC_URL &&
+      config.blockchainConfig.CONTRACT_ADDRESS &&
+      config.autoDriveConfig.AUTO_DRIVE_API_KEY
+        ? await createExperienceManager({
+            autoDriveApiOptions: {
+              apiKey: config.autoDriveConfig.AUTO_DRIVE_API_KEY,
+              network: config.autoDriveConfig.AUTO_DRIVE_NETWORK,
+            },
+            uploadOptions: {
+              compression: true,
+              password: config.autoDriveConfig.AUTO_DRIVE_ENCRYPTION_PASSWORD,
+            },
+            walletOptions: {
+              privateKey: config.blockchainConfig.PRIVATE_KEY,
+              rpcUrl: config.blockchainConfig.RPC_URL,
+              contractAddress: config.blockchainConfig.CONTRACT_ADDRESS,
+            },
+            agentOptions: {
+              agentName: characterName,
+              agentPath: character.characterPath,
+            },
+          })
+        : undefined;
+
+    if (!experienceManager) {
+      logger.error('Missing configuration for experience manager');
+      await cleanupOnApplicationClose();
+      return;
+    }
+
+    const latestCid = await experienceManager.cidManager.getLastMemoryCid();
     if (!latestCid) {
       logger.info('No memories found (empty CID)');
       return;
@@ -202,6 +247,7 @@ const run = async () => {
       options.memoriesToFetch,
       options.outputDir,
       vectorDb,
+      experienceManager,
     );
 
     saveLastProcessedCid(cidTrackingFile, latestCid);

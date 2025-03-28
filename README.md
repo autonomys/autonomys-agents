@@ -28,6 +28,9 @@ Autonomys Agents is an **EXPERIMENTAL** framework for building AI agents. Curren
 5. Run your character:
    - For dev purposes in watch mode: `yarn dev <your-character-name>`
    - For production build and run: `yarn start <your-character-name>`
+6. Run your character in headless mode (without API):
+   - For dev purposes in watch mode: `yarn dev <your-character-name> --headless`
+   - For production build and run: `yarn start <your-character-name> --headless`
 
 ## Docker Deployment
 

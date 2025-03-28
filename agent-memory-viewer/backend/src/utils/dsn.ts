@@ -9,14 +9,14 @@ const logger = createLogger('dsn');
 const MAX_RETRIES = 15;
 const INITIAL_RETRY_DELAY = 10000;
 
-async function delay(ms: number) {
+const delay = (ms: number) => {
   return new Promise(resolve => setTimeout(resolve, ms));
-}
+};
 
-export async function downloadMemory(
+export const downloadMemory = async (
   cid: string,
   retryCount = 0,
-): Promise<{ memoryData: any; agentName: string } | null> {
+): Promise<{ memoryData: any; agentName: string } | null> => {
   logger.info(`Checking memory metadata: ${cid}`);
   try {
     const api = createAutoDriveApi({
@@ -91,4 +91,4 @@ export async function downloadMemory(
     });
     throw error;
   }
-}
+};
