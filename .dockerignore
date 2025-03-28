@@ -14,7 +14,6 @@ dist
 agent-contracts
 agent-memory-viewer
 agent-pkg
-characters
 tests
 examples
 .github
@@ -26,17 +25,8 @@ examples
 *.tmp
 *~
 
-# Environment variables and secrets
-.env
-.env.*
-cookies.json
-.cookies
-
 # Local development configuration
 .vscode
 .idea
 *.log
 logs
-
-# Only include the character.example directory
-!characters/character.example
