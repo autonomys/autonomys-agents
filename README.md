@@ -37,7 +37,8 @@ Autonomys Agents is an **EXPERIMENTAL** framework for building AI agents. Curren
 You can also run your agents using Docker. This provides isolation and makes it easy to run multiple agents simultaneously.
 
 ### Prerequisites
-- Docker and Docker Compose installed on your system
+- Docker installed on your system ([Installation Guide](https://docs.docker.com/get-docker/))
+- Docker Compose Plugin required ([Compose Plugin Installation](https://docs.docker.com/compose/install/))
 - Character configuration set up (follow steps 2-3 from Getting Started)
 
 ### Running with Docker
@@ -63,10 +64,22 @@ You can also run your agents using Docker. This provides isolation and makes it 
    ```
 
 2. The script will generate a `docker-compose-{character-name}.yml` file and show you the available commands:
-   - Build and start the container
-   - Stop and remove the container
-   - View container logs
-   - Access container shell
+   - Build and start the container: 
+     ```bash
+     docker compose -f docker-compose-{character-name}.yml up -d
+     ```
+   - Stop and remove the container: 
+     ```bash
+     docker compose -f docker-compose-{character-name}.yml down
+     ```
+   - View container logs: 
+     ```bash
+     docker compose -f docker-compose-{character-name}.yml logs -f
+     ```
+   - Access container shell: 
+     ```bash
+     docker exec -it autonomys-agent-{character-name} bash
+     ```
 
 ### Running Multiple Agents
 
