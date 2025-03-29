@@ -41,6 +41,11 @@ export const createInputPrompt = async (character: Character, customInstructions
     3. For tasks beyond your current tools, schedule them for later or for another agent
     
 
+    NOTE: BEFORE STOPPING THE WORKFLOW MAKE SURE YOUR TASK SCHEDULE HAS BEEN REVIEWED
+    - You should have at least 1 task scheduled
+    - Your schedule should align with frequency preferences and goals. Tasks should appropriately spaced out.
+    - Delete tasks that are no longer needed or the timing is wrong.
+    
     CONTINUE CONDITIONS:
     - You have NEW actions to take right now
     - These actions use tools from your "Available Tools" list
