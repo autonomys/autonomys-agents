@@ -1,7 +1,7 @@
 import fs from 'fs/promises';
 import { ToolMetadata, ToolRegistry } from '../../../types/index.js';
 import {
-  getAllToolNames,
+  getAllToolNameHashes,
   getLatestToolVersion,
   getToolInfo,
   getToolVersion,
@@ -16,7 +16,7 @@ const fetchRegistryFromBlockchain = async (): Promise<ToolRegistry> => {
   try {
     console.log(chalk.blue('Fetching registry from blockchain...'));
 
-    const toolNames = await getAllToolNames();
+    const toolNames = await getAllToolNameHashes();
 
     const registry: ToolRegistry = {
       version: '1.0.0',

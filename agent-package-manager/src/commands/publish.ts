@@ -21,8 +21,12 @@ const publish = async (toolPath: string, options: PublishOptions): Promise<Comma
 
     if (options.registry !== false) {
       spinner.text = 'Updating registry...';
-      await updateRegistry(metadata, metadataCid);
-      spinner.succeed(`Successfully published ${metadata.name}`);
+      const { txHash, error } = await updateRegistry(metadata, metadataCid);
+      if (error) {
+        spinner.fail(`Failed to update registry: ${error}`);
+        return { success: false, message: `Failed to update registry: ${error}` };
+      }
+      spinner.succeed(`Successfully published ${metadata.name}, txHash: ${txHash}`);
       console.log(chalk.green(`\nTool published with CID: ${cid}`));
     } else {
       spinner.succeed(`Successfully uploaded ${metadata.name} to DSN (skipped registry update)`);

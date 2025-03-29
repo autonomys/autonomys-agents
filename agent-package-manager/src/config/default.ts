@@ -1,7 +1,7 @@
 export const DEFAULT_CONFIG = {
   autoDriveNetwork: 'mainnet',
   taurusRpcUrl: 'https://auto-evm.taurus.autonomys.xyz/ws',
-  packageRegistryAddress: '0xE90A8DceD16255Ba6D589808ccb2E50a74C80A8c',
+  packageRegistryAddress: '0x2fFD268a21BBEce10Ead66897b70Fa970E51D932',
   autoSaveCredentials: true,
 };
 
