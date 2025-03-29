@@ -6,30 +6,30 @@ import { getHashFromCid } from './utils.js';
 import AutonomysPackageRegistry from './AutonomysPackageRegistry.abi.json' with { type: 'json' };
 import { getWalletAddress } from './utils.js';
 import {
-  Version,
   ContractError,
+  ContractErrorType,
   ToolInfo,
-  ToolVersionInfo,
   ToolLatestVersionInfo,
-  isCustomError,
-  getCustomErrorFromData,
+  ToolVersionInfo,
+  Version,
 } from './types.js';
+import { getErrorType } from './errorHandler.js';
 
 // Convert string version to Version struct
-function parseVersion(versionStr: string): Version {
+const parseVersion = (versionStr: string): Version => {
   const [major, minor, patch] = versionStr.split('.').map(Number);
   return { major, minor, patch };
-}
+};
 
 // Compute nameHash from string using keccak256
-function computeNameHash(name: string): string {
+const computeNameHash = (name: string): string => {
   return ethers.keccak256(ethers.toUtf8Bytes(name));
-}
+};
 
 // Convert Version struct to string
-function versionToString(version: Version): string {
+const versionToString = (version: Version): string => {
   return `${version.major}.${version.minor}.${version.patch}`;
-}
+};
 
 const getRegistryContract = async (readOnly: boolean = false) => {
   try {
@@ -78,35 +78,34 @@ const registerTool = async (
     return receipt.hash;
   } catch (error: unknown) {
     const contractError = error as ContractError;
+    const errorType = getErrorType(contractError);
 
-    // General error handling with our utility functions
-    const customError = getCustomErrorFromData(contractError);
+    // Handle specific error types with appropriate messages
+    switch (errorType) {
+      case ContractErrorType.VersionAlreadyExists:
+        console.error(chalk.red(`Version ${version} already exists for tool ${name}.`));
+        throw new Error(`Version ${version} already exists for tool ${name}.`);
 
-    if (isCustomError(contractError, 'VersionAlreadyExists')) {
-      console.error(chalk.red(`Version ${version} already exists for tool ${name}.`));
-      throw new Error(`Version ${version} already exists for tool ${name}.`);
+      case ContractErrorType.ToolNameAlreadyRegistered:
+        console.error(chalk.red(`Tool name ${name} is already registered by another owner.`));
+        throw new Error(`Tool name ${name} is already registered by another owner.`);
+
+      case ContractErrorType.InvalidVersionOrder:
+        console.error(
+          chalk.red(`Version ${version} must be greater than the latest registered version.`),
+        );
+        throw new Error(`Version ${version} must be greater than the latest registered version.`);
+
+      case null:
+        // Unknown error
+        console.error(`Error registering tool ${name}:`, error);
+        throw error;
+
+      default:
+        // Other known error types
+        console.error(chalk.red(`Contract error: ${errorType}`));
+        throw new Error(`Contract error: ${errorType}`);
     }
-
-    if (isCustomError(contractError, 'ToolNameAlreadyRegistered')) {
-      console.error(chalk.red(`Tool name ${name} is already registered by another owner.`));
-      throw new Error(`Tool name ${name} is already registered by another owner.`);
-    }
-
-    if (isCustomError(contractError, 'InvalidVersionOrder')) {
-      console.error(
-        chalk.red(`Version ${version} must be greater than the latest registered version.`),
-      );
-      throw new Error(`Version ${version} must be greater than the latest registered version.`);
-    }
-
-    // Handle other errors
-    if (customError) {
-      console.error(chalk.red(`Contract error: ${customError}`));
-      throw new Error(`Contract error: ${customError}`);
-    }
-
-    // console.error(`Error registering tool ${name}:`, error);
-    throw error;
   }
 };
 
@@ -123,19 +122,16 @@ const getToolInfo = async (name: string): Promise<ToolInfo | null> => {
     };
   } catch (error: unknown) {
     const contractError = error as ContractError;
-    const customError = getCustomErrorFromData(contractError);
+    const errorType = getErrorType(contractError);
 
-    // Return null for Tool does not exist errors
-    if (
-      isCustomError(contractError, 'Tool does not exist') ||
-      contractError.code === 'CALL_EXCEPTION'
-    ) {
+    // Return null for Tool not found errors
+    if (errorType === ContractErrorType.ToolNotFound) {
       return null;
     }
 
-    if (customError) {
-      console.error(chalk.red(`Contract error: ${customError}`));
-      throw new Error(`Contract error: ${customError}`);
+    if (errorType) {
+      console.error(chalk.red(`Contract error: ${errorType}`));
+      throw new Error(`Contract error: ${errorType}`);
     }
 
     console.error(`Error getting info for tool ${name}:`, error);
@@ -149,7 +145,7 @@ const getToolVersion = async (name: string, version: string): Promise<ToolVersio
     const nameHash = computeNameHash(name);
     const versionObj = parseVersion(version);
 
-    const [retrievedVersion, cidHash, timestamp, metadataHash] = await contract.getToolVersion(
+    const [_retrievedVersion, cidHash, timestamp, metadataHash] = await contract.getToolVersion(
       nameHash,
       versionObj,
     );
@@ -161,25 +157,27 @@ const getToolVersion = async (name: string, version: string): Promise<ToolVersio
     };
   } catch (error: unknown) {
     const contractError = error as ContractError;
-    const customError = getCustomErrorFromData(contractError);
+    const errorType = getErrorType(contractError);
 
-    if (isCustomError(contractError, 'Tool does not exist')) {
-      console.error(chalk.red(`Tool ${name} does not exist`));
-      throw new Error(`Tool ${name} does not exist`);
+    switch (errorType) {
+      case ContractErrorType.ToolNotFound:
+        console.error(chalk.red(`Tool ${name} does not exist`));
+        throw new Error(`Tool ${name} does not exist`);
+
+      case ContractErrorType.VersionNotExists:
+        console.error(chalk.red(`Version ${version} does not exist for tool ${name}`));
+        throw new Error(`Version ${version} does not exist for tool ${name}`);
+
+      case null:
+        // Unknown error
+        console.error(`Error getting version ${version} for tool ${name}:`, error);
+        throw error;
+
+      default:
+        // Other known error types
+        console.error(chalk.red(`Contract error: ${errorType}`));
+        throw new Error(`Contract error: ${errorType}`);
     }
-
-    if (isCustomError(contractError, 'VersionNotExists')) {
-      console.error(chalk.red(`Version ${version} does not exist for tool ${name}`));
-      throw new Error(`Version ${version} does not exist for tool ${name}`);
-    }
-
-    if (customError) {
-      console.error(chalk.red(`Contract error: ${customError}`));
-      throw new Error(`Contract error: ${customError}`);
-    }
-
-    console.error(`Error getting version ${version} for tool ${name}:`, error);
-    throw error;
   }
 };
 
@@ -194,16 +192,16 @@ const getToolVersions = async (name: string): Promise<string[]> => {
     return versionStrings;
   } catch (error: unknown) {
     const contractError = error as ContractError;
-    const customError = getCustomErrorFromData(contractError);
+    const errorType = getErrorType(contractError);
 
-    if (isCustomError(contractError, 'Tool does not exist')) {
+    if (errorType === ContractErrorType.ToolNotFound) {
       console.error(chalk.red(`Tool ${name} does not exist`));
       throw new Error(`Tool ${name} does not exist`);
     }
 
-    if (customError) {
-      console.error(chalk.red(`Contract error: ${customError}`));
-      throw new Error(`Contract error: ${customError}`);
+    if (errorType) {
+      console.error(chalk.red(`Contract error: ${errorType}`));
+      throw new Error(`Contract error: ${errorType}`);
     }
 
     console.error(`Error getting versions for tool ${name}:`, error);
@@ -226,16 +224,16 @@ const getLatestToolVersion = async (name: string): Promise<ToolLatestVersionInfo
     };
   } catch (error: unknown) {
     const contractError = error as ContractError;
-    const customError = getCustomErrorFromData(contractError);
+    const errorType = getErrorType(contractError);
 
-    if (isCustomError(contractError, 'Tool does not exist')) {
+    if (errorType === ContractErrorType.ToolNotFound) {
       console.error(chalk.red(`Tool ${name} does not exist`));
       throw new Error(`Tool ${name} does not exist`);
     }
 
-    if (customError) {
-      console.error(chalk.red(`Contract error: ${customError}`));
-      throw new Error(`Contract error: ${customError}`);
+    if (errorType) {
+      console.error(chalk.red(`Contract error: ${errorType}`));
+      throw new Error(`Contract error: ${errorType}`);
     }
 
     console.error(`Error getting latest version for tool ${name}:`, error);
@@ -256,11 +254,11 @@ const getAllToolNameHashes = async (offset: number = 0, limit: number = 100): Pr
     return toolNameHashes;
   } catch (error: unknown) {
     const contractError = error as ContractError;
-    const customError = getCustomErrorFromData(contractError);
+    const errorType = getErrorType(contractError);
 
-    if (customError) {
-      console.error(chalk.red(`Contract error: ${customError}`));
-      throw new Error(`Contract error: ${customError}`);
+    if (errorType) {
+      console.error(chalk.red(`Contract error: ${errorType}`));
+      throw new Error(`Contract error: ${errorType}`);
     }
 
     console.error('Error getting tool name hashes:', error);
@@ -278,9 +276,9 @@ const isToolOwner = async (name: string): Promise<boolean> => {
     return ownerAddress.toLowerCase() === address.toLowerCase();
   } catch (error: unknown) {
     const contractError = error as ContractError;
-    const customError = getCustomErrorFromData(contractError);
+    const errorType = getErrorType(contractError);
 
-    if (isCustomError(contractError, 'Tool does not exist')) {
+    if (errorType === ContractErrorType.ToolNotFound) {
       console.log(chalk.yellow(`Tool ${name} does not exist.`));
       return false;
     }
