@@ -26,6 +26,9 @@ COPY scripts ./scripts
 COPY characters/${CHARACTER_NAME} ./characters/${CHARACTER_NAME}
 COPY certs ./certs
 
+# Fix line endings for .env files to ensure compatibility across operating systems
+RUN find ./characters -name "*.env" -type f -exec sed -i 's/\r$//' {} \; || true
+
 # Generate certificates if they don't exist
 RUN mkdir -p certs && \
     if [ ! -f certs/server.cert ] || [ ! -f certs/server.key ]; then \
@@ -66,6 +69,9 @@ COPY --from=builder /app/characters/${CHARACTER_NAME} ./characters/${CHARACTER_N
 COPY --from=builder /app/certs ./certs
 COPY --from=builder /app/scripts ./scripts
 
+# Fix line endings again to ensure compatibility (in case any changes happened during build)
+RUN find ./characters -name "*.env" -type f -exec sed -i 's/\r$//' {} \; || true
+
 # Create directories with secure permissions
 RUN mkdir -p logs .cookies && \
     find ./characters -type d -mindepth 1 -maxdepth 1 -exec mkdir -p {}/data {}/logs {}/memories \; && \
@@ -82,10 +88,15 @@ RUN chown -R autonomys:autonomys ./.cookies && \
     chown -R autonomys:autonomys ./logs && \
     chown -R autonomys:autonomys ./certs
 
-# Create startup script with security enhancements
+# Create startup script with security enhancements and improved .env handling
 RUN echo '#!/bin/sh\n\
 CHARACTER_NAME=${CHARACTER_NAME:-test}\n\
 echo "Starting agent with character: $CHARACTER_NAME"\n\
+\n\
+# Fix any remaining line ending issues in the .env file\n\
+if [ -f /app/characters/$CHARACTER_NAME/config/.env ]; then\n\
+  sed -i "s/\\r$//" /app/characters/$CHARACTER_NAME/config/.env\n\
+fi\n\
 \n\
 # Load the character configuration\n\
 if [ -f /app/characters/$CHARACTER_NAME/config/.env ]; then\n\
