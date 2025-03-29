@@ -43,7 +43,7 @@ export const createInputPrompt = async (character: Character, customInstructions
 
     NOTE: BEFORE STOPPING THE WORKFLOW MAKE SURE YOUR TASK SCHEDULE HAS BEEN REVIEWED
     - You should have at least 1 task scheduled
-    - Your schedule should align with frequency preferences and goals. Tasks should appropriately spaced out.
+    - Your schedule should align with frequency preferences and goals. Tasks should be appropriately spaced out.
     - Delete tasks that are no longer needed or the timing is wrong.
     
     CONTINUE CONDITIONS:
