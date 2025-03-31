@@ -65,7 +65,7 @@ const registerTool = async (
   cid: string,
   version: string,
   metadataCid: string,
-): Promise<string> => {
+): Promise<string | null> => {
   try {
     const contract = await getRegistryContract();
 
@@ -84,27 +84,27 @@ const registerTool = async (
     switch (errorType) {
       case ContractErrorType.VersionAlreadyExists:
         console.error(chalk.red(`Version ${version} already exists for tool ${name}.`));
-        throw new Error(`Version ${version} already exists for tool ${name}.`);
+        return null;
 
       case ContractErrorType.ToolNameAlreadyRegistered:
         console.error(chalk.red(`Tool name ${name} is already registered by another owner.`));
-        throw new Error(`Tool name ${name} is already registered by another owner.`);
+        return null;
 
       case ContractErrorType.InvalidVersionOrder:
         console.error(
           chalk.red(`Version ${version} must be greater than the latest registered version.`),
         );
-        throw new Error(`Version ${version} must be greater than the latest registered version.`);
+        return null;
 
       case null:
         // Unknown error
         console.error(`Error registering tool ${name}:`, error);
-        throw error;
+        return null;
 
       default:
         // Other known error types
         console.error(chalk.red(`Contract error: ${errorType}`));
-        throw new Error(`Contract error: ${errorType}`);
+        return null;
     }
   }
 };
@@ -131,15 +131,14 @@ const getToolInfo = async (name: string): Promise<ToolInfo | null> => {
 
     if (errorType) {
       console.error(chalk.red(`Contract error: ${errorType}`));
-      throw new Error(`Contract error: ${errorType}`);
+      return null;
     }
 
-    console.error(`Error getting info for tool ${name}:`, error);
-    throw error;
+    return null;
   }
 };
 
-const getToolVersion = async (name: string, version: string): Promise<ToolVersionInfo> => {
+const getToolVersion = async (name: string, version: string): Promise<ToolVersionInfo | null> => {
   try {
     const contract = await getRegistryContract(true);
     const nameHash = computeNameHash(name);
@@ -162,26 +161,26 @@ const getToolVersion = async (name: string, version: string): Promise<ToolVersio
     switch (errorType) {
       case ContractErrorType.ToolNotFound:
         console.error(chalk.red(`Tool ${name} does not exist`));
-        throw new Error(`Tool ${name} does not exist`);
+        return null;
 
       case ContractErrorType.VersionNotExists:
         console.error(chalk.red(`Version ${version} does not exist for tool ${name}`));
-        throw new Error(`Version ${version} does not exist for tool ${name}`);
+        return null;
 
       case null:
         // Unknown error
         console.error(`Error getting version ${version} for tool ${name}:`, error);
-        throw error;
+        return null;
 
       default:
         // Other known error types
         console.error(chalk.red(`Contract error: ${errorType}`));
-        throw new Error(`Contract error: ${errorType}`);
+        return null;
     }
   }
 };
 
-const getToolVersions = async (name: string): Promise<string[]> => {
+const getToolVersions = async (name: string): Promise<string[] | null> => {
   try {
     const contract = await getRegistryContract(true);
     const nameHash = computeNameHash(name);
@@ -196,20 +195,19 @@ const getToolVersions = async (name: string): Promise<string[]> => {
 
     if (errorType === ContractErrorType.ToolNotFound) {
       console.error(chalk.red(`Tool ${name} does not exist`));
-      throw new Error(`Tool ${name} does not exist`);
+      return null;
     }
 
     if (errorType) {
       console.error(chalk.red(`Contract error: ${errorType}`));
-      throw new Error(`Contract error: ${errorType}`);
+      return null;
     }
 
-    console.error(`Error getting versions for tool ${name}:`, error);
-    throw error;
+    return null;
   }
 };
 
-const getLatestToolVersion = async (name: string): Promise<ToolLatestVersionInfo> => {
+const getLatestToolVersion = async (name: string): Promise<ToolLatestVersionInfo | null> => {
   try {
     const contract = await getRegistryContract(true);
     const nameHash = computeNameHash(name);
@@ -228,20 +226,22 @@ const getLatestToolVersion = async (name: string): Promise<ToolLatestVersionInfo
 
     if (errorType === ContractErrorType.ToolNotFound) {
       console.error(chalk.red(`Tool ${name} does not exist`));
-      throw new Error(`Tool ${name} does not exist`);
+      return null;
     }
 
     if (errorType) {
       console.error(chalk.red(`Contract error: ${errorType}`));
-      throw new Error(`Contract error: ${errorType}`);
+      return null;
     }
 
-    console.error(`Error getting latest version for tool ${name}:`, error);
-    throw error;
+    return null;
   }
 };
 
-const getAllToolNameHashes = async (offset: number = 0, limit: number = 100): Promise<string[]> => {
+const getAllToolNameHashes = async (
+  offset: number = 0,
+  limit: number = 100,
+): Promise<string[] | null> => {
   try {
     console.log(
       chalk.blue(`Getting all tool name hashes with offset ${offset} and limit ${limit}`),
@@ -258,15 +258,14 @@ const getAllToolNameHashes = async (offset: number = 0, limit: number = 100): Pr
 
     if (errorType) {
       console.error(chalk.red(`Contract error: ${errorType}`));
-      throw new Error(`Contract error: ${errorType}`);
+      return null;
     }
 
-    console.error('Error getting tool name hashes:', error);
-    throw error;
+    return null;
   }
 };
 
-const isToolOwner = async (name: string): Promise<boolean> => {
+const isToolOwner = async (name: string): Promise<boolean | null> => {
   try {
     const contract = await getRegistryContract(true);
     const nameHash = computeNameHash(name);
@@ -280,11 +279,10 @@ const isToolOwner = async (name: string): Promise<boolean> => {
 
     if (errorType === ContractErrorType.ToolNotFound) {
       console.log(chalk.yellow(`Tool ${name} does not exist.`));
-      return false;
+      return null;
     }
 
-    console.error(`Error checking ownership for tool ${name}:`, error);
-    return false;
+    return null;
   }
 };
 

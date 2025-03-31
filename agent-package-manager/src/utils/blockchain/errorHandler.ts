@@ -59,30 +59,6 @@ const getErrorType = (error: ContractError): ContractErrorType | null => {
     }
   }
 
-  // If no selector match, try string matches in various error properties
-  const errorTextFields = [error.reason, error.message, error.shortMessage];
-
-  // Check each error type against each text field
-  for (const errorText of errorTextFields) {
-    if (!errorText) continue;
-
-    // Check this text against each error type
-    for (const errorType of Object.values(ContractErrorType)) {
-      // Skip UnknownError for text matching
-      if (errorType === ContractErrorType.UnknownError) continue;
-
-      const normalizedErrorType = errorType.replace(/([A-Z])/g, ' $1').trim();
-
-      if (
-        errorText.includes(errorType) ||
-        errorText.includes(normalizedErrorType) ||
-        (errorType === ContractErrorType.ToolNotFound && errorText.includes('Tool does not exist'))
-      ) {
-        return errorType;
-      }
-    }
-  }
-
   // For any selector that isn't mapped but is detected, return UnknownError
   if (error.data || error.info?.error?.data) {
     return ContractErrorType.UnknownError;

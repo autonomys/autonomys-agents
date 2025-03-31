@@ -34,12 +34,15 @@ const updateRegistry = async (
 
         case 'REGISTER_NEW':
         case 'UPDATE_EXISTING':
-          txHash = await registerTool(
+          const txHash = await registerTool(
             toolMetadata.name,
             toolMetadata.cid,
             toolMetadata.version,
             metadataCid,
           );
+          if (!txHash) {
+            throw new Error(`Failed to register tool ${toolMetadata.name}`);
+          }
           console.log(
             chalk.green(
               `Tool ${toolMetadata.name} registered with CID: ${toolMetadata.cid}, txHash: ${txHash}`,
