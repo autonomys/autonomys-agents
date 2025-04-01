@@ -7,6 +7,7 @@ import { broadcastTaskUpdateUtility } from './controller/TaskController.js';
 import { Logger } from 'winston';
 import { attachLoggerUtility } from './controller/LogsController.js';
 import { broadcastLogUtility } from './controller/LogsController.js';
+import { broadcastNamespaces } from './controller/NamespaceController.js';
 import { getRegisteredNamespaces } from './controller/WorkflowController.js';
 import { authenticateToken, securityHeaders } from './middleware/auth.js';
 import { corsMiddleware } from './middleware/cors.js';
@@ -59,18 +60,22 @@ const createSingletonApiServer = (): ApiServer => {
         allowHTTP1: true,
       };
       server = http2.createSecureServer(options, app);
+
       server.listen(PORT, () => {
         logger.info(`API server started with HTTP/2 support on port ${PORT}`);
         logger.info(
           `API security: ${config.apiSecurityConfig.ENABLE_AUTH ? 'Enabled' : 'Disabled'}`,
         );
         logger.info(`Access the API at: https://localhost:${PORT}/api`);
+        logger.info(
+          `Server-Sent Events available at: https://localhost:${PORT}/api/namespaces/sse`,
+        );
       });
     } else {
       throw new Error('SSL certificates not found');
     }
   } catch (error) {
-    logger.error('Error starting HTTP/2 server, falling back to HTTP/1.1', error);
+    logger.error('Error starting HTTP/2 server', error);
     throw error;
   }
 
@@ -81,6 +86,7 @@ const createSingletonApiServer = (): ApiServer => {
     broadcastTaskUpdate: broadcastTaskUpdateUtility,
     attachLogger: attachLoggerUtility,
     getRegisteredNamespaces: getRegisteredNamespaces,
+    broadcastNamespaces: broadcastNamespaces,
   };
 };
 
@@ -110,6 +116,15 @@ export const broadcastTaskUpdate = (namespace: string) => {
   }
 
   apiServer.broadcastTaskUpdate(namespace);
+};
+
+// Add a wrapper function to broadcast namespace updates
+export const broadcastNamespacesUpdate = () => {
+  if (!apiServer) {
+    return;
+  }
+
+  apiServer.broadcastNamespaces();
 };
 
 export const attachLogger = (logger: Logger, namespace: string) => {

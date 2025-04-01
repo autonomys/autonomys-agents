@@ -93,7 +93,7 @@ const LogoBox: React.FC = () => {
           animation: 'pulse 1.5s infinite alternate',
         }}
       >
-        :: WEB CLI v0.1 ::
+        :: WEB CLI v0.2 ::
       </Text>
     </Box>
   );

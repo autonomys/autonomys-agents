@@ -1,62 +1,102 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { fetchNamespaces, subscribeToNamespace } from '../services/LogService';
-
-const NAMESPACE_POLL_INTERVAL = 5000;
+import { API_BASE_URL, API_TOKEN } from '../services/Api';
 
 export const useNamespaces = () => {
   const [namespaces, setNamespaces] = useState<string[]>(['all']);
   const [activeNamespace, setActiveNamespace] = useState<string>('all');
   const subscribedNamespacesRef = useRef<Set<string>>(new Set(['all']));
-  const pollingIntervalRef = useRef<number | null>(null);
+  const eventSourceRef = useRef<EventSource | null>(null);
+  const [isConnected, setIsConnected] = useState(false);
 
-  const checkForNewNamespaces = useCallback(async () => {
-    try {
-      const fetchedNamespaces = await fetchNamespaces();
-      let hasNewNamespaces = false;
+  // Setup EventSource connection for namespaces
+  useEffect(() => {
+    const setupEventSource = () => {
+      // Close any existing connection
+      if (eventSourceRef.current) {
+        eventSourceRef.current.close();
+      }
 
-      fetchedNamespaces.forEach(ns => {
-        if (!subscribedNamespacesRef.current.has(ns)) {
-          hasNewNamespaces = true;
-          subscribeToNamespace(ns);
-          subscribedNamespacesRef.current.add(ns);
-          console.log(`New namespace detected: ${ns}`);
+      const tokenParam = API_TOKEN ? `?token=${encodeURIComponent(API_TOKEN)}` : '';
+      const sseUrl = `${API_BASE_URL}/namespaces/sse${tokenParam}`;
+
+      const eventSource = new EventSource(sseUrl);
+
+      eventSource.onopen = () => {
+        console.log('Connected to namespaces SSE');
+        setIsConnected(true);
+      };
+
+      eventSource.addEventListener('message', event => {
+        try {
+          const data = JSON.parse(event.data);
+          if (data.type === 'namespaces' && Array.isArray(data.data)) {
+            console.log('Received namespaces update:', data.data);
+
+            // Subscribe to any new namespaces
+            data.data.forEach((ns: string) => {
+              if (!subscribedNamespacesRef.current.has(ns)) {
+                subscribeToNamespace(ns);
+                subscribedNamespacesRef.current.add(ns);
+                console.log(`SSE: New namespace detected: ${ns}`);
+              }
+            });
+
+            // Update the namespaces state with 'all' at the beginning
+            setNamespaces(['all', ...data.data]);
+          }
+        } catch (error) {
+          console.error('Error parsing SSE message:', error);
         }
       });
 
-      if (hasNewNamespaces) {
-        setNamespaces(['all', ...fetchedNamespaces]);
-      }
-    } catch (error) {
-      console.error('Failed to check for new namespaces:', error);
-    }
-  }, []);
+      eventSource.onerror = error => {
+        console.error('Namespaces SSE error:', error);
+        setIsConnected(false);
 
-  useEffect(() => {
-    const loadNamespaces = async () => {
-      const fetchedNamespaces = await fetchNamespaces();
-      setNamespaces(['all', ...fetchedNamespaces]);
+        // Close the event source and try to reconnect after a delay
+        eventSource.close();
+        setTimeout(() => {
+          setupEventSource();
+        }, 5000);
+      };
 
-      subscribeToNamespace('all');
-      subscribedNamespacesRef.current.add('all');
-
-      fetchedNamespaces.forEach(ns => {
-        subscribeToNamespace(ns);
-        subscribedNamespacesRef.current.add(ns);
-      });
+      eventSourceRef.current = eventSource;
     };
 
-    loadNamespaces();
-
-    pollingIntervalRef.current = window.setInterval(() => {
-      checkForNewNamespaces();
-    }, NAMESPACE_POLL_INTERVAL);
+    setupEventSource();
 
     return () => {
-      if (pollingIntervalRef.current) {
-        clearInterval(pollingIntervalRef.current);
+      if (eventSourceRef.current) {
+        eventSourceRef.current.close();
       }
     };
-  }, [checkForNewNamespaces]);
+  }, []);
+
+  // Initial load of namespaces (fallback if SSE fails)
+  useEffect(() => {
+    const loadNamespaces = async () => {
+      try {
+        const fetchedNamespaces = await fetchNamespaces();
+        setNamespaces(['all', ...fetchedNamespaces]);
+
+        subscribeToNamespace('all');
+        subscribedNamespacesRef.current.add('all');
+
+        fetchedNamespaces.forEach(ns => {
+          subscribeToNamespace(ns);
+          subscribedNamespacesRef.current.add(ns);
+        });
+      } catch (error) {
+        console.error('Failed to load namespaces:', error);
+      }
+    };
+
+    // Only load namespaces initially if SSE is not connected
+    if (!isConnected) {
+      loadNamespaces();
+    }
+  }, [isConnected]);
 
   const changeNamespace = useCallback((namespace: string) => {
     setActiveNamespace(namespace);
@@ -68,8 +108,19 @@ export const useNamespaces = () => {
   }, []);
 
   const refreshNamespaces = useCallback(async () => {
-    await checkForNewNamespaces();
-  }, [checkForNewNamespaces]);
+    if (!isConnected) {
+      // Fallback to REST API if SSE is not connected
+      const fetchedNamespaces = await fetchNamespaces();
+      setNamespaces(['all', ...fetchedNamespaces]);
+
+      fetchedNamespaces.forEach(ns => {
+        if (!subscribedNamespacesRef.current.has(ns)) {
+          subscribeToNamespace(ns);
+          subscribedNamespacesRef.current.add(ns);
+        }
+      });
+    }
+  }, [isConnected]);
 
   return {
     namespaces,
@@ -77,5 +128,6 @@ export const useNamespaces = () => {
     subscribedNamespaces: subscribedNamespacesRef.current,
     changeNamespace,
     refreshNamespaces,
+    isSSEConnected: isConnected,
   };
 };
