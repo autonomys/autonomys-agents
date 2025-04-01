@@ -30,7 +30,6 @@ export const getChatStream = (req: Request, res: Response) => {
 
   res.setHeader('Content-Type', 'text/event-stream');
   res.setHeader('Cache-Control', 'no-cache');
-  res.setHeader('Connection', 'keep-alive');
 
   res.write(
     `data: ${JSON.stringify({
@@ -86,7 +85,6 @@ export const sendChatMessage = asyncHandler(async (req: Request, res: Response) 
 
     res.setHeader('Content-Type', 'text/event-stream');
     res.setHeader('Cache-Control', 'no-cache');
-    res.setHeader('Connection', 'keep-alive');
 
     const stream = await responseChain.stream({
       namespace,

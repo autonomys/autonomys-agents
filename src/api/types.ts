@@ -10,6 +10,7 @@ export interface ApiServer {
   broadcastTaskUpdate: (namespace: string) => void;
   attachLogger: (logger: Logger, namespace: string) => Logger;
   getRegisteredNamespaces: () => string[];
+  broadcastNamespaces: () => void;
 }
 
 export interface LogMetadata {
