@@ -1,7 +1,8 @@
 # Stage 1: Build stage
 FROM node:20.18.1 AS builder
 
-# Add the build argument at the top
+# The CHARACTER_NAME environment variable is automatically configured during the build process.
+# No manual changes are needed - the Docker Compose file will set this correctly for each character instance.
 ARG CHARACTER_NAME=character.example
 
 WORKDIR /app
