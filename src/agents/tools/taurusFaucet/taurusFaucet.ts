@@ -1,7 +1,6 @@
-import { Contract } from 'ethers';
-import { createLogger } from '../../utils/logger.js';
-import { FAUCET_ABI } from '../abi/faucet.js';
-import { provider, wallet } from './agentWallet.js';
+import { Contract, ethers } from 'ethers';
+import { createLogger } from '../../../utils/logger.js';
+import { FAUCET_ABI } from './abi/faucet.js';
 
 const logger = createLogger('faucet-tools');
 const FAUCET_CONTRACT_ADDRESS = '0x2296dbb90C714c1355Ff9cbcB70D5AB29060b454';
@@ -12,11 +11,11 @@ type FaucetRequestResult = {
   message: string;
 };
 
-const getFaucetContract = () => {
+const getFaucetContract = (wallet: ethers.Wallet) => {
   return new Contract(FAUCET_CONTRACT_ADDRESS, FAUCET_ABI, wallet);
 };
 
-export const verifyFaucetBalance = async (): Promise<bigint> => {
+export const verifyFaucetBalance = async (provider: ethers.JsonRpcProvider): Promise<bigint> => {
   try {
     const balance = await provider.getBalance(FAUCET_CONTRACT_ADDRESS);
     return BigInt(balance.toString());
@@ -26,9 +25,9 @@ export const verifyFaucetBalance = async (): Promise<bigint> => {
   }
 };
 
-export const nextAccessTime = async (address: string): Promise<bigint> => {
+export const nextAccessTime = async (address: string, wallet: ethers.Wallet): Promise<bigint> => {
   try {
-    const faucet = getFaucetContract();
+    const faucet = getFaucetContract(wallet);
     const nextAccessTime = await faucet.nextAccessTime(address);
     return BigInt(nextAccessTime.toString());
   } catch (error) {
@@ -37,9 +36,9 @@ export const nextAccessTime = async (address: string): Promise<bigint> => {
   }
 };
 
-export const isMinter = async (): Promise<boolean> => {
+export const isMinter = async (wallet: ethers.Wallet): Promise<boolean> => {
   try {
-    const faucet = getFaucetContract();
+    const faucet = getFaucetContract(wallet);
     const isMinter = await faucet.isMinter(wallet.address);
     return Boolean(isMinter);
   } catch (error) {
@@ -48,9 +47,9 @@ export const isMinter = async (): Promise<boolean> => {
   }
 };
 
-export const withdrawalAmount = async (): Promise<bigint> => {
+export const withdrawalAmount = async (wallet: ethers.Wallet): Promise<bigint> => {
   try {
-    const faucet = getFaucetContract();
+    const faucet = getFaucetContract(wallet);
     const withdrawalAmount = await faucet.withdrawalAmount();
     return BigInt(withdrawalAmount.toString());
   } catch (error) {
@@ -59,10 +58,13 @@ export const withdrawalAmount = async (): Promise<bigint> => {
   }
 };
 
-export const requestTokens = async (address: string): Promise<FaucetRequestResult> => {
+export const requestTokens = async (
+  address: string,
+  wallet: ethers.Wallet,
+): Promise<FaucetRequestResult> => {
   logger.info('Sending faucet request - Starting requestTokens');
   try {
-    const faucet = getFaucetContract();
+    const faucet = getFaucetContract(wallet);
     const tx = await faucet.requestTokens(address);
     logger.info('Faucet request transaction submitted', {
       success: true,
