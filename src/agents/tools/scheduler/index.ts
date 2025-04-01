@@ -43,6 +43,7 @@ export const createSchedulerAddTaskTool = () =>
       - Use clear, specific descriptions for the task
       - Specify a future time when the task should be executed
       - Remember that you will be the one executing this task later
+      - Check your existing schedule before scheduling new tasks. Do not schedule similar tasks at the same time
     `,
     schema: z.object({
       message: z.string().describe(
@@ -105,11 +106,11 @@ export const createSchedulerDeleteTasksTool = () =>
   new DynamicStructuredTool({
     name: 'scheduler_delete_task',
     description: `
-        Delete your current task by its ID.
-        Use this tool to delete tasks that are no longer needed.
+        Use this tool to delete tasks that are no longer needed or the timing is wrong. Use this tool when cleaning up your schedule.
         
         USAGE GUIDANCE:
         - Use to delete tasks that are no longer needed
+        - Use to delete tasks that are scheduled for the wrong time such as too close to another similar task.
       `,
     schema: z.object({
       taskId: z.string().describe('The ID of the task to delete'),
@@ -241,14 +242,14 @@ export const createSchedulerGetCurrentTaskTool = () =>
   new DynamicStructuredTool({
     name: 'scheduler_get_current_task',
     description: `
-            Retrieve your current task that is running.
-            Use this tool to check what task is currently being executed.
-            
-            USAGE GUIDANCE:
-            - Check this before scheduling similar tasks that might already be planned
-            - Use to review your upcoming work
-            - Helpful when you need to prioritize or manage your schedule
-          `,
+          Retrieve your current task that is running.
+          Use this tool to check what task is currently being executed.
+          
+          USAGE GUIDANCE:
+          - Check this before scheduling similar tasks that might already be planned
+          - Use to review your upcoming work
+          - Helpful when you need to prioritize or manage your schedule
+        `,
     schema: z.object({}),
     func: async () => {
       try {

@@ -9,24 +9,16 @@ export const createSlackPrompts = async (character: Character): Promise<Orchestr
     - You can also search your recent activity on Slack to gain context.
     - If it would be helpful, look up other people's profiles for greater context.
            
-    Best Practices:
-    - BEFORE POSTING, check recent channel history to maintain context and avoid repeating yourself
+    **BEST PRACTICES**:
+    - BEFORE POSTING, check recent channel history to maintain context and avoid repeating yourself.
     - Use threads appropriately to keep conversations organized
     - ALWAYS acknowledge messages that are relevant to you, either with a reply or a reaction
+    - It is strange to react to your own messages, don't do it.
     - When checking messages, remember to CHECK REPLY THREADS for relevant messages you should acknowledge
-    - Post links to external sources when relevant
-    - Use bookmarks to save important information
-    - Use reactions meaningfully to engage with others
-    - Pin crucial information when appropriate
-    - To pin a user, use this format: <@USER_ID>
-    
-    Important Guidelines:
-    - Save significant interactions to Autonomy Network's DSN using save_experience tool (e.g., after posting, reacting, or bookmarking)
+    - When references external sources post links if you have them.
+    - To mention a user, use this format: <@USER_ID>
     - Always verify channel context before posting
     - Keep messages concise and professional
-    - Use threading appropriately to organize conversations
-    - Utilize emojis and reactions appropriately for the channel's tone
-    - Schedule follow-up messages when immediate action isn't appropriate
 
     - **DO NOT BE REPETITIVE**, use different phrases and words with each post.
     - Banned words: ${character.communicationRules.wordsToAvoid.join(', ')}

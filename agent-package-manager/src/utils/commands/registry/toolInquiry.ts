@@ -1,7 +1,7 @@
 import fs from 'fs/promises';
 import { ToolMetadata, ToolRegistry } from '../../../types/index.js';
 import {
-  getAllToolNames,
+  getAllToolNameHashes,
   getLatestToolVersion,
   getToolInfo,
   getToolVersion,
@@ -12,12 +12,14 @@ import { REGISTRY_CACHE_PATH } from '../../shared/path.js';
 import { downloadMetadataFromDsn } from '../../autoDrive/autoDriveClient.js';
 import { getCidFromHash } from '../../blockchain/utils.js';
 
-const fetchRegistryFromBlockchain = async (): Promise<ToolRegistry> => {
+const fetchRegistryFromBlockchain = async (): Promise<ToolRegistry | null> => {
   try {
     console.log(chalk.blue('Fetching registry from blockchain...'));
 
-    const toolNames = await getAllToolNames();
-
+    const toolNames = await getAllToolNameHashes();
+    if (!toolNames) {
+      return null;
+    }
     const registry: ToolRegistry = {
       version: '1.0.0',
       updated: new Date().toISOString(),
@@ -30,7 +32,9 @@ const fetchRegistryFromBlockchain = async (): Promise<ToolRegistry> => {
         continue;
       }
       const latestVersionInfo = await getLatestToolVersion(name);
-
+      if (!latestVersionInfo) {
+        continue;
+      }
       registry.tools[name] = {
         name,
         version: toolInfo.latestVersion,
@@ -72,24 +76,18 @@ const getLocalRegistryCache = async (): Promise<ToolRegistry> => {
 };
 
 const getRegistry = async (): Promise<ToolRegistry> => {
+  const cacheData = await fs.readFile(REGISTRY_CACHE_PATH, 'utf8');
+  const cachedRegistry = JSON.parse(cacheData) as ToolRegistry;
   try {
-    const cacheData = await fs.readFile(REGISTRY_CACHE_PATH, 'utf8');
-    const cachedRegistry = JSON.parse(cacheData) as ToolRegistry;
-
-    const cacheTime = new Date(cachedRegistry.updated);
-    const now = new Date();
-    const cacheAge = now.getTime() - cacheTime.getTime();
-    const oneHour = 60 * 60 * 1000;
-
-    if (cacheAge < oneHour) {
+    const registry = await fetchRegistryFromBlockchain();
+    if (!registry) {
+      chalk.red('Error fetching registry from blockchain - using cached registry');
       return cachedRegistry;
     }
-
-    return await fetchRegistryFromBlockchain();
+    return registry;
   } catch (error) {
     console.error('Error fetching registry from blockchain:', error);
-
-    return await fetchRegistryFromBlockchain();
+    throw error;
   }
 };
 
@@ -101,7 +99,9 @@ const getToolFromRegistry = async (toolName: string): Promise<ToolMetadata | nul
     }
     if (toolInfo.latestVersion) {
       const latestVersionInfo = await getLatestToolVersion(toolName);
-
+      if (!latestVersionInfo) {
+        return null;
+      }
       return {
         name: toolName,
         version: toolInfo.latestVersion,
@@ -137,12 +137,18 @@ const getToolVersionFromRegistry = async (
     }
 
     const versions = await getToolVersions(toolName);
+    if (!versions) {
+      return null;
+    }
     if (!versions.includes(version)) {
       console.error(`Version ${version} of tool ${toolName} not found`);
       return null;
     }
 
     const versionInfo = await getToolVersion(toolName, version);
+    if (!versionInfo) {
+      return null;
+    }
 
     return {
       name: toolName,

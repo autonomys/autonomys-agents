@@ -9,7 +9,10 @@ import chalk from 'chalk';
 import { REGISTRY_CACHE_PATH } from '../../../utils/shared/path.js';
 import { getLocalRegistryCache } from './toolInquiry.js';
 
-const updateRegistry = async (toolMetadata: ToolMetadata, metadataCid: string): Promise<string> => {
+const updateRegistry = async (
+  toolMetadata: ToolMetadata,
+  metadataCid: string,
+): Promise<{ txHash: string; error?: string }> => {
   try {
     console.log(chalk.blue('Updating registry on blockchain...'));
 
@@ -31,12 +34,15 @@ const updateRegistry = async (toolMetadata: ToolMetadata, metadataCid: string): 
 
         case 'REGISTER_NEW':
         case 'UPDATE_EXISTING':
-          txHash = await registerTool(
+          const txHash = await registerTool(
             toolMetadata.name,
             toolMetadata.cid,
             toolMetadata.version,
             metadataCid,
           );
+          if (!txHash) {
+            throw new Error(`Failed to register tool ${toolMetadata.name}`);
+          }
           console.log(
             chalk.green(
               `Tool ${toolMetadata.name} registered with CID: ${toolMetadata.cid}, txHash: ${txHash}`,
@@ -45,7 +51,11 @@ const updateRegistry = async (toolMetadata: ToolMetadata, metadataCid: string): 
           break;
       }
     } catch (error) {
-      console.error(`Error updating registry:`, error);
+      console.error(
+        `Error updating registry:`,
+        error instanceof Error ? error.message : 'Unknown error',
+      );
+      return { txHash: '', error: error instanceof Error ? error.message : 'Unknown error' };
     }
 
     const registry = await getLocalRegistryCache();
@@ -53,10 +63,10 @@ const updateRegistry = async (toolMetadata: ToolMetadata, metadataCid: string): 
     registry.updated = new Date().toISOString();
     await fs.writeFile(REGISTRY_CACHE_PATH, JSON.stringify(registry, null, 2));
 
-    return txHash;
+    return { txHash, error: undefined };
   } catch (error) {
     console.error('Error updating registry:', error);
-    throw error;
+    return { txHash: '', error: error instanceof Error ? error.message : 'Unknown error' };
   }
 };
 
