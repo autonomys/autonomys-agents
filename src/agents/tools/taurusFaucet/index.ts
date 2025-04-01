@@ -1,6 +1,6 @@
 import { DynamicStructuredTool } from '@langchain/core/tools';
 import { z } from 'zod';
-import { isAddress } from 'ethers';
+import { isAddress, ethers } from 'ethers';
 import {
   isMinter,
   nextAccessTime,
@@ -9,7 +9,10 @@ import {
   withdrawalAmount,
 } from './taurusFaucet.js';
 
-export const createFaucetRequestTokensTool = () =>
+export const createFaucetRequestTokensTool = (
+  provider: ethers.JsonRpcProvider,
+  wallet: ethers.Wallet,
+) =>
   new DynamicStructuredTool({
     name: 'faucet_request_tokens',
     description: `
@@ -35,10 +38,10 @@ export const createFaucetRequestTokensTool = () =>
 
       const [faucetBalance, nextAccessTimeForAddress, isMinterForAddress, currentWithdrawalAmount] =
         await Promise.all([
-          verifyFaucetBalance(),
-          nextAccessTime(address),
-          isMinter(),
-          withdrawalAmount(),
+          verifyFaucetBalance(provider),
+          nextAccessTime(address, wallet),
+          isMinter(wallet),
+          withdrawalAmount(wallet),
         ]);
 
       if (currentTime <= nextAccessTimeForAddress) {
@@ -54,7 +57,7 @@ export const createFaucetRequestTokensTool = () =>
             message: `Faucet balance is too low, please wait for refill`,
           };
 
-        return await requestTokens(address);
+        return await requestTokens(address, wallet);
       } else {
         const timeToWait = nextAccessTimeForAddress - currentTime;
         const formattedTime = timeToWait.toString();
