@@ -24,7 +24,6 @@ const checkMasterPassword = async () => {
 
   if ((await credentialsExist()) && !isConfigCommand && !isHelpCommand) {
     console.log(chalk.blue('\nℹ️  Information: You have stored credentials'));
-    console.log(chalk.yellow('Your master password is securely stored in the system keychain.\n'));
   }
 };
 

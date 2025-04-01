@@ -5,10 +5,85 @@
 		"type": "constructor"
 	},
 	{
+		"inputs": [],
+		"name": "EmptyCidHash",
+		"type": "error"
+	},
+	{
+		"inputs": [],
+		"name": "EmptyMetadataHash",
+		"type": "error"
+	},
+	{
+		"inputs": [],
+		"name": "EmptyToolName",
+		"type": "error"
+	},
+	{
+		"inputs": [],
+		"name": "InvalidNameHash",
+		"type": "error"
+	},
+	{
+		"inputs": [],
+		"name": "InvalidVersion",
+		"type": "error"
+	},
+	{
+		"inputs": [],
+		"name": "InvalidVersionOrder",
+		"type": "error"
+	},
+	{
+		"inputs": [],
+		"name": "NotToolOwner",
+		"type": "error"
+	},
+	{
+		"inputs": [],
+		"name": "OffsetOutOfBounds",
+		"type": "error"
+	},
+	{
+		"inputs": [],
+		"name": "OnlyOwner",
+		"type": "error"
+	},
+	{
+		"inputs": [],
+		"name": "SameOwner",
+		"type": "error"
+	},
+	{
+		"inputs": [],
+		"name": "ToolNameAlreadyRegistered",
+		"type": "error"
+	},
+	{
+		"inputs": [],
+		"name": "ToolNotFound",
+		"type": "error"
+	},
+	{
+		"inputs": [],
+		"name": "VersionAlreadyExists",
+		"type": "error"
+	},
+	{
+		"inputs": [],
+		"name": "VersionNotExists",
+		"type": "error"
+	},
+	{
+		"inputs": [],
+		"name": "ZeroAddressNotAllowed",
+		"type": "error"
+	},
+	{
 		"anonymous": false,
 		"inputs": [
 			{
-				"indexed": false,
+				"indexed": true,
 				"internalType": "string",
 				"name": "name",
 				"type": "string"
@@ -30,52 +105,36 @@
 		"type": "event"
 	},
 	{
-		"inputs": [
-			{
-				"internalType": "string",
-				"name": "name",
-				"type": "string"
-			},
-			{
-				"internalType": "string",
-				"name": "version",
-				"type": "string"
-			},
-			{
-				"internalType": "bytes32",
-				"name": "cid",
-				"type": "bytes32"
-			},
-			{
-				"internalType": "bytes32",
-				"name": "metadata",
-				"type": "bytes32"
-			}
-		],
-		"name": "registerTool",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
 		"anonymous": false,
 		"inputs": [
 			{
-				"indexed": false,
+				"indexed": true,
 				"internalType": "string",
 				"name": "name",
 				"type": "string"
 			},
 			{
 				"indexed": false,
-				"internalType": "string",
-				"name": "version",
-				"type": "string"
+				"internalType": "uint256",
+				"name": "major",
+				"type": "uint256"
+			},
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "minor",
+				"type": "uint256"
+			},
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "patch",
+				"type": "uint256"
 			},
 			{
 				"indexed": false,
 				"internalType": "bytes32",
-				"name": "cid",
+				"name": "cidHash",
 				"type": "bytes32"
 			},
 			{
@@ -98,21 +157,33 @@
 		"anonymous": false,
 		"inputs": [
 			{
-				"indexed": false,
+				"indexed": true,
 				"internalType": "string",
 				"name": "name",
 				"type": "string"
 			},
 			{
 				"indexed": false,
-				"internalType": "string",
-				"name": "version",
-				"type": "string"
+				"internalType": "uint256",
+				"name": "major",
+				"type": "uint256"
+			},
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "minor",
+				"type": "uint256"
+			},
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "patch",
+				"type": "uint256"
 			},
 			{
 				"indexed": false,
 				"internalType": "bytes32",
-				"name": "cid",
+				"name": "cidHash",
 				"type": "bytes32"
 			},
 			{
@@ -134,76 +205,17 @@
 	{
 		"inputs": [
 			{
-				"internalType": "address",
-				"name": "newOwner",
-				"type": "address"
-			}
-		],
-		"name": "transferContractOwnership",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
 				"internalType": "string",
 				"name": "name",
 				"type": "string"
-			},
-			{
-				"internalType": "address",
-				"name": "newOwner",
-				"type": "address"
 			}
 		],
-		"name": "transferToolOwnership",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "string",
-				"name": "name",
-				"type": "string"
-			},
-			{
-				"internalType": "string",
-				"name": "version",
-				"type": "string"
-			},
-			{
-				"internalType": "bytes32",
-				"name": "metadata",
-				"type": "bytes32"
-			}
-		],
-		"name": "updateToolMetadata",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "string",
-				"name": "a",
-				"type": "string"
-			},
-			{
-				"internalType": "string",
-				"name": "b",
-				"type": "string"
-			}
-		],
-		"name": "compareVersions",
+		"name": "computeNameHash",
 		"outputs": [
 			{
-				"internalType": "int256",
+				"internalType": "bytes32",
 				"name": "",
-				"type": "int256"
+				"type": "bytes32"
 			}
 		],
 		"stateMutability": "pure",
@@ -222,12 +234,12 @@
 				"type": "uint256"
 			}
 		],
-		"name": "getAllTools",
+		"name": "getAllToolsPaginated",
 		"outputs": [
 			{
-				"internalType": "string[]",
+				"internalType": "bytes32[]",
 				"name": "",
-				"type": "string[]"
+				"type": "bytes32[]"
 			}
 		],
 		"stateMutability": "view",
@@ -236,21 +248,38 @@
 	{
 		"inputs": [
 			{
-				"internalType": "string",
+				"internalType": "bytes32",
 				"name": "name",
-				"type": "string"
+				"type": "bytes32"
 			}
 		],
 		"name": "getLatestVersion",
 		"outputs": [
 			{
-				"internalType": "string",
+				"components": [
+					{
+						"internalType": "uint64",
+						"name": "major",
+						"type": "uint64"
+					},
+					{
+						"internalType": "uint64",
+						"name": "minor",
+						"type": "uint64"
+					},
+					{
+						"internalType": "uint64",
+						"name": "patch",
+						"type": "uint64"
+					}
+				],
+				"internalType": "struct AutonomysPackageRegistry.Version",
 				"name": "version",
-				"type": "string"
+				"type": "tuple"
 			},
 			{
 				"internalType": "bytes32",
-				"name": "cid",
+				"name": "cidHash",
 				"type": "bytes32"
 			},
 			{
@@ -260,7 +289,7 @@
 			},
 			{
 				"internalType": "bytes32",
-				"name": "metadata",
+				"name": "metadataHash",
 				"type": "bytes32"
 			}
 		],
@@ -285,12 +314,12 @@
 				"type": "uint256"
 			}
 		],
-		"name": "getPublisherTools",
+		"name": "getPublisherToolsPaginated",
 		"outputs": [
 			{
-				"internalType": "string[]",
+				"internalType": "bytes32[]",
 				"name": "",
-				"type": "string[]"
+				"type": "bytes32[]"
 			}
 		],
 		"stateMutability": "view",
@@ -312,9 +341,9 @@
 	{
 		"inputs": [
 			{
-				"internalType": "string",
+				"internalType": "bytes32",
 				"name": "name",
-				"type": "string"
+				"type": "bytes32"
 			}
 		],
 		"name": "getToolInfo",
@@ -330,9 +359,26 @@
 				"type": "uint256"
 			},
 			{
-				"internalType": "string",
+				"components": [
+					{
+						"internalType": "uint64",
+						"name": "major",
+						"type": "uint64"
+					},
+					{
+						"internalType": "uint64",
+						"name": "minor",
+						"type": "uint64"
+					},
+					{
+						"internalType": "uint64",
+						"name": "patch",
+						"type": "uint64"
+					}
+				],
+				"internalType": "struct AutonomysPackageRegistry.Version",
 				"name": "latestVersion",
-				"type": "string"
+				"type": "tuple"
 			}
 		],
 		"stateMutability": "view",
@@ -341,21 +387,60 @@
 	{
 		"inputs": [
 			{
-				"internalType": "string",
+				"internalType": "bytes32",
 				"name": "name",
-				"type": "string"
+				"type": "bytes32"
 			},
 			{
-				"internalType": "string",
+				"components": [
+					{
+						"internalType": "uint64",
+						"name": "major",
+						"type": "uint64"
+					},
+					{
+						"internalType": "uint64",
+						"name": "minor",
+						"type": "uint64"
+					},
+					{
+						"internalType": "uint64",
+						"name": "patch",
+						"type": "uint64"
+					}
+				],
+				"internalType": "struct AutonomysPackageRegistry.Version",
 				"name": "version",
-				"type": "string"
+				"type": "tuple"
 			}
 		],
 		"name": "getToolVersion",
 		"outputs": [
 			{
+				"components": [
+					{
+						"internalType": "uint64",
+						"name": "major",
+						"type": "uint64"
+					},
+					{
+						"internalType": "uint64",
+						"name": "minor",
+						"type": "uint64"
+					},
+					{
+						"internalType": "uint64",
+						"name": "patch",
+						"type": "uint64"
+					}
+				],
+				"internalType": "struct AutonomysPackageRegistry.Version",
+				"name": "retrievedVersion",
+				"type": "tuple"
+			},
+			{
 				"internalType": "bytes32",
-				"name": "cid",
+				"name": "cidHash",
 				"type": "bytes32"
 			},
 			{
@@ -365,7 +450,7 @@
 			},
 			{
 				"internalType": "bytes32",
-				"name": "metadata",
+				"name": "metadataHash",
 				"type": "bytes32"
 			}
 		],
@@ -375,17 +460,34 @@
 	{
 		"inputs": [
 			{
-				"internalType": "string",
+				"internalType": "bytes32",
 				"name": "name",
-				"type": "string"
+				"type": "bytes32"
 			}
 		],
 		"name": "getToolVersions",
 		"outputs": [
 			{
-				"internalType": "string[]",
+				"components": [
+					{
+						"internalType": "uint64",
+						"name": "major",
+						"type": "uint64"
+					},
+					{
+						"internalType": "uint64",
+						"name": "minor",
+						"type": "uint64"
+					},
+					{
+						"internalType": "uint64",
+						"name": "patch",
+						"type": "uint64"
+					}
+				],
+				"internalType": "struct AutonomysPackageRegistry.Version[]",
 				"name": "",
-				"type": "string[]"
+				"type": "tuple[]"
 			}
 		],
 		"stateMutability": "view",
@@ -394,9 +496,9 @@
 	{
 		"inputs": [
 			{
-				"internalType": "string",
-				"name": "name",
-				"type": "string"
+				"internalType": "bytes32",
+				"name": "nameHash",
+				"type": "bytes32"
 			}
 		],
 		"name": "isToolNameRegistered",
@@ -427,36 +529,58 @@
 		"inputs": [
 			{
 				"internalType": "string",
-				"name": "version",
+				"name": "name",
 				"type": "string"
-			}
-		],
-		"name": "parseVersion",
-		"outputs": [
+			},
 			{
 				"components": [
 					{
-						"internalType": "uint256",
+						"internalType": "uint64",
 						"name": "major",
-						"type": "uint256"
+						"type": "uint64"
 					},
 					{
-						"internalType": "uint256",
+						"internalType": "uint64",
 						"name": "minor",
-						"type": "uint256"
+						"type": "uint64"
 					},
 					{
-						"internalType": "uint256",
+						"internalType": "uint64",
 						"name": "patch",
-						"type": "uint256"
+						"type": "uint64"
 					}
 				],
 				"internalType": "struct AutonomysPackageRegistry.Version",
-				"name": "",
+				"name": "version",
 				"type": "tuple"
+			},
+			{
+				"internalType": "bytes32",
+				"name": "cidHash",
+				"type": "bytes32"
+			},
+			{
+				"internalType": "bytes32",
+				"name": "metadataHash",
+				"type": "bytes32"
 			}
 		],
-		"stateMutability": "pure",
+		"name": "registerTool",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "newOwner",
+				"type": "address"
+			}
+		],
+		"name": "transferContractOwnership",
+		"outputs": [],
+		"stateMutability": "nonpayable",
 		"type": "function"
 	},
 	{
@@ -467,9 +591,94 @@
 				"type": "string"
 			},
 			{
+				"internalType": "bytes32",
+				"name": "nameHash",
+				"type": "bytes32"
+			},
+			{
+				"internalType": "address",
+				"name": "newOwner",
+				"type": "address"
+			}
+		],
+		"name": "transferToolOwnership",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
 				"internalType": "string",
-				"name": "version",
+				"name": "name",
 				"type": "string"
+			},
+			{
+				"internalType": "bytes32",
+				"name": "nameHash",
+				"type": "bytes32"
+			},
+			{
+				"components": [
+					{
+						"internalType": "uint64",
+						"name": "major",
+						"type": "uint64"
+					},
+					{
+						"internalType": "uint64",
+						"name": "minor",
+						"type": "uint64"
+					},
+					{
+						"internalType": "uint64",
+						"name": "patch",
+						"type": "uint64"
+					}
+				],
+				"internalType": "struct AutonomysPackageRegistry.Version",
+				"name": "version",
+				"type": "tuple"
+			},
+			{
+				"internalType": "bytes32",
+				"name": "metadataHash",
+				"type": "bytes32"
+			}
+		],
+		"name": "updateToolMetadata",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "bytes32",
+				"name": "nameHash",
+				"type": "bytes32"
+			},
+			{
+				"components": [
+					{
+						"internalType": "uint64",
+						"name": "major",
+						"type": "uint64"
+					},
+					{
+						"internalType": "uint64",
+						"name": "minor",
+						"type": "uint64"
+					},
+					{
+						"internalType": "uint64",
+						"name": "patch",
+						"type": "uint64"
+					}
+				],
+				"internalType": "struct AutonomysPackageRegistry.Version",
+				"name": "version",
+				"type": "tuple"
 			}
 		],
 		"name": "versionExists",
