@@ -6,6 +6,8 @@ import { createTasksRouter } from './tasks.js';
 import { createChatRouter } from './chat.js';
 import { createWebhooksRouter } from './webhooks.js';
 import { createCharacterRouter } from './character.js';
+import { createNamespacesRouter } from './namespaces.js';
+
 export const createApiRouter = (): Router => {
   const apiRouter = Router();
 
@@ -16,6 +18,7 @@ export const createApiRouter = (): Router => {
   apiRouter.use(createChatRouter());
   apiRouter.use(createWebhooksRouter());
   apiRouter.use(createCharacterRouter());
+  apiRouter.use(createNamespacesRouter());
 
   return apiRouter;
 };
