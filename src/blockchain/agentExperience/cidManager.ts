@@ -94,7 +94,7 @@ const validateLocalHash = async (
     }
     return { message: 'Local hash is up to date' };
   } catch (error) {
-    return { message: 'Using local hash due to blockchain connection issues' };
+    return { message: `Using local hash due to blockchain connection issues. Error:${error}` };
   }
 };
 
@@ -136,7 +136,9 @@ export const createCidManager = async (
       if (fallbackLocalHash) {
         return hashToCid(fallbackLocalHash);
       }
-      throw new Error('Failed to get memory hash from both blockchain and local storage');
+      throw new Error(
+        `Failed to get memory hash from both blockchain and local storage. Error:${error}`,
+      );
     }
   };
 
