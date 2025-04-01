@@ -7,7 +7,7 @@ export const createNamespacesRouter = (): Router => {
 
   // GET endpoint for SSE connection
   router.get('/namespaces/sse', handleNamespaceSSE);
-  
+
   // GET endpoint for one-time fetch
   router.get('/namespaces', (req, res) => {
     const namespaces = getRegisteredNamespaces();
@@ -15,4 +15,4 @@ export const createNamespacesRouter = (): Router => {
   });
 
   return router;
-}; 
+};

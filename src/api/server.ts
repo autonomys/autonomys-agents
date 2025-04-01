@@ -60,14 +60,16 @@ const createSingletonApiServer = (): ApiServer => {
         allowHTTP1: true,
       };
       server = http2.createSecureServer(options, app);
-      
+
       server.listen(PORT, () => {
         logger.info(`API server started with HTTP/2 support on port ${PORT}`);
         logger.info(
           `API security: ${config.apiSecurityConfig.ENABLE_AUTH ? 'Enabled' : 'Disabled'}`,
         );
         logger.info(`Access the API at: https://localhost:${PORT}/api`);
-        logger.info(`Server-Sent Events available at: https://localhost:${PORT}/api/namespaces/sse`);
+        logger.info(
+          `Server-Sent Events available at: https://localhost:${PORT}/api/namespaces/sse`,
+        );
       });
     } else {
       throw new Error('SSL certificates not found');
@@ -121,7 +123,7 @@ export const broadcastNamespacesUpdate = () => {
   if (!apiServer) {
     return;
   }
-  
+
   apiServer.broadcastNamespaces();
 };
 

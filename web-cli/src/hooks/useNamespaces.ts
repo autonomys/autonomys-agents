@@ -16,23 +16,23 @@ export const useNamespaces = () => {
       if (eventSourceRef.current) {
         eventSourceRef.current.close();
       }
-      
+
       const tokenParam = API_TOKEN ? `?token=${encodeURIComponent(API_TOKEN)}` : '';
       const sseUrl = `${API_BASE_URL}/namespaces/sse${tokenParam}`;
-      
+
       const eventSource = new EventSource(sseUrl);
-      
+
       eventSource.onopen = () => {
         console.log('Connected to namespaces SSE');
         setIsConnected(true);
       };
-      
-      eventSource.addEventListener('message', (event) => {
+
+      eventSource.addEventListener('message', event => {
         try {
           const data = JSON.parse(event.data);
           if (data.type === 'namespaces' && Array.isArray(data.data)) {
             console.log('Received namespaces update:', data.data);
-            
+
             // Subscribe to any new namespaces
             data.data.forEach((ns: string) => {
               if (!subscribedNamespacesRef.current.has(ns)) {
@@ -41,7 +41,7 @@ export const useNamespaces = () => {
                 console.log(`SSE: New namespace detected: ${ns}`);
               }
             });
-            
+
             // Update the namespaces state with 'all' at the beginning
             setNamespaces(['all', ...data.data]);
           }
@@ -49,23 +49,23 @@ export const useNamespaces = () => {
           console.error('Error parsing SSE message:', error);
         }
       });
-      
-      eventSource.onerror = (error) => {
+
+      eventSource.onerror = error => {
         console.error('Namespaces SSE error:', error);
         setIsConnected(false);
-        
+
         // Close the event source and try to reconnect after a delay
         eventSource.close();
         setTimeout(() => {
           setupEventSource();
         }, 5000);
       };
-      
+
       eventSourceRef.current = eventSource;
     };
-    
+
     setupEventSource();
-    
+
     return () => {
       if (eventSourceRef.current) {
         eventSourceRef.current.close();
@@ -112,7 +112,7 @@ export const useNamespaces = () => {
       // Fallback to REST API if SSE is not connected
       const fetchedNamespaces = await fetchNamespaces();
       setNamespaces(['all', ...fetchedNamespaces]);
-      
+
       fetchedNamespaces.forEach(ns => {
         if (!subscribedNamespacesRef.current.has(ns)) {
           subscribeToNamespace(ns);
@@ -128,6 +128,6 @@ export const useNamespaces = () => {
     subscribedNamespaces: subscribedNamespacesRef.current,
     changeNamespace,
     refreshNamespaces,
-    isSSEConnected: isConnected
+    isSSEConnected: isConnected,
   };
 };
