@@ -7,7 +7,7 @@ import {
   requestTokens,
   verifyFaucetBalance,
   withdrawalAmount,
-} from '../../../blockchain/autoEvm/taurusFaucet.js';
+} from './taurusFaucet.js';
 
 export const createFaucetRequestTokensTool = () =>
   new DynamicStructuredTool({
