@@ -1,6 +1,6 @@
 import { DynamicStructuredTool } from '@langchain/core/tools';
 import { z } from 'zod';
-import { isAddress, ethers } from 'ethers';
+import { ethers, isAddress } from 'ethers';
 import {
   isMinter,
   nextAccessTime,
