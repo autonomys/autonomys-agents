@@ -15,7 +15,7 @@ export const getHeaders = (contentType = 'application/json') => {
   return headers;
 };
 
-export async function apiRequest<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
+export const apiRequest = async <T>(endpoint: string, options: RequestInit = {}): Promise<T> => {
   const url = endpoint.startsWith('http') ? endpoint : `${API_BASE_URL}${endpoint}`;
 
   const headers = options.headers || getHeaders();
@@ -40,4 +40,4 @@ export async function apiRequest<T>(endpoint: string, options: RequestInit = {})
     console.error('API request failed:', error);
     throw error;
   }
-}
+};

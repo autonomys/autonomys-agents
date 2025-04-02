@@ -22,17 +22,17 @@ export const runWorkflow = async (
     console.error('Error in runWorkflow:', error);
     throw error;
   }
-}
+};
 
 export const stopWorkflow = async (namespace = DEFAULT_NAMESPACE): Promise<WorkflowResult> => {
   try {
     console.log('Stopping workflow...');
-    
+
     const data = await apiRequest<WorkflowResult>(`${API_BASE_URL}/stop`, {
       method: 'POST',
       body: JSON.stringify({ namespace }),
     });
-    
+
     return {
       status: data.status,
       error: data.error,
@@ -41,4 +41,4 @@ export const stopWorkflow = async (namespace = DEFAULT_NAMESPACE): Promise<Workf
     console.error('Error in stopWorkflow:', error);
     throw error;
   }
-}
+};

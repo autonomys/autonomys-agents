@@ -4,6 +4,24 @@ import { Resizable } from 're-resizable';
 import StatusBox from '../status/StatusBox';
 import { InputBoxProps } from '../../types/types';
 import { stopWorkflow } from '../../services/WorkflowService';
+import {
+  containerFlexStyles,
+  resizableDefaultSize,
+  resizableEnableProps,
+  resizableHandleStyles,
+  resizableHandleBoxStyles,
+  containerBoxStyles,
+  headingStyles,
+  contentFlexStyles,
+  inputAreaFlexStyles,
+  textareaStyles,
+  textareaScrollbarStyles,
+  sendButtonStyles,
+  sendButtonFlexStyles,
+  sendButtonTextStyles,
+  sendButtonAnimationStyles,
+  helperTextStyles
+} from './styles/InputStyles';
 
 const InputArea: React.FC<InputBoxProps> = ({
   value,
@@ -70,13 +88,10 @@ const InputArea: React.FC<InputBoxProps> = ({
   }, [size.height]);
 
   return (
-    <Flex direction='column' gap='4' w='100%' h='100%'>
+    <Flex {...containerFlexStyles}>
       <StatusBox status={getStatusText()} onStop={handleStopWorkflow} />
       <Resizable
-        defaultSize={{
-          width: '100%',
-          height: 240,
-        }}
+        defaultSize={resizableDefaultSize}
         size={{
           width: '100%',
           height: size.height,
@@ -88,197 +103,52 @@ const InputArea: React.FC<InputBoxProps> = ({
             height: prevSize.height + d.height,
           }));
         }}
-        enable={{
-          top: false,
-          right: false,
-          bottom: true,
-          left: false,
-          topRight: false,
-          bottomRight: false,
-          bottomLeft: false,
-          topLeft: false,
-        }}
+        enable={resizableEnableProps}
         handleStyles={{
-          bottom: {
-            height: '8px',
-            borderRadius: '0 0 6px 6px',
-            backgroundColor: 'transparent',
-            backgroundImage:
-              'linear-gradient(to right, transparent, rgba(0, 255, 153, 0.4), transparent)',
-            bottom: '0px',
-            cursor: 'row-resize',
-          },
+          bottom: resizableHandleStyles,
         }}
         handleComponent={{
           bottom: (
-            <Box
-              width='100%'
-              height='8px'
-              position='absolute'
-              bottom='0'
-              cursor='row-resize'
-              borderRadius='0 0 6px 6px'
-              _hover={{
-                backgroundImage:
-                  'linear-gradient(to right, transparent, rgba(0, 255, 153, 0.8), transparent)',
-                opacity: 0.7,
-              }}
-            />
+            <Box {...resizableHandleBoxStyles} />
           ),
         }}
       >
-        <Box
-          p={4}
-          bg='rgba(26, 26, 46, 0.8)'
-          borderRadius='md'
-          boxShadow='0 4px 12px rgba(0, 0, 0, 0.3)'
-          backdropFilter='blur(8px)'
-          border='1px solid'
-          borderColor='gray.700'
-          position='relative'
-          width='100%'
-          height='100%'
-          display='flex'
-          flexDirection='column'
-          _before={{
-            content: '""',
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            height: '1px',
-            bgGradient: 'linear(to-r, transparent, brand.neonGreen, transparent)',
-          }}
-        >
-          <Heading
-            as='h3'
-            size='md'
-            mb={3}
-            color='brand.neonGreen'
-            textShadow='0 0 5px rgba(0, 255, 153, 0.5)'
-            fontSize={['md', 'lg', 'xl']}
-          >
+        <Box {...containerBoxStyles}>
+          <Heading {...headingStyles}>
             Input
           </Heading>
 
-          <Flex direction='column' flex='1'>
-            <Flex mb={2} flex='1' gap={3}>
+          <Flex {...contentFlexStyles}>
+            <Flex {...inputAreaFlexStyles}>
               <Textarea
                 ref={textareaRef}
                 value={value}
                 onChange={e => handleInputChange(e.target.value)}
                 onKeyDown={handleKeyDown}
                 placeholder='Enter your message here...'
-                bg='rgba(0, 0, 0, 0.3)'
-                color='white'
-                border='1px solid'
-                borderColor='gray.600'
-                _hover={{
-                  borderColor: 'brand.neonBlue',
-                  boxShadow: '0 0 5px rgba(0, 204, 255, 0.3)',
-                }}
-                _focus={{
-                  borderColor: 'brand.neonGreen',
-                  boxShadow: '0 0 10px rgba(0, 255, 153, 0.3)',
-                  outline: 'none',
-                }}
-                _placeholder={{
-                  color: 'whiteAlpha.500',
-                  fontSize: ['sm', 'md'],
-                }}
-                resize='none'
-                flex='1'
-                h='auto'
-                overflowY='auto'
-                p={3}
-                fontSize={['sm', 'md']}
-                transition='all 0.2s ease'
-                css={{
-                  '&::-webkit-scrollbar': {
-                    width: '8px',
-                    borderRadius: '4px',
-                  },
-                  '&::-webkit-scrollbar-track': {
-                    background: 'rgba(0, 0, 0, 0.1)',
-                  },
-                  '&::-webkit-scrollbar-thumb': {
-                    background: 'rgba(0, 255, 153, 0.3)',
-                    borderRadius: '4px',
-                  },
-                }}
+                {...textareaStyles}
+                css={textareaScrollbarStyles}
               />
 
               <Button
                 onClick={handleInputSubmit}
-                bg='rgba(0, 0, 0, 0.5)'
-                color='brand.neonGreen'
-                border='1px solid'
-                borderColor='brand.neonGreen'
-                alignSelf='stretch'
-                px={4}
-                py={6}
-                fontSize={['sm', 'md']}
-                fontWeight='medium'
-                _hover={{
-                  bg: 'rgba(0, 255, 153, 0.2)',
-                  boxShadow: '0 0 15px rgba(0, 255, 153, 0.5)',
-                  transform: 'translateY(-2px)',
-                }}
-                _active={{
-                  bg: 'rgba(0, 255, 153, 0.3)',
-                  transform: 'translateY(1px)',
-                }}
-                transition='all 0.2s ease'
-                position='relative'
-                overflow='hidden'
-                _before={{
-                  content: '""',
-                  position: 'absolute',
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  height: '1px',
-                  bg: 'rgba(0, 255, 153, 0.7)',
-                  animation: 'shimmer 2s infinite linear',
-                }}
+                {...sendButtonStyles}
                 className='send-button'
               >
-                <Flex align='center' justify='center' gap={2}>
+                <Flex {...sendButtonFlexStyles}>
                   <Text>Send</Text>
                   <Text
-                    as='span'
-                    ml={1}
-                    className='send-icon'
-                    animation='floatEffect 2s infinite ease-in-out'
-                    fontSize='lg'
-                    fontWeight='bold'
+                    {...sendButtonTextStyles}
                     style={{ transform: 'rotate(-45deg)' }}
                   >
                     ➚
                   </Text>
-                  <Box
-                    position='absolute'
-                    top='0'
-                    left='0'
-                    right='0'
-                    bottom='0'
-                    pointerEvents='none'
-                    opacity='0.4'
-                    zIndex='-1'
-                    bgGradient='linear(to-r, transparent, rgba(0, 255, 153, 0.1), transparent)'
-                    animation='scannerEffect 2s infinite linear'
-                  />
+                  <Box {...sendButtonAnimationStyles} />
                 </Flex>
               </Button>
             </Flex>
 
-            <Text
-              fontSize={['xs', 'sm']}
-              color='whiteAlpha.600'
-              textAlign='right'
-              mt={1}
-              fontStyle='italic'
-            >
+            <Text {...helperTextStyles}>
               Press Enter to send, Shift+Enter for new line
             </Text>
           </Flex>
