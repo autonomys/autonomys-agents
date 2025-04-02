@@ -1,7 +1,7 @@
-import { join } from "path";
+import { join } from 'path';
 
-import { dirname } from "path";
-import { fileURLToPath } from "url";
+import { dirname } from 'path';
+import { fileURLToPath } from 'url';
 
 // Get the absolute path to the project root
 export const getProjectRoot = () => {
