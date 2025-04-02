@@ -28,19 +28,34 @@
     "build:agent": "yarn workspace autonomys-agents-core build",
     "start:agent": "yarn workspace autonomys-agents-core start",
     "dev:agent": "yarn workspace autonomys-agents-core dev",
-    "dev:web": "yarn workspace web-cli start",
+    "dev:web": "cd web-cli && DISABLE_ESLINT_PLUGIN=true npx react-scripts start",
     "dev:all": "tsx scripts/dev-all.ts",
     "test": "yarn workspaces run test",
     "format": "prettier --write \"core/**/*.ts\" \"tests/**/*.ts\" \"web-cli/**/*.ts\"",
     "lint": "eslint \"core/**/*.{js,ts}\"",
+    "lint:fix": "eslint \"core/**/*.{js,ts}\" --fix",
     "generate-certs": "yarn workspace autonomys-agents-core generate-certs",
     "resurrect": "yarn workspace autonomys-agents-core resurrect",
     "create-character": "yarn workspace autonomys-agents-core create-character"
   },
+  "dependencies": {
+    "@types/yargs": "^17.0.33",
+    "better-sqlite3": "^11.8.0",
+    "yargs": "^17.7.2"
+  },
   "devDependencies": {
+    "@eslint/js": "^9.18.0",
+    "@types/better-sqlite3": "^7.6.12",
+    "@typescript-eslint/eslint-plugin": "^8.29.0",
+    "@typescript-eslint/parser": "^8.29.0",
+    "eslint": "^9.23.0",
+    "eslint-config-prettier": "^10.1.1",
+    "eslint-plugin-prettier": "^5.2.6",
     "glob": "^10.3.10",
-    "prettier": "^3.2.2",
-    "tsx": "^4.7.1"
+    "prettier": "^3.5.3",
+    "tsx": "^4.7.1",
+    "typescript": "^5.8.2",
+    "typescript-eslint": "^8.29.0"
   },
   "packageManager": "yarn@4.8.1"
 }
