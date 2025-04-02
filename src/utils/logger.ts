@@ -1,13 +1,14 @@
 import winston from 'winston';
 import path from 'path';
 import util from 'util';
+import { getProjectRoot } from './utils.js';
 
 const getCharacterPath = () => {
   const characterName = process.argv[2];
   if (!characterName) {
     return process.cwd();
   }
-  return path.join(process.cwd(), 'characters', characterName);
+  return path.join(getProjectRoot(), 'characters', characterName);
 };
 
 const stripAnsi = (str: string) => str.replace(/\u001b\[\d+m/g, '');

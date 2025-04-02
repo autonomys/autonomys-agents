@@ -2,15 +2,13 @@ import dotenv from 'dotenv';
 import { existsSync, readFileSync } from 'fs';
 import { mkdir } from 'fs/promises';
 import path from 'path';
-import { fileURLToPath } from 'url';
 import yaml from 'yaml';
 import { z } from 'zod';
 import { loadCharacter } from './characters.js';
 import { configSchema } from './schema.js';
+import { getProjectRoot } from '../utils/utils.js';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const workspaceRoot = path.resolve(__dirname, '../..');
+const workspaceRoot = getProjectRoot();
 
 const cookiesDir = path.join(workspaceRoot, '.cookies');
 try {
