@@ -2,7 +2,7 @@ import { spawn } from 'child_process';
 import { readFileSync } from 'fs';
 import { dirname, join } from 'path';
 import { fileURLToPath } from 'url';
-import { closeAllVectorDBs } from '../src/services/vectorDb/vectorDBPool';
+import { closeAllVectorDBs } from '../core/src/services/vectorDb/vectorDBPool';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const rootDir = dirname(__dirname);

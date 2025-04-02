@@ -1,7 +1,7 @@
-import { createLogger } from './utils/logger.js';
-import { orchestratorRunner } from './agent.js';
-import { startTaskExecutor } from './agents/workflows/orchestrator/scheduler/taskExecutor.js';
-import { closeAllVectorDBs } from './services/vectorDb/vectorDBPool.js';
+import { createLogger } from './src/utils/logger.js';
+import { orchestratorRunner } from './src/agent.js';
+import { startTaskExecutor } from './src/agents/workflows/orchestrator/scheduler/taskExecutor.js';
+import { closeAllVectorDBs } from './src/services/vectorDb/vectorDBPool.js';
 export const logger = createLogger('app');
 
 process.on('SIGINT', () => {
