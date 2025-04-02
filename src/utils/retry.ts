@@ -2,21 +2,29 @@ type RetryOptions = {
   maxRetries?: number;
   initialDelay?: number;
   shouldRetry?: (error: Error) => boolean;
+  timeout?: number; // Total time in milliseconds before giving up
 };
 
 const delay = (ms: number): Promise<void> => new Promise(resolve => setTimeout(resolve, ms));
 
+const withTimeout = <T>(promise: Promise<T>, ms: number): Promise<T> => {
+  const timeoutPromise = new Promise<never>((_, reject) => {
+    setTimeout(() => reject(new Error(`Operation timed out after ${ms}ms`)), ms);
+  });
+  return Promise.race([promise, timeoutPromise]);
+};
+
 // Retry function with exponential backoff
 export const retryWithBackoff = async <T>(
   fn: () => Promise<T>,
-  { maxRetries = 5, initialDelay = 1000, shouldRetry = () => true }: RetryOptions = {},
+  { maxRetries = 5, initialDelay = 1000, shouldRetry = () => true, timeout }: RetryOptions = {},
 ): Promise<T> => {
   let retries = 0;
   let lastError: Error;
 
   while (retries < maxRetries) {
     try {
-      return await fn();
+      return await (timeout ? withTimeout(fn(), timeout) : fn());
     } catch (error) {
       lastError = error as Error;
       retries++;

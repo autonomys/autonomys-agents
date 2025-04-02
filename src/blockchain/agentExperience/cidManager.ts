@@ -149,6 +149,7 @@ export const createCidManager = async (
     try {
       const tx = await retryWithBackoff(
         () => contract.setLastMemoryHash(bytes32Hash) as Promise<ethers.TransactionResponse>,
+        { timeout: 60000 },
       );
       const receipt = (await tx.wait()) as ethers.TransactionReceipt;
       saveHashLocally(bytes32Hash, localHashLocation);
