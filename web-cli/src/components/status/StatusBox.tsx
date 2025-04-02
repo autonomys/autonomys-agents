@@ -1,9 +1,9 @@
 import React from 'react';
-import { Box, Heading, Text, Flex } from '@chakra-ui/react';
+import { Box, Heading, Text, Flex, Button, Icon } from '@chakra-ui/react';
 import { Resizable } from 're-resizable';
 import { StatusBoxProps } from '../../types/types';
 
-const StatusBox: React.FC<StatusBoxProps> = ({ status }) => {
+const StatusBox: React.FC<StatusBoxProps> = ({ status, onStop }) => {
   const getStatusColor = () => {
     if (status.startsWith('Running:') || status.startsWith('Processing:')) {
       return 'brand.neonBlue';
@@ -42,6 +42,14 @@ const StatusBox: React.FC<StatusBoxProps> = ({ status }) => {
     return '';
   };
 
+  // Add StopIcon component
+  const StopIcon = (props: any) => (
+    <Icon viewBox="0 0 24 24" {...props}>
+      <rect x="6" y="6" width="12" height="12" />
+    </Icon>
+  );
+
+  const isRunning = status.startsWith('Running:') || status.startsWith('Processing:');
   const statusColor = getStatusColor();
   const bgColor = getBgColor();
   const statusLabel = getStatusLabel();
@@ -162,34 +170,94 @@ const StatusBox: React.FC<StatusBoxProps> = ({ status }) => {
             },
           }}
         >
-          {isReady ? (
-            <Text fontWeight='500' color={statusColor} fontSize={['sm', 'md', 'lg']}>
-              Ready for input
-            </Text>
-          ) : (
-            <Flex direction='column'>
-              <Text
-                fontWeight='600'
-                color={statusColor}
-                mb={statusMessage ? 2 : 0}
-                fontSize={['sm', 'md', 'lg']}
-              >
-                {statusLabel}
+          <Flex direction='column'>
+            {isReady ? (
+              <Text fontWeight='500' color={statusColor} fontSize={['sm', 'md', 'lg']}>
+                Ready for input
               </Text>
-              {statusMessage && (
-                <Text
-                  fontSize={['sm', 'md']}
-                  fontWeight='normal'
-                  color='whiteAlpha.800'
-                  wordBreak='break-word'
-                  whiteSpace='pre-wrap'
-                  lineHeight='1.6'
-                >
-                  {statusMessage}
-                </Text>
-              )}
-            </Flex>
-          )}
+            ) : (
+              <Flex direction='column'>
+                <Flex justify='space-between' align='center'>
+                  <Text
+                    fontWeight='600'
+                    color={statusColor}
+                    mb={statusMessage ? 2 : 0}
+                    fontSize={['sm', 'md', 'lg']}
+                  >
+                    {statusLabel}
+                  </Text>
+                  {isRunning && onStop && (
+                    <Button
+                      size='sm'
+                      colorScheme='red'
+                      variant='outline'
+                      onClick={onStop}
+                      ml='auto'
+                      position='relative'
+                      borderRadius='md'
+                      py={1.5}
+                      px={4}
+                      bg='rgba(239, 83, 80, 0.05)'
+                      color='#ef5350'
+                      border='1px solid'
+                      borderColor='rgba(239, 83, 80, 0.3)'
+                      overflow='hidden'
+                      transition='all 0.2s ease'
+                      css={{
+                        animation: 'nodeRipple 2s infinite',
+                      }}
+                      _before={{
+                        content: '""',
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        height: '1px',
+                        bg: 'rgba(239, 83, 80, 0.7)',
+                      }}
+                      _hover={{
+                        bg: 'rgba(239, 83, 80, 0.15)',
+                        borderColor: 'rgba(239, 83, 80, 0.8)',
+                        boxShadow: '0 0 12px rgba(239, 83, 80, 0.5)',
+                        transform: 'translateY(-1px)',
+                        animation: 'none',
+                      }}
+                      _active={{
+                        bg: 'rgba(239, 83, 80, 0.25)',
+                        transform: 'translateY(1px)',
+                      }}
+                    >
+                      <Text fontSize="md" fontWeight="500">Stop</Text>
+                      <Box
+                        position='absolute'
+                        top='0'
+                        left='0'
+                        right='0'
+                        bottom='0'
+                        pointerEvents='none'
+                        opacity='0.3'
+                        zIndex='-1'
+                        bgGradient='linear(to-r, transparent, rgba(239, 83, 80, 0.2), transparent)'
+                        animation='scannerEffect 2s infinite linear'
+                      />
+                    </Button>
+                  )}
+                </Flex>
+                {statusMessage && (
+                  <Text
+                    fontSize={['sm', 'md']}
+                    fontWeight='normal'
+                    color='whiteAlpha.800'
+                    wordBreak='break-word'
+                    whiteSpace='pre-wrap'
+                    lineHeight='1.6'
+                  >
+                    {statusMessage}
+                  </Text>
+                )}
+              </Flex>
+            )}
+          </Flex>
         </Box>
       </Box>
     </Resizable>

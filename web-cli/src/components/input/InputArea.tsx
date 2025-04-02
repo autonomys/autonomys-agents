@@ -3,6 +3,7 @@ import { Box, Heading, Textarea, Button, Text, Flex } from '@chakra-ui/react';
 import { Resizable } from 're-resizable';
 import StatusBox from '../status/StatusBox';
 import { InputBoxProps } from '../../types/types';
+import { stopWorkflow } from '../../services/WorkflowService';
 
 const InputArea: React.FC<InputBoxProps> = ({
   value,
@@ -13,6 +14,7 @@ const InputArea: React.FC<InputBoxProps> = ({
 }) => {
   const [size, setSize] = useState({ height: 240 });
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const [stopStatus, setStopStatus] = useState<string | null>(null);
 
   const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -22,6 +24,10 @@ const InputArea: React.FC<InputBoxProps> = ({
   };
 
   const getStatusText = () => {
+    if (stopStatus) {
+      return stopStatus;
+    }
+    
     if (currentTask) {
       const taskStatus = currentTask.status || 'processing';
       const formattedStatus = taskStatus.charAt(0).toUpperCase() + taskStatus.slice(1);
@@ -30,6 +36,27 @@ const InputArea: React.FC<InputBoxProps> = ({
       return `Error: ${error}`;
     } else {
       return 'Ready';
+    }
+  };
+
+  const handleStopWorkflow = async () => {
+    try {
+      setStopStatus('Stopping: Sending stop signal to workflow...');
+      await stopWorkflow();
+      setStopStatus('Ready');
+      
+      // Clear the status message after a delay
+      setTimeout(() => {
+        setStopStatus(null);
+      }, 3000);
+    } catch (error) {
+      console.error('Error stopping workflow:', error);
+      setStopStatus('Error: Failed to stop the workflow. Please try again.');
+      
+      // Clear the error message after a delay
+      setTimeout(() => {
+        setStopStatus(null);
+      }, 5000);
     }
   };
 
@@ -44,7 +71,7 @@ const InputArea: React.FC<InputBoxProps> = ({
 
   return (
     <Flex direction='column' gap='4' w='100%' h='100%'>
-      <StatusBox status={getStatusText()} />
+      <StatusBox status={getStatusText()} onStop={handleStopWorkflow} />
       <Resizable
         defaultSize={{
           width: '100%',

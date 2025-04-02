@@ -17,6 +17,7 @@ export interface OutputLogProps {
 
 export interface StatusBoxProps {
   status: string;
+  onStop?: () => void;
 }
 
 export interface InputBoxProps {
