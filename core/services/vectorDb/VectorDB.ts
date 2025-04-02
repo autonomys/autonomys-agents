@@ -1,6 +1,6 @@
 import Database from 'better-sqlite3';
 import vectorlite from 'vectorlite';
-import { OpenAI } from 'openai';
+import { OpenAI } from 'openai/index.mjs';
 import { config } from '../../config/index.js';
 import { createLogger } from '../../utils/logger.js';
 import { join } from 'path';

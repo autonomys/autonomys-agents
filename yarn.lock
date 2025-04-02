@@ -8068,9 +8068,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"autonomys-agents-core@workspace:src":
+"autonomys-agents-core@workspace:core":
   version: 0.0.0-use.local
-  resolution: "autonomys-agents-core@workspace:src"
+  resolution: "autonomys-agents-core@workspace:core"
   dependencies:
     "@autonomys/auto-dag-data": "npm:1.4.5"
     "@autonomys/auto-drive": "npm:1.4.5"

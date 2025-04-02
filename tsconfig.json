@@ -4,7 +4,7 @@
         "module": "NodeNext",
         "moduleResolution": "NodeNext",
         "outDir": "./dist",
-        "rootDir": "./src",
+        "rootDir": "core",
         "strict": true,
         "esModuleInterop": true,
         "skipLibCheck": true,
@@ -13,7 +13,7 @@
         "resolveJsonModule": true
     },
     "include": [
-        "src/**/*"
+        "core/**/*"
     ],
     "exclude": [
         "node_modules",
