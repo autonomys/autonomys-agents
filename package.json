@@ -33,6 +33,7 @@
     "dev:all": "tsx scripts/dev-all.ts",
     "test": "yarn workspaces run test",
     "format": "prettier --write \"core/**/*.ts\" \"tests/**/*.ts\" \"web-cli/**/*.ts\"",
+    "format:check": "prettier --check \"core/**/*.ts\" \"tests/**/*.ts\" \"web-cli/**/*.ts\"",
     "lint": "eslint \"core/**/*.{js,ts}\"",
     "lint:fix": "eslint \"core/**/*.{js,ts}\" --fix",
     "generate-certs": "yarn workspace autonomys-agents-core generate-certs",
