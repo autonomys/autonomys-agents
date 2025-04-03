@@ -8,10 +8,22 @@ type RetryOptions = {
 const delay = (ms: number): Promise<void> => new Promise(resolve => setTimeout(resolve, ms));
 
 const withTimeout = <T>(promise: Promise<T>, ms: number): Promise<T> => {
+  let timeoutId: NodeJS.Timeout;
+  
   const timeoutPromise = new Promise<never>((_, reject) => {
-    setTimeout(() => reject(new Error(`Operation timed out after ${ms}ms`)), ms);
+    timeoutId = setTimeout(() => reject(new Error(`Operation timed out after ${ms}ms`)), ms);
   });
-  return Promise.race([promise, timeoutPromise]);
+  
+  return Promise.race([
+    promise.then(result => {
+      clearTimeout(timeoutId);
+      return result;
+    }).catch(error => {
+      clearTimeout(timeoutId);
+      throw error;
+    }),
+    timeoutPromise
+  ]);
 };
 
 // Retry function with exponential backoff
