@@ -3,6 +3,10 @@
   "version": "0.4.2",
   "description": "Autonomys Agents Core",
   "main": "index.ts",
+  "exports": {
+    ".": "./index.ts",
+    "./src/*": "./src/*"
+  },
   "type": "module",
   "publishConfig": {
     "access": "public"

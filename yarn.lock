@@ -7888,7 +7888,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"autonomys-agents-core@workspace:core":
+"autonomys-agents-core@workspace:*, autonomys-agents-core@workspace:core":
   version: 0.0.0-use.local
   resolution: "autonomys-agents-core@workspace:core"
   dependencies:
@@ -7938,6 +7938,15 @@ __metadata:
     xml2js: "npm:^0.6.2"
     zod: "npm:^3.22.4"
     zod-to-json-schema: "npm:^3.24.1"
+  languageName: unknown
+  linkType: soft
+
+"autonomys-agents-examples@workspace:examples":
+  version: 0.0.0-use.local
+  resolution: "autonomys-agents-examples@workspace:examples"
+  dependencies:
+    autonomys-agents-core: "workspace:*"
+    tsx: "npm:^4.7.1"
   languageName: unknown
   linkType: soft
 
