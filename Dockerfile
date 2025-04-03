@@ -13,19 +13,21 @@ RUN apt-get update && apt-get install -y \
     libc6-dev libx11-dev libnss3-dev libglib2.0-dev libasound2-dev libxi-dev libxtst-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy package files
-COPY package.json yarn.lock ./
+# Enable corepack for proper Yarn version management
+RUN corepack enable
 
-# Install dependencies
-RUN yarn install
-
-# Copy and build source
-COPY tsconfig.json tsconfig.node.json ./
-COPY src ./src
+# Copy workspace and package files
+COPY package.json yarn.lock .yarnrc.yml ./
+COPY .yarn ./.yarn
+COPY tsconfig.json ./
+COPY core ./core
 COPY scripts ./scripts
 # Only copy the specific character folder
 COPY characters/${CHARACTER_NAME} ./characters/${CHARACTER_NAME}
 COPY certs ./certs
+
+# Install dependencies
+RUN yarn install
 
 # Fix line endings for .env files to ensure compatibility across operating systems
 RUN find ./characters -name "*.env" -type f -exec sed -i 's/\r$//' {} \; || true
@@ -38,7 +40,8 @@ RUN mkdir -p certs && \
       -keyout certs/server.key -out certs/server.cert -days 365; \
     fi
 
-RUN yarn build
+# Build the project using the workspace setup
+RUN yarn workspace autonomys-agents-core build
 
 # Stage 2: Production stage
 FROM node:20.18.1
@@ -57,18 +60,26 @@ RUN apt-get update && apt-get install -y \
     libc6 libx11-6 libnss3 libglib2.0-0 libasound2 libxi6 libxtst6 \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy package files
-COPY package.json yarn.lock ./
+# Enable corepack for proper Yarn version management
+RUN corepack enable
 
-# Install only production deps
-RUN yarn install
-
-# Copy built files
+# Copy built files from the root-level dist directory
 COPY --from=builder /app/dist ./dist
 # Only copy the specific character folder from builder
 COPY --from=builder /app/characters/${CHARACTER_NAME} ./characters/${CHARACTER_NAME}
 COPY --from=builder /app/certs ./certs
 COPY --from=builder /app/scripts ./scripts
+
+# Copy yarn configuration and install dependencies in dist directory
+COPY package.json yarn.lock .yarnrc.yml ./
+COPY .yarn ./.yarn
+COPY --from=builder /app/core/package.json ./dist/package.json
+WORKDIR /app/dist
+# Create an empty yarn.lock file to mark this as a separate project
+RUN touch yarn.lock
+# Install dependencies
+RUN yarn install
+WORKDIR /app
 
 # Fix line endings again to ensure compatibility (in case any changes happened during build)
 RUN find ./characters -name "*.env" -type f -exec sed -i 's/\r$//' {} \; || true
