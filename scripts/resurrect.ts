@@ -2,16 +2,16 @@ import { join } from 'path';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs';
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
-import { createExperienceManager } from '../core/blockchain/agentExperience/index.js';
-import { characterName, config } from '../core/config/index.js';
-import { createLogger } from '../core/utils/logger.js';
-import { VectorDB } from '../core/services/vectorDb/VectorDB.js';
-import { getVectorDB, closeVectorDB } from '../core/services/vectorDb/vectorDBPool.js';
+import { createExperienceManager } from '../core/src/blockchain/agentExperience/index.js';
+import { characterName, config } from '../core/src/config/index.js';
+import { createLogger } from '../core/src/utils/logger.js';
+import { VectorDB } from '../core/src/services/vectorDb/VectorDB.js';
+import { getVectorDB, closeVectorDB } from '../core/src/services/vectorDb/vectorDBPool.js';
 import {
   ExperienceManager,
   AgentExperience,
   AgentExperienceV0,
-} from '../core/blockchain/agentExperience/types.js';
+} from '../core/src/blockchain/agentExperience/types.js';
 
 const logger = createLogger('resurrect-cli');
 let vectorDb: VectorDB;
