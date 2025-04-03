@@ -40,13 +40,7 @@
     "generate-certs": "yarn workspace autonomys-agents-core generate-certs",
     "resurrect": "yarn workspace autonomys-agents-core resurrect",
     "create-character": "yarn workspace autonomys-agents-core create-character",
-    "example:twitter": "yarn workspace autonomys-agents-examples twitter",
-    "example:web3": "yarn workspace autonomys-agents-examples web3",
-    "example:multi": "yarn workspace autonomys-agents-examples multi",
-    "example:notion": "yarn workspace autonomys-agents-examples notion",
-    "example:slack": "yarn workspace autonomys-agents-examples slack",
-    "example:github": "yarn workspace autonomys-agents-examples github",
-    "example:vectordb": "yarn workspace autonomys-agents-examples vectordb"
+    "example": "yarn workspace autonomys-agents-examples tsx index.ts"
   },
   "dependencies": {
     "@types/yargs": "^17.0.33",

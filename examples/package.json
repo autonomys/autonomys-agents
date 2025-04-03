@@ -5,6 +5,7 @@
   "type": "module",
   "private": true,
   "scripts": {
+    "start": "tsx index.ts",
     "twitter": "tsx twitterAgent/index.ts",
     "web3": "tsx web3Agent/index.ts",
     "multi": "tsx multiPersonality/index.ts",
