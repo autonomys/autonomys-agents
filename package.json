@@ -25,12 +25,12 @@
     "node": ">=20.18.1"
   },
   "scripts": {
+    "start": "tsx scripts/dev-all.ts",
     "build:agent": "yarn workspace autonomys-agents-core build",
     "build:web": "DISABLE_ESLINT_PLUGIN=true yarn workspace web-cli build",
     "start:agent": "yarn workspace autonomys-agents-core start",
     "dev:agent": "yarn workspace autonomys-agents-core dev",
     "dev:web": "DISABLE_ESLINT_PLUGIN=true yarn workspace web-cli start",
-    "dev:all": "tsx scripts/dev-all.ts",
     "test": "yarn workspaces run test",
     "format": "prettier --write \"core/**/*.ts\" \"tests/**/*.ts\" \"web-cli/**/*.ts\"",
     "format:check": "prettier --check \"core/**/*.ts\" \"tests/**/*.ts\" \"web-cli/**/*.ts\"",
