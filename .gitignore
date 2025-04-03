@@ -20,21 +20,9 @@ ENV/
 env/
 .env
 
-# Distribution / packaging
-.Python
-build/
-develop-eggs/
 dist/
 downloads/
-eggs/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-share/python-wheels/
 
-# Logs
 *.log
 
 # IDE specific files
@@ -54,9 +42,7 @@ node_modules/
 *.sqlite
 *.sqlite-journal
 
-resources/
-threads.json
-cookies.json
-
-*.bin
-data
+*.gz
+.yarn/cache
+.yarn/install-state.gz
+.yarn/unplugged
