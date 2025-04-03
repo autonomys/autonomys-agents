@@ -40,25 +40,33 @@ function findRootDir(startDir: string): string {
 
 const rootDir = findRootDir(__dirname);
 
-const copyCharacterFile = async (characterName: string): Promise<void> => {
-  if (!characterName || characterName.startsWith('-')) {
-    console.error('Error: No character name provided');
-    process.exit(1);
-  }
-
-  const sourceDir = path.join(rootDir, 'characters', characterName, 'config');
-  const destDir = path.join(rootDir, 'core', 'dist', 'characters', characterName, 'config');
-  const fileName = `${characterName}.yaml`;
-
+// Setup dependencies in dist folder by symlinking
+const setupDistDependencies = async (): Promise<void> => {
   try {
-    // Create destination directory
-    await fs.mkdir(destDir, { recursive: true });
-
-    // Copy the file
-    await fs.copyFile(path.join(sourceDir, fileName), path.join(destDir, fileName));
+    // Get paths
+    const distDir = path.join(rootDir, 'dist');
+    const coreNodeModulesPath = path.join(rootDir, 'core', 'node_modules');
+    const distNodeModulesPath = path.join(distDir, 'node_modules');
+    
+    // Create a symlink from core/node_modules to dist/node_modules if it doesn't exist
+    if (!existsSync(distNodeModulesPath)) {
+      console.log('Setting up symlink to core node_modules...');
+      
+      if (process.platform === 'win32') {
+        // Windows needs directory junction
+        await execAsync(`mklink /J "${distNodeModulesPath}" "${coreNodeModulesPath}"`);
+      } else {
+        // Unix/Mac can use symlink
+        await fs.symlink(coreNodeModulesPath, distNodeModulesPath, 'dir');
+      }
+      
+      console.log('Symlink created successfully');
+    } else {
+      console.log('Dependencies symlink already exists, skipping');
+    }
   } catch (error) {
     console.error(
-      `Error copying character file: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      `Error setting up dist dependencies: ${error instanceof Error ? error.message : 'Unknown error'}`,
     );
     process.exit(1);
   }
@@ -75,22 +83,45 @@ const start = async () => {
   }
 
   try {
-    // Run build using workspace to ensure it runs in the context of the core package
-    await execAsync('yarn workspace autonomys-agents-core build');
+    // Create dist directory if it doesn't exist
+    const distDir = path.join(rootDir, 'dist');
+    if (!existsSync(distDir)) {
+      console.log('Creating dist directory...');
+      await fs.mkdir(distDir, { recursive: true });
+    }
 
-    // Run copy-character script
-    await copyCharacterFile(characterName);
-
-    // Use path to dist inside the core folder
-    const distPath = path.join(rootDir, 'core', 'dist', 'index.js');
+    // Check if we need to build
+    const indexJsPath = path.join(distDir, 'index.js');
+    if (!existsSync(indexJsPath)) {
+      // Run build using workspace to ensure it runs in the context of the core package
+      console.log('Building the project...');
+      await execAsync('yarn workspace autonomys-agents-core build');
+      
+      // Verify the build succeeded
+      if (!existsSync(indexJsPath)) {
+        console.error('Build failed: index.js not found in dist directory');
+        process.exit(1);
+      }
+    } else {
+      console.log('Build exists, skipping build step');
+    }
     
+    // Setup dist dependencies
+    await setupDistDependencies();
+
+    // Use path to dist at the root level
+    const distPath = path.join(rootDir, 'dist', 'index.js');
+
     const nodeArgs = [distPath, characterName];
     if (isHeadless) {
       nodeArgs.push('--headless');
     }
 
     // Run the main program with all arguments
-    const mainProcess = spawn('node', nodeArgs, { stdio: 'inherit' });
+    const mainProcess = spawn('node', nodeArgs, { 
+      stdio: 'inherit',
+      cwd: path.join(rootDir, 'dist') // Set working directory to dist
+    });
 
     mainProcess.on('error', err => {
       console.error('Failed to start main process:', err);
