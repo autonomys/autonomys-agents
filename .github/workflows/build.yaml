@@ -22,7 +22,7 @@ jobs:
         run: corepack enable
 
       - name: Install dependencies 📦
-        run: yarn install
+        run: yarn install --immutable
 
       - name: Build project 🔧
         run: yarn build
@@ -46,7 +46,7 @@ jobs:
         run: corepack enable
 
       - name: Install dependencies 📦
-        run: yarn install
+        run: yarn install --immutable
 
       - name: Build project 🔧
         run: yarn build
@@ -67,10 +67,10 @@ jobs:
         run: corepack enable
 
       - name: Install dependencies 📦
-        run: yarn install
+        run: yarn install --immutable
 
       - name: Build project 🔧
-        run: yarn build
+        run: yarn build:agent
 
   build-agent-package-manager:
     runs-on: ubuntu-latest
@@ -91,16 +91,13 @@ jobs:
         run: corepack enable
 
       - name: Install dependencies 📦
-        run: yarn install
+        run: yarn install --immutable
 
       - name: Build project 🔧
         run: yarn build
 
   build-web-cli:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: web-cli
     name: Run build
     steps:
       - name: Checkout 🛎️
@@ -115,7 +112,7 @@ jobs:
         run: corepack enable
 
       - name: Install dependencies 📦
-        run: yarn install
+        run: yarn install --immutable
 
       - name: Build project 🔧
-        run: yarn build
+        run: yarn build:web
