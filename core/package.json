@@ -23,7 +23,7 @@
     "node": ">=20.18.1"
   },
   "scripts": {
-    "build": "tsc --outDir ./dist",
+    "build": "tsc",
     "start": "tsx ../scripts/start.ts",
     "dev": "NODE_ENV=development tsx --no-cache --watch index.ts",
     "example:twitter-agent": "tsx ../examples/twitterAgent/index.ts",
