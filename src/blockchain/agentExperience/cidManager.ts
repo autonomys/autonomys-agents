@@ -37,7 +37,7 @@ const getLocalHash = (location: string): string | undefined => {
     const data = JSON.parse(readFileSync(location, 'utf-8')) as StoredHash;
     return data.hash;
   } catch (error) {
-    throw new Error(`Failed to read local hash:${error}`);
+    throw new Error(`Failed to get local hash:${error}`);
   }
 };
 
@@ -45,10 +45,7 @@ const getLastMemoryHashSetTimestamp = async (
   provider: ethers.JsonRpcProvider,
   contract: ethers.Contract,
   walletAddress: string,
-): Promise<{
-  timestamp: number;
-  hash: string;
-}> => {
+): Promise<{ timestamp: number; hash: string }> => {
   try {
     const currentBlock = await provider.getBlockNumber();
     const fromBlock = Math.max(0, currentBlock - 5000);
@@ -66,8 +63,8 @@ const getLastMemoryHashSetTimestamp = async (
       timestamp: block.timestamp,
       hash: (lastEvent as ethers.EventLog).args.hash,
     };
-  } catch {
-    return { timestamp: 0, hash: '' };
+  } catch (error) {
+    throw new Error(`Failed to get last memory hash:${error}`);
   }
 };
 
@@ -78,16 +75,18 @@ const validateLocalHash = async (
   location: string,
 ): Promise<{ message: string }> => {
   try {
-    if (!existsSync(location)) {
+    const localHash = getLocalHash(location);
+    if (!localHash) {
       return { message: 'No local hash found' };
     }
-    const data = JSON.parse(readFileSync(location, 'utf-8')) as StoredHash;
+
     const { timestamp: eventTimestamp, hash: eventHash } = await getLastMemoryHashSetTimestamp(
       provider,
       contract,
       walletAddress,
     );
-    const localTimestamp = new Date(data.timestamp).getTime() / 1000;
+    const localTimestamp =
+      new Date(JSON.parse(readFileSync(location, 'utf-8')).timestamp).getTime() / 1000;
 
     if (eventTimestamp > localTimestamp) {
       saveHashLocally(eventHash, location);
@@ -95,7 +94,7 @@ const validateLocalHash = async (
     }
     return { message: 'Local hash is up to date' };
   } catch (error) {
-    return { message: `Failed to validate local hash:${error}` };
+    return { message: `Using local hash due to blockchain connection issues. Error:${error}` };
   }
 };
 
@@ -106,7 +105,6 @@ export const createCidManager = async (
   const memoriesDir = join(agentPath, 'memories');
   const localHashLocation = join(memoriesDir, 'last-memory-hash.json');
 
-  // First check if the memories directory exists and create it if it doesn't
   if (!existsSync(memoriesDir)) {
     mkdirSync(memoriesDir, { recursive: true });
   }
@@ -128,19 +126,39 @@ export const createCidManager = async (
       return hashToCid(localHash);
     }
 
-    const blockchainHash = await contract.getLastMemoryHash(wallet.address);
-    saveHashLocally(blockchainHash, localHashLocation);
-    return hashToCid(blockchainHash);
+    try {
+      const blockchainHash = await contract.getLastMemoryHash(wallet.address);
+      saveHashLocally(blockchainHash, localHashLocation);
+      return hashToCid(blockchainHash);
+    } catch (error) {
+      // If blockchain call fails, try to use local hash again
+      const fallbackLocalHash = getLocalHash(localHashLocation);
+      if (fallbackLocalHash) {
+        return hashToCid(fallbackLocalHash);
+      }
+      throw new Error(
+        `Failed to get memory hash from both blockchain and local storage. Error:${error}`,
+      );
+    }
   };
 
   const saveLastMemoryCid = async (cid: string) => {
     const blake3hash = blake3HashFromCid(stringToCid(cid));
     const bytes32Hash = ethers.hexlify(blake3hash);
-    const tx = await retryWithBackoff(
-      () => contract.setLastMemoryHash(bytes32Hash) as Promise<ethers.TransactionResponse>,
-    );
-    const receipt = (await tx.wait()) as ethers.TransactionReceipt;
-    return receipt;
+
+    try {
+      const tx = await retryWithBackoff(
+        () => contract.setLastMemoryHash(bytes32Hash) as Promise<ethers.TransactionResponse>,
+        { timeout: 60000 },
+      );
+      const receipt = (await tx.wait()) as ethers.TransactionReceipt;
+      saveHashLocally(bytes32Hash, localHashLocation);
+      return receipt;
+    } catch (error) {
+      // If blockchain save fails, still save locally
+      saveHashLocally(bytes32Hash, localHashLocation);
+      throw new Error(`Failed to save hash to blockchain:${error}`);
+    }
   };
 
   return {
