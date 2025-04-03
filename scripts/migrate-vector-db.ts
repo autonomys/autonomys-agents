@@ -23,8 +23,8 @@
 import { join, basename } from 'path';
 import { existsSync, mkdirSync, readdirSync, copyFileSync, renameSync } from 'fs';
 import Database from 'better-sqlite3';
-import { config } from '../src/config/index.js';
-import { createLogger } from '../src/utils/logger.js';
+import { config } from '../core/config/index.js';
+import { createLogger } from '../core/utils/logger.js';
 
 const logger = createLogger('vector-db-migration');
 
