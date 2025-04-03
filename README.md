@@ -26,13 +26,15 @@ Autonomys Agents is an **EXPERIMENTAL** framework for building AI agents. Curren
 4. Agent API
    - The Agent API uses HTTP/2 protocol exclusively, requiring SSL certificates. Generate these by running `yarn generate-certs`
 5. Run your character:
-   - For dev purposes in watch mode: `yarn dev <your-character-name>`
-   - For production build and run: `yarn start <your-character-name>`
+   - For dev purposes in watch mode: `yarn dev:agent <your-character-name>`
+   - For production build and run: `yarn start:agent <your-character-name>`
 6. Run your character in headless mode (without API):
-   - For dev purposes in watch mode: `yarn dev <your-character-name> --headless`
-   - For production build and run: `yarn start <your-character-name> --headless`
+   - For dev purposes in watch mode: `yarn dev:agent <your-character-name> --headless`
+   - For production build and run: `yarn start:agent <your-character-name> --headless`
+7. Run agent and WebCli 
+   - For dev purposes: `yarn start <your-character-name>`
 
-## Docker Deployment
+## Docker Deployment simultaneously
 
 You can also run your agents using Docker. This provides isolation and makes it easy to run multiple agents simultaneously.
 
@@ -56,10 +58,10 @@ You can also run your agents using Docker. This provides isolation and makes it 
    ```
    Example:
    ```bash
-   # Run Alice on port 3011
+   # Run Alice on port 3011 on docker with API port on 3011
    ./generate-compose.sh Alice 3011 3011
    
-   # Run Bob on port 3012
+   # Run Bob on port 3012 on docker with API port on 3011
    ./generate-compose.sh Bob 3012 3011
    ```
 
@@ -98,14 +100,7 @@ Each agent will:
 
 A modern web-based interface for interacting with your agent. To start:
 
-### Installation
-
-1. **Install Dependencies**
-   ```bash
-   cd web-cli && yarn
-   ```
-
-2. **Configure Agent API**  
+1. **Configure Agent API**  
    In your agent character's `.env` file, add these API settings:
    ```
    API_PORT=3010
@@ -114,28 +109,28 @@ A modern web-based interface for interacting with your agent. To start:
    CORS_ALLOWED_ORIGINS=http://localhost:3000,http://localhost:3001 
    ```
 
-3. **Configure Web CLI**
+2. **Configure Web CLI**
    ```bash
    cp .env.sample .env
    ```
 
-4. **Update Web CLI Environment**  
+3. **Update Web CLI Environment**  
    Edit the `.env` file with your configuration:
    - `PORT`: The port for running the Web CLI interface
    - `REACT_APP_API_BASE_URL`: Your Agent API address (e.g., http://localhost:3010/api)
    - `REACT_APP_API_TOKEN`: The same token used in your agent configuration
 
-5. **Start the Web Interface**
+4. **Start the Web Interface**
    ```bash
-   yarn start
+   yarn dev:web
    ```
 
 ## Running with dev:all (Web-CLI And Agent)
 
-The `dev:all` command launches both the main application and web interface concurrently:
+The `start` command launches both the main application and web interface concurrently:
 
 ```bash
-yarn dev:all <your-character-name>
+yarn start <your-character-name>
 ```
 
 This command:
@@ -151,6 +146,16 @@ The following examples demonstrate the use of the framework and are available:
 
 - [Twitter Agent](examples/twitterAgent/README.md)
 - [Multi Personality](examples/multiPersonality/README.md)
+- Github Agent
+- Notion Agent
+- Slack Agent
+- Web3 Agent
+
+To run each example run following command to see the options:
+
+```bash
+yarn example
+```
 
 ## Character System
 
@@ -213,7 +218,7 @@ The framework uses the Autonomys Network for permanent storage of agent memory a
 
 To use this feature:
 
-1. Configure your AUTO_DRIVE_API_KEY in `.env` (obtain from https://ai3.storage)
+1. Configure your `AUTO_DRIVE_API_KEY` in `.env` (obtain from https://ai3.storage)
 2. Enable Auto Drive uploading in `config.yaml`
 3. Provide your Taurus EVM wallet details (PRIVATE_KEY) and Agent Memory Contract Address (CONTRACT_ADDRESS) in `.env`
 4. Make sure your Taurus EVM wallet has funds. A faucet can be found at https://subspacefaucet.com/
