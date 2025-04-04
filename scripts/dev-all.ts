@@ -1,46 +1,11 @@
 import { spawn } from 'child_process';
-import { readFileSync } from 'fs';
-import { dirname, join } from 'path';
-import { fileURLToPath } from 'url';
-import { closeAllVectorDBs } from '../src/services/vectorDb/vectorDBPool';
+import { closeAllVectorDBs } from '../core/src/services/vectorDb/vectorDBPool';
+import { rootDir } from './utils';
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
-const rootDir = dirname(__dirname);
-
+// Simply pass any arguments to the agent process
 const characterArg = process.argv.slice(2).join(' ');
 
-export const loadCharacter = (characterName: string): [number, number,string] => {    
-    if (!characterName) {
-        throw new Error('Character name is required');
-    }
-    
-    try { 
-        let apiPort, webCliPort, name;;
-        const characterPath = join(process.cwd(), 'characters', characterName);
-        const envPath = join(characterPath, 'config', '.env');
-        const envContent = readFileSync(envPath, 'utf8');
-        
-        const portMatch = envContent.match(/API_PORT=(\d+)/);
-        if (portMatch && portMatch[1]) {
-            apiPort = parseInt(portMatch[1], 10);
-        }
-
-        const characterYamlPath = join(characterPath, 'config', `${characterName}.yaml`);
-        const characterYamlContent = readFileSync(characterYamlPath, 'utf8');
-        const characterNameMatch = characterYamlContent.match(/name: '([^']+)'/);
-        if (characterNameMatch && characterNameMatch[1]) {
-            name = characterNameMatch[1];
-        }
-
-        return [apiPort, webCliPort, name];
-    } catch (error) {
-        console.error(`Failed to load API_PORT for '${characterName}':`, error);
-        throw new Error('Failed to load API_PORT for ' + error);
-    }
-};
-
-const [apiPort, characterName] = characterArg ? loadCharacter(characterArg) : [3001, "default"];
-console.log(`Using API port ${apiPort} for character '${characterName}'`);
+console.log(`Starting agent${characterArg ? ` with '${characterArg}'` : ''} and web-cli`);
 
 const colors = {
   blue: '\x1b[34m',
@@ -57,17 +22,19 @@ const prefixOutput = (prefix: string, color: string, data: Buffer) => {
   }
 }
 
-const agentProcess = spawn('tsx', ['--no-cache', '--watch', 'src/index.ts', ...(characterArg ? [characterArg] : [])], {
-  cwd: rootDir, 
+// Run the agent
+const agentProcess = spawn('yarn', ['workspace', 'autonomys-agents-core', 'dev', ...(characterArg ? [characterArg] : [])], {
+  cwd: rootDir,
   env: { ...process.env, NODE_ENV: 'development' },
   shell: true,
 });
 
-const webCliProcess = spawn('yarn', ['start'], {
-  cwd: `${rootDir}/web-cli`,
+// Run the web-cli
+const webCliProcess = spawn('yarn', ['workspace', 'web-cli', 'start'], {
+  cwd: rootDir,
   env: { 
     ...process.env,
-    REACT_APP_API_PORT: apiPort.toString(),
+    DISABLE_ESLINT_PLUGIN: 'true',
   },
   shell: true,
 });

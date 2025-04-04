@@ -1,7 +1,9 @@
 import fs from 'fs/promises';
 import path from 'path';
+import { rootDir } from './utils';
 
-async function createCharacter(): Promise<void> {
+
+const createCharacter = async (): Promise<void> => {
   // Get character name from command line arguments
   const characterName = process.argv[2];
 
@@ -11,7 +13,7 @@ async function createCharacter(): Promise<void> {
     process.exit(1);
   }
 
-  const targetDir = path.join('characters', characterName, 'config');
+  const targetDir = path.join(rootDir, 'characters', characterName, 'config');
 
   try {
     // Check if target directory already exists
@@ -25,7 +27,7 @@ async function createCharacter(): Promise<void> {
 
     // Copy the example directory
     console.log(`Copying character.example to ${characterName}...`);
-    await fs.cp(path.join('characters', 'character.example', 'config'), targetDir, {
+    await fs.cp(path.join(rootDir, 'characters', 'character.example', 'config'), targetDir, {
       recursive: true,
     });
 

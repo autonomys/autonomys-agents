@@ -1,6 +1,7 @@
 import { readFileSync } from 'fs';
 import { load } from 'js-yaml';
 import { join } from 'path';
+import { getProjectRoot } from '../utils/utils.js';
 
 export interface Character {
   name: string;
@@ -28,7 +29,7 @@ interface RawCharacterConfig {
 }
 
 export const loadCharacter = (characterName: string): Character => {
-  const characterPath = join(process.cwd(), 'characters', `${characterName}`);
+  const characterPath = join(getProjectRoot(), 'characters', `${characterName}`);
   const configPath = join(characterPath, 'config', `${characterName}.yaml`);
   try {
     const yamlContent = readFileSync(configPath, 'utf8');

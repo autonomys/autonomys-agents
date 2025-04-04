@@ -2,16 +2,17 @@ import { join } from 'path';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs';
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
-import { createExperienceManager } from '../src/blockchain/agentExperience/index.js';
-import { characterName, config } from '../src/config/index.js';
-import { createLogger } from '../src/utils/logger.js';
-import { VectorDB } from '../src/services/vectorDb/VectorDB.js';
-import { getVectorDB, closeVectorDB } from '../src/services/vectorDb/vectorDBPool.js';
+import { createExperienceManager } from '../core/src/blockchain/agentExperience/index.js';
+import { characterName, config } from '../core/src/config/index.js';
+import { createLogger } from '../core/src/utils/logger.js';
+import { VectorDB } from '../core/src/services/vectorDb/VectorDB.js';
+import { getVectorDB, closeVectorDB } from '../core/src/services/vectorDb/vectorDBPool.js';
 import {
   ExperienceManager,
   AgentExperience,
   AgentExperienceV0,
-} from '../src/blockchain/agentExperience/types.js';
+} from '../core/src/blockchain/agentExperience/types.js';
+import { rootDir } from './utils';
 
 const logger = createLogger('resurrect-cli');
 let vectorDb: VectorDB;
@@ -166,13 +167,14 @@ const run = async () => {
       .parseSync();
 
     return {
-      outputDir: join(process.cwd(), 'characters', argv.character as string, argv.output as string),
+      outputDir: join(rootDir, 'characters', argv.character as string, argv.output as string),
       memoriesToFetch: argv.number as number | null,
     };
   };
 
   const options = parseArgs();
   const cidTrackingFile = join(
+    rootDir,
     config.characterConfig.characterPath,
     'memories',
     'last-processed-cid.json',

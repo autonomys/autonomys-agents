@@ -1,0 +1,23 @@
+{
+  "name": "autonomys-agents-examples",
+  "version": "0.4.2",
+  "description": "Autonomys Agents Examples",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "start": "tsx index.ts",
+    "twitter": "tsx twitterAgent/index.ts",
+    "web3": "tsx web3Agent/index.ts",
+    "multi": "tsx multiPersonality/index.ts",
+    "notion": "tsx notionAgent/index.ts",
+    "slack": "tsx slackAgent/index.ts",
+    "github": "tsx githubAgent/index.ts",
+    "vectordb": "tsx vectorDbExample.ts"
+  },
+  "dependencies": {
+    "autonomys-agents-core": "workspace:*"
+  },
+  "devDependencies": {
+    "tsx": "^4.7.1"
+  }
+}

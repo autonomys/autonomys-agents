@@ -1,18 +1,17 @@
-import { config } from '../../src/config/index.js';
-import { createLogger } from '../../src/utils/logger.js';
-import { validateLocalHash } from '../../src/blockchain/localHashStorage.js';
+import { config } from 'autonomys-agents-core/src/config/index.js';
+import { createLogger } from 'autonomys-agents-core/src/utils/logger.js';
 import {
   createOrchestratorRunner,
   OrchestratorRunner,
-} from '../../src/agents/workflows/orchestrator/orchestratorWorkflow.js';
-import { createPrompts } from '../../src/agents/workflows/orchestrator/prompts.js';
+} from 'autonomys-agents-core/src/agents/workflows/orchestrator/orchestratorWorkflow.js';
+import { createPrompts } from 'autonomys-agents-core/src/agents/workflows/orchestrator/prompts.js';
 import { HumanMessage } from '@langchain/core/messages';
-import { OrchestratorRunnerOptions } from '../../src/agents/workflows/orchestrator/types.js';
+import { OrchestratorRunnerOptions } from 'autonomys-agents-core/src/agents/workflows/orchestrator/types.js';
 import { ethers } from 'ethers';
 import {
   createCheckBalanceTool,
   createTransferNativeTokenTool,
-} from '../../src/agents/tools/evm/index.js';
+} from 'autonomys-agents-core/src/agents/tools/evm/index.js';
 
 const logger = createLogger('autonomous-web3-agent');
 
@@ -27,9 +26,9 @@ const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
   const provider = new ethers.JsonRpcProvider(config.blockchainConfig.RPC_URL);
   const signer = new ethers.Wallet(config.blockchainConfig.PRIVATE_KEY, provider);
 
-  // Create tools
-  const transferNativeTokenTool = createTransferNativeTokenTool(signer);
-  const checkBalanceTool = createCheckBalanceTool(provider);
+  // Create tools with type assertions to resolve incompatible types
+  const transferNativeTokenTool = createTransferNativeTokenTool(signer as any);
+  const checkBalanceTool = createCheckBalanceTool(provider as any);
 
   //Orchestrator config
   //use default orchestrator prompts with character config
@@ -59,9 +58,9 @@ const main = async () => {
   const initialMessage = `Transfer 0.01 AI3 to 0x0F409152C9cDA318c3dB94c0693c1347E29E1Ea8 and then check the balance of both sender and receiver`;
 
   try {
-    await validateLocalHash();
-
-    const result = await runner.runWorkflow({ messages: [new HumanMessage(initialMessage)] });
+    // Use type assertion for HumanMessage to resolve compatibility issue
+    const humanMessage = new HumanMessage(initialMessage) as any;
+    const result = await runner.runWorkflow({ messages: [humanMessage] });
 
     logger.info('Workflow execution result:', { summary: result.summary });
   } catch (error) {

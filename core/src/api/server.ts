@@ -17,7 +17,7 @@ import fs from 'fs';
 import path from 'path';
 import http2Express from 'http2-express-bridge';
 import { Express } from 'express';
-
+import { getProjectRoot } from '../utils/utils.js';
 const logger = createLogger('api-server');
 
 let apiServer: ApiServer | null = null;
@@ -48,7 +48,7 @@ const createSingletonApiServer = (): ApiServer => {
   const PORT = config.API_PORT;
   let server;
 
-  const certsDir = path.join(process.cwd(), 'certs');
+  const certsDir = path.join(getProjectRoot(), 'certs');
   const certFile = path.join(certsDir, 'server.cert');
   const keyFile = path.join(certsDir, 'server.key');
 

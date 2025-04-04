@@ -1,14 +1,13 @@
 import { HumanMessage } from '@langchain/core/messages';
-import { createNotionTools } from '../../src/agents/tools/notion/index.js';
+import { createNotionTools } from 'autonomys-agents-core/src/agents/tools/notion/index.js';
 import {
   createOrchestratorRunner,
   OrchestratorRunner,
-} from '../../src/agents/workflows/orchestrator/orchestratorWorkflow.js';
-import { createPrompts } from '../../src/agents/workflows/orchestrator/prompts.js';
-import { OrchestratorRunnerOptions } from '../../src/agents/workflows/orchestrator/types.js';
-import { validateLocalHash } from '../../src/blockchain/localHashStorage.js';
-import { config } from '../../src/config/index.js';
-import { createLogger } from '../../src/utils/logger.js';
+} from 'autonomys-agents-core/src/agents/workflows/orchestrator/orchestratorWorkflow.js';
+import { createPrompts } from 'autonomys-agents-core/src/agents/workflows/orchestrator/prompts.js';
+import { OrchestratorRunnerOptions } from 'autonomys-agents-core/src/agents/workflows/orchestrator/types.js';
+import { config } from 'autonomys-agents-core/src/config/index.js';
+import { createLogger } from 'autonomys-agents-core/src/utils/logger.js';
 
 const logger = createLogger('notion-agent');
 
@@ -60,9 +59,8 @@ const main = async () => {
   `;
 
   try {
-    await validateLocalHash();
-
-    const result = await runner.runWorkflow({ messages: [new HumanMessage(initialMessage)] });
+    const humanMessage = new HumanMessage(initialMessage) as any;
+    const result = await runner.runWorkflow({ messages: [humanMessage] });
 
     logger.info('Workflow execution result:', { summary: result.summary });
   } catch (error) {

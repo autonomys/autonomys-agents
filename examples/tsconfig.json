@@ -3,25 +3,26 @@
         "target": "ES2020",
         "module": "NodeNext",
         "moduleResolution": "NodeNext",
-        "outDir": "./dist",
-        "rootDir": "core",
+        "outDir": "../dist/examples",
+        "baseUrl": ".",
         "strict": true,
         "esModuleInterop": true,
         "skipLibCheck": true,
         "forceConsistentCasingInFileNames": true,
         "allowJs": true,
-        "resolveJsonModule": true
+        "resolveJsonModule": true,
+        "paths": {
+            "autonomys-agents-core/*": ["../core/*"]
+        }
     },
     "include": [
-        "core/**/*"
+        "**/*"
     ],
     "exclude": [
-        "node_modules",
-        "dist",
-        "examples"
+        "node_modules"
     ],
     "ts-node": {
         "esm": true,
         "experimentalSpecifiers": true
     }
-}
+} 

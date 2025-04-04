@@ -1,17 +1,17 @@
 import { HumanMessage } from '@langchain/core/messages';
-import { createWebSearchTool } from '../../src/agents/tools/webSearch/index.js';
+import { createWebSearchTool } from 'autonomys-agents-core/src/agents/tools/webSearch/index.js';
 import {
   createOrchestratorRunner,
   OrchestratorRunner,
-} from '../../src/agents/workflows/orchestrator/orchestratorWorkflow.js';
-import { createPrompts } from '../../src/agents/workflows/orchestrator/prompts.js';
-import { OrchestratorRunnerOptions } from '../../src/agents/workflows/orchestrator/types.js';
-import { createTwitterAgent } from '../../src/agents/workflows/twitter/twitterAgent.js';
-import { validateLocalHash } from '../../src/blockchain/localHashStorage.js';
-import { config } from '../../src/config/index.js';
-import { createTwitterApi } from '../../src/services/twitter/client.js';
-import { createLogger } from '../../src/utils/logger.js';
-
+} from 'autonomys-agents-core/src/agents/workflows/orchestrator/orchestratorWorkflow.js';
+import { createPrompts } from 'autonomys-agents-core/src/agents/workflows/orchestrator/prompts.js';
+import { OrchestratorRunnerOptions } from 'autonomys-agents-core/src/agents/workflows/orchestrator/types.js';
+import { createTwitterAgent } from 'autonomys-agents-core/src/agents/workflows/twitter/twitterAgent.js';
+import { agentVersion, characterName, config } from 'autonomys-agents-core/src/config/index.js';
+import { createTwitterApi } from 'autonomys-agents-core/src/agents/tools/twitter/client.js';
+import { createLogger } from 'autonomys-agents-core/src/utils/logger.js';
+import { createAllSchedulerTools } from 'autonomys-agents-core/src/agents/tools/scheduler/index.js';
+import { createExperienceManager } from 'autonomys-agents-core/src/blockchain/agentExperience/index.js';
 const logger = createLogger('autonomous-twitter-agent');
 
 const character = config.characterConfig;
@@ -20,6 +20,53 @@ const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
   const webSearchTool = config.SERPAPI_API_KEY ? [createWebSearchTool(config.SERPAPI_API_KEY)] : [];
   const saveExperiences = config.autoDriveConfig.AUTO_DRIVE_SAVE_EXPERIENCES;
   const monitoringEnabled = config.autoDriveConfig.AUTO_DRIVE_MONITORING;
+  const schedulerTools = createAllSchedulerTools();
+  const experienceManager =
+  (saveExperiences || monitoringEnabled) &&
+  config.blockchainConfig.PRIVATE_KEY &&
+  config.blockchainConfig.RPC_URL &&
+  config.blockchainConfig.CONTRACT_ADDRESS &&
+  config.autoDriveConfig.AUTO_DRIVE_API_KEY
+    ? await createExperienceManager({
+        autoDriveApiOptions: {
+          apiKey: config.autoDriveConfig.AUTO_DRIVE_API_KEY,
+          network: config.autoDriveConfig.AUTO_DRIVE_NETWORK,
+        },
+        uploadOptions: {
+          compression: true,
+          password: config.autoDriveConfig.AUTO_DRIVE_ENCRYPTION_PASSWORD,
+        },
+        walletOptions: {
+          privateKey: config.blockchainConfig.PRIVATE_KEY,
+          rpcUrl: config.blockchainConfig.RPC_URL,
+          contractAddress: config.blockchainConfig.CONTRACT_ADDRESS,
+        },
+        agentOptions: {
+          agentVersion: agentVersion,
+          agentName: characterName,
+          agentPath: character.characterPath,
+        },
+      })
+    : undefined;
+  const experienceConfig =
+  saveExperiences && experienceManager
+    ? {
+        saveExperiences: true as const,
+        experienceManager,
+      }
+    : {
+        saveExperiences: false as const,
+      };
+
+const monitoringConfig =
+  monitoringEnabled && experienceManager
+    ? {
+        enabled: true as const,
+        monitoringExperienceManager: experienceManager,
+      }
+    : {
+        enabled: false as const,
+      };
 
   //Twitter agent config
   const twitterAgentTool =
@@ -33,12 +80,10 @@ const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
             ),
             character,
             {
-              tools: [...webSearchTool],
+              tools: [...webSearchTool, ...schedulerTools],
               postTweets: config.twitterConfig.POST_TWEETS,
-              saveExperiences,
-              monitoring: {
-                enabled: monitoringEnabled,
-              },
+              experienceConfig,
+              monitoringConfig,
               modelConfigurations: config.twitterConfig.model_configurations,
             },
           ),
@@ -66,10 +111,19 @@ const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
     modelConfigurations,
     tools: [...twitterAgentTool, ...webSearchTool],
     prompts,
-    saveExperiences,
-    monitoring: {
-      enabled: monitoringEnabled,
-    },
+    experienceConfig:
+      saveExperiences && experienceManager
+        ? { saveExperiences: true, experienceManager }
+        : { saveExperiences: false },
+    monitoringConfig:
+      monitoringEnabled && experienceManager
+        ? {
+            enabled: true,
+            monitoringExperienceManager: experienceManager,
+          }
+        : {
+            enabled: false,
+          },
   };
 };
 
@@ -88,11 +142,11 @@ const main = async () => {
   const runner = await orchestratorRunner();
   const initialMessage = `Check your timeline, engage with posts and find an interesting topic to tweet about.`;
   try {
-    await validateLocalHash();
-
     let message = initialMessage;
     while (true) {
-      const result = await runner.runWorkflow({ messages: [new HumanMessage(message)] });
+      // Use type assertion for HumanMessage to resolve compatibility issue
+      const humanMessage = new HumanMessage(message) as any;
+      const result = await runner.runWorkflow({ messages: [humanMessage] });
 
       message = `${result.summary}`;
 

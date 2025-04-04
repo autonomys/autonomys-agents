@@ -1,8 +1,10 @@
 import { execSync } from 'child_process';
 import fs from 'fs';
 import path from 'path';
+import { rootDir } from './utils';
 
-const CERT_DIR: string = path.join(process.cwd(), 'certs');
+
+const CERT_DIR: string = path.join(rootDir, 'certs');
 const CERT_FILE: string = path.join(CERT_DIR, 'server.cert');
 const KEY_FILE: string = path.join(CERT_DIR, 'server.key');
 
