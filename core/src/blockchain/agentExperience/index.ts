@@ -65,7 +65,7 @@ export const createExperienceManager = async ({
     return {
       cid,
       previousCid: previousCid || null,
-      evmHash: receipt.hash,
+      evmHash: receipt?.hash || null,
     };
   };
 
