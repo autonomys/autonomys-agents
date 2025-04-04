@@ -58,7 +58,7 @@ export type ExperienceManagerOptions = {
 
 export type CidManager = {
   getLastMemoryCid: () => Promise<string>;
-  saveLastMemoryCid: (cid: string) => Promise<ethers.TransactionReceipt>;
+  saveLastMemoryCid: (cid: string) => Promise<ethers.TransactionReceipt | undefined>;
   localHashStatus: { message: string };
 };
 
