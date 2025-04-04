@@ -12,7 +12,7 @@ export const createThinkingTool = () =>
     func: async ({ thoughts }: { thoughts: string }) => {
       return {
         success: true,
-        thoughts,
+        message: 'Great job taking a step back and thinking through the problem!',
       };
     },
   });
