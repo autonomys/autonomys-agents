@@ -142,9 +142,12 @@ export const createCidManager = async (
     }
   };
 
-  const saveLastMemoryCid = async (cid: string) => {
+  const saveLastMemoryCid = async (cid: string): Promise<ethers.TransactionReceipt | undefined> => {
     const blake3hash = blake3HashFromCid(stringToCid(cid));
     const bytes32Hash = ethers.hexlify(blake3hash);
+
+    // Save locally first
+    saveHashLocally(bytes32Hash, localHashLocation);
 
     try {
       const tx = await retryWithBackoff(
@@ -152,12 +155,13 @@ export const createCidManager = async (
         { timeout: 60000 },
       );
       const receipt = (await tx.wait()) as ethers.TransactionReceipt;
-      saveHashLocally(bytes32Hash, localHashLocation);
       return receipt;
-    } catch (error) {
-      // If blockchain save fails, still save locally
-      saveHashLocally(bytes32Hash, localHashLocation);
-      throw new Error(`Failed to save hash to blockchain:${error}`);
+    } catch (error: unknown) {
+      // If blockchain save fails, just continue with local storage
+      console.warn(
+        `Skipping blockchain update due to error: ${error instanceof Error ? error.message : String(error)}`,
+      );
+      return undefined;
     }
   };
 
