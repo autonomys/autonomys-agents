@@ -1,10 +1,6 @@
 import { spawn } from 'child_process';
-import { dirname } from 'path';
-import { fileURLToPath } from 'url';
 import { closeAllVectorDBs } from '../core/src/services/vectorDb/vectorDBPool';
-
-const __dirname = dirname(fileURLToPath(import.meta.url));
-const rootDir = dirname(__dirname);
+import { rootDir } from './utils';
 
 // Simply pass any arguments to the agent process
 const characterArg = process.argv.slice(2).join(' ');

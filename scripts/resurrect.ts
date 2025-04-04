@@ -12,6 +12,7 @@ import {
   AgentExperience,
   AgentExperienceV0,
 } from '../core/src/blockchain/agentExperience/types.js';
+import { rootDir } from './utils';
 
 const logger = createLogger('resurrect-cli');
 let vectorDb: VectorDB;
@@ -166,13 +167,14 @@ const run = async () => {
       .parseSync();
 
     return {
-      outputDir: join(process.cwd(), 'characters', argv.character as string, argv.output as string),
+      outputDir: join(rootDir, 'characters', argv.character as string, argv.output as string),
       memoriesToFetch: argv.number as number | null,
     };
   };
 
   const options = parseArgs();
   const cidTrackingFile = join(
+    rootDir,
     config.characterConfig.characterPath,
     'memories',
     'last-processed-cid.json',

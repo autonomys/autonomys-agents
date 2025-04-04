@@ -1,44 +1,12 @@
 import { spawn } from 'child_process';
 import { promisify } from 'util';
 import { exec } from 'child_process';
-
-const execAsync = promisify(exec);
-
 import fs from 'fs/promises';
 import path from 'path';
-import { fileURLToPath } from 'url';
-import { readFileSync } from 'fs';
 import { existsSync } from 'fs';
+import { rootDir } from './utils';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-// Function to find the package.json
-function findRootDir(startDir: string): string {
-  let currentDir = startDir;
-  
-  // Keep going up until we find package.json with the right name
-  while (currentDir !== path.parse(currentDir).root) {
-    const packageJsonPath = path.join(currentDir, 'package.json');
-    
-    if (existsSync(packageJsonPath)) {
-      try {
-        const packageJson = JSON.parse(readFileSync(packageJsonPath, 'utf8'));
-        if (packageJson.name === 'autonomys-agents') {
-          return currentDir;
-        }
-      } catch (e) {
-        // Continue if package.json exists but can't be parsed
-      }
-    }
-    
-    currentDir = path.dirname(currentDir);
-  }
-  
-  throw new Error('Could not find project root directory');
-}
-
-const rootDir = findRootDir(__dirname);
+const execAsync = promisify(exec);
 
 // Setup dependencies in dist folder by symlinking
 const setupDistDependencies = async (): Promise<void> => {
