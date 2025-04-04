@@ -12,6 +12,103 @@ import type { MessageInfo } from './utils/types.js';
 
 const logger = createLogger('slack-tools');
 
+const blockSchema = z
+  .object({
+    type: z
+      .string()
+      .describe('The type of block: "section", "divider", "image", "header", or "context"'),
+    text: z
+      .object({
+        type: z
+          .string()
+          .describe(
+            'The type of text: "mrkdwn" for markdown formatting or "plain_text" for plain text',
+          ),
+        text: z.string().describe('The actual text content to display'),
+      })
+      .optional()
+      .describe('Text content for section, header, or context blocks'),
+    // Image block properties
+    image_url: z.string().optional().describe('URL to the image (required for image blocks)'),
+    alt_text: z
+      .string()
+      .optional()
+      .describe('Alternative text for the image (required for image blocks)'),
+    // Section block properties
+    accessory: z
+      .object({
+        type: z.string().describe('Type of accessory element'),
+        image_url: z.string().optional().describe('URL to the image for image accessories'),
+        alt_text: z.string().optional().describe('Alternative text for image accessories'),
+      })
+      .optional()
+      .describe('Optional accessory for section blocks'),
+    // Context block properties
+    elements: z
+      .array(
+        z.union([
+          z.object({
+            type: z.literal('image').describe('Image element type'),
+            image_url: z.string().describe('URL to the image'),
+            alt_text: z.string().describe('Alternative text for the image'),
+          }),
+          z.object({
+            type: z
+              .union([z.literal('mrkdwn'), z.literal('plain_text')])
+              .describe('Text element type'),
+            text: z.string().describe('The text content'),
+          }),
+        ]),
+      )
+      .optional()
+      .describe('Elements for context blocks'),
+  })
+  .passthrough();
+
+const blockExamples = `
+    BLOCK EXAMPLES:
+    
+    Simple section with text:
+    [
+      {
+        "type": "section",
+        "text": {
+          "type": "mrkdwn",
+          "text": "Hello world! This is a message with *formatting*."
+        }
+      }
+    ]
+    
+    Header, section, divider and context (footer):
+    [
+      {
+        "type": "header",
+        "text": {
+          "type": "plain_text",
+          "text": "Header"
+        }
+      },
+      {
+        "type": "section",
+        "text": {
+          "type": "mrkdwn",
+          "text": "Main content with *formatting*"
+        }
+      },
+      {
+        "type": "divider"
+      },
+      {
+        "type": "context",
+        "elements": [
+          {
+            "type": "mrkdwn",
+            "text": "Footer text"
+          }
+        ]
+      }
+    ]`;
+
 /**
  * Creates a tool to post a simple message to Slack
  */
@@ -32,15 +129,25 @@ export const createPostSlackMsgTool = (
     FORMAT: Include links, messages, and any other relevant information. Avoid very long messages.
     BEFORE POSTING:
     - use the list_slack_messages tool to check if a similar message has already been posted. If it has, do not post the same message again.
-    - After reviewing the list of messages, determine if the message would be best suited as a thread or a new message.`,
+    - After reviewing the list of messages, determine if the message would be best suited as a thread or a new message.
+    
+    WHEN USING BLOCKS:
+    - Always use an array of block objects with properly defined structure
+    - Each block must have a 'type' property ("section", "divider", "image", etc.)
+    - For text blocks, include a text object with both 'type' and 'text' properties
+    
+    ${blockExamples}`,
     schema: z.object({
       channelId: z.string().describe('The channel ID to post to.'),
       message: z.string().describe('The message to post to Slack'),
       blocks: z
-        .any()
+        .array(blockSchema)
         .optional()
         .describe('The blocks to post to Slack using Slack block-kit (optional)'),
-      threadTs: z.string().describe('The thread timestamp to post to if this is a reply.'),
+      threadTs: z
+        .string()
+        .optional()
+        .describe('The thread timestamp to post to if this is a reply (optional).'),
     }),
     func: async ({ message, channelId, blocks, threadTs }) => {
       try {
@@ -116,13 +223,20 @@ export const createEditMessageTool = (
     - You want to modify the content of an existing message
     - You need to update message blocks or text
     - You want to add or remove blocks from the message
-    FORMAT: Provide the channel ID, message timestamp, and the new text/blocks to update the message.`,
+    FORMAT: Provide the channel ID, message timestamp, and the new text/blocks to update the message.
+    
+    WHEN USING BLOCKS (for smaller models like o3-mini):
+    - Always use an array of block objects with properly defined structure
+    - Each block must have a 'type' property ("section", "divider", "image", etc.)
+    - For text blocks, include a text object with both 'type' and 'text' properties
+    
+    ${blockExamples}`,
     schema: z.object({
       channelId: z.string().describe('The channel ID where the message is located.'),
       timestamp: z.string().describe('The timestamp of the message to edit.'),
       text: z.string().describe('The new text for the message.'),
       blocks: z
-        .array(z.any())
+        .array(blockSchema)
         .optional()
         .describe('Optional: The new blocks for the message using Slack block-kit.'),
     }),
@@ -171,7 +285,14 @@ export const createScheduleMessageTool = (
     - You want to time messages for different time zones
     - You don't want to annoy your colleagues with messages at the wrong time (out of office hours)
     FORMAT: Provide the channel ID, message text, and Unix timestamp for when to send the message.
-    NOTE: The post_at time must be within 120 days from now, and cannot be in the past.`,
+    NOTE: The post_at time must be within 120 days from now, and cannot be in the past.
+    
+    WHEN USING BLOCKS (for smaller models like o3-mini):
+    - Always use an array of block objects with properly defined structure
+    - Each block must have a 'type' property ("section", "divider", "image", etc.) 
+    - For text blocks, include a text object with both 'type' and 'text' properties
+    
+    ${blockExamples}`,
     schema: z.object({
       channelId: z.string().describe('The channel ID to post to.'),
       text: z.string().describe('The message text to schedule.'),
@@ -181,7 +302,7 @@ export const createScheduleMessageTool = (
           'Unix timestamp of when message should be sent. Must be within 120 days and not in the past.',
         ),
       blocks: z
-        .array(z.any())
+        .array(blockSchema)
         .optional()
         .describe('Optional: The blocks to post using Slack block-kit.'),
       threadTs: z
