@@ -2,9 +2,9 @@
   "name": "autonomys-agents-core",
   "version": "0.4.2",
   "description": "Autonomys Agents Core",
-  "main": "index.ts",
+  "main": "src/index.ts",
   "exports": {
-    ".": "./index.ts",
+    ".": "./src/index.ts",
     "./src/*": "./src/*"
   },
   "type": "module",
@@ -29,22 +29,13 @@
   "scripts": {
     "build": "tsc",
     "start": "tsx ../scripts/start.ts",
-    "dev": "NODE_ENV=development tsx --no-cache --watch index.ts",
-    "example:twitter-agent": "tsx ../examples/twitterAgent/index.ts",
-    "example:multi-personality": "tsx ../examples/multiPersonality/index.ts",
-    "example:web3-agent": "tsx ../examples/web3Agent/index.ts",
-    "example:vector-db": "tsx ../examples/vectorDbExample.ts",
-    "example:slack-agent": "tsx ../examples/slackAgent/index.ts",
-    "example:github-agent": "tsx ../examples/githubAgent/index.ts",
-    "example:notion-agent": "tsx ../examples/notionAgent/index.ts",
+    "dev": "NODE_ENV=development tsx --no-cache --watch src/index.ts",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
-    "format": "prettier --write \"**/*.ts\"",
     "generate-certs": "tsx ../scripts/generate-certs.ts",
     "resurrect": "tsx ../scripts/resurrect.ts",
-    "create-character": "tsx ../scripts/create-character.ts",
-    "migrate:vector-db": "tsx ../scripts/migrate-vector-db.ts"
+    "create-character": "tsx ../scripts/create-character.ts"
   },
   "dependencies": {
     "@autonomys/auto-dag-data": "1.4.5",

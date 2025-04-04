@@ -125,7 +125,7 @@ chmod -R 750 /app/characters/$CHARACTER_NAME\n\
 chown -R autonomys:autonomys /app/characters/$CHARACTER_NAME\n\
 \n\
 # Start the application as non-root user\n\
-exec su -c "node dist/index.js $CHARACTER_NAME" autonomys\n\
+exec su -c "node dist/src/index.js $CHARACTER_NAME" autonomys\n\
 ' > /app/start.sh && chmod +x /app/start.sh
 
 ENTRYPOINT ["/app/start.sh"]

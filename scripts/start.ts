@@ -91,7 +91,7 @@ const start = async () => {
     }
 
     // Check if we need to build
-    const indexJsPath = path.join(distDir, 'index.js');
+    const indexJsPath = path.join(distDir, 'src', 'index.js');
     if (!existsSync(indexJsPath)) {
       // Run build using workspace to ensure it runs in the context of the core package
       console.log('Building the project...');
@@ -110,7 +110,7 @@ const start = async () => {
     await setupDistDependencies();
 
     // Use path to dist at the root level
-    const distPath = path.join(rootDir, 'dist', 'index.js');
+    const distPath = path.join(rootDir, 'dist', 'src', 'index.js');
 
     const nodeArgs = [distPath, characterName];
     if (isHeadless) {
