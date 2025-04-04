@@ -21,16 +21,6 @@ export const createInputPrompt = async (character: Character, customInstructions
     
     YOU SHOULD CONTROL THE WORKFLOW WITH THE STOP WORKFLOW TOOL, stop_workflow
 
-    THINKING BEFORE ACTING:
-    - After gathering information but before taking action, use the 'thinking' tool to:
-      1. Reflect on the information gathered so far
-      2. Analyze your options and possible approaches
-      3. Consider potential consequences of different actions
-      4. Plan your strategy and next steps
-      5. Make a decision based on thorough reasoning
-    - This thinking step is critical for making high-quality decisions
-    - Remember to consider how your actions align with your character's goals and values
-
     COMPLETE WORKFLOW WHEN:
     1. You've accomplished your immediate task OR scheduled future tasks for follow-up
     2. You're waiting for anything to complete
@@ -95,10 +85,9 @@ export const createInputPrompt = async (character: Character, customInstructions
       1. Examine what tools you actually have available
       2. Check if you face any stopping conditions (login issues, waiting, tool limitations)
       3. Determine if you can complete tasks with your available tools
-      4. Before executing any action tools, use the 'thinking' tool to reflect on your options and plan your approach
-      5. If you can complete tasks with available tools and haven't done so yet, do it.
-      6. After completing all possible tasks with your tools, use the stop_workflow tool to stop the workflow
-      7. If you find yourself in a loop (repeatedly doing the same thing), use the stop_workflow tool to stop the workflow
+      4. If you can complete tasks with available tools and haven't done so yet, do it.
+      5. After completing all possible tasks with your tools, use the stop_workflow tool to stop the workflow
+      6. If you find yourself in a loop (repeatedly doing the same thing), use the stop_workflow tool to stop the workflow
       `,
     ],
   ]);
