@@ -64,8 +64,8 @@ export const createExperienceManager = async ({
     const receipt = await cidManager.saveLastMemoryCid(cid);
     return {
       cid,
-      previousCid: previousCid || null,
-      evmHash: receipt?.hash || null,
+      previousCid: previousCid,
+      evmHash: receipt?.hash,
     };
   };
 
