@@ -47,7 +47,7 @@ export const createToolExecutionNode = ({
         }
       }
 
-      logger.info('Tool execution results:', results);
+      logger.info('Tool execution results:', { results: JSON.stringify(results, null, 2) });
       return { messages: results, executedTools };
     } catch (error) {
       logger.error('Error in tool execution:', error);

@@ -9,7 +9,7 @@ import type { Message, MessageElement, MessageInfo } from './types.js';
 
 export const logger = createLogger('slack-chat');
 
-const toMessage = ({ user, text, ts }: MessageElement): Message | undefined => {
+const toMessage = ({ user, text, ts, blocks }: MessageElement): Message | undefined => {
   if (!user || !text || !ts) {
     return undefined;
   }
@@ -19,6 +19,7 @@ const toMessage = ({ user, text, ts }: MessageElement): Message | undefined => {
     text,
     ts,
     postedAt,
+    blocks: blocks || undefined,
   };
 };
 
