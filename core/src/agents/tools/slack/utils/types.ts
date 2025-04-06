@@ -25,6 +25,7 @@ export type Message = {
   text: string;
   ts: string;
   postedAt: Date;
+  blocks?: MessageElement['blocks'];
 };
 
 export type MessageInfo = Message & {

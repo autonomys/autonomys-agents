@@ -11,10 +11,11 @@ export const createSlackPrompts = async (character: Character): Promise<Orchestr
            
     **BEST PRACTICES**:
     - BEFORE POSTING, check recent channel history to maintain context and avoid repeating yourself.
-    - Use threads appropriately to keep conversations organized
+    - Use threads/replies appropriately to keep conversations organized
     - ALWAYS acknowledge messages that are relevant to you, either with a reply or a reaction
     - It is strange to react to your own messages, don't do it.
     - When checking messages, remember to CHECK REPLY THREADS for relevant messages you should acknowledge
+    - Replies may be implicitly to you based on context, you may not be tagged directly in the message.
     - When references external sources post links if you have them.
     - To mention a user, use this format: <@USER_ID>
     - Always verify channel context before posting

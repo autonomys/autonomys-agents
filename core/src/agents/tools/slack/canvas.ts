@@ -11,6 +11,39 @@ import { createLogger } from '../../../utils/logger.js';
 
 const logger = createLogger('slack-tools');
 
+// Define a schema for canvas blocks
+const canvasBlockSchema = z
+  .object({
+    type: z.string().describe('The type of block'),
+    text: z
+      .object({
+        text: z.string().describe('The text content'),
+        type: z.string().describe('The type of text (plain_text or mrkdwn)'),
+      })
+      .optional()
+      .describe('Text content for the block'),
+  })
+  .passthrough();
+
+// Define a schema for canvas changes
+const canvasChangeSchema = z
+  .object({
+    title: z.string().optional().describe('New title for the canvas'),
+    initial_blocks: z.array(canvasBlockSchema).optional().describe('Blocks to set for the canvas'),
+  })
+  .passthrough();
+
+// Define a schema for canvas section lookup criteria
+const canvasCriteriaSchema = z
+  .object({
+    section_id: z.string().optional().describe('ID of the section to lookup'),
+    blocks_after: z.string().optional().describe('ID of the block to search after'),
+    blocks_before: z.string().optional().describe('ID of the block to search before'),
+    blocks_limit: z.number().optional().describe('Maximum number of blocks to return'),
+    contains_text: z.string().describe('Text to search for within sections (required)'),
+  })
+  .passthrough();
+
 /**
  * Creates a tool to create a channel canvas in a Slack channel
  */
@@ -72,7 +105,11 @@ export const createEditChannelCanvasTool = (
     schema: z.object({
       channelId: z.string().describe('The channel ID where the canvas is located.'),
       canvasId: z.string().describe('The ID of the canvas to edit.'),
-      changes: z.array(z.any()).describe('The changes to the canvas.'),
+      changes: z
+        .array(canvasChangeSchema)
+        .describe(
+          'The changes to apply to the canvas. Each change should include properties like title or initial_blocks.',
+        ),
     }),
     func: async ({ channelId, canvasId, changes }) => {
       try {
@@ -117,7 +154,9 @@ export const canvasSectionsLookupTool = (
     - You want to find a section in a canvas  `,
     schema: z.object({
       canvasId: z.string().describe('The ID of the canvas to lookup sections in.'),
-      criteria: z.any().describe('The criteria to lookup sections in.'),
+      criteria: canvasCriteriaSchema.describe(
+        'The criteria to lookup sections by, such as section_id or blocks_limit.',
+      ),
     }),
     func: async ({ canvasId, criteria }) => {
       try {
