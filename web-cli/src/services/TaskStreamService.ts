@@ -233,7 +233,9 @@ export const subscribeToCompletedTasks = (callback: TaskUpdateCallback): (() => 
           description: task.message,
           startedAt: task.startedAt ? new Date(task.startedAt) : undefined,
           status: task.status || 'completed',
-          result: task.result || 'Task completed successfully',
+          result: task.result || (task.status === 'failed' ? 'Task execution failed' : 
+                                  task.status === 'deleted' ? 'Task was deleted' : 
+                                  'Task completed successfully'),
         }))
         .sort((a: ScheduledTask, b: ScheduledTask) => b.time.getTime() - a.time.getTime());
 

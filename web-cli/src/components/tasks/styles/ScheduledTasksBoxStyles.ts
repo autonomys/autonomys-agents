@@ -191,10 +191,10 @@ export const getTaskStatusBadgeStyles = (statusColor: string): BadgeProps => ({
   py: 1,
   borderRadius: 'full',
   fontSize: ['xs', 'sm'],
-  bg: `${statusColor}20`,
-  color: statusColor,
+  bg: statusColor === 'brand.neonGreen' ? 'rgba(0, 0, 0, 0.5)' : `${statusColor}20`,
+  color: statusColor === 'brand.neonGreen' ? 'rgba(50, 255, 126, 0.95)' : statusColor,
   textTransform: 'capitalize',
-  fontWeight: 'medium',
+  fontWeight: 'bold',
   boxShadow: `0 0 5px ${statusColor}50`,
 });
 
@@ -274,3 +274,61 @@ export const taskResultTextStyles: TextProps = {
   color: "whiteAlpha.800",
   fontStyle: "italic"
 };
+
+// Filter container styles
+export const filterContainerStyles: FlexProps = {
+  gap: 2,
+  mb: 3,
+  px: 1,
+  py: 2,
+  alignItems: "center",
+  flexWrap: "wrap",
+  borderRadius: "md",
+  bg: "rgba(0, 0, 0, 0.2)",
+  borderBottom: "1px solid rgba(255, 255, 255, 0.05)"
+};
+
+// Filter label styles
+export const filterLabelStyles: TextProps = {
+  fontSize: "xs",
+  fontWeight: "medium",
+  color: "whiteAlpha.700",
+  mr: 2
+};
+
+// Filter chip styles - for individual filter options
+export const getFilterChipStyles = (isSelected: boolean, chipColor: string): BoxProps => ({
+  px: 2,
+  py: 1,
+  borderRadius: "full",
+  fontSize: "xs",
+  fontWeight: isSelected ? "bold" : "normal",
+  bg: isSelected ? `${chipColor}30` : "rgba(255, 255, 255, 0.05)",
+  color: isSelected ? chipColor : "whiteAlpha.700",
+  cursor: "pointer",
+  transition: "all 0.2s ease",
+  border: "1px solid",
+  borderColor: isSelected ? chipColor : "transparent",
+  _hover: {
+    bg: isSelected ? `${chipColor}40` : "rgba(255, 255, 255, 0.1)",
+    transform: "translateY(-1px)"
+  },
+  _active: {
+    transform: "translateY(0px)"
+  }
+});
+
+// Filter badge/counter styles
+export const getFilterCountBadgeStyles = (isSelected: boolean, chipColor: string): BoxProps => ({
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+  ml: 1,
+  borderRadius: "full",
+  bg: isSelected ? "rgba(0, 0, 0, 0.3)" : "rgba(0, 0, 0, 0.2)",
+  color: isSelected ? chipColor : "whiteAlpha.600",
+  fontSize: "xs",
+  fontWeight: "bold",
+  w: "16px",
+  h: "16px"
+});

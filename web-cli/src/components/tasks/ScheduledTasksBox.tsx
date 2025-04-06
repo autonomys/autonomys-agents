@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Box, Text, Button, Flex, Badge, useToken } from '@chakra-ui/react';
 import { Resizable } from 're-resizable';
 import { ScheduledTasksBoxProps, ScheduledTask } from '../../types/types';
@@ -25,11 +25,18 @@ import {
   getTabItemStyles,
   activeTabDotStyles,
   taskResultBoxStyles,
-  taskResultTextStyles
+  taskResultTextStyles,
+  filterContainerStyles,
+  filterLabelStyles,
+  getFilterChipStyles,
+  getFilterCountBadgeStyles
 } from './styles/ScheduledTasksBoxStyles';
 
 // Define the task types for the navbar
 type TaskViewType = 'processing' | 'scheduled' | 'completed';
+
+// Define the filter status types for completed tasks
+type CompletedFilterStatus = 'completed' | 'failed' | 'deleted';
 
 const ScheduledTasksBox: React.FC<ScheduledTasksBoxProps> = ({ 
   tasks, 
@@ -40,8 +47,10 @@ const ScheduledTasksBox: React.FC<ScheduledTasksBoxProps> = ({
 }) => {
   const [size, setSize] = useState({ height: 200 });
   const [activeView, setActiveView] = useState<TaskViewType>('scheduled');
+  const [activeFilters, setActiveFilters] = useState<CompletedFilterStatus[]>(['completed', 'failed', 'deleted']);
+  
   // Get brand colors for the navbar
-  const [neonBlue, neonGreen, neonPink] = useToken('colors', ['brand.neonBlue', 'brand.neonGreen', 'brand.neonPink']);
+  const [neonBlue, neonGreen, neonPink, red] = useToken('colors', ['brand.neonBlue', 'brand.neonGreen', 'brand.neonPink', 'red.400']);
 
   // Filter tasks based on the active view
   const getTasksForActiveView = (): ScheduledTask[] => {
@@ -50,10 +59,36 @@ const ScheduledTasksBox: React.FC<ScheduledTasksBoxProps> = ({
     } else if (activeView === 'scheduled') {
       return scheduledTasks.length ? scheduledTasks : tasks.filter(task => !task.status || task.status === 'scheduled');
     } else if (activeView === 'completed') {
-      return completedTasks.length ? completedTasks : tasks.filter(task => task.status === 'completed' || task.status === 'failed');
+      const allCompletedTasks = completedTasks.length 
+        ? completedTasks 
+        : tasks.filter(task => 
+            task.status === 'completed' || 
+            task.status === 'failed' || 
+            task.status === 'deleted'
+          );
+          
+      // Apply active filters for completed view
+      return allCompletedTasks.filter(task => activeFilters.includes(task.status as CompletedFilterStatus));
     }
     return tasks;
   };
+
+  // Task count for each filter type
+  const filterCounts = useMemo(() => {
+    const allCompletedTasks = completedTasks.length 
+      ? completedTasks 
+      : tasks.filter(task => 
+          task.status === 'completed' || 
+          task.status === 'failed' || 
+          task.status === 'deleted'
+        );
+    
+    return {
+      completed: allCompletedTasks.filter(task => task.status === 'completed').length,
+      failed: allCompletedTasks.filter(task => task.status === 'failed').length,
+      deleted: allCompletedTasks.filter(task => task.status === 'deleted').length
+    };
+  }, [completedTasks, tasks]);
 
   const getStatusColor = (status?: string) => {
     if (!status) return 'gray.500';
@@ -65,8 +100,23 @@ const ScheduledTasksBox: React.FC<ScheduledTasksBoxProps> = ({
         return 'brand.neonGreen';
       case 'failed':
         return '#ef5350';
+      case 'deleted':
+        return 'gray.400';
       default:
         return 'gray.500';
+    }
+  };
+
+  const getFilterColor = (filterStatus: CompletedFilterStatus) => {
+    switch (filterStatus) {
+      case 'completed':
+        return neonGreen;
+      case 'failed':
+        return '#ef5350';
+      case 'deleted':
+        return 'gray.400';
+      default:
+        return 'whiteAlpha.600';
     }
   };
 
@@ -82,6 +132,23 @@ const ScheduledTasksBox: React.FC<ScheduledTasksBoxProps> = ({
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+
+  // Toggle a filter on/off
+  const toggleFilter = (filterStatus: CompletedFilterStatus) => {
+    setActiveFilters(prev => {
+      // If it's the only filter left, don't remove it
+      if (prev.length === 1 && prev.includes(filterStatus)) {
+        return prev;
+      }
+      
+      // If filter is already active, remove it
+      if (prev.includes(filterStatus)) {
+        return prev.filter(f => f !== filterStatus);
+      }
+      // Otherwise add it
+      return [...prev, filterStatus];
+    });
+  };
 
   // Get color for the active tab
   const getTabColor = (tabType: TaskViewType) => {
@@ -200,6 +267,64 @@ const ScheduledTasksBox: React.FC<ScheduledTasksBoxProps> = ({
         css={scrollbarStyles}
       >
         <Box {...stackStyles}>
+          {/* Faceted Filter UI - Only show for completed view */}
+          {activeView === 'completed' && (
+            <Flex {...filterContainerStyles}>
+              <Text {...filterLabelStyles}>FILTER:</Text>
+              
+              {/* Completed Filter */}
+              <Box 
+                {...getFilterChipStyles(
+                  activeFilters.includes('completed'), 
+                  getFilterColor('completed')
+                )}
+                onClick={() => toggleFilter('completed')}
+              >
+                Completed
+                <Box {...getFilterCountBadgeStyles(
+                  activeFilters.includes('completed'),
+                  getFilterColor('completed')
+                )}>
+                  {filterCounts.completed}
+                </Box>
+              </Box>
+              
+              {/* Failed Filter */}
+              <Box 
+                {...getFilterChipStyles(
+                  activeFilters.includes('failed'), 
+                  getFilterColor('failed')
+                )}
+                onClick={() => toggleFilter('failed')}
+              >
+                Failed
+                <Box {...getFilterCountBadgeStyles(
+                  activeFilters.includes('failed'),
+                  getFilterColor('failed')
+                )}>
+                  {filterCounts.failed}
+                </Box>
+              </Box>
+              
+              {/* Deleted Filter */}
+              <Box 
+                {...getFilterChipStyles(
+                  activeFilters.includes('deleted'), 
+                  getFilterColor('deleted')
+                )}
+                onClick={() => toggleFilter('deleted')}
+              >
+                Deleted
+                <Box {...getFilterCountBadgeStyles(
+                  activeFilters.includes('deleted'),
+                  getFilterColor('deleted')
+                )}>
+                  {filterCounts.deleted}
+                </Box>
+              </Box>
+            </Flex>
+          )}
+
           {currentViewTasks.length === 0 ? (
             <Box {...emptyStateStyles}>
               No {activeView} tasks
