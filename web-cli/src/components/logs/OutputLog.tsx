@@ -17,8 +17,8 @@ import {
 } from './styles/LogStyles';
 
 const OutputLog: React.FC<OutputLogProps> = ({ messages }) => {
-  const [size, setSize] = useState({ height: 400 });
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [size, setSize] = useState({ height: 80 }); // Initial collapsed height
+  const [isCollapsed, setIsCollapsed] = useState(true);
   const [prevHeight, setPrevHeight] = useState(400);
   const containerRef = useRef<HTMLDivElement>(null);
   const headerRef = useRef<HTMLDivElement>(null);
