@@ -109,7 +109,27 @@ export const createCidManager = async (
     mkdirSync(memoriesDir, { recursive: true });
   }
 
-  const provider = new ethers.JsonRpcProvider(walletOptions.rpcUrl);
+  let provider;
+  try {
+    provider = new ethers.JsonRpcProvider(walletOptions.rpcUrl);
+    await provider.getNetwork(); // Test connection
+  } catch {
+    // Return offline-only implementation if provider fails
+    return {
+      localHashStatus: { message: 'Using local storage only' },
+      getLastMemoryCid: async () => {
+        const localHash = getLocalHash(localHashLocation);
+        return localHash ? hashToCid(localHash) : undefined;
+      },
+      saveLastMemoryCid: async (cid: string) => {
+        const blake3hash = blake3HashFromCid(stringToCid(cid));
+        const bytes32Hash = ethers.hexlify(blake3hash);
+        saveHashLocally(bytes32Hash, localHashLocation);
+        return undefined;
+      },
+    };
+  }
+
   const wallet = new ethers.Wallet(walletOptions.privateKey, provider);
   const contract = new ethers.Contract(walletOptions.contractAddress, MEMORY_ABI, wallet);
 
@@ -120,7 +140,7 @@ export const createCidManager = async (
     localHashLocation,
   );
 
-  const getLastMemoryCid = async (): Promise<string> => {
+  const getLastMemoryCid = async (): Promise<string | undefined> => {
     const localHash = getLocalHash(localHashLocation);
     if (localHash) {
       return hashToCid(localHash);
@@ -128,17 +148,12 @@ export const createCidManager = async (
 
     try {
       const blockchainHash = await contract.getLastMemoryHash(wallet.address);
-      saveHashLocally(blockchainHash, localHashLocation);
-      return hashToCid(blockchainHash);
-    } catch (error) {
-      // If blockchain call fails, try to use local hash again
-      const fallbackLocalHash = getLocalHash(localHashLocation);
-      if (fallbackLocalHash) {
-        return hashToCid(fallbackLocalHash);
+      if (blockchainHash) {
+        saveHashLocally(blockchainHash, localHashLocation);
+        return hashToCid(blockchainHash);
       }
-      throw new Error(
-        `Failed to get memory hash from both blockchain and local storage. Error:${error}`,
-      );
+    } catch {
+      return undefined;
     }
   };
 
@@ -156,11 +171,7 @@ export const createCidManager = async (
       );
       const receipt = (await tx.wait()) as ethers.TransactionReceipt;
       return receipt;
-    } catch (error: unknown) {
-      // If blockchain save fails, just continue with local storage
-      console.warn(
-        `Skipping blockchain update due to error: ${error instanceof Error ? error.message : String(error)}`,
-      );
+    } catch {
       return undefined;
     }
   };
