@@ -16,7 +16,6 @@
   },
   "dependencies": {
     "@autonomys/auto-dag-data": "^1.1.2",
-    "@autonomys/auto-drive": "^1.1.2",
     "@types/js-yaml": "^4.0.9",
     "axios": "^1.8.4",
     "cors": "^2.8.5",
