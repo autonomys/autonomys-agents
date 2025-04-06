@@ -18,19 +18,19 @@ export const processPreviousCids = async (startCid: string, agentName: string) =
         if (!existingMemory) {
           logger.info('Downloading previous memory in background', { cid: currentCid });
           const memoryResult = await downloadMemory(currentCid);
-
+          let previousCid = memoryResult?.memoryData?.previousCid || memoryResult?.memoryData?.header?.previousCid;
           if (memoryResult && memoryResult.memoryData) {
             await saveMemoryRecord(
               currentCid,
               memoryResult.memoryData,
-              memoryResult.memoryData.previousCid,
+              previousCid,
               agentName,
             );
             logger.info('Successfully saved previous memory', {
               cid: currentCid,
               agentName,
             });
-            currentCid = memoryResult.memoryData.previousCid;
+            currentCid = previousCid;
           } else {
             logger.warn('Failed to download previous memory', { cid: currentCid });
             break;

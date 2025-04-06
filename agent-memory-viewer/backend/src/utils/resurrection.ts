@@ -73,7 +73,7 @@ const processResurrection = async (startHash: string, agentName: string) => {
         currentBatch = [];
       }
 
-      hash = memory.memoryData?.previousCid;
+      hash = memory.memoryData?.previousCid || memory.memoryData?.header?.previousCid;
       if (!hash) break;
     } catch (error) {
       logger.error('Failed to download memory during resurrection', {
