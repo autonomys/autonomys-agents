@@ -184,6 +184,84 @@ export const subscribeToConnectionStatus = (callback: ConnectionStatusCallback):
   };
 };
 
+export const subscribeToProcessingTasks = (callback: TaskUpdateCallback): (() => void) => {
+  const processingCallback = (data: TaskEventMessage) => {
+    if (data.type === 'tasks' && data.tasks?.current) {
+      const currentTask = data.tasks.current;
+      const processingTask: ScheduledTask = {
+        id: currentTask.id,
+        time: new Date(currentTask.scheduledFor),
+        description: currentTask.message,
+        startedAt: currentTask.startedAt ? new Date(currentTask.startedAt) : undefined,
+        status: 'processing',
+      };
+      
+      callback([processingTask]);
+    } else {
+      callback([]);
+    }
+  };
+
+  if (!isInitialized || connectionStatus === ConnectionStatus.DISCONNECTED) {
+    connectToTaskStream();
+  }
+
+  // We're manually handling this by listening to task stream messages
+  taskEventSource?.addEventListener('message', (event) => {
+    try {
+      const data = JSON.parse(event.data) as TaskEventMessage;
+      processingCallback(data);
+    } catch (error) {
+      console.error('Error parsing processing task message:', error);
+    }
+  });
+
+  return () => {
+    // No need to do anything specific for cleanup as the main taskEventSource cleanup will handle it
+  };
+};
+
+export const subscribeToCompletedTasks = (callback: TaskUpdateCallback): (() => void) => {
+  // For now, let's create a simulated subscription since the API doesn't currently provide completed tasks
+  // In a real implementation, we would listen to task completion events from the server
+  const completedTasksCallback = (data: TaskEventMessage) => {
+    if (data.type === 'tasks' && data.tasks?.completed) {
+      const tasks = data.tasks.completed
+        .map((task: any) => ({
+          id: task.id,
+          time: new Date(task.scheduledFor),
+          description: task.message,
+          startedAt: task.startedAt ? new Date(task.startedAt) : undefined,
+          status: task.status || 'completed',
+          result: task.result || 'Task completed successfully',
+        }))
+        .sort((a: ScheduledTask, b: ScheduledTask) => b.time.getTime() - a.time.getTime());
+
+      callback(tasks);
+    } else {
+      callback([]);
+    }
+  };
+
+  if (!isInitialized || connectionStatus === ConnectionStatus.DISCONNECTED) {
+    connectToTaskStream();
+  }
+
+  // We're manually handling this by listening to task stream messages
+  taskEventSource?.addEventListener('message', (event) => {
+    try {
+      const data = JSON.parse(event.data) as TaskEventMessage;
+      completedTasksCallback(data);
+    } catch (error) {
+      console.error('Error parsing completed task message:', error);
+    }
+  });
+
+  return () => {
+    // No need to do anything specific for cleanup as the main taskEventSource cleanup will handle it
+  };
+};
+
 export const reconnect = (): void => {
   console.log('Manual reconnection triggered');
   connectToTaskStream(activeNamespace);

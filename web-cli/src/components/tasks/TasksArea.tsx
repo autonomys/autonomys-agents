@@ -12,7 +12,11 @@ import {
 } from './styles/TasksAreaStyles';
 
 interface TasksAreaProps {
-  tasks: ScheduledTask[];
+  tasks: {
+    scheduled: ScheduledTask[];
+    processing: ScheduledTask[];
+    completed: ScheduledTask[];
+  };
   loading: boolean;
   connectionStatus: ConnectionStatus;
   connectionStatusInfo: {
@@ -31,6 +35,13 @@ const TasksArea: React.FC<TasksAreaProps> = ({
   handleDeleteTask,
   handleReconnect,
 }) => {
+  // Combine all tasks for display
+  const allTasks = [
+    ...tasks.processing,
+    ...tasks.scheduled,
+    ...tasks.completed
+  ];
+
   return (
     <Flex {...containerStyles}>
       <TaskHeader
@@ -39,7 +50,13 @@ const TasksArea: React.FC<TasksAreaProps> = ({
         handleReconnect={handleReconnect}
       />
       <Box {...contentContainerStyles}>
-        <ScheduledTasksBox tasks={tasks} onDeleteTask={handleDeleteTask} />
+        <ScheduledTasksBox 
+          tasks={allTasks} 
+          onDeleteTask={handleDeleteTask}
+          processingTasks={tasks.processing}
+          scheduledTasks={tasks.scheduled}
+          completedTasks={tasks.completed}
+        />
       </Box>
 
       {loading && (

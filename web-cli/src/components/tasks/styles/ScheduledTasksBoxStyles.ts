@@ -197,3 +197,80 @@ export const getTaskStatusBadgeStyles = (statusColor: string): BadgeProps => ({
   fontWeight: 'medium',
   boxShadow: `0 0 5px ${statusColor}50`,
 });
+
+// Navigation Tabs Container
+export const navTabsContainerStyles: FlexProps = {
+  width: "100%", 
+  borderBottom: "1px solid rgba(255, 255, 255, 0.1)",
+  background: "rgba(15, 15, 25, 0.7)",
+  backdropFilter: "blur(10px)",
+  position: "relative",
+  zIndex: 10,
+  overflow: "hidden",
+  height: "45px",
+  minHeight: "45px"
+};
+
+// Neural Network Background
+export const neuralNetworkBgStyles: BoxProps = {
+  position: "absolute",
+  top: "0",
+  left: "0",
+  right: "0",
+  bottom: "0",
+  opacity: "0.1",
+  backgroundImage: "linear-gradient(rgba(255, 255, 255, 0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 255, 255, 0.1) 1px, transparent 1px)",
+  backgroundSize: "20px 20px",
+  zIndex: -1
+};
+
+// Tab item base styles
+export const getTabItemStyles = (isActive: boolean, tabColor: string, tabBg: string): FlexProps => ({
+  flex: "1",
+  justifyContent: "center",
+  alignItems: "center",
+  py: 2,
+  height: "100%",
+  cursor: "pointer",
+  color: tabColor,
+  background: tabBg,
+  borderBottom: isActive ? `2px solid ${tabColor}` : "2px solid transparent",
+  transition: "all 0.3s ease",
+  position: "relative",
+  fontWeight: isActive ? "bold" : "normal",
+  fontSize: "sm",
+  _hover: { 
+    color: isActive ? tabColor : "whiteAlpha.800",
+    background: isActive ? tabBg : `rgba(${tabColor === 'brand.neonBlue' ? '0, 204, 255' : tabColor === 'brand.neonGreen' ? '50, 255, 126' : '255, 0, 204'}, 0.05)`
+  }
+});
+
+// Glowing dot for active tab
+export const activeTabDotStyles = (dotColor: string): BoxProps => ({
+  position: "absolute",
+  top: "50%",
+  left: "10px",
+  transform: "translateY(-50%)",
+  width: "6px",
+  height: "6px",
+  borderRadius: "full",
+  background: dotColor,
+  boxShadow: `0 0 8px ${dotColor}`
+});
+
+// Result box for completed tasks
+export const taskResultBoxStyles = (statusColor: string): BoxProps => ({
+  mt: 2,
+  p: 2,
+  bg: "rgba(0,0,0,0.2)",
+  borderRadius: "md",
+  borderLeft: "2px solid",
+  borderColor: statusColor
+});
+
+// Result text style
+export const taskResultTextStyles: TextProps = {
+  fontSize: "sm",
+  color: "whiteAlpha.800",
+  fontStyle: "italic"
+};
