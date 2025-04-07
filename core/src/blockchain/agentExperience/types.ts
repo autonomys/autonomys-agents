@@ -57,16 +57,16 @@ export type ExperienceManagerOptions = {
 };
 
 export type CidManager = {
-  getLastMemoryCid: () => Promise<string>;
-  saveLastMemoryCid: (cid: string) => Promise<ethers.TransactionReceipt>;
+  getLastMemoryCid: () => Promise<string | undefined>;
+  saveLastMemoryCid: (cid: string) => Promise<ethers.TransactionReceipt | undefined>;
   localHashStatus: { message: string };
 };
 
 export type ExperienceManager = {
   saveExperience: (data: unknown) => Promise<{
     cid: string;
-    previousCid: string | null;
-    evmHash: string;
+    previousCid: string | undefined;
+    evmHash: string | undefined;
   }>;
   retrieveExperience: (cid: string) => Promise<AgentExperience | AgentExperienceV0>;
   cidManager: CidManager;
