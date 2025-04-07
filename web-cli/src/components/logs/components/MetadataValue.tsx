@@ -29,7 +29,7 @@ export const MetadataValue: React.FC<MetadataValueProps> = ({
   index,
   fontSize,
 }) => {
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(true);
   const isLongString = typeof value === 'string' && value.length > 80;
 
   if (value !== null && typeof value === 'object') {

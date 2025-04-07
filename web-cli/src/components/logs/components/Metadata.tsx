@@ -21,7 +21,7 @@ interface MetadataProps {
 }
 
 export const Metadata: React.FC<MetadataProps> = ({ data, label = 'Metadata' }) => {
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(true);
   const [fontSize, setFontSize] = useState(14);
   const toggleMetadata = () => setIsOpen(!isOpen);
 
