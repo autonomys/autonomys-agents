@@ -93,7 +93,7 @@ export const createAuthenticatedScraper = async (
       return scraper;
     },
     {
-      maxRetries: 4,
+      maxRetries: 8,
       initialDelay: 2000,
     },
   ).catch(error => {
