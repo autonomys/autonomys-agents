@@ -195,7 +195,7 @@ export const subscribeToProcessingTasks = (callback: TaskUpdateCallback): (() =>
         startedAt: currentTask.startedAt ? new Date(currentTask.startedAt) : undefined,
         status: currentTask.status === 'stopped' ? 'stopped' : 'processing',
       };
-      
+
       callback([processingTask]);
     } else {
       callback([]);
@@ -207,7 +207,7 @@ export const subscribeToProcessingTasks = (callback: TaskUpdateCallback): (() =>
   }
 
   // We're manually handling this by listening to task stream messages
-  taskEventSource?.addEventListener('message', (event) => {
+  taskEventSource?.addEventListener('message', event => {
     try {
       const data = JSON.parse(event.data) as TaskEventMessage;
       processingCallback(data);
@@ -233,10 +233,15 @@ export const subscribeToCompletedTasks = (callback: TaskUpdateCallback): (() => 
           description: task.message,
           startedAt: task.startedAt ? new Date(task.startedAt) : undefined,
           status: task.status || 'completed',
-          result: task.result || (task.status === 'failed' ? 'Task execution failed' : 
-                                  task.status === 'deleted' ? 'Task was deleted' : 
-                                  task.status === 'stopped' ? 'Task was stopped' :
-                                  'Task completed successfully'),
+          result:
+            task.result ||
+            (task.status === 'failed'
+              ? 'Task execution failed'
+              : task.status === 'deleted'
+                ? 'Task was deleted'
+                : task.status === 'stopped'
+                  ? 'Task was stopped'
+                  : 'Task completed successfully'),
         }))
         .sort((a: ScheduledTask, b: ScheduledTask) => b.time.getTime() - a.time.getTime());
 
@@ -251,7 +256,7 @@ export const subscribeToCompletedTasks = (callback: TaskUpdateCallback): (() => 
   }
 
   // We're manually handling this by listening to task stream messages
-  taskEventSource?.addEventListener('message', (event) => {
+  taskEventSource?.addEventListener('message', event => {
     try {
       const data = JSON.parse(event.data) as TaskEventMessage;
       completedTasksCallback(data);
