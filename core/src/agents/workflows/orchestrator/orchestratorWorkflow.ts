@@ -221,15 +221,14 @@ export const createOrchestratorRunner = async (
         workflowLogger.info('Task is stopped - waiting for workflow to complete', {
           taskId: currentTask.id,
         });
-
-        const externalTerminationKey = `${namespace}:external-stop`;
-        workflowControlState.set(externalTerminationKey, {
-          shouldStop: true,
-          reason: reason || 'Unknown',
-        });
       } else {
         workflowLogger.info('No current task to terminate');
       }
+      const externalTerminationKey = `${namespace}:external-stop`;
+      workflowControlState.set(externalTerminationKey, {
+        shouldStop: true,
+        reason: reason || 'Unknown',
+      });
     },
 
     scheduleTask: (message: string, executeAt: Date): Task => {
