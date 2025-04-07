@@ -28,7 +28,7 @@
   },
   "scripts": {
     "build": "tsc",
-    "start": "tsx ../scripts/start.ts",
+    "start": "tsc && tsx ../scripts/start.ts",
     "dev": "NODE_ENV=development tsx --no-cache --watch src/index.ts",
     "test": "jest",
     "test:watch": "jest --watch",
