@@ -144,7 +144,7 @@ const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
   const prompts = await createPrompts(character);
 
   return {
-    modelConfigurations: config.orchestratorConfig.model_configurations,
+    modelConfigurations,
     tools: [
       ...twitterAgentTool,
       ...slackAgentTool,
