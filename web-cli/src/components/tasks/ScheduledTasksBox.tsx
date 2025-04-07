@@ -102,6 +102,8 @@ const ScheduledTasksBox: React.FC<ScheduledTasksBoxProps> = ({
         return '#ef5350';
       case 'deleted':
         return 'gray.400';
+      case 'stopped':
+        return 'orange.300';
       default:
         return 'gray.500';
     }
