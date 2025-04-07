@@ -7,7 +7,10 @@ import {
   OrchestratorRunner,
 } from './agents/workflows/orchestrator/orchestratorWorkflow.js';
 import { createPrompts } from './agents/workflows/orchestrator/prompts.js';
-import { OrchestratorRunnerOptions } from './agents/workflows/orchestrator/types.js';
+import {
+  ModelConfigurations,
+  OrchestratorRunnerOptions,
+} from './agents/workflows/orchestrator/types.js';
 import { registerOrchestratorRunner } from './agents/workflows/registration.js';
 import { createSlackAgent } from './agents/workflows/slack/slackAgent.js';
 import { createTwitterAgent } from './agents/workflows/twitter/twitterAgent.js';
@@ -15,6 +18,23 @@ import { withApiLogger } from './api/server.js';
 import { agentVersion, characterName, config } from './config/index.js';
 import { createTwitterApi } from './agents/tools/twitter/client.js';
 import { createExperienceManager } from './blockchain/agentExperience/index.js';
+import { LLMConfiguration } from './services/llm/types.js';
+
+export const bigModel: LLMConfiguration = {
+  provider: 'anthropic',
+  model: 'claude-3-5-sonnet-latest',
+  temperature: 0.6,
+};
+export const smallModel: LLMConfiguration = {
+  provider: 'anthropic',
+  model: 'claude-3-5-haiku-latest',
+  temperature: 0.6,
+};
+export const modelConfigurations: ModelConfigurations = {
+  inputModelConfig: bigModel,
+  messageSummaryModelConfig: smallModel,
+  finishWorkflowModelConfig: smallModel,
+};
 
 const character = config.characterConfig;
 const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
@@ -102,6 +122,7 @@ const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
           tools: [...schedulerTools],
           experienceConfig,
           monitoringConfig,
+          modelConfigurations,
         }),
       ]
     : [];
@@ -110,10 +131,11 @@ const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
   const githubToken = config.githubConfig.GITHUB_TOKEN;
   const githubAgentTools = githubToken
     ? [
-        createGithubAgent(githubToken, GitHubToolsSubset.ALL, character, {
+        createGithubAgent(githubToken, GitHubToolsSubset.ISSUES_CONTRIBUTOR, character, {
           tools: [...schedulerTools],
           experienceConfig,
           monitoringConfig,
+          modelConfigurations,
         }),
       ]
     : [];
@@ -122,7 +144,7 @@ const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
   const prompts = await createPrompts(character);
 
   return {
-    modelConfigurations: config.orchestratorConfig.model_configurations,
+    modelConfigurations,
     tools: [
       ...twitterAgentTool,
       ...slackAgentTool,
