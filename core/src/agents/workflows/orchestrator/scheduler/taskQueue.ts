@@ -226,6 +226,10 @@ export const createTaskQueue = (namespace: string): TaskQueue => {
         if (isCurrentTask) {
           currentTask = undefined;
         }
+      } else if (status === 'stopped') {
+        if (result) {
+          task.error = result;
+        }
       }
 
       try {
@@ -246,6 +250,10 @@ export const createTaskQueue = (namespace: string): TaskQueue => {
 
           case 'processing':
             dbController.markTaskAsProcessing(namespace, id);
+            break;
+
+          case 'stopped':
+            dbController.markTaskAsStopped(namespace, id, result || undefined);
             break;
 
           default:

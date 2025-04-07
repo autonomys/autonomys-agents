@@ -308,3 +308,12 @@ export const markTaskAsFailed = (namespace: string, taskId: string, error: strin
     error,
   });
 };
+
+export const markTaskAsStopped = (namespace: string, taskId: string, message?: string): void => {
+  updateTaskStatus({
+    id: taskId,
+    namespace,
+    status: 'stopped',
+    error: message,
+  });
+};

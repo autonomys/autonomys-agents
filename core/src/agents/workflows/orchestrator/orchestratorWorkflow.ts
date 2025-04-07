@@ -184,7 +184,20 @@ export const createOrchestratorRunner = async (
         const workflowSummary = `This action finished running at ${new Date().toISOString()}. Action summary: ${summary}`;
         const result = { summary: workflowSummary };
 
-        taskQueue.updateTaskStatus(taskQueue.currentTask?.id || '', 'completed', result.summary);
+        if (taskQueue.currentTask?.status === 'stopped') {
+          workflowLogger.info('Stopping task is now complete', {
+            taskId: taskQueue.currentTask.id,
+            summary,
+          });
+          taskQueue.updateTaskStatus(
+            taskQueue.currentTask.id,
+            'failed',
+            `Stopped by user. ${result.summary}`,
+          );
+        } else {
+          taskQueue.updateTaskStatus(taskQueue.currentTask?.id || '', 'completed', result.summary);
+        }
+
         closeVectorDB(namespace);
         return result;
       } else {
@@ -200,8 +213,15 @@ export const createOrchestratorRunner = async (
       workflowLogger.info('Stopping orchestrator workflow', { reason });
       const currentTask = taskQueue.currentTask;
       if (currentTask) {
-        taskQueue.updateTaskStatus(currentTask.id, 'failed', `Terminated by user: ${reason}`);
-        workflowLogger.info('Terminated current task', { taskId: currentTask.id });
+        taskQueue.updateTaskStatus(
+          currentTask.id,
+          'stopped',
+          `Terminating: ${reason || 'User requested stop'}`,
+        );
+        workflowLogger.info('Task is stopped - waiting for workflow to complete', {
+          taskId: currentTask.id,
+        });
+
         const externalTerminationKey = `${namespace}:external-stop`;
         workflowControlState.set(externalTerminationKey, {
           shouldStop: true,
