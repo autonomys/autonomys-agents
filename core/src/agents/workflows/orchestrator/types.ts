@@ -39,6 +39,10 @@ export type ExperienceConfig =
       experienceManager?: never;
     };
 
+export type CharacterDataPathConfig = {
+  dataPath: string;
+};
+
 export type OrchestratorRunnerOptions = {
   modelConfigurations?: {
     inputModelConfig?: LLMConfiguration;
@@ -51,6 +55,7 @@ export type OrchestratorRunnerOptions = {
   pruningParameters?: PruningParameters;
   experienceConfig?: ExperienceConfig;
   monitoringConfig?: MonitoringConfig;
+  characterDataPathConfig?: CharacterDataPathConfig;
   recursionLimit?: number;
   logger?: Logger;
 };
@@ -63,6 +68,7 @@ export type OrchestratorConfig = {
   pruningParameters: PruningParameters;
   experienceConfig: ExperienceConfig;
   monitoringConfig: MonitoringConfig;
+  characterDataPathConfig: CharacterDataPathConfig;
   recursionLimit: number;
   logger?: Logger;
 };

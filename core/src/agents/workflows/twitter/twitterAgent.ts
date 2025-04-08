@@ -16,6 +16,7 @@ import {
   createModelConfigurations,
   createMonitoringConfig,
   createPruningParameters,
+  createCharacterDataPathConfig,
 } from '../orchestrator/config.js';
 
 const logger = createLogger('twitter-workflow');
@@ -59,7 +60,7 @@ const createTwitterAgentConfig = async (
     monitoringConfig: monitoringOptions,
   });
   const pruningParameters = createPruningParameters(options);
-
+  const characterDataPathConfig = createCharacterDataPathConfig(options);
   // Get Twitter-specific tools and prompts
   const twitterTools = createAllTwitterTools(
     twitterApi,
@@ -81,6 +82,7 @@ const createTwitterAgentConfig = async (
     pruningParameters,
     experienceConfig,
     monitoringConfig,
+    characterDataPathConfig,
   };
 };
 

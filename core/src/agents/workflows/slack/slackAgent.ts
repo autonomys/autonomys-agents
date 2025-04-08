@@ -14,6 +14,7 @@ import {
   createModelConfigurations,
   createMonitoringConfig,
   createPruningParameters,
+  createCharacterDataPathConfig,
 } from '../orchestrator/config.js';
 
 const logger = createLogger('slack-workflow');
@@ -47,6 +48,7 @@ const createSlackAgentConfig = async (
   const monitoringConfig = createMonitoringConfig(options);
 
   const pruningParameters = createPruningParameters(options);
+  const characterDataPathConfig = createCharacterDataPathConfig(options);
 
   // Get Slack-specific tools and prompts
   const slackTools = await createSlackTools(slackToken);
@@ -64,6 +66,7 @@ const createSlackAgentConfig = async (
     pruningParameters,
     experienceConfig,
     monitoringConfig,
+    characterDataPathConfig,
   };
 };
 

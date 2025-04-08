@@ -40,6 +40,7 @@ const character = config.characterConfig;
 const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
   //shared config
   const webSearchTool = config.SERPAPI_API_KEY ? [createWebSearchTool(config.SERPAPI_API_KEY)] : [];
+  const dataPath = character.characterPath;
   const saveExperiences = config.autoDriveConfig.AUTO_DRIVE_SAVE_EXPERIENCES;
   const monitoringEnabled = config.autoDriveConfig.AUTO_DRIVE_MONITORING;
   const experienceManager =
@@ -109,6 +110,9 @@ const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
               experienceConfig,
               monitoringConfig,
               modelConfigurations: config.twitterConfig.model_configurations,
+              characterDataPathConfig: {
+                dataPath,
+              },
             },
           ),
         ]
@@ -136,6 +140,9 @@ const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
           experienceConfig,
           monitoringConfig,
           modelConfigurations,
+          characterDataPathConfig: {
+            dataPath,
+          },
         }),
       ]
     : [];
@@ -166,6 +173,9 @@ const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
         : {
             enabled: false,
           },
+    characterDataPathConfig: {
+      dataPath,
+    },
   };
 };
 

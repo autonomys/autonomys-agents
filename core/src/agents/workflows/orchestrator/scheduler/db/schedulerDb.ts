@@ -1,17 +1,13 @@
-import path from 'path';
 import { createSqliteService } from '../../../../../services/sqlite/SqliteDB.js';
-import { config } from '../../../../../config/index.js';
 import { SchedulerDatabase } from '../types.js';
 import { createTaskTableIndexes, TASKS_TABLE_SCHEMA } from './schema.js';
 
 let schedulerDbInstance: SchedulerDatabase | null = null;
 
-export function createSchedulerDatabase(): SchedulerDatabase {
+export function createSchedulerDatabase(dbPath: string): SchedulerDatabase {
   if (schedulerDbInstance) {
     return schedulerDbInstance;
   }
-
-  const dbPath = path.join(config.characterConfig.characterPath, 'data', 'scheduler.db');
 
   const sqliteService = createSqliteService(dbPath);
   const getTableName = (namespace: string): string => {
@@ -35,9 +31,9 @@ export function createSchedulerDatabase(): SchedulerDatabase {
   return schedulerDb;
 }
 
-export function getSchedulerDatabase(): SchedulerDatabase {
+export function getSchedulerDatabase(path: string): SchedulerDatabase {
   if (!schedulerDbInstance) {
-    schedulerDbInstance = createSchedulerDatabase();
+    schedulerDbInstance = createSchedulerDatabase(path);
   }
   return schedulerDbInstance;
 }

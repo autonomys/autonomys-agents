@@ -11,11 +11,12 @@ const taskQueues = new Map<string, TaskQueue>();
 const MAX_COMPLETED_TASKS = 50;
 const MAX_SCHEDULED_TASKS = 100;
 
-export const createTaskQueue = (namespace: string): TaskQueue => {
+export const createTaskQueue = (namespace: string, dataPath: string): TaskQueue => {
   if (taskQueues.get(namespace)) {
     return taskQueues.get(namespace) as TaskQueue;
   }
 
+    
   const scheduledTasks: Task[] = [];
   const completedTasks: Task[] = [];
   let currentTask: Task | undefined = undefined;
@@ -24,19 +25,19 @@ export const createTaskQueue = (namespace: string): TaskQueue => {
     const dbProcessingTasks = dbController.getTasks({
       namespace,
       status: 'processing',
-    });
+    }, dataPath);
 
     const dbScheduledTasks = dbController.getTasks({
       namespace,
       status: 'scheduled',
       limit: MAX_SCHEDULED_TASKS,
-    });
+    }, dataPath);
 
     const dbCompletedTasks = dbController.getTasks({
       namespace,
       status: ['completed', 'failed'],
       limit: MAX_COMPLETED_TASKS,
-    });
+    }, dataPath);
 
     for (const dbTask of [...dbScheduledTasks, ...dbProcessingTasks, ...dbCompletedTasks]) {
       const task: Task = {
@@ -62,7 +63,7 @@ export const createTaskQueue = (namespace: string): TaskQueue => {
           id: task.id,
           namespace,
           status: 'scheduled',
-        });
+        }, dataPath);
       } else {
         completedTasks.push(task);
       }
@@ -90,7 +91,7 @@ export const createTaskQueue = (namespace: string): TaskQueue => {
     },
     get completedTasks() {
       return [...completedTasks].sort(
-        (a, b) => (a.completedAt?.getTime() || 0) - (b.completedAt?.getTime() || 0),
+        (a, b) => (b.completedAt?.getTime() ?? 0) - (a.completedAt?.getTime() ?? 0),
       );
     },
 
@@ -123,7 +124,7 @@ export const createTaskQueue = (namespace: string): TaskQueue => {
           status: 'scheduled',
           created_at: now.toISOString(),
           scheduled_for: executeAt.toISOString(),
-        });
+        }, dataPath);
       } catch (error) {
         logger.error(
           `Failed to persist task to database: ${error instanceof Error ? error.message : String(error)}`,
@@ -162,7 +163,7 @@ export const createTaskQueue = (namespace: string): TaskQueue => {
             taskId: nextTask.id,
           });
 
-          dbController.markTaskAsProcessing(namespace, nextTask.id);
+          dbController.markTaskAsProcessing(namespace, nextTask.id, dataPath);
         } catch (error) {
           logger.error(
             `Failed to update task status in database: ${error instanceof Error ? error.message : String(error)}`,
@@ -231,7 +232,7 @@ export const createTaskQueue = (namespace: string): TaskQueue => {
       try {
         switch (status) {
           case 'completed':
-            dbController.markTaskAsCompleted(namespace, id, result);
+            dbController.markTaskAsCompleted(namespace, id, dataPath, result);
             break;
 
           case 'failed':
@@ -241,11 +242,11 @@ export const createTaskQueue = (namespace: string): TaskQueue => {
                 : result
                   ? JSON.stringify(result)
                   : 'Task failed without specific error';
-            dbController.markTaskAsFailed(namespace, id, errorMsg);
+            dbController.markTaskAsFailed(namespace, id, dataPath, errorMsg);
             break;
 
           case 'processing':
-            dbController.markTaskAsProcessing(namespace, id);
+            dbController.markTaskAsProcessing(namespace, id, dataPath);
             break;
 
           default:
@@ -269,7 +270,7 @@ export const createTaskQueue = (namespace: string): TaskQueue => {
         completedTasks.push(deletedTask);
 
         try {
-          dbController.deleteTask(namespace, id);
+          dbController.deleteTask(namespace, id, dataPath);
         } catch (error) {
           logger.error(
             `Failed to delete task from database: ${error instanceof Error ? error.message : String(error)}`,

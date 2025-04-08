@@ -11,6 +11,7 @@ import {
   OrchestratorRunnerOptions,
   PruningParameters,
   Tools,
+  CharacterDataPathConfig,
 } from './types.js';
 
 /**
@@ -133,6 +134,17 @@ export const createPruningParameters = (options?: OrchestratorRunnerOptions): Pr
 };
 
 /**
+ * Helper function to get the character path for data storage
+ */
+export const createCharacterDataPathConfig = (
+  options?: OrchestratorRunnerOptions,
+): CharacterDataPathConfig => {
+  return {
+    dataPath: options?.characterDataPathConfig?.dataPath || process.cwd(),
+  };
+};
+
+/**
  * Creates a configuration object for an orchestrator runner
  * This handles all the merging of defaults with provided options
  */
@@ -152,6 +164,7 @@ export const createOrchestratorConfig = async (
   const experienceConfig = createExperienceConfig(options);
   const monitoringConfig = createMonitoringConfig(options);
   const pruningParameters = createPruningParameters(options);
+  const characterDataPathConfig = createCharacterDataPathConfig(options);
 
   // Get tools - merge custom tools with defaults if experience saving is enabled
   const tools: Tools = [
@@ -174,5 +187,6 @@ export const createOrchestratorConfig = async (
     pruningParameters,
     experienceConfig,
     monitoringConfig,
+    characterDataPathConfig,
   };
 };

@@ -14,8 +14,8 @@ import {
   createModelConfigurations,
   createMonitoringConfig,
   createPruningParameters,
+  createCharacterDataPathConfig,
 } from '../orchestrator/config.js';
-
 const logger = createLogger('github-workflow');
 
 // GitHub-specific default configuration values
@@ -49,7 +49,7 @@ const createGithubAgentConfig = async (
   const monitoringConfig = createMonitoringConfig(options);
 
   const pruningParameters = createPruningParameters(options);
-
+  const characterDataPathConfig = createCharacterDataPathConfig(options);
   // Get GitHub-specific tools and prompts
   const githubTools = await createGitHubTools(githubToken, toolsSubset);
   const prompts = await createGithubPrompts(character);
@@ -66,6 +66,7 @@ const createGithubAgentConfig = async (
     pruningParameters,
     experienceConfig,
     monitoringConfig,
+    characterDataPathConfig,
   };
 };
 

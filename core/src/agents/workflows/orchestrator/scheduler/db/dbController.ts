@@ -1,6 +1,7 @@
 import { v4 as uuidv4 } from 'uuid';
 import { createLogger } from '../../../../../utils/logger.js';
 import { getSchedulerDatabase } from './schedulerDb.js';
+import { schedulerConfig } from '../config.js';
 import {
   CreateTaskParams,
   GetTasksParams,
@@ -8,10 +9,23 @@ import {
   TaskRow,
   TaskStatus,
   UpdateTaskStatusParams,
+  SchedulerDatabase,
 } from '../types.js';
 
 const logger = createLogger('task-repository');
-const schedulerDb = getSchedulerDatabase();
+
+// Store database instances by path
+const dbInstances = new Map<string, SchedulerDatabase>();
+
+// Get or create a database instance for the given path
+export const getDbInstance = (dataPath: string): SchedulerDatabase => {
+  if (!dbInstances.has(dataPath)) {
+    const { dbPath } = schedulerConfig(dataPath);
+    const schedulerDb = getSchedulerDatabase(dbPath);
+    dbInstances.set(dataPath, schedulerDb);
+  }
+  return dbInstances.get(dataPath)!;
+};
 
 const rowToTask = (row: TaskRow, namespace: string): Task => {
   return {
@@ -28,7 +42,8 @@ const rowToTask = (row: TaskRow, namespace: string): Task => {
   };
 };
 
-export const createTask = (params: CreateTaskParams): Task => {
+export const createTask = (params: CreateTaskParams, dataPath: string): Task => {
+  const schedulerDb = getDbInstance(dataPath);
   schedulerDb.ensureNamespaceTable(params.namespace);
 
   const db = schedulerDb.getSqliteService().getDatabase();
@@ -60,7 +75,7 @@ export const createTask = (params: CreateTaskParams): Task => {
   }
 };
 
-export const scheduleTask = (namespace: string, message: string, scheduledFor: Date): Task => {
+export const scheduleTask = (namespace: string, message: string, scheduledFor: Date, dataPath: string): Task => {
   const taskId = uuidv4();
   const now = new Date();
 
@@ -71,10 +86,11 @@ export const scheduleTask = (namespace: string, message: string, scheduledFor: D
     status: 'scheduled',
     created_at: now.toISOString(),
     scheduled_for: scheduledFor.toISOString(),
-  });
+  }, dataPath);
 };
 
-export const updateTaskStatus = (params: UpdateTaskStatusParams): void => {
+export const updateTaskStatus = (params: UpdateTaskStatusParams, dataPath: string): void => {
+  const schedulerDb = getDbInstance(dataPath);
   schedulerDb.ensureNamespaceTable(params.namespace);
 
   const db = schedulerDb.getSqliteService().getDatabase();
@@ -130,7 +146,8 @@ export const updateTaskStatus = (params: UpdateTaskStatusParams): void => {
   }
 };
 
-export const deleteTask = (namespace: string, taskId: string): void => {
+export const deleteTask = (namespace: string, taskId: string, dataPath: string): void => {
+  const schedulerDb = getDbInstance(dataPath);
   schedulerDb.ensureNamespaceTable(namespace);
 
   const db = schedulerDb.getSqliteService().getDatabase();
@@ -153,7 +170,8 @@ export const deleteTask = (namespace: string, taskId: string): void => {
   }
 };
 
-export const getTaskById = (namespace: string, taskId: string): Task | null => {
+export const getTaskById = (namespace: string, taskId: string, dataPath: string): Task | null => {
+  const schedulerDb = getDbInstance(dataPath);
   schedulerDb.ensureNamespaceTable(namespace);
 
   const db = schedulerDb.getSqliteService().getDatabase();
@@ -174,7 +192,8 @@ export const getTaskById = (namespace: string, taskId: string): Task | null => {
   }
 };
 
-export const getTasks = (params: GetTasksParams): Task[] => {
+export const getTasks = (params: GetTasksParams, dataPath: string): Task[] => {
+  const schedulerDb = getDbInstance(dataPath);
   schedulerDb.ensureNamespaceTable(params.namespace);
 
   const db = schedulerDb.getSqliteService().getDatabase();
@@ -246,7 +265,8 @@ const buildTaskQueryParams = (params: GetTasksParams): (string | number | TaskSt
   return queryParams;
 };
 
-export const getNextDueTasks = (namespace: string, limit: number = 10): Task[] => {
+export const getNextDueTasks = (namespace: string, dataPath: string, limit: number = 10): Task[] => {
+  const schedulerDb = getDbInstance(dataPath);
   schedulerDb.ensureNamespaceTable(namespace);
 
   const db = schedulerDb.getSqliteService().getDatabase();
@@ -273,7 +293,7 @@ export const getNextDueTasks = (namespace: string, limit: number = 10): Task[] =
   }
 };
 
-export const markTaskAsProcessing = (namespace: string, taskId: string): void => {
+export const markTaskAsProcessing = (namespace: string, taskId: string, dataPath: string): void => {
   const now = new Date();
 
   updateTaskStatus({
@@ -281,10 +301,10 @@ export const markTaskAsProcessing = (namespace: string, taskId: string): void =>
     namespace,
     status: 'processing',
     started_at: now.toISOString(),
-  });
+  }, dataPath);
 };
 
-export const markTaskAsCompleted = (namespace: string, taskId: string, result?: unknown): void => {
+export const markTaskAsCompleted = (namespace: string, taskId: string, dataPath: string, result?: unknown): void => {
   const now = new Date();
   const resultJson = result ? JSON.stringify(result) : undefined;
 
@@ -294,10 +314,10 @@ export const markTaskAsCompleted = (namespace: string, taskId: string, result?: 
     status: 'completed',
     completed_at: now.toISOString(),
     result: resultJson,
-  });
+  }, dataPath);
 };
 
-export const markTaskAsFailed = (namespace: string, taskId: string, error: string): void => {
+export const markTaskAsFailed = (namespace: string, taskId: string, dataPath: string, error: string): void => {
   const now = new Date();
 
   updateTaskStatus({
@@ -306,5 +326,5 @@ export const markTaskAsFailed = (namespace: string, taskId: string, error: strin
     status: 'failed',
     completed_at: now.toISOString(),
     error,
-  });
+  }, dataPath);
 };
