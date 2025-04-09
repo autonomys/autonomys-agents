@@ -1,8 +1,7 @@
-import { createAutoDriveApi, downloadObject, getObjectMetadata } from '@autonomys/auto-drive';
-import { config } from '../config/index.js';
+import axios from 'axios';
 import { inflate } from 'pako';
 import { createLogger } from './logger.js';
-import { validateMemoryData, validateMemoryMetadata } from './validation/memory.js';
+import { validateMemoryData } from './validation/memory.js';
 
 const logger = createLogger('dsn');
 
@@ -17,48 +16,22 @@ export const downloadMemory = async (
   cid: string,
   retryCount = 0,
 ): Promise<{ memoryData: any; agentName: string } | null> => {
-  logger.info(`Checking memory metadata: ${cid}`);
   try {
-    const api = createAutoDriveApi({
-      apiKey: config.DSN_API_KEY || '',
-    });
+    logger.info(`Downloading memory: ${cid}`);
+    const memory = await axios.get(`https://gateway.autonomys.xyz/file/${cid}`);
 
-    const { isValid, agentName } = await validateMemoryMetadata(api, cid);
-    if (!isValid || !agentName) {
+    if (!memory.data.header.agentName) {
+      logger.error('Memory rejected: File name does not contain any known agent username');
       return null;
     }
-    logger.info(`Memory metadata is valid: ${cid}`);
-
-    logger.info(`Downloading memory: ${cid}`);
-    const stream = await downloadObject(api, { cid });
-    const reader = stream.getReader();
-    const chunks: Uint8Array[] = [];
-
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      chunks.push(value);
-    }
-
-    const allChunks = new Uint8Array(chunks.reduce((acc, chunk) => acc + chunk.length, 0));
-    let position = 0;
-    for (const chunk of chunks) {
-      allChunks.set(chunk, position);
-      position += chunk.length;
-    }
-
-    const decompressed = inflate(allChunks);
-    const jsonString = new TextDecoder().decode(decompressed);
-    const memoryData = JSON.parse(jsonString);
-
-    const isValidData = await validateMemoryData(memoryData, agentName);
+    const isValidData = await validateMemoryData(memory.data, memory.data.header.agentName);
     if (!isValidData) {
       return null;
     }
 
     return {
-      memoryData,
-      agentName,
+      memoryData: memory.data,
+      agentName: memory.data.header.agentName,
     };
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
