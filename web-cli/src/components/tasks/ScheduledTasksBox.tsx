@@ -36,7 +36,7 @@ import {
 type TaskViewType = 'processing' | 'scheduled' | 'completed';
 
 // Define the filter status types for completed tasks
-type CompletedFilterStatus = 'completed' | 'failed' | 'deleted';
+type CompletedFilterStatus = 'completed' | 'failed' | 'cancelled' | 'deleted';
 
 const ScheduledTasksBox: React.FC<ScheduledTasksBoxProps> = ({ 
   tasks, 
@@ -47,7 +47,7 @@ const ScheduledTasksBox: React.FC<ScheduledTasksBoxProps> = ({
 }) => {
   const [size, setSize] = useState({ height: 200 });
   const [activeView, setActiveView] = useState<TaskViewType>('scheduled');
-  const [activeFilters, setActiveFilters] = useState<CompletedFilterStatus[]>(['completed', 'failed', 'deleted']);
+  const [activeFilters, setActiveFilters] = useState<CompletedFilterStatus[]>(['completed', 'failed', 'cancelled', 'deleted']);
   
   // Get brand colors for the navbar
   const [neonBlue, neonGreen, neonPink, red] = useToken('colors', ['brand.neonBlue', 'brand.neonGreen', 'brand.neonPink', 'red.400']);
@@ -55,7 +55,7 @@ const ScheduledTasksBox: React.FC<ScheduledTasksBoxProps> = ({
   // Filter tasks based on the active view
   const getTasksForActiveView = (): ScheduledTask[] => {
     if (activeView === 'processing') {
-      return processingTasks.length ? processingTasks : tasks.filter(task => task.status === 'processing');
+      return processingTasks.length ? processingTasks : tasks.filter(task => task.status === 'processing' || task.status === 'finalizing');
     } else if (activeView === 'scheduled') {
       return scheduledTasks.length ? scheduledTasks : tasks.filter(task => !task.status || task.status === 'scheduled');
     } else if (activeView === 'completed') {
@@ -64,6 +64,7 @@ const ScheduledTasksBox: React.FC<ScheduledTasksBoxProps> = ({
         : tasks.filter(task => 
             task.status === 'completed' || 
             task.status === 'failed' || 
+            task.status === 'cancelled' || 
             task.status === 'deleted'
           );
           
@@ -80,12 +81,14 @@ const ScheduledTasksBox: React.FC<ScheduledTasksBoxProps> = ({
       : tasks.filter(task => 
           task.status === 'completed' || 
           task.status === 'failed' || 
+          task.status === 'cancelled' ||
           task.status === 'deleted'
         );
     
     return {
       completed: allCompletedTasks.filter(task => task.status === 'completed').length,
       failed: allCompletedTasks.filter(task => task.status === 'failed').length,
+      cancelled: allCompletedTasks.filter(task => task.status === 'cancelled').length,
       deleted: allCompletedTasks.filter(task => task.status === 'deleted').length
     };
   }, [completedTasks, tasks]);
@@ -96,10 +99,14 @@ const ScheduledTasksBox: React.FC<ScheduledTasksBoxProps> = ({
     switch (status.toLowerCase()) {
       case 'processing':
         return 'brand.neonBlue';
+      case 'finalizing':
+        return 'yellow.300';
       case 'completed':
         return 'brand.neonGreen';
       case 'failed':
         return '#ef5350';
+      case 'cancelled':
+        return 'purple.300';
       case 'deleted':
         return 'gray.400';
       case 'stopped':
@@ -115,6 +122,8 @@ const ScheduledTasksBox: React.FC<ScheduledTasksBoxProps> = ({
         return neonGreen;
       case 'failed':
         return '#ef5350';
+      case 'cancelled':
+        return 'purple.300';
       case 'deleted':
         return 'gray.400';
       default:
@@ -305,6 +314,23 @@ const ScheduledTasksBox: React.FC<ScheduledTasksBoxProps> = ({
                   getFilterColor('failed')
                 )}>
                   {filterCounts.failed}
+                </Box>
+              </Box>
+              
+              {/* Cancelled Filter */}
+              <Box 
+                {...getFilterChipStyles(
+                  activeFilters.includes('cancelled'), 
+                  getFilterColor('cancelled')
+                )}
+                onClick={() => toggleFilter('cancelled')}
+              >
+                Cancelled
+                <Box {...getFilterCountBadgeStyles(
+                  activeFilters.includes('cancelled'),
+                  getFilterColor('cancelled')
+                )}>
+                  {filterCounts.cancelled}
                 </Box>
               </Box>
               

@@ -193,7 +193,12 @@ export const subscribeToProcessingTasks = (callback: TaskUpdateCallback): (() =>
         time: new Date(currentTask.scheduledFor),
         description: currentTask.message,
         startedAt: currentTask.startedAt ? new Date(currentTask.startedAt) : undefined,
-        status: currentTask.status === 'stopped' ? 'stopped' : 'processing',
+        status:
+          currentTask.status === 'stopped'
+            ? 'stopped'
+            : currentTask.status === 'finalizing'
+              ? 'finalizing'
+              : 'processing',
       };
 
       callback([processingTask]);
@@ -239,9 +244,11 @@ export const subscribeToCompletedTasks = (callback: TaskUpdateCallback): (() => 
               ? 'Task execution failed'
               : task.status === 'deleted'
                 ? 'Task was deleted'
-                : task.status === 'stopped'
-                  ? 'Task was stopped'
-                  : 'Task completed successfully'),
+                : task.status === 'cancelled'
+                  ? 'Task was cancelled by user'
+                  : task.status === 'stopped'
+                    ? 'Task was stopped'
+                    : 'Task completed successfully'),
         }))
         .sort((a: ScheduledTask, b: ScheduledTask) => b.time.getTime() - a.time.getTime());
 

@@ -111,22 +111,22 @@ export const getTaskItemStyles = (statusColor: string): BoxProps => ({
   p: 3,
   mb: 3,
   borderRadius: 'md',
-  bg: 'rgba(0, 0, 0, 0.3)',
+  bg: `linear-gradient(90deg, ${statusColor}15 0%, rgba(0, 0, 0, 0.3) 50%)`,
   border: '1px solid',
-  borderColor: 'gray.700',
+  borderColor: `${statusColor}30`,
   position: 'relative',
   overflow: 'hidden',
   transition: 'all 0.2s ease',
   _hover: {
-    borderColor: 'brand.neonBlue',
-    boxShadow: '0 0 12px rgba(0, 204, 255, 0.2)',
+    borderColor: statusColor,
+    boxShadow: `0 0 12px ${statusColor}40`,
   },
   _before: {
     content: '""',
     position: 'absolute',
     top: 0,
     left: 0,
-    width: '2px',
+    width: '4px',
     height: '100%',
     bg: statusColor,
     boxShadow: `0 0 8px ${statusColor}`,
@@ -191,7 +191,16 @@ export const getTaskStatusBadgeStyles = (statusColor: string): BadgeProps => ({
   py: 1,
   borderRadius: 'full',
   fontSize: ['xs', 'sm'],
-  bg: statusColor === 'brand.neonGreen' ? 'rgba(0, 0, 0, 0.5)' : `${statusColor}20`,
+  bg:
+    statusColor === 'brand.neonGreen'
+      ? 'rgba(0, 0, 0, 0.5)'
+      : statusColor === 'brand.neonBlue'
+        ? 'rgba(0, 204, 255, 0.2)' // Processing background
+        : statusColor === 'purple.300'
+          ? 'rgba(128, 90, 213, 0.3)' // Cancelled background
+          : statusColor === 'yellow.300'
+            ? 'rgba(236, 201, 75, 0.25)' // Finalizing background
+            : `${statusColor}20`,
   color: statusColor === 'brand.neonGreen' ? 'rgba(50, 255, 126, 0.95)' : statusColor,
   textTransform: 'capitalize',
   fontWeight: 'bold',
@@ -269,10 +278,11 @@ export const activeTabDotStyles = (dotColor: string): BoxProps => ({
 export const taskResultBoxStyles = (statusColor: string): BoxProps => ({
   mt: 2,
   p: 2,
-  bg: 'rgba(0,0,0,0.2)',
+  bg: `linear-gradient(90deg, ${statusColor}10 0%, rgba(0, 0, 0, 0.2) 70%)`,
   borderRadius: 'md',
-  borderLeft: '2px solid',
+  borderLeft: '3px solid',
   borderColor: statusColor,
+  boxShadow: `inset 0 0 10px ${statusColor}15`,
 });
 
 // Result text style

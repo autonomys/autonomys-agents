@@ -212,7 +212,12 @@ export const createTaskQueue = (namespace: string): TaskQueue => {
       logger.info(`Updating task ${id} status to ${status} in namespace: ${namespace}`);
       task.status = status;
 
-      if (status === 'completed' || status === 'failed' || status === 'cancelled' || status === 'deleted') {
+      if (
+        status === 'completed' ||
+        status === 'failed' ||
+        status === 'cancelled' ||
+        status === 'deleted'
+      ) {
         task.completedAt = new Date();
 
         if (status === 'completed' && result) {
@@ -265,7 +270,7 @@ export const createTaskQueue = (namespace: string): TaskQueue => {
           case 'stopped':
             dbController.markTaskAsStopped(namespace, id, result || undefined);
             break;
-            
+
           case 'finalizing':
             dbController.markTaskAsStopped(namespace, id, result || undefined);
             break;
