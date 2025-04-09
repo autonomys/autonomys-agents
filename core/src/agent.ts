@@ -19,6 +19,7 @@ import { agentVersion, characterName, config } from './config/index.js';
 import { createTwitterApi } from './agents/tools/twitter/client.js';
 import { createExperienceManager } from './blockchain/agentExperience/index.js';
 import { LLMConfiguration } from './services/llm/types.js';
+import { createApiServer } from './api/server.js';
 
 export const bigModel: LLMConfiguration = {
   provider: 'anthropic',
@@ -39,14 +40,30 @@ export const modelConfigurations: ModelConfigurations = {
 const character = config.characterConfig;
 const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
   //shared config
-  const webSearchTool = config.SERPAPI_API_KEY ? [createWebSearchTool(config.SERPAPI_API_KEY)] : [];
   const dataPath = character.characterPath;
-  const apiConfig = {
-    authFlag: config.apiSecurityConfig.ENABLE_AUTH,
-    authToken: config.apiSecurityConfig.API_TOKEN,
-    allowedOrigins: config.apiSecurityConfig.CORS_ALLOWED_ORIGINS,
-    port: config.API_PORT,
-  };
+
+  let apiConfig: OrchestratorRunnerOptions['apiConfig'] | undefined;
+  if (config.ENABLE_API) {
+    apiConfig = {
+      apiEnabled: true,
+      authFlag: config.apiSecurityConfig.ENABLE_AUTH,
+      authToken: config.apiSecurityConfig.API_TOKEN,
+      allowedOrigins: config.apiSecurityConfig.CORS_ALLOWED_ORIGINS,
+      port: config.API_PORT,
+    };
+
+    const _apiServer = createApiServer(
+      characterName,
+      dataPath,
+      apiConfig.authFlag ?? false,
+      apiConfig.authToken ?? '',
+      apiConfig.port ?? 3000,
+      apiConfig.allowedOrigins ?? [],
+      config.llmConfig,
+    );
+  }
+  const webSearchTool = config.SERPAPI_API_KEY ? [createWebSearchTool(config.SERPAPI_API_KEY)] : [];
+
   const saveExperiences = config.autoDriveConfig.AUTO_DRIVE_SAVE_EXPERIENCES;
   const monitoringEnabled = config.autoDriveConfig.AUTO_DRIVE_MONITORING;
   const experienceManager =
@@ -201,16 +218,7 @@ export const orchestratorRunner = (() => {
       const namespace = 'orchestrator';
       runnerPromise = createOrchestratorRunner(character, {
         ...orchestrationConfig,
-        ...withApiLogger(
-          characterName,
-          orchestrationConfig.characterDataPathConfig?.dataPath || process.cwd(),
-          namespace,
-          orchestrationConfig.apiConfig?.authFlag,
-          orchestrationConfig.apiConfig?.authToken,
-          orchestrationConfig.apiConfig?.port,
-          orchestrationConfig.apiConfig?.allowedOrigins,
-          orchestrationConfig.llmConfig,
-        ),
+        ...withApiLogger(namespace, orchestrationConfig.apiConfig ? true : false),
       });
       const runner = await runnerPromise;
       registerOrchestratorRunner(namespace, runner);

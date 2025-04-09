@@ -27,30 +27,20 @@ export const parseFinishedWorkflow = async (content: unknown, logger: Logger) =>
 export const createFinishWorkflowNode = ({
   modelConfig,
   finishWorkflowPrompt,
-  characterName,
-  dataPath,
   namespace,
   apiConfig,
   llmConfig,
 }: {
   modelConfig: LLMConfiguration;
   finishWorkflowPrompt: ChatPromptTemplate;
-  characterName: string;
-  dataPath: string;
   namespace: string;
   apiConfig: ApiConfig;
   llmConfig: LLMFactoryConfig;
 }) => {
   const logger = attachLogger(
-    characterName,
-    dataPath,
     createLogger(`${namespace}-finish-workflow-node`),
     namespace,
-    apiConfig.authFlag,
-    apiConfig.authToken,
-    apiConfig.port,
-    apiConfig.allowedOrigins,
-    llmConfig,
+    apiConfig.apiEnabled ?? false,
   );
   const runNode = async (state: OrchestratorStateType) => {
     logger.info('Workflow Summary Node');

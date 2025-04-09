@@ -3,33 +3,20 @@ import { createLogger } from '../../../../utils/logger.js';
 import { ApiConfig, OrchestratorStateType } from '../types.js';
 import { AIMessage } from '@langchain/core/messages';
 import { attachLogger } from '../../../../api/server.js';
-import { LLMFactoryConfig } from '../../../../services/llm/factory.js';
 
 export const createToolExecutionNode = ({
   tools,
-  characterName,
-  dataPath,
   namespace,
   apiConfig,
-  llmConfig,
 }: {
   tools: DynamicStructuredTool[];
-  characterName: string;
-  dataPath: string;
   namespace: string;
   apiConfig: ApiConfig;
-  llmConfig: LLMFactoryConfig;
 }) => {
   const logger = attachLogger(
-    characterName,
-    dataPath,
     createLogger(`${namespace}-tool-execution-node`),
     namespace,
-    apiConfig.authFlag,
-    apiConfig.authToken,
-    apiConfig.port,
-    apiConfig.allowedOrigins,
-    llmConfig,
+    apiConfig.apiEnabled ?? false,
   );
   const toolByNames = tools.map(tool => ({ name: tool.name, tool }));
 

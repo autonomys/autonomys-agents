@@ -113,15 +113,7 @@ export const createTwitterAgent = (
         const { namespace } = twitterAgentConfig;
         const runner = createOrchestratorRunner(character, {
           ...twitterAgentConfig,
-          ...withApiLogger(
-            character.name,
-            twitterAgentConfig.characterDataPathConfig?.dataPath || process.cwd(),
-            namespace,
-            twitterAgentConfig.apiConfig.authFlag,
-            twitterAgentConfig.apiConfig.authToken,
-            twitterAgentConfig.apiConfig.port,
-            twitterAgentConfig.apiConfig.allowedOrigins,
-          ),
+          ...withApiLogger(namespace, twitterAgentConfig.apiConfig ? true : false),
         });
 
         const runnerPromise = await runner;

@@ -100,15 +100,7 @@ export const createSlackAgent = (
 
         const runner = createOrchestratorRunner(character, {
           ...slackAgentConfig,
-          ...withApiLogger(
-            character.name,
-            slackAgentConfig.characterDataPathConfig?.dataPath || process.cwd(),
-            namespace,
-            slackAgentConfig.apiConfig.authFlag,
-            slackAgentConfig.apiConfig.authToken,
-            slackAgentConfig.apiConfig.port,
-            slackAgentConfig.apiConfig.allowedOrigins,
-          ),
+          ...withApiLogger(namespace, slackAgentConfig.apiConfig ? true : false),
         });
 
         const runnerPromise = await runner;

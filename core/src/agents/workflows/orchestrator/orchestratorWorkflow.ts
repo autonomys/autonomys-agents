@@ -118,7 +118,6 @@ export const createOrchestratorRunner = async (
     monitoringConfig,
     characterDataPathConfig,
   } = runnerConfig;
-
   const workflowLogger =
     options?.logger || createLogger(`orchestrator-workflow-${runnerConfig.namespace}`);
 

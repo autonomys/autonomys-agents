@@ -11,8 +11,6 @@ export const createMessageSummaryNode = ({
   modelConfig,
   messageSummaryPrompt,
   pruningParameters,
-  characterName,
-  dataPath,
   namespace,
   apiConfig,
   llmConfig,
@@ -20,22 +18,14 @@ export const createMessageSummaryNode = ({
   modelConfig: LLMConfiguration;
   messageSummaryPrompt: ChatPromptTemplate;
   pruningParameters: PruningParameters;
-  characterName: string;
-  dataPath: string;
   namespace: string;
   apiConfig: ApiConfig;
   llmConfig: LLMFactoryConfig;
 }) => {
   const logger = attachLogger(
-    characterName,
-    dataPath,
     createLogger(`${namespace}-message-summary-node`),
     namespace,
-    apiConfig.authFlag,
-    apiConfig.authToken,
-    apiConfig.port,
-    apiConfig.allowedOrigins,
-    llmConfig,
+    apiConfig.apiEnabled ?? false,
   );
   const runNode = async (state: OrchestratorStateType) => {
     logger.info('MessageSummary Node');

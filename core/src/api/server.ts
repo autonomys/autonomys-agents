@@ -22,6 +22,14 @@ const logger = createLogger('api-server');
 
 let apiServer: ApiServer | null = null;
 
+export type ApiConfig = {
+  authFlag: boolean;
+  authToken: string;
+  apiPort: number;
+  allowedOrigins: string[];
+  llmConfig: LLMFactoryConfig;
+};
+
 const createSingletonApiServer = (
   characterName: string,
   dataPath: string,
@@ -120,6 +128,13 @@ export const createApiServer = (
   return apiServer;
 };
 
+export const getApiServer = () => {
+  if (!apiServer) {
+    throw new Error('API server not initialized');
+  }
+  return apiServer;
+};
+
 export const broadcastLog = (
   namespace: string,
   level: string,
@@ -150,68 +165,18 @@ export const broadcastNamespacesUpdate = () => {
   apiServer.broadcastNamespaces();
 };
 
-export const attachLogger = (
-  characterName: string,
-  dataPath: string,
-  logger: Logger,
-  namespace: string,
-  authFlag?: boolean,
-  authToken?: string,
-  apiPort?: number,
-  allowedOrigins?: string[],
-  llmConfig?: LLMFactoryConfig,
-) => {
-  if (!authFlag) {
+export const attachLogger = (logger: Logger, namespace: string, flag: boolean) => {
+  if (!flag) {
     return logger;
   }
-  if (!apiPort) {
-    throw new Error('API port is required');
-  }
-  if (!authToken) {
-    throw new Error('API token is required');
-  }
-  if (!allowedOrigins) {
-    allowedOrigins = ['*'];
-  }
-  if (!llmConfig) {
-    throw new Error('LLM configuration is required');
-  }
-  const api = createApiServer(
-    characterName,
-    dataPath,
-    authFlag,
-    authToken,
-    apiPort,
-    allowedOrigins,
-    llmConfig,
-  );
+  const api = getApiServer();
   return api.attachLogger(logger, namespace);
 };
 
 // Helper function
-export const withApiLogger = (
-  characterName: string,
-  dataPath: string,
-  namespace: string,
-  authFlag?: boolean,
-  authToken?: string,
-  apiPort?: number,
-  allowedOrigins?: string[],
-  llmConfig?: LLMFactoryConfig,
-) => {
+export const withApiLogger = (namespace: string, flag: boolean) => {
   const logger = createLogger(`orchestrator-workflow-${namespace}`);
-
-  const enhancedLogger = attachLogger(
-    characterName,
-    dataPath,
-    logger,
-    namespace,
-    authFlag,
-    authToken,
-    apiPort,
-    allowedOrigins,
-    llmConfig,
-  );
+  const enhancedLogger = attachLogger(logger, namespace, flag);
   return {
     logger: enhancedLogger,
   };

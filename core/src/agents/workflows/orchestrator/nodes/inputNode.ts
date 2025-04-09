@@ -9,8 +9,6 @@ export const createInputNode = ({
   modelConfig,
   inputPrompt,
   tools,
-  characterName,
-  dataPath,
   namespace,
   apiConfig,
   llmConfig,
@@ -18,22 +16,14 @@ export const createInputNode = ({
   modelConfig: LLMConfiguration;
   inputPrompt: ChatPromptTemplate;
   tools: Tools;
-  characterName: string;
-  dataPath: string;
   namespace: string;
   apiConfig: ApiConfig;
   llmConfig: LLMFactoryConfig;
 }) => {
   const logger = attachLogger(
-    characterName,
-    dataPath,
     createLogger(`${namespace}-input-node`),
     namespace,
-    apiConfig.authFlag,
-    apiConfig.authToken,
-    apiConfig.port,
-    apiConfig.allowedOrigins,
-    llmConfig,
+    apiConfig.apiEnabled ?? false,
   );
   const runNode = async (state: OrchestratorStateType) => {
     logger.info('MODEL CONFIG - Input Node:', { modelConfig });

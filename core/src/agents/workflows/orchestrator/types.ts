@@ -45,6 +45,7 @@ export type CharacterDataPathConfig = {
 };
 
 export type ApiConfig = {
+  apiEnabled?: boolean;
   authFlag?: boolean;
   authToken?: string;
   allowedOrigins?: string[];

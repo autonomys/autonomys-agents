@@ -151,10 +151,11 @@ export const createCharacterDataPathConfig = (
  */
 export const createApiConfig = (options?: OrchestratorRunnerOptions): ApiConfig => {
   return {
-    authFlag: options?.apiConfig?.authFlag,
-    authToken: options?.apiConfig?.authToken,
-    allowedOrigins: options?.apiConfig?.allowedOrigins,
-    port: options?.apiConfig?.port,
+    apiEnabled: options?.apiConfig?.apiEnabled ?? false,
+    authFlag: options?.apiConfig?.authFlag ?? false,
+    authToken: options?.apiConfig?.authToken ?? '',
+    allowedOrigins: options?.apiConfig?.allowedOrigins ?? [],
+    port: options?.apiConfig?.port ?? 3000,
   };
 };
 

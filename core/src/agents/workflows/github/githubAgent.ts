@@ -107,15 +107,7 @@ export const createGithubAgent = (
 
         const runner = createOrchestratorRunner(character, {
           ...githubAgentConfig,
-          ...withApiLogger(
-            character.name,
-            githubAgentConfig.characterDataPathConfig?.dataPath || process.cwd(),
-            namespace,
-            githubAgentConfig.apiConfig.authFlag,
-            githubAgentConfig.apiConfig.authToken,
-            githubAgentConfig.apiConfig.port,
-            githubAgentConfig.apiConfig.allowedOrigins,
-          ),
+          ...withApiLogger(namespace, githubAgentConfig.apiConfig ? true : false),
         });
 
         const runnerPromise = await runner;
