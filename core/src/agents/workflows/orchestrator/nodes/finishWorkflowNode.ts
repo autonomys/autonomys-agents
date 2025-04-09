@@ -1,10 +1,10 @@
 import { ChatPromptTemplate } from '@langchain/core/prompts';
-import { LLMFactory, LLMFactoryConfig } from '../../../../services/llm/factory.js';
+import { LLMConfiguration, LLMFactoryConfig } from '../../../../services/llm/types.js';
+import { LLMFactory } from '../../../../services/llm/factory.js';
 import { createLogger } from '../../../../utils/logger.js';
 import { ApiConfig, OrchestratorStateType } from '../types.js';
 import { finishedWorkflowParser } from './finishWorkflowPrompt.js';
 import { AIMessage } from '@langchain/core/messages';
-import { LLMConfiguration } from '../../../../services/llm/types.js';
 import { attachLogger } from '../../../../api/server.js';
 import { Logger } from 'winston';
 

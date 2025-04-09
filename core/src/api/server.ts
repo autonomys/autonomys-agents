@@ -17,7 +17,7 @@ import path from 'path';
 import http2Express from 'http2-express-bridge';
 import { Express } from 'express';
 import { getProjectRoot } from '../utils/utils.js';
-import { LLMFactoryConfig } from '../services/llm/factory.js';
+import { LLMFactoryConfig } from '../services/llm/types.js';
 const logger = createLogger('api-server');
 
 let apiServer: ApiServer | null = null;

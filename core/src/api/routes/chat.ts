@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { createChatController } from '../controller/ChatController.js';
-import { LLMFactoryConfig } from '../../services/llm/factory.js';
+import { LLMFactoryConfig } from '../../services/llm/types.js';
 
 export const createChatRouter = (dataPath: string, llmConfig: LLMFactoryConfig): Router => {
   const router = Router();

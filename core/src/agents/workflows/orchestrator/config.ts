@@ -1,6 +1,5 @@
 import { Character } from '../../../config/characters.js';
-import { LLMFactoryConfig } from '../../../services/llm/factory.js';
-import { LLMConfiguration } from '../../../services/llm/types.js';
+import { LLMConfiguration, LLMFactoryConfig } from '../../../services/llm/types.js';
 import { createLogger } from '../../../utils/logger.js';
 import { createPrompts } from './prompts.js';
 import { createDefaultOrchestratorTools } from './tools.js';

@@ -1,18 +1,8 @@
 import { ChatOpenAI } from '@langchain/openai';
 import { ChatAnthropic } from '@langchain/anthropic';
 import { ChatOllama } from '@langchain/ollama';
-import { LLMConfiguration } from './types.js';
+import { LLMConfiguration, LLMFactoryConfig } from './types.js';
 import { ChatGroq } from '@langchain/groq';
-
-// Define a config interface
-export interface LLMFactoryConfig {
-  OPENAI_API_KEY?: string;
-  ANTHROPIC_API_KEY?: string;
-  LLAMA_API_URL?: string;
-  DEEPSEEK_API_KEY?: string;
-  DEEPSEEK_URL?: string;
-  GROQ_API_KEY?: string;
-}
 
 export class LLMFactory {
   static createModel(node: LLMConfiguration, config: LLMFactoryConfig) {
