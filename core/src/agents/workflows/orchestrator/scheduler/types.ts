@@ -4,6 +4,8 @@ export type TaskStatus =
   | 'scheduled'
   | 'processing'
   | 'stopped'
+  | 'finalizing'
+  | 'cancelled'
   | 'completed'
   | 'failed'
   | 'deleted';

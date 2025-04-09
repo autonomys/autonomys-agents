@@ -184,14 +184,14 @@ export const createOrchestratorRunner = async (
         const workflowSummary = `This action finished running at ${new Date().toISOString()}. Action summary: ${summary}`;
         const result = { summary: workflowSummary };
 
-        if (taskQueue.currentTask?.status === 'stopped') {
-          workflowLogger.info('Stopping task is now complete', {
+        if (taskQueue.currentTask?.status === 'finalizing') {
+          workflowLogger.info('Finalizing task is now complete', {
             taskId: taskQueue.currentTask.id,
             summary,
           });
           taskQueue.updateTaskStatus(
             taskQueue.currentTask.id,
-            'failed',
+            'cancelled',
             `Stopped by user. ${result.summary}`,
           );
         } else {
@@ -215,10 +215,10 @@ export const createOrchestratorRunner = async (
       if (currentTask) {
         taskQueue.updateTaskStatus(
           currentTask.id,
-          'stopped',
+          'finalizing',
           `Terminating: ${reason || 'User requested stop'}`,
         );
-        workflowLogger.info('Task is stopped - waiting for workflow to complete', {
+        workflowLogger.info('Task is finalizing - waiting for workflow to complete', {
           taskId: currentTask.id,
         });
       } else {
