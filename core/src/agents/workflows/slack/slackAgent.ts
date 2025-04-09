@@ -60,6 +60,7 @@ const createSlackAgentConfig = async (
 
   // Return the complete configuration
   return {
+    characterName: character.name,
     ...baseConfig,
     modelConfigurations,
     tools,
@@ -96,7 +97,7 @@ export const createSlackAgent = (
 
         const runner = createOrchestratorRunner(character, {
           ...slackAgentConfig,
-          ...withApiLogger(character.name, namespace, slackAgentConfig.apiConfig.authFlag, slackAgentConfig.apiConfig.authToken, slackAgentConfig.apiConfig.port, slackAgentConfig.apiConfig.allowedOrigins),
+          ...withApiLogger(character.name, slackAgentConfig.characterDataPathConfig?.dataPath || process.cwd(), namespace, slackAgentConfig.apiConfig.authFlag, slackAgentConfig.apiConfig.authToken, slackAgentConfig.apiConfig.port, slackAgentConfig.apiConfig.allowedOrigins),
         });
 
         const runnerPromise = await runner;

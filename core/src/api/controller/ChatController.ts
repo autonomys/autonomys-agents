@@ -48,7 +48,7 @@ export const getChatStream = (req: Request, res: Response) => {
   });
 };
 
-export const sendChatMessage = asyncHandler(async (req: Request, res: Response) => {
+export const sendChatMessage = (dataPath: string) => asyncHandler(async (req: Request, res: Response) => {
   const { namespace } = req.params;
   const { message } = req.body;
 
@@ -58,7 +58,7 @@ export const sendChatMessage = asyncHandler(async (req: Request, res: Response) 
   }
 
   try {
-    const db = getVectorDB('experiences');
+    const db = getVectorDB('experiences', dataPath);
     const searchChain = searchPrompt.pipe(searchQueryModel).pipe(searchParamsParser);
     logger.info('Generating search parameters...');
 

@@ -1,6 +1,6 @@
 import { LLMFactory } from '../../../../services/llm/factory.js';
 import { createLogger } from '../../../../utils/logger.js';
-import { OrchestratorStateType, Tools } from '../types.js';
+import { ApiConfig, OrchestratorStateType, Tools } from '../types.js';
 import { LLMConfiguration } from '../../../../services/llm/types.js';
 import { ChatPromptTemplate } from '@langchain/core/prompts';
 import { attachLogger } from '../../../../api/server.js';
@@ -9,14 +9,20 @@ export const createInputNode = ({
   modelConfig,
   inputPrompt,
   tools,
+  characterName,
+  dataPath,
   namespace,
+  apiConfig,
 }: {
   modelConfig: LLMConfiguration;
   inputPrompt: ChatPromptTemplate;
   tools: Tools;
+  characterName: string;
+  dataPath: string;
   namespace: string;
+  apiConfig: ApiConfig;
 }) => {
-  const logger = attachLogger(createLogger(`${namespace}-input-node`), namespace);
+  const logger = attachLogger(characterName, dataPath, createLogger(`${namespace}-input-node`), namespace, apiConfig.authFlag, apiConfig.authToken, apiConfig.port, apiConfig.allowedOrigins);
   const runNode = async (state: OrchestratorStateType) => {
     logger.info('MODEL CONFIG - Input Node:', { modelConfig });
     const { messages, executedTools } = state;

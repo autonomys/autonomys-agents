@@ -77,6 +77,7 @@ const createTwitterAgentConfig = async (
 
   // Return the complete configuration
   return {
+    characterName: character.name,
     ...baseConfig,
     modelConfigurations,
     tools,
@@ -109,7 +110,7 @@ export const createTwitterAgent = (
         const { namespace } = twitterAgentConfig;
         const runner = createOrchestratorRunner(character, {
           ...twitterAgentConfig,
-          ...withApiLogger(character.name, namespace, twitterAgentConfig.apiConfig.authFlag, twitterAgentConfig.apiConfig.authToken, twitterAgentConfig.apiConfig.port, twitterAgentConfig.apiConfig.allowedOrigins),
+          ...withApiLogger(character.name, twitterAgentConfig.characterDataPathConfig?.dataPath || process.cwd(), namespace, twitterAgentConfig.apiConfig.authFlag, twitterAgentConfig.apiConfig.authToken, twitterAgentConfig.apiConfig.port, twitterAgentConfig.apiConfig.allowedOrigins),
         });
 
         const runnerPromise = await runner;

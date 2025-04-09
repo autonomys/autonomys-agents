@@ -1,7 +1,6 @@
 import Database from 'better-sqlite3';
 import vectorlite from 'vectorlite';
 import { OpenAI } from 'openai/index.mjs';
-import { config } from '../../config/index.js';
 import { createLogger } from '../../utils/logger.js';
 import { join } from 'path';
 import { existsSync, mkdirSync } from 'fs';
@@ -16,8 +15,8 @@ export class VectorDB {
   private maxElements: number;
   private static readonly DEFAULT_MAX_ELEMENTS = 100000;
 
-  constructor(namespace: string, maxElements?: number) {
-    const targetDir = join(config.characterConfig.characterPath, 'data', namespace);
+  constructor(namespace: string, dataPath: string, maxElements?: number) {
+    const targetDir = join(dataPath, 'data', namespace);
 
     if (!existsSync(targetDir)) {
       mkdirSync(targetDir, { recursive: true });
@@ -26,8 +25,10 @@ export class VectorDB {
     this.indexFilePath = join(targetDir, `${namespace}-index.bin`);
     this.dbFilePath = join(targetDir, `${namespace}-store.db`);
     this.maxElements = maxElements ?? VectorDB.DEFAULT_MAX_ELEMENTS;
+    // This is a temporary solution to get the openai api key from the environment variable
+    // TODO: This should be removed and the openai api key should be passed as a parameter to the constructor
     this.openai = new OpenAI({
-      apiKey: config.llmConfig.OPENAI_API_KEY,
+      apiKey: process.env.OPENAI_API_KEY,
     });
 
     this.initializeDatabase();

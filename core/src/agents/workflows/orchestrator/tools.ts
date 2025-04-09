@@ -8,9 +8,10 @@ import { workflowControlState } from './orchestratorWorkflow.js';
 
 export const createDefaultOrchestratorTools = (
   namespace: string,
+  dataPath: string,
   experienceManager?: ExperienceManager,
 ) => {
-  const experienceVectorDb = getVectorDB('experiences');
+  const experienceVectorDb = getVectorDB('experiences', dataPath);
   const agentExperienceTools = createAgentExperienceTools(experienceVectorDb, experienceManager);
   const getCurrentTimeTool = createGetCurrentTimeTool();
   const stopWorkflowTool = createStopWorkflowTool(workflowControlState, namespace);

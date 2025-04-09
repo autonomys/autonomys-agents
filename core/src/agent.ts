@@ -200,7 +200,7 @@ export const orchestratorRunner = (() => {
       const namespace = 'orchestrator';
       runnerPromise = createOrchestratorRunner(character, {
         ...orchestrationConfig,
-        ...withApiLogger(characterName, namespace, orchestrationConfig.apiConfig?.authFlag, orchestrationConfig.apiConfig?.authToken, orchestrationConfig.apiConfig?.port, orchestrationConfig.apiConfig?.allowedOrigins),
+        ...withApiLogger(characterName, orchestrationConfig.characterDataPathConfig?.dataPath || process.cwd(), namespace, orchestrationConfig.apiConfig?.authFlag, orchestrationConfig.apiConfig?.authToken, orchestrationConfig.apiConfig?.port, orchestrationConfig.apiConfig?.allowedOrigins),
       });
       const runner = await runnerPromise;
       registerOrchestratorRunner(namespace, runner);

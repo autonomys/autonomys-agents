@@ -1,17 +1,23 @@
 import { DynamicStructuredTool } from '@langchain/core/tools';
 import { createLogger } from '../../../../utils/logger.js';
-import { OrchestratorStateType } from '../types.js';
+import { ApiConfig, OrchestratorStateType } from '../types.js';
 import { AIMessage } from '@langchain/core/messages';
 import { attachLogger } from '../../../../api/server.js';
 
 export const createToolExecutionNode = ({
   tools,
+  characterName,
+  dataPath,
   namespace,
+  apiConfig,
 }: {
   tools: DynamicStructuredTool[];
+  characterName: string;
+  dataPath: string;
   namespace: string;
+  apiConfig: ApiConfig;
 }) => {
-  const logger = attachLogger(createLogger(`${namespace}-tool-execution-node`), namespace);
+  const logger = attachLogger(characterName, dataPath, createLogger(`${namespace}-tool-execution-node`), namespace, apiConfig.authFlag, apiConfig.authToken, apiConfig.port, apiConfig.allowedOrigins);
   const toolByNames = tools.map(tool => ({ name: tool.name, tool }));
 
   const runNode = async (state: OrchestratorStateType) => {

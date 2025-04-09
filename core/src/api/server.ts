@@ -21,7 +21,7 @@ const logger = createLogger('api-server');
 
 let apiServer: ApiServer | null = null;
 
-const createSingletonApiServer = (characterName: string, authFlag: boolean, authToken: string, apiPort: number, allowedOrigins: string[]): ApiServer => {
+const createSingletonApiServer = (characterName: string, dataPath: string, authFlag: boolean, authToken: string, apiPort: number, allowedOrigins: string[]): ApiServer => {
   const app = http2Express(express) as unknown as Express;
 
   app.use(corsMiddleware(allowedOrigins));
@@ -34,7 +34,7 @@ const createSingletonApiServer = (characterName: string, authFlag: boolean, auth
   app.use(express.json({ limit: '1mb' }));
   app.use(express.urlencoded({ extended: true, limit: '1mb' }));
 
-  const apiRouter = createApiRouter(characterName);
+  const apiRouter = createApiRouter(characterName, dataPath);
 
   if (authFlag) {
     app.use('/api', createAuthMiddleware(authToken));
@@ -90,9 +90,9 @@ const createSingletonApiServer = (characterName: string, authFlag: boolean, auth
   };
 };
 
-export const createApiServer = (characterName: string, authFlag: boolean, authToken: string, apiPort: number, allowedOrigins: string[]) => {
+export const createApiServer = (characterName: string, dataPath: string, authFlag: boolean, authToken: string, apiPort: number, allowedOrigins: string[]) => {
   if (!apiServer) {
-    apiServer = createSingletonApiServer(characterName, authFlag, authToken, apiPort, allowedOrigins);
+    apiServer = createSingletonApiServer(characterName, dataPath, authFlag, authToken, apiPort, allowedOrigins);
   }
   return apiServer;
 };
@@ -127,7 +127,7 @@ export const broadcastNamespacesUpdate = () => {
   apiServer.broadcastNamespaces();
 };
 
-export const attachLogger = (characterName: string, logger: Logger, namespace: string, authFlag?: boolean, authToken?: string, apiPort?: number, allowedOrigins?: string[]) => {
+export const attachLogger = (characterName: string, dataPath: string, logger: Logger, namespace: string, authFlag?: boolean, authToken?: string, apiPort?: number, allowedOrigins?: string[]) => {
   if (!authFlag) {
     return logger;
   }
@@ -140,15 +140,15 @@ export const attachLogger = (characterName: string, logger: Logger, namespace: s
   if (!allowedOrigins) {
     allowedOrigins = ["*"]
   }
-  const api = createApiServer(characterName, authFlag, authToken, apiPort, allowedOrigins);
+  const api = createApiServer(characterName, dataPath, authFlag, authToken, apiPort, allowedOrigins);
   return api.attachLogger(logger, namespace);
 };
 
 // Helper function
-export const withApiLogger = (characterName: string, namespace: string, authFlag?: boolean, authToken?: string, apiPort?: number, allowedOrigins?: string[]) => {
+export const withApiLogger = (characterName: string, dataPath: string, namespace: string, authFlag?: boolean, authToken?: string, apiPort?: number, allowedOrigins?: string[]) => {
   const logger = createLogger(`orchestrator-workflow-${namespace}`);
 
-  const enhancedLogger = attachLogger(characterName, logger, namespace, authFlag, authToken, apiPort, allowedOrigins);
+  const enhancedLogger = attachLogger(characterName, dataPath, logger, namespace, authFlag, authToken, apiPort, allowedOrigins);
   return {
     logger: enhancedLogger,
   };

@@ -69,6 +69,7 @@ export type OrchestratorRunnerOptions = {
 };
 
 export type OrchestratorConfig = {
+  characterName: string;
   modelConfigurations: ModelConfigurations;
   tools: Tools;
   prompts: OrchestratorPrompts;

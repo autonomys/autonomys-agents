@@ -184,6 +184,7 @@ export const createOrchestratorConfig = async (
     ...(options?.tools || []),
     ...createDefaultOrchestratorTools(
       baseConfig.namespace,
+      characterDataPathConfig.dataPath,
       experienceConfig.saveExperiences ? experienceConfig.experienceManager : undefined,
     ),
   ];
@@ -193,6 +194,7 @@ export const createOrchestratorConfig = async (
 
   // Return the complete configuration
   return {
+    characterName: character.name,
     ...baseConfig,
     modelConfigurations,
     tools,

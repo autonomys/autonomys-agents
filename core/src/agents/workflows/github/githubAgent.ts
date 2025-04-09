@@ -61,6 +61,7 @@ const createGithubAgentConfig = async (
 
   // Return the complete configuration
   return {
+    characterName: character.name,
     ...baseConfig,
     modelConfigurations,
     tools,
@@ -103,7 +104,7 @@ export const createGithubAgent = (
 
         const runner = createOrchestratorRunner(character, {
           ...githubAgentConfig,
-          ...withApiLogger(character.name, namespace, githubAgentConfig.apiConfig.authFlag, githubAgentConfig.apiConfig.authToken, githubAgentConfig.apiConfig.port, githubAgentConfig.apiConfig.allowedOrigins),
+          ...withApiLogger(character.name, githubAgentConfig.characterDataPathConfig?.dataPath || process.cwd(), namespace, githubAgentConfig.apiConfig.authFlag, githubAgentConfig.apiConfig.authToken, githubAgentConfig.apiConfig.port, githubAgentConfig.apiConfig.allowedOrigins),
         });
 
         const runnerPromise = await runner;
