@@ -10,12 +10,13 @@ import { z } from 'zod';
 import { SlackAgentConfig, SlackAgentOptions } from './types.js';
 import { registerOrchestratorRunner } from '../registration.js';
 import {
+  createApiConfig,
+  createCharacterDataPathConfig,
   createExperienceConfig,
+  createLLMConfig,
   createModelConfigurations,
   createMonitoringConfig,
   createPruningParameters,
-  createCharacterDataPathConfig,
-  createApiConfig,
 } from '../orchestrator/config.js';
 
 const logger = createLogger('slack-workflow');
@@ -51,6 +52,7 @@ const createSlackAgentConfig = async (
   const pruningParameters = createPruningParameters(options);
   const characterDataPathConfig = createCharacterDataPathConfig(options);
   const apiConfig = createApiConfig(options);
+  const llmConfig = createLLMConfig(options);
   // Get Slack-specific tools and prompts
   const slackTools = await createSlackTools(slackToken);
   const prompts = await createSlackPrompts(character);
@@ -70,6 +72,7 @@ const createSlackAgentConfig = async (
     monitoringConfig,
     characterDataPathConfig,
     apiConfig,
+    llmConfig,
   };
 };
 
@@ -97,7 +100,15 @@ export const createSlackAgent = (
 
         const runner = createOrchestratorRunner(character, {
           ...slackAgentConfig,
-          ...withApiLogger(character.name, slackAgentConfig.characterDataPathConfig?.dataPath || process.cwd(), namespace, slackAgentConfig.apiConfig.authFlag, slackAgentConfig.apiConfig.authToken, slackAgentConfig.apiConfig.port, slackAgentConfig.apiConfig.allowedOrigins),
+          ...withApiLogger(
+            character.name,
+            slackAgentConfig.characterDataPathConfig?.dataPath || process.cwd(),
+            namespace,
+            slackAgentConfig.apiConfig.authFlag,
+            slackAgentConfig.apiConfig.authToken,
+            slackAgentConfig.apiConfig.port,
+            slackAgentConfig.apiConfig.allowedOrigins,
+          ),
         });
 
         const runnerPromise = await runner;

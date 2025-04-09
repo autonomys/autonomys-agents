@@ -10,12 +10,13 @@ import { registerOrchestratorRunner } from '../registration.js';
 import { createGithubPrompts } from './prompts.js';
 import { GithubAgentConfig, GithubAgentOptions } from './types.js';
 import {
+  createApiConfig,
+  createCharacterDataPathConfig,
   createExperienceConfig,
+  createLLMConfig,
   createModelConfigurations,
   createMonitoringConfig,
   createPruningParameters,
-  createCharacterDataPathConfig,
-  createApiConfig,
 } from '../orchestrator/config.js';
 const logger = createLogger('github-workflow');
 
@@ -52,6 +53,7 @@ const createGithubAgentConfig = async (
   const pruningParameters = createPruningParameters(options);
   const characterDataPathConfig = createCharacterDataPathConfig(options);
   const apiConfig = createApiConfig(options);
+  const llmConfig = createLLMConfig(options);
   // Get GitHub-specific tools and prompts
   const githubTools = await createGitHubTools(githubToken, toolsSubset);
   const prompts = await createGithubPrompts(character);
@@ -71,6 +73,7 @@ const createGithubAgentConfig = async (
     monitoringConfig,
     characterDataPathConfig,
     apiConfig,
+    llmConfig,
   };
 };
 
@@ -104,7 +107,15 @@ export const createGithubAgent = (
 
         const runner = createOrchestratorRunner(character, {
           ...githubAgentConfig,
-          ...withApiLogger(character.name, githubAgentConfig.characterDataPathConfig?.dataPath || process.cwd(), namespace, githubAgentConfig.apiConfig.authFlag, githubAgentConfig.apiConfig.authToken, githubAgentConfig.apiConfig.port, githubAgentConfig.apiConfig.allowedOrigins),
+          ...withApiLogger(
+            character.name,
+            githubAgentConfig.characterDataPathConfig?.dataPath || process.cwd(),
+            namespace,
+            githubAgentConfig.apiConfig.authFlag,
+            githubAgentConfig.apiConfig.authToken,
+            githubAgentConfig.apiConfig.port,
+            githubAgentConfig.apiConfig.allowedOrigins,
+          ),
         });
 
         const runnerPromise = await runner;

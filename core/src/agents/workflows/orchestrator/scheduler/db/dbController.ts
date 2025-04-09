@@ -5,11 +5,11 @@ import { schedulerConfig } from '../config.js';
 import {
   CreateTaskParams,
   GetTasksParams,
+  SchedulerDatabase,
   Task,
   TaskRow,
   TaskStatus,
   UpdateTaskStatusParams,
-  SchedulerDatabase,
 } from '../types.js';
 
 const logger = createLogger('task-repository');
@@ -24,7 +24,7 @@ export const getDbInstance = (dataPath: string): SchedulerDatabase => {
     const schedulerDb = getSchedulerDatabase(dbPath);
     dbInstances.set(dataPath, schedulerDb);
   }
-  return dbInstances.get(dataPath)!;
+  return dbInstances.get(dataPath) as SchedulerDatabase;
 };
 
 const rowToTask = (row: TaskRow, namespace: string): Task => {
@@ -75,18 +75,26 @@ export const createTask = (params: CreateTaskParams, dataPath: string): Task => 
   }
 };
 
-export const scheduleTask = (namespace: string, message: string, scheduledFor: Date, dataPath: string): Task => {
+export const scheduleTask = (
+  namespace: string,
+  message: string,
+  scheduledFor: Date,
+  dataPath: string,
+): Task => {
   const taskId = uuidv4();
   const now = new Date();
 
-  return createTask({
-    id: taskId,
-    namespace,
-    message,
-    status: 'scheduled',
-    created_at: now.toISOString(),
-    scheduled_for: scheduledFor.toISOString(),
-  }, dataPath);
+  return createTask(
+    {
+      id: taskId,
+      namespace,
+      message,
+      status: 'scheduled',
+      created_at: now.toISOString(),
+      scheduled_for: scheduledFor.toISOString(),
+    },
+    dataPath,
+  );
 };
 
 export const updateTaskStatus = (params: UpdateTaskStatusParams, dataPath: string): void => {
@@ -265,7 +273,11 @@ const buildTaskQueryParams = (params: GetTasksParams): (string | number | TaskSt
   return queryParams;
 };
 
-export const getNextDueTasks = (namespace: string, dataPath: string, limit: number = 10): Task[] => {
+export const getNextDueTasks = (
+  namespace: string,
+  dataPath: string,
+  limit: number = 10,
+): Task[] => {
   const schedulerDb = getDbInstance(dataPath);
   schedulerDb.ensureNamespaceTable(namespace);
 
@@ -296,35 +308,54 @@ export const getNextDueTasks = (namespace: string, dataPath: string, limit: numb
 export const markTaskAsProcessing = (namespace: string, taskId: string, dataPath: string): void => {
   const now = new Date();
 
-  updateTaskStatus({
-    id: taskId,
-    namespace,
-    status: 'processing',
-    started_at: now.toISOString(),
-  }, dataPath);
+  updateTaskStatus(
+    {
+      id: taskId,
+      namespace,
+      status: 'processing',
+      started_at: now.toISOString(),
+    },
+    dataPath,
+  );
 };
 
-export const markTaskAsCompleted = (namespace: string, taskId: string, dataPath: string, result?: unknown): void => {
+export const markTaskAsCompleted = (
+  namespace: string,
+  taskId: string,
+  dataPath: string,
+  result?: unknown,
+): void => {
   const now = new Date();
   const resultJson = result ? JSON.stringify(result) : undefined;
 
-  updateTaskStatus({
-    id: taskId,
-    namespace,
-    status: 'completed',
-    completed_at: now.toISOString(),
-    result: resultJson,
-  }, dataPath);
+  updateTaskStatus(
+    {
+      id: taskId,
+      namespace,
+      status: 'completed',
+      completed_at: now.toISOString(),
+      result: resultJson,
+    },
+    dataPath,
+  );
 };
 
-export const markTaskAsFailed = (namespace: string, taskId: string, dataPath: string, error: string): void => {
+export const markTaskAsFailed = (
+  namespace: string,
+  taskId: string,
+  dataPath: string,
+  error: string,
+): void => {
   const now = new Date();
 
-  updateTaskStatus({
-    id: taskId,
-    namespace,
-    status: 'failed',
-    completed_at: now.toISOString(),
-    error,
-  }, dataPath);
+  updateTaskStatus(
+    {
+      id: taskId,
+      namespace,
+      status: 'failed',
+      completed_at: now.toISOString(),
+      error,
+    },
+    dataPath,
+  );
 };

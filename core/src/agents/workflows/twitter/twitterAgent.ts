@@ -12,12 +12,13 @@ import { TwitterAgentConfig, TwitterAgentOptions } from './types.js';
 import { cleanTwitterMessageData } from './cleanMessages.js';
 import { registerOrchestratorRunner } from '../../workflows/registration.js';
 import {
+  createApiConfig,
+  createCharacterDataPathConfig,
   createExperienceConfig,
+  createLLMConfig,
   createModelConfigurations,
   createMonitoringConfig,
   createPruningParameters,
-  createCharacterDataPathConfig,
-  createApiConfig,
 } from '../orchestrator/config.js';
 
 const logger = createLogger('twitter-workflow');
@@ -63,6 +64,7 @@ const createTwitterAgentConfig = async (
   const pruningParameters = createPruningParameters(options);
   const characterDataPathConfig = createCharacterDataPathConfig(options);
   const apiConfig = createApiConfig(options);
+  const llmConfig = createLLMConfig(options);
   // Get Twitter-specific tools and prompts
   const twitterTools = createAllTwitterTools(
     twitterApi,
@@ -87,6 +89,7 @@ const createTwitterAgentConfig = async (
     monitoringConfig,
     characterDataPathConfig,
     apiConfig,
+    llmConfig,
   };
 };
 
@@ -110,7 +113,15 @@ export const createTwitterAgent = (
         const { namespace } = twitterAgentConfig;
         const runner = createOrchestratorRunner(character, {
           ...twitterAgentConfig,
-          ...withApiLogger(character.name, twitterAgentConfig.characterDataPathConfig?.dataPath || process.cwd(), namespace, twitterAgentConfig.apiConfig.authFlag, twitterAgentConfig.apiConfig.authToken, twitterAgentConfig.apiConfig.port, twitterAgentConfig.apiConfig.allowedOrigins),
+          ...withApiLogger(
+            character.name,
+            twitterAgentConfig.characterDataPathConfig?.dataPath || process.cwd(),
+            namespace,
+            twitterAgentConfig.apiConfig.authFlag,
+            twitterAgentConfig.apiConfig.authToken,
+            twitterAgentConfig.apiConfig.port,
+            twitterAgentConfig.apiConfig.allowedOrigins,
+          ),
         });
 
         const runnerPromise = await runner;

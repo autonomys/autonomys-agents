@@ -111,7 +111,13 @@ export const createOrchestratorRunner = async (
   options?: OrchestratorRunnerOptions,
 ): Promise<OrchestratorRunner> => {
   const runnerConfig = await createOrchestratorConfig(character, options);
-  const { namespace, pruningParameters, recursionLimit, monitoringConfig, characterDataPathConfig } = runnerConfig;
+  const {
+    namespace,
+    pruningParameters,
+    recursionLimit,
+    monitoringConfig,
+    characterDataPathConfig,
+  } = runnerConfig;
 
   const workflowLogger =
     options?.logger || createLogger(`orchestrator-workflow-${runnerConfig.namespace}`);

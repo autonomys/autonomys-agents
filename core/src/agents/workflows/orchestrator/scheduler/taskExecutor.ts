@@ -7,7 +7,7 @@ const logger = createLogger('task-executor');
 
 /**
  * Starts a task executor that periodically checks for and executes due tasks
- * 
+ *
  * @param runner The orchestrator runner to use for executing tasks
  * @param namespace The namespace for the tasks
  * @param checkIntervalMs How often to check for new tasks (in milliseconds)

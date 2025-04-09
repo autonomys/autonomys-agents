@@ -12,7 +12,11 @@ const dbInstances: Map<string, VectorDB> = new Map();
  * @param maxElements Optional maximum number of elements
  * @returns A VectorDB instance
  */
-export const getVectorDB = (namespace: string, dataPath: string, maxElements?: number): VectorDB => {
+export const getVectorDB = (
+  namespace: string,
+  dataPath: string,
+  maxElements?: number,
+): VectorDB => {
   if (!dbInstances.has(namespace)) {
     logger.info(`Creating new VectorDB instance for namespace: ${namespace}`);
     const db = new VectorDB(namespace, dataPath, maxElements);

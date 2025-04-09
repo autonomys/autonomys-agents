@@ -189,6 +189,7 @@ const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
       dataPath,
     },
     apiConfig,
+    llmConfig: config.llmConfig,
   };
 };
 
@@ -200,7 +201,16 @@ export const orchestratorRunner = (() => {
       const namespace = 'orchestrator';
       runnerPromise = createOrchestratorRunner(character, {
         ...orchestrationConfig,
-        ...withApiLogger(characterName, orchestrationConfig.characterDataPathConfig?.dataPath || process.cwd(), namespace, orchestrationConfig.apiConfig?.authFlag, orchestrationConfig.apiConfig?.authToken, orchestrationConfig.apiConfig?.port, orchestrationConfig.apiConfig?.allowedOrigins),
+        ...withApiLogger(
+          characterName,
+          orchestrationConfig.characterDataPathConfig?.dataPath || process.cwd(),
+          namespace,
+          orchestrationConfig.apiConfig?.authFlag,
+          orchestrationConfig.apiConfig?.authToken,
+          orchestrationConfig.apiConfig?.port,
+          orchestrationConfig.apiConfig?.allowedOrigins,
+          orchestrationConfig.llmConfig,
+        ),
       });
       const runner = await runnerPromise;
       registerOrchestratorRunner(namespace, runner);

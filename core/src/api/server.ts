@@ -8,7 +8,7 @@ import { attachLoggerUtility } from './controller/LogsController.js';
 import { broadcastLogUtility } from './controller/LogsController.js';
 import { broadcastNamespaces } from './controller/NamespaceController.js';
 import { getRegisteredNamespaces } from './controller/WorkflowController.js';
-import { securityHeaders, createAuthMiddleware } from './middleware/auth.js';
+import { createAuthMiddleware, securityHeaders } from './middleware/auth.js';
 import { corsMiddleware } from './middleware/cors.js';
 import helmet from 'helmet';
 import http2 from 'http2';
@@ -17,11 +17,20 @@ import path from 'path';
 import http2Express from 'http2-express-bridge';
 import { Express } from 'express';
 import { getProjectRoot } from '../utils/utils.js';
+import { LLMFactoryConfig } from '../services/llm/factory.js';
 const logger = createLogger('api-server');
 
 let apiServer: ApiServer | null = null;
 
-const createSingletonApiServer = (characterName: string, dataPath: string, authFlag: boolean, authToken: string, apiPort: number, allowedOrigins: string[]): ApiServer => {
+const createSingletonApiServer = (
+  characterName: string,
+  dataPath: string,
+  authFlag: boolean,
+  authToken: string,
+  apiPort: number,
+  allowedOrigins: string[],
+  llmConfig: LLMFactoryConfig,
+): ApiServer => {
   const app = http2Express(express) as unknown as Express;
 
   app.use(corsMiddleware(allowedOrigins));
@@ -34,7 +43,7 @@ const createSingletonApiServer = (characterName: string, dataPath: string, authF
   app.use(express.json({ limit: '1mb' }));
   app.use(express.urlencoded({ extended: true, limit: '1mb' }));
 
-  const apiRouter = createApiRouter(characterName, dataPath);
+  const apiRouter = createApiRouter(characterName, dataPath, llmConfig);
 
   if (authFlag) {
     app.use('/api', createAuthMiddleware(authToken));
@@ -63,9 +72,7 @@ const createSingletonApiServer = (characterName: string, dataPath: string, authF
 
       server.listen(PORT, () => {
         logger.info(`API server started with HTTP/2 support on port ${PORT}`);
-        logger.info(
-          `API security: ${authFlag ? 'Enabled' : 'Disabled'}`,
-        );
+        logger.info(`API security: ${authFlag ? 'Enabled' : 'Disabled'}`);
         logger.info(`Access the API at: https://localhost:${PORT}/api`);
         logger.info(
           `Server-Sent Events available at: https://localhost:${PORT}/api/namespaces/sse`,
@@ -90,9 +97,25 @@ const createSingletonApiServer = (characterName: string, dataPath: string, authF
   };
 };
 
-export const createApiServer = (characterName: string, dataPath: string, authFlag: boolean, authToken: string, apiPort: number, allowedOrigins: string[]) => {
+export const createApiServer = (
+  characterName: string,
+  dataPath: string,
+  authFlag: boolean,
+  authToken: string,
+  apiPort: number,
+  allowedOrigins: string[],
+  llmConfig: LLMFactoryConfig,
+) => {
   if (!apiServer) {
-    apiServer = createSingletonApiServer(characterName, dataPath, authFlag, authToken, apiPort, allowedOrigins);
+    apiServer = createSingletonApiServer(
+      characterName,
+      dataPath,
+      authFlag,
+      authToken,
+      apiPort,
+      allowedOrigins,
+      llmConfig,
+    );
   }
   return apiServer;
 };
@@ -127,7 +150,17 @@ export const broadcastNamespacesUpdate = () => {
   apiServer.broadcastNamespaces();
 };
 
-export const attachLogger = (characterName: string, dataPath: string, logger: Logger, namespace: string, authFlag?: boolean, authToken?: string, apiPort?: number, allowedOrigins?: string[]) => {
+export const attachLogger = (
+  characterName: string,
+  dataPath: string,
+  logger: Logger,
+  namespace: string,
+  authFlag?: boolean,
+  authToken?: string,
+  apiPort?: number,
+  allowedOrigins?: string[],
+  llmConfig?: LLMFactoryConfig,
+) => {
   if (!authFlag) {
     return logger;
   }
@@ -138,17 +171,47 @@ export const attachLogger = (characterName: string, dataPath: string, logger: Lo
     throw new Error('API token is required');
   }
   if (!allowedOrigins) {
-    allowedOrigins = ["*"]
+    allowedOrigins = ['*'];
   }
-  const api = createApiServer(characterName, dataPath, authFlag, authToken, apiPort, allowedOrigins);
+  if (!llmConfig) {
+    throw new Error('LLM configuration is required');
+  }
+  const api = createApiServer(
+    characterName,
+    dataPath,
+    authFlag,
+    authToken,
+    apiPort,
+    allowedOrigins,
+    llmConfig,
+  );
   return api.attachLogger(logger, namespace);
 };
 
 // Helper function
-export const withApiLogger = (characterName: string, dataPath: string, namespace: string, authFlag?: boolean, authToken?: string, apiPort?: number, allowedOrigins?: string[]) => {
+export const withApiLogger = (
+  characterName: string,
+  dataPath: string,
+  namespace: string,
+  authFlag?: boolean,
+  authToken?: string,
+  apiPort?: number,
+  allowedOrigins?: string[],
+  llmConfig?: LLMFactoryConfig,
+) => {
   const logger = createLogger(`orchestrator-workflow-${namespace}`);
 
-  const enhancedLogger = attachLogger(characterName, dataPath, logger, namespace, authFlag, authToken, apiPort, allowedOrigins);
+  const enhancedLogger = attachLogger(
+    characterName,
+    dataPath,
+    logger,
+    namespace,
+    authFlag,
+    authToken,
+    apiPort,
+    allowedOrigins,
+    llmConfig,
+  );
   return {
     logger: enhancedLogger,
   };

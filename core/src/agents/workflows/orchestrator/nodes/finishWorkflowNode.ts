@@ -1,5 +1,5 @@
 import { ChatPromptTemplate } from '@langchain/core/prompts';
-import { LLMFactory } from '../../../../services/llm/factory.js';
+import { LLMFactory, LLMFactoryConfig } from '../../../../services/llm/factory.js';
 import { createLogger } from '../../../../utils/logger.js';
 import { ApiConfig, OrchestratorStateType } from '../types.js';
 import { finishedWorkflowParser } from './finishWorkflowPrompt.js';
@@ -31,6 +31,7 @@ export const createFinishWorkflowNode = ({
   dataPath,
   namespace,
   apiConfig,
+  llmConfig,
 }: {
   modelConfig: LLMConfiguration;
   finishWorkflowPrompt: ChatPromptTemplate;
@@ -38,8 +39,19 @@ export const createFinishWorkflowNode = ({
   dataPath: string;
   namespace: string;
   apiConfig: ApiConfig;
+  llmConfig: LLMFactoryConfig;
 }) => {
-  const logger = attachLogger(characterName, dataPath, createLogger(`${namespace}-finish-workflow-node`), namespace, apiConfig.authFlag, apiConfig.authToken, apiConfig.port, apiConfig.allowedOrigins);
+  const logger = attachLogger(
+    characterName,
+    dataPath,
+    createLogger(`${namespace}-finish-workflow-node`),
+    namespace,
+    apiConfig.authFlag,
+    apiConfig.authToken,
+    apiConfig.port,
+    apiConfig.allowedOrigins,
+    llmConfig,
+  );
   const runNode = async (state: OrchestratorStateType) => {
     logger.info('Workflow Summary Node');
 
@@ -56,7 +68,9 @@ export const createFinishWorkflowNode = ({
       currentTime: new Date().toISOString(),
     });
 
-    const result = await LLMFactory.createModelFromConfig(modelConfig).invoke(formattedPrompt);
+    const result = await LLMFactory.createModelFromConfig(modelConfig, llmConfig).invoke(
+      formattedPrompt,
+    );
     const finishedWorkflow = await parseFinishedWorkflow(result.content, logger);
 
     logger.info('Finished Workflow:', { finishedWorkflow });

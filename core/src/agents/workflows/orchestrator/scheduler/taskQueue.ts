@@ -16,28 +16,36 @@ export const createTaskQueue = (namespace: string, dataPath: string): TaskQueue 
     return taskQueues.get(namespace) as TaskQueue;
   }
 
-    
   const scheduledTasks: Task[] = [];
   const completedTasks: Task[] = [];
   let currentTask: Task | undefined = undefined;
 
   try {
-    const dbProcessingTasks = dbController.getTasks({
-      namespace,
-      status: 'processing',
-    }, dataPath);
+    const dbProcessingTasks = dbController.getTasks(
+      {
+        namespace,
+        status: 'processing',
+      },
+      dataPath,
+    );
 
-    const dbScheduledTasks = dbController.getTasks({
-      namespace,
-      status: 'scheduled',
-      limit: MAX_SCHEDULED_TASKS,
-    }, dataPath);
+    const dbScheduledTasks = dbController.getTasks(
+      {
+        namespace,
+        status: 'scheduled',
+        limit: MAX_SCHEDULED_TASKS,
+      },
+      dataPath,
+    );
 
-    const dbCompletedTasks = dbController.getTasks({
-      namespace,
-      status: ['completed', 'failed'],
-      limit: MAX_COMPLETED_TASKS,
-    }, dataPath);
+    const dbCompletedTasks = dbController.getTasks(
+      {
+        namespace,
+        status: ['completed', 'failed'],
+        limit: MAX_COMPLETED_TASKS,
+      },
+      dataPath,
+    );
 
     for (const dbTask of [...dbScheduledTasks, ...dbProcessingTasks, ...dbCompletedTasks]) {
       const task: Task = {
@@ -59,11 +67,14 @@ export const createTaskQueue = (namespace: string, dataPath: string): TaskQueue 
         task.status = 'scheduled';
         scheduledTasks.push(task);
 
-        dbController.updateTaskStatus({
-          id: task.id,
-          namespace,
-          status: 'scheduled',
-        }, dataPath);
+        dbController.updateTaskStatus(
+          {
+            id: task.id,
+            namespace,
+            status: 'scheduled',
+          },
+          dataPath,
+        );
       } else {
         completedTasks.push(task);
       }
@@ -117,14 +128,17 @@ export const createTaskQueue = (namespace: string, dataPath: string): TaskQueue 
       scheduledTasks.sort((a, b) => a.scheduledFor.getTime() - b.scheduledFor.getTime());
 
       try {
-        dbController.createTask({
-          id: taskId,
-          namespace,
-          message,
-          status: 'scheduled',
-          created_at: now.toISOString(),
-          scheduled_for: executeAt.toISOString(),
-        }, dataPath);
+        dbController.createTask(
+          {
+            id: taskId,
+            namespace,
+            message,
+            status: 'scheduled',
+            created_at: now.toISOString(),
+            scheduled_for: executeAt.toISOString(),
+          },
+          dataPath,
+        );
       } catch (error) {
         logger.error(
           `Failed to persist task to database: ${error instanceof Error ? error.message : String(error)}`,

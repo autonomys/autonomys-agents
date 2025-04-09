@@ -4,6 +4,7 @@ import { ToolNode } from '@langchain/langgraph/prebuilt';
 import { LLMConfiguration } from '../../../services/llm/types.js';
 import { Logger } from 'winston';
 import { ExperienceManager } from '../../../blockchain/agentExperience/types.js';
+import { LLMFactoryConfig } from '../../../services/llm/factory.js';
 
 export type OrchestratorPrompts = {
   inputPrompt: ChatPromptTemplate;
@@ -50,6 +51,15 @@ export type ApiConfig = {
   port?: number;
 };
 
+export type LLMConfig = {
+  OPENAI_API_KEY?: string;
+  ANTHROPIC_API_KEY?: string;
+  LLAMA_API_URL?: string;
+  DEEPSEEK_API_KEY?: string;
+  DEEPSEEK_URL?: string;
+  GROQ_API_KEY?: string;
+};
+
 export type OrchestratorRunnerOptions = {
   modelConfigurations?: {
     inputModelConfig?: LLMConfiguration;
@@ -65,6 +75,7 @@ export type OrchestratorRunnerOptions = {
   characterDataPathConfig?: CharacterDataPathConfig;
   recursionLimit?: number;
   apiConfig?: ApiConfig;
+  llmConfig?: LLMConfig;
   logger?: Logger;
 };
 
@@ -80,6 +91,7 @@ export type OrchestratorConfig = {
   characterDataPathConfig: CharacterDataPathConfig;
   recursionLimit: number;
   apiConfig: ApiConfig;
+  llmConfig: LLMFactoryConfig;
   logger?: Logger;
 };
 
