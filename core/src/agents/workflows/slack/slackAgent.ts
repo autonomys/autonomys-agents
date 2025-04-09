@@ -1,6 +1,6 @@
 import { DynamicStructuredTool } from '@langchain/core/tools';
 import { HumanMessage } from '@langchain/core/messages';
-import { Character } from '../../../config/characters.js';
+import { Character } from '../../../config/types.js';
 import { createOrchestratorRunner } from '../orchestrator/orchestratorWorkflow.js';
 import { createSlackTools } from '../../tools/slack/index.js';
 import { createSlackPrompts } from './prompts.js';

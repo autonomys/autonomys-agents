@@ -7,36 +7,21 @@ import { z } from 'zod';
 import { loadCharacter } from './characters.js';
 import { configSchema } from './schema.js';
 import { getProjectRoot } from '../utils/utils.js';
+import { ConfigOptions, ConfigInstance } from './types.js';
+// Store instances by configPath
+const configInstances = new Map<string, any>();
 
-const workspaceRoot = getProjectRoot();
-
-const cookiesDir = path.join(workspaceRoot, '.cookies');
-try {
-  await mkdir(cookiesDir, { recursive: true });
-} catch (error) {
-  console.error('Error creating cookies directory:', error);
-}
-
-export const characterName = process.argv[2];
-
-if (!characterName) {
-  console.error('Please provide a character name');
-  console.error('Usage: yarn start <character-name> [--headless]');
-  // Force immediate exit of the entire process group
-  process.kill(0, 'SIGKILL');
-}
-const isHeadless = process.argv[3] === '--headless';
-const characterConfig = loadCharacter(characterName);
-// Load root .env
-dotenv.config({ path: path.resolve(workspaceRoot, '.env') });
-
-// Load character-specific .env if it exists, overriding root .env values
-const characterEnvPath = characterName
-  ? path.resolve(characterConfig.characterPath, 'config', '.env')
-  : null;
-if (characterEnvPath && existsSync(characterEnvPath)) {
-  dotenv.config({ path: characterEnvPath });
-}
+// Create cookies directory
+const createCookiesDir = async (workspaceRoot: string) => {
+  const cookiesDir = path.join(workspaceRoot, '.cookies');
+  try {
+    await mkdir(cookiesDir, { recursive: true });
+    return cookiesDir;
+  } catch (error) {
+    console.error('Error creating cookies directory:', error);
+    return cookiesDir;
+  }
+};
 
 const formatZodError = (error: z.ZodError) => {
   const missingVars = error.issues.map(issue => {
@@ -48,7 +33,7 @@ const formatZodError = (error: z.ZodError) => {
     \nPlease check your .env file and config.yaml file and ensure all required variables are set correctly.`;
 };
 
-export const agentVersion = (() => {
+const getAgentVersion = (workspaceRoot: string) => {
   try {
     const packageJson = JSON.parse(readFileSync(path.join(workspaceRoot, 'package.json'), 'utf8'));
     return packageJson.version;
@@ -56,18 +41,7 @@ export const agentVersion = (() => {
     console.error('Error reading package.json version:', error);
     return '0.0.0';
   }
-})();
-
-const yamlConfig = (() => {
-  try {
-    const characterConfigPath = path.join(characterConfig.characterPath, 'config', 'config.yaml');
-    const fileContents = readFileSync(characterConfigPath, 'utf8');
-    return yaml.parse(fileContents);
-  } catch (error) {
-    console.error('No YAML config found for character', characterName, error);
-    return {};
-  }
-})();
+};
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const convertModelConfigurations = (modelConfigurations: any) => {
@@ -86,7 +60,54 @@ const convertModelConfigurations = (modelConfigurations: any) => {
   };
 };
 
-export const config = (() => {
+export const createOrGetConfig = async ({
+  characterName,
+  customWorkspaceRoot,
+  isHeadless = false,
+}: ConfigOptions): Promise<ConfigInstance> => {
+  // Create unique key for this configuration
+  const configKey = `${customWorkspaceRoot}-${characterName}-${isHeadless}`;
+
+  // Return cached instance if it exists
+  if (configInstances.has(configKey)) {
+    return configInstances.get(configKey);
+  }
+
+  // Initialize with provided or default workspace root
+  const workspaceRoot = customWorkspaceRoot;
+  const cookiesDir = await createCookiesDir(workspaceRoot);
+
+  if (!characterName) {
+    throw new Error('No character name provided');
+  }
+
+  // Load character config from the workspaceRoot
+  const characterConfig = loadCharacter(characterName, workspaceRoot);
+
+  // Load root .env
+  dotenv.config({ path: path.resolve(workspaceRoot, '.env') });
+
+  // Load character-specific .env if it exists, overriding root .env values
+  const characterEnvPath = characterName
+    ? path.resolve(characterConfig.characterPath, 'config', '.env')
+    : null;
+  if (characterEnvPath && existsSync(characterEnvPath)) {
+    dotenv.config({ path: characterEnvPath });
+  }
+
+  const agentVersion = getAgentVersion(workspaceRoot);
+
+  const yamlConfig = (() => {
+    try {
+      const characterConfigPath = path.join(characterConfig.characterPath, 'config', 'config.yaml');
+      const fileContents = readFileSync(characterConfigPath, 'utf8');
+      return yaml.parse(fileContents);
+    } catch (error) {
+      console.error('No YAML config found for character', characterName, error);
+      return {};
+    }
+  })();
+
   try {
     const username = process.env.TWITTER_USERNAME || '';
     const cookiesPath = path.join(cookiesDir, `${username}-cookies.json`);
@@ -166,7 +187,19 @@ export const config = (() => {
 
       ENABLE_API: !isHeadless,
     };
-    return configSchema.parse(rawConfig);
+
+    const parsedConfig = configSchema.parse(rawConfig);
+
+    const instance: ConfigInstance = {
+      config: parsedConfig,
+      agentVersion,
+      characterName,
+    };
+
+    // Store in instances map
+    configInstances.set(configKey, instance);
+
+    return instance;
   } catch (error) {
     if (error instanceof z.ZodError) {
       console.error('\x1b[31m%s\x1b[0m', formatZodError(error));
@@ -178,6 +211,29 @@ export const config = (() => {
     }
     throw error;
   }
-})();
+};
+
+// **Temporary** backwards compatibility for existing code - get default instance
+export const initializeDefaultConfig = async () => {
+  const characterName = process.argv[2];
+  if (!characterName) {
+    console.error('Please provide a character name');
+    console.error('Usage: yarn start <character-name> [--headless]');
+    // Force immediate exit of the entire process group
+    process.kill(0, 'SIGKILL');
+  }
+
+  const isHeadless = process.argv[3] === '--headless';
+  return createOrGetConfig({ characterName, customWorkspaceRoot: getProjectRoot(), isHeadless });
+};
+
+// Initialize default config and export for backwards compatibility
+let defaultConfigPromise: Promise<ConfigInstance> | null = null;
+export const getDefaultConfig = async (): Promise<ConfigInstance> => {
+  if (!defaultConfigPromise) {
+    defaultConfigPromise = initializeDefaultConfig();
+  }
+  return defaultConfigPromise;
+};
 
 export type Config = z.infer<typeof configSchema>;

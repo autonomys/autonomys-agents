@@ -2,7 +2,7 @@ import { ChatPromptTemplate, PromptTemplate } from '@langchain/core/prompts';
 import { SystemMessage } from '@langchain/core/messages';
 import { StructuredOutputParser } from '@langchain/core/output_parsers';
 import { z } from 'zod';
-import { Character } from '../../../../config/characters.js';
+import { Character } from '../../../../config/types.js';
 
 export const createFinishWorkflowPrompt = async (
   character: Character,

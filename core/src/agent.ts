@@ -15,11 +15,15 @@ import { registerOrchestratorRunner } from './agents/workflows/registration.js';
 import { createSlackAgent } from './agents/workflows/slack/slackAgent.js';
 import { createTwitterAgent } from './agents/workflows/twitter/twitterAgent.js';
 import { withApiLogger } from './api/server.js';
-import { agentVersion, characterName, config } from './config/index.js';
+import { getDefaultConfig } from './config/index.js';
 import { createTwitterApi } from './agents/tools/twitter/client.js';
 import { createExperienceManager } from './blockchain/agentExperience/index.js';
 import { LLMConfiguration } from './services/llm/types.js';
 import { createApiServer } from './api/server.js';
+
+// Get the config instance
+const configInstance = await getDefaultConfig();
+const { config, agentVersion, characterName } = configInstance;
 
 export const bigModel: LLMConfiguration = {
   provider: 'anthropic',

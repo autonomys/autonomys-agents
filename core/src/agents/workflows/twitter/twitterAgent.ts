@@ -1,6 +1,6 @@
 import { DynamicStructuredTool } from '@langchain/core/tools';
 import { HumanMessage } from '@langchain/core/messages';
-import { Character } from '../../../config/characters.js';
+import { Character } from '../../../config/types.js';
 import { TwitterApi } from '../../tools/twitter/types.js';
 import { createAllTwitterTools } from '../../tools/twitter/index.js';
 import { createOrchestratorRunner } from '../orchestrator/orchestratorWorkflow.js';

@@ -2,7 +2,7 @@ import { HumanMessage } from '@langchain/core/messages';
 import { DynamicStructuredTool } from '@langchain/core/tools';
 import { z } from 'zod';
 import { withApiLogger } from '../../../api/server.js';
-import { Character } from '../../../config/characters.js';
+import { Character } from '../../../config/types.js';
 import { createLogger } from '../../../utils/logger.js';
 import { createGitHubTools, GitHubToolsSubset } from '../../tools/github/index.js';
 import { createOrchestratorRunner } from '../orchestrator/orchestratorWorkflow.js';

@@ -2,7 +2,7 @@ import { createInputPrompt } from './nodes/inputPrompt.js';
 import { createMessageSummaryPrompt } from './nodes/messageSummaryPrompt.js';
 import { createFinishWorkflowPrompt } from './nodes/finishWorkflowPrompt.js';
 import { OrchestratorPrompts } from './types.js';
-import { Character } from '../../../config/characters.js';
+import { Character } from '../../../config/types.js';
 
 export const createPrompts = async (
   character: Character,
