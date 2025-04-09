@@ -200,6 +200,7 @@ export const createOrchestratorConfig = async (
     ...(options?.tools || []),
     ...createDefaultOrchestratorTools(
       baseConfig.namespace,
+      llmConfig,
       characterDataPathConfig.dataPath,
       experienceConfig.saveExperiences ? experienceConfig.experienceManager : undefined,
     ),

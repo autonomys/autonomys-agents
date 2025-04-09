@@ -5,7 +5,8 @@ import { getVectorDB } from '../../services/vectorDb/vectorDBPool.js';
 import { StringOutputParser } from '@langchain/core/output_parsers';
 import { chatStreamClients } from './StateController.js';
 import { responsePrompt, searchParamsParser, searchPrompt } from './prompt/ChatPrompts.js';
-import { LLMFactory, LLMFactoryConfig } from '../../services/llm/factory.js';
+import { LLMFactory } from '../../services/llm/factory.js';
+import { LLMFactoryConfig } from '../../services/llm/types.js';
 const logger = createLogger('chat-controller');
 interface SearchParams {
   query: string;
@@ -67,7 +68,7 @@ export const createChatController = (llmConfig: LLMFactoryConfig) => {
       }
 
       try {
-        const db = getVectorDB('experiences', dataPath);
+        const db = getVectorDB('experiences', llmConfig, dataPath);
         const searchChain = searchPrompt.pipe(searchQueryModel).pipe(searchParamsParser);
         logger.info('Generating search parameters...');
 

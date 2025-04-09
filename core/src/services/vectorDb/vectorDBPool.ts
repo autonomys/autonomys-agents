@@ -1,5 +1,6 @@
 import { VectorDB } from './VectorDB.js';
 import { createLogger } from '../../utils/logger.js';
+import { LLMFactoryConfig } from '../llm/types.js';
 
 const logger = createLogger('vector-database-pool');
 
@@ -14,12 +15,13 @@ const dbInstances: Map<string, VectorDB> = new Map();
  */
 export const getVectorDB = (
   namespace: string,
+  llmConfig: LLMFactoryConfig,
   dataPath: string,
   maxElements?: number,
 ): VectorDB => {
   if (!dbInstances.has(namespace)) {
     logger.info(`Creating new VectorDB instance for namespace: ${namespace}`);
-    const db = new VectorDB(namespace, dataPath, maxElements);
+    const db = new VectorDB(namespace, llmConfig, dataPath, maxElements);
     dbInstances.set(namespace, db);
   }
   const db = dbInstances.get(namespace);

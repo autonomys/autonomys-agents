@@ -7,7 +7,7 @@ import { createChatRouter } from './chat.js';
 import { createWebhooksRouter } from './webhooks.js';
 import { createCharacterRouter } from './character.js';
 import { createNamespacesRouter } from './namespaces.js';
-import { LLMFactoryConfig } from '../../services/llm/factory.js';
+import { LLMFactoryConfig } from '../../services/llm/types.js';
 
 export const createApiRouter = (
   characterName: string,
