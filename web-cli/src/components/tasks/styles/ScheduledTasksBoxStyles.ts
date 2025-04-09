@@ -111,22 +111,22 @@ export const getTaskItemStyles = (statusColor: string): BoxProps => ({
   p: 3,
   mb: 3,
   borderRadius: 'md',
-  bg: 'rgba(0, 0, 0, 0.3)',
+  bg: `linear-gradient(90deg, ${statusColor}15 0%, rgba(0, 0, 0, 0.3) 50%)`,
   border: '1px solid',
-  borderColor: 'gray.700',
+  borderColor: `${statusColor}30`,
   position: 'relative',
   overflow: 'hidden',
   transition: 'all 0.2s ease',
   _hover: {
-    borderColor: 'brand.neonBlue',
-    boxShadow: '0 0 12px rgba(0, 204, 255, 0.2)',
+    borderColor: statusColor,
+    boxShadow: `0 0 12px ${statusColor}40`,
   },
   _before: {
     content: '""',
     position: 'absolute',
     top: 0,
     left: 0,
-    width: '2px',
+    width: '4px',
     height: '100%',
     bg: statusColor,
     boxShadow: `0 0 8px ${statusColor}`,
@@ -191,9 +191,161 @@ export const getTaskStatusBadgeStyles = (statusColor: string): BadgeProps => ({
   py: 1,
   borderRadius: 'full',
   fontSize: ['xs', 'sm'],
-  bg: `${statusColor}20`,
-  color: statusColor,
+  bg:
+    statusColor === 'brand.neonGreen'
+      ? 'rgba(0, 0, 0, 0.5)'
+      : statusColor === 'brand.neonBlue'
+        ? 'rgba(0, 204, 255, 0.2)' // Processing background
+        : statusColor === 'purple.300'
+          ? 'rgba(128, 90, 213, 0.3)' // Cancelled background
+          : statusColor === 'yellow.300'
+            ? 'rgba(236, 201, 75, 0.25)' // Finalizing background
+            : `${statusColor}20`,
+  color: statusColor === 'brand.neonGreen' ? 'rgba(50, 255, 126, 0.95)' : statusColor,
   textTransform: 'capitalize',
-  fontWeight: 'medium',
+  fontWeight: 'bold',
   boxShadow: `0 0 5px ${statusColor}50`,
+});
+
+// Navigation Tabs Container
+export const navTabsContainerStyles: FlexProps = {
+  width: '100%',
+  borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+  background: 'rgba(15, 15, 25, 0.7)',
+  backdropFilter: 'blur(10px)',
+  position: 'relative',
+  zIndex: 10,
+  overflow: 'hidden',
+  height: '45px',
+  minHeight: '45px',
+};
+
+// Neural Network Background
+export const neuralNetworkBgStyles: BoxProps = {
+  position: 'absolute',
+  top: '0',
+  left: '0',
+  right: '0',
+  bottom: '0',
+  opacity: '0.1',
+  backgroundImage:
+    'linear-gradient(rgba(255, 255, 255, 0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 255, 255, 0.1) 1px, transparent 1px)',
+  backgroundSize: '20px 20px',
+  zIndex: -1,
+};
+
+// Tab item base styles
+export const getTabItemStyles = (
+  isActive: boolean,
+  tabColor: string,
+  tabBg: string,
+): FlexProps => ({
+  flex: '1',
+  justifyContent: 'center',
+  alignItems: 'center',
+  py: 2,
+  height: '100%',
+  cursor: 'pointer',
+  color: tabColor,
+  background: tabBg,
+  borderBottom: isActive ? `2px solid ${tabColor}` : '2px solid transparent',
+  transition: 'all 0.3s ease',
+  position: 'relative',
+  fontWeight: isActive ? 'bold' : 'normal',
+  fontSize: 'sm',
+  _hover: {
+    color: isActive ? tabColor : 'whiteAlpha.800',
+    background: isActive
+      ? tabBg
+      : `rgba(${tabColor === 'brand.neonBlue' ? '0, 204, 255' : tabColor === 'brand.neonGreen' ? '50, 255, 126' : '255, 0, 204'}, 0.05)`,
+  },
+});
+
+// Glowing dot for active tab
+export const activeTabDotStyles = (dotColor: string): BoxProps => ({
+  position: 'absolute',
+  top: '50%',
+  left: '10px',
+  transform: 'translateY(-50%)',
+  width: '6px',
+  height: '6px',
+  borderRadius: 'full',
+  background: dotColor,
+  boxShadow: `0 0 8px ${dotColor}`,
+});
+
+// Result box for completed tasks
+export const taskResultBoxStyles = (statusColor: string): BoxProps => ({
+  mt: 2,
+  p: 2,
+  bg: `linear-gradient(90deg, ${statusColor}10 0%, rgba(0, 0, 0, 0.2) 70%)`,
+  borderRadius: 'md',
+  borderLeft: '3px solid',
+  borderColor: statusColor,
+  boxShadow: `inset 0 0 10px ${statusColor}15`,
+});
+
+// Result text style
+export const taskResultTextStyles: TextProps = {
+  fontSize: 'sm',
+  color: 'whiteAlpha.800',
+  fontStyle: 'italic',
+};
+
+// Filter container styles
+export const filterContainerStyles: FlexProps = {
+  gap: 2,
+  mb: 3,
+  px: 1,
+  py: 2,
+  alignItems: 'center',
+  flexWrap: 'wrap',
+  borderRadius: 'md',
+  bg: 'rgba(0, 0, 0, 0.2)',
+  borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
+};
+
+// Filter label styles
+export const filterLabelStyles: TextProps = {
+  fontSize: 'xs',
+  fontWeight: 'medium',
+  color: 'whiteAlpha.700',
+  mr: 2,
+};
+
+// Filter chip styles - for individual filter options
+export const getFilterChipStyles = (isSelected: boolean, chipColor: string): BoxProps => ({
+  px: 2,
+  py: 1,
+  borderRadius: 'full',
+  fontSize: 'xs',
+  fontWeight: isSelected ? 'bold' : 'normal',
+  bg: isSelected ? `${chipColor}30` : 'rgba(255, 255, 255, 0.05)',
+  color: isSelected ? chipColor : 'whiteAlpha.700',
+  cursor: 'pointer',
+  transition: 'all 0.2s ease',
+  border: '1px solid',
+  borderColor: isSelected ? chipColor : 'transparent',
+  _hover: {
+    bg: isSelected ? `${chipColor}40` : 'rgba(255, 255, 255, 0.1)',
+    transform: 'translateY(-1px)',
+  },
+  _active: {
+    transform: 'translateY(0px)',
+  },
+});
+
+// Filter badge/counter styles
+export const getFilterCountBadgeStyles = (isSelected: boolean, chipColor: string): BoxProps => ({
+  display: 'inline-flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  ml: 1,
+  borderRadius: 'full',
+  bg: isSelected ? 'rgba(0, 0, 0, 0.3)' : 'rgba(0, 0, 0, 0.2)',
+  color: isSelected ? chipColor : 'whiteAlpha.600',
+  fontSize: 'xs',
+  fontWeight: 'bold',
+  w: '16px',
+  h: '16px',
 });

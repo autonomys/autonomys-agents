@@ -17,9 +17,14 @@ import {
 } from './styles/LogStyles';
 
 const OutputLog: React.FC<OutputLogProps> = ({ messages }) => {
-  const [size, setSize] = useState({ height: 400 });
+  const [size, setSize] = useState({ height: 80 }); // Initial collapsed height
+  const [isCollapsed, setIsCollapsed] = useState(true);
+  const [prevHeight, setPrevHeight] = useState(400);
   const containerRef = useRef<HTMLDivElement>(null);
+  const headerRef = useRef<HTMLDivElement>(null);
   const [isSearchVisible, setIsSearchVisible] = useState(false);
+  // Default header height - will be updated dynamically
+  const [headerHeight, setHeaderHeight] = useState(80);
 
   const { namespaces, activeNamespace, subscribedNamespaces, changeNamespace, refreshNamespaces } =
     useNamespaces();
@@ -43,6 +48,16 @@ const OutputLog: React.FC<OutputLogProps> = ({ messages }) => {
     showDebugLogs,
     setShowDebugLogs,
   } = useLogMessages();
+
+  // Measure header height after render to ensure proper collapse height
+  useEffect(() => {
+    if (headerRef.current) {
+      const headerElement = headerRef.current;
+      const height = headerElement.offsetHeight;
+      // Add a small buffer to ensure full visibility (e.g., 10px)
+      setHeaderHeight(height + 10);
+    }
+  }, [namespaces]); // Re-measure when namespaces change
 
   // Handle keyboard shortcut for search (Ctrl+F)
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
@@ -94,6 +109,33 @@ const OutputLog: React.FC<OutputLogProps> = ({ messages }) => {
     }
   };
 
+  const toggleCollapse = () => {
+    if (isCollapsed) {
+      // When expanding, restore previous height
+      setSize({ height: prevHeight });
+      setIsCollapsed(false);
+    } else {
+      // When collapsing, store current height and collapse to header height
+      setPrevHeight(size.height);
+      setSize({ height: headerHeight });
+      setIsCollapsed(true);
+    }
+  };
+
+  const handleResize = (e: any, direction: any, ref: any, d: any) => {
+    // Only update the size if not collapsed, or if expanding from collapsed state
+    if (!isCollapsed || (d.height > 0 && size.height <= headerHeight)) {
+      // If we're expanding from collapsed state, toggle the collapsed state
+      if (isCollapsed && d.height > 0) {
+        setIsCollapsed(false);
+      }
+      
+      setSize(prevSize => ({
+        height: prevSize.height + d.height,
+      }));
+    }
+  };
+
   const filteredMessages = getFilteredMessages(activeNamespace);
 
   return (
@@ -121,12 +163,14 @@ const OutputLog: React.FC<OutputLogProps> = ({ messages }) => {
           width: '100%',
           height: size.height,
         }}
-        minHeight={200}
+        minHeight={headerHeight}
         maxHeight={800}
-        onResizeStop={(e, direction, ref, d) => {
-          setSize(prevSize => ({
-            height: prevSize.height + d.height,
-          }));
+        onResizeStop={handleResize}
+        onResize={(e, direction, ref, d) => {
+          // Handle resize in real-time
+          if (d.height > 0 && isCollapsed) {
+            setIsCollapsed(false);
+          }
         }}
         enable={{
           top: false,
@@ -144,22 +188,32 @@ const OutputLog: React.FC<OutputLogProps> = ({ messages }) => {
         }}
       >
         <Flex ref={containerRef} {...outputLogFlexContainer}>
-          <NamespaceTabs
-            namespaces={namespaces}
-            activeNamespace={activeNamespace}
-            namespaceCount={namespaceCount}
-            onNamespaceChange={handleNamespaceChange}
-            onRefreshNamespaces={refreshNamespaces}
-            onClearLogs={handleClearLogs}
-            onShowSearch={handleShowSearch}
-            showDebugLogs={showDebugLogs}
-            onToggleDebugLogs={handleToggleDebugLogs}
-          />
+          {/* Use headerRef to dynamically measure the header height */}
+          <Box ref={headerRef} width="100%">
+            <NamespaceTabs
+              namespaces={namespaces}
+              activeNamespace={activeNamespace}
+              namespaceCount={namespaceCount}
+              onNamespaceChange={handleNamespaceChange}
+              onRefreshNamespaces={refreshNamespaces}
+              onClearLogs={handleClearLogs}
+              onShowSearch={handleShowSearch}
+              showDebugLogs={showDebugLogs}
+              onToggleDebugLogs={handleToggleDebugLogs}
+              isCollapsed={isCollapsed}
+              onToggleCollapse={toggleCollapse}
+            />
+          </Box>
 
           <Box
             ref={(ref: HTMLDivElement | null) => setLogContainerRef(ref)}
             {...outputLogScrollBox}
-            maxHeight={size.height - 50}
+            maxHeight={isCollapsed ? "0" : `${size.height - headerHeight}px`}
+            height={isCollapsed ? "0" : "auto"}
+            overflow={isCollapsed ? "hidden" : "auto"}
+            transition="all 0.3s ease"
+            opacity={isCollapsed ? 0 : 1}
+            visibility={isCollapsed ? "hidden" : "visible"}
           >
             <LogMessageList
               filteredMessages={filteredMessages}

@@ -27,6 +27,12 @@ const StatusBox: React.FC<StatusBoxProps> = ({ status, onStop }) => {
       return 'brand.neonGreen';
     } else if (status.startsWith('Error:')) {
       return '#ef5350'; // Red
+    } else if (status.startsWith('Finalizing')) {
+      return 'yellow.300'; // Match finalizing color
+    } else if (status.startsWith('Cancelled')) {
+      return 'purple.300'; // Match cancelled color
+    } else if (status.startsWith('Stopped')) {
+      return 'orange.300'; // Match stopped color
     } else {
       return 'gray.400';
     }
@@ -39,6 +45,12 @@ const StatusBox: React.FC<StatusBoxProps> = ({ status, onStop }) => {
       return 'rgba(0, 255, 153, 0.1)';
     } else if (status.startsWith('Error:')) {
       return 'rgba(239, 83, 80, 0.1)';
+    } else if (status.startsWith('Finalizing')) {
+      return 'rgba(236, 201, 75, 0.15)'; // Finalizing background
+    } else if (status.startsWith('Cancelled')) {
+      return 'rgba(128, 90, 213, 0.15)'; // Cancelled background
+    } else if (status.startsWith('Stopped')) {
+      return 'rgba(251, 140, 0, 0.15)'; // Stopped background (orange)
     } else {
       return 'rgba(0, 0, 0, 0.2)';
     }

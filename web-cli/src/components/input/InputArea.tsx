@@ -48,6 +48,16 @@ const InputArea: React.FC<InputBoxProps> = ({
     
     if (currentTask) {
       const taskStatus = currentTask.status || 'processing';
+      
+      // Check for stopped status (previously finalizing) 
+      if (taskStatus === 'stopped') {
+        return `Stopped: ${currentTask.description}`;
+      }
+      // Also check for failed tasks with appropriate result message
+      else if (taskStatus === 'failed' && currentTask.result && currentTask.result.includes('Stopped by user')) {
+        return `Stopped: ${currentTask.description}`;
+      }
+      
       const formattedStatus = taskStatus.charAt(0).toUpperCase() + taskStatus.slice(1);
       return `${formattedStatus}: ${currentTask.description}`;
     } else if (error) {
@@ -59,11 +69,13 @@ const InputArea: React.FC<InputBoxProps> = ({
 
   const handleStopWorkflow = async () => {
     try {
-      setStopStatus('Stopping: Sending stop signal to workflow...');
-      await stopWorkflow();
-      setStopStatus('Ready');
+      // Immediately set to "Stopped" status
+      setStopStatus(`Stopped: ${currentTask?.description || ''}`);
       
-      // Clear the status message after a delay
+      // Send the stop request
+      await stopWorkflow();
+      
+      // Keep showing the "Stopped" status for a while
       setTimeout(() => {
         setStopStatus(null);
       }, 3000);
