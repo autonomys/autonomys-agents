@@ -41,6 +41,12 @@ const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
   //shared config
   const webSearchTool = config.SERPAPI_API_KEY ? [createWebSearchTool(config.SERPAPI_API_KEY)] : [];
   const dataPath = character.characterPath;
+  const apiConfig = {
+    authFlag: config.apiSecurityConfig.ENABLE_AUTH,
+    authToken: config.apiSecurityConfig.API_TOKEN,
+    allowedOrigins: config.apiSecurityConfig.CORS_ALLOWED_ORIGINS,
+    port: config.API_PORT,
+  };
   const saveExperiences = config.autoDriveConfig.AUTO_DRIVE_SAVE_EXPERIENCES;
   const monitoringEnabled = config.autoDriveConfig.AUTO_DRIVE_MONITORING;
   const experienceManager =
@@ -113,6 +119,7 @@ const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
               characterDataPathConfig: {
                 dataPath,
               },
+              apiConfig,
             },
           ),
         ]
@@ -127,6 +134,10 @@ const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
           experienceConfig,
           monitoringConfig,
           modelConfigurations,
+          characterDataPathConfig: {
+            dataPath,
+          },
+          apiConfig,
         }),
       ]
     : [];
@@ -143,6 +154,7 @@ const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
           characterDataPathConfig: {
             dataPath,
           },
+          apiConfig,
         }),
       ]
     : [];
@@ -176,6 +188,7 @@ const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
     characterDataPathConfig: {
       dataPath,
     },
+    apiConfig,
   };
 };
 
@@ -187,7 +200,7 @@ export const orchestratorRunner = (() => {
       const namespace = 'orchestrator';
       runnerPromise = createOrchestratorRunner(character, {
         ...orchestrationConfig,
-        ...withApiLogger(namespace),
+        ...withApiLogger(characterName, namespace, orchestrationConfig.apiConfig?.authFlag, orchestrationConfig.apiConfig?.authToken, orchestrationConfig.apiConfig?.port, orchestrationConfig.apiConfig?.allowedOrigins),
       });
       const runner = await runnerPromise;
       registerOrchestratorRunner(namespace, runner);

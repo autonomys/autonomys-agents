@@ -12,6 +12,7 @@ import {
   PruningParameters,
   Tools,
   CharacterDataPathConfig,
+  ApiConfig,
 } from './types.js';
 
 /**
@@ -145,6 +146,18 @@ export const createCharacterDataPathConfig = (
 };
 
 /**
+ * Helper function to create an ApiConfig based on user options
+ */
+export const createApiConfig = (options?: OrchestratorRunnerOptions): ApiConfig => {
+  return {
+    authFlag: options?.apiConfig?.authFlag,
+    authToken: options?.apiConfig?.authToken,
+    allowedOrigins: options?.apiConfig?.allowedOrigins,
+    port: options?.apiConfig?.port,
+  };
+};
+
+/**
  * Creates a configuration object for an orchestrator runner
  * This handles all the merging of defaults with provided options
  */
@@ -165,7 +178,7 @@ export const createOrchestratorConfig = async (
   const monitoringConfig = createMonitoringConfig(options);
   const pruningParameters = createPruningParameters(options);
   const characterDataPathConfig = createCharacterDataPathConfig(options);
-
+  const apiConfig = createApiConfig(options);
   // Get tools - merge custom tools with defaults if experience saving is enabled
   const tools: Tools = [
     ...(options?.tools || []),
@@ -188,5 +201,6 @@ export const createOrchestratorConfig = async (
     experienceConfig,
     monitoringConfig,
     characterDataPathConfig,
+    apiConfig,
   };
 };

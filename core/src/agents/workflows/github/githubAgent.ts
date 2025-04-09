@@ -15,6 +15,7 @@ import {
   createMonitoringConfig,
   createPruningParameters,
   createCharacterDataPathConfig,
+  createApiConfig,
 } from '../orchestrator/config.js';
 const logger = createLogger('github-workflow');
 
@@ -50,6 +51,7 @@ const createGithubAgentConfig = async (
 
   const pruningParameters = createPruningParameters(options);
   const characterDataPathConfig = createCharacterDataPathConfig(options);
+  const apiConfig = createApiConfig(options);
   // Get GitHub-specific tools and prompts
   const githubTools = await createGitHubTools(githubToken, toolsSubset);
   const prompts = await createGithubPrompts(character);
@@ -67,6 +69,7 @@ const createGithubAgentConfig = async (
     experienceConfig,
     monitoringConfig,
     characterDataPathConfig,
+    apiConfig,
   };
 };
 
@@ -100,7 +103,7 @@ export const createGithubAgent = (
 
         const runner = createOrchestratorRunner(character, {
           ...githubAgentConfig,
-          ...withApiLogger(namespace),
+          ...withApiLogger(character.name, namespace, githubAgentConfig.apiConfig.authFlag, githubAgentConfig.apiConfig.authToken, githubAgentConfig.apiConfig.port, githubAgentConfig.apiConfig.allowedOrigins),
         });
 
         const runnerPromise = await runner;

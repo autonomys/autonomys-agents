@@ -43,6 +43,13 @@ export type CharacterDataPathConfig = {
   dataPath: string;
 };
 
+export type ApiConfig = {
+  authFlag?: boolean;
+  authToken?: string;
+  allowedOrigins?: string[];
+  port?: number;
+};
+
 export type OrchestratorRunnerOptions = {
   modelConfigurations?: {
     inputModelConfig?: LLMConfiguration;
@@ -57,6 +64,7 @@ export type OrchestratorRunnerOptions = {
   monitoringConfig?: MonitoringConfig;
   characterDataPathConfig?: CharacterDataPathConfig;
   recursionLimit?: number;
+  apiConfig?: ApiConfig;
   logger?: Logger;
 };
 
@@ -70,6 +78,7 @@ export type OrchestratorConfig = {
   monitoringConfig: MonitoringConfig;
   characterDataPathConfig: CharacterDataPathConfig;
   recursionLimit: number;
+  apiConfig: ApiConfig;
   logger?: Logger;
 };
 

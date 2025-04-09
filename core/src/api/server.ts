@@ -1,7 +1,6 @@
 import express from 'express';
 import { createLogger } from '../utils/logger.js';
 import { ApiServer, LogMetadata } from './types.js';
-import { config } from '../config/index.js';
 import { createApiRouter } from './routes/index.js';
 import { broadcastTaskUpdateUtility } from './controller/TaskController.js';
 import { Logger } from 'winston';
@@ -9,7 +8,7 @@ import { attachLoggerUtility } from './controller/LogsController.js';
 import { broadcastLogUtility } from './controller/LogsController.js';
 import { broadcastNamespaces } from './controller/NamespaceController.js';
 import { getRegisteredNamespaces } from './controller/WorkflowController.js';
-import { authenticateToken, securityHeaders } from './middleware/auth.js';
+import { securityHeaders, createAuthMiddleware } from './middleware/auth.js';
 import { corsMiddleware } from './middleware/cors.js';
 import helmet from 'helmet';
 import http2 from 'http2';
@@ -22,10 +21,10 @@ const logger = createLogger('api-server');
 
 let apiServer: ApiServer | null = null;
 
-const createSingletonApiServer = (): ApiServer => {
+const createSingletonApiServer = (characterName: string, authFlag: boolean, authToken: string, apiPort: number, allowedOrigins: string[]): ApiServer => {
   const app = http2Express(express) as unknown as Express;
 
-  app.use(corsMiddleware);
+  app.use(corsMiddleware(allowedOrigins));
   app.use(
     helmet({
       contentSecurityPolicy: false,
@@ -35,17 +34,18 @@ const createSingletonApiServer = (): ApiServer => {
   app.use(express.json({ limit: '1mb' }));
   app.use(express.urlencoded({ extended: true, limit: '1mb' }));
 
-  const apiRouter = createApiRouter();
+  const apiRouter = createApiRouter(characterName);
 
-  if (config.apiSecurityConfig.ENABLE_AUTH) {
-    app.use('/api', authenticateToken, apiRouter);
+  if (authFlag) {
+    app.use('/api', createAuthMiddleware(authToken));
+    app.use('/api', apiRouter);
     logger.info('API authentication enabled');
   } else {
     app.use('/api', apiRouter);
     logger.info('API authentication disabled');
   }
 
-  const PORT = config.API_PORT;
+  const PORT = apiPort;
   let server;
 
   const certsDir = path.join(getProjectRoot(), 'certs');
@@ -64,7 +64,7 @@ const createSingletonApiServer = (): ApiServer => {
       server.listen(PORT, () => {
         logger.info(`API server started with HTTP/2 support on port ${PORT}`);
         logger.info(
-          `API security: ${config.apiSecurityConfig.ENABLE_AUTH ? 'Enabled' : 'Disabled'}`,
+          `API security: ${authFlag ? 'Enabled' : 'Disabled'}`,
         );
         logger.info(`Access the API at: https://localhost:${PORT}/api`);
         logger.info(
@@ -90,9 +90,9 @@ const createSingletonApiServer = (): ApiServer => {
   };
 };
 
-export const createApiServer = () => {
+export const createApiServer = (characterName: string, authFlag: boolean, authToken: string, apiPort: number, allowedOrigins: string[]) => {
   if (!apiServer) {
-    apiServer = createSingletonApiServer();
+    apiServer = createSingletonApiServer(characterName, authFlag, authToken, apiPort, allowedOrigins);
   }
   return apiServer;
 };
@@ -127,19 +127,28 @@ export const broadcastNamespacesUpdate = () => {
   apiServer.broadcastNamespaces();
 };
 
-export const attachLogger = (logger: Logger, namespace: string) => {
-  if (!config.ENABLE_API) {
+export const attachLogger = (characterName: string, logger: Logger, namespace: string, authFlag?: boolean, authToken?: string, apiPort?: number, allowedOrigins?: string[]) => {
+  if (!authFlag) {
     return logger;
   }
-  const api = createApiServer();
+  if (!apiPort) {
+    throw new Error('API port is required');
+  }
+  if (!authToken) {
+    throw new Error('API token is required');
+  }
+  if (!allowedOrigins) {
+    allowedOrigins = ["*"]
+  }
+  const api = createApiServer(characterName, authFlag, authToken, apiPort, allowedOrigins);
   return api.attachLogger(logger, namespace);
 };
 
 // Helper function
-export const withApiLogger = (namespace: string) => {
+export const withApiLogger = (characterName: string, namespace: string, authFlag?: boolean, authToken?: string, apiPort?: number, allowedOrigins?: string[]) => {
   const logger = createLogger(`orchestrator-workflow-${namespace}`);
 
-  const enhancedLogger = attachLogger(logger, namespace);
+  const enhancedLogger = attachLogger(characterName, logger, namespace, authFlag, authToken, apiPort, allowedOrigins);
   return {
     logger: enhancedLogger,
   };

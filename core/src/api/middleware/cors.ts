@@ -1,9 +1,7 @@
 import cors from 'cors';
-import { config } from '../../config/index.js';
 
-export const corsMiddleware = cors({
+export const corsMiddleware = (allowedOrigins: string[]) => cors({
   origin: (origin, callback) => {
-    const allowedOrigins = config.apiSecurityConfig.CORS_ALLOWED_ORIGINS;
 
     if (!origin) {
       return callback(null, true);

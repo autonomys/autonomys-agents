@@ -8,7 +8,7 @@ import { createWebhooksRouter } from './webhooks.js';
 import { createCharacterRouter } from './character.js';
 import { createNamespacesRouter } from './namespaces.js';
 
-export const createApiRouter = (): Router => {
+export const createApiRouter = (characterName: string): Router => {
   const apiRouter = Router();
 
   apiRouter.use(createLogsRouter());
@@ -17,7 +17,7 @@ export const createApiRouter = (): Router => {
   apiRouter.use(createTasksRouter());
   apiRouter.use(createChatRouter());
   apiRouter.use(createWebhooksRouter());
-  apiRouter.use(createCharacterRouter());
+  apiRouter.use(createCharacterRouter(characterName));
   apiRouter.use(createNamespacesRouter());
 
   return apiRouter;
