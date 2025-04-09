@@ -2,6 +2,7 @@ import { Express } from 'express';
 import { Server } from 'http';
 import { Logger } from 'winston';
 import { Http2SecureServer } from 'http2';
+import { LLMFactoryConfig } from '../services/llm/types.js';
 
 export interface ApiServer {
   app: Express;
@@ -17,3 +18,21 @@ export interface LogMetadata {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   [key: string]: string | number | boolean | null | undefined | object | any[];
 }
+
+export type ApiConfig = {
+  authFlag: boolean;
+  authToken: string;
+  apiPort: number;
+  allowedOrigins: string[];
+  llmConfig: LLMFactoryConfig;
+};
+
+export type CreateApiServerParams = {
+  characterName: string;
+  dataPath: string;
+  authFlag: boolean;
+  authToken: string;
+  apiPort: number;
+  allowedOrigins: string[];
+  llmConfig: LLMFactoryConfig;
+};

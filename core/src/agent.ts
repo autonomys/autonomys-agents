@@ -14,7 +14,7 @@ import {
 import { registerOrchestratorRunner } from './agents/workflows/registration.js';
 import { createSlackAgent } from './agents/workflows/slack/slackAgent.js';
 import { createTwitterAgent } from './agents/workflows/twitter/twitterAgent.js';
-import { withApiLogger } from './api/server.js';
+import { CreateApiServerParams, withApiLogger } from './api/server.js';
 import { agentVersion, characterName, config } from './config/index.js';
 import { createTwitterApi } from './agents/tools/twitter/client.js';
 import { createExperienceManager } from './blockchain/agentExperience/index.js';
@@ -51,16 +51,16 @@ const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
       allowedOrigins: config.apiSecurityConfig.CORS_ALLOWED_ORIGINS,
       port: config.API_PORT,
     };
-
-    const _apiServer = createApiServer(
+    const createApiServerParams: CreateApiServerParams = {
       characterName,
       dataPath,
-      apiConfig.authFlag ?? false,
-      apiConfig.authToken ?? '',
-      apiConfig.port ?? 3000,
-      apiConfig.allowedOrigins ?? [],
-      config.llmConfig,
-    );
+      authFlag: apiConfig.authFlag ?? false,
+      authToken: apiConfig.authToken ?? '',
+      apiPort: apiConfig.port ?? 3000,
+      allowedOrigins: apiConfig.allowedOrigins ?? [],
+      llmConfig: config.llmConfig,
+    };
+    const _apiServer = createApiServer(createApiServerParams);
   }
   const webSearchTool = config.SERPAPI_API_KEY ? [createWebSearchTool(config.SERPAPI_API_KEY)] : [];
 
