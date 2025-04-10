@@ -45,7 +45,9 @@ const ScheduledTasksBox: React.FC<ScheduledTasksBoxProps> = ({
   scheduledTasks = [],
   completedTasks = [] 
 }) => {
-  const [size, setSize] = useState({ height: 200 });
+  // Initial height calculation to match OutputLog component
+  const initialHeight = 700;
+  const [size, setSize] = useState({ height: initialHeight });
   const [activeView, setActiveView] = useState<TaskViewType>('scheduled');
   const [activeFilters, setActiveFilters] = useState<CompletedFilterStatus[]>(['completed', 'failed', 'cancelled', 'deleted']);
   
@@ -137,7 +139,9 @@ const ScheduledTasksBox: React.FC<ScheduledTasksBoxProps> = ({
 
   useEffect(() => {
     const handleResize = () => {
-      setSize(prevSize => ({ ...prevSize }));
+      // Update height on window resize using same calculation as OutputLog
+      const newHeight = window.innerHeight - 10;
+      setSize(prevSize => ({ ...prevSize, height: newHeight }));
     };
 
     window.addEventListener('resize', handleResize);
@@ -202,7 +206,6 @@ const ScheduledTasksBox: React.FC<ScheduledTasksBoxProps> = ({
         height: size.height,
       }}
       minHeight={150}
-      maxHeight={600}
       style={resizableStyles}
       onResizeStop={(e, direction, ref, d) => {
         setSize(prevSize => ({

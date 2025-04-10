@@ -32,8 +32,10 @@ function App() {
       <ChatProvider>
         <div className='App'>
           <HeaderArea />
-          <OutputLog messages={messages} />
-          <BodyArea />
+          <div className='main-content-layout'>
+            <BodyArea />
+            <OutputLog messages={messages} />
+          </div>
         </div>
       </ChatProvider>
     </AppProvider>
