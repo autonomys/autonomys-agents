@@ -11,11 +11,13 @@ services:
     environment:
       - CHARACTER_NAME=${CHARACTER_NAME:-character.example}
     volumes:
-        # Cookies and Character-specific volumes - unique per character
-      - agent_cookies_${CHARACTER_NAME:-character.example}:/app/.cookies
-      - agent_data_${CHARACTER_NAME:-character.example}:/app/characters/${CHARACTER_NAME:-character.example}/data
-      - agent_logs_${CHARACTER_NAME:-character.example}:/app/characters/${CHARACTER_NAME:-character.example}/logs
-      - agent_memories_${CHARACTER_NAME:-character.example}:/app/characters/${CHARACTER_NAME:-character.example}/memories
+      # Mount credentials and data from local machine
+      - ./.cookies:/app/.cookies
+      - ./certs:/app/certs
+      - ./characters/${CHARACTER_NAME:-character.example}/config:/app/characters/${CHARACTER_NAME:-character.example}/config
+      - ./characters/${CHARACTER_NAME:-character.example}/data:/app/characters/${CHARACTER_NAME:-character.example}/data
+      - ./characters/${CHARACTER_NAME:-character.example}/logs:/app/characters/${CHARACTER_NAME:-character.example}/logs
+      - ./characters/${CHARACTER_NAME:-character.example}/memories:/app/characters/${CHARACTER_NAME:-character.example}/memories
     ports:
       # Host port 3011 maps to container port 3011
       - "${HOST_PORT:-3011}:${API_PORT:-3011}"
@@ -30,9 +32,3 @@ services:
     # Run container with non-privileged security options
     security_opt:
       - no-new-privileges:true
-
-volumes:
-  agent_cookies_${CHARACTER_NAME:-character.example}:
-  agent_data_${CHARACTER_NAME:-character.example}:
-  agent_logs_${CHARACTER_NAME:-character.example}:
-  agent_memories_${CHARACTER_NAME:-character.example}:

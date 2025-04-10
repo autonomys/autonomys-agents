@@ -22,23 +22,9 @@ COPY .yarn ./.yarn
 COPY tsconfig.json ./
 COPY core ./core
 COPY scripts ./scripts
-# Only copy the specific character folder
-COPY characters/${CHARACTER_NAME} ./characters/${CHARACTER_NAME}
-COPY certs ./certs
 
 # Install dependencies
 RUN yarn install
-
-# Fix line endings for .env files to ensure compatibility across operating systems
-RUN find ./characters -name "*.env" -type f -exec sed -i 's/\r$//' {} \; || true
-
-# Generate certificates if they don't exist
-RUN mkdir -p certs && \
-    if [ ! -f certs/server.cert ] || [ ! -f certs/server.key ]; then \
-      echo "Generating self-signed certificates..." && \
-      openssl req -x509 -newkey rsa:2048 -nodes -sha256 -subj '/CN=localhost' \
-      -keyout certs/server.key -out certs/server.cert -days 365; \
-    fi
 
 # Build the project using the workspace setup
 RUN yarn workspace autonomys-agents-core build
@@ -63,11 +49,8 @@ RUN apt-get update && apt-get install -y \
 # Enable corepack for proper Yarn version management
 RUN corepack enable
 
-# Copy built files from the root-level dist directory
+# Copy built files and scripts - ONLY CODE
 COPY --from=builder /app/dist ./dist
-# Only copy the specific character folder from builder
-COPY --from=builder /app/characters/${CHARACTER_NAME} ./characters/${CHARACTER_NAME}
-COPY --from=builder /app/certs ./certs
 COPY --from=builder /app/scripts ./scripts
 
 # Copy yarn configuration and install dependencies in dist directory
@@ -81,52 +64,47 @@ RUN touch yarn.lock
 RUN yarn install
 WORKDIR /app
 
-# Fix line endings again to ensure compatibility (in case any changes happened during build)
-RUN find ./characters -name "*.env" -type f -exec sed -i 's/\r$//' {} \; || true
-
-# Create directories with secure permissions
+# Create mount points for credentials and data
 RUN mkdir -p logs .cookies && \
-    find ./characters -type d -mindepth 1 -maxdepth 1 -exec mkdir -p {}/data {}/logs {}/memories \; && \
+    mkdir -p ./characters/${CHARACTER_NAME}/config ./characters/${CHARACTER_NAME}/data ./characters/${CHARACTER_NAME}/logs ./characters/${CHARACTER_NAME}/memories && \
+    mkdir -p ./certs && \
     chmod 700 ./.cookies && \
     chmod -R 750 ./characters && \
-    chmod -R 755 ./dist && \
+    chmod 755 ./dist && \
     chmod 750 ./logs && \
-    chmod 644 ./certs/server.cert && \
-    chmod 644 ./certs/server.key
+    chmod 755 ./certs
 
-# Set ownership of sensitive directories
+# Set initial ownership of mount points
 RUN chown -R autonomys:autonomys ./.cookies && \
     chown -R autonomys:autonomys ./characters && \
     chown -R autonomys:autonomys ./logs && \
     chown -R autonomys:autonomys ./certs
 
-# Create startup script with security enhancements and improved .env handling
-RUN echo '#!/bin/sh\n\
-CHARACTER_NAME=${CHARACTER_NAME:-test}\n\
-echo "Starting agent with character: $CHARACTER_NAME"\n\
-\n\
-# Fix any remaining line ending issues in the .env file\n\
-if [ -f /app/characters/$CHARACTER_NAME/config/.env ]; then\n\
-  sed -i "s/\\r$//" /app/characters/$CHARACTER_NAME/config/.env\n\
-fi\n\
-\n\
-# Load the character configuration\n\
-if [ -f /app/characters/$CHARACTER_NAME/config/.env ]; then\n\
-  set -a\n\
-  . /app/characters/$CHARACTER_NAME/config/.env\n\
-  set +a\n\
-fi\n\
-\n\
-# Ensure character directories exist and are properly secured\n\
-mkdir -p /app/characters/$CHARACTER_NAME/logs\n\
-mkdir -p /app/characters/$CHARACTER_NAME/data\n\
-mkdir -p /app/characters/$CHARACTER_NAME/memories\n\
-chmod -R 750 /app/characters/$CHARACTER_NAME\n\
-chown -R autonomys:autonomys /app/characters/$CHARACTER_NAME\n\
-\n\
-# Start the application as non-root user\n\
-exec su -c "node dist/src/index.js $CHARACTER_NAME" autonomys\n\
-' > /app/start.sh && chmod +x /app/start.sh
+# Create startup script with modified permissions handling to respect mounted volumes
+RUN echo '#!/bin/sh' > /app/start.sh && \
+    echo 'CHARACTER_NAME=${CHARACTER_NAME:-test}' >> /app/start.sh && \
+    echo 'echo "Starting agent with character: $CHARACTER_NAME"' >> /app/start.sh && \
+    echo '' >> /app/start.sh && \
+    echo '# Fix any remaining line ending issues in the .env file' >> /app/start.sh && \
+    echo 'if [ -f /app/characters/$CHARACTER_NAME/config/.env ]; then' >> /app/start.sh && \
+    echo '  sed -i "s/\r$//" /app/characters/$CHARACTER_NAME/config/.env' >> /app/start.sh && \
+    echo 'fi' >> /app/start.sh && \
+    echo '' >> /app/start.sh && \
+    echo '# Load the character configuration' >> /app/start.sh && \
+    echo 'if [ -f /app/characters/$CHARACTER_NAME/config/.env ]; then' >> /app/start.sh && \
+    echo '  set -a' >> /app/start.sh && \
+    echo '  . /app/characters/$CHARACTER_NAME/config/.env' >> /app/start.sh && \
+    echo '  set +a' >> /app/start.sh && \
+    echo 'fi' >> /app/start.sh && \
+    echo '' >> /app/start.sh && \
+    echo '# Ensure directories exist but dont modify permissions of mounted volumes' >> /app/start.sh && \
+    echo 'mkdir -p /app/characters/$CHARACTER_NAME/logs' >> /app/start.sh && \
+    echo 'mkdir -p /app/characters/$CHARACTER_NAME/data' >> /app/start.sh && \
+    echo 'mkdir -p /app/characters/$CHARACTER_NAME/memories' >> /app/start.sh && \
+    echo '' >> /app/start.sh && \
+    echo '# Start the application as non-root user' >> /app/start.sh && \
+    echo 'exec su -c "node dist/src/index.js $CHARACTER_NAME" autonomys' >> /app/start.sh && \
+    chmod +x /app/start.sh
 
 ENTRYPOINT ["/app/start.sh"]
 
