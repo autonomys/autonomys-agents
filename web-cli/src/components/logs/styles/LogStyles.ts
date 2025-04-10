@@ -7,6 +7,24 @@ export const metadataContainer: BoxProps = {
   fontSize: ['xs', 'sm'],
 };
 
+// Custom styling for the right panel layout
+export const customOutputLogContainer = {
+  flex: { base: '1', md: '0.6' },
+  height: { base: 'calc(100vh - 122px)', md: '100%' }, // Responsive height
+  position: 'relative',
+  zIndex: '1',
+  borderLeft: { base: 'none', md: '1px solid' },
+  borderColor: { base: 'transparent', md: 'rgba(0, 255, 153, 0.3)' },
+  boxShadow: { base: 'none', md: 'inset 3px 0 5px rgba(0, 0, 0, 0.2)' },
+  display: 'flex',
+  flexDirection: 'column',
+  overflow: 'hidden',
+  bg: 'black',
+  marginTop: '12px', // Reduced margin to better align with Status box
+  borderRadius: 'md',
+  border: '1px solid rgba(0, 255, 153, 0.3)',
+};
+
 export const getMetadataToggleButton = (isOpen: boolean): FlexProps => ({
   as: 'button',
   display: 'flex',

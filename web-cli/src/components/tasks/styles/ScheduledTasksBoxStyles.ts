@@ -4,16 +4,22 @@ import { CSSProperties } from 'react';
 // Resizable properties
 export const resizableDefaultSize = {
   width: '100%',
-  height: 200,
+  height: 600,
 };
 
 // Use CSSProperties for resizableStyles since it's passed to style prop
 export const resizableStyles: CSSProperties = {
   margin: '0',
-  flex: '1',
+  marginTop: '16px',
+  flex: '1 1 auto',
   position: 'relative',
   display: 'flex',
   flexDirection: 'column',
+  height: 'calc(100vh)',
+  minHeight: '400px',
+  border: '1px solid rgba(0, 255, 153, 0.3)',
+  borderRadius: '6px',
+  overflow: 'hidden',
 };
 
 export const resizableEnableProps = {
@@ -60,6 +66,7 @@ export const containerBoxStyles: BoxProps = {
   bg: 'rgba(20, 20, 20, 0.7)',
   backdropFilter: 'blur(5px)',
   height: '100%',
+  minHeight: '500px',
   width: '100%',
 };
 
@@ -218,6 +225,8 @@ export const navTabsContainerStyles: FlexProps = {
   overflow: 'hidden',
   height: '45px',
   minHeight: '45px',
+  borderTopLeftRadius: '6px',
+  borderTopRightRadius: '6px',
 };
 
 // Neural Network Background
@@ -328,10 +337,6 @@ export const getFilterChipStyles = (isSelected: boolean, chipColor: string): Box
   borderColor: isSelected ? chipColor : 'transparent',
   _hover: {
     bg: isSelected ? `${chipColor}40` : 'rgba(255, 255, 255, 0.1)',
-    transform: 'translateY(-1px)',
-  },
-  _active: {
-    transform: 'translateY(0px)',
   },
 });
 

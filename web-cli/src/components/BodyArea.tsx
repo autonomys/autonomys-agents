@@ -137,37 +137,32 @@ const BodyArea: React.FC = () => {
   };
 
   return (
-    <Flex direction={{ base: 'column', lg: 'row' }} flex='1' p={4} gap={4} position='relative'>
-      <Box flex={{ base: '1', lg: '3' }} position='relative' zIndex={5} minHeight='200px'>
-        {chatState.activeChatNamespace ? (
-          <ChatArea namespace={chatState.activeChatNamespace} onClose={handleCloseChat} />
-        ) : (
-          <InputArea
-            value={state.value}
-            handleInputChange={handleInputChange}
-            handleInputSubmit={handleInputSubmit}
-            currentTask={currentTask}
-            error={error}
-          />
-        )}
-      </Box>
-
-      <Box
-        flex={{ base: '1', lg: '2' }}
-        display={{ base: 'block', lg: 'block' }}
-        position='relative'
-        zIndex={1}
-        minHeight='200px'
-      >
-        <TasksArea
-          tasks={allTasks}
-          loading={loading}
-          connectionStatus={connectionStatus}
-          connectionStatusInfo={connectionStatusInfo}
-          handleDeleteTask={handleDeleteTask}
-          handleReconnect={handleReconnect}
-        />
-      </Box>
+    <Flex className="left-panel" direction="column" position='relative' height="100%" pb={0}>
+      {chatState.activeChatNamespace ? (
+        <ChatArea namespace={chatState.activeChatNamespace} onClose={handleCloseChat} />
+      ) : (
+        <>
+          <Box flex="0 0 auto" mb={2}>
+            <InputArea
+              value={state.value}
+              handleInputChange={handleInputChange}
+              handleInputSubmit={handleInputSubmit}
+              currentTask={currentTask}
+              error={error}
+            />
+          </Box>
+          <Box flex="1" overflow="auto" mb={0}>
+            <TasksArea
+              tasks={allTasks}
+              loading={loading}
+              connectionStatus={connectionStatus}
+              connectionStatusInfo={connectionStatusInfo}
+              handleDeleteTask={handleDeleteTask}
+              handleReconnect={handleReconnect}
+            />
+          </Box>
+        </>
+      )}
     </Flex>
   );
 };

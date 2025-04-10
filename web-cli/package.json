@@ -1,6 +1,6 @@
 {
   "name": "web-cli",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "private": true,
   "dependencies": {
     "@chakra-ui/react": "^3.9.0",
