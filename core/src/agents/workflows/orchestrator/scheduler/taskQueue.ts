@@ -255,7 +255,7 @@ export const createTaskQueue = (namespace: string, dataPath: string): TaskQueue 
       try {
         switch (status) {
           case 'completed':
-            dbController.markTaskAsCompleted(namespace, id, dataPath, result);
+            dbController.markTaskAsCompleted(namespace, dataPath, id, result);
             break;
 
           case 'failed':
@@ -265,7 +265,7 @@ export const createTaskQueue = (namespace: string, dataPath: string): TaskQueue 
                 : result
                   ? JSON.stringify(result)
                   : 'Task failed without specific error';
-            dbController.markTaskAsFailed(namespace, id, dataPath, errorMsg);
+            dbController.markTaskAsFailed(namespace, dataPath, id, errorMsg);
             break;
 
           case 'cancelled':
@@ -275,19 +275,19 @@ export const createTaskQueue = (namespace: string, dataPath: string): TaskQueue 
                 : result
                   ? JSON.stringify(result)
                   : 'Task cancelled without specific reason';
-            dbController.markTaskAsCancelled(namespace, id, cancelMsg);
+            dbController.markTaskAsCancelled(namespace, dataPath, id, cancelMsg);
             break;
 
           case 'processing':
-            dbController.markTaskAsProcessing(namespace, id, dataPath);
+            dbController.markTaskAsProcessing(namespace, dataPath, id);
             break;
 
           case 'stopped':
-            dbController.markTaskAsStopped(namespace, id, result || undefined);
+            dbController.markTaskAsStopped(namespace, dataPath, id, result || undefined);
             break;
 
           case 'finalizing':
-            dbController.markTaskAsStopped(namespace, id, result || undefined);
+            dbController.markTaskAsStopped(namespace, dataPath, id, result || undefined);
             break;
 
           default:

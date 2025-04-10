@@ -305,7 +305,7 @@ export const getNextDueTasks = (
   }
 };
 
-export const markTaskAsProcessing = (namespace: string, taskId: string, dataPath: string): void => {
+export const markTaskAsProcessing = (namespace: string, dataPath: string, taskId: string): void => {
   const now = new Date();
 
   updateTaskStatus(
@@ -321,8 +321,8 @@ export const markTaskAsProcessing = (namespace: string, taskId: string, dataPath
 
 export const markTaskAsCompleted = (
   namespace: string,
-  taskId: string,
   dataPath: string,
+  taskId: string,
   result?: unknown,
 ): void => {
   const now = new Date();
@@ -342,8 +342,8 @@ export const markTaskAsCompleted = (
 
 export const markTaskAsFailed = (
   namespace: string,
-  taskId: string,
   dataPath: string,
+  taskId: string,
   error: string,
 ): void => {
   const now = new Date();
@@ -360,23 +360,39 @@ export const markTaskAsFailed = (
   );
 };
 
-export const markTaskAsStopped = (namespace: string, taskId: string, message?: string): void => {
-  updateTaskStatus({
-    id: taskId,
-    namespace,
-    status: 'stopped',
-    error: message,
-  });
+export const markTaskAsStopped = (
+  namespace: string,
+  dataPath: string,
+  taskId: string,
+  message?: string,
+): void => {
+  updateTaskStatus(
+    {
+      id: taskId,
+      namespace,
+      status: 'stopped',
+      error: message,
+    },
+    dataPath,
+  );
 };
 
-export const markTaskAsCancelled = (namespace: string, taskId: string, reason: string): void => {
+export const markTaskAsCancelled = (
+  namespace: string,
+  dataPath: string,
+  taskId: string,
+  reason: string,
+): void => {
   const now = new Date();
 
-  updateTaskStatus({
-    id: taskId,
-    namespace,
-    status: 'cancelled',
-    completed_at: now.toISOString(),
-    error: reason,
-  });
+  updateTaskStatus(
+    {
+      id: taskId,
+      namespace,
+      status: 'cancelled',
+      completed_at: now.toISOString(),
+      error: reason,
+    },
+    dataPath,
+  );
 };
