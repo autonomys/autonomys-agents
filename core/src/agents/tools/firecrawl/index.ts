@@ -1,7 +1,7 @@
 import { createMcpClientTool } from '../mcp-tool/index.js';
 import { StdioServerParameters } from '@modelcontextprotocol/sdk/client/stdio.js';
 
-export const createFirecrawlTool = async (apiKey: string) => {
+export const createFirecrawlTools = async (apiKey: string) => {
   const firecrawlServerParams: StdioServerParameters = {
     command: process.execPath,
     args: ['node_modules/.bin/firecrawl-mcp'],
