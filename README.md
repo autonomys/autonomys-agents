@@ -21,6 +21,7 @@ Autonomys Agents is an **EXPERIMENTAL** framework for building AI agents. Curren
 3. Setup character config:
    - All character configs are stored in `characters/{your-character-name}/config`
    - Update .env with applicable environment variables
+      - **Note**: OPEN AI is being used for Vector DB and semantic search. Be sure `OPENAI_API_KEY` is provided!
    - Update `config.yaml` with applicable configuration
    - Update `{your-character-name}.yaml` with applicable personality configuration (See Character System below).
 4. Agent API
@@ -34,7 +35,7 @@ Autonomys Agents is an **EXPERIMENTAL** framework for building AI agents. Curren
 7. Run agent and WebCli 
    - For dev purposes: `yarn start <your-character-name>`
 
-## Docker Deployment simultaneously
+## Docker Deployment
 
 You can also run your agents using Docker. This provides isolation and makes it easy to run multiple agents simultaneously.
 
@@ -42,6 +43,12 @@ You can also run your agents using Docker. This provides isolation and makes it 
 - Docker installed on your system ([Installation Guide](https://docs.docker.com/get-docker/))
 - Docker Compose Plugin required ([Compose Plugin Installation](https://docs.docker.com/compose/install/))
 - Character configuration set up (follow steps 2-3 from Getting Started)
+
+### Architecture
+The Docker deployment uses a single image (`autosaeid/autonomys-agents:poc`) that can run multiple character containers. Each character runs in its own isolated container with:
+- Character-specific volumes for configuration and data
+- Dedicated network ports
+- Isolated memory and processes
 
 ### Running with Docker
 
@@ -82,6 +89,12 @@ You can also run your agents using Docker. This provides isolation and makes it 
      ```bash
      docker exec -it autonomys-agent-{character-name} bash
      ```
+
+### File Permissions
+
+The Docker container runs the startup commands as `root` to set up proper permissions before switching to the `autonomys` user to run the application. By default, the container sets `777` (full read/write/execute for all users) permissions on the character directory.
+
+> **Note:** The default permission setting of `777` provides maximum compatibility across different environments but may not be ideal for production deployments. Consider modifying the permissions in `docker-compose-template.yml` to a more restrictive value (like `750` or `755`) based on your security requirements.
 
 ### Running Multiple Agents
 
