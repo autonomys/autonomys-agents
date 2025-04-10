@@ -9,6 +9,6 @@ export const createFirecrawlTool = async (apiKey: string) => {
       FIRECRAWL_API_KEY: apiKey,
     },
   };
-  const tools = await createMcpClientTool('firecrawl-mcp', firecrawlServerParams);
+  const tools = await createMcpClientTool('firecrawl-mcp', '0.0.1', firecrawlServerParams);
   return tools;
 };
