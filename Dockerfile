@@ -1,10 +1,6 @@
 # Stage 1: Build stage
 FROM node:20.18.1 AS builder
 
-# The CHARACTER_NAME environment variable is automatically configured during the build process.
-# No manual changes are needed - the Docker Compose file will set this correctly for each character instance.
-ARG CHARACTER_NAME=character.example
-
 WORKDIR /app
 
 # Install dependencies for build
@@ -16,7 +12,7 @@ RUN apt-get update && apt-get install -y \
 # Enable corepack for proper Yarn version management
 RUN corepack enable
 
-# Copy workspace and package files
+# Copy workspace and package files - ONLY CODE
 COPY package.json yarn.lock .yarnrc.yml ./
 COPY .yarn ./.yarn
 COPY tsconfig.json ./
@@ -31,9 +27,6 @@ RUN yarn workspace autonomys-agents-core build
 
 # Stage 2: Production stage
 FROM node:20.18.1
-
-# Make the build arg available in this stage too
-ARG CHARACTER_NAME=character.example
 
 WORKDIR /app
 
@@ -66,7 +59,7 @@ WORKDIR /app
 
 # Create mount points for credentials and data
 RUN mkdir -p logs .cookies && \
-    mkdir -p ./characters/${CHARACTER_NAME}/config ./characters/${CHARACTER_NAME}/data ./characters/${CHARACTER_NAME}/logs ./characters/${CHARACTER_NAME}/memories && \
+    mkdir -p ./characters && \
     mkdir -p ./certs && \
     chmod 700 ./.cookies && \
     chmod -R 750 ./characters && \
@@ -80,10 +73,21 @@ RUN chown -R autonomys:autonomys ./.cookies && \
     chown -R autonomys:autonomys ./logs && \
     chown -R autonomys:autonomys ./certs
 
-# Create startup script with modified permissions handling to respect mounted volumes
+# Create startup script using proper multi-line syntax
 RUN echo '#!/bin/sh' > /app/start.sh && \
-    echo 'CHARACTER_NAME=${CHARACTER_NAME:-test}' >> /app/start.sh && \
+    echo '# Get character name from environment variable' >> /app/start.sh && \
+    echo 'if [ -z "$CHARACTER_NAME" ]; then' >> /app/start.sh && \
+    echo '  echo "ERROR: CHARACTER_NAME environment variable is not set!"' >> /app/start.sh && \
+    echo '  exit 1' >> /app/start.sh && \
+    echo 'fi' >> /app/start.sh && \
+    echo '' >> /app/start.sh && \
     echo 'echo "Starting agent with character: $CHARACTER_NAME"' >> /app/start.sh && \
+    echo '' >> /app/start.sh && \
+    echo '# Ensure character directories exist' >> /app/start.sh && \
+    echo 'if [ ! -d "/app/characters/$CHARACTER_NAME" ]; then' >> /app/start.sh && \
+    echo '  echo "ERROR: Character directory /app/characters/$CHARACTER_NAME does not exist!"' >> /app/start.sh && \
+    echo '  exit 1' >> /app/start.sh && \
+    echo 'fi' >> /app/start.sh && \
     echo '' >> /app/start.sh && \
     echo '# Fix any remaining line ending issues in the .env file' >> /app/start.sh && \
     echo 'if [ -f /app/characters/$CHARACTER_NAME/config/.env ]; then' >> /app/start.sh && \
@@ -97,7 +101,7 @@ RUN echo '#!/bin/sh' > /app/start.sh && \
     echo '  set +a' >> /app/start.sh && \
     echo 'fi' >> /app/start.sh && \
     echo '' >> /app/start.sh && \
-    echo '# Ensure directories exist but dont modify permissions of mounted volumes' >> /app/start.sh && \
+    echo '# Ensure directories exist' >> /app/start.sh && \
     echo 'mkdir -p /app/characters/$CHARACTER_NAME/logs' >> /app/start.sh && \
     echo 'mkdir -p /app/characters/$CHARACTER_NAME/data' >> /app/start.sh && \
     echo 'mkdir -p /app/characters/$CHARACTER_NAME/memories' >> /app/start.sh && \
@@ -107,5 +111,3 @@ RUN echo '#!/bin/sh' > /app/start.sh && \
     chmod +x /app/start.sh
 
 ENTRYPOINT ["/app/start.sh"]
-
-EXPOSE ${API_PORT:-3010}

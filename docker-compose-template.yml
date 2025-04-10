@@ -1,12 +1,12 @@
 services:
   autonomys-agent-${CHARACTER_NAME:-character.example}:
+    image: autonomys-agents:latest
     build:
       context: .
       dockerfile: Dockerfile
-      args:
-        CHARACTER_NAME: ${CHARACTER_NAME:-character.example}
+      tags:
+        - autonomys-agents:latest
     platform: linux/amd64
-    image: autonomys-agent-${CHARACTER_NAME:-character.example}:${TAG:-latest}
     container_name: autonomys-agent-${CHARACTER_NAME:-character.example}
     environment:
       - CHARACTER_NAME=${CHARACTER_NAME:-character.example}
@@ -14,10 +14,7 @@ services:
       # Mount credentials and data from local machine
       - ./.cookies:/app/.cookies
       - ./certs:/app/certs
-      - ./characters/${CHARACTER_NAME:-character.example}/config:/app/characters/${CHARACTER_NAME:-character.example}/config
-      - ./characters/${CHARACTER_NAME:-character.example}/data:/app/characters/${CHARACTER_NAME:-character.example}/data
-      - ./characters/${CHARACTER_NAME:-character.example}/logs:/app/characters/${CHARACTER_NAME:-character.example}/logs
-      - ./characters/${CHARACTER_NAME:-character.example}/memories:/app/characters/${CHARACTER_NAME:-character.example}/memories
+      - ./characters/${CHARACTER_NAME:-character.example}:/app/characters/${CHARACTER_NAME:-character.example}
     ports:
       # Host port 3011 maps to container port 3011
       - "${HOST_PORT:-3011}:${API_PORT:-3011}"
