@@ -227,12 +227,17 @@ export const createTaskQueue = (namespace: string, dataPath: string): TaskQueue 
       logger.info(`Updating task ${id} status to ${status} in namespace: ${namespace}`);
       task.status = status;
 
-      if (status === 'completed' || status === 'failed' || status === 'deleted') {
+      if (
+        status === 'completed' ||
+        status === 'failed' ||
+        status === 'cancelled' ||
+        status === 'deleted'
+      ) {
         task.completedAt = new Date();
 
         if (status === 'completed' && result) {
           task.result = result;
-        } else if (status === 'failed' && result) {
+        } else if ((status === 'failed' || status === 'cancelled') && result) {
           task.error = result;
         }
 
@@ -240,6 +245,10 @@ export const createTaskQueue = (namespace: string, dataPath: string): TaskQueue 
 
         if (isCurrentTask) {
           currentTask = undefined;
+        }
+      } else if (status === 'stopped' || status === 'finalizing') {
+        if (result) {
+          task.error = result;
         }
       }
 
@@ -259,8 +268,26 @@ export const createTaskQueue = (namespace: string, dataPath: string): TaskQueue 
             dbController.markTaskAsFailed(namespace, id, dataPath, errorMsg);
             break;
 
+          case 'cancelled':
+            const cancelMsg =
+              typeof result === 'string'
+                ? result
+                : result
+                  ? JSON.stringify(result)
+                  : 'Task cancelled without specific reason';
+            dbController.markTaskAsCancelled(namespace, id, cancelMsg);
+            break;
+
           case 'processing':
             dbController.markTaskAsProcessing(namespace, id, dataPath);
+            break;
+
+          case 'stopped':
+            dbController.markTaskAsStopped(namespace, id, result || undefined);
+            break;
+
+          case 'finalizing':
+            dbController.markTaskAsStopped(namespace, id, result || undefined);
             break;
 
           default:

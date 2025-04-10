@@ -359,3 +359,24 @@ export const markTaskAsFailed = (
     dataPath,
   );
 };
+
+export const markTaskAsStopped = (namespace: string, taskId: string, message?: string): void => {
+  updateTaskStatus({
+    id: taskId,
+    namespace,
+    status: 'stopped',
+    error: message,
+  });
+};
+
+export const markTaskAsCancelled = (namespace: string, taskId: string, reason: string): void => {
+  const now = new Date();
+
+  updateTaskStatus({
+    id: taskId,
+    namespace,
+    status: 'cancelled',
+    completed_at: now.toISOString(),
+    error: reason,
+  });
+};

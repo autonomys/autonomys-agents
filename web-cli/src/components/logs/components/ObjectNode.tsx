@@ -24,7 +24,7 @@ export const ObjectNode: React.FC<ObjectNodeProps> = ({
   depth = 0,
   fontSize,
 }) => {
-  const [isOpen, setIsOpen] = useState(depth < 1);
+  const [isOpen, setIsOpen] = useState(true);
   const newPath = path ? `${path}.${name}` : name;
   const isArray = Array.isArray(value);
   const entries = isArray ? value.map((item, i) => [i, item]) : Object.entries(value);

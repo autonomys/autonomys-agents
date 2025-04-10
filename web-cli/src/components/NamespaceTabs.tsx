@@ -68,6 +68,8 @@ interface NamespaceTabsProps {
   onShowSearch?: () => void;
   showDebugLogs?: boolean;
   onToggleDebugLogs?: () => void;
+  isCollapsed?: boolean;
+  onToggleCollapse?: () => void;
 }
 
 const NamespaceTabs: React.FC<NamespaceTabsProps> = ({
@@ -80,6 +82,8 @@ const NamespaceTabs: React.FC<NamespaceTabsProps> = ({
   onShowSearch,
   showDebugLogs = true,
   onToggleDebugLogs,
+  isCollapsed = false,
+  onToggleCollapse,
 }) => {
   const [neonPink] = useToken('colors', ['brand.neonPink']);
   const [activeIndex, setActiveIndex] = useState(namespaces.indexOf(activeNamespace));
@@ -385,6 +389,56 @@ const NamespaceTabs: React.FC<NamespaceTabsProps> = ({
                 textAlign='center'
               >
                 DEBUG
+              </Text>
+            </Box>
+          )}
+
+          {/* Toggle Collapse/Expand Neural Node */}
+          {onToggleCollapse && (
+            <Box
+              onClick={onToggleCollapse}
+              position='relative'
+              cursor='pointer'
+              mx={4}
+              display='flex'
+              flexDirection='column'
+              alignItems='center'
+              width='50px'
+            >
+              {/* Neural Node */}
+              <Box
+                width='30px'
+                height='30px'
+                borderRadius='50%'
+                bg='rgba(255, 64, 129, 0.2)'
+                border='1px solid rgba(255, 64, 129, 0.5)'
+                display='flex'
+                alignItems='center'
+                justifyContent='center'
+                boxShadow='0 0 8px rgba(255, 64, 129, 0.3)'
+                transition='all 0.3s'
+                _hover={{
+                  bg: 'rgba(255, 64, 129, 0.3)',
+                  boxShadow: '0 0 15px rgba(255, 64, 129, 0.5)',
+                }}
+              >
+                <Text
+                  fontSize='18px'
+                  fontWeight='bold'
+                  color='rgba(255, 64, 129, 0.9)'
+                  lineHeight='1'
+                >
+                  {isCollapsed ? '↓' : '↑'}
+                </Text>
+              </Box>
+              <Text
+                fontSize='14px'
+                color='rgba(255, 64, 129, 0.7)'
+                mt={2}
+                fontWeight='medium'
+                textAlign='center'
+              >
+                {isCollapsed ? 'SHOW' : 'HIDE'}
               </Text>
             </Box>
           )}

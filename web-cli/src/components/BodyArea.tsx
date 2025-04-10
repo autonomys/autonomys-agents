@@ -4,6 +4,8 @@ import { useAppContext } from '../context/AppContext';
 import { useChatContext } from '../context/ChatContext';
 import {
   subscribeToTaskUpdates,
+  subscribeToProcessingTasks,
+  subscribeToCompletedTasks, 
   closeTaskStream,
   ConnectionStatus,
   subscribeToConnectionStatus,
@@ -20,7 +22,9 @@ import ChatArea from './chat/ChatArea';
 const BodyArea: React.FC = () => {
   const { state, dispatch } = useAppContext();
   const { state: chatState, dispatch: chatDispatch } = useChatContext();
-  const [tasks, setTasks] = useState<ScheduledTask[]>([]);
+  const [scheduledTasks, setScheduledTasks] = useState<ScheduledTask[]>([]);
+  const [processingTasks, setProcessingTasks] = useState<ScheduledTask[]>([]);
+  const [completedTasks, setCompletedTasks] = useState<ScheduledTask[]>([]);
   const [currentTask, setCurrentTask] = useState<ScheduledTask | undefined>(undefined);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | undefined>(undefined);
@@ -32,10 +36,20 @@ const BodyArea: React.FC = () => {
     console.log('Setting up task stream subscriptions');
     setLoading(true);
 
-    const unsubscribeFromTasks = subscribeToTaskUpdates(updatedTasks => {
-      console.log(`Received ${updatedTasks.length} tasks from stream`);
-      setTasks(updatedTasks);
+    const unsubscribeFromScheduledTasks = subscribeToTaskUpdates(updatedTasks => {
+      console.log(`Received ${updatedTasks.length} scheduled tasks from stream`);
+      setScheduledTasks(updatedTasks);
       setLoading(false);
+    });
+
+    const unsubscribeFromProcessingTasks = subscribeToProcessingTasks(updatedTasks => {
+      console.log(`Received ${updatedTasks.length} processing tasks from stream`);
+      setProcessingTasks(updatedTasks);
+    });
+
+    const unsubscribeFromCompletedTasks = subscribeToCompletedTasks(updatedTasks => {
+      console.log(`Received ${updatedTasks.length} completed tasks from stream`);
+      setCompletedTasks(updatedTasks);
     });
 
     const unsubscribeFromStatus = subscribeToConnectionStatus(status => {
@@ -54,7 +68,9 @@ const BodyArea: React.FC = () => {
 
     return () => {
       console.log('Cleaning up task stream subscriptions');
-      unsubscribeFromTasks();
+      unsubscribeFromScheduledTasks();
+      unsubscribeFromProcessingTasks();
+      unsubscribeFromCompletedTasks();
       unsubscribeFromStatus();
       unsubscribeFromCurrentTask();
       closeTaskStream();
@@ -113,6 +129,13 @@ const BodyArea: React.FC = () => {
     }
   })();
 
+  // Combine all tasks for the TasksArea
+  const allTasks = {
+    scheduled: scheduledTasks,
+    processing: processingTasks,
+    completed: completedTasks
+  };
+
   return (
     <Flex direction={{ base: 'column', lg: 'row' }} flex='1' p={4} gap={4} position='relative'>
       <Box flex={{ base: '1', lg: '3' }} position='relative' zIndex={5} minHeight='200px'>
@@ -137,7 +160,7 @@ const BodyArea: React.FC = () => {
         minHeight='200px'
       >
         <TasksArea
-          tasks={tasks}
+          tasks={allTasks}
           loading={loading}
           connectionStatus={connectionStatus}
           connectionStatusInfo={connectionStatusInfo}

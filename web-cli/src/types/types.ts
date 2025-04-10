@@ -31,6 +31,9 @@ export interface InputBoxProps {
 export interface ScheduledTasksBoxProps {
   tasks: Array<ScheduledTask>;
   onDeleteTask: (id: string) => void;
+  processingTasks?: Array<ScheduledTask>;
+  scheduledTasks?: Array<ScheduledTask>;
+  completedTasks?: Array<ScheduledTask>;
 }
 
 export interface CharacterBoxProps {
@@ -56,6 +59,7 @@ export interface ScheduledTask {
   description: string;
   startedAt?: Date;
   status?: string;
+  result?: string;
 }
 
 export interface LogMessageListProps {

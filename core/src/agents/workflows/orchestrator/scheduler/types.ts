@@ -1,6 +1,14 @@
 import { SqliteService } from '../../../../services/sqlite/SqliteDB.js';
 
-export type TaskStatus = 'scheduled' | 'processing' | 'completed' | 'failed' | 'deleted';
+export type TaskStatus =
+  | 'scheduled'
+  | 'processing'
+  | 'stopped'
+  | 'finalizing'
+  | 'cancelled'
+  | 'completed'
+  | 'failed'
+  | 'deleted';
 export interface Task {
   id: string;
   namespace: string;
