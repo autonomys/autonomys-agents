@@ -8,18 +8,22 @@ import NamespaceTabs from '../NamespaceTabs';
 import LogMessageList from './LogMessageList';
 import { LogSearch } from './components';
 import {
-  outputLogContainer,
   outputLogFlexContainer,
   outputLogResizableHandleStyles,
   outputLogResizableHandleBox,
   outputLogScrollBox,
   scrollToBottomButton,
+  customOutputLogContainer,
 } from './styles/LogStyles';
 
+
+
 const OutputLog: React.FC<OutputLogProps> = ({ messages }) => {
-  const [size, setSize] = useState({ height: 80 }); // Initial collapsed height
-  const [isCollapsed, setIsCollapsed] = useState(true);
-  const [prevHeight, setPrevHeight] = useState(400);
+  // Using vh units for consistency across browsers instead of window.innerHeight
+  const initialHeight = typeof window !== 'undefined' ? window.innerHeight  : 0;
+  const [size, setSize] = useState({ height: initialHeight });
+  const [isCollapsed, setIsCollapsed] = useState(false); // Changed to false (expanded by default)
+  const [prevHeight, setPrevHeight] = useState(initialHeight);
   const containerRef = useRef<HTMLDivElement>(null);
   const headerRef = useRef<HTMLDivElement>(null);
   const [isSearchVisible, setIsSearchVisible] = useState(false);
@@ -136,10 +140,24 @@ const OutputLog: React.FC<OutputLogProps> = ({ messages }) => {
     }
   };
 
+  // Update height on window resize for responsiveness
+  useEffect(() => {
+    const handleResize = () => {
+      const newHeight = window.innerHeight - 122;
+      if (!isCollapsed) {
+        setSize({ height: newHeight });
+      }
+      setPrevHeight(newHeight);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [isCollapsed]);
+
   const filteredMessages = getFilteredMessages(activeNamespace);
 
   return (
-    <Box {...outputLogContainer}>
+    <Box {...customOutputLogContainer} className="right-panel">
       {/* Search overlay (visible when triggered) */}
       <LogSearch
         activeNamespace={activeNamespace}
@@ -157,14 +175,13 @@ const OutputLog: React.FC<OutputLogProps> = ({ messages }) => {
       <Resizable
         defaultSize={{
           width: '100%',
-          height: 400,
+          height: initialHeight,
         }}
         size={{
           width: '100%',
           height: size.height,
         }}
         minHeight={headerHeight}
-        maxHeight={800}
         onResizeStop={handleResize}
         onResize={(e, direction, ref, d) => {
           // Handle resize in real-time
@@ -186,6 +203,7 @@ const OutputLog: React.FC<OutputLogProps> = ({ messages }) => {
         handleComponent={{
           bottom: <Box {...outputLogResizableHandleBox} />,
         }}
+        style={{ borderRadius: 'md', overflow: 'hidden' }}
       >
         <Flex ref={containerRef} {...outputLogFlexContainer}>
           {/* Use headerRef to dynamically measure the header height */}
