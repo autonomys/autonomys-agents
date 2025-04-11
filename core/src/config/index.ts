@@ -174,7 +174,7 @@ export const createOrGetConfig = async ({
       NODE_ENV: process.env.NODE_ENV || 'development',
 
       SERPAPI_API_KEY: process.env.SERPAPI_API_KEY || '',
-
+      FIRECRAWL_API_KEY: process.env.FIRECRAWL_API_KEY || '',
       API_PORT: process.env.API_PORT ? parseInt(process.env.API_PORT, 10) : 3001,
 
       apiSecurityConfig: {

@@ -14,12 +14,13 @@ import {
 import { registerOrchestratorRunner } from './agents/workflows/registration.js';
 import { createSlackAgent } from './agents/workflows/slack/slackAgent.js';
 import { createTwitterAgent } from './agents/workflows/twitter/twitterAgent.js';
-import { withApiLogger } from './api/server.js';
+import { CreateApiServerParams, withApiLogger } from './api/server.js';
 import { getDefaultConfig } from './config/index.js';
 import { createTwitterApi } from './agents/tools/twitter/client.js';
 import { createExperienceManager } from './blockchain/agentExperience/index.js';
 import { LLMConfiguration } from './services/llm/types.js';
 import { createApiServer } from './api/server.js';
+import { createFirecrawlTools } from './agents/tools/firecrawl/index.js';
 
 // Get the config instance
 const configInstance = await getDefaultConfig();
@@ -55,17 +56,20 @@ const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
       allowedOrigins: config.apiSecurityConfig.CORS_ALLOWED_ORIGINS,
       port: config.API_PORT,
     };
-
-    const _apiServer = createApiServer(
+    const createApiServerParams: CreateApiServerParams = {
       characterName,
       dataPath,
-      apiConfig.authFlag ?? false,
-      apiConfig.authToken ?? '',
-      apiConfig.port ?? 3000,
-      apiConfig.allowedOrigins ?? [],
-      config.llmConfig,
-    );
+      authFlag: apiConfig.authFlag ?? false,
+      authToken: apiConfig.authToken ?? '',
+      apiPort: apiConfig.port ?? 3000,
+      allowedOrigins: apiConfig.allowedOrigins ?? [],
+      llmConfig: config.llmConfig,
+    };
+    const _apiServer = createApiServer(createApiServerParams);
   }
+  const firecrawlTools = config.FIRECRAWL_API_KEY
+    ? await createFirecrawlTools(config.FIRECRAWL_API_KEY)
+    : [];
   const webSearchTool = config.SERPAPI_API_KEY ? [createWebSearchTool(config.SERPAPI_API_KEY)] : [];
 
   const saveExperiences = config.autoDriveConfig.AUTO_DRIVE_SAVE_EXPERIENCES;
@@ -132,7 +136,7 @@ const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
             ),
             character,
             {
-              tools: [...webSearchTool, ...schedulerTools],
+              tools: [...webSearchTool, ...firecrawlTools, ...schedulerTools],
               postTweets: config.twitterConfig.POST_TWEETS,
               experienceConfig,
               monitoringConfig,
@@ -189,6 +193,7 @@ const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
       ...twitterAgentTool,
       ...slackAgentTool,
       ...webSearchTool,
+      ...firecrawlTools,
       ...githubAgentTools,
       ...schedulerTools,
     ],

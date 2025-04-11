@@ -1,44 +1,29 @@
 import express from 'express';
 import { createLogger } from '../utils/logger.js';
-import { ApiServer, LogMetadata } from './types.js';
+import { ApiConfig, ApiServer, CreateApiServerParams, LogMetadata } from './types.js';
 import { createApiRouter } from './routes/index.js';
 import { broadcastTaskUpdateUtility } from './controller/TaskController.js';
-import { Logger } from 'winston';
-import { attachLoggerUtility } from './controller/LogsController.js';
-import { broadcastLogUtility } from './controller/LogsController.js';
+import { attachLoggerUtility, broadcastLogUtility } from './controller/LogsController.js';
 import { broadcastNamespaces } from './controller/NamespaceController.js';
 import { getRegisteredNamespaces } from './controller/WorkflowController.js';
 import { createAuthMiddleware, securityHeaders } from './middleware/auth.js';
 import { corsMiddleware } from './middleware/cors.js';
+import { getProjectRoot } from '../utils/utils.js';
 import helmet from 'helmet';
 import http2 from 'http2';
 import fs from 'fs';
 import path from 'path';
 import http2Express from 'http2-express-bridge';
 import { Express } from 'express';
-import { getProjectRoot } from '../utils/utils.js';
-import { LLMFactoryConfig } from '../services/llm/types.js';
+import { Logger } from 'winston';
+
 const logger = createLogger('api-server');
 
 let apiServer: ApiServer | null = null;
 
-export type ApiConfig = {
-  authFlag: boolean;
-  authToken: string;
-  apiPort: number;
-  allowedOrigins: string[];
-  llmConfig: LLMFactoryConfig;
-};
-
-const createSingletonApiServer = (
-  characterName: string,
-  dataPath: string,
-  authFlag: boolean,
-  authToken: string,
-  apiPort: number,
-  allowedOrigins: string[],
-  llmConfig: LLMFactoryConfig,
-): ApiServer => {
+const createSingletonApiServer = (params: CreateApiServerParams): ApiServer => {
+  const { characterName, dataPath, authFlag, authToken, apiPort, allowedOrigins, llmConfig } =
+    params;
   const app = http2Express(express) as unknown as Express;
 
   app.use(corsMiddleware(allowedOrigins));
@@ -105,25 +90,9 @@ const createSingletonApiServer = (
   };
 };
 
-export const createApiServer = (
-  characterName: string,
-  dataPath: string,
-  authFlag: boolean,
-  authToken: string,
-  apiPort: number,
-  allowedOrigins: string[],
-  llmConfig: LLMFactoryConfig,
-) => {
+export const createApiServer = (params: CreateApiServerParams) => {
   if (!apiServer) {
-    apiServer = createSingletonApiServer(
-      characterName,
-      dataPath,
-      authFlag,
-      authToken,
-      apiPort,
-      allowedOrigins,
-      llmConfig,
-    );
+    apiServer = createSingletonApiServer(params);
   }
   return apiServer;
 };
@@ -181,3 +150,5 @@ export const withApiLogger = (namespace: string, flag: boolean) => {
     logger: enhancedLogger,
   };
 };
+
+export { type ApiConfig, type CreateApiServerParams };

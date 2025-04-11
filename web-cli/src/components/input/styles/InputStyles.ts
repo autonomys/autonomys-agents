@@ -19,7 +19,7 @@ export const containerFlexStyles: FlexProps = {
 // Resizable properties
 export const resizableDefaultSize = {
   width: '100%',
-  height: 240,
+  height: 180,
 };
 
 export const resizableEnableProps = {

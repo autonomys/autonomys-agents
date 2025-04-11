@@ -70,7 +70,7 @@ jobs:
         run: yarn install --immutable
 
       - name: Build project 🔧
-        run: yarn build:agent
+        run: yarn cache clean && yarn build:agent
 
   build-agent-package-manager:
     runs-on: ubuntu-latest

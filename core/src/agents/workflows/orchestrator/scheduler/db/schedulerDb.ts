@@ -4,7 +4,7 @@ import { createTaskTableIndexes, TASKS_TABLE_SCHEMA } from './schema.js';
 
 let schedulerDbInstance: SchedulerDatabase | null = null;
 
-export function createSchedulerDatabase(dbPath: string): SchedulerDatabase {
+export const createSchedulerDatabase = (dbPath: string): SchedulerDatabase => {
   if (schedulerDbInstance) {
     return schedulerDbInstance;
   }
@@ -29,11 +29,11 @@ export function createSchedulerDatabase(dbPath: string): SchedulerDatabase {
   schedulerDbInstance = schedulerDb;
 
   return schedulerDb;
-}
+};
 
-export function getSchedulerDatabase(path: string): SchedulerDatabase {
+export const getSchedulerDatabase = (path: string): SchedulerDatabase => {
   if (!schedulerDbInstance) {
     schedulerDbInstance = createSchedulerDatabase(path);
   }
   return schedulerDbInstance;
-}
+};
