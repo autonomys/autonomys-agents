@@ -2,6 +2,10 @@ import { createLogger } from './utils/logger.js';
 import { orchestratorRunner } from './agent.js';
 import { startTaskExecutor } from './agents/workflows/orchestrator/scheduler/taskExecutor.js';
 import { closeAllVectorDBs } from './services/vectorDb/vectorDBPool.js';
+import { parseArgs } from './utils/args.js';
+
+parseArgs();
+
 export const logger = createLogger('app');
 
 process.on('SIGINT', () => {

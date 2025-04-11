@@ -4,11 +4,10 @@ import { mkdir } from 'fs/promises';
 import path from 'path';
 import yaml from 'yaml';
 import { z } from 'zod';
-import yargs from 'yargs';
 import { loadCharacter } from './characters.js';
 import { configSchema } from './schema.js';
-import { getProjectRoot } from '../utils/utils.js';
 import { ConfigOptions, ConfigInstance } from './types.js';
+import { parseArgs, getWorkspacePath, getCharacterName, isHeadlessMode } from '../utils/args.js';
 
 const configInstances = new Map<string, any>();
 
@@ -60,49 +59,16 @@ const convertModelConfigurations = (modelConfigurations: any) => {
   };
 };
 
-const parseArgs = () => {
-  // When using yarn dev:agent, the character name might be passed directly
-  // as a non-option argument rather than as a positional parameter
-  const args = yargs(process.argv.slice(2))
-    .command('$0 [character]', 'Start the agent', yargs => {
-      return yargs.positional('character', {
-        describe: 'Character name',
-        type: 'string',
-      });
-    })
-    .option('headless', {
-      describe: 'Run in headless mode',
-      type: 'boolean',
-      default: false,
-    })
-    .option('workspace', {
-      describe: 'Custom workspace root path',
-      type: 'string',
-      default: getProjectRoot(),
-    })
-    .help()
-    .parseSync();
-
-  // If no character provided through yargs but there's a non-option argument,
-  // use the first non-option argument as the character name
-  if (!args.character && args._.length > 0) {
-    console.log('args._', args._);
-    args.character = args._[0].toString();
-  }
-
-  return args;
-};
-
 /**
  * Get configuration based on options or command line arguments
  */
 export const getConfig = async (options?: ConfigOptions): Promise<ConfigInstance> => {
-  const args = parseArgs();
-
-  const characterName = options?.characterName || (args.character as string);
-  const isHeadless = options?.isHeadless !== undefined ? options.isHeadless : args.headless;
-  const workspaceRoot =
-    options?.customWorkspaceRoot || (args.workspace as string) || getProjectRoot();
+  // Parse arguments only once using the centralized argument parser
+  parseArgs();
+  
+  const characterName = options?.characterName || getCharacterName();
+  const isHeadless = options?.isHeadless !== undefined ? options.isHeadless : isHeadlessMode();
+  const workspaceRoot = options?.customWorkspaceRoot || getWorkspacePath();
 
   if (!characterName) {
     console.error('Please provide a character name');
