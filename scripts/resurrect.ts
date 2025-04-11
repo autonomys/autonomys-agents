@@ -3,7 +3,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs';
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 import { createExperienceManager } from '../core/src/blockchain/agentExperience/index.js';
-import { characterName, config } from '../core/src/config/index.js';
+import { getConfig } from '../core/src/config/index.js';
 import { createLogger } from '../core/src/utils/logger.js';
 import { VectorDB } from '../core/src/services/vectorDb/VectorDB.js';
 import { getVectorDB, closeVectorDB } from '../core/src/services/vectorDb/vectorDBPool.js';
@@ -40,17 +40,17 @@ const setupYargs = () =>
         demandOption: true,
       });
     })
-    .option('output', {
-      alias: 'o',
-      type: 'string',
-      description: 'Output directory for memories',
-      default: 'memories',
-    })
     .option('number', {
       alias: 'n',
       type: 'number',
       description: 'Number of memories to fetch',
       default: null,
+    })
+    .option('workspace', {
+      alias: 'w',
+      type: 'string',
+      description: 'Workspace root path',
+      default: rootDir,
     })
     .help();
 
@@ -149,8 +149,9 @@ const fetchMemoryChain = async (
 
 const run = async () => {
   interface CliOptions {
-    outputDir: string;
+    characterName: string;
     memoriesToFetch: number | null;
+    workspaceRoot: string;
   }
 
   const parseArgs = (): CliOptions => {
@@ -166,24 +167,41 @@ const run = async () => {
       })
       .parseSync();
 
+    // Ensure we're using absolute paths
+    const workspaceRoot = argv.workspace as string;
+    
     return {
-      outputDir: join(rootDir, 'characters', argv.character as string, argv.output as string),
+      characterName: argv.character as string,
       memoriesToFetch: argv.number as number | null,
+      workspaceRoot: workspaceRoot,
     };
   };
 
   const options = parseArgs();
-  const cidTrackingFile = join(
-    rootDir,
-    config.characterConfig.characterPath,
-    'memories',
-    'last-processed-cid.json',
-  );
+  
+  // Get the config for the specified character with the user-specified workspace
+  const configInstance = await getConfig({ 
+    characterName: options.characterName,
+    customWorkspaceRoot: options.workspaceRoot,
+  });
+  const { config, characterName } = configInstance;
+  
+  // Character path is likely relative within the workspace - ensure it's handled correctly
+  const characterPath = config.characterConfig.characterPath.startsWith(options.workspaceRoot) 
+    ? config.characterConfig.characterPath 
+    : join(options.workspaceRoot, 'characters', characterName);
+  
+  // Define the memories directory inside the character's path
+  const memoriesDir = join(characterPath, 'memories');
+  
+  const cidTrackingFile = join(memoriesDir, 'last-processed-cid.json');
 
   try {
-    mkdirSync(options.outputDir, { recursive: true });
+    // Create memories directory if it doesn't exist
+    logger.info(`Creating memories directory at: ${memoriesDir}`);
+    mkdirSync(memoriesDir, { recursive: true });
 
-    logger.info(`Using output directory: ${options.outputDir}`);
+    logger.info(`Using memories directory: ${memoriesDir}`);
     logger.info(
       options.memoriesToFetch
         ? `Starting memory resurrection (fetching ${options.memoriesToFetch} memories)...`
@@ -212,7 +230,7 @@ const run = async () => {
             },
             agentOptions: {
               agentName: characterName,
-              agentPath: character.characterPath,
+              agentPath: characterPath,
             },
           })
         : undefined;
@@ -235,7 +253,13 @@ const run = async () => {
       return;
     }
 
-    vectorDb = getVectorDB('experiences');
+    // Initialize the vector database with correct parameters
+    // Use character path for the dataPath
+    vectorDb = getVectorDB(
+      'experiences',      // namespace
+      config.llmConfig,   // llmConfig
+      characterPath,      // dataPath - use the corrected character path
+    );
     await vectorDb.open();
 
     logger.info(
@@ -247,7 +271,7 @@ const run = async () => {
     const { processedCount, failedCid } = await fetchMemoryChain(
       latestCid,
       options.memoriesToFetch,
-      options.outputDir,
+      memoriesDir,
       vectorDb,
       experienceManager,
     );
@@ -256,7 +280,7 @@ const run = async () => {
     logger.info(
       `Memory resurrection complete. Processed: ${processedCount}, Failed: ${failedCid.size}`,
     );
-    logger.info(`Memories saved to ${options.outputDir}`);
+    logger.info(`Memories saved to ${memoriesDir}`);
     await cleanupOnApplicationClose();
   } catch (error) {
     logger.error('Failed to resurrect memories:', error);
