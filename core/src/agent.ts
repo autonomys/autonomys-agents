@@ -20,6 +20,7 @@ import { createTwitterApi } from './agents/tools/twitter/client.js';
 import { createExperienceManager } from './blockchain/agentExperience/index.js';
 import { LLMConfiguration } from './services/llm/types.js';
 import { createApiServer } from './api/server.js';
+import { createFirecrawlTools } from './agents/tools/firecrawl/index.js';
 
 export const bigModel: LLMConfiguration = {
   provider: 'anthropic',
@@ -62,6 +63,9 @@ const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
     };
     const _apiServer = createApiServer(createApiServerParams);
   }
+  const firecrawlTools = config.FIRECRAWL_API_KEY
+    ? await createFirecrawlTools(config.FIRECRAWL_API_KEY)
+    : [];
   const webSearchTool = config.SERPAPI_API_KEY ? [createWebSearchTool(config.SERPAPI_API_KEY)] : [];
 
   const saveExperiences = config.autoDriveConfig.AUTO_DRIVE_SAVE_EXPERIENCES;
@@ -128,7 +132,7 @@ const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
             ),
             character,
             {
-              tools: [...webSearchTool, ...schedulerTools],
+              tools: [...webSearchTool, ...firecrawlTools, ...schedulerTools],
               postTweets: config.twitterConfig.POST_TWEETS,
               experienceConfig,
               monitoringConfig,
@@ -185,6 +189,7 @@ const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
       ...twitterAgentTool,
       ...slackAgentTool,
       ...webSearchTool,
+      ...firecrawlTools,
       ...githubAgentTools,
       ...schedulerTools,
     ],

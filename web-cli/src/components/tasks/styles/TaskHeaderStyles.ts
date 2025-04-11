@@ -5,6 +5,7 @@ export const headerContainerStyles: FlexProps = {
   justifyContent: 'space-between',
   alignItems: 'center',
   p: 4,
+  marginTop: '16px',
   borderBottom: '1px solid',
   borderColor: 'gray.600',
   bg: 'rgba(26, 26, 46, 0.8)',
