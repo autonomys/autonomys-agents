@@ -1,7 +1,7 @@
 import { LLMFactory } from '../../../../services/llm/factory.js';
 import { createLogger } from '../../../../utils/logger.js';
-import { OrchestratorStateType, Tools } from '../types.js';
-import { LLMConfiguration } from '../../../../services/llm/types.js';
+import { ApiConfig, OrchestratorStateType, Tools } from '../types.js';
+import { LLMConfiguration, LLMFactoryConfig } from '../../../../services/llm/types.js';
 import { ChatPromptTemplate } from '@langchain/core/prompts';
 import { attachLogger } from '../../../../api/server.js';
 
@@ -10,13 +10,21 @@ export const createInputNode = ({
   inputPrompt,
   tools,
   namespace,
+  apiConfig,
+  llmConfig,
 }: {
   modelConfig: LLMConfiguration;
   inputPrompt: ChatPromptTemplate;
   tools: Tools;
   namespace: string;
+  apiConfig: ApiConfig;
+  llmConfig: LLMFactoryConfig;
 }) => {
-  const logger = attachLogger(createLogger(`${namespace}-input-node`), namespace);
+  const logger = attachLogger(
+    createLogger(`${namespace}-input-node`),
+    namespace,
+    apiConfig.apiEnabled ?? false,
+  );
   const runNode = async (state: OrchestratorStateType) => {
     logger.info('MODEL CONFIG - Input Node:', { modelConfig });
     const { messages, executedTools } = state;
@@ -34,7 +42,7 @@ export const createInputNode = ({
 
     logger.debug('Formatted Prompt - Input Node:', { formattedPrompt });
 
-    const result = await LLMFactory.createModel(modelConfig)
+    const result = await LLMFactory.createModel(modelConfig, llmConfig)
       .bindTools(tools)
       .invoke(formattedPrompt);
 

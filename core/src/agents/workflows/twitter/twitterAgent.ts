@@ -12,7 +12,10 @@ import { TwitterAgentConfig, TwitterAgentOptions } from './types.js';
 import { cleanTwitterMessageData } from './cleanMessages.js';
 import { registerOrchestratorRunner } from '../../workflows/registration.js';
 import {
+  createApiConfig,
+  createCharacterDataPathConfig,
   createExperienceConfig,
+  createLLMConfig,
   createModelConfigurations,
   createMonitoringConfig,
   createPruningParameters,
@@ -59,7 +62,9 @@ const createTwitterAgentConfig = async (
     monitoringConfig: monitoringOptions,
   });
   const pruningParameters = createPruningParameters(options);
-
+  const characterDataPathConfig = createCharacterDataPathConfig(options);
+  const apiConfig = createApiConfig(options);
+  const llmConfig = createLLMConfig(options);
   // Get Twitter-specific tools and prompts
   const twitterTools = createAllTwitterTools(
     twitterApi,
@@ -74,6 +79,7 @@ const createTwitterAgentConfig = async (
 
   // Return the complete configuration
   return {
+    characterName: character.name,
     ...baseConfig,
     modelConfigurations,
     tools,
@@ -81,6 +87,9 @@ const createTwitterAgentConfig = async (
     pruningParameters,
     experienceConfig,
     monitoringConfig,
+    characterDataPathConfig,
+    apiConfig,
+    llmConfig,
   };
 };
 
@@ -104,7 +113,7 @@ export const createTwitterAgent = (
         const { namespace } = twitterAgentConfig;
         const runner = createOrchestratorRunner(character, {
           ...twitterAgentConfig,
-          ...withApiLogger(namespace),
+          ...withApiLogger(namespace, twitterAgentConfig.apiConfig ? true : false),
         });
 
         const runnerPromise = await runner;

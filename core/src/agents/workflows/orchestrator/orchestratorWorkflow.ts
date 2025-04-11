@@ -111,8 +111,13 @@ export const createOrchestratorRunner = async (
   options?: OrchestratorRunnerOptions,
 ): Promise<OrchestratorRunner> => {
   const runnerConfig = await createOrchestratorConfig(character, options);
-  const { namespace, pruningParameters, recursionLimit, monitoringConfig } = runnerConfig;
-
+  const {
+    namespace,
+    pruningParameters,
+    recursionLimit,
+    monitoringConfig,
+    characterDataPathConfig,
+  } = runnerConfig;
   const workflowLogger =
     options?.logger || createLogger(`orchestrator-workflow-${runnerConfig.namespace}`);
 
@@ -127,7 +132,7 @@ export const createOrchestratorRunner = async (
   const memoryStore = new MemorySaver();
   const app = workflow.compile({ checkpointer: memoryStore });
 
-  const taskQueue = createTaskQueue(namespace);
+  const taskQueue = createTaskQueue(namespace, characterDataPathConfig.dataPath);
 
   return {
     runWorkflow: async (

@@ -1,19 +1,22 @@
 import { ChatOpenAI } from '@langchain/openai';
 import { ChatAnthropic } from '@langchain/anthropic';
 import { ChatOllama } from '@langchain/ollama';
-import { LLMConfiguration } from './types.js';
-import { config as appConfig } from '../../config/index.js';
+import { LLMConfiguration, LLMFactoryConfig } from './types.js';
 import { ChatGroq } from '@langchain/groq';
+
 export class LLMFactory {
-  static createModel(node: LLMConfiguration) {
-    return this.createModelFromConfig(node);
+  static createModel(node: LLMConfiguration, config: LLMFactoryConfig) {
+    return this.createModelFromConfig(node, config);
   }
 
-  static createModelFromConfig({ model, provider, temperature }: LLMConfiguration) {
+  static createModelFromConfig(
+    { model, provider, temperature }: LLMConfiguration,
+    config: LLMFactoryConfig,
+  ) {
     switch (provider) {
       case 'openai':
         const baseConfig = {
-          apiKey: appConfig.llmConfig.OPENAI_API_KEY,
+          apiKey: config.OPENAI_API_KEY,
           model,
         };
         if (!model.includes('o3-mini')) {
@@ -25,28 +28,28 @@ export class LLMFactory {
         return new ChatOpenAI(baseConfig);
       case 'anthropic':
         return new ChatAnthropic({
-          apiKey: appConfig.llmConfig.ANTHROPIC_API_KEY,
+          apiKey: config.ANTHROPIC_API_KEY,
           model,
           temperature,
         });
       case 'ollama':
         return new ChatOllama({
-          baseUrl: appConfig.llmConfig.LLAMA_API_URL,
+          baseUrl: config.LLAMA_API_URL,
           model,
           temperature,
         });
       case 'deepseek':
         return new ChatOpenAI({
-          apiKey: appConfig.llmConfig.DEEPSEEK_API_KEY,
+          apiKey: config.DEEPSEEK_API_KEY,
           configuration: {
-            baseURL: appConfig.llmConfig.DEEPSEEK_URL,
+            baseURL: config.DEEPSEEK_URL,
           },
           model,
           temperature,
         });
       case 'groq':
         return new ChatGroq({
-          apiKey: appConfig.llmConfig.GROQ_API_KEY,
+          apiKey: config.GROQ_API_KEY,
           model,
           temperature,
         });

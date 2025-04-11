@@ -4,6 +4,7 @@ import { ToolNode } from '@langchain/langgraph/prebuilt';
 import { LLMConfiguration } from '../../../services/llm/types.js';
 import { Logger } from 'winston';
 import { ExperienceManager } from '../../../blockchain/agentExperience/types.js';
+import { LLMFactoryConfig } from '../../../services/llm/types.js';
 
 export type OrchestratorPrompts = {
   inputPrompt: ChatPromptTemplate;
@@ -39,6 +40,27 @@ export type ExperienceConfig =
       experienceManager?: never;
     };
 
+export type CharacterDataPathConfig = {
+  dataPath: string;
+};
+
+export type ApiConfig = {
+  apiEnabled?: boolean;
+  authFlag?: boolean;
+  authToken?: string;
+  allowedOrigins?: string[];
+  port?: number;
+};
+
+export type LLMConfig = {
+  OPENAI_API_KEY?: string;
+  ANTHROPIC_API_KEY?: string;
+  LLAMA_API_URL?: string;
+  DEEPSEEK_API_KEY?: string;
+  DEEPSEEK_URL?: string;
+  GROQ_API_KEY?: string;
+};
+
 export type OrchestratorRunnerOptions = {
   modelConfigurations?: {
     inputModelConfig?: LLMConfiguration;
@@ -51,11 +73,15 @@ export type OrchestratorRunnerOptions = {
   pruningParameters?: PruningParameters;
   experienceConfig?: ExperienceConfig;
   monitoringConfig?: MonitoringConfig;
+  characterDataPathConfig?: CharacterDataPathConfig;
   recursionLimit?: number;
+  apiConfig?: ApiConfig;
+  llmConfig?: LLMConfig;
   logger?: Logger;
 };
 
 export type OrchestratorConfig = {
+  characterName: string;
   modelConfigurations: ModelConfigurations;
   tools: Tools;
   prompts: OrchestratorPrompts;
@@ -63,7 +89,10 @@ export type OrchestratorConfig = {
   pruningParameters: PruningParameters;
   experienceConfig: ExperienceConfig;
   monitoringConfig: MonitoringConfig;
+  characterDataPathConfig: CharacterDataPathConfig;
   recursionLimit: number;
+  apiConfig: ApiConfig;
+  llmConfig: LLMFactoryConfig;
   logger?: Logger;
 };
 

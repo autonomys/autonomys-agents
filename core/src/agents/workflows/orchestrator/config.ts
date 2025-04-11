@@ -1,9 +1,11 @@
 import { Character } from '../../../config/characters.js';
-import { LLMConfiguration } from '../../../services/llm/types.js';
+import { LLMConfiguration, LLMFactoryConfig } from '../../../services/llm/types.js';
 import { createLogger } from '../../../utils/logger.js';
 import { createPrompts } from './prompts.js';
 import { createDefaultOrchestratorTools } from './tools.js';
 import {
+  ApiConfig,
+  CharacterDataPathConfig,
   ExperienceConfig,
   ModelConfigurations,
   MonitoringConfig,
@@ -133,6 +135,44 @@ export const createPruningParameters = (options?: OrchestratorRunnerOptions): Pr
 };
 
 /**
+ * Helper function to get the character path for data storage
+ */
+export const createCharacterDataPathConfig = (
+  options?: OrchestratorRunnerOptions,
+): CharacterDataPathConfig => {
+  return {
+    dataPath: options?.characterDataPathConfig?.dataPath || process.cwd(),
+  };
+};
+
+/**
+ * Helper function to create an ApiConfig based on user options
+ */
+export const createApiConfig = (options?: OrchestratorRunnerOptions): ApiConfig => {
+  return {
+    apiEnabled: options?.apiConfig?.apiEnabled ?? false,
+    authFlag: options?.apiConfig?.authFlag ?? false,
+    authToken: options?.apiConfig?.authToken ?? '',
+    allowedOrigins: options?.apiConfig?.allowedOrigins ?? [],
+    port: options?.apiConfig?.port ?? 3000,
+  };
+};
+
+/**
+ * Helper function to create an LLMConfig based on user options
+ */
+export const createLLMConfig = (options?: OrchestratorRunnerOptions): LLMFactoryConfig => {
+  return {
+    OPENAI_API_KEY: options?.llmConfig?.OPENAI_API_KEY,
+    ANTHROPIC_API_KEY: options?.llmConfig?.ANTHROPIC_API_KEY,
+    LLAMA_API_URL: options?.llmConfig?.LLAMA_API_URL,
+    DEEPSEEK_API_KEY: options?.llmConfig?.DEEPSEEK_API_KEY,
+    DEEPSEEK_URL: options?.llmConfig?.DEEPSEEK_URL,
+    GROQ_API_KEY: options?.llmConfig?.GROQ_API_KEY,
+  };
+};
+
+/**
  * Creates a configuration object for an orchestrator runner
  * This handles all the merging of defaults with provided options
  */
@@ -152,12 +192,16 @@ export const createOrchestratorConfig = async (
   const experienceConfig = createExperienceConfig(options);
   const monitoringConfig = createMonitoringConfig(options);
   const pruningParameters = createPruningParameters(options);
-
+  const characterDataPathConfig = createCharacterDataPathConfig(options);
+  const apiConfig = createApiConfig(options);
+  const llmConfig = createLLMConfig(options);
   // Get tools - merge custom tools with defaults if experience saving is enabled
   const tools: Tools = [
     ...(options?.tools || []),
     ...createDefaultOrchestratorTools(
       baseConfig.namespace,
+      llmConfig,
+      characterDataPathConfig.dataPath,
       experienceConfig.saveExperiences ? experienceConfig.experienceManager : undefined,
     ),
   ];
@@ -167,6 +211,7 @@ export const createOrchestratorConfig = async (
 
   // Return the complete configuration
   return {
+    characterName: character.name,
     ...baseConfig,
     modelConfigurations,
     tools,
@@ -174,5 +219,8 @@ export const createOrchestratorConfig = async (
     pruningParameters,
     experienceConfig,
     monitoringConfig,
+    characterDataPathConfig,
+    apiConfig,
+    llmConfig,
   };
 };

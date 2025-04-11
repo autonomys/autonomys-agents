@@ -1,11 +1,10 @@
 import Database from 'better-sqlite3';
 import vectorlite from 'vectorlite';
 import { OpenAI } from 'openai/index.mjs';
-import { config } from '../../config/index.js';
 import { createLogger } from '../../utils/logger.js';
 import { join } from 'path';
 import { existsSync, mkdirSync } from 'fs';
-
+import { LLMFactoryConfig } from '../llm/types.js';
 const logger = createLogger('vector-database');
 
 export class VectorDB {
@@ -16,8 +15,13 @@ export class VectorDB {
   private maxElements: number;
   private static readonly DEFAULT_MAX_ELEMENTS = 100000;
 
-  constructor(namespace: string, maxElements?: number) {
-    const targetDir = join(config.characterConfig.characterPath, 'data', namespace);
+  constructor(
+    namespace: string,
+    llmConfig: LLMFactoryConfig,
+    dataPath: string,
+    maxElements?: number,
+  ) {
+    const targetDir = join(dataPath, 'data', namespace);
 
     if (!existsSync(targetDir)) {
       mkdirSync(targetDir, { recursive: true });
@@ -27,7 +31,7 @@ export class VectorDB {
     this.dbFilePath = join(targetDir, `${namespace}-store.db`);
     this.maxElements = maxElements ?? VectorDB.DEFAULT_MAX_ELEMENTS;
     this.openai = new OpenAI({
-      apiKey: config.llmConfig.OPENAI_API_KEY,
+      apiKey: llmConfig.OPENAI_API_KEY,
     });
 
     this.initializeDatabase();

@@ -1,10 +1,10 @@
 import { ChatPromptTemplate } from '@langchain/core/prompts';
+import { LLMConfiguration, LLMFactoryConfig } from '../../../../services/llm/types.js';
 import { LLMFactory } from '../../../../services/llm/factory.js';
 import { createLogger } from '../../../../utils/logger.js';
-import { OrchestratorStateType } from '../types.js';
+import { ApiConfig, OrchestratorStateType } from '../types.js';
 import { finishedWorkflowParser } from './finishWorkflowPrompt.js';
 import { AIMessage } from '@langchain/core/messages';
-import { LLMConfiguration } from '../../../../services/llm/types.js';
 import { attachLogger } from '../../../../api/server.js';
 import { Logger } from 'winston';
 
@@ -28,12 +28,20 @@ export const createFinishWorkflowNode = ({
   modelConfig,
   finishWorkflowPrompt,
   namespace,
+  apiConfig,
+  llmConfig,
 }: {
   modelConfig: LLMConfiguration;
   finishWorkflowPrompt: ChatPromptTemplate;
   namespace: string;
+  apiConfig: ApiConfig;
+  llmConfig: LLMFactoryConfig;
 }) => {
-  const logger = attachLogger(createLogger(`${namespace}-finish-workflow-node`), namespace);
+  const logger = attachLogger(
+    createLogger(`${namespace}-finish-workflow-node`),
+    namespace,
+    apiConfig.apiEnabled ?? false,
+  );
   const runNode = async (state: OrchestratorStateType) => {
     logger.info('Workflow Summary Node');
 
@@ -50,7 +58,9 @@ export const createFinishWorkflowNode = ({
       currentTime: new Date().toISOString(),
     });
 
-    const result = await LLMFactory.createModelFromConfig(modelConfig).invoke(formattedPrompt);
+    const result = await LLMFactory.createModelFromConfig(modelConfig, llmConfig).invoke(
+      formattedPrompt,
+    );
     const finishedWorkflow = await parseFinishedWorkflow(result.content, logger);
 
     logger.info('Finished Workflow:', { finishedWorkflow });

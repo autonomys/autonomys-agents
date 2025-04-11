@@ -14,11 +14,12 @@ import {
 import { registerOrchestratorRunner } from './agents/workflows/registration.js';
 import { createSlackAgent } from './agents/workflows/slack/slackAgent.js';
 import { createTwitterAgent } from './agents/workflows/twitter/twitterAgent.js';
-import { withApiLogger } from './api/server.js';
+import { CreateApiServerParams, withApiLogger } from './api/server.js';
 import { agentVersion, characterName, config } from './config/index.js';
 import { createTwitterApi } from './agents/tools/twitter/client.js';
 import { createExperienceManager } from './blockchain/agentExperience/index.js';
 import { LLMConfiguration } from './services/llm/types.js';
+import { createApiServer } from './api/server.js';
 import { createFirecrawlTools } from './agents/tools/firecrawl/index.js';
 
 export const bigModel: LLMConfiguration = {
@@ -40,10 +41,33 @@ export const modelConfigurations: ModelConfigurations = {
 const character = config.characterConfig;
 const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
   //shared config
+  const dataPath = character.characterPath;
+
+  let apiConfig: OrchestratorRunnerOptions['apiConfig'] | undefined;
+  if (config.ENABLE_API) {
+    apiConfig = {
+      apiEnabled: true,
+      authFlag: config.apiSecurityConfig.ENABLE_AUTH,
+      authToken: config.apiSecurityConfig.API_TOKEN,
+      allowedOrigins: config.apiSecurityConfig.CORS_ALLOWED_ORIGINS,
+      port: config.API_PORT,
+    };
+    const createApiServerParams: CreateApiServerParams = {
+      characterName,
+      dataPath,
+      authFlag: apiConfig.authFlag ?? false,
+      authToken: apiConfig.authToken ?? '',
+      apiPort: apiConfig.port ?? 3000,
+      allowedOrigins: apiConfig.allowedOrigins ?? [],
+      llmConfig: config.llmConfig,
+    };
+    const _apiServer = createApiServer(createApiServerParams);
+  }
   const firecrawlTools = config.FIRECRAWL_API_KEY
     ? await createFirecrawlTools(config.FIRECRAWL_API_KEY)
     : [];
   const webSearchTool = config.SERPAPI_API_KEY ? [createWebSearchTool(config.SERPAPI_API_KEY)] : [];
+
   const saveExperiences = config.autoDriveConfig.AUTO_DRIVE_SAVE_EXPERIENCES;
   const monitoringEnabled = config.autoDriveConfig.AUTO_DRIVE_MONITORING;
   const experienceManager =
@@ -113,6 +137,10 @@ const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
               experienceConfig,
               monitoringConfig,
               modelConfigurations: config.twitterConfig.model_configurations,
+              characterDataPathConfig: {
+                dataPath,
+              },
+              apiConfig,
             },
           ),
         ]
@@ -127,6 +155,10 @@ const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
           experienceConfig,
           monitoringConfig,
           modelConfigurations,
+          characterDataPathConfig: {
+            dataPath,
+          },
+          apiConfig,
         }),
       ]
     : [];
@@ -140,6 +172,10 @@ const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
           experienceConfig,
           monitoringConfig,
           modelConfigurations,
+          characterDataPathConfig: {
+            dataPath,
+          },
+          apiConfig,
         }),
       ]
     : [];
@@ -171,6 +207,11 @@ const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
         : {
             enabled: false,
           },
+    characterDataPathConfig: {
+      dataPath,
+    },
+    apiConfig,
+    llmConfig: config.llmConfig,
   };
 };
 
@@ -182,7 +223,7 @@ export const orchestratorRunner = (() => {
       const namespace = 'orchestrator';
       runnerPromise = createOrchestratorRunner(character, {
         ...orchestrationConfig,
-        ...withApiLogger(namespace),
+        ...withApiLogger(namespace, orchestrationConfig.apiConfig ? true : false),
       });
       const runner = await runnerPromise;
       registerOrchestratorRunner(namespace, runner);

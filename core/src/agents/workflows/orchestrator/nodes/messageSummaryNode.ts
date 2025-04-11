@@ -1,8 +1,8 @@
 import { AIMessage } from '@langchain/core/messages';
 import { createLogger } from '../../../../utils/logger.js';
-import { OrchestratorStateType } from '../types.js';
+import { ApiConfig, OrchestratorStateType } from '../types.js';
 import { LLMFactory } from '../../../../services/llm/factory.js';
-import { LLMConfiguration } from '../../../../services/llm/types.js';
+import { LLMConfiguration, LLMFactoryConfig } from '../../../../services/llm/types.js';
 import { PruningParameters } from '../types.js';
 import { ChatPromptTemplate } from '@langchain/core/prompts';
 import { attachLogger } from '../../../../api/server.js';
@@ -12,13 +12,21 @@ export const createMessageSummaryNode = ({
   messageSummaryPrompt,
   pruningParameters,
   namespace,
+  apiConfig,
+  llmConfig,
 }: {
   modelConfig: LLMConfiguration;
   messageSummaryPrompt: ChatPromptTemplate;
   pruningParameters: PruningParameters;
   namespace: string;
+  apiConfig: ApiConfig;
+  llmConfig: LLMFactoryConfig;
 }) => {
-  const logger = attachLogger(createLogger(`${namespace}-message-summary-node`), namespace);
+  const logger = attachLogger(
+    createLogger(`${namespace}-message-summary-node`),
+    namespace,
+    apiConfig.apiEnabled ?? false,
+  );
   const runNode = async (state: OrchestratorStateType) => {
     logger.info('MessageSummary Node');
     logger.info('State size:', { size: state.messages.length });
@@ -39,7 +47,7 @@ export const createMessageSummaryNode = ({
       newMessages,
     });
 
-    const newSummary = await LLMFactory.createModel(modelConfig).invoke(formattedPrompt);
+    const newSummary = await LLMFactory.createModel(modelConfig, llmConfig).invoke(formattedPrompt);
     logger.info('New Summary Result:', { newSummary });
 
     const summaryContent =

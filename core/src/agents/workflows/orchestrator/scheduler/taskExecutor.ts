@@ -2,8 +2,17 @@ import { createLogger } from '../../../../utils/logger.js';
 import { OrchestratorRunner } from '../orchestratorWorkflow.js';
 import { HumanMessage } from '@langchain/core/messages';
 import { broadcastTaskUpdate } from '../../../../api/server.js';
+
 const logger = createLogger('task-executor');
 
+/**
+ * Starts a task executor that periodically checks for and executes due tasks
+ *
+ * @param runner The orchestrator runner to use for executing tasks
+ * @param namespace The namespace for the tasks
+ * @param checkIntervalMs How often to check for new tasks (in milliseconds)
+ * @returns A function that stops the task executor when called
+ */
 export const startTaskExecutor = (
   runner: OrchestratorRunner,
   namespace: string,

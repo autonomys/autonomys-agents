@@ -10,12 +10,14 @@ import { registerOrchestratorRunner } from '../registration.js';
 import { createGithubPrompts } from './prompts.js';
 import { GithubAgentConfig, GithubAgentOptions } from './types.js';
 import {
+  createApiConfig,
+  createCharacterDataPathConfig,
   createExperienceConfig,
+  createLLMConfig,
   createModelConfigurations,
   createMonitoringConfig,
   createPruningParameters,
 } from '../orchestrator/config.js';
-
 const logger = createLogger('github-workflow');
 
 // GitHub-specific default configuration values
@@ -49,7 +51,9 @@ const createGithubAgentConfig = async (
   const monitoringConfig = createMonitoringConfig(options);
 
   const pruningParameters = createPruningParameters(options);
-
+  const characterDataPathConfig = createCharacterDataPathConfig(options);
+  const apiConfig = createApiConfig(options);
+  const llmConfig = createLLMConfig(options);
   // Get GitHub-specific tools and prompts
   const githubTools = await createGitHubTools(githubToken, toolsSubset);
   const prompts = await createGithubPrompts(character);
@@ -59,6 +63,7 @@ const createGithubAgentConfig = async (
 
   // Return the complete configuration
   return {
+    characterName: character.name,
     ...baseConfig,
     modelConfigurations,
     tools,
@@ -66,6 +71,9 @@ const createGithubAgentConfig = async (
     pruningParameters,
     experienceConfig,
     monitoringConfig,
+    characterDataPathConfig,
+    apiConfig,
+    llmConfig,
   };
 };
 
@@ -99,7 +107,7 @@ export const createGithubAgent = (
 
         const runner = createOrchestratorRunner(character, {
           ...githubAgentConfig,
-          ...withApiLogger(namespace),
+          ...withApiLogger(namespace, githubAgentConfig.apiConfig ? true : false),
         });
 
         const runnerPromise = await runner;

@@ -26,7 +26,6 @@ if (!characterName) {
   process.kill(0, 'SIGKILL');
 }
 const isHeadless = process.argv[3] === '--headless';
-
 const characterConfig = loadCharacter(characterName);
 // Load root .env
 dotenv.config({ path: path.resolve(workspaceRoot, '.env') });

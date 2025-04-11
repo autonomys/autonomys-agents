@@ -10,7 +10,10 @@ import { z } from 'zod';
 import { SlackAgentConfig, SlackAgentOptions } from './types.js';
 import { registerOrchestratorRunner } from '../registration.js';
 import {
+  createApiConfig,
+  createCharacterDataPathConfig,
   createExperienceConfig,
+  createLLMConfig,
   createModelConfigurations,
   createMonitoringConfig,
   createPruningParameters,
@@ -47,7 +50,9 @@ const createSlackAgentConfig = async (
   const monitoringConfig = createMonitoringConfig(options);
 
   const pruningParameters = createPruningParameters(options);
-
+  const characterDataPathConfig = createCharacterDataPathConfig(options);
+  const apiConfig = createApiConfig(options);
+  const llmConfig = createLLMConfig(options);
   // Get Slack-specific tools and prompts
   const slackTools = await createSlackTools(slackToken);
   const prompts = await createSlackPrompts(character);
@@ -57,6 +62,7 @@ const createSlackAgentConfig = async (
 
   // Return the complete configuration
   return {
+    characterName: character.name,
     ...baseConfig,
     modelConfigurations,
     tools,
@@ -64,6 +70,9 @@ const createSlackAgentConfig = async (
     pruningParameters,
     experienceConfig,
     monitoringConfig,
+    characterDataPathConfig,
+    apiConfig,
+    llmConfig,
   };
 };
 
@@ -91,7 +100,7 @@ export const createSlackAgent = (
 
         const runner = createOrchestratorRunner(character, {
           ...slackAgentConfig,
-          ...withApiLogger(namespace),
+          ...withApiLogger(namespace, slackAgentConfig.apiConfig ? true : false),
         });
 
         const runnerPromise = await runner;

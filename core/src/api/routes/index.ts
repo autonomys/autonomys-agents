@@ -7,17 +7,22 @@ import { createChatRouter } from './chat.js';
 import { createWebhooksRouter } from './webhooks.js';
 import { createCharacterRouter } from './character.js';
 import { createNamespacesRouter } from './namespaces.js';
+import { LLMFactoryConfig } from '../../services/llm/types.js';
 
-export const createApiRouter = (): Router => {
+export const createApiRouter = (
+  characterName: string,
+  dataPath: string,
+  llmConfig: LLMFactoryConfig,
+): Router => {
   const apiRouter = Router();
 
   apiRouter.use(createLogsRouter());
   apiRouter.use(createStatusRouter());
   apiRouter.use(createWorkflowsRouter());
   apiRouter.use(createTasksRouter());
-  apiRouter.use(createChatRouter());
+  apiRouter.use(createChatRouter(dataPath, llmConfig));
   apiRouter.use(createWebhooksRouter());
-  apiRouter.use(createCharacterRouter());
+  apiRouter.use(createCharacterRouter(characterName));
   apiRouter.use(createNamespacesRouter());
 
   return apiRouter;

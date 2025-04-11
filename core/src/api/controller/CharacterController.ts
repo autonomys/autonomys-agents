@@ -1,6 +1,5 @@
-import { config } from '../../config/index.js';
 import { Request, Response } from 'express';
-export const getCharacter = (req: Request, res: Response) => {
-  const character = config.characterConfig.name;
-  res.json({ character });
+
+export const getCharacter = (characterName: string) => (req: Request, res: Response) => {
+  res.json({ character: characterName });
 };
