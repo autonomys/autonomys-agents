@@ -11,18 +11,17 @@ fi
 CHARACTER_NAME=$1
 HOST_PORT=${2:-3011}
 API_PORT=${3:-3011}
-TAG=${TAG:-latest}
 
 # Create docker-compose.yml from template
 sed "s/\${CHARACTER_NAME:-character.example}/$CHARACTER_NAME/g; \
     s/\${HOST_PORT:-3011}/$HOST_PORT/g; \
-    s/\${API_PORT:-3011}/$API_PORT/g; \
-    s/\${TAG:-latest}/$TAG/g" docker-compose-template.yml > "docker-compose-$CHARACTER_NAME.yml"
+    s/\${API_PORT:-3011}/$API_PORT/g" docker-compose-template.yml > "docker-compose-$CHARACTER_NAME.yml"
 
 echo "Generated docker-compose-$CHARACTER_NAME.yml with:"
 echo "CHARACTER_NAME: $CHARACTER_NAME"
 echo "HOST_PORT: $HOST_PORT"
 echo "API_PORT: $API_PORT"
+echo "Using published image: autosaeid/autonomys-agents:poc"
 echo
 
 # Check if the character directory exists
@@ -67,24 +66,19 @@ if [ ! -d "./.cookies" ]; then
 fi
 
 echo "========================================================"
-echo "IMPORTANT: How to use a single image for all characters"
+echo "How to run your agent"
 echo "========================================================"
-echo "1. First time only: Build the base image"
-echo "   docker compose -f docker-compose-$CHARACTER_NAME.yml build"
+echo "1. Pull the image (first time or after updates):"
+echo "   docker pull autosaeid/autonomys-agents:poc"
 echo
-echo "2. For each character, just run the container (no build):"
+echo "2. Start your character container:"
 echo "   docker compose -f docker-compose-$CHARACTER_NAME.yml up -d"
 echo
-echo "3. After code changes, rebuild the base image once:"
-echo "   docker compose -f docker-compose-$CHARACTER_NAME.yml build"
-echo "   docker compose -f docker-compose-$CHARACTER_NAME.yml up -d"
-echo "   (Then restart other containers to use the updated image)"
+echo "3. Stop your character container:"
+echo "   docker compose -f docker-compose-$CHARACTER_NAME.yml down"
 echo
 echo "Additional commands:"
 echo "-------------------"
-echo "Stop container:"
-echo "  docker compose -f docker-compose-$CHARACTER_NAME.yml down"
-echo
 echo "View logs:"
 echo "  docker compose -f docker-compose-$CHARACTER_NAME.yml logs -f"
 echo

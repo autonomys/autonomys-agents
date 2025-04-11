@@ -1,11 +1,6 @@
 services:
   autonomys-agent-${CHARACTER_NAME:-character.example}:
-    image: autonomys-agents:latest
-    build:
-      context: .
-      dockerfile: Dockerfile
-      tags:
-        - autonomys-agents:latest
+    image: autosaeid/autonomys-agents:poc
     platform: linux/amd64
     container_name: autonomys-agent-${CHARACTER_NAME:-character.example}
     environment:
