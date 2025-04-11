@@ -28,11 +28,37 @@ Autonomys Agents is an **EXPERIMENTAL** framework for building AI agents. Curren
 5. Run your character:
    - For dev purposes in watch mode: `yarn dev:agent <your-character-name>`
    - For production build and run: `yarn start:agent <your-character-name>`
-6. Run your character in headless mode (without API):
-   - For dev purposes in watch mode: `yarn dev:agent <your-character-name> --headless`
-   - For production build and run: `yarn start:agent <your-character-name> --headless`
-7. Run agent and WebCli 
+6. Run agent and WebCli 
    - For dev purposes: `yarn start <your-character-name>`
+
+### Command Line Arguments
+
+The agent supports the following command-line arguments:
+
+- **Character Name**: (Required) The first argument specifies which character to run
+  ```bash
+  yarn dev:agent my-character
+  ```
+
+- **--headless**: (Optional) Run the agent without starting the API server
+  ```bash
+  yarn dev:agent my-character --headless
+  ```
+
+- **--workspace=PATH**: (Optional) Specify a custom workspace root directory where the `characters` folder exists
+  ```bash
+  yarn dev:agent my-character --workspace=/path/to/your/project
+  ```
+
+- **--help**: Show available command-line options
+  ```bash
+  yarn dev:agent --help
+  ```
+
+You can combine multiple options as needed:
+```bash
+yarn dev:agent <your-character-name> --headless --workspace=/path/to/your/project
+```
 
 ## Docker Deployment simultaneously
 
@@ -230,21 +256,20 @@ To resurrect memories from the Autonomys Network, run the following command:
 
 ### Options
 
-- `-o, --output`: (Optional) The directory where memories will be saved. Defaults to `./memories`
 - `-n, --number`: (Optional) Number of memories to fetch. If not specified, fetches all memories
+- `-w, --workspace`: (Optional) Specify the path to the project root directory where the `characters` folder exists. This is needed if you're running the command from outside the project or want to use a different project root. Defaults to the current project root directory.
 - `--help`: Show help menu with all available options
 
 Examples:
 
 ```bash
-yarn resurrect your_character_name                                  # Fetch all memories to ./memories/
-yarn resurrect your_character_name -n 1000                           # Fetch 1000 memories to ./memories/
-yarn resurrect your_character_name -o ./memories/my-agent -n 1000    # Fetch 1000 memories to specified directory
-yarn resurrect your_character_name --output ./custom/path            # Fetch all memories to custom directory
-yarn resurrect --help                            # Show help menu
+yarn resurrect your_character_name                       # Fetch all memories
+yarn resurrect your_character_name -n 1000               # Fetch 1000 memories
+yarn resurrect your_character_name --workspace=/path/to/your/project    # Use a custom workspace path where the 'characters' directory is located
+yarn resurrect --help                                     # Show help menu
 ```
 
-While memories are being fetched, they will be added to the vector database named `experiences` in the background, located in the <your_character_name> folder within the data directory.
+While memories are being fetched, they will be added to the vector database named `experiences` in the background, located in the character's data directory within the workspace.
 
 ## Testing
 
