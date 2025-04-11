@@ -3,24 +3,35 @@ services:
     image: autosaeid/autonomys-agents:poc
     platform: linux/amd64
     container_name: autonomys-agent-${CHARACTER_NAME:-character.example}
+    user: root
     environment:
       - CHARACTER_NAME=${CHARACTER_NAME:-character.example}
     volumes:
-      # Mount credentials and data from local machine
       - ./.cookies:/app/.cookies
       - ./certs:/app/certs
-      - ./characters/${CHARACTER_NAME:-character.example}:/app/characters/${CHARACTER_NAME:-character.example}
+      - ./characters/${CHARACTER_NAME:-character.example}:/app/characters/${CHARACTER_NAME:-character.example}:Z
     ports:
-      # Host port 3011 maps to container port 3011
       - "${HOST_PORT:-3011}:${API_PORT:-3011}"
     restart: unless-stopped
+    entrypoint: >
+      bash -c "
+        # Create data/experiences directory
+        mkdir -p /app/characters/${CHARACTER_NAME:-character.example}/data/experiences
+
+        # Ensure the folder is owned by the 'autonomys' user and group
+        chown -R autonomys:autonomys /app/characters/${CHARACTER_NAME:-character.example}
+
+        # Give ONLY the owner read/write/execute (700), or read/execute for group as well (750)
+        chmod -R 777 /app/characters/${CHARACTER_NAME:-character.example}
+
+        # Run the original start.sh script (which su's to the 'autonomys' user to run the app)
+        exec /app/start.sh
+      "
     healthcheck:
-      # Health check using the correct port
       test: ["CMD", "sh", "-c", "if [ \"$$ENABLE_AUTH\" = \"true\" ] || [ \"$$ENABLE_AUTH\" = \"TRUE\" ]; then curl -k -f -H \"Authorization: Bearer $$API_TOKEN\" https://localhost:${API_PORT:-3011}/health || exit 1; else curl -k -f https://localhost:${API_PORT:-3011}/health || exit 1; fi"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 10s
-    # Run container with non-privileged security options
     security_opt:
       - no-new-privileges:true
