@@ -8,38 +8,6 @@ import { rootDir } from './utils';
 
 const execAsync = promisify(exec);
 
-// Setup dependencies in dist folder by symlinking
-const setupDistDependencies = async (): Promise<void> => {
-  try {
-    // Get paths
-    const distDir = path.join(rootDir, 'dist');
-    const coreNodeModulesPath = path.join(rootDir, 'core', 'node_modules');
-    const distNodeModulesPath = path.join(distDir, 'node_modules');
-    
-    // Create a symlink from core/node_modules to dist/node_modules if it doesn't exist
-    if (!existsSync(distNodeModulesPath)) {
-      console.log('Setting up symlink to core node_modules...');
-      
-      if (process.platform === 'win32') {
-        // Windows needs directory junction
-        await execAsync(`mklink /J "${distNodeModulesPath}" "${coreNodeModulesPath}"`);
-      } else {
-        // Unix/Mac can use symlink
-        await fs.symlink(coreNodeModulesPath, distNodeModulesPath, 'dir');
-      }
-      
-      console.log('Symlink created successfully');
-    } else {
-      console.log('Dependencies symlink already exists, skipping');
-    }
-  } catch (error) {
-    console.error(
-      `Error setting up dist dependencies: ${error instanceof Error ? error.message : 'Unknown error'}`,
-    );
-    process.exit(1);
-  }
-};
-
 const start = async () => {
   const characterName = process.argv[2];
   const isHeadless = process.argv[3] === '--headless';
@@ -51,15 +19,11 @@ const start = async () => {
   }
 
   try {
-    // Create dist directory if it doesn't exist
-    const distDir = path.join(rootDir, 'dist');
-    if (!existsSync(distDir)) {
-      console.log('Creating dist directory...');
-      await fs.mkdir(distDir, { recursive: true });
-    }
-
+    // Update path to dist directory (now inside core folder)
+    const distDir = path.join(rootDir, 'core', 'dist');
+    
     // Check if we need to build
-    const indexJsPath = path.join(distDir, 'src', 'index.js');
+    const indexJsPath = path.join(distDir, 'index.js');
     if (!existsSync(indexJsPath)) {
       // Run build using workspace to ensure it runs in the context of the core package
       console.log('Building the project...');
@@ -73,12 +37,9 @@ const start = async () => {
     } else {
       console.log('Build exists, skipping build step');
     }
-    
-    // Setup dist dependencies
-    await setupDistDependencies();
 
-    // Use path to dist at the root level
-    const distPath = path.join(rootDir, 'dist', 'src', 'index.js');
+    // Use updated path to index.js inside core/dist
+    const distPath = path.join(distDir, 'index.js');
 
     const nodeArgs = [distPath, characterName];
     if (isHeadless) {
@@ -88,7 +49,7 @@ const start = async () => {
     // Run the main program with all arguments
     const mainProcess = spawn('node', nodeArgs, { 
       stdio: 'inherit',
-      cwd: path.join(rootDir, 'dist') // Set working directory to dist
+      cwd: distDir // Set working directory to core/dist
     });
 
     mainProcess.on('error', err => {

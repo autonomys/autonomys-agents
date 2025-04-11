@@ -3,8 +3,8 @@
         "target": "ES2020",
         "module": "NodeNext",
         "moduleResolution": "NodeNext",
-        "outDir": "./dist",
-        "rootDir": "core",
+        "outDir": "./core/dist",
+        "rootDir": "./core/src",
         "strict": true,
         "esModuleInterop": true,
         "skipLibCheck": true,
@@ -13,11 +13,11 @@
         "resolveJsonModule": true
     },
     "include": [
-        "core/**/*"
+        "core/src/**/*"
     ],
     "exclude": [
         "node_modules",
-        "dist",
+        "core/dist",
         "examples"
     ],
     "ts-node": {
