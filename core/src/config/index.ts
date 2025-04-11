@@ -115,6 +115,8 @@ export const config = (() => {
         NOTION_DATABASE_ID: process.env.NOTION_DATABASE_ID || '',
       },
 
+      NOTION_INTEGRATION_SECRET: process.env.NOTION_INTEGRATION_SECRET || '',
+
       llmConfig: {
         OPENAI_API_KEY: process.env.OPENAI_API_KEY || '',
         ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY || '',

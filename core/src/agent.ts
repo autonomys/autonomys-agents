@@ -21,6 +21,7 @@ import { createExperienceManager } from './blockchain/agentExperience/index.js';
 import { LLMConfiguration } from './services/llm/types.js';
 import { createApiServer } from './api/server.js';
 import { createFirecrawlTools } from './agents/tools/firecrawl/index.js';
+import { createNotionTools } from './agents/tools/notion-mcp/index.js';
 
 export const bigModel: LLMConfiguration = {
   provider: 'anthropic',
@@ -66,6 +67,12 @@ const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
   const firecrawlTools = config.FIRECRAWL_API_KEY
     ? await createFirecrawlTools(config.FIRECRAWL_API_KEY)
     : [];
+
+  console.log('config.NOTION_INTEGRATION_SECRET', config.NOTION_INTEGRATION_SECRET);
+  const notionTools = config.NOTION_INTEGRATION_SECRET
+    ? await createNotionTools(config.NOTION_INTEGRATION_SECRET)
+    : [];
+
   const webSearchTool = config.SERPAPI_API_KEY ? [createWebSearchTool(config.SERPAPI_API_KEY)] : [];
 
   const saveExperiences = config.autoDriveConfig.AUTO_DRIVE_SAVE_EXPERIENCES;
@@ -132,7 +139,7 @@ const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
             ),
             character,
             {
-              tools: [...webSearchTool, ...firecrawlTools, ...schedulerTools],
+              tools: [...webSearchTool, ...firecrawlTools, ...notionTools, ...schedulerTools],
               postTweets: config.twitterConfig.POST_TWEETS,
               experienceConfig,
               monitoringConfig,
@@ -190,6 +197,7 @@ const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
       ...slackAgentTool,
       ...webSearchTool,
       ...firecrawlTools,
+      ...notionTools,
       ...githubAgentTools,
       ...schedulerTools,
     ],
