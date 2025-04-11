@@ -4,14 +4,14 @@ import { mkdir } from 'fs/promises';
 import path from 'path';
 import yaml from 'yaml';
 import { z } from 'zod';
+import yargs from 'yargs';
 import { loadCharacter } from './characters.js';
 import { configSchema } from './schema.js';
 import { getProjectRoot } from '../utils/utils.js';
 import { ConfigOptions, ConfigInstance } from './types.js';
-// Store instances by configPath
+
 const configInstances = new Map<string, any>();
 
-// Create cookies directory
 const createCookiesDir = async (workspaceRoot: string) => {
   const cookiesDir = path.join(workspaceRoot, '.cookies');
   try {
@@ -60,50 +60,84 @@ const convertModelConfigurations = (modelConfigurations: any) => {
   };
 };
 
-export const createOrGetConfig = async ({
-  characterName,
-  customWorkspaceRoot,
-  isHeadless = false,
-}: ConfigOptions): Promise<ConfigInstance> => {
-  // Create unique key for this configuration
-  const configKey = `${customWorkspaceRoot}-${characterName}-${isHeadless}`;
+const parseArgs = () => {
+  // When using yarn dev:agent, the character name might be passed directly
+  // as a non-option argument rather than as a positional parameter
+  const args = yargs(process.argv.slice(2))
+    .command('$0 [character]', 'Start the agent', yargs => {
+      return yargs.positional('character', {
+        describe: 'Character name',
+        type: 'string',
+      });
+    })
+    .option('headless', {
+      describe: 'Run in headless mode',
+      type: 'boolean',
+      default: false,
+    })
+    .option('workspace', {
+      describe: 'Custom workspace root path',
+      type: 'string',
+      default: getProjectRoot(),
+    })
+    .help()
+    .parseSync();
 
-  // Return cached instance if it exists
+  // If no character provided through yargs but there's a non-option argument,
+  // use the first non-option argument as the character name
+  if (!args.character && args._.length > 0) {
+    console.log('args._', args._);
+    args.character = args._[0].toString();
+  }
+
+  return args;
+};
+
+/**
+ * Get configuration based on options or command line arguments
+ */
+export const getConfig = async (options?: ConfigOptions): Promise<ConfigInstance> => {
+  const args = parseArgs();
+
+  const characterName = options?.characterName || (args.character as string);
+  const isHeadless = options?.isHeadless !== undefined ? options.isHeadless : args.headless;
+  const workspaceRoot =
+    options?.customWorkspaceRoot || (args.workspace as string) || getProjectRoot();
+
+  if (!characterName) {
+    console.error('Please provide a character name');
+    console.error('Usage: yarn dev:agent <character-name> [--headless] [--workspace=path]');
+    process.exit(1);
+  }
+
+  // Create unique key for this configuration
+  const configKey = `${workspaceRoot}-${characterName}-${isHeadless}`;
+
+  // Return cached instance if available
   if (configInstances.has(configKey)) {
     return configInstances.get(configKey);
   }
 
-  // Initialize with provided or default workspace root
-  const workspaceRoot = customWorkspaceRoot;
+  // Create new config instance
   const cookiesDir = await createCookiesDir(workspaceRoot);
-
-  if (!characterName) {
-    throw new Error('No character name provided');
-  }
-
-  // Load character config from the workspaceRoot
   const characterConfig = loadCharacter(characterName, workspaceRoot);
 
   // Load root .env
   dotenv.config({ path: path.resolve(workspaceRoot, '.env') });
 
-  // Load character-specific .env if it exists, overriding root .env values
-  const characterEnvPath = characterName
-    ? path.resolve(characterConfig.characterPath, 'config', '.env')
-    : null;
-  if (characterEnvPath && existsSync(characterEnvPath)) {
+  // Load character-specific .env if it exists
+  const characterEnvPath = path.resolve(characterConfig.characterPath, 'config', '.env');
+  if (existsSync(characterEnvPath)) {
     dotenv.config({ path: characterEnvPath });
   }
 
   const agentVersion = getAgentVersion(workspaceRoot);
-
   const yamlConfig = (() => {
     try {
-      const characterConfigPath = path.join(characterConfig.characterPath, 'config', 'config.yaml');
-      const fileContents = readFileSync(characterConfigPath, 'utf8');
-      return yaml.parse(fileContents);
+      const configPath = path.join(characterConfig.characterPath, 'config', 'config.yaml');
+      return yaml.parse(readFileSync(configPath, 'utf8'));
     } catch (error) {
-      console.error('No YAML config found for character', characterName, error);
+      console.error('No YAML config found for character', characterName);
       return {};
     }
   })();
@@ -117,8 +151,8 @@ export const createOrGetConfig = async ({
         USERNAME: username,
         PASSWORD: process.env.TWITTER_PASSWORD || '',
         COOKIES_PATH: cookiesPath,
-        POST_TWEETS: yamlConfig.twitter.post_tweets ?? false,
-        model_configurations: convertModelConfigurations(yamlConfig.twitter.model_configurations),
+        POST_TWEETS: yamlConfig.twitter?.post_tweets ?? false,
+        model_configurations: convertModelConfigurations(yamlConfig.twitter?.model_configurations),
       },
 
       characterConfig,
@@ -148,9 +182,9 @@ export const createOrGetConfig = async ({
       autoDriveConfig: {
         AUTO_DRIVE_API_KEY: process.env.AUTO_DRIVE_API_KEY,
         AUTO_DRIVE_ENCRYPTION_PASSWORD: process.env.AUTO_DRIVE_ENCRYPTION_PASSWORD,
-        AUTO_DRIVE_NETWORK: yamlConfig.auto_drive.network ?? 'taurus',
-        AUTO_DRIVE_MONITORING: yamlConfig.auto_drive.monitoring ?? false,
-        AUTO_DRIVE_SAVE_EXPERIENCES: yamlConfig.auto_drive.save_experiences ?? false,
+        AUTO_DRIVE_NETWORK: yamlConfig.auto_drive?.network ?? 'taurus',
+        AUTO_DRIVE_MONITORING: yamlConfig.auto_drive?.monitoring ?? false,
+        AUTO_DRIVE_SAVE_EXPERIENCES: yamlConfig.auto_drive?.save_experiences ?? false,
       },
 
       blockchainConfig: {
@@ -189,16 +223,14 @@ export const createOrGetConfig = async ({
     };
 
     const parsedConfig = configSchema.parse(rawConfig);
-
     const instance: ConfigInstance = {
       config: parsedConfig,
       agentVersion,
       characterName,
     };
 
-    // Store in instances map
+    // Cache the instance
     configInstances.set(configKey, instance);
-
     return instance;
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -211,29 +243,6 @@ export const createOrGetConfig = async ({
     }
     throw error;
   }
-};
-
-// **Temporary** backwards compatibility for existing code - get default instance
-export const initializeDefaultConfig = async () => {
-  const characterName = process.argv[2];
-  if (!characterName) {
-    console.error('Please provide a character name');
-    console.error('Usage: yarn start <character-name> [--headless]');
-    // Force immediate exit of the entire process group
-    process.kill(0, 'SIGKILL');
-  }
-
-  const isHeadless = process.argv[3] === '--headless';
-  return createOrGetConfig({ characterName, customWorkspaceRoot: getProjectRoot(), isHeadless });
-};
-
-// Initialize default config and export for backwards compatibility
-let defaultConfigPromise: Promise<ConfigInstance> | null = null;
-export const getDefaultConfig = async (): Promise<ConfigInstance> => {
-  if (!defaultConfigPromise) {
-    defaultConfigPromise = initializeDefaultConfig();
-  }
-  return defaultConfigPromise;
 };
 
 export type Config = z.infer<typeof configSchema>;
