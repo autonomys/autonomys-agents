@@ -2,10 +2,13 @@
   "name": "autonomys-agents-core",
   "version": "0.5.0",
   "description": "Autonomys Agents Core",
-  "main": "src/index.ts",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "exports": {
-    ".": "./src/index.ts",
-    "./src/*": "./src/*"
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
   },
   "type": "module",
   "publishConfig": {
@@ -28,6 +31,7 @@
   },
   "scripts": {
     "build": "tsc",
+    "prepublishOnly": "yarn build",
     "start": "tsx ../scripts/start.ts",
     "dev": "NODE_ENV=development tsx --no-cache --watch src/index.ts",
     "test": "jest",
@@ -35,7 +39,8 @@
     "test:coverage": "jest --coverage",
     "generate-certs": "tsx ../scripts/generate-certs.ts",
     "resurrect": "tsx ../scripts/resurrect.ts",
-    "create-character": "tsx ../scripts/create-character.ts"
+    "create-character": "tsx ../scripts/create-character.ts",
+    "pack": "yarn pack"
   },
   "dependencies": {
     "@autonomys/auto-dag-data": "1.4.5",

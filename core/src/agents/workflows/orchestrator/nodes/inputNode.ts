@@ -5,6 +5,12 @@ import { LLMConfiguration, LLMFactoryConfig } from '../../../../services/llm/typ
 import { ChatPromptTemplate } from '@langchain/core/prompts';
 import { attachLogger } from '../../../../api/server.js';
 
+// Define the return type of the node function
+export type InputNodeFunction = (state: OrchestratorStateType) => Promise<{
+  messages: any[];
+  toolCalls: any[] | undefined;
+}>;
+
 export const createInputNode = ({
   modelConfig,
   inputPrompt,
@@ -19,7 +25,7 @@ export const createInputNode = ({
   namespace: string;
   apiConfig: ApiConfig;
   llmConfig: LLMFactoryConfig;
-}) => {
+}): InputNodeFunction => {
   const logger = attachLogger(
     createLogger(`${namespace}-input-node`),
     namespace,

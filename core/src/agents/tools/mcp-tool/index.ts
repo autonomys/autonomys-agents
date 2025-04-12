@@ -5,11 +5,15 @@ import {
 } from '@modelcontextprotocol/sdk/client/stdio.js';
 import { loadMcpTools } from '@langchain/mcp-adapters';
 
+// Define a type that matches what loadMcpTools returns
+// We're using unknown for now to avoid specific type constraints
+export type McpTool = unknown;
+
 export const createMcpClientTool = async (
   clientName: string,
   clientVersion: string,
   serverParams: StdioServerParameters,
-) => {
+): Promise<McpTool[]> => {
   const transport = new StdioClientTransport(serverParams);
   const client = new Client({
     name: clientName,
