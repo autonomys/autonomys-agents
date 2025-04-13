@@ -49,9 +49,9 @@ export const getWorkspacePath = (): string => {
 /**
  * Get the character name if provided
  */
-export const getCharacterName = (): string | undefined => {
+export const getCharacterName = (): string => {
   const args = parseArgs();
-  return args.character;
+  return args.character || '';
 };
 
 /**
