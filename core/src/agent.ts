@@ -24,6 +24,9 @@ import { createFirecrawlTools } from './agents/tools/firecrawl/index.js';
 
 // Get the config instance
 const configInstance = await getConfig();
+if (!configInstance) {
+  throw new Error('Config instance not found');
+}
 const { config, agentVersion, characterName } = configInstance;
 
 export const bigModel: LLMConfiguration = {

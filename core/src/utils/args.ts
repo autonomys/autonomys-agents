@@ -60,4 +60,4 @@ export const getCharacterName = (): string => {
 export const isHeadlessMode = (): boolean => {
   const args = parseArgs();
   return args.headless;
-}; 
+};

@@ -6,10 +6,10 @@ import yaml from 'yaml';
 import { z } from 'zod';
 import { loadCharacter } from './characters.js';
 import { configSchema } from './schema.js';
-import { ConfigOptions, ConfigInstance } from './types.js';
-import { parseArgs, getWorkspacePath, getCharacterName, isHeadlessMode } from '../utils/args.js';
+import { ConfigInstance, ConfigOptions } from './types.js';
+import { getCharacterName, getWorkspacePath, isHeadlessMode, parseArgs } from '../utils/args.js';
 
-const configInstances = new Map<string, any>();
+const configInstances = new Map<string, ConfigInstance>();
 
 const createCookiesDir = async (workspaceRoot: string) => {
   const cookiesDir = path.join(workspaceRoot, '.cookies');
@@ -62,10 +62,10 @@ const convertModelConfigurations = (modelConfigurations: any) => {
 /**
  * Get configuration based on options or command line arguments
  */
-export const getConfig = async (options?: ConfigOptions): Promise<ConfigInstance> => {
+export const getConfig = async (options?: ConfigOptions): Promise<ConfigInstance | undefined> => {
   // Parse arguments only once using the centralized argument parser
   parseArgs();
-  
+
   const characterName = options?.characterName || getCharacterName();
   const isHeadless = options?.isHeadless !== undefined ? options.isHeadless : isHeadlessMode();
   const workspaceRoot = options?.customWorkspaceRoot || getWorkspacePath();
@@ -103,7 +103,7 @@ export const getConfig = async (options?: ConfigOptions): Promise<ConfigInstance
       const configPath = path.join(characterConfig.characterPath, 'config', 'config.yaml');
       return yaml.parse(readFileSync(configPath, 'utf8'));
     } catch (error) {
-      console.error('No YAML config found for character', characterName);
+      console.error('No YAML config found for character', characterName, error);
       return {};
     }
   })();

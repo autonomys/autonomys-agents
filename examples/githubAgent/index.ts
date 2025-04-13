@@ -19,8 +19,10 @@ const logger = createLogger('autonomous-web3-agent');
 
 // Get the config instance
 const configInstance = await getConfig();
+if (!configInstance) {
+  throw new Error('Config instance not found');
+}
 const { config, agentVersion } = configInstance;
-
 const character = config.characterConfig;
 const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
   const dataPath = character.characterPath;

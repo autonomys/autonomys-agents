@@ -2,13 +2,13 @@ import winston from 'winston';
 import path from 'path';
 import util from 'util';
 import fs from 'fs';
-import { getWorkspacePath, getCharacterName } from './args.js';
+import { getCharacterName, getWorkspacePath } from './args.js';
 
 const getDefaultLogPath = () => {
   const workspacePath = getWorkspacePath();
   const characterName = getCharacterName();
-  const logPath = path.join(workspacePath, "characters", characterName);
-  
+  const logPath = path.join(workspacePath, 'characters', characterName);
+
   // Ensure the logs directory exists
   try {
     if (!fs.existsSync(logPath)) {

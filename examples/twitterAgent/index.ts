@@ -20,6 +20,9 @@ const logger = createLogger('autonomous-twitter-agent');
 
 // Get the config instance
 const configInstance = await getConfig();
+if (!configInstance) {
+  throw new Error('Config instance not found');
+}
 const { config, agentVersion, characterName } = configInstance;
 
 const character = config.characterConfig;
