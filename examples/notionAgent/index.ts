@@ -6,13 +6,21 @@ import {
 } from 'autonomys-agents-core/src/agents/workflows/orchestrator/orchestratorWorkflow.js';
 import { createPrompts } from 'autonomys-agents-core/src/agents/workflows/orchestrator/prompts.js';
 import { OrchestratorRunnerOptions } from 'autonomys-agents-core/src/agents/workflows/orchestrator/types.js';
-import { config } from 'autonomys-agents-core/src/config/index.js';
+import { getConfig } from 'autonomys-agents-core/src/config/index.js';
 import { createLogger } from 'autonomys-agents-core/src/utils/logger.js';
+import { parseArgs } from 'autonomys-agents-core/src/utils/args.js';
+
+parseArgs();
 
 const logger = createLogger('notion-agent');
 
+// Get the config instance
+const configInstance = await getConfig();
+const { config } = configInstance;
+
 const character = config.characterConfig;
 const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
+  const dataPath = character.characterPath;
   const notionToken = config.notionConfig.NOTION_TOKEN;
   const notionDatabaseId = config.notionConfig.NOTION_DATABASE_ID;
   if (!notionToken) {
@@ -30,6 +38,9 @@ const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
   return {
     tools: [...notionTools],
     prompts,
+    characterDataPathConfig: {
+      dataPath,
+    },
   };
 };
 
