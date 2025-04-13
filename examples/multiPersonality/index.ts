@@ -7,13 +7,24 @@ import {
 import { createPrompts } from 'autonomys-agents-core/src/agents/workflows/orchestrator/prompts.js';
 import { OrchestratorRunnerOptions } from 'autonomys-agents-core/src/agents/workflows/orchestrator/types.js';
 import { createTwitterAgent } from 'autonomys-agents-core/src/agents/workflows/twitter/twitterAgent.js';
-import { Character } from 'autonomys-agents-core/src/config/characters.js';
-import { agentVersion, config } from 'autonomys-agents-core/src/config/index.js';
+import { getConfig } from 'autonomys-agents-core/src/config/index.js';
+import { Character } from 'autonomys-agents-core/src/config/types.js';
 import { createTwitterApi } from 'autonomys-agents-core/src/agents/tools/twitter/client.js';
 import { createLogger } from 'autonomys-agents-core/src/utils/logger.js';
 import { createAllSchedulerTools } from 'autonomys-agents-core/src/agents/tools/scheduler/index.js';
 import { createExperienceManager } from 'autonomys-agents-core/src/blockchain/agentExperience/index.js';
+import { parseArgs } from 'autonomys-agents-core/src/utils/args.js';
+
+parseArgs();
+
 const logger = createLogger('autonomous-twitter-agent');
+
+// Get the config instance
+const configInstance = await getConfig();
+if (!configInstance) {
+  throw new Error('Config instance not found');
+}
+const { config, agentVersion } = configInstance;
 
 const twitterCharacter = config.characterConfig;
 const orchestratorCharacter: Character = {
@@ -27,8 +38,12 @@ const orchestratorCharacter: Character = {
     wordsToAvoid: [],
   },
 };
+const character = config.characterConfig;
+
 const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
   //shared twitter agent and orchestrator config
+  const dataPath = character.characterPath;
+
   const webSearchTool = config.SERPAPI_API_KEY ? [createWebSearchTool(config.SERPAPI_API_KEY)] : [];
   const saveExperiences = config.autoDriveConfig.AUTO_DRIVE_SAVE_EXPERIENCES;
   const monitoringEnabled = config.autoDriveConfig.AUTO_DRIVE_MONITORING;
@@ -97,6 +112,9 @@ const monitoringConfig =
               experienceConfig,
               monitoringConfig,
               modelConfigurations: config.twitterConfig.model_configurations,
+              characterDataPathConfig: {
+                dataPath,
+              },
             },
           ),
         ]
@@ -136,6 +154,9 @@ const monitoringConfig =
         : {
             enabled: false,
           },
+    characterDataPathConfig: {
+      dataPath,
+    },
   };
 };
 

@@ -2,34 +2,11 @@ import { readFileSync } from 'fs';
 import { load } from 'js-yaml';
 import { join } from 'path';
 import { getProjectRoot } from '../utils/utils.js';
+import { Character, RawCharacterConfig } from './types.js';
 
-export interface Character {
-  name: string;
-  characterPath: string;
-  goal: string;
-  personality: string[];
-  expertise: string[];
-  frequencyPreferences?: string[];
-  communicationRules: {
-    rules: string[];
-    wordsToAvoid: string[];
-  };
-}
-
-interface RawCharacterConfig {
-  name: string;
-  goal: string;
-  personality: string[];
-  expertise: string[];
-  frequency_preferences?: string[];
-  communication_rules: {
-    rules: string[];
-    words_to_avoid: string[];
-  };
-}
-
-export const loadCharacter = (characterName: string): Character => {
-  const characterPath = join(getProjectRoot(), 'characters', `${characterName}`);
+export const loadCharacter = (characterName: string, customWorkspaceRoot?: string): Character => {
+  const workspaceRoot = customWorkspaceRoot || getProjectRoot();
+  const characterPath = join(workspaceRoot, 'characters', `${characterName}`);
   const configPath = join(characterPath, 'config', `${characterName}.yaml`);
   try {
     const yamlContent = readFileSync(configPath, 'utf8');

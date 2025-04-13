@@ -1,4 +1,4 @@
-import { config } from 'autonomys-agents-core/src/config/index.js';
+import { getConfig } from 'autonomys-agents-core/src/config/index.js';
 import { createLogger } from 'autonomys-agents-core/src/utils/logger.js';
 import {
   createOrchestratorRunner,
@@ -12,11 +12,24 @@ import {
   createCheckBalanceTool,
   createTransferNativeTokenTool,
 } from 'autonomys-agents-core/src/agents/tools/evm/index.js';
+import { parseArgs } from 'autonomys-agents-core/src/utils/args.js';
+
+parseArgs();
 
 const logger = createLogger('autonomous-web3-agent');
 
+// Get the config instance
+const configInstance = await getConfig();
+if (!configInstance) {
+  throw new Error('Config instance not found');
+}
+const { config } = configInstance;
+
 const character = config.characterConfig;
 const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
+
+  const dataPath = character.characterPath;
+
   // Check for RPC and private key in config
   if (!config.blockchainConfig.PRIVATE_KEY || !config.blockchainConfig.RPC_URL) {
     throw new Error('PRIVATE_KEY and RPC_URL are required in the blockchainConfig');
@@ -37,6 +50,9 @@ const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
   return {
     tools: [transferNativeTokenTool, checkBalanceTool],
     prompts,
+    characterDataPathConfig: {
+      dataPath,
+    },
   };
 };
 

@@ -1,14 +1,23 @@
 import winston from 'winston';
 import path from 'path';
 import util from 'util';
-import { getProjectRoot } from './utils.js';
+import fs from 'fs';
+import { getCharacterName, getWorkspacePath } from './args.js';
 
-const getCharacterPath = () => {
-  const characterName = process.argv[2];
-  if (!characterName) {
-    return process.cwd();
+const getDefaultLogPath = () => {
+  const workspacePath = getWorkspacePath();
+  const characterName = getCharacterName();
+  const logPath = path.join(workspacePath, 'characters', characterName);
+
+  // Ensure the logs directory exists
+  try {
+    if (!fs.existsSync(logPath)) {
+      fs.mkdirSync(logPath, { recursive: true });
+    }
+  } catch (error) {
+    console.error('Error creating logs directory:', error);
   }
-  return path.join(getProjectRoot(), 'characters', characterName);
+  return logPath;
 };
 
 const stripAnsi = (str: string) => str.replace(/\u001b\[\d+m/g, '');
@@ -91,7 +100,7 @@ interface LoggerOptions {
 type LoggerParams = [LoggerOptions] | [string, string?, string?, string?];
 
 export const createLogger = (...args: LoggerParams): winston.Logger => {
-  const defaultBasePath = getCharacterPath();
+  const defaultBasePath = getDefaultLogPath();
   const isProduction = process.env.NODE_ENV === 'production';
 
   if (typeof args[0] === 'object') {
@@ -105,6 +114,13 @@ export const createLogger = (...args: LoggerParams): winston.Logger => {
     } = args[0];
 
     const logFolder = path.join(basePath, folder);
+    // Ensure log directory exists
+    try {
+      fs.mkdirSync(logFolder, { recursive: true });
+    } catch (error) {
+      console.error(`Error creating log directory ${logFolder}:`, error);
+    }
+
     const logger = winston.createLogger({
       defaultMeta: { context },
       level: 'info',
@@ -125,6 +141,13 @@ export const createLogger = (...args: LoggerParams): winston.Logger => {
 
   const [context, folder = 'logs', errorLogs = 'error.log', combinedLogs = 'combined.log'] = args;
   const logFolder = path.join(defaultBasePath, folder);
+  // Ensure log directory exists
+  try {
+    fs.mkdirSync(logFolder, { recursive: true });
+  } catch (error) {
+    console.error(`Error creating log directory ${logFolder}:`, error);
+  }
+
   const logger = winston.createLogger({
     defaultMeta: { context },
     level: 'info',

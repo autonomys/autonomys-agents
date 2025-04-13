@@ -8,13 +8,25 @@ import {
 } from 'autonomys-agents-core/src/agents/workflows/orchestrator/orchestratorWorkflow.js';
 import { createPrompts } from 'autonomys-agents-core/src/agents/workflows/orchestrator/prompts.js';
 import { OrchestratorRunnerOptions } from 'autonomys-agents-core/src/agents/workflows/orchestrator/types.js';
-import { agentVersion, config } from 'autonomys-agents-core/src/config/index.js';
+import { getConfig } from 'autonomys-agents-core/src/config/index.js';
 import { createExperienceManager } from 'autonomys-agents-core/src/blockchain/agentExperience/index.js';
 import { createLogger } from 'autonomys-agents-core/src/utils/logger.js';
+import { parseArgs } from 'autonomys-agents-core/src/utils/args.js';
+
+parseArgs();
+
 const logger = createLogger('autonomous-web3-agent');
 
+// Get the config instance
+const configInstance = await getConfig();
+if (!configInstance) {
+  throw new Error('Config instance not found');
+}
+const { config, agentVersion } = configInstance;
 const character = config.characterConfig;
 const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
+  const dataPath = character.characterPath;
+
   const saveExperiences = config.autoDriveConfig.AUTO_DRIVE_SAVE_EXPERIENCES;
   const monitoringEnabled = config.autoDriveConfig.AUTO_DRIVE_MONITORING;
   const schedulerTools = createAllSchedulerTools();
@@ -75,6 +87,9 @@ const monitoringConfig =
           tools: [...schedulerTools],
           experienceConfig,
           monitoringConfig,
+          characterDataPathConfig: {
+            dataPath,
+          },
         }),
       ]
     : [];

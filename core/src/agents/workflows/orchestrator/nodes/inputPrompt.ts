@@ -1,6 +1,6 @@
 import { ChatPromptTemplate, PromptTemplate } from '@langchain/core/prompts';
 import { SystemMessage } from '@langchain/core/messages';
-import { Character } from '../../../../config/characters.js';
+import { Character } from '../../../../config/types.js';
 
 export const createInputPrompt = async (character: Character, customInstructions?: string) => {
   const inputSystemPrompt = await PromptTemplate.fromTemplate(

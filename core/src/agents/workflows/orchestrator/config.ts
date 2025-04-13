@@ -1,4 +1,4 @@
-import { Character } from '../../../config/characters.js';
+import { Character } from '../../../config/types.js';
 import { LLMConfiguration, LLMFactoryConfig } from '../../../services/llm/types.js';
 import { createLogger } from '../../../utils/logger.js';
 import { createPrompts } from './prompts.js';

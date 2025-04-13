@@ -15,12 +15,19 @@ import { registerOrchestratorRunner } from './agents/workflows/registration.js';
 import { createSlackAgent } from './agents/workflows/slack/slackAgent.js';
 import { createTwitterAgent } from './agents/workflows/twitter/twitterAgent.js';
 import { CreateApiServerParams, withApiLogger } from './api/server.js';
-import { agentVersion, characterName, config } from './config/index.js';
+import { getConfig } from './config/index.js';
 import { createTwitterApi } from './agents/tools/twitter/client.js';
 import { createExperienceManager } from './blockchain/agentExperience/index.js';
 import { LLMConfiguration } from './services/llm/types.js';
 import { createApiServer } from './api/server.js';
 import { createFirecrawlTools } from './agents/tools/firecrawl/index.js';
+
+// Get the config instance
+const configInstance = await getConfig();
+if (!configInstance) {
+  throw new Error('Config instance not found');
+}
+const { config, agentVersion, characterName } = configInstance;
 
 export const bigModel: LLMConfiguration = {
   provider: 'anthropic',

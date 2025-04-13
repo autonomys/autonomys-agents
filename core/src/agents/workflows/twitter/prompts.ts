@@ -1,5 +1,5 @@
 import { createPrompts } from '../orchestrator/prompts.js';
-import { Character } from '../../../config/characters.js';
+import { Character } from '../../../config/types.js';
 
 export const createTwitterPrompts = async (character: Character, username: string) => {
   const customInputInstructions = `

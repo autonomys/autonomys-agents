@@ -1,4 +1,4 @@
-import { Character } from '../../../config/characters.js';
+import { Character } from '../../../config/types.js';
 import { createPrompts } from '../orchestrator/prompts.js';
 import { OrchestratorPrompts } from '../orchestrator/types.js';
 

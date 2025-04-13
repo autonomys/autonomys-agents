@@ -1,6 +1,6 @@
 import { BaseMessage } from '@langchain/core/messages';
 import { END, MemorySaver, START, StateGraph } from '@langchain/langgraph';
-import { Character } from '../../../config/characters.js';
+import { Character } from '../../../config/types.js';
 import { createLogger } from '../../../utils/logger.js';
 import { Logger } from 'winston';
 import { cleanMessageData } from './cleanMessages.js';

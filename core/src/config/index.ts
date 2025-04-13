@@ -6,37 +6,21 @@ import yaml from 'yaml';
 import { z } from 'zod';
 import { loadCharacter } from './characters.js';
 import { configSchema } from './schema.js';
-import { getProjectRoot } from '../utils/utils.js';
+import { ConfigInstance, ConfigOptions } from './types.js';
+import { getCharacterName, getWorkspacePath, isHeadlessMode, parseArgs } from '../utils/args.js';
 
-const workspaceRoot = getProjectRoot();
+const configInstances = new Map<string, ConfigInstance>();
 
-const cookiesDir = path.join(workspaceRoot, '.cookies');
-try {
-  await mkdir(cookiesDir, { recursive: true });
-} catch (error) {
-  console.error('Error creating cookies directory:', error);
-}
-
-export const characterName = process.argv[2];
-
-if (!characterName) {
-  console.error('Please provide a character name');
-  console.error('Usage: yarn start <character-name> [--headless]');
-  // Force immediate exit of the entire process group
-  process.kill(0, 'SIGKILL');
-}
-const isHeadless = process.argv[3] === '--headless';
-const characterConfig = loadCharacter(characterName);
-// Load root .env
-dotenv.config({ path: path.resolve(workspaceRoot, '.env') });
-
-// Load character-specific .env if it exists, overriding root .env values
-const characterEnvPath = characterName
-  ? path.resolve(characterConfig.characterPath, 'config', '.env')
-  : null;
-if (characterEnvPath && existsSync(characterEnvPath)) {
-  dotenv.config({ path: characterEnvPath });
-}
+const createCookiesDir = async (workspaceRoot: string) => {
+  const cookiesDir = path.join(workspaceRoot, '.cookies');
+  try {
+    await mkdir(cookiesDir, { recursive: true });
+    return cookiesDir;
+  } catch (error) {
+    console.error('Error creating cookies directory:', error);
+    return cookiesDir;
+  }
+};
 
 const formatZodError = (error: z.ZodError) => {
   const missingVars = error.issues.map(issue => {
@@ -48,7 +32,7 @@ const formatZodError = (error: z.ZodError) => {
     \nPlease check your .env file and config.yaml file and ensure all required variables are set correctly.`;
 };
 
-export const agentVersion = (() => {
+const getAgentVersion = (workspaceRoot: string) => {
   try {
     const packageJson = JSON.parse(readFileSync(path.join(workspaceRoot, 'package.json'), 'utf8'));
     return packageJson.version;
@@ -56,18 +40,7 @@ export const agentVersion = (() => {
     console.error('Error reading package.json version:', error);
     return '0.0.0';
   }
-})();
-
-const yamlConfig = (() => {
-  try {
-    const characterConfigPath = path.join(characterConfig.characterPath, 'config', 'config.yaml');
-    const fileContents = readFileSync(characterConfigPath, 'utf8');
-    return yaml.parse(fileContents);
-  } catch (error) {
-    console.error('No YAML config found for character', characterName, error);
-    return {};
-  }
-})();
+};
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const convertModelConfigurations = (modelConfigurations: any) => {
@@ -86,7 +59,55 @@ const convertModelConfigurations = (modelConfigurations: any) => {
   };
 };
 
-export const config = (() => {
+/**
+ * Get configuration based on options or command line arguments
+ */
+export const getConfig = async (options?: ConfigOptions): Promise<ConfigInstance | undefined> => {
+  // Parse arguments only once using the centralized argument parser
+  parseArgs();
+
+  const characterName = options?.characterName || getCharacterName();
+  const isHeadless = options?.isHeadless !== undefined ? options.isHeadless : isHeadlessMode();
+  const workspaceRoot = options?.customWorkspaceRoot || getWorkspacePath();
+
+  if (!characterName) {
+    console.error('Please provide a character name');
+    console.error('Usage: yarn dev:agent <character-name> [--headless] [--workspace=path]');
+    process.exit(1);
+  }
+
+  // Create unique key for this configuration
+  const configKey = `${workspaceRoot}-${characterName}-${isHeadless}`;
+
+  // Return cached instance if available
+  if (configInstances.has(configKey)) {
+    return configInstances.get(configKey);
+  }
+
+  // Create new config instance
+  const cookiesDir = await createCookiesDir(workspaceRoot);
+  const characterConfig = loadCharacter(characterName, workspaceRoot);
+
+  // Load root .env
+  dotenv.config({ path: path.resolve(workspaceRoot, '.env') });
+
+  // Load character-specific .env if it exists
+  const characterEnvPath = path.resolve(characterConfig.characterPath, 'config', '.env');
+  if (existsSync(characterEnvPath)) {
+    dotenv.config({ path: characterEnvPath });
+  }
+
+  const agentVersion = getAgentVersion(workspaceRoot);
+  const yamlConfig = (() => {
+    try {
+      const configPath = path.join(characterConfig.characterPath, 'config', 'config.yaml');
+      return yaml.parse(readFileSync(configPath, 'utf8'));
+    } catch (error) {
+      console.error('No YAML config found for character', characterName, error);
+      return {};
+    }
+  })();
+
   try {
     const username = process.env.TWITTER_USERNAME || '';
     const cookiesPath = path.join(cookiesDir, `${username}-cookies.json`);
@@ -96,8 +117,8 @@ export const config = (() => {
         USERNAME: username,
         PASSWORD: process.env.TWITTER_PASSWORD || '',
         COOKIES_PATH: cookiesPath,
-        POST_TWEETS: yamlConfig.twitter.post_tweets ?? false,
-        model_configurations: convertModelConfigurations(yamlConfig.twitter.model_configurations),
+        POST_TWEETS: yamlConfig.twitter?.post_tweets ?? false,
+        model_configurations: convertModelConfigurations(yamlConfig.twitter?.model_configurations),
       },
 
       characterConfig,
@@ -127,9 +148,9 @@ export const config = (() => {
       autoDriveConfig: {
         AUTO_DRIVE_API_KEY: process.env.AUTO_DRIVE_API_KEY,
         AUTO_DRIVE_ENCRYPTION_PASSWORD: process.env.AUTO_DRIVE_ENCRYPTION_PASSWORD,
-        AUTO_DRIVE_NETWORK: yamlConfig.auto_drive.network ?? 'taurus',
-        AUTO_DRIVE_MONITORING: yamlConfig.auto_drive.monitoring ?? false,
-        AUTO_DRIVE_SAVE_EXPERIENCES: yamlConfig.auto_drive.save_experiences ?? false,
+        AUTO_DRIVE_NETWORK: yamlConfig.auto_drive?.network ?? 'taurus',
+        AUTO_DRIVE_MONITORING: yamlConfig.auto_drive?.monitoring ?? false,
+        AUTO_DRIVE_SAVE_EXPERIENCES: yamlConfig.auto_drive?.save_experiences ?? false,
       },
 
       blockchainConfig: {
@@ -166,7 +187,17 @@ export const config = (() => {
 
       ENABLE_API: !isHeadless,
     };
-    return configSchema.parse(rawConfig);
+
+    const parsedConfig = configSchema.parse(rawConfig);
+    const instance: ConfigInstance = {
+      config: parsedConfig,
+      agentVersion,
+      characterName,
+    };
+
+    // Cache the instance
+    configInstances.set(configKey, instance);
+    return instance;
   } catch (error) {
     if (error instanceof z.ZodError) {
       console.error('\x1b[31m%s\x1b[0m', formatZodError(error));
@@ -178,6 +209,6 @@ export const config = (() => {
     }
     throw error;
   }
-})();
+};
 
 export type Config = z.infer<typeof configSchema>;
