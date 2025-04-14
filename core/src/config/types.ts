@@ -10,6 +10,7 @@ export type ConfigInstance = {
   config: Config;
   agentVersion: string;
   characterName: string;
+  workspaceRoot: string;
 };
 
 export interface Character {

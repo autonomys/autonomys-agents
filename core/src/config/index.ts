@@ -193,6 +193,7 @@ export const getConfig = async (options?: ConfigOptions): Promise<ConfigInstance
       config: parsedConfig,
       agentVersion,
       characterName,
+      workspaceRoot,
     };
 
     // Cache the instance
