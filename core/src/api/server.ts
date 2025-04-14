@@ -8,7 +8,7 @@ import { broadcastNamespaces } from './controller/NamespaceController.js';
 import { getRegisteredNamespaces } from './controller/WorkflowController.js';
 import { createAuthMiddleware, securityHeaders } from './middleware/auth.js';
 import { corsMiddleware } from './middleware/cors.js';
-import { getProjectRoot } from '../utils/utils.js';
+import { getConfig } from '../config/index.js';
 import helmet from 'helmet';
 import http2 from 'http2';
 import fs from 'fs';
@@ -18,6 +18,11 @@ import { Express } from 'express';
 import { Logger } from 'winston';
 
 const logger = createLogger('api-server');
+const config = await getConfig();
+
+if (!config) {
+  throw new Error('Config not found');
+}
 
 let apiServer: ApiServer | null = null;
 
@@ -50,7 +55,7 @@ const createSingletonApiServer = (params: CreateApiServerParams): ApiServer => {
   const PORT = apiPort;
   let server;
 
-  const certsDir = path.join(getProjectRoot(), 'certs');
+  const certsDir = path.join(config.workspaceRoot, 'certs');
   const certFile = path.join(certsDir, 'server.cert');
   const keyFile = path.join(certsDir, 'server.key');
 

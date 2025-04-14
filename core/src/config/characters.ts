@@ -1,11 +1,9 @@
 import { readFileSync } from 'fs';
 import { load } from 'js-yaml';
 import { join } from 'path';
-import { getProjectRoot } from '../utils/utils.js';
 import { Character, RawCharacterConfig } from './types.js';
 
-export const loadCharacter = (characterName: string, customWorkspaceRoot?: string): Character => {
-  const workspaceRoot = customWorkspaceRoot || getProjectRoot();
+export const loadCharacter = (characterName: string, workspaceRoot: string): Character => {
   const characterPath = join(workspaceRoot, 'characters', `${characterName}`);
   const configPath = join(characterPath, 'config', `${characterName}.yaml`);
   try {
