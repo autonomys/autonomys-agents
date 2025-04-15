@@ -40,7 +40,6 @@ export { parseArgs } from './utils/args.js';
 // Setup signal handlers
 import { createLogger } from './utils/logger.js';
 import { closeAllVectorDBs } from './services/vectorDb/vectorDBPool.js';
-import { parseArgs } from './utils/args.js';
 
 const logger = createLogger('core');
 

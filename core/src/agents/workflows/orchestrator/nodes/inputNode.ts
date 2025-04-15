@@ -1,15 +1,9 @@
 import { LLMFactory } from '../../../../services/llm/factory.js';
 import { createLogger } from '../../../../utils/logger.js';
-import { ApiConfig, OrchestratorStateType, Tools } from '../types.js';
+import { ApiConfig, InputNodeFunction, OrchestratorStateType, Tools } from '../types.js';
 import { LLMConfiguration, LLMFactoryConfig } from '../../../../services/llm/types.js';
 import { ChatPromptTemplate } from '@langchain/core/prompts';
 import { attachLogger } from '../../../../api/server.js';
-
-// Define the return type of the node function
-export type InputNodeFunction = (state: OrchestratorStateType) => Promise<{
-  messages: any[];
-  toolCalls: any[] | undefined;
-}>;
 
 export const createInputNode = ({
   modelConfig,
