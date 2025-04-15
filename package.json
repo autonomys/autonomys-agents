@@ -26,20 +26,14 @@
     "node": ">=20.18.1"
   },
   "scripts": {
-    "start": "tsx scripts/dev-all.ts",
     "build:agent": "yarn workspace @autonomys/agent-core build",
     "build:web": "DISABLE_ESLINT_PLUGIN=true yarn workspace web-cli build",
-    "start:agent": "yarn workspace @autonomys/agent-core start",
-    "dev:agent": "yarn workspace @autonomys/agent-core dev",
     "dev:web": "DISABLE_ESLINT_PLUGIN=true yarn workspace web-cli start",
     "test": "yarn workspaces run test",
     "format": "prettier --write \"core/**/*.ts\" \"tests/**/*.ts\" \"web-cli/**/*.ts\"",
     "format:check": "prettier --check \"core/**/*.ts\" \"tests/**/*.ts\" \"web-cli/**/*.ts\"",
     "lint": "eslint \"core/**/*.{js,ts}\" --ignore-pattern \"core/dist/**\"",
     "lint:fix": "eslint \"core/**/*.{js,ts}\" --fix --ignore-pattern \"core/dist/**\"",
-    "generate-certs": "tsx ./scripts/generate-certs.ts",
-    "resurrect": "tsx ./scripts/resurrect.ts",
-    "create-character": "tsx ./scripts/create-character.ts",
     "example": "yarn workspace autonomys-agents-examples tsx index.ts"
   },
   "dependencies": {
