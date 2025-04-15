@@ -1,14 +1,14 @@
-import { getConfig } from 'autonomys-agents-core/src/config/index.js';
-import { createLogger } from 'autonomys-agents-core/src/utils/logger.js';
+import { getConfig } from '@autonomys/agent-core/src/config/index.js';
+import { createLogger } from '@autonomys/agent-core/src/utils/logger.js';
 import {
   createOrchestratorRunner,
   OrchestratorRunner,
-} from 'autonomys-agents-core/src/agents/workflows/orchestrator/orchestratorWorkflow.js';
-import { createPrompts } from 'autonomys-agents-core/src/agents/workflows/orchestrator/prompts.js';
+} from '@autonomys/agent-core/src/agents/workflows/orchestrator/orchestratorWorkflow.js';
+import { createPrompts } from '@autonomys/agent-core/src/agents/workflows/orchestrator/prompts.js';
 import { HumanMessage } from '@langchain/core/messages';
-import { OrchestratorRunnerOptions } from 'autonomys-agents-core/src/agents/workflows/orchestrator/types.js';
-import { createSlackTools } from 'autonomys-agents-core/src/agents/tools/slack/index.js';
-import { parseArgs } from 'autonomys-agents-core/src/utils/args.js';
+import { OrchestratorRunnerOptions } from '@autonomys/agent-core/src/agents/workflows/orchestrator/types.js';
+import { createSlackTools } from '@autonomys/agent-core/src/agents/tools/slack/index.js';
+import { parseArgs } from '@autonomys/agent-core/src/utils/args.js';
 
 parseArgs();
 

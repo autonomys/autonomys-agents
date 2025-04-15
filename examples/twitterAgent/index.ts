@@ -1,18 +1,18 @@
 import { HumanMessage } from '@langchain/core/messages';
-import { createWebSearchTool } from 'autonomys-agents-core/src/agents/tools/webSearch/index.js';
+import { createWebSearchTool } from '@autonomys/agent-core/src/agents/tools/webSearch/index.js';
 import {
   createOrchestratorRunner,
   OrchestratorRunner,
-} from 'autonomys-agents-core/src/agents/workflows/orchestrator/orchestratorWorkflow.js';
-import { createPrompts } from 'autonomys-agents-core/src/agents/workflows/orchestrator/prompts.js';
-import { OrchestratorRunnerOptions } from 'autonomys-agents-core/src/agents/workflows/orchestrator/types.js';
-import { createTwitterAgent } from 'autonomys-agents-core/src/agents/workflows/twitter/twitterAgent.js';
-import { getConfig } from 'autonomys-agents-core/src/config/index.js';
-import { createTwitterApi } from 'autonomys-agents-core/src/agents/tools/twitter/client.js';
-import { createLogger } from 'autonomys-agents-core/src/utils/logger.js';
-import { createAllSchedulerTools } from 'autonomys-agents-core/src/agents/tools/scheduler/index.js';
-import { createExperienceManager } from 'autonomys-agents-core/src/blockchain/agentExperience/index.js';
-import { parseArgs } from 'autonomys-agents-core/src/utils/args.js';
+} from '@autonomys/agent-core/src/agents/workflows/orchestrator/orchestratorWorkflow.js';
+import { createPrompts } from '@autonomys/agent-core/src/agents/workflows/orchestrator/prompts.js';
+import { OrchestratorRunnerOptions } from '@autonomys/agent-core/src/agents/workflows/orchestrator/types.js';
+import { createTwitterAgent } from '@autonomys/agent-core/src/agents/workflows/twitter/twitterAgent.js';
+import { getConfig } from '@autonomys/agent-core/src/config/index.js';
+import { createTwitterApi } from '@autonomys/agent-core/src/agents/tools/twitter/client.js';
+import { createLogger } from '@autonomys/agent-core/src/utils/logger.js';
+import { createAllSchedulerTools } from '@autonomys/agent-core/src/agents/tools/scheduler/index.js';
+import { createExperienceManager } from '@autonomys/agent-core/src/blockchain/agentExperience/index.js';
+import { parseArgs } from '@autonomys/agent-core/src/utils/args.js';
 
 parseArgs();
 

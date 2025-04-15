@@ -1,5 +1,5 @@
 {
-  "name": "autonomys-agents-core",
+  "name": "@autonomys/agent-core",
   "version": "0.5.0",
   "description": "Autonomys Agents Core",
   "main": "dist/index.js",

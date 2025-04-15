@@ -157,6 +157,61 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@autonomys/agent-core@workspace:*, @autonomys/agent-core@workspace:core":
+  version: 0.0.0-use.local
+  resolution: "@autonomys/agent-core@workspace:core"
+  dependencies:
+    "@autonomys/auto-dag-data": "npm:1.4.5"
+    "@autonomys/auto-drive": "npm:1.4.5"
+    "@autonomys/auto-utils": "npm:1.4.5"
+    "@langchain/anthropic": "npm:0.3.17"
+    "@langchain/community": "npm:0.3.40"
+    "@langchain/core": "npm:0.3.44"
+    "@langchain/groq": "npm:0.2.0"
+    "@langchain/langgraph": "npm:0.2.63"
+    "@langchain/mcp-adapters": "npm:^0.4.2"
+    "@langchain/ollama": "npm:0.2.0"
+    "@langchain/openai": "npm:0.5.5"
+    "@notionhq/client": "npm:^2.2.16"
+    "@octokit/rest": "npm:^21.1.1"
+    "@slack/web-api": "npm:^7.8.0"
+    "@tsconfig/node20": "npm:^20.1.4"
+    "@types/better-sqlite3": "npm:^7.6.12"
+    "@types/cors": "npm:^2.8.17"
+    "@types/express": "npm:^5.0.0"
+    "@types/helmet": "npm:^4.0.0"
+    "@types/inquirer": "npm:^9.0.7"
+    "@types/jest": "npm:^29.5.12"
+    "@types/js-yaml": "npm:^4.0.9"
+    "@types/node": "npm:22.10.0"
+    "@types/sqlite3": "npm:^3.1.11"
+    "@types/xml2js": "npm:^0.4.14"
+    agent-twitter-client: "npm:0.0.18"
+    axios: "npm:^1.7.9"
+    better-sqlite3: "npm:^11.8.0"
+    cheerio: "npm:^1.0.0"
+    cors: "npm:^2.8.5"
+    dotenv: "npm:^16.3.1"
+    ethers: "npm:^6.13.4"
+    express: "npm:^4.21.2"
+    express-async-handler: "npm:^1.2.0"
+    firecrawl-mcp: "npm:^1.7.2"
+    helmet: "npm:^8.0.0"
+    http2-express-bridge: "npm:^1.0.7"
+    inquirer: "npm:^10.2.0"
+    jest: "npm:^29.7.0"
+    sqlite3: "npm:^5.1.7"
+    ts-jest: "npm:^29.1.2"
+    tsx: "npm:^4.7.1"
+    typescript: "npm:^5.3.3"
+    vectorlite: "npm:^0.2.0"
+    winston: "npm:^3.11.0"
+    xml2js: "npm:^0.6.2"
+    zod: "npm:^3.22.4"
+    zod-to-json-schema: "npm:^3.24.1"
+  languageName: unknown
+  linkType: soft
+
 "@autonomys/asynchronous@npm:^1.4.5":
   version: 1.4.5
   resolution: "@autonomys/asynchronous@npm:1.4.5"
@@ -7941,66 +7996,11 @@ __metadata:
   languageName: node
   linkType: hard
 
-"autonomys-agents-core@workspace:*, autonomys-agents-core@workspace:core":
-  version: 0.0.0-use.local
-  resolution: "autonomys-agents-core@workspace:core"
-  dependencies:
-    "@autonomys/auto-dag-data": "npm:1.4.5"
-    "@autonomys/auto-drive": "npm:1.4.5"
-    "@autonomys/auto-utils": "npm:1.4.5"
-    "@langchain/anthropic": "npm:0.3.17"
-    "@langchain/community": "npm:0.3.40"
-    "@langchain/core": "npm:0.3.44"
-    "@langchain/groq": "npm:0.2.0"
-    "@langchain/langgraph": "npm:0.2.63"
-    "@langchain/mcp-adapters": "npm:^0.4.2"
-    "@langchain/ollama": "npm:0.2.0"
-    "@langchain/openai": "npm:0.5.5"
-    "@notionhq/client": "npm:^2.2.16"
-    "@octokit/rest": "npm:^21.1.1"
-    "@slack/web-api": "npm:^7.8.0"
-    "@tsconfig/node20": "npm:^20.1.4"
-    "@types/better-sqlite3": "npm:^7.6.12"
-    "@types/cors": "npm:^2.8.17"
-    "@types/express": "npm:^5.0.0"
-    "@types/helmet": "npm:^4.0.0"
-    "@types/inquirer": "npm:^9.0.7"
-    "@types/jest": "npm:^29.5.12"
-    "@types/js-yaml": "npm:^4.0.9"
-    "@types/node": "npm:22.10.0"
-    "@types/sqlite3": "npm:^3.1.11"
-    "@types/xml2js": "npm:^0.4.14"
-    agent-twitter-client: "npm:0.0.18"
-    axios: "npm:^1.7.9"
-    better-sqlite3: "npm:^11.8.0"
-    cheerio: "npm:^1.0.0"
-    cors: "npm:^2.8.5"
-    dotenv: "npm:^16.3.1"
-    ethers: "npm:^6.13.4"
-    express: "npm:^4.21.2"
-    express-async-handler: "npm:^1.2.0"
-    firecrawl-mcp: "npm:^1.7.2"
-    helmet: "npm:^8.0.0"
-    http2-express-bridge: "npm:^1.0.7"
-    inquirer: "npm:^10.2.0"
-    jest: "npm:^29.7.0"
-    sqlite3: "npm:^5.1.7"
-    ts-jest: "npm:^29.1.2"
-    tsx: "npm:^4.7.1"
-    typescript: "npm:^5.3.3"
-    vectorlite: "npm:^0.2.0"
-    winston: "npm:^3.11.0"
-    xml2js: "npm:^0.6.2"
-    zod: "npm:^3.22.4"
-    zod-to-json-schema: "npm:^3.24.1"
-  languageName: unknown
-  linkType: soft
-
 "autonomys-agents-examples@workspace:examples":
   version: 0.0.0-use.local
   resolution: "autonomys-agents-examples@workspace:examples"
   dependencies:
-    autonomys-agents-core: "workspace:*"
+    "@autonomys/agent-core": "workspace:*"
     tsx: "npm:^4.7.1"
   languageName: unknown
   linkType: soft

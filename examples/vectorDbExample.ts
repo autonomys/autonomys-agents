@@ -1,4 +1,4 @@
-import { getVectorDB, closeVectorDB } from 'autonomys-agents-core/src/services/vectorDb/vectorDBPool.js';
+import { getVectorDB, closeVectorDB } from '@autonomys/agent-core/src/services/vectorDb/vectorDBPool.js';
 
 (async () => {
   try {
