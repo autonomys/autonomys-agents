@@ -4,6 +4,9 @@
 
 Autonomys Agents is an **EXPERIMENTAL** framework for building AI agents. Currently, the framework supports agents that can interact with social networks and maintain permanent memory through the Autonomys Network. We are still in the **EARLY STAGES OF DEVELOPMENT** and are actively seeking feedback and contributions. We will be rapidly adding many more workflows and features.
 
+> **IMPORTANT**: The main branch of this repository is under active development and may contain breaking changes. Please use the latest stable release for production environments.
+
+
 ## Features
 
 - 🤖 Autonomous social media engagement
@@ -15,21 +18,11 @@ Autonomys Agents is an **EXPERIMENTAL** framework for building AI agents. Curren
 
 ## Getting Started
 
-1. Install dependencies: `yarn install`
+1. Create a new project and install `@autonomys/agent-core`
    - Windows users will need to install Visual Studio C++ Redistributable. They can be found here: https://aka.ms/vs/17/release/vc_redist.x64.exe
-2. Create your character config: `yarn create-character <your-character-name>`
-3. Setup character config:
-   - All character configs are stored in `characters/{your-character-name}/config`
-   - Update .env with applicable environment variables
-   - Update `config.yaml` with applicable configuration
-   - Update `{your-character-name}.yaml` with applicable personality configuration (See Character System below).
-4. Agent API
-   - The Agent API uses HTTP/2 protocol exclusively, requiring SSL certificates. Generate these by running `yarn generate-certs`
-5. Run your character:
-   - For dev purposes in watch mode: `yarn dev:agent <your-character-name>`
-   - For production build and run: `yarn start:agent <your-character-name>`
-6. Run agent and WebCli 
-   - For dev purposes: `yarn start <your-character-name>`
+2. Create a new folder name `characters` and follow the `character.example` to create your character with all the configurations and environment variables
+3. If you like to run your agent with API, create `certs` folder and generate self-signed SSL certificates.
+4. Follow the commands below to run your agent!
 
 ### Command Line Arguments
 
@@ -37,30 +30,30 @@ The agent supports the following command-line arguments:
 
 - **Character Name**: (Required) The first argument specifies which character to run
   ```bash
-  yarn dev:agent my-character
+  yarn start my-character
   ```
 
 - **--headless**: (Optional) Run the agent without starting the API server
   ```bash
-  yarn dev:agent my-character --headless
+  yarn start my-character --headless
   ```
 
-- **--workspace=PATH**: (Optional) Specify a custom workspace root directory where the `characters` folder exists
+- **--workspace=PATH**: (Optional) Specify a custom workspace root directory where the `characters` and `certs` folder exists
   ```bash
-  yarn dev:agent my-character --workspace=/path/to/your/project
+  yarn start my-character --workspace=/path/to/your/project
   ```
 
 - **--help**: Show available command-line options
   ```bash
-  yarn dev:agent --help
+  yarn start --help
   ```
 
 You can combine multiple options as needed:
 ```bash
-yarn dev:agent <your-character-name> --headless --workspace=/path/to/your/project
+yarn start <your-character-name> --headless --workspace=/path/to/your/project
 ```
 
-## Docker Deployment simultaneously
+<!-- ## Docker Deployment simultaneously
 
 You can also run your agents using Docker. This provides isolation and makes it easy to run multiple agents simultaneously.
 
@@ -107,7 +100,7 @@ You can also run your agents using Docker. This provides isolation and makes it 
    - Access container shell: 
      ```bash
      docker exec -it autonomys-agent-{character-name} bash
-     ```
+     ``` -->
 
 ### Running Multiple Agents
 
@@ -151,7 +144,7 @@ A modern web-based interface for interacting with your agent. To start:
    yarn dev:web
    ```
 
-## Running with dev:all (Web-CLI And Agent)
+<!-- ## Running with dev:all (Web-CLI And Agent)
 
 The `start` command launches both the main application and web interface concurrently:
 
@@ -163,13 +156,14 @@ This command:
 - Starts your agent with the specified character
 - Launches the web interface configured for that character
 - Automatically uses the character's API port from its .env file
-- Provides color-coded output from both processes
+- Provides color-coded output from both processes -->
 
 
 ## Examples
 
 The following examples demonstrate the use of the framework and are available:
 
+- [Template Agent](examples/exampleAgent/README.md)
 - [Twitter Agent](examples/twitterAgent/README.md)
 - [Multi Personality](examples/multiPersonality/README.md)
 - Github Agent
@@ -186,16 +180,6 @@ yarn example
 ## Character System
 
 The framework uses a YAML-based character system that allows you to create and run different AI personalities.
-
-### Creating Characters
-
-1. Character related files are stored in `characters/{your-character-name}/`
-2. Create new characters by running the `create-character.ts` script:
-
-   ```bash
-   # Create a new character
-   yarn create-character your_character
-   ```
 
 ### Character Configuration
 
@@ -250,7 +234,7 @@ To use this feature:
 4. Make sure your Taurus EVM wallet has funds. A faucet can be found at https://subspacefaucet.com/
 5. Provide encryption password in `.env` (optional, leave empty to not encrypt the agent memories)
 
-## Resurrection
+<!-- ## Resurrection
 
 To resurrect memories from the Autonomys Network, run the following command:
 
@@ -269,15 +253,15 @@ yarn resurrect your_character_name --workspace=/path/to/your/project    # Use a 
 yarn resurrect --help                                     # Show help menu
 ```
 
-While memories are being fetched, they will be added to the vector database named `experiences` in the background, located in the character's data directory within the workspace.
+While memories are being fetched, they will be added to the vector database named `experiences` in the background, located in the character's data directory within the workspace. -->
 
-## Testing
+<!-- ## Testing
 
 To run tests:
 
 ```bash
 yarn test
-```
+``` -->
 
 ## License
 
