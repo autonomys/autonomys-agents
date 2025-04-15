@@ -37,9 +37,9 @@
     "format:check": "prettier --check \"core/**/*.ts\" \"tests/**/*.ts\" \"web-cli/**/*.ts\"",
     "lint": "eslint \"core/**/*.{js,ts}\" --ignore-pattern \"core/dist/**\"",
     "lint:fix": "eslint \"core/**/*.{js,ts}\" --fix --ignore-pattern \"core/dist/**\"",
-    "generate-certs": "yarn workspace @autonomys/agent-core generate-certs",
-    "resurrect": "yarn workspace @autonomys/agent-core resurrect",
-    "create-character": "yarn workspace @autonomys/agent-core create-character",
+    "generate-certs": "tsx ./scripts/generate-certs.ts",
+    "resurrect": "tsx ./scripts/resurrect.ts",
+    "create-character": "tsx ./scripts/create-character.ts",
     "example": "yarn workspace autonomys-agents-examples tsx index.ts"
   },
   "dependencies": {
