@@ -1,0 +1,35 @@
+twitter:
+  post_tweets: false
+  model_configurations:
+    input_model_config:
+      provider: anthropic
+      model: claude-3-5-sonnet-latest
+      temperature: 0.8
+    message_summary_model_config:
+      provider: openai
+      model: gpt-4o
+      temperature: 0.8
+    finish_workflow_model_config:
+      provider: openai
+      model: gpt-4o
+      temperature: 0.8
+
+auto_drive:
+  save_experiences: false
+  monitoring: false
+  network: 'mainnet' # or 'taurus'
+
+orchestrator:
+  model_configurations:
+    input_model_config:
+      provider: anthropic
+      model: claude-3-5-sonnet-latest
+      temperature: 0.8
+    message_summary_model_config:
+      provider: openai
+      model: gpt-4o
+      temperature: 0.8
+    finish_workflow_model_config:
+      provider: openai
+      model: gpt-4o
+      temperature: 0.8
