@@ -18,11 +18,27 @@ Autonomys Agents is an **EXPERIMENTAL** framework for building AI agents. Curren
 
 ## Getting Started
 
-1. Create a new project and install `@autonomys/agent-core`
+1. Create a new repository using the template at [autonomys-agent-template](https://github.com/autonomys/autonomys-agent-template)
+2. Clone your new repository and install dependencies:
+   ```bash
+   git clone <your-repo-url>
+   cd <your-repo-directory>
+   yarn install
+   ```
    - Windows users will need to install Visual Studio C++ Redistributable. They can be found here: https://aka.ms/vs/17/release/vc_redist.x64.exe
-2. Create a new folder name `characters` and follow the `character.example` to create your character with all the configurations and environment variables
-3. If you would like to run your agent with the API, create `certs` folder and generate self-signed SSL certificates.
-4. Follow the commands below to run your agent!
+3. Create a character using the provided script:
+   ```bash
+   yarn create-character your_character_name
+   ```
+4. Configure your character:
+   - Edit `characters/your_character_name/config/.env` with your API keys and credentials
+      - `OPENAI_API_KEY` is required for the vector database that powers agent memory through embeddings
+   - Customize `characters/your_character_name/config/config.yaml` for agent behavior
+   - Define personality in `characters/your_character_name/config/your_character_name.yaml`
+5. Generate SSL certificates (required for API server):
+   ```bash
+   yarn generate-certs
+   ```
 
 ### Command Line Arguments
 
@@ -30,17 +46,12 @@ The agent supports the following command-line arguments:
 
 - **Character Name**: (Required) The first argument specifies which character to run
   ```bash
-  yarn start my-character
+  yarn start my-character --workspace=</path/to/your/project>
   ```
 
 - **--headless**: (Optional) Run the agent without starting the API server
   ```bash
-  yarn start my-character --headless
-  ```
-
-- **--workspace=PATH**: (Optional) Specify a custom workspace root directory where the `characters` and `certs` folder exists
-  ```bash
-  yarn start my-character --workspace=/path/to/your/project
+  yarn start my-character --workspace=</path/to/your/project> --headless
   ```
 
 - **--help**: Show available command-line options
@@ -48,10 +59,7 @@ The agent supports the following command-line arguments:
   yarn start --help
   ```
 
-You can combine multiple options as needed:
-```bash
-yarn start <your-character-name> --headless --workspace=/path/to/your/project
-```
+ > #### Note: The `--workspace` parameter is required because the runtime needs to locate important directories like characters, certs, and cookies. Always specify the path to your project root where these directories are located.
 
 <!-- ## Docker Deployment simultaneously
 
@@ -163,7 +171,6 @@ This command:
 
 The following examples demonstrate the use of the framework and are available:
 
-- [Template Agent](examples/exampleAgent/README.md)
 - [Twitter Agent](examples/twitterAgent/README.md)
 - [Multi Personality](examples/multiPersonality/README.md)
 - Github Agent
