@@ -21,7 +21,7 @@ Autonomys Agents is an **EXPERIMENTAL** framework for building AI agents. Curren
 1. Create a new project and install `@autonomys/agent-core`
    - Windows users will need to install Visual Studio C++ Redistributable. They can be found here: https://aka.ms/vs/17/release/vc_redist.x64.exe
 2. Create a new folder name `characters` and follow the `character.example` to create your character with all the configurations and environment variables
-3. If you like to run your agent with API, create `certs` folder and generate self-signed SSL certificates.
+3. If you would like to run your agent with the API, create `certs` folder and generate self-signed SSL certificates.
 4. Follow the commands below to run your agent!
 
 ### Command Line Arguments
