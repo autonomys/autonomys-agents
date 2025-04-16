@@ -46,9 +46,9 @@
     "pack": "yarn pack"
   },
   "dependencies": {
-    "@autonomys/auto-dag-data": "1.4.5",
-    "@autonomys/auto-drive": "1.4.5",
-    "@autonomys/auto-utils": "1.4.5",
+    "@autonomys/auto-dag-data": "1.4.17",
+    "@autonomys/auto-drive": "1.4.17",
+    "@autonomys/auto-utils": "1.4.17",
     "@langchain/anthropic": "0.3.17",
     "@langchain/community": "0.3.40",
     "@langchain/core": "0.3.44",
