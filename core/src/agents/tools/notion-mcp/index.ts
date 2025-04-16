@@ -1,8 +1,11 @@
 import { logger } from '../agentExperiences/index.js';
 import { createMcpClientTool } from '../mcp-tool/index.js';
 import { StdioServerParameters } from '@modelcontextprotocol/sdk/client/stdio.js';
+import { StructuredToolInterface } from '@langchain/core/tools';
 
-export const createNotionTools = async (integrationSecret: string) => {
+export const createNotionTools = async (
+  integrationSecret: string,
+): Promise<StructuredToolInterface[]> => {
   const notionServerParams: StdioServerParameters = {
     command: process.execPath,
     args: ['node_modules/.bin/notion-mcp-server'],
