@@ -10,7 +10,7 @@
     "dev": "tsx --no-cache --watch agent.ts"
   },
   "dependencies": {
-    "@autonomys/agent-core": "^0.1.0",
+    "@autonomys/agent-core": "^0.1.1",
     "yargs": "^17.7.2"
   },
   "devDependencies": {
