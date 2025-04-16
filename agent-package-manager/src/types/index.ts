@@ -6,6 +6,12 @@ export interface InstallOptions {
   local?: boolean;
 }
 
+export interface InitOptions {
+  install?: boolean;
+  character?: string;
+  api?: boolean;
+}
+
 export interface ToolInstallInfo {
   name: string;
   cid: string;
