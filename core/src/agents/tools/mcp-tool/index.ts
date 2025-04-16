@@ -4,12 +4,13 @@ import {
   StdioServerParameters,
 } from '@modelcontextprotocol/sdk/client/stdio.js';
 import { loadMcpTools } from '@langchain/mcp-adapters';
+import { StructuredToolInterface } from '@langchain/core/tools';
 
 export const createMcpClientTool = async (
   clientName: string,
   clientVersion: string,
   serverParams: StdioServerParameters,
-) => {
+): Promise<StructuredToolInterface[]> => {
   const transport = new StdioClientTransport(serverParams);
   const client = new Client({
     name: clientName,

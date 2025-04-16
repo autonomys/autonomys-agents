@@ -5,6 +5,14 @@ import { createToolExecutionNode } from './nodes/toolExecutionNode.js';
 import { OrchestratorConfig } from './types.js';
 import { DynamicStructuredTool } from '@langchain/core/tools';
 
+// Define a type for the nodes object
+export interface OrchestratorNodes {
+  inputNode: ReturnType<typeof createInputNode>;
+  messageSummaryNode: ReturnType<typeof createMessageSummaryNode>;
+  finishWorkflowNode: ReturnType<typeof createFinishWorkflowNode>;
+  toolExecutionNode: ReturnType<typeof createToolExecutionNode>;
+}
+
 export const createNodes = async ({
   modelConfigurations,
   tools,
@@ -13,7 +21,7 @@ export const createNodes = async ({
   namespace,
   apiConfig,
   llmConfig,
-}: OrchestratorConfig) => {
+}: OrchestratorConfig): Promise<OrchestratorNodes> => {
   const { inputPrompt, messageSummaryPrompt, finishWorkflowPrompt } = prompts;
   const { inputModelConfig, messageSummaryModelConfig, finishWorkflowModelConfig } =
     modelConfigurations;

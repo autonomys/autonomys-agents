@@ -1,5 +1,7 @@
 characters/*
+examples/exampleAgent/characters/*
 !characters/character.example/
+!examples/exampleAgent/characters/character.example/
 .cookies/
 .google/
 memories/
@@ -46,3 +48,5 @@ node_modules/
 .yarn/cache
 .yarn/install-state.gz
 .yarn/unplugged
+
+*.tgz
