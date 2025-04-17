@@ -3,6 +3,7 @@ import { CommandResult, ToolMetadata } from '../types/index.js';
 import { getRegistry } from '../utils/commands/registry/toolInquiry.js';
 
 const list = async (): Promise<CommandResult> => {
+  // TODO - This should get updated with reading the data from web-server
   console.log(chalk.blue('Fetching available tools from registry...'));
 
   try {
