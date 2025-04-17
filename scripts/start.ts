@@ -27,7 +27,7 @@ const start = async () => {
     if (!existsSync(indexJsPath)) {
       // Run build using workspace to ensure it runs in the context of the core package
       console.log('Building the project...');
-      await execAsync('yarn workspace autonomys-agents-core build');
+      await execAsync('yarn workspace @autonomys/agent-core build');
       
       // Verify the build succeeded
       if (!existsSync(indexJsPath)) {

@@ -1,4 +1,4 @@
-import { BaseMessage } from '@langchain/core/messages';
+import { AIMessage, BaseMessage } from '@langchain/core/messages';
 import { ChatPromptTemplate } from '@langchain/core/prompts';
 import { ToolNode } from '@langchain/langgraph/prebuilt';
 import { LLMConfiguration } from '../../../services/llm/types.js';
@@ -115,3 +115,9 @@ export type PruningParameters = {
 };
 
 export type Tools = ToolNode['tools'];
+
+export type InputNodeFunction = (state: OrchestratorStateType) => Promise<{
+  messages: AIMessage[];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  toolCalls: any[] | undefined;
+}>;

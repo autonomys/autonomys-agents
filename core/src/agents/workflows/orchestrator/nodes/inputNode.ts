@@ -1,6 +1,6 @@
 import { LLMFactory } from '../../../../services/llm/factory.js';
 import { createLogger } from '../../../../utils/logger.js';
-import { ApiConfig, OrchestratorStateType, Tools } from '../types.js';
+import { ApiConfig, InputNodeFunction, OrchestratorStateType, Tools } from '../types.js';
 import { LLMConfiguration, LLMFactoryConfig } from '../../../../services/llm/types.js';
 import { ChatPromptTemplate } from '@langchain/core/prompts';
 import { attachLogger } from '../../../../api/server.js';
@@ -19,7 +19,7 @@ export const createInputNode = ({
   namespace: string;
   apiConfig: ApiConfig;
   llmConfig: LLMFactoryConfig;
-}) => {
+}): InputNodeFunction => {
   const logger = attachLogger(
     createLogger(`${namespace}-input-node`),
     namespace,
