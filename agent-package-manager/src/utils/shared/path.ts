@@ -5,7 +5,7 @@ const HOME_DIR = process.env.HOME || process.env.USERPROFILE || '';
 const AUTOOS_DIR = path.join(HOME_DIR, '.autoOS');
 const PACKAGES_DIR = path.join(AUTOOS_DIR, 'packages');
 const TOOLS_DIR = path.join(AUTOOS_DIR, 'tools');
-const DEFAULT_PROJECT_TOOLS_PATH = 'src/agents/tools';
+const DEFAULT_PROJECT_TOOLS_PATH = 'src/tools';
 const REGISTRY_CACHE_PATH = path.join(AUTOOS_DIR, 'registry.json');
 const CONFIG_FILE = path.join(AUTOOS_DIR, 'config.json');
 const CREDENTIALS_FILE = path.join(AUTOOS_DIR, 'credentials.enc');
@@ -19,7 +19,7 @@ const ensureAutoOSDir = async () => {
   }
 };
 
-const detectProjectRoot = async (): Promise<string | undefined> => {
+const detectProjectRoot = async (): Promise<{ root: string; isTemplateProject: boolean } | undefined> => {
   let currentDir = process.cwd();
 
   while (currentDir && currentDir !== HOME_DIR && currentDir !== path.parse(currentDir).root) {
@@ -30,7 +30,33 @@ const detectProjectRoot = async (): Promise<string | undefined> => {
         files.includes('tsconfig.json') ||
         files.includes('.git')
       ) {
-        return currentDir;
+        // Check if this is an autonomys-agent-template based project
+        let isTemplateProject = false;
+        try {
+          const packageJsonPath = path.join(currentDir, 'package.json');
+          const packageJsonContent = await fs.readFile(packageJsonPath, 'utf8');
+          const packageJson = JSON.parse(packageJsonContent);
+          
+          // Check for key dependencies that would indicate this is our template
+          if (packageJson.dependencies && packageJson.dependencies['@autonomys/agent-core']) {
+            isTemplateProject = true;
+          }
+          
+          // Also check src directory structure
+          if (files.includes('src')) {
+            const srcFiles = await fs.readdir(path.join(currentDir, 'src'));
+            if (srcFiles.includes('tools') || srcFiles.includes('index.ts')) {
+              isTemplateProject = true;
+            }
+          }
+        } catch (err) {
+          // If we can't read package.json, assume it's not a template project
+        }
+        
+        return { 
+          root: currentDir,
+          isTemplateProject 
+        };
       }
 
       currentDir = path.dirname(currentDir);
@@ -45,10 +71,24 @@ const detectProjectRoot = async (): Promise<string | undefined> => {
 
 const getToolInstallDir = async (isLocalInstall: boolean): Promise<{ installDir: string }> => {
   if (isLocalInstall) {
-    const projectRoot = await detectProjectRoot();
-    if (!projectRoot) {
+    const projectInfo = await detectProjectRoot();
+    if (!projectInfo) {
       throw new Error('Could not detect project root. Make sure you are in a project directory.');
     }
+    
+    const { root: projectRoot, isTemplateProject } = projectInfo;
+    
+    // If this is a template project, use the template directory structure
+    if (isTemplateProject) {
+      const toolsDir = path.join(projectRoot, 'src', 'tools');
+      // Ensure the directory exists
+      await fs.mkdir(toolsDir, { recursive: true });
+      return {
+        installDir: toolsDir,
+      };
+    }
+    
+    // Otherwise use the default path
     return {
       installDir: path.join(projectRoot, DEFAULT_PROJECT_TOOLS_PATH),
     };

@@ -15,28 +15,22 @@ import { CommandResult, InitOptions } from '../types/index.js';
 const downloadFile = async (url: string, destinationPath: string): Promise<void> => {
   return new Promise((resolve, reject) => {
     const makeRequest = (requestUrl: string, redirectCount = 0) => {
-      // Prevent infinite redirect loops
       if (redirectCount > 5) {
         reject(new Error('Too many redirects'));
         return;
       }
 
-      // Parse the URL to determine if it's http or https
       const urlObj = new URL(requestUrl);
       const httpModule = urlObj.protocol === 'https:' ? https : require('http');
 
       const request = httpModule.get(requestUrl, async (response: http.IncomingMessage) => {
-        // Handle redirects (status codes 301, 302, 303, 307, 308)
         if (
           response.statusCode &&
           response.statusCode >= 300 &&
           response.statusCode < 400 &&
           response.headers.location
         ) {
-          // Close current request
           request.destroy();
-
-          // Follow the redirect
           makeRequest(response.headers.location, redirectCount + 1);
           return;
         }
@@ -62,7 +56,6 @@ const downloadFile = async (url: string, destinationPath: string): Promise<void>
       });
     };
 
-    // Start the request
     makeRequest(url);
   });
 };
@@ -351,6 +344,11 @@ const init = async (projectName: string, options: InitOptions): Promise<CommandR
       }
       console.log(chalk.cyan(`  yarn start ${options.character} --workspace=/path/to/workspace`));
     }
+    
+    // Add information about installing tools
+    console.log(chalk.green(`\nInstalling agent tools:`));
+    console.log(chalk.cyan(`  autoOS install <tool-name> --local`));
+    console.log(chalk.cyan(`  # Tools will be installed to src/tools/ in your project`));
 
     // Suggest flags for next time
     if (!options.install || !options.character || !options.api) {
