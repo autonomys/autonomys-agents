@@ -33,8 +33,8 @@ function App() {
         <div className='App'>
           <HeaderArea />
           <div className='main-content-layout'>
-            <BodyArea />
             <OutputLog messages={messages} />
+            <BodyArea />
           </div>
         </div>
       </ChatProvider>

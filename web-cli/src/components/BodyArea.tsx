@@ -5,7 +5,7 @@ import { useChatContext } from '../context/ChatContext';
 import {
   subscribeToTaskUpdates,
   subscribeToProcessingTasks,
-  subscribeToCompletedTasks, 
+  subscribeToCompletedTasks,
   closeTaskStream,
   ConnectionStatus,
   subscribeToConnectionStatus,
@@ -133,16 +133,16 @@ const BodyArea: React.FC = () => {
   const allTasks = {
     scheduled: scheduledTasks,
     processing: processingTasks,
-    completed: completedTasks
+    completed: completedTasks,
   };
 
   return (
-    <Flex className="left-panel" direction="column" position='relative' height="100%" pb={0}>
+    <Flex className='left-panel' direction='column' position='relative' height='100%' pb={0}>
       {chatState.activeChatNamespace ? (
         <ChatArea namespace={chatState.activeChatNamespace} onClose={handleCloseChat} />
       ) : (
         <>
-          <Box flex="0 0 auto" mb={2}>
+          <Box flex='0 0 auto' mb={2}>
             <InputArea
               value={state.value}
               handleInputChange={handleInputChange}
@@ -151,7 +151,7 @@ const BodyArea: React.FC = () => {
               error={error}
             />
           </Box>
-          <Box flex="1" overflow="auto" mb={0}>
+          <Box flex='1' mb={0}>
             <TasksArea
               tasks={allTasks}
               loading={loading}

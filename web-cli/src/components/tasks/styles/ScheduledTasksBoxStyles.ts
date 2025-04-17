@@ -64,9 +64,7 @@ export const containerBoxStyles: BoxProps = {
   overflow: 'auto',
   p: 4,
   bg: 'rgba(20, 20, 20, 0.7)',
-  backdropFilter: 'blur(5px)',
-  height: '100%',
-  minHeight: '500px',
+  height: '450px',
   width: '100%',
 };
 

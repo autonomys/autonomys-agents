@@ -10,7 +10,7 @@ export const metadataContainer: BoxProps = {
 // Custom styling for the right panel layout
 export const customOutputLogContainer = {
   flex: { base: '1', md: '0.6' },
-  height: { base: 'calc(100vh - 122px)', md: '100%' }, // Responsive height
+  height: { base: 'calc(100vh - 175px)' }, // Responsive height
   position: 'relative',
   zIndex: '1',
   borderLeft: { base: 'none', md: '1px solid' },
@@ -20,7 +20,7 @@ export const customOutputLogContainer = {
   flexDirection: 'column',
   overflow: 'hidden',
   bg: 'black',
-  marginTop: '12px', // Reduced margin to better align with Status box
+  marginTop: '8px', // Reduced margin to better align with Status box
   borderRadius: 'md',
   border: '1px solid rgba(0, 255, 153, 0.3)',
 };

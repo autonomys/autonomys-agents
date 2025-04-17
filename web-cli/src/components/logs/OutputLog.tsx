@@ -16,11 +16,9 @@ import {
   customOutputLogContainer,
 } from './styles/LogStyles';
 
-
-
 const OutputLog: React.FC<OutputLogProps> = ({ messages }) => {
   // Using vh units for consistency across browsers instead of window.innerHeight
-  const initialHeight = typeof window !== 'undefined' ? window.innerHeight  : 0;
+  const initialHeight = typeof window !== 'undefined' ? window.innerHeight : 0;
   const [size, setSize] = useState({ height: initialHeight });
   const [isCollapsed, setIsCollapsed] = useState(false); // Changed to false (expanded by default)
   const [prevHeight, setPrevHeight] = useState(initialHeight);
@@ -133,7 +131,7 @@ const OutputLog: React.FC<OutputLogProps> = ({ messages }) => {
       if (isCollapsed && d.height > 0) {
         setIsCollapsed(false);
       }
-      
+
       setSize(prevSize => ({
         height: prevSize.height + d.height,
       }));
@@ -157,7 +155,7 @@ const OutputLog: React.FC<OutputLogProps> = ({ messages }) => {
   const filteredMessages = getFilteredMessages(activeNamespace);
 
   return (
-    <Box {...customOutputLogContainer} className="right-panel">
+    <Box {...customOutputLogContainer} className='right-panel'>
       {/* Search overlay (visible when triggered) */}
       <LogSearch
         activeNamespace={activeNamespace}
@@ -207,7 +205,7 @@ const OutputLog: React.FC<OutputLogProps> = ({ messages }) => {
       >
         <Flex ref={containerRef} {...outputLogFlexContainer}>
           {/* Use headerRef to dynamically measure the header height */}
-          <Box ref={headerRef} width="100%">
+          <Box ref={headerRef} width='100%'>
             <NamespaceTabs
               namespaces={namespaces}
               activeNamespace={activeNamespace}
@@ -226,12 +224,12 @@ const OutputLog: React.FC<OutputLogProps> = ({ messages }) => {
           <Box
             ref={(ref: HTMLDivElement | null) => setLogContainerRef(ref)}
             {...outputLogScrollBox}
-            maxHeight={isCollapsed ? "0" : `${size.height - headerHeight}px`}
-            height={isCollapsed ? "0" : "auto"}
-            overflow={isCollapsed ? "hidden" : "auto"}
-            transition="all 0.3s ease"
+            maxHeight={isCollapsed ? '0' : `688px`}
+            height={isCollapsed ? '0' : 'auto'}
+            overflow={isCollapsed ? 'hidden' : 'auto'}
+            transition='all 0.3s ease'
             opacity={isCollapsed ? 0 : 1}
-            visibility={isCollapsed ? "hidden" : "visible"}
+            visibility={isCollapsed ? 'hidden' : 'visible'}
           >
             <LogMessageList
               filteredMessages={filteredMessages}

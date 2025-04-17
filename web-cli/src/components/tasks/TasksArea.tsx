@@ -8,7 +8,7 @@ import {
   containerStyles,
   contentContainerStyles,
   loadingContainerStyles,
-  loadingTextStyles
+  loadingTextStyles,
 } from './styles/TasksAreaStyles';
 
 interface TasksAreaProps {
@@ -36,11 +36,7 @@ const TasksArea: React.FC<TasksAreaProps> = ({
   handleReconnect,
 }) => {
   // Combine all tasks for display
-  const allTasks = [
-    ...tasks.processing,
-    ...tasks.scheduled,
-    ...tasks.completed
-  ];
+  const allTasks = [...tasks.processing, ...tasks.scheduled, ...tasks.completed];
 
   return (
     <Flex {...containerStyles}>
@@ -50,8 +46,8 @@ const TasksArea: React.FC<TasksAreaProps> = ({
         handleReconnect={handleReconnect}
       />
       <Box {...contentContainerStyles}>
-        <ScheduledTasksBox 
-          tasks={allTasks} 
+        <ScheduledTasksBox
+          tasks={allTasks}
           onDeleteTask={handleDeleteTask}
           processingTasks={tasks.processing}
           scheduledTasks={tasks.scheduled}
@@ -62,9 +58,7 @@ const TasksArea: React.FC<TasksAreaProps> = ({
       {loading && (
         <Flex {...loadingContainerStyles}>
           <Spinner size='sm' color='brand.neonBlue' />
-          <Text {...loadingTextStyles}>
-            Loading tasks...
-          </Text>
+          <Text {...loadingTextStyles}>Loading tasks...</Text>
         </Flex>
       )}
     </Flex>
