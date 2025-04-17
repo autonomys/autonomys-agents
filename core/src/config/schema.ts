@@ -134,6 +134,8 @@ const orchestratorConfigSchema = z.object({
 
 const SERPAPI_API_KEY = z.string().optional();
 const FIRECRAWL_API_KEY = z.string().optional();
+const NOTION_INTEGRATION_SECRET = z.string().optional();
+
 // Add API security configuration schema
 const apiSecurityConfigSchema = z.object({
   API_TOKEN: z.string().min(32).optional(),
@@ -155,6 +157,7 @@ export const configSchema = z.object({
   apiSecurityConfig: apiSecurityConfigSchema,
   SERPAPI_API_KEY: SERPAPI_API_KEY,
   FIRECRAWL_API_KEY: FIRECRAWL_API_KEY,
+  NOTION_INTEGRATION_SECRET: NOTION_INTEGRATION_SECRET,
   NODE_ENV: z.enum(['development', 'production', 'test']),
   API_PORT: z.number().int().positive().default(3001),
   ENABLE_API: z.boolean().default(true),

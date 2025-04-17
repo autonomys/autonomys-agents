@@ -1,6 +1,6 @@
 {
   "name": "@autonomys/agent-core",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Autonomys Agents Core",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -58,6 +58,7 @@
     "@langchain/ollama": "0.2.0",
     "@langchain/openai": "0.5.5",
     "@notionhq/client": "^2.2.16",
+    "@notionhq/notion-mcp-server": "^1.5.0",
     "@octokit/rest": "^21.1.1",
     "@slack/web-api": "^7.8.0",
     "@types/helmet": "^4.0.0",
