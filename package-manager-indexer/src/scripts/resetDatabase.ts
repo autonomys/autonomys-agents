@@ -8,7 +8,7 @@ const logger = createLogger('reset-database');
  * Script to completely reset the database by truncating all tables
  * This preserves the schema but removes all data
  */
-async function resetDatabase() {
+const resetDatabase = async () => {
   try {
     logger.info('Starting database reset...');
     

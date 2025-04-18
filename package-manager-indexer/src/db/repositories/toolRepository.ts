@@ -1,5 +1,5 @@
 import { pool } from '../connection.js';
-import { Tool, ToolVersion, Version, nameToHash, bytes32ToBuffer } from '../../models/Tool.js';
+import { Tool, ToolVersion, Version, nameToHash } from '../../models/Tool.js';
 import { createLogger } from '../../utils/logger.js';
 
 const logger = createLogger('tool-repository');
@@ -103,29 +103,20 @@ export const getToolByNameHash = async (nameHash: Buffer | string): Promise<Tool
 export const saveToolVersion = async (
   toolId: number,
   version: Version,
-  cidHash: Buffer | string,
-  metadataHash: Buffer | string,
+  cid: string,
+  metadataCid: string,
   publisherAddress: string,
   publishedAt: Date
 ): Promise<ToolVersion> => {
   try {
-    // Convert hashes to Buffer if they're strings
-    const cidHashBuffer = typeof cidHash === 'string' 
-      ? bytes32ToBuffer(cidHash)
-      : cidHash;
-    
-    const metadataHashBuffer = typeof metadataHash === 'string'
-      ? bytes32ToBuffer(metadataHash)
-      : metadataHash;
-
     const query = `
       INSERT INTO tool_versions (
         tool_id, major, minor, patch, 
-        cid_hash, metadata_hash, publisher_address, published_at
+        cid, metadata_cid, publisher_address, published_at
       )
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
       RETURNING id, tool_id as "toolId", major, minor, patch, 
-      cid_hash as "cidHash", metadata_hash as "metadataHash", 
+      cid, metadata_cid as "metadataCid", 
       publisher_address as "publisherAddress", published_at as "publishedAt",
       created_at as "createdAt"
     `;
@@ -134,8 +125,8 @@ export const saveToolVersion = async (
       version.major,
       version.minor,
       version.patch,
-      cidHashBuffer,
-      metadataHashBuffer,
+      cid,
+      metadataCid,
       publisherAddress,
       publishedAt
     ];
@@ -151,24 +142,19 @@ export const saveToolVersion = async (
 export const updateToolVersionMetadata = async (
   toolId: number,
   version: Version,
-  metadataHash: Buffer | string
+  metadataCid: string
 ): Promise<ToolVersion | null> => {
   try {
-    // Convert metadataHash to Buffer if it's a string
-    const metadataHashBuffer = typeof metadataHash === 'string'
-      ? bytes32ToBuffer(metadataHash)
-      : metadataHash;
-
     const query = `
       UPDATE tool_versions
-      SET metadata_hash = $1
+      SET metadata_cid = $1
       WHERE tool_id = $2 AND major = $3 AND minor = $4 AND patch = $5
       RETURNING id, tool_id as "toolId", major, minor, patch, 
-      cid_hash as "cidHash", metadata_hash as "metadataHash", 
+      cid, metadata_cid as "metadataCid", 
       publisher_address as "publisherAddress", published_at as "publishedAt",
       created_at as "createdAt"
     `;
-    const values = [metadataHashBuffer, toolId, version.major, version.minor, version.patch];
+    const values = [metadataCid, toolId, version.major, version.minor, version.patch];
     const { rows } = await pool.query(query, values);
     return rows.length > 0 ? rows[0] : null;
   } catch (error) {

@@ -74,7 +74,7 @@ export const getToolByName = async (name: string): Promise<ToolWithVersions | nu
     // Get versions for this tool
     const versionsQuery = `
       SELECT id, tool_id as "toolId", major, minor, patch, 
-      cid_hash as "cidHash", metadata_hash as "metadataHash", 
+      cid, metadata_cid as "metadataCid", 
       publisher_address as "publisherAddress", published_at as "publishedAt",
       created_at as "createdAt"
       FROM tool_versions
@@ -99,7 +99,7 @@ export const getToolVersions = async (toolId: number): Promise<ToolVersion[]> =>
   try {
     const query = `
       SELECT id, tool_id as "toolId", major, minor, patch, 
-      cid_hash as "cidHash", metadata_hash as "metadataHash", 
+      cid, metadata_cid as "metadataCid", 
       publisher_address as "publisherAddress", published_at as "publishedAt",
       created_at as "createdAt"
       FROM tool_versions
@@ -120,7 +120,7 @@ export const getLatestToolVersions = async (): Promise<{
   toolName: string, 
   toolId: number, 
   version: string, 
-  cidHash: Buffer, 
+  cid: string, 
   publisherAddress: string, 
   publishedAt: Date 
 }[]> => {
@@ -133,7 +133,7 @@ export const getLatestToolVersions = async (): Promise<{
           tv.major,
           tv.minor,
           tv.patch,
-          tv.cid_hash,
+          tv.cid,
           tv.publisher_address,
           tv.published_at,
           ROW_NUMBER() OVER (
@@ -147,7 +147,7 @@ export const getLatestToolVersions = async (): Promise<{
         tool_name as "toolName",
         tool_id as "toolId",
         concat(major, '.', minor, '.', patch) as version,
-        cid_hash as "cidHash",
+        cid,
         publisher_address as "publisherAddress",
         published_at as "publishedAt"
       FROM ranked_versions

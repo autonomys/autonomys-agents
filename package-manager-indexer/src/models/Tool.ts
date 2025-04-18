@@ -1,4 +1,5 @@
 import { ethers } from 'ethers';
+import { cidFromBlakeHash, cidToString } from '@autonomys/auto-dag-data';
 
 export interface Tool {
   id: number;
@@ -15,8 +16,8 @@ export interface ToolVersion {
   major: number;
   minor: number;
   patch: number;
-  cidHash: Buffer;
-  metadataHash: Buffer;
+  cid: string;
+  metadataCid: string;
   publisherAddress: string;
   publishedAt: Date;
   createdAt: Date;
@@ -43,4 +44,16 @@ export const bytes32ToBuffer = (bytes32: string): Buffer => {
   // Remove '0x' if present
   const hex = bytes32.startsWith('0x') ? bytes32.slice(2) : bytes32;
   return Buffer.from(hex, 'hex');
+};
+
+// Utility to convert bytes32 hash to CID string
+export const hashToCid = (bytes32: string | Buffer): string => {
+  // If it's a string, convert to Buffer
+  const hashBuffer = Buffer.isBuffer(bytes32) 
+    ? bytes32 
+    : bytes32ToBuffer(bytes32);
+  
+  // Convert hash to CID
+  const cid = cidFromBlakeHash(hashBuffer);
+  return cidToString(cid);
 }; 
