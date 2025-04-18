@@ -25,8 +25,6 @@ const startIndexer = async (): Promise<void> => {
     
     // Get the last processed block
     const lastProcessedBlock = await getLastProcessedBlock();
-    logger.info(`Last processed block --------------->: ${lastProcessedBlock}`);
-
 
     const startBlock = lastProcessedBlock > 0 
     ? lastProcessedBlock 
