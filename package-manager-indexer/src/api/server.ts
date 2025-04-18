@@ -3,6 +3,7 @@ import { createLogger } from '../utils/logger.js';
 import { errorHandler } from './middleware/errorHandler.js';
 import { applyMiddleware } from './middleware/appMiddleware.js';
 import { applyRoutes } from './routes/index.js';
+import { apiRateLimiter } from './middleware/rateLimiter.js';
 
 const logger = createLogger('api-server');
 
@@ -11,6 +12,10 @@ export const createServer = () => {
   
   // Apply all middleware
   applyMiddleware(app);
+  
+  // Apply rate limiting
+  app.use(apiRateLimiter);
+  logger.info('API rate limiting enabled: 60 requests per minute per IP');
   
   // Apply all routes
   applyRoutes(app);

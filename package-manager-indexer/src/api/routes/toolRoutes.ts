@@ -7,14 +7,19 @@ import {
   searchToolsHandler,
   getToolsByPublisherHandler
 } from '../controllers/toolController.js';
+import { strictRateLimiter } from '../middleware/rateLimiter.js';
+import { createLogger } from '../../utils/logger.js';
 
+const logger = createLogger('tool-routes');
 const router = express.Router();
 
 // GET /api/v1/tools - List all tools with pagination
 router.get('/', listTools);
 
 // GET /api/v1/tools/search?q=searchTerm - Search tools by name
-router.get('/search', searchToolsHandler);
+// apply strict rate limiting
+router.get('/search', strictRateLimiter, searchToolsHandler);
+logger.info('Applied strict rate limiting to /api/v1/tools/search endpoint');
 
 // GET /api/v1/tools/latest - Get latest version for each tool
 router.get('/latest', getLatestVersionsHandler);
@@ -26,6 +31,8 @@ router.get('/publisher/:address', getToolsByPublisherHandler);
 router.get('/name/:name', getToolByNameHandler);
 
 // GET /api/v1/tools/:toolId/versions - Get versions for a specific tool
-router.get('/:toolId/versions', getToolVersionsHandler);
+// This might return a lot of data for tools with many versions
+router.get('/:toolId/versions', strictRateLimiter, getToolVersionsHandler);
+logger.info('Applied strict rate limiting to /api/v1/tools/:toolId/versions endpoint');
 
 export default router; 

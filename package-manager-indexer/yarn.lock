@@ -1421,6 +1421,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"express-rate-limit@npm:^7.5.0":
+  version: 7.5.0
+  resolution: "express-rate-limit@npm:7.5.0"
+  peerDependencies:
+    express: ^4.11 || 5 || ^5.0.0-beta.1
+  checksum: 10c0/3e96afa05b4f577395688ede37e0cb19901f20c350b32575fb076f3d25176209fb88d3648151755c232aaf304147c58531f070757978f376e2f08326449299fd
+  languageName: node
+  linkType: hard
+
 "express@npm:^4.18.2":
   version: 4.21.2
   resolution: "express@npm:4.21.2"
@@ -2419,6 +2428,7 @@ __metadata:
     eslint: "npm:^8.54.0"
     ethers: "npm:^6.11.1"
     express: "npm:^4.18.2"
+    express-rate-limit: "npm:^7.5.0"
     helmet: "npm:^7.1.0"
     morgan: "npm:^1.10.0"
     pg: "npm:^8.11.3"

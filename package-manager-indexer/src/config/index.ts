@@ -25,6 +25,9 @@ interface Config {
   
   // Logging
   LOG_LEVEL: 'error' | 'warn' | 'info' | 'debug';
+  
+  // Node environment
+  NODE_ENV: 'development' | 'production';
 }
 
 // Validate and export configuration
@@ -45,6 +48,9 @@ export const config: Config = {
   
   // Logging
   LOG_LEVEL: (process.env.LOG_LEVEL as Config['LOG_LEVEL']) || 'info',
+  
+  // Node environment
+  NODE_ENV: (process.env.NODE_ENV as Config['NODE_ENV']) || 'development',
 };
 
 // Validate required configuration
