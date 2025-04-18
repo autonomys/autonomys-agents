@@ -27,6 +27,14 @@ export interface ToolWithVersions extends Tool {
   versions: ToolVersion[];
 }
 
+export interface ToolWithLatestVersion extends Tool {
+  version?: string;
+  cid?: string;
+  metadataCid?: string;
+  publisherAddress?: string;
+  publishedAt?: Date;
+}
+
 export interface Version {
   major: number;
   minor: number;

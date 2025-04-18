@@ -126,6 +126,7 @@ export const searchToolsHandler = async (req: Request, res: Response, next: Next
       meta: {
         query: q,
         count: results.length,
+        description: 'Search results include latest version information for each tool',
       },
     });
   } catch (error) {
