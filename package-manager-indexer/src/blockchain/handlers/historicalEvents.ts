@@ -37,8 +37,8 @@ export const processHistoricalEvents = async (
 
     logger.info(`Processing historical events from block ${fromBlock} to ${currentBlock}`);
 
-    // Process in smaller chunks to avoid RPC timeout issues
-    const CHUNK_SIZE = 1000; // Reduced from 10000 to avoid timeouts
+    // Process in small (<= 1000) chunks to avoid RPC timeout issues
+    const CHUNK_SIZE = 1000;
     let processedBlocks = 0;
     let highestBlockProcessed = fromBlock;
 
