@@ -8,6 +8,8 @@ export { createAllSchedulerTools } from './agents/tools/scheduler/index.js';
 export { createWebSearchTool } from './agents/tools/webSearch/index.js';
 export { createFirecrawlTools } from './agents/tools/firecrawl/index.js';
 export { createTwitterApi } from './agents/tools/twitter/client.js';
+export { createNotionTools } from './agents/tools/notion-mcp/index.js';
+export { createMcpClientTool } from './agents/tools/mcp-tool/index.js';
 
 // Agent Workflows
 export { createGithubAgent } from './agents/workflows/github/githubAgent.js';
