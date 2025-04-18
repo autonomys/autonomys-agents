@@ -95,4 +95,5 @@ export interface Config {
   autoEvmPrivateKey?: string;
   packageRegistryAddress?: string;
   taurusRpcUrl?: string;
+  indexerUrl?: string;
 }

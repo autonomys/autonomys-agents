@@ -2,7 +2,7 @@ import { Command } from 'commander';
 import chalk from 'chalk';
 import { install } from './commands/install.js';
 import { publish } from './commands/publish.js';
-import { list } from './commands/list.js';
+import { search } from './commands/search.js';
 import { config } from './commands/config.js';
 import { clean } from './commands/clean.js';
 import { tool } from './commands/tool.js';
@@ -44,8 +44,8 @@ ensureAutoOSDir()
       await publish(toolPath, options);
     };
 
-    const listWrapper = async () => {
-      await list();
+    const searchWrapper = async (searchTerm: string) => {
+      await search(searchTerm);
     };
 
     const configWrapper = async (options: ConfigOptions) => {
@@ -89,10 +89,11 @@ ensureAutoOSDir()
       .action(publishWrapper);
 
     program
-      .command('list')
-      .description('List available tools in the registry')
+      .command('search')
+      .description('Search for tools in the registry')
+      .argument('<search-term>', 'Search term to filter tools')
       .option('-d, --detailed', 'Show detailed information')
-      .action(listWrapper);
+      .action(searchWrapper);
 
     program
       .command('tool')
