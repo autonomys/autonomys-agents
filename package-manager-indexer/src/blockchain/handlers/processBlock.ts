@@ -1,7 +1,8 @@
 import { ethers } from 'ethers';
 import { createLogger } from '../../utils/logger.js';
 import { EventCallbacks } from '../types/events.js';
-import { extractNameFromTransaction, extractMetadataHashFromTransaction, extractToolName } from '../utils/transactionUtils.js';
+import { extractNameFromTransaction, extractMetadataHashFromTransaction } from '../utils/transactionUtils.js';
+import { retryOperation } from '../utils/retryUtils.js';
 
 const logger = createLogger('process-block');
 
@@ -20,35 +21,43 @@ export const processBlock = async (
   
   try {
     // Query all relevant events for this block
+    logger.debug(`Querying events for block ${blockNumber}`);
     const registeredFilter = contract.filters.ToolRegistered();
     const updatedFilter = contract.filters.ToolUpdated();
     const transferFilter = contract.filters.OwnershipTransferred();
     
+    // Use retryOperation for each query to make it more resilient
     const [registeredEvents, updatedEvents, transferEvents] = await Promise.all([
-      contract.queryFilter(registeredFilter, blockNumber, blockNumber),
-      contract.queryFilter(updatedFilter, blockNumber, blockNumber),
-      contract.queryFilter(transferFilter, blockNumber, blockNumber)
+      retryOperation(() => contract.queryFilter(registeredFilter, blockNumber, blockNumber)),
+      retryOperation(() => contract.queryFilter(updatedFilter, blockNumber, blockNumber)),
+      retryOperation(() => contract.queryFilter(transferFilter, blockNumber, blockNumber))
     ]);
     
     logger.info(`Found ${registeredEvents.length} ToolRegistered, ${updatedEvents.length} ToolUpdated, and ${transferEvents.length} OwnershipTransferred events in block ${blockNumber}`);
     
     // Process all ToolRegistered events
-    for (const event of registeredEvents) {
+    if (registeredEvents.length > 0) {
+      logger.debug(`Processing ${registeredEvents.length} ToolRegistered events in block ${blockNumber}`);
+    }
+    
+    for (let i = 0; i < registeredEvents.length; i++) {
+      const event = registeredEvents[i];
+      logger.debug(`Processing ToolRegistered event ${i+1}/${registeredEvents.length} in block ${blockNumber}`);
+      
       try {
         if (!('args' in event)) {
           logger.warn('Skipping event without args property');
           continue;
         }
         
-        const rawName = event.args[0];
-        // First try to get the real name from the transaction
-        let name: string;
-        if (event.transactionHash) {
-          const extractedName = await extractNameFromTransaction(event.transactionHash, contract);
-          name = extractedName || extractToolName(rawName);
-        } else {
-          name = extractToolName(rawName);
+        if (!event.transactionHash) {
+          logger.error(`Event missing transaction hash in block ${blockNumber}`);
+          continue;
         }
+        
+        logger.debug(`Extracting tool name from tx ${event.transactionHash}`);
+        // Extract tool name from transaction - will throw error if not found
+        const name = await extractNameFromTransaction(event.transactionHash, contract);
         
         const major = event.args[1];
         const minor = event.args[2];
@@ -57,16 +66,9 @@ export const processBlock = async (
         const publisher = event.args[5];
         const timestamp = event.args[6];
         
-        // Extract metadataHash from transaction
-        let metadataHash = null;
-        if (event.transactionHash) {
-          metadataHash = await extractMetadataHashFromTransaction(event.transactionHash, contract);
-        }
-        
-        if (!metadataHash) {
-          logger.warn(`Could not extract metadataHash for ToolRegistered event at block ${event.blockNumber}, tx ${event.transactionHash}`);
-          continue; // Skip this event if we can't get the metadataHash
-        }
+        logger.debug(`Extracting metadata hash from tx ${event.transactionHash}`);
+        // Extract metadataHash from transaction - will throw error if not found
+        const metadataHash = await extractMetadataHashFromTransaction(event.transactionHash, contract);
         
         const registeredEvent = {
           name,
@@ -78,7 +80,7 @@ export const processBlock = async (
           publisher,
           timestamp: new Date(Number(timestamp) * 1000),
           blockNumber: event.blockNumber,
-          transactionHash: event.transactionHash || ''
+          transactionHash: event.transactionHash
         };
         
         logger.info(`ToolRegistered event detected in block ${blockNumber}: ${name} v${major}.${minor}.${patch}`, {
@@ -86,29 +88,37 @@ export const processBlock = async (
           txHash: event.transactionHash
         });
         
+        logger.debug(`Calling onToolRegistered callback for ${name}`);
         await callbacks.onToolRegistered(registeredEvent);
+        logger.debug(`Finished processing ToolRegistered event for ${name}`);
       } catch (error) {
         logger.error(`Error processing ToolRegistered event in block ${blockNumber}:`, error);
       }
     }
     
     // Process all ToolUpdated events
-    for (const event of updatedEvents) {
+    if (updatedEvents.length > 0) {
+      logger.debug(`Processing ${updatedEvents.length} ToolUpdated events in block ${blockNumber}`);
+    }
+    
+    for (let i = 0; i < updatedEvents.length; i++) {
+      const event = updatedEvents[i];
+      logger.debug(`Processing ToolUpdated event ${i+1}/${updatedEvents.length} in block ${blockNumber}`);
+      
       try {
         if (!('args' in event)) {
           logger.warn('Skipping event without args property');
           continue;
         }
         
-        const rawName = event.args[0];
-        // Try to get the real name from the transaction
-        let name: string;
-        if (event.transactionHash) {
-          const extractedName = await extractNameFromTransaction(event.transactionHash, contract);
-          name = extractedName || extractToolName(rawName);
-        } else {
-          name = extractToolName(rawName);
+        if (!event.transactionHash) {
+          logger.error(`Event missing transaction hash in block ${blockNumber}`);
+          continue;
         }
+        
+        logger.debug(`Extracting tool name from tx ${event.transactionHash}`);
+        // Extract tool name from transaction - will throw error if not found
+        const name = await extractNameFromTransaction(event.transactionHash, contract);
         
         const major = event.args[1];
         const minor = event.args[2];
@@ -117,16 +127,9 @@ export const processBlock = async (
         const publisher = event.args[5];
         const timestamp = event.args[6];
         
-        // Extract metadataHash from transaction
-        let metadataHash = null;
-        if (event.transactionHash) {
-          metadataHash = await extractMetadataHashFromTransaction(event.transactionHash, contract);
-        }
-        
-        if (!metadataHash) {
-          logger.warn(`Could not extract metadataHash for ToolUpdated event at block ${event.blockNumber}, tx ${event.transactionHash}`);
-          continue; // Skip this event if we can't get the metadataHash
-        }
+        logger.debug(`Extracting metadata hash from tx ${event.transactionHash}`);
+        // Extract metadataHash from transaction - will throw error if not found
+        const metadataHash = await extractMetadataHashFromTransaction(event.transactionHash, contract);
         
         const updatedEvent = {
           name,
@@ -138,7 +141,7 @@ export const processBlock = async (
           publisher,
           timestamp: new Date(Number(timestamp) * 1000),
           blockNumber: event.blockNumber,
-          transactionHash: event.transactionHash || ''
+          transactionHash: event.transactionHash
         };
         
         logger.info(`ToolUpdated event detected in block ${blockNumber}: ${name} v${major}.${minor}.${patch}`, {
@@ -146,29 +149,37 @@ export const processBlock = async (
           txHash: event.transactionHash
         });
         
+        logger.debug(`Calling onToolUpdated callback for ${name}`);
         await callbacks.onToolUpdated(updatedEvent);
+        logger.debug(`Finished processing ToolUpdated event for ${name}`);
       } catch (error) {
         logger.error(`Error processing ToolUpdated event in block ${blockNumber}:`, error);
       }
     }
     
     // Process all OwnershipTransferred events
-    for (const event of transferEvents) {
+    if (transferEvents.length > 0) {
+      logger.debug(`Processing ${transferEvents.length} OwnershipTransferred events in block ${blockNumber}`);
+    }
+    
+    for (let i = 0; i < transferEvents.length; i++) {
+      const event = transferEvents[i];
+      logger.debug(`Processing OwnershipTransferred event ${i+1}/${transferEvents.length} in block ${blockNumber}`);
+      
       try {
         if (!('args' in event)) {
           logger.warn('Skipping event without args property');
           continue;
         }
         
-        const rawName = event.args[0];
-        // Try to get the real name from the transaction
-        let name: string;
-        if (event.transactionHash) {
-          const extractedName = await extractNameFromTransaction(event.transactionHash, contract);
-          name = extractedName || extractToolName(rawName);
-        } else {
-          name = extractToolName(rawName);
+        if (!event.transactionHash) {
+          logger.error(`Event missing transaction hash in block ${blockNumber}`);
+          continue;
         }
+        
+        logger.debug(`Extracting tool name from tx ${event.transactionHash}`);
+        // Extract tool name from transaction - will throw error if not found
+        const name = await extractNameFromTransaction(event.transactionHash, contract);
         
         const previousOwner = event.args[1];
         const newOwner = event.args[2];
@@ -178,7 +189,7 @@ export const processBlock = async (
           previousOwner,
           newOwner,
           blockNumber: event.blockNumber,
-          transactionHash: event.transactionHash || ''
+          transactionHash: event.transactionHash
         };
         
         logger.info(`OwnershipTransferred event detected in block ${blockNumber}: ${name}`, {
@@ -188,14 +199,18 @@ export const processBlock = async (
           to: newOwner
         });
         
+        logger.debug(`Calling onOwnershipTransferred callback for ${name}`);
         await callbacks.onOwnershipTransferred(transferEvent);
+        logger.debug(`Finished processing OwnershipTransferred event for ${name}`);
       } catch (error) {
         logger.error(`Error processing OwnershipTransferred event in block ${blockNumber}:`, error);
       }
     }
     
     // Mark block as processed
+    logger.debug(`Marking block ${blockNumber} as processed`);
     await callbacks.onProcessedBlock(blockNumber);
+    logger.debug(`Successfully processed block ${blockNumber}`);
     
   } catch (error) {
     logger.error(`Error processing block ${blockNumber}:`, error);

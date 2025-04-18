@@ -2,7 +2,7 @@ import { ethers } from 'ethers';
 import { createLogger } from '../../utils/logger.js';
 import { EventCallbacks } from '../types/events.js';
 import { verifyBlockContinuity } from '../utils/blockUtils.js';
-import { extractNameFromTransaction, extractMetadataHashFromTransaction, extractToolName } from '../utils/transactionUtils.js';
+import { extractNameFromTransaction, extractMetadataHashFromTransaction } from '../utils/transactionUtils.js';
 import { processBlock } from './processBlock.js';
 
 const logger = createLogger('event-listeners');
@@ -40,46 +40,41 @@ export const setupEventListeners = (
           return;
         }
         
-        // Try to extract the real name from transaction
-        let name: string;
-        if (event.transactionHash) {
-          const extractedName = await extractNameFromTransaction(event.transactionHash, contract);
-          name = extractedName || extractToolName(rawName);
-        } else {
-          name = extractToolName(rawName);
+        if (!event.transactionHash) {
+          logger.error(`Event missing transaction hash in block ${event.blockNumber}`);
+          return;
         }
         
-        // Extract metadataHash from transaction
-        let metadataHash = null;
-        if (event.transactionHash) {
-          metadataHash = await extractMetadataHashFromTransaction(event.transactionHash, contract);
+        try {
+          // Extract tool name from transaction - will throw error if not found
+          const name = await extractNameFromTransaction(event.transactionHash, contract);
+          
+          // Extract metadataHash from transaction - will throw error if not found
+          const metadataHash = await extractMetadataHashFromTransaction(event.transactionHash, contract);
+          
+          const registeredEvent = {
+            name,
+            major: Number(major),
+            minor: Number(minor),
+            patch: Number(patch),
+            cidHash,
+            metadataHash,
+            publisher,
+            timestamp: new Date(Number(timestamp) * 1000), // Convert to milliseconds
+            blockNumber: event.blockNumber,
+            transactionHash: event.transactionHash
+          };
+          
+          logger.info(`ToolRegistered event detected: ${name} v${major}.${minor}.${patch}`, {
+            blockNumber: event.blockNumber,
+            txHash: event.transactionHash
+          });
+          
+          await callbacks.onToolRegistered(registeredEvent);
+          await callbacks.onProcessedBlock(event.blockNumber);
+        } catch (error) {
+          logger.error(`Error extracting data from transaction ${event.transactionHash}:`, error);
         }
-        
-        if (!metadataHash) {
-          logger.warn(`Could not extract metadataHash for ToolRegistered event at block ${event.blockNumber}, tx ${event.transactionHash}`);
-          return; // Skip this event if we can't get the metadataHash
-        }
-        
-        const registeredEvent = {
-          name,
-          major: Number(major),
-          minor: Number(minor),
-          patch: Number(patch),
-          cidHash,
-          metadataHash,
-          publisher,
-          timestamp: new Date(Number(timestamp) * 1000), // Convert to milliseconds
-          blockNumber: event.blockNumber,
-          transactionHash: event.transactionHash
-        };
-        
-        logger.info(`ToolRegistered event detected: ${name} v${major}.${minor}.${patch}`, {
-          blockNumber: event.blockNumber,
-          txHash: event.transactionHash
-        });
-        
-        await callbacks.onToolRegistered(registeredEvent);
-        await callbacks.onProcessedBlock(event.blockNumber);
       } catch (error) {
         logger.error('Error processing ToolRegistered event:', error);
       }
@@ -96,46 +91,41 @@ export const setupEventListeners = (
           return;
         }
         
-        // Try to extract the real name from transaction
-        let name: string;
-        if (event.transactionHash) {
-          const extractedName = await extractNameFromTransaction(event.transactionHash, contract);
-          name = extractedName || extractToolName(rawName);
-        } else {
-          name = extractToolName(rawName);
+        if (!event.transactionHash) {
+          logger.error(`Event missing transaction hash in block ${event.blockNumber}`);
+          return;
         }
         
-        // Extract metadataHash from transaction
-        let metadataHash = null;
-        if (event.transactionHash) {
-          metadataHash = await extractMetadataHashFromTransaction(event.transactionHash, contract);
+        try {
+          // Extract tool name from transaction - will throw error if not found
+          const name = await extractNameFromTransaction(event.transactionHash, contract);
+          
+          // Extract metadataHash from transaction - will throw error if not found
+          const metadataHash = await extractMetadataHashFromTransaction(event.transactionHash, contract);
+          
+          const updatedEvent = {
+            name,
+            major: Number(major),
+            minor: Number(minor),
+            patch: Number(patch),
+            cidHash,
+            metadataHash,
+            publisher,
+            timestamp: new Date(Number(timestamp) * 1000), // Convert to milliseconds
+            blockNumber: event.blockNumber,
+            transactionHash: event.transactionHash
+          };
+          
+          logger.info(`ToolUpdated event detected: ${name} v${major}.${minor}.${patch}`, {
+            blockNumber: event.blockNumber,
+            txHash: event.transactionHash
+          });
+          
+          await callbacks.onToolUpdated(updatedEvent);
+          await callbacks.onProcessedBlock(event.blockNumber);
+        } catch (error) {
+          logger.error(`Error extracting data from transaction ${event.transactionHash}:`, error);
         }
-        
-        if (!metadataHash) {
-          logger.warn(`Could not extract metadataHash for ToolUpdated event at block ${event.blockNumber}, tx ${event.transactionHash}`);
-          return; // Skip this event if we can't get the metadataHash
-        }
-        
-        const updatedEvent = {
-          name,
-          major: Number(major),
-          minor: Number(minor),
-          patch: Number(patch),
-          cidHash,
-          metadataHash,
-          publisher,
-          timestamp: new Date(Number(timestamp) * 1000), // Convert to milliseconds
-          blockNumber: event.blockNumber,
-          transactionHash: event.transactionHash
-        };
-        
-        logger.info(`ToolUpdated event detected: ${name} v${major}.${minor}.${patch}`, {
-          blockNumber: event.blockNumber,
-          txHash: event.transactionHash
-        });
-        
-        await callbacks.onToolUpdated(updatedEvent);
-        await callbacks.onProcessedBlock(event.blockNumber);
       } catch (error) {
         logger.error('Error processing ToolUpdated event:', error);
       }
@@ -151,32 +141,35 @@ export const setupEventListeners = (
           return;
         }
         
-        // Try to extract the real name from transaction
-        let name: string;
-        if (event.transactionHash) {
-          const extractedName = await extractNameFromTransaction(event.transactionHash, contract);
-          name = extractedName || extractToolName(rawName);
-        } else {
-          name = extractToolName(rawName);
+        if (!event.transactionHash) {
+          logger.error(`Event missing transaction hash in block ${event.blockNumber}`);
+          return;
         }
         
-        const transferEvent = {
-          name,
-          previousOwner,
-          newOwner,
-          blockNumber: event.blockNumber,
-          transactionHash: event.transactionHash
-        };
-        
-        logger.info(`OwnershipTransferred event detected: ${name}`, {
-          blockNumber: event.blockNumber,
-          txHash: event.transactionHash,
-          from: previousOwner,
-          to: newOwner
-        });
-        
-        await callbacks.onOwnershipTransferred(transferEvent);
-        await callbacks.onProcessedBlock(event.blockNumber);
+        try {
+          // Extract tool name from transaction - will throw error if not found
+          const name = await extractNameFromTransaction(event.transactionHash, contract);
+          
+          const transferEvent = {
+            name,
+            previousOwner,
+            newOwner,
+            blockNumber: event.blockNumber,
+            transactionHash: event.transactionHash
+          };
+          
+          logger.info(`OwnershipTransferred event detected: ${name}`, {
+            blockNumber: event.blockNumber,
+            txHash: event.transactionHash,
+            from: previousOwner,
+            to: newOwner
+          });
+          
+          await callbacks.onOwnershipTransferred(transferEvent);
+          await callbacks.onProcessedBlock(event.blockNumber);
+        } catch (error) {
+          logger.error(`Error extracting data from transaction ${event.transactionHash}:`, error);
+        }
       } catch (error) {
         logger.error('Error processing OwnershipTransferred event:', error);
       }

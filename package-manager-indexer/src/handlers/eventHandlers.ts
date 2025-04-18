@@ -11,7 +11,8 @@ import {
   saveToolVersion,
   updateToolOwner,
   updateToolVersionMetadata,
-  updateLastProcessedBlock
+  updateLastProcessedBlock,
+  doesToolVersionExist
 } from '../db/repositories/toolRepository.js';
 import { ethers } from 'ethers';
 import { hashToCid } from '../models/Tool.js';
@@ -48,21 +49,31 @@ export const handleToolRegistered = async (event: ToolRegisteredEvent): Promise<
     const cid = hashToCid(event.cidHash);
     const metadataCid = hashToCid(event.metadataHash); // Use metadata hash for metadataCid
     
-    // Save the tool version
+    // Create version object
     const version = parseVersion(event.major, event.minor, event.patch);
-    await saveToolVersion(
-      toolId,
-      version,
-      cid,
-      metadataCid,
-      event.publisher,
-      event.timestamp
-    );
+
+    // Check if this version already exists
+    const versionExists = await doesToolVersionExist(toolId, version);
     
-    logger.info(`Tool version ${event.major}.${event.minor}.${event.patch} saved for ${event.name}`);
+    if (versionExists) {
+      logger.info(`Version ${event.major}.${event.minor}.${event.patch} for tool ${event.name} already exists, updating metadata`);
+      await updateToolVersionMetadata(toolId, version, metadataCid);
+    } else {
+      // Save the tool version
+      await saveToolVersion(
+        toolId,
+        version,
+        cid,
+        metadataCid,
+        event.publisher,
+        event.timestamp
+      );
+      logger.info(`Tool version ${event.major}.${event.minor}.${event.patch} saved for ${event.name}`);
+    }
   } catch (error) {
     logger.error('Error handling ToolRegistered event:', error);
-    throw error;
+    // Don't throw the error here - we want to continue processing other events
+    // Throwing would bubble up and potentially stop the entire process
   }
 };
 
@@ -103,11 +114,15 @@ export const handleToolUpdated = async (event: ToolUpdatedEvent): Promise<void> 
       // Check if this is a metadata update or a new version
       const version = parseVersion(event.major, event.minor, event.patch);
       
-      // Try to update the metadata first
-      const updated = await updateToolVersionMetadata(tool.id, version, metadataCid);
+      // Check if this version already exists
+      const versionExists = await doesToolVersionExist(tool.id, version);
       
-      if (!updated) {
-        // If update failed, it means this is a new version
+      if (versionExists) {
+        // Update the metadata
+        await updateToolVersionMetadata(tool.id, version, metadataCid);
+        logger.info(`Updated metadata for ${event.name} v${event.major}.${event.minor}.${event.patch}`);
+      } else {
+        // If version doesn't exist, save as new version
         await saveToolVersion(
           tool.id,
           version,
@@ -117,13 +132,11 @@ export const handleToolUpdated = async (event: ToolUpdatedEvent): Promise<void> 
           event.timestamp
         );
         logger.info(`New tool version ${event.major}.${event.minor}.${event.patch} saved for ${event.name}`);
-      } else {
-        logger.info(`Updated metadata for ${event.name} v${event.major}.${event.minor}.${event.patch}`);
       }
     }
   } catch (error) {
     logger.error('Error handling ToolUpdated event:', error);
-    throw error;
+    // Don't throw the error - we want to continue processing
   }
 };
 
@@ -148,7 +161,7 @@ export const handleOwnershipTransferred = async (event: OwnershipTransferredEven
     }
   } catch (error) {
     logger.error('Error handling OwnershipTransferred event:', error);
-    throw error;
+    // Don't throw the error - we want to continue processing
   }
 };
 
@@ -161,5 +174,6 @@ export const handleProcessedBlock = async (blockNumber: number): Promise<void> =
     await updateLastProcessedBlock(blockNumber);
   } catch (error) {
     logger.error('Error updating last processed block:', error);
+    // Don't throw the error - we want to continue processing
   }
 }; 
