@@ -14,20 +14,22 @@ const logger = createLogger('app-middleware');
 export const applyMiddleware = (app: express.Application): void => {
   // Security middleware
   app.use(helmet() as any);
-  
+
   // Compression middleware
   app.use(compression() as any);
-  
+
   // CORS middleware
   app.use(cors() as any);
-  
+
   // Body parsing middleware
   app.use(express.json() as any);
-  
+
   // Logging middleware
-  app.use(morgan('dev', {
-    stream: {
-      write: (message) => logger.info(message.trim())
-    }
-  }));
-}; 
+  app.use(
+    morgan('dev', {
+      stream: {
+        write: message => logger.info(message.trim()),
+      },
+    }),
+  );
+};

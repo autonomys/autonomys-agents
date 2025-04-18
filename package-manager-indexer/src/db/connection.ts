@@ -9,19 +9,19 @@ export const parseConnectionString = (url: string) => {
   // Handle connection strings with or without password
   const regexWithPassword = /postgresql:\/\/([^:]+):([^@]+)@([^:]+):(\d+)\//;
   const regexWithoutPassword = /postgresql:\/\/([^@]+)@([^:]+):(\d+)\//;
-  
+
   let match = url.match(regexWithPassword);
   if (match) {
     const [_, user, password, host, port] = match;
     return { user, password, host, port };
   }
-  
+
   match = url.match(regexWithoutPassword);
   if (match) {
     const [_, user, host, port] = match;
     return { user, password: '', host, port };
   }
-  
+
   throw new Error(`Invalid connection string: ${url}`);
 };
 
@@ -59,4 +59,4 @@ export const createPool = (database = 'package_registry') => {
 };
 
 // Export default pool
-export const pool = createPool(); 
+export const pool = createPool();

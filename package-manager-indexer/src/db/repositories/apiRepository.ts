@@ -9,24 +9,32 @@ export const getAllTools = async (
   page = 1,
   limit = 20,
   sortBy = 'created_at',
-  sortOrder = 'desc'
-): Promise<{ tools: Tool[], total: number, page: number, pageSize: number, totalPages: number }> => {
+  sortOrder = 'desc',
+): Promise<{
+  tools: Tool[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+}> => {
   try {
     // Ensure valid sort parameters to prevent SQL injection
     const validSortColumns = ['created_at', 'updated_at', 'name'];
     const validSortOrders = ['asc', 'desc'];
-    
+
     const sortColumn = validSortColumns.includes(sortBy) ? sortBy : 'created_at';
-    const order = validSortOrders.includes(sortOrder.toLowerCase()) ? sortOrder.toLowerCase() : 'desc';
-    
+    const order = validSortOrders.includes(sortOrder.toLowerCase())
+      ? sortOrder.toLowerCase()
+      : 'desc';
+
     // Calculate offset
     const offset = (page - 1) * limit;
-    
+
     // Get total count
     const countQuery = 'SELECT COUNT(*) as total FROM tools';
     const countResult = await pool.query(countQuery);
     const total = parseInt(countResult.rows[0].total);
-    
+
     // Query tools with pagination
     const query = `
       SELECT id, name, name_hash as "nameHash", owner_address as "ownerAddress", 
@@ -35,18 +43,18 @@ export const getAllTools = async (
       ORDER BY ${sortColumn} ${order}
       LIMIT $1 OFFSET $2
     `;
-    
+
     const { rows } = await pool.query(query, [limit, offset]);
-    
+
     // Calculate total pages
     const totalPages = Math.ceil(total / limit);
-    
+
     return {
       tools: rows,
       total,
       page,
       pageSize: limit,
-      totalPages
+      totalPages,
     };
   } catch (error) {
     logger.error('Error getting all tools:', error);
@@ -64,13 +72,13 @@ export const getToolByName = async (name: string): Promise<ToolWithVersions | nu
       WHERE name = $1
     `;
     const { rows: toolRows } = await pool.query(nameQuery, [name]);
-    
+
     if (toolRows.length === 0) {
       return null;
     }
-    
+
     const tool = toolRows[0];
-    
+
     // Get versions for this tool
     const versionsQuery = `
       SELECT id, tool_id as "toolId", major, minor, patch, 
@@ -81,12 +89,12 @@ export const getToolByName = async (name: string): Promise<ToolWithVersions | nu
       WHERE tool_id = $1
       ORDER BY major DESC, minor DESC, patch DESC
     `;
-    
+
     const { rows: versionRows } = await pool.query(versionsQuery, [tool.id]);
-    
+
     return {
       ...tool,
-      versions: versionRows
+      versions: versionRows,
     };
   } catch (error) {
     logger.error('Error getting tool by name:', error);
@@ -106,7 +114,7 @@ export const getToolVersions = async (toolId: number): Promise<ToolVersion[]> =>
       WHERE tool_id = $1
       ORDER BY major DESC, minor DESC, patch DESC
     `;
-    
+
     const { rows } = await pool.query(query, [toolId]);
     return rows;
   } catch (error) {
@@ -116,14 +124,16 @@ export const getToolVersions = async (toolId: number): Promise<ToolVersion[]> =>
 };
 
 // Get the latest version for each tool
-export const getLatestToolVersions = async (): Promise<{ 
-  toolName: string, 
-  toolId: number, 
-  version: string, 
-  cid: string, 
-  publisherAddress: string, 
-  publishedAt: Date 
-}[]> => {
+export const getLatestToolVersions = async (): Promise<
+  {
+    toolName: string;
+    toolId: number;
+    version: string;
+    cid: string;
+    publisherAddress: string;
+    publishedAt: Date;
+  }[]
+> => {
   try {
     const query = `
       WITH ranked_versions AS (
@@ -154,7 +164,7 @@ export const getLatestToolVersions = async (): Promise<{
       WHERE rank = 1
       ORDER BY tool_name
     `;
-    
+
     const { rows } = await pool.query(query);
     return rows;
   } catch (error) {
@@ -174,7 +184,7 @@ export const searchTools = async (searchTerm: string, limit = 10): Promise<Tool[
       ORDER BY created_at DESC
       LIMIT $2
     `;
-    
+
     const { rows } = await pool.query(query, [`%${searchTerm}%`, limit]);
     return rows;
   } catch (error) {
@@ -185,19 +195,25 @@ export const searchTools = async (searchTerm: string, limit = 10): Promise<Tool[
 
 // Get tools by publisher address
 export const getToolsByPublisher = async (
-  address: string, 
-  page = 1, 
-  limit = 20
-): Promise<{ tools: Tool[], total: number, page: number, pageSize: number, totalPages: number }> => {
+  address: string,
+  page = 1,
+  limit = 20,
+): Promise<{
+  tools: Tool[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+}> => {
   try {
     // Calculate offset
     const offset = (page - 1) * limit;
-    
+
     // Get total count
     const countQuery = 'SELECT COUNT(*) as total FROM tools WHERE owner_address = $1';
     const countResult = await pool.query(countQuery, [address]);
     const total = parseInt(countResult.rows[0].total);
-    
+
     // Query tools with pagination
     const query = `
       SELECT id, name, name_hash as "nameHash", owner_address as "ownerAddress", 
@@ -207,21 +223,21 @@ export const getToolsByPublisher = async (
       ORDER BY created_at DESC
       LIMIT $2 OFFSET $3
     `;
-    
+
     const { rows } = await pool.query(query, [address, limit, offset]);
-    
+
     // Calculate total pages
     const totalPages = Math.ceil(total / limit);
-    
+
     return {
       tools: rows,
       total,
       page,
       pageSize: limit,
-      totalPages
+      totalPages,
     };
   } catch (error) {
     logger.error('Error getting tools by publisher:', error);
     throw error;
   }
-}; 
+};

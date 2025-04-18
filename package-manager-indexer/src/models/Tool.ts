@@ -49,11 +49,9 @@ export const bytes32ToBuffer = (bytes32: string): Buffer => {
 // Utility to convert bytes32 hash to CID string
 export const hashToCid = (bytes32: string | Buffer): string => {
   // If it's a string, convert to Buffer
-  const hashBuffer = Buffer.isBuffer(bytes32) 
-    ? bytes32 
-    : bytes32ToBuffer(bytes32);
-  
+  const hashBuffer = Buffer.isBuffer(bytes32) ? bytes32 : bytes32ToBuffer(bytes32);
+
   // Convert hash to CID
   const cid = cidFromBlakeHash(hashBuffer);
   return cidToString(cid);
-}; 
+};

@@ -11,6 +11,6 @@ export const parseVersion = (major: number, minor: number, patch: number): Versi
   return {
     major,
     minor,
-    patch
+    patch,
   };
-}; 
+};

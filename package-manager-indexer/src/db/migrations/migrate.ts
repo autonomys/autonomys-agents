@@ -17,11 +17,9 @@ const runMigrations = async () => {
   try {
     // Get all migration files
     const migrationFiles = await fs.readdir(__dirname);
-    
+
     // Filter SQL files and sort them to ensure order
-    const sqlFiles = migrationFiles
-      .filter((file) => file.endsWith('.sql'))
-      .sort();
+    const sqlFiles = migrationFiles.filter(file => file.endsWith('.sql')).sort();
 
     logger.info(`Found ${sqlFiles.length} migration files to run`);
 
@@ -35,9 +33,7 @@ const runMigrations = async () => {
     `);
 
     // Get already applied migrations
-    const { rows: appliedMigrations } = await pool.query(
-      'SELECT name FROM migrations'
-    );
+    const { rows: appliedMigrations } = await pool.query('SELECT name FROM migrations');
     const appliedMigrationNames = appliedMigrations.map((row: { name: string }) => row.name);
 
     // Run migrations that haven't been applied yet
@@ -55,16 +51,13 @@ const runMigrations = async () => {
       const client = await pool.connect();
       try {
         await client.query('BEGIN');
-        
+
         // Run the migration
         await client.query(sql);
-        
+
         // Record the migration
-        await client.query(
-          'INSERT INTO migrations (name) VALUES ($1)',
-          [file]
-        );
-        
+        await client.query('INSERT INTO migrations (name) VALUES ($1)', [file]);
+
         await client.query('COMMIT');
         logger.info(`Successfully applied migration: ${file}`);
       } catch (error) {
@@ -85,4 +78,4 @@ const runMigrations = async () => {
   }
 };
 
-runMigrations(); 
+runMigrations();

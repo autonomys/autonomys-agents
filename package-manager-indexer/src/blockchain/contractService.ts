@@ -20,16 +20,16 @@ const logger = createLogger('contract-service');
 export const initContract = () => {
   try {
     logger.info('Initializing contract connection');
-    
+
     const provider = new ethers.WebSocketProvider(config.RPC_URL);
     const contract = new ethers.Contract(
       config.CONTRACT_ADDRESS,
       AutonomysPackageRegistryABI,
-      provider
+      provider,
     );
-    
+
     logger.info('Contract connection initialized successfully');
-    
+
     return { provider, contract };
   } catch (error) {
     logger.error('Failed to initialize contract connection:', error);
@@ -47,11 +47,11 @@ export const initContract = () => {
 export const startIndexing = async (
   contract: ethers.Contract,
   fromBlock: number,
-  callbacks: EventCallbacks
+  callbacks: EventCallbacks,
 ): Promise<() => void> => {
   // Process historical events first
   const latestProcessedBlock = await processHistoricalEvents(contract, fromBlock, callbacks);
-  
+
   // Then setup listeners for real-time events
   return setupEventListeners(contract, latestProcessedBlock + 1, callbacks);
 };

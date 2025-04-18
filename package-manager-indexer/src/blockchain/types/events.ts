@@ -39,4 +39,4 @@ export interface EventCallbacks {
   onToolUpdated: (event: ToolUpdatedEvent) => Promise<void>;
   onOwnershipTransferred: (event: OwnershipTransferredEvent) => Promise<void>;
   onProcessedBlock: (blockNumber: number) => Promise<void>;
-} 
+}

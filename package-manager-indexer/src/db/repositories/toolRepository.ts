@@ -8,13 +8,11 @@ const logger = createLogger('tool-repository');
 export const saveTool = async (
   name: string,
   nameHash: Buffer | string,
-  ownerAddress: string
+  ownerAddress: string,
 ): Promise<Tool> => {
   try {
     // Convert nameHash to Buffer if it's a string
-    const nameHashBuffer = typeof nameHash === 'string' 
-      ? nameToHash(nameHash)
-      : nameHash;
+    const nameHashBuffer = typeof nameHash === 'string' ? nameToHash(nameHash) : nameHash;
 
     const query = `
       INSERT INTO tools (name, name_hash, owner_address)
@@ -33,13 +31,11 @@ export const saveTool = async (
 // Update tool owner
 export const updateToolOwner = async (
   nameHash: Buffer | string,
-  newOwnerAddress: string
+  newOwnerAddress: string,
 ): Promise<Tool | null> => {
   try {
     // Convert nameHash to Buffer if it's a string
-    const nameHashBuffer = typeof nameHash === 'string' 
-      ? nameToHash(nameHash)
-      : nameHash;
+    const nameHashBuffer = typeof nameHash === 'string' ? nameToHash(nameHash) : nameHash;
 
     const query = `
       UPDATE tools
@@ -56,11 +52,8 @@ export const updateToolOwner = async (
   }
 };
 
-// Update tool name 
-export const updateToolName = async (
-  id: number,
-  newName: string
-): Promise<Tool | null> => {
+// Update tool name
+export const updateToolName = async (id: number, newName: string): Promise<Tool | null> => {
   try {
     const query = `
       UPDATE tools
@@ -81,9 +74,7 @@ export const updateToolName = async (
 export const getToolByNameHash = async (nameHash: Buffer | string): Promise<Tool | null> => {
   try {
     // Convert nameHash to Buffer if it's a string
-    const nameHashBuffer = typeof nameHash === 'string' 
-      ? nameToHash(nameHash)
-      : nameHash;
+    const nameHashBuffer = typeof nameHash === 'string' ? nameToHash(nameHash) : nameHash;
 
     const query = `
       SELECT id, name, name_hash as "nameHash", owner_address as "ownerAddress", 
@@ -106,7 +97,7 @@ export const saveToolVersion = async (
   cid: string,
   metadataCid: string,
   publisherAddress: string,
-  publishedAt: Date
+  publishedAt: Date,
 ): Promise<ToolVersion> => {
   try {
     const query = `
@@ -128,7 +119,7 @@ export const saveToolVersion = async (
       cid,
       metadataCid,
       publisherAddress,
-      publishedAt
+      publishedAt,
     ];
     const { rows } = await pool.query(query, values);
     return rows[0];
@@ -142,7 +133,7 @@ export const saveToolVersion = async (
 export const updateToolVersionMetadata = async (
   toolId: number,
   version: Version,
-  metadataCid: string
+  metadataCid: string,
 ): Promise<ToolVersion | null> => {
   try {
     const query = `
@@ -164,10 +155,7 @@ export const updateToolVersionMetadata = async (
 };
 
 // Check if a tool version exists
-export const doesToolVersionExist = async (
-  toolId: number,
-  version: Version
-): Promise<boolean> => {
+export const doesToolVersionExist = async (toolId: number, version: Version): Promise<boolean> => {
   try {
     const query = `
       SELECT COUNT(*) as count
@@ -230,4 +218,4 @@ export const resetLastProcessedBlock = async (blockNumber: number = 0): Promise<
     logger.error('Error resetting last processed block:', error);
     throw error;
   }
-}; 
+};

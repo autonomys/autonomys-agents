@@ -8,8 +8,6 @@
     "build": "tsc && mkdir -p dist/db/migrations && cp ./src/db/migrations/* dist/db/migrations",
     "start": "node dist/index.js",
     "dev": "tsc-watch --onSuccess \"node dist/index.js\"",
-    "lint": "eslint src --ext ts",
-    "format": "prettier --write \"src/**/*.ts\"",
     "migrate": "node dist/db/migrations/migrate.js",
     "reset-indexer": "node dist/scripts/resetIndexer.js",
     "reset-database": "node dist/scripts/resetDatabase.js"

@@ -5,7 +5,7 @@ import {
   getToolVersionsHandler,
   getLatestVersionsHandler,
   searchToolsHandler,
-  getToolsByPublisherHandler
+  getToolsByPublisherHandler,
 } from '../controllers/toolController.js';
 import { strictRateLimiter } from '../middleware/rateLimiter.js';
 import { createLogger } from '../../utils/logger.js';
@@ -35,4 +35,4 @@ router.get('/name/:name', getToolByNameHandler);
 router.get('/:toolId/versions', strictRateLimiter, getToolVersionsHandler);
 logger.info('Applied strict rate limiting to /api/v1/tools/:toolId/versions endpoint');
 
-export default router; 
+export default router;

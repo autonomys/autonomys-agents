@@ -20,16 +20,16 @@ router.get('/status', async (req, res) => {
       lastProcessedBlock,
       startBlock: config.START_BLOCK,
       contractAddress: config.CONTRACT_ADDRESS,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   } catch (error) {
     logger.error('Error fetching indexer status:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       status: 'error',
       message: 'Failed to fetch indexer status',
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   }
 });
 
-export default router; 
+export default router;

@@ -14,15 +14,15 @@ export const apiRateLimiter = rateLimit({
   standardHeaders: 'draft-7', // Use recommended draft-7 header format
   legacyHeaders: false, // Disable legacy X-RateLimit headers
   message: 'Too many requests from this IP, please try again after a minute',
-  
+
   handler: (req, res, next, options) => {
     logger.warn(`Rate limit exceeded for IP: ${req.ip}`);
     res.status(options.statusCode).json({
       error: options.message,
-      retryAfter: Math.ceil(options.windowMs / 1000) // in seconds
+      retryAfter: Math.ceil(options.windowMs / 1000), // in seconds
     });
   },
-  skipSuccessfulRequests: config.NODE_ENV === 'development'
+  skipSuccessfulRequests: config.NODE_ENV === 'development',
 });
 
 /**
@@ -35,14 +35,14 @@ export const strictRateLimiter = rateLimit({
   standardHeaders: 'draft-7',
   legacyHeaders: false,
   message: 'Too many requests for this operation, please try again after 5 minutes',
-  
+
   handler: (req, res, next, options) => {
     logger.warn(`Strict rate limit exceeded for IP: ${req.ip}, path: ${req.path}`);
     res.status(options.statusCode).json({
       error: options.message,
-      retryAfter: Math.ceil(options.windowMs / 1000) // in seconds
+      retryAfter: Math.ceil(options.windowMs / 1000), // in seconds
     });
   },
-  
-  skipSuccessfulRequests: config.NODE_ENV === 'development'
-}); 
+
+  skipSuccessfulRequests: config.NODE_ENV === 'development',
+});

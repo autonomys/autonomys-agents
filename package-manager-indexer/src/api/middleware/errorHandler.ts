@@ -8,26 +8,22 @@ export interface ApiError extends Error {
   details?: unknown;
 }
 
-export const errorHandler = (
-  err: ApiError, 
-  req: Request, 
-  res: Response, 
-) => {
+export const errorHandler = (err: ApiError, req: Request, res: Response) => {
   const statusCode = err.statusCode || 500;
-  
+
   logger.error(`API Error: ${err.message}`, {
     path: req.path,
     method: req.method,
     statusCode,
     stack: err.stack,
-    details: err.details
+    details: err.details,
   });
-  
+
   res.status(statusCode).json({
     error: {
       message: err.message,
       status: statusCode,
-      timestamp: new Date().toISOString()
-    }
+      timestamp: new Date().toISOString(),
+    },
   });
-}; 
+};
