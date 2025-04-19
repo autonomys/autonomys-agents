@@ -9,16 +9,17 @@ const loadConfig = async () => {
   try {
     const data = await fs.readFile(CONFIG_FILE, 'utf8');
     return { ...DEFAULT_CONFIG, ...JSON.parse(data) };
-  } catch (error) {
+  } catch {
     console.log('Creating default configuration...');
     const config = { ...DEFAULT_CONFIG };
-    await saveConfig(config);
+    const _saveConfig = await saveConfig(config);
     return config;
   }
 };
 
 const saveConfig = async (config: Config) => {
-  await fs.writeFile(CONFIG_FILE, JSON.stringify(config, null, 2));
+  const saveConfig = await fs.writeFile(CONFIG_FILE, JSON.stringify(config, null, 2));
+  return saveConfig;
 };
 
 const initializeConfigAndCredentials = async () => {

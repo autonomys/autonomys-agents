@@ -11,10 +11,27 @@ const CREDENTIALS_FILE = path.join(AUTOOS_DIR, 'credentials.enc');
 
 const ensureAutoOSDir = async () => {
   try {
-    await fs.access(AUTOOS_DIR);
+    try {
+      await fs.access(AUTOOS_DIR);
+    } catch {
+      // Directory doesn't exist, create it
+      console.log(`Creating directory: ${AUTOOS_DIR}`);
+      const _createAutoOSDir = await fs.mkdir(AUTOOS_DIR, { recursive: true });
+    }
+    try {
+      await fs.access(PACKAGES_DIR);
+    } catch {
+      // Packages directory doesn't exist, create it
+      console.log(`Creating directory: ${PACKAGES_DIR}`);
+      const _createPackagesDir = await fs.mkdir(PACKAGES_DIR, { recursive: true });
+    }
+
+    return true;
   } catch (error) {
-    console.error('Error ensuring autoOS directory:', error);
-    await fs.mkdir(AUTOOS_DIR, { recursive: true });
+    console.error('Error creating autoOS directories:', error);
+    throw new Error(
+      `Failed to create required directories: ${error instanceof Error ? error.message : String(error)}`,
+    );
   }
 };
 

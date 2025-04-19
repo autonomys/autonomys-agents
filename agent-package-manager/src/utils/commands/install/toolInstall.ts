@@ -12,6 +12,9 @@ const fetchToolPackage = async (cidHash: string): Promise<string> => {
   const packagePath = path.join(PACKAGES_DIR, `${cid}.zip`);
 
   try {
+    try {
+      const _createPackagesDir = await fs.mkdir(PACKAGES_DIR, { recursive: true });
+    } catch {}
     console.log(`Downloading tool package with CID: ${cid}`);
 
     const fileStream = await downloadFileFromGateway(cid);
@@ -38,14 +41,33 @@ const unpackToolToDirectory = async (
   targetDir: string,
 ): Promise<string> => {
   const toolDir = path.join(targetDir, toolName);
-  await fs.mkdir(toolDir, { recursive: true });
 
   try {
-    console.log(`Extracting package to: ${toolDir}`);
-    await extract(packagePath, { dir: toolDir });
-    return toolDir;
+    const _createToolDir = await fs.mkdir(toolDir, { recursive: true });
+
+    try {
+      console.log(`Extracting package to: ${toolDir}`);
+      const _extractPackage = await extract(packagePath, { dir: toolDir });
+      return toolDir;
+    } catch (error) {
+      console.error('Error extracting package:', error);
+      if (
+        error instanceof Error &&
+        error.message.includes('end of central directory record signature not found')
+      ) {
+        throw new Error(
+          `Invalid or corrupted package file. Try again or contact the tool publisher.`,
+        );
+      }
+      throw error;
+    }
   } catch (error) {
-    console.error('Error extracting package:', error);
+    if (error instanceof Error && error.message.includes('EACCES')) {
+      throw new Error(
+        `Permission denied when creating directory: ${toolDir}. Try running with elevated permissions.`,
+      );
+    }
+    console.error('Error preparing tool directory:', error);
     throw error;
   }
 };
