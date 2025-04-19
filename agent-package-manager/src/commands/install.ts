@@ -5,6 +5,7 @@ import { InstallOptions } from '../types/index.js';
 import { performToolInstallation } from '../utils/commands/install/toolInstall.js';
 import { getToolInstallDir } from '../utils/shared/path.js';
 import { resolveToolInfo } from '../utils/commands/install/utils.js';
+
 const install = async (toolName: string, options: InstallOptions): Promise<CommandResult> => {
   const spinner = ora(`Installing ${toolName}...`).start();
   try {

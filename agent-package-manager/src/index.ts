@@ -36,7 +36,13 @@ ensureAutoOSDir()
     return Promise.all([initializeConfigAndCredentials(), checkMasterPassword()]);
   })
   .then(() => {
-    const installWrapper = async (toolName: string, options: InstallOptions) => {
+
+    const initWrapper = async (projectName: string, options: InitOptions) => {
+      await init(projectName, options);
+    };
+
+
+    const installToolWrapper = async (toolName: string, options: InstallOptions) => {
       await install(toolName, options);
     };
 
@@ -60,14 +66,20 @@ ensureAutoOSDir()
       await tool(options);
     };
 
-    const initWrapper = async (projectName: string, options: InitOptions) => {
-      await init(projectName, options);
-    };
-
+    
     program
       .name('autoOS')
       .description('Package manager for Autonomys agent tools')
       .version('0.1.0');
+
+    program
+      .command('init')
+      .description('Create a new agent project')
+      .argument('<project-name>', 'Name of the project to create')
+      .option('--install', 'Install dependencies after creation')
+      .option('--character <character-name>', 'Create a character with this name')
+      .option('--api', 'Generate API certificates', true)
+      .action(initWrapper);
 
     program
       .command('install')
@@ -75,7 +87,7 @@ ensureAutoOSDir()
       .argument('<tool-name>', 'Name of the tool to install')
       .option('-v, --version <version>', 'Specific version to install')
       .option('--cid <cid>', 'Install directly using Content ID (CID) from Autonomys Auto Drive')
-      .action(installWrapper);
+      .action(installToolWrapper);
 
     program
       .command('publish')
@@ -114,15 +126,6 @@ ensureAutoOSDir()
       .description('Clean cached packages and temporary files')
       .option('--force', 'Force clean without confirmation')
       .action(cleanWrapper);
-
-    program
-      .command('init')
-      .description('Create a new agent project')
-      .argument('<project-name>', 'Name of the project to create')
-      .option('--install', 'Install dependencies after creation')
-      .option('--character <character-name>', 'Create a character with this name')
-      .option('--api', 'Generate API certificates', true)
-      .action(initWrapper);
 
     program.showHelpAfterError();
 
