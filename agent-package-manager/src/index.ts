@@ -75,7 +75,6 @@ ensureAutoOSDir()
       .argument('<tool-name>', 'Name of the tool to install')
       .option('-v, --version <version>', 'Specific version to install')
       .option('--cid <cid>', 'Install directly using Content ID (CID) from Autonomys Auto Drive')
-      .option('--local', 'Install the tool locally to the current project instead of globally')
       .action(installWrapper);
 
     program

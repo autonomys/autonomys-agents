@@ -6,19 +6,17 @@ import { performToolInstallation, resolveToolInfo } from '../utils/commands/inst
 
 const install = async (toolName: string, options: InstallOptions): Promise<CommandResult> => {
   const spinner = ora(`Installing ${toolName}...`).start();
-  const isLocalInstall = !!options.local;
-  const installType = isLocalInstall ? 'locally' : 'globally';
-
+  // Always use local installation, ignoring the local flag
   try {
     const { toolInfo, versionDisplay } = await resolveToolInfo(toolName, options, spinner);
 
-    await performToolInstallation(toolInfo, isLocalInstall);
+    await performToolInstallation(toolInfo);
 
-    spinner.succeed(`Successfully installed ${toolName} ${versionDisplay} ${installType}`);
+    spinner.succeed(`Successfully installed ${toolName} ${versionDisplay} locally`);
 
     return {
       success: true,
-      message: `Successfully installed ${toolName} ${versionDisplay} ${installType}`,
+      message: `Successfully installed ${toolName} ${versionDisplay} locally`,
     };
   } catch (error) {
     spinner.fail(`Failed to install ${toolName}`);

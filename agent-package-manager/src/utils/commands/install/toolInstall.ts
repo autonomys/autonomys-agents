@@ -55,11 +55,13 @@ const unpackToolToDirectory = async (
 
 const performToolInstallation = async (
   toolInfo: ToolInstallInfo,
-  isLocalInstall: boolean,
 ): Promise<string> => {
   try {
+    const { installDir } = await getToolInstallDir();
+    if (!installDir) {
+      throw new Error('Could not detect project root. Make sure you are in a project directory.');
+    }
     const packagePath = await fetchToolPackage(toolInfo.cid);
-    const { installDir } = await getToolInstallDir(isLocalInstall);
     const toolDir = await unpackToolToDirectory(packagePath, toolInfo.name, installDir);
     console.log(`Tool installed successfully to: ${toolDir}`);
     return toolDir;
@@ -161,7 +163,8 @@ const resolveToolInfo = async (
   options: InstallOptions,
   spinner: ReturnType<typeof ora>,
 ): Promise<{ toolInfo: ToolInstallInfo; versionDisplay: string }> => {
-  const installType = options.local ? 'locally' : 'globally';
+  // All installations are local now
+  const installType = 'locally';
 
   // Handle CID-based installation
   if (options.cid) {
