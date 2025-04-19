@@ -20,7 +20,10 @@ const startIndexer = async (): Promise<void> => {
     // Get the last processed block
     const lastProcessedBlock = await getLastProcessedBlock();
 
-    const startBlock = lastProcessedBlock > 0 ? Math.max(lastProcessedBlock, config.START_BLOCK) : config.START_BLOCK;
+    const startBlock =
+      lastProcessedBlock > 0
+        ? Math.max(lastProcessedBlock, config.START_BLOCK)
+        : config.START_BLOCK;
     logger.info(`Starting from block ${startBlock}`);
 
     // Initialize contract connection

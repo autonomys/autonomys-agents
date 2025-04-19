@@ -123,8 +123,6 @@ export const getToolVersions = async (toolId: number): Promise<ToolVersion[]> =>
   }
 };
 
-
-
 // Get the latest version for each tool
 export const getLatestToolVersions = async (): Promise<
   {
@@ -176,7 +174,10 @@ export const getLatestToolVersions = async (): Promise<
 };
 
 // Search tools by name
-export const searchTools = async (searchTerm: string, limit = 10): Promise<ToolWithLatestVersion[]> => {
+export const searchTools = async (
+  searchTerm: string,
+  limit = 10,
+): Promise<ToolWithLatestVersion[]> => {
   try {
     const query = `
       WITH tool_results AS (
