@@ -5,11 +5,10 @@ import chalk from 'chalk';
 import { install } from './commands/install.js';
 import { publish } from './commands/publish.js';
 import { search } from './commands/search.js';
-import { config } from './commands/config.js';
 import { clean } from './commands/clean.js';
 import { tool } from './commands/tool.js';
 import { init } from './commands/init.js';
-import { initializeConfigAndCredentials } from './config/index.js';
+import { loadConfig } from './config/index.js';
 import { credentialsExist } from './utils/credential/index.js';
 import { ensureAutoOSDir } from './utils/shared/path.js';
 import {
@@ -35,10 +34,14 @@ const program = new Command();
 
 ensureAutoOSDir()
   .then(() => {
-    return Promise.all([initializeConfigAndCredentials(), checkMasterPassword()]);
+    return loadConfig(); // Only load config by default, not credentials
   })
-  .then(() => {
-
+  .then(async (config) => {
+    // Only check for credentials if they exist, don't force loading them
+    const _check = await checkMasterPassword();
+    return config;
+  })
+  .then((config) => {
     const initWrapper = async (projectName: string, options: InitOptions) => {
       await init(projectName, options);
     };
