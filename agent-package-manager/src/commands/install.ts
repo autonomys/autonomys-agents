@@ -2,15 +2,19 @@ import chalk from 'chalk';
 import ora from 'ora';
 import { CommandResult } from '../types/index.js';
 import { InstallOptions } from '../types/index.js';
-import { performToolInstallation, resolveToolInfo } from '../utils/commands/install/toolInstall.js';
-
+import { performToolInstallation } from '../utils/commands/install/toolInstall.js';
+import { getToolInstallDir } from '../utils/shared/path.js';
+import { resolveToolInfo } from '../utils/commands/install/utils.js';
 const install = async (toolName: string, options: InstallOptions): Promise<CommandResult> => {
   const spinner = ora(`Installing ${toolName}...`).start();
-  // Always use local installation, ignoring the local flag
   try {
+    const { installDir } = await getToolInstallDir();
+    if (!installDir) {
+      throw new Error('Could not detect project root. Make sure you are in the agent project directory.');
+    }
     const { toolInfo, versionDisplay } = await resolveToolInfo(toolName, options, spinner);
 
-    await performToolInstallation(toolInfo);
+    const _install = await performToolInstallation(toolInfo, installDir);
 
     spinner.succeed(`Successfully installed ${toolName} ${versionDisplay} locally`);
 

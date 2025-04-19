@@ -8,7 +8,7 @@ import http from 'http';
 import { createWriteStream } from 'fs';
 import { pipeline } from 'stream/promises';
 import { CommandResult, InitOptions } from '../types/index.js';
-
+import extract from "extract-zip";
 /**
  * Download file from URL to specified path
  */
@@ -60,41 +60,7 @@ const downloadFile = async (url: string, destinationPath: string): Promise<void>
   });
 };
 
-/**
- * Extract a zip file using unzipper (implemented with Node.js streams)
- */
-const extractZip = async (zipPath: string, destinationDir: string): Promise<void> => {
-  // Since we're avoiding external dependencies, we'll use the unzip command if available
-  // This is not a pure JS solution but should work on most systems
-  const { exec } = await import('child_process');
 
-  return new Promise((resolve, reject) => {
-    exec(`unzip -o "${zipPath}" -d "${destinationDir}"`, (error, _stdout, _stderr) => {
-      if (error) {
-        console.error(`Extraction error: ${error.message}`);
-        console.error(`Attempting alternative extraction method...`);
-
-        // If unzip fails, fall back to a less efficient but more compatible method
-        try {
-          const { extract } = require('node:tar');
-          extract({ file: zipPath, cwd: destinationDir }).then(resolve).catch(reject);
-        } catch (fallbackError) {
-          console.error(
-            `Failed to extract using both methods. Please install 'unzip' command line tool or use a system with tar support.`,
-            fallbackError,
-          );
-          reject(
-            new Error(
-              `Failed to extract using both methods. Please install 'unzip' command line tool or use a system with tar support.`,
-            ),
-          );
-        }
-        return;
-      }
-      resolve();
-    });
-  });
-};
 
 /**
  * Download and extract the template repository
@@ -121,7 +87,7 @@ const downloadTemplate = async (
     spinner.text = 'Extracting template...';
     const extractDir = path.join(tempDir, 'extracted');
     await fs.mkdir(extractDir, { recursive: true });
-    await extractZip(tempZipPath, extractDir);
+    await extract(tempZipPath, { dir: extractDir });
 
     // Find the extracted directory name (should be autonomys-agent-template-main)
     const extractedItems = await fs.readdir(extractDir);
