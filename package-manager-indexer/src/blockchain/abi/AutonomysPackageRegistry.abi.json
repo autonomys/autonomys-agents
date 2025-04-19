@@ -1,0 +1,695 @@
+[
+	{
+		"inputs": [],
+		"stateMutability": "nonpayable",
+		"type": "constructor"
+	},
+	{
+		"inputs": [],
+		"name": "EmptyCidHash",
+		"type": "error"
+	},
+	{
+		"inputs": [],
+		"name": "EmptyMetadataHash",
+		"type": "error"
+	},
+	{
+		"inputs": [],
+		"name": "EmptyToolName",
+		"type": "error"
+	},
+	{
+		"inputs": [],
+		"name": "InvalidNameHash",
+		"type": "error"
+	},
+	{
+		"inputs": [],
+		"name": "InvalidVersion",
+		"type": "error"
+	},
+	{
+		"inputs": [],
+		"name": "InvalidVersionOrder",
+		"type": "error"
+	},
+	{
+		"inputs": [],
+		"name": "NotToolOwner",
+		"type": "error"
+	},
+	{
+		"inputs": [],
+		"name": "OffsetOutOfBounds",
+		"type": "error"
+	},
+	{
+		"inputs": [],
+		"name": "OnlyOwner",
+		"type": "error"
+	},
+	{
+		"inputs": [],
+		"name": "SameOwner",
+		"type": "error"
+	},
+	{
+		"inputs": [],
+		"name": "ToolNameAlreadyRegistered",
+		"type": "error"
+	},
+	{
+		"inputs": [],
+		"name": "ToolNotFound",
+		"type": "error"
+	},
+	{
+		"inputs": [],
+		"name": "VersionAlreadyExists",
+		"type": "error"
+	},
+	{
+		"inputs": [],
+		"name": "VersionNotExists",
+		"type": "error"
+	},
+	{
+		"inputs": [],
+		"name": "ZeroAddressNotAllowed",
+		"type": "error"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"internalType": "string",
+				"name": "name",
+				"type": "string"
+			},
+			{
+				"indexed": false,
+				"internalType": "address",
+				"name": "previousOwner",
+				"type": "address"
+			},
+			{
+				"indexed": false,
+				"internalType": "address",
+				"name": "newOwner",
+				"type": "address"
+			}
+		],
+		"name": "OwnershipTransferred",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"internalType": "string",
+				"name": "name",
+				"type": "string"
+			},
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "major",
+				"type": "uint256"
+			},
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "minor",
+				"type": "uint256"
+			},
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "patch",
+				"type": "uint256"
+			},
+			{
+				"indexed": false,
+				"internalType": "bytes32",
+				"name": "cidHash",
+				"type": "bytes32"
+			},
+			{
+				"indexed": false,
+				"internalType": "address",
+				"name": "publisher",
+				"type": "address"
+			},
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "timestamp",
+				"type": "uint256"
+			}
+		],
+		"name": "ToolRegistered",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"internalType": "string",
+				"name": "name",
+				"type": "string"
+			},
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "major",
+				"type": "uint256"
+			},
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "minor",
+				"type": "uint256"
+			},
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "patch",
+				"type": "uint256"
+			},
+			{
+				"indexed": false,
+				"internalType": "bytes32",
+				"name": "cidHash",
+				"type": "bytes32"
+			},
+			{
+				"indexed": false,
+				"internalType": "address",
+				"name": "publisher",
+				"type": "address"
+			},
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "timestamp",
+				"type": "uint256"
+			}
+		],
+		"name": "ToolUpdated",
+		"type": "event"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "string",
+				"name": "name",
+				"type": "string"
+			}
+		],
+		"name": "computeNameHash",
+		"outputs": [
+			{
+				"internalType": "bytes32",
+				"name": "",
+				"type": "bytes32"
+			}
+		],
+		"stateMutability": "pure",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "offset",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "limit",
+				"type": "uint256"
+			}
+		],
+		"name": "getAllToolsPaginated",
+		"outputs": [
+			{
+				"internalType": "bytes32[]",
+				"name": "",
+				"type": "bytes32[]"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "bytes32",
+				"name": "name",
+				"type": "bytes32"
+			}
+		],
+		"name": "getLatestVersion",
+		"outputs": [
+			{
+				"components": [
+					{
+						"internalType": "uint64",
+						"name": "major",
+						"type": "uint64"
+					},
+					{
+						"internalType": "uint64",
+						"name": "minor",
+						"type": "uint64"
+					},
+					{
+						"internalType": "uint64",
+						"name": "patch",
+						"type": "uint64"
+					}
+				],
+				"internalType": "struct AutonomysPackageRegistry.Version",
+				"name": "version",
+				"type": "tuple"
+			},
+			{
+				"internalType": "bytes32",
+				"name": "cidHash",
+				"type": "bytes32"
+			},
+			{
+				"internalType": "uint256",
+				"name": "timestamp",
+				"type": "uint256"
+			},
+			{
+				"internalType": "bytes32",
+				"name": "metadataHash",
+				"type": "bytes32"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "publisher",
+				"type": "address"
+			},
+			{
+				"internalType": "uint256",
+				"name": "offset",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "limit",
+				"type": "uint256"
+			}
+		],
+		"name": "getPublisherToolsPaginated",
+		"outputs": [
+			{
+				"internalType": "bytes32[]",
+				"name": "",
+				"type": "bytes32[]"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "getToolCount",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "bytes32",
+				"name": "name",
+				"type": "bytes32"
+			}
+		],
+		"name": "getToolInfo",
+		"outputs": [
+			{
+				"internalType": "address",
+				"name": "toolOwner",
+				"type": "address"
+			},
+			{
+				"internalType": "uint256",
+				"name": "versionCount",
+				"type": "uint256"
+			},
+			{
+				"components": [
+					{
+						"internalType": "uint64",
+						"name": "major",
+						"type": "uint64"
+					},
+					{
+						"internalType": "uint64",
+						"name": "minor",
+						"type": "uint64"
+					},
+					{
+						"internalType": "uint64",
+						"name": "patch",
+						"type": "uint64"
+					}
+				],
+				"internalType": "struct AutonomysPackageRegistry.Version",
+				"name": "latestVersion",
+				"type": "tuple"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "bytes32",
+				"name": "name",
+				"type": "bytes32"
+			},
+			{
+				"components": [
+					{
+						"internalType": "uint64",
+						"name": "major",
+						"type": "uint64"
+					},
+					{
+						"internalType": "uint64",
+						"name": "minor",
+						"type": "uint64"
+					},
+					{
+						"internalType": "uint64",
+						"name": "patch",
+						"type": "uint64"
+					}
+				],
+				"internalType": "struct AutonomysPackageRegistry.Version",
+				"name": "version",
+				"type": "tuple"
+			}
+		],
+		"name": "getToolVersion",
+		"outputs": [
+			{
+				"components": [
+					{
+						"internalType": "uint64",
+						"name": "major",
+						"type": "uint64"
+					},
+					{
+						"internalType": "uint64",
+						"name": "minor",
+						"type": "uint64"
+					},
+					{
+						"internalType": "uint64",
+						"name": "patch",
+						"type": "uint64"
+					}
+				],
+				"internalType": "struct AutonomysPackageRegistry.Version",
+				"name": "retrievedVersion",
+				"type": "tuple"
+			},
+			{
+				"internalType": "bytes32",
+				"name": "cidHash",
+				"type": "bytes32"
+			},
+			{
+				"internalType": "uint256",
+				"name": "timestamp",
+				"type": "uint256"
+			},
+			{
+				"internalType": "bytes32",
+				"name": "metadataHash",
+				"type": "bytes32"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "bytes32",
+				"name": "name",
+				"type": "bytes32"
+			}
+		],
+		"name": "getToolVersions",
+		"outputs": [
+			{
+				"components": [
+					{
+						"internalType": "uint64",
+						"name": "major",
+						"type": "uint64"
+					},
+					{
+						"internalType": "uint64",
+						"name": "minor",
+						"type": "uint64"
+					},
+					{
+						"internalType": "uint64",
+						"name": "patch",
+						"type": "uint64"
+					}
+				],
+				"internalType": "struct AutonomysPackageRegistry.Version[]",
+				"name": "",
+				"type": "tuple[]"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "bytes32",
+				"name": "nameHash",
+				"type": "bytes32"
+			}
+		],
+		"name": "isToolNameRegistered",
+		"outputs": [
+			{
+				"internalType": "bool",
+				"name": "",
+				"type": "bool"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "owner",
+		"outputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "string",
+				"name": "name",
+				"type": "string"
+			},
+			{
+				"components": [
+					{
+						"internalType": "uint64",
+						"name": "major",
+						"type": "uint64"
+					},
+					{
+						"internalType": "uint64",
+						"name": "minor",
+						"type": "uint64"
+					},
+					{
+						"internalType": "uint64",
+						"name": "patch",
+						"type": "uint64"
+					}
+				],
+				"internalType": "struct AutonomysPackageRegistry.Version",
+				"name": "version",
+				"type": "tuple"
+			},
+			{
+				"internalType": "bytes32",
+				"name": "cidHash",
+				"type": "bytes32"
+			},
+			{
+				"internalType": "bytes32",
+				"name": "metadataHash",
+				"type": "bytes32"
+			}
+		],
+		"name": "registerTool",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "newOwner",
+				"type": "address"
+			}
+		],
+		"name": "transferContractOwnership",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "string",
+				"name": "name",
+				"type": "string"
+			},
+			{
+				"internalType": "bytes32",
+				"name": "nameHash",
+				"type": "bytes32"
+			},
+			{
+				"internalType": "address",
+				"name": "newOwner",
+				"type": "address"
+			}
+		],
+		"name": "transferToolOwnership",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "string",
+				"name": "name",
+				"type": "string"
+			},
+			{
+				"internalType": "bytes32",
+				"name": "nameHash",
+				"type": "bytes32"
+			},
+			{
+				"components": [
+					{
+						"internalType": "uint64",
+						"name": "major",
+						"type": "uint64"
+					},
+					{
+						"internalType": "uint64",
+						"name": "minor",
+						"type": "uint64"
+					},
+					{
+						"internalType": "uint64",
+						"name": "patch",
+						"type": "uint64"
+					}
+				],
+				"internalType": "struct AutonomysPackageRegistry.Version",
+				"name": "version",
+				"type": "tuple"
+			},
+			{
+				"internalType": "bytes32",
+				"name": "metadataHash",
+				"type": "bytes32"
+			}
+		],
+		"name": "updateToolMetadata",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "bytes32",
+				"name": "nameHash",
+				"type": "bytes32"
+			},
+			{
+				"components": [
+					{
+						"internalType": "uint64",
+						"name": "major",
+						"type": "uint64"
+					},
+					{
+						"internalType": "uint64",
+						"name": "minor",
+						"type": "uint64"
+					},
+					{
+						"internalType": "uint64",
+						"name": "patch",
+						"type": "uint64"
+					}
+				],
+				"internalType": "struct AutonomysPackageRegistry.Version",
+				"name": "version",
+				"type": "tuple"
+			}
+		],
+		"name": "versionExists",
+		"outputs": [
+			{
+				"internalType": "bool",
+				"name": "",
+				"type": "bool"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	}
+]
