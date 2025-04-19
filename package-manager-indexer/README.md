@@ -38,7 +38,7 @@ cp .env.sample .env
    - `CONTRACT_ADDRESS`: Address of the AutonomysPackageRegistry contract
    - `DATABASE_URL`: PostgreSQL connection string
    - `START_BLOCK`: Starting block number for indexing (0 for genesis)
-   - `API_PORT`: Port for the API server (default: 3000)
+   - `API_PORT`: Port for the API server (default: 8000)
 
 ## Database Setup
 
