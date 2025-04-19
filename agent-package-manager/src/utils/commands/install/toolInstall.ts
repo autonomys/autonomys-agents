@@ -1,7 +1,7 @@
 import fs from 'fs/promises';
 import path from 'path';
 import { PACKAGES_DIR } from '../../shared/path.js';
-import { downloadFileFromDsn } from '../../autoDrive/autoDriveClient.js';
+import { downloadFileFromGateway } from '../../autoDrive/gatewayClient.js';
 import { ToolInstallInfo, ToolManifest } from '../../../types/index.js';
 import { loadCredentials } from '../../credential/index.js';
 import { getCidFromHash } from '../../blockchain/utils.js';
@@ -17,7 +17,7 @@ const fetchToolPackage = async (cidHash: string): Promise<string> => {
   try {
     console.log(`Downloading tool package with CID: ${cid}`);
 
-    const fileStream = await downloadFileFromDsn(cid, credentials.autoDriveEncryptionPassword);
+    const fileStream = await downloadFileFromGateway(cid);
 
     const chunks: Buffer[] = [];
     for await (const chunk of fileStream) {
