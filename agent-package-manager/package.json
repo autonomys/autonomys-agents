@@ -1,5 +1,5 @@
 {
-  "name": "@autonomys/agent-os-cli",
+  "name": "@autonomys/agent-os",
   "version": "0.1.0",
   "description": "Package manager for Autonomys agent tools",
   "license": "MIT",
@@ -7,13 +7,39 @@
   "bin": {
     "autoOS": "./dist/index.js"
   },
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/autonomys/autonomys-agents",
+    "directory": "agent-package-manager"
+  },
+  "author": {
+    "name": "Autonomys",
+    "url": "https://www.autonomys.xyz"
+  },
+  "bugs": {
+    "url": "https://github.com/autonomys/autonomys-agents/issues"
+  },
+  "homepage": "https://github.com/autonomys/autonomys-agents/tree/main/agent-package-manager#readme",
+  "keywords": [
+    "autonomys",
+    "agent",
+    "package-manager",
+    "cli",
+    "tools"
+  ],
   "scripts": {
     "build": "tsc",
     "start": "node dist/index.js",
     "dev": "ts-node src/index.ts",
-    "prepublish": "npm run build",
+    "prepublishOnly": "yarn build",
     "lint": "eslint \"src/**/*.{js,ts}\"",
     "lint:fix": "eslint \"src/**/*.{js,ts}\" --fix"
+  },
+  "engines": {
+    "node": ">=20.18.1"
   },
   "dependencies": {
     "@autonomys/auto-drive": "^1.4.17",

@@ -12,9 +12,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@autonomys/agent-os-cli@workspace:.":
+"@autonomys/agent-os@workspace:.":
   version: 0.0.0-use.local
-  resolution: "@autonomys/agent-os-cli@workspace:."
+  resolution: "@autonomys/agent-os@workspace:."
   dependencies:
     "@autonomys/auto-drive": "npm:^1.4.17"
     "@types/archiver": "npm:^5.3.2"
