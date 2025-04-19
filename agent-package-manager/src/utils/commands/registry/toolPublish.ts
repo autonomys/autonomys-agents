@@ -5,6 +5,7 @@ import { UploadFileOptions } from '@autonomys/auto-drive';
 import { ToolManifest, ToolMetadata } from '../../../types/index.js';
 import { uploadFileToDsn, uploadMetadataToDsn } from '../../autoDrive/autoDriveClient.js';
 import { loadCredentials } from '../../credential/index.js';
+import { validateToolStructure } from '../../validation.js';
 
 const createToolPackage = async (toolPath: string): Promise<Buffer> => {
   return new Promise((resolve, reject) => {
@@ -72,6 +73,12 @@ const uploadToolMetadata = async (metadata: ToolMetadata): Promise<string> => {
 const packageAndUploadTool = async (
   toolPath: string,
 ): Promise<{ cid: string; metadataCid: string; metadata: ToolMetadata }> => {
+  // Validate tool structure before packaging
+  const validationResult = await validateToolStructure(toolPath);
+  if (!validationResult.valid) {
+    throw new Error(`Tool validation failed: ${validationResult.message}`);
+  }
+
   const manifestPath = path.join(toolPath, 'manifest.json');
   const manifestData = await fs.readFile(manifestPath, 'utf8');
   const manifest = JSON.parse(manifestData) as ToolManifest;

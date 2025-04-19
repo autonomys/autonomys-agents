@@ -44,7 +44,7 @@ export interface ToolManifest {
   version: string;
   description: string;
   author: string;
-  dependencies: string[];
+  dependencies: Record<string, string>;
   main: string;
   keywords: string[];
 }

@@ -2,10 +2,11 @@ import fs from 'fs/promises';
 import path from 'path';
 import { PACKAGES_DIR } from '../../shared/path.js';
 import { downloadFileFromDsn } from '../../autoDrive/autoDriveClient.js';
-import { ToolInstallInfo } from '../../../types/index.js';
+import { ToolInstallInfo, ToolManifest } from '../../../types/index.js';
 import { loadCredentials } from '../../credential/index.js';
 import { getCidFromHash } from '../../blockchain/utils.js';
 import extract from "extract-zip";
+import chalk from 'chalk';
 
 
 const fetchToolPackage = async (cidHash: string): Promise<string> => {
@@ -52,6 +53,61 @@ const unpackToolToDirectory = async (
   }
 };    
 
+/**
+ * Checks if the tool's dependencies are in the project's package.json
+ * and logs a message for any missing dependencies
+ */
+const checkToolDependencies = async (toolDir: string): Promise<void> => {
+  try {
+    // Read the tool's manifest.json
+    const manifestPath = path.join(toolDir, 'manifest.json');
+    const manifestData = await fs.readFile(manifestPath, 'utf8');
+    const manifest = JSON.parse(manifestData) as ToolManifest;
+    
+    if (!manifest.dependencies || Object.keys(manifest.dependencies).length === 0) {
+      return; // No dependencies to check
+    }
+    
+    // Try to find the project's package.json by going up directories
+    let currentDir = path.resolve(toolDir, '..');
+    let projectPackageJson = null;
+    
+    // Look for package.json in parent directories to find project root
+    while (currentDir !== path.parse(currentDir).root) {
+      try {
+        const packageJsonPath = path.join(currentDir, 'package.json');
+        const packageJsonData = await fs.readFile(packageJsonPath, 'utf8');
+        projectPackageJson = JSON.parse(packageJsonData);
+        break;
+      } catch (error) {
+        currentDir = path.resolve(currentDir, '..');
+      }
+    }
+    
+    if (!projectPackageJson) {
+      console.warn(chalk.yellow(`Warning: Could not find project's package.json to check dependencies`));
+      return;
+    }
+    
+    // Check if each dependency is in the project's package.json
+    const missingDependencies: string[] = [];
+    
+    for (const [dependency, version] of Object.entries(manifest.dependencies)) {
+      if (!projectPackageJson.dependencies || !projectPackageJson.dependencies[dependency]) {
+        missingDependencies.push(`${dependency}@${version}`);
+      }
+    }
+    
+    if (missingDependencies.length > 0) {
+      console.warn(chalk.yellow('Warning: The following dependencies required by the tool are not in your package.json:'));
+      console.warn(chalk.yellow(missingDependencies.join(', ')));
+      console.warn(chalk.yellow('Please add these dependencies to your project to ensure the tool works correctly.'));
+    }
+  } catch (error) {
+    console.warn(chalk.yellow(`Warning: Could not check tool dependencies: ${error instanceof Error ? error.message : String(error)}`));
+  }
+};
+
 const performToolInstallation = async (
   toolInfo: ToolInstallInfo,
   toolInstallDir: string,
@@ -59,6 +115,10 @@ const performToolInstallation = async (
   try {
     const packagePath = await fetchToolPackage(toolInfo.cid);
     const toolDir = await unpackToolToDirectory(packagePath, toolInfo.name, toolInstallDir);
+    
+    // Check if the tool has dependencies not in the project
+    await checkToolDependencies(toolDir);
+    
     console.log(`Tool installed successfully to: ${toolDir}`);
     return toolDir;
   } catch (error) {
@@ -71,4 +131,5 @@ export {
   fetchToolPackage,
   unpackToolToDirectory,
   performToolInstallation,
+  checkToolDependencies,
 };
