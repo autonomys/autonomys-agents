@@ -18,7 +18,9 @@ const ensureAutoOSDir = async () => {
   }
 };
 
-const detectProjectRoot = async (): Promise<{ root: string; isTemplateProject: boolean } | undefined> => {
+const detectProjectRoot = async (): Promise<
+  { root: string; isTemplateProject: boolean } | undefined
+> => {
   let currentDir = process.cwd();
 
   while (currentDir && currentDir !== HOME_DIR && currentDir !== path.parse(currentDir).root) {
@@ -35,7 +37,7 @@ const detectProjectRoot = async (): Promise<{ root: string; isTemplateProject: b
           const packageJsonPath = path.join(currentDir, 'package.json');
           const packageJsonContent = await fs.readFile(packageJsonPath, 'utf8');
           const packageJson = JSON.parse(packageJsonContent);
-          
+
           // Check for key dependencies that would indicate this is our template
           if (packageJson.dependencies && packageJson.dependencies['@autonomys/agent-core']) {
             if (files.includes('src')) {
@@ -44,14 +46,14 @@ const detectProjectRoot = async (): Promise<{ root: string; isTemplateProject: b
                 isTemplateProject = true;
               }
             }
-          }          
-        } catch (err) {
+          }
+        } catch {
           // If we can't read package.json, assume it's not a template project
         }
-        
-        return { 
+
+        return {
           root: currentDir,
-          isTemplateProject 
+          isTemplateProject,
         };
       }
 
@@ -71,9 +73,9 @@ const getToolInstallDir = async (): Promise<{ installDir: string | undefined }> 
   if (!projectInfo) {
     throw new Error('Could not detect project root. Make sure you are in a project directory.');
   }
-  
+
   const { root, isTemplateProject } = projectInfo;
-  
+
   // If this is a template project, use the template directory structure
   if (isTemplateProject) {
     const toolsDir = path.join(root, 'src', 'tools');

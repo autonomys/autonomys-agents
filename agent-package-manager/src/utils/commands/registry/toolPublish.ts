@@ -2,7 +2,7 @@ import fs from 'fs/promises';
 import path from 'path';
 import archiver from 'archiver';
 import { UploadFileOptions } from '@autonomys/auto-drive';
-import { ToolManifest, ToolMetadata, PublishedToolMetadata } from '../../../types/index.js';
+import { PublishedToolMetadata, ToolManifest, ToolMetadata } from '../../../types/index.js';
 import { uploadFileToDsn, uploadMetadataToDsn } from '../../autoDrive/autoDriveClient.js';
 import { loadCredentials } from '../../credential/index.js';
 import { validateToolStructure } from '../../validation.js';
@@ -109,7 +109,9 @@ const packageAndUploadTool = async (
       return { cid, metadataCid, metadata };
     } catch (error) {
       if (error instanceof Error && error.message.includes('credentials')) {
-        throw new Error('Publishing requires credentials. Please run "autoOS config --credentials" to set up.');
+        throw new Error(
+          'Publishing requires credentials. Please run "autoOS config --credentials" to set up.',
+        );
       }
       throw error;
     }

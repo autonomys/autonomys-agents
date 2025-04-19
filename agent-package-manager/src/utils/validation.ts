@@ -13,14 +13,14 @@ const isValidPackageName = (name: string): boolean => {
   if (name.startsWith('_')) return false;
   if (name.trim() !== name) return false;
   if (name.length > 214) return false;
-  
+
   // Package names can't have uppercase letters
   if (name.toLowerCase() !== name) return false;
-  
+
   // Package names can only contain URL-friendly characters
   const validRegex = /^[a-z0-9-._~@!$&'()*+,;=:/]+$/;
   if (!validRegex.test(name)) return false;
-  
+
   return true;
 };
 
@@ -30,32 +30,32 @@ const isValidPackageName = (name: string): boolean => {
  */
 const isValidVersionSpecifier = (version: string): boolean => {
   if (!version || typeof version !== 'string') return false;
-  
+
   // Allow wildcards
   if (version === '*' || version === 'latest') return true;
-  
+
   // Exact versions (1.2.3)
   if (/^\d+\.\d+\.\d+$/.test(version)) return true;
-  
+
   // Semver ranges with ^ or ~ (^1.2.3, ~1.2.3)
   if (/^[\^~]\d+\.\d+\.\d+$/.test(version)) return true;
-  
+
   // Version ranges with comparison operators
   if (/^(>=|<=|>|<)\d+\.\d+\.\d+$/.test(version)) return true;
-  
+
   // Version ranges (1.2.3 - 1.5.0)
   if (/^\d+\.\d+\.\d+ - \d+\.\d+\.\d+$/.test(version)) return true;
-  
+
   // Git URLs
   if (/^(git|http|https|git\+https|git\+ssh):\/\//.test(version)) return true;
-  
+
   // GitHub URLs
   if (/^(github|gitlab|bitbucket):/.test(version)) return true;
   if (/^[a-zA-Z0-9_-]+\/[a-zA-Z0-9_-]+/.test(version)) return true;
-  
+
   // Local paths
   if (/^file:/.test(version)) return true;
-  
+
   return false;
 };
 
@@ -64,28 +64,28 @@ const isValidVersionSpecifier = (version: string): boolean => {
  */
 const validateDependencies = (dependencies: Record<string, string>): ValidationResult => {
   if (!dependencies || typeof dependencies !== 'object' || Array.isArray(dependencies)) {
-    return { 
-      valid: false, 
-      message: 'dependencies must be an object mapping package names to versions' 
+    return {
+      valid: false,
+      message: 'dependencies must be an object mapping package names to versions',
     };
   }
-  
+
   for (const [pkg, version] of Object.entries(dependencies)) {
     if (!isValidPackageName(pkg)) {
-      return { 
-        valid: false, 
-        message: `dependency name '${pkg}' is not a valid npm package name` 
+      return {
+        valid: false,
+        message: `dependency name '${pkg}' is not a valid npm package name`,
       };
     }
-    
+
     if (!isValidVersionSpecifier(version)) {
-      return { 
-        valid: false, 
-        message: `version '${version}' for package '${pkg}' is not a valid version specifier` 
+      return {
+        valid: false,
+        message: `version '${version}' for package '${pkg}' is not a valid version specifier`,
       };
     }
   }
-  
+
   return { valid: true };
 };
 

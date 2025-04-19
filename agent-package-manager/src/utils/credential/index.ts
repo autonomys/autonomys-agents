@@ -52,9 +52,11 @@ const loadCredentials = async (): Promise<Credentials> => {
   try {
     const masterPassword = await getFromKeychain();
     if (!masterPassword) {
-      throw new Error('No master password found in keychain. Please run "autoOS config --credentials" to set up.');
+      throw new Error(
+        'No master password found in keychain. Please run "autoOS config --credentials" to set up.',
+      );
     }
-    
+
     try {
       const encryptedData = await fs.readFile(CREDENTIALS_FILE);
       const credentials = await decryptCredentials(encryptedData, masterPassword);
@@ -62,7 +64,9 @@ const loadCredentials = async (): Promise<Credentials> => {
     } catch (error) {
       // Handle file not found error with a clearer message
       if (error instanceof Error && error.message.includes('ENOENT')) {
-        throw new Error('No credentials file found. Please run "autoOS config --credentials" to set up.');
+        throw new Error(
+          'No credentials file found. Please run "autoOS config --credentials" to set up.',
+        );
       }
       throw error;
     }
@@ -79,7 +83,7 @@ const credentialsExist = async (): Promise<boolean> => {
   try {
     await fs.access(CREDENTIALS_FILE);
     return true;
-  } catch (error) {
+  } catch {
     // Silently return false if the file doesn't exist
     // This is expected behavior when credentials haven't been set up yet
     return false;

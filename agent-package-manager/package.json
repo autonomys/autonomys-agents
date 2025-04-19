@@ -35,6 +35,8 @@
     "start": "node dist/index.js",
     "dev": "ts-node src/index.ts",
     "prepublishOnly": "yarn build",
+    "format": "prettier --write \"src/**/*.{js,ts}\"",
+    "format:check": "prettier --check \"src/**/*.{js,ts}\"",
     "lint": "eslint \"src/**/*.{js,ts}\"",
     "lint:fix": "eslint \"src/**/*.{js,ts}\" --fix"
   },
@@ -52,7 +54,8 @@
     "extract-zip": "^2.0.1",
     "inquirer": "^9.2.0",
     "keytar": "^7.9.0",
-    "ora": "^6.3.0"
+    "ora": "^6.3.0",
+    "prettier": "^3.5.3"
   },
   "devDependencies": {
     "@types/archiver": "^5.3.2",

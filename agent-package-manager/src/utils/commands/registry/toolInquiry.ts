@@ -179,13 +179,13 @@ const fetchMetadataFromCid = async (metadataCid: string): Promise<string | null>
     const cid = getCidFromHash(metadataCid);
     spinner.text = `Downloading file from gateway: ${cid}`;
     const responseStream = await downloadFileFromGateway(cid);
-    
+
     // Convert readable stream to buffer and then to JSON
     const chunks: Buffer[] = [];
     for await (const chunk of responseStream) {
       chunks.push(chunk);
     }
-    
+
     const buffer = Buffer.concat(chunks);
     spinner.succeed(`Successfully downloaded metadata`);
     return buffer.toString('utf-8');

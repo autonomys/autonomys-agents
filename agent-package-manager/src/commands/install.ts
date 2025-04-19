@@ -11,7 +11,9 @@ const install = async (toolName: string, options: InstallOptions): Promise<Comma
   try {
     const { installDir } = await getToolInstallDir();
     if (!installDir) {
-      throw new Error('Could not detect project root. Make sure you are in the agent project directory.');
+      throw new Error(
+        'Could not detect project root. Make sure you are in the agent project directory.',
+      );
     }
     const { toolInfo, versionDisplay } = await resolveToolInfo(toolName, options, spinner);
 

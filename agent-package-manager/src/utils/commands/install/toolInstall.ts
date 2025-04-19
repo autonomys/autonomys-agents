@@ -4,9 +4,8 @@ import { PACKAGES_DIR } from '../../shared/path.js';
 import { downloadFileFromGateway } from '../../autoDrive/gatewayClient.js';
 import { ToolInstallInfo, ToolManifest } from '../../../types/index.js';
 import { getCidFromHash } from '../../blockchain/utils.js';
-import extract from "extract-zip";
+import extract from 'extract-zip';
 import chalk from 'chalk';
-
 
 const fetchToolPackage = async (cidHash: string): Promise<string> => {
   const cid = getCidFromHash(cidHash);
@@ -49,7 +48,7 @@ const unpackToolToDirectory = async (
     console.error('Error extracting package:', error);
     throw error;
   }
-};    
+};
 
 /**
  * Checks if the tool's dependencies are in the project's package.json
@@ -61,15 +60,15 @@ const checkToolDependencies = async (toolDir: string): Promise<void> => {
     const manifestPath = path.join(toolDir, 'manifest.json');
     const manifestData = await fs.readFile(manifestPath, 'utf8');
     const manifest = JSON.parse(manifestData) as ToolManifest;
-    
+
     if (!manifest.dependencies || Object.keys(manifest.dependencies).length === 0) {
       return; // No dependencies to check
     }
-    
+
     // Try to find the project's package.json by going up directories
     let currentDir = path.resolve(toolDir, '..');
     let projectPackageJson = null;
-    
+
     // Look for package.json in parent directories to find project root
     while (currentDir !== path.parse(currentDir).root) {
       try {
@@ -77,32 +76,46 @@ const checkToolDependencies = async (toolDir: string): Promise<void> => {
         const packageJsonData = await fs.readFile(packageJsonPath, 'utf8');
         projectPackageJson = JSON.parse(packageJsonData);
         break;
-      } catch (error) {
+      } catch {
         currentDir = path.resolve(currentDir, '..');
       }
     }
-    
+
     if (!projectPackageJson) {
-      console.warn(chalk.yellow(`Warning: Could not find project's package.json to check dependencies`));
+      console.warn(
+        chalk.yellow(`Warning: Could not find project's package.json to check dependencies`),
+      );
       return;
     }
-    
+
     // Check if each dependency is in the project's package.json
     const missingDependencies: string[] = [];
-    
+
     for (const [dependency, version] of Object.entries(manifest.dependencies)) {
       if (!projectPackageJson.dependencies || !projectPackageJson.dependencies[dependency]) {
         missingDependencies.push(`${dependency}@${version}`);
       }
     }
-    
+
     if (missingDependencies.length > 0) {
-      console.warn(chalk.yellow('Warning: The following dependencies required by the tool are not in your package.json:'));
+      console.warn(
+        chalk.yellow(
+          'Warning: The following dependencies required by the tool are not in your package.json:',
+        ),
+      );
       console.warn(chalk.yellow(missingDependencies.join(', ')));
-      console.warn(chalk.yellow('Please add these dependencies to your project to ensure the tool works correctly.'));
+      console.warn(
+        chalk.yellow(
+          'Please add these dependencies to your project to ensure the tool works correctly.',
+        ),
+      );
     }
   } catch (error) {
-    console.warn(chalk.yellow(`Warning: Could not check tool dependencies: ${error instanceof Error ? error.message : String(error)}`));
+    console.warn(
+      chalk.yellow(
+        `Warning: Could not check tool dependencies: ${error instanceof Error ? error.message : String(error)}`,
+      ),
+    );
   }
 };
 
@@ -113,10 +126,10 @@ const performToolInstallation = async (
   try {
     const packagePath = await fetchToolPackage(toolInfo.cid);
     const toolDir = await unpackToolToDirectory(packagePath, toolInfo.name, toolInstallDir);
-    
+
     // Check if the tool has dependencies not in the project
     await checkToolDependencies(toolDir);
-    
+
     console.log(`Tool installed successfully to: ${toolDir}`);
     return toolDir;
   } catch (error) {
@@ -125,9 +138,4 @@ const performToolInstallation = async (
   }
 };
 
-export {
-  fetchToolPackage,
-  unpackToolToDirectory,
-  performToolInstallation,
-  checkToolDependencies,
-};
+export { fetchToolPackage, unpackToolToDirectory, performToolInstallation, checkToolDependencies };

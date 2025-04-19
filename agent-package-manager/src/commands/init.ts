@@ -23,7 +23,7 @@ const init = async (projectName: string, options: InitOptions): Promise<CommandR
         success: false,
         message: `Directory already exists: ${projectPath}`,
       };
-    } catch { }
+    } catch {}
 
     // Create project directory
     const _createProjectDir = await fs.mkdir(projectPath, { recursive: true });
@@ -40,7 +40,9 @@ const init = async (projectName: string, options: InitOptions): Promise<CommandR
       );
 
       // Clean up the project directory if it was created
-      const _rmProjectDir = await fs.rm(projectPath, { recursive: true, force: true }).catch(() => { });
+      const _rmProjectDir = await fs
+        .rm(projectPath, { recursive: true, force: true })
+        .catch(() => {});
 
       return {
         success: false,
@@ -64,7 +66,11 @@ const init = async (projectName: string, options: InitOptions): Promise<CommandR
         if (options.character) {
           spinner.start(`Creating character: ${options.character}...`);
           try {
-            const _createCharacter = await runCommand(`yarn create-character ${options.character}`, projectPath, spinner);
+            const _createCharacter = await runCommand(
+              `yarn create-character ${options.character}`,
+              projectPath,
+              spinner,
+            );
             spinner.succeed(`Character "${options.character}" created`);
           } catch (characterError) {
             spinner.fail(

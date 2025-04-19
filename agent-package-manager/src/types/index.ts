@@ -106,3 +106,17 @@ export interface Config {
   taurusRpcUrl?: string;
   indexerUrl?: string;
 }
+
+export interface IndexedToolSearchResult {
+  id: number;
+  name: string;
+  nameHash: string;
+  ownerAddress: string;
+  createdAt: string;
+  updatedAt: string;
+  version?: string;
+  cid?: string;
+  metadataCid?: string;
+  publisherAddress?: string;
+  publishedAt?: string;
+}

@@ -37,7 +37,7 @@ ensureAutoOSDir()
   .then(() => {
     return loadConfig();
   })
-  .then(async (config) => {
+  .then(async config => {
     const _check = await checkMasterPassword();
     return config;
   })
@@ -70,7 +70,6 @@ ensureAutoOSDir()
       await tool(options);
     };
 
-    
     program
       .name('autoOS')
       .description('Package manager for Autonomys agent tools')

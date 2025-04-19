@@ -15,10 +15,15 @@ const publish = async (toolPath: string, options: PublishOptions): Promise<Comma
     if (!hasCredentials) {
       spinner.fail('Missing credentials required for publishing');
       console.log(chalk.yellow('\nPublishing requires credentials to be set up.'));
-      console.log(chalk.yellow('Please run ') + chalk.cyan('autoOS config --credentials') + chalk.yellow(' to set up your credentials.'));
-      return { 
-        success: false, 
-        message: 'Missing credentials required for publishing. Run "autoOS config --credentials" to set up.' 
+      console.log(
+        chalk.yellow('Please run ') +
+          chalk.cyan('autoOS config --credentials') +
+          chalk.yellow(' to set up your credentials.'),
+      );
+      return {
+        success: false,
+        message:
+          'Missing credentials required for publishing. Run "autoOS config --credentials" to set up.',
       };
     }
 
