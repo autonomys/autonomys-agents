@@ -33,6 +33,15 @@ export interface ToolMetadata {
   updated: string;
 }
 
+export interface PublishedToolMetadata {
+  name: string;
+  version: string;
+  author: string;
+  cid: string;
+  updated: string;
+  dependencies: Record<string, string>;
+}
+
 export interface ToolRegistry {
   version: string;
   updated: string;

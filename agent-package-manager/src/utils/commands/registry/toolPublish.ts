@@ -2,7 +2,7 @@ import fs from 'fs/promises';
 import path from 'path';
 import archiver from 'archiver';
 import { UploadFileOptions } from '@autonomys/auto-drive';
-import { ToolManifest, ToolMetadata } from '../../../types/index.js';
+import { ToolManifest, ToolMetadata, PublishedToolMetadata } from '../../../types/index.js';
 import { uploadFileToDsn, uploadMetadataToDsn } from '../../autoDrive/autoDriveClient.js';
 import { loadCredentials } from '../../credential/index.js';
 import { validateToolStructure } from '../../validation.js';
@@ -56,7 +56,7 @@ const uploadToolPackage = async (
   return await uploadFileToDsn(file, options);
 };
 
-const uploadToolMetadata = async (metadata: ToolMetadata): Promise<string> => {
+const uploadToolMetadata = async (metadata: PublishedToolMetadata): Promise<string> => {
   const credentials = await loadCredentials();
   const options: UploadFileOptions = {
     compression: true,
@@ -90,17 +90,20 @@ const packageAndUploadTool = async (
   const cid = await uploadToolPackage(packageBuffer, manifest);
   console.log(`Upload successful. CID: ${cid}`);
 
-  const metadata: ToolMetadata = {
+  const publishedMetadata: PublishedToolMetadata = {
     name: manifest.name,
     version: manifest.version,
     author: manifest.author,
     cid: cid,
-    metadataCid: '',
     updated: new Date().toISOString(),
+    dependencies: manifest.dependencies,
   };
 
-  const metadataCid = await uploadToolMetadata(metadata);
-  metadata.metadataCid = metadataCid;
+  const metadataCid = await uploadToolMetadata(publishedMetadata);
+  const metadata: ToolMetadata = {
+    ...publishedMetadata,
+    metadataCid: metadataCid,
+  };
   return { cid, metadataCid, metadata };
 };
 
