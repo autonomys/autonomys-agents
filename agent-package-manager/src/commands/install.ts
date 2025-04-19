@@ -17,11 +17,11 @@ const install = async (toolName: string, options: InstallOptions): Promise<Comma
 
     const _install = await performToolInstallation(toolInfo, installDir);
 
-    spinner.succeed(`Successfully installed ${toolName} ${versionDisplay} locally`);
+    spinner.succeed(`Successfully installed ${toolName} ${versionDisplay}`);
 
     return {
       success: true,
-      message: `Successfully installed ${toolName} ${versionDisplay} locally`,
+      message: `Successfully installed ${toolName} ${versionDisplay}`,
     };
   } catch (error) {
     spinner.fail(`Failed to install ${toolName}`);

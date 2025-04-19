@@ -10,7 +10,7 @@ const loadConfig = async () => {
     const data = await fs.readFile(CONFIG_FILE, 'utf8');
     return { ...DEFAULT_CONFIG, ...JSON.parse(data) };
   } catch (error) {
-    console.log('No config file found, creating default config', error);
+    console.log('Creating default configuration...');
     const config = { ...DEFAULT_CONFIG };
     await saveConfig(config);
     return config;

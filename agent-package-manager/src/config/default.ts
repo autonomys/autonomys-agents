@@ -3,7 +3,7 @@ export const DEFAULT_CONFIG = {
   taurusRpcUrl: 'https://auto-evm.taurus.autonomys.xyz/ws',
   packageRegistryAddress: '0x2fFD268a21BBEce10Ead66897b70Fa970E51D932',
   autoSaveCredentials: true,
-  indexerUrl: 'http://localhost:3000/api/v1',
+  indexerUrl: '',
 };
 
 export const KEYCHAIN_SERVICE = 'autoOS-cli';

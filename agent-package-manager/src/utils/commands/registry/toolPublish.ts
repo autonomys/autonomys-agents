@@ -79,32 +79,43 @@ const packageAndUploadTool = async (
     throw new Error(`Tool validation failed: ${validationResult.message}`);
   }
 
-  const manifestPath = path.join(toolPath, 'manifest.json');
-  const manifestData = await fs.readFile(manifestPath, 'utf8');
-  const manifest = JSON.parse(manifestData) as ToolManifest;
+  try {
+    const manifestPath = path.join(toolPath, 'manifest.json');
+    const manifestData = await fs.readFile(manifestPath, 'utf8');
+    const manifest = JSON.parse(manifestData) as ToolManifest;
 
-  console.log('Creating tool package...');
-  const packageBuffer = await createToolPackage(toolPath);
+    console.log('Creating tool package...');
+    const packageBuffer = await createToolPackage(toolPath);
 
-  console.log('Uploading to Autonomys DSN...');
-  const cid = await uploadToolPackage(packageBuffer, manifest);
-  console.log(`Upload successful. CID: ${cid}`);
+    console.log('Uploading to Autonomys DSN...');
+    try {
+      const cid = await uploadToolPackage(packageBuffer, manifest);
+      console.log(`Upload successful. CID: ${cid}`);
 
-  const publishedMetadata: PublishedToolMetadata = {
-    name: manifest.name,
-    version: manifest.version,
-    author: manifest.author,
-    cid: cid,
-    updated: new Date().toISOString(),
-    dependencies: manifest.dependencies,
-  };
+      const publishedMetadata: PublishedToolMetadata = {
+        name: manifest.name,
+        version: manifest.version,
+        author: manifest.author,
+        cid: cid,
+        updated: new Date().toISOString(),
+        dependencies: manifest.dependencies,
+      };
 
-  const metadataCid = await uploadToolMetadata(publishedMetadata);
-  const metadata: ToolMetadata = {
-    ...publishedMetadata,
-    metadataCid: metadataCid,
-  };
-  return { cid, metadataCid, metadata };
+      const metadataCid = await uploadToolMetadata(publishedMetadata);
+      const metadata: ToolMetadata = {
+        ...publishedMetadata,
+        metadataCid: metadataCid,
+      };
+      return { cid, metadataCid, metadata };
+    } catch (error) {
+      if (error instanceof Error && error.message.includes('credentials')) {
+        throw new Error('Publishing requires credentials. Please run "autoOS config --credentials" to set up.');
+      }
+      throw error;
+    }
+  } catch (error) {
+    throw error;
+  }
 };
 
 export { packageAndUploadTool };

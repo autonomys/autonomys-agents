@@ -7,9 +7,13 @@ const search = async (searchTerm = ''): Promise<CommandResult> => {
   try {
     const config = await loadConfig();
     const indexerUrl = config.indexerUrl;
-    
-    console.log(chalk.blue(`Searching for tools${searchTerm ? ` matching "${searchTerm}"` : ''}...`));
-    
+    if (!indexerUrl || indexerUrl === '') {
+      throw new Error('Search is not available.');
+    }
+    console.log(
+      chalk.blue(`Searching for tools${searchTerm ? ` matching "${searchTerm}"` : ''}...`),
+    );
+
     // Make API call to indexer's search endpoint
     const endpoint = searchTerm 
       ? `${indexerUrl}/tools/search?q=${encodeURIComponent(searchTerm)}&limit=20` 

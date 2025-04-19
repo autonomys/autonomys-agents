@@ -8,6 +8,7 @@ import { search } from './commands/search.js';
 import { clean } from './commands/clean.js';
 import { tool } from './commands/tool.js';
 import { init } from './commands/init.js';
+import { config } from './commands/config.js';
 import { loadConfig } from './config/index.js';
 import { credentialsExist } from './utils/credential/index.js';
 import { ensureAutoOSDir } from './utils/shared/path.js';
@@ -34,18 +35,16 @@ const program = new Command();
 
 ensureAutoOSDir()
   .then(() => {
-    return loadConfig(); // Only load config by default, not credentials
+    return loadConfig();
   })
   .then(async (config) => {
-    // Only check for credentials if they exist, don't force loading them
     const _check = await checkMasterPassword();
     return config;
   })
-  .then((config) => {
+  .then(() => {
     const initWrapper = async (projectName: string, options: InitOptions) => {
       await init(projectName, options);
     };
-
 
     const installToolWrapper = async (toolName: string, options: InstallOptions) => {
       await install(toolName, options);

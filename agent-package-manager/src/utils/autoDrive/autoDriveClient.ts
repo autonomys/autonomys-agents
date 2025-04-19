@@ -9,19 +9,27 @@ const createApiClient = async () => {
     return apiClientInstance;
   }
 
-  const config = await loadConfig();
-  const credentials = await loadCredentials();
+  try {
+    const config = await loadConfig();
+    const credentials = await loadCredentials();
 
-  if (credentials.autoDriveApiKey) {
-    apiClientInstance = createAutoDriveApi({
-      apiKey: credentials.autoDriveApiKey,
-      network: config.autoDriveNetwork,
-    });
-    return apiClientInstance;
+    if (credentials.autoDriveApiKey) {
+      apiClientInstance = createAutoDriveApi({
+        apiKey: credentials.autoDriveApiKey,
+        network: config.autoDriveNetwork,
+      });
+      return apiClientInstance;
+    }
+    
+    throw new Error("Missing Auto Drive API key. Please run 'autoOS config --credentials' to set up your credentials.");
+  } catch (error) {
+    if (error instanceof Error) {
+      if (error.message.includes('ENOENT') && error.message.includes('credentials.enc')) {
+        throw new Error("No credentials found. Please run 'autoOS config --credentials' to set up.");
+      }
+    }
+    throw error;
   }
-  throw new Error(
-    "Missing Auto Drive API key. Please run 'autoOS config' to set up your credentials.",
-  );
 };
 
 const uploadFileToDsn = async (

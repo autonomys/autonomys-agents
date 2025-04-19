@@ -3,7 +3,6 @@ import path from 'path';
 import { PACKAGES_DIR } from '../../shared/path.js';
 import { downloadFileFromGateway } from '../../autoDrive/gatewayClient.js';
 import { ToolInstallInfo, ToolManifest } from '../../../types/index.js';
-import { loadCredentials } from '../../credential/index.js';
 import { getCidFromHash } from '../../blockchain/utils.js';
 import extract from "extract-zip";
 import chalk from 'chalk';
@@ -11,7 +10,6 @@ import chalk from 'chalk';
 
 const fetchToolPackage = async (cidHash: string): Promise<string> => {
   const cid = getCidFromHash(cidHash);
-  const credentials = await loadCredentials();
   const packagePath = path.join(PACKAGES_DIR, `${cid}.zip`);
 
   try {
