@@ -84,7 +84,7 @@ export const Metadata: React.FC<MetadataProps> = ({ data, label = 'Metadata' }) 
 
   return (
     <Box {...metadataContainer}>
-      <Flex {...getMetadataToggleButton(isOpen)} onClick={toggleMetadata}>
+      {/* <Flex {...getMetadataToggleButton(isOpen)} onClick={toggleMetadata}>
         <Text {...metadataToggleIcon}>{isOpen ? '▼' : '▶'}</Text>
         <Text {...metadataToggleLabel}>{label}</Text>
         <Text {...getMetadataFieldCount(isOpen)}>
@@ -110,7 +110,7 @@ export const Metadata: React.FC<MetadataProps> = ({ data, label = 'Metadata' }) 
             </Button>
           </Flex>
         )}
-      </Flex>
+      </Flex> */}
 
       {isOpen && <Box {...metadataContentContainer}>{renderMetadata()}</Box>}
     </Box>

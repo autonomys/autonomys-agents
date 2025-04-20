@@ -105,7 +105,7 @@ const InputArea: React.FC<InputBoxProps> = ({
 
   return (
     <Flex {...containerFlexStyles}>
-      {/* <StatusBox status={getStatusText()} onStop={handleStopWorkflow} /> */}
+      <StatusBox status={getStatusText()} onStop={handleStopWorkflow} />
       <Resizable
         defaultSize={resizableDefaultSize}
         size={{

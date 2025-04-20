@@ -16,7 +16,7 @@ import {
   stopButtonStyles,
   stopButtonTextStyles,
   stopButtonAnimationStyles,
-  animationStyles
+  animationStyles,
 } from './styles/StatusStyles';
 
 const StatusBox: React.FC<StatusBoxProps> = ({ status, onStop }) => {
@@ -72,8 +72,8 @@ const StatusBox: React.FC<StatusBoxProps> = ({ status, onStop }) => {
 
   // Add StopIcon component
   const StopIcon = (props: any) => (
-    <Icon viewBox="0 0 24 24" {...props}>
-      <rect x="6" y="6" width="12" height="12" />
+    <Icon viewBox='0 0 24 24' {...props}>
+      <rect x='6' y='6' width='12' height='12' />
     </Icon>
   );
 
@@ -106,15 +106,10 @@ const StatusBox: React.FC<StatusBoxProps> = ({ status, onStop }) => {
         bottom: resizableHandleStyles(statusColor),
       }}
       handleComponent={{
-        bottom: (
-          <Box {...resizableHandleBoxStyles(statusColor)} />
-        ),
+        bottom: <Box {...resizableHandleBoxStyles(statusColor)} />,
       }}
     >
-      <Box
-        {...containerBoxStyles}
-        _before={containerBeforeStyles(statusColor)}
-      >
+      <Box {...containerBoxStyles} _before={containerBeforeStyles(statusColor)}>
         <Heading {...headingStyles}>
           <Box {...statusDotStyles(statusColor)} />
           Status
@@ -123,15 +118,11 @@ const StatusBox: React.FC<StatusBoxProps> = ({ status, onStop }) => {
         <Box {...statusContentBoxStyles(statusColor, bgColor)}>
           <Flex direction='column'>
             {isReady ? (
-              <Text {...readyTextStyles(statusColor)}>
-                Ready for input
-              </Text>
+              <Text {...readyTextStyles(statusColor)}>Ready for input</Text>
             ) : (
               <Flex direction='column'>
                 <Flex justify='space-between' align='center'>
-                  <Text {...statusLabelStyles(statusColor, !!statusMessage)}>
-                    {statusLabel}
-                  </Text>
+                  <Text {...statusLabelStyles(statusColor, !!statusMessage)}>{statusLabel}</Text>
                   {isRunning && onStop && (
                     <Button
                       {...stopButtonStyles}
@@ -145,11 +136,7 @@ const StatusBox: React.FC<StatusBoxProps> = ({ status, onStop }) => {
                     </Button>
                   )}
                 </Flex>
-                {statusMessage && (
-                  <Text {...statusMessageStyles}>
-                    {statusMessage}
-                  </Text>
-                )}
+                {statusMessage && <Text {...statusMessageStyles}>{statusMessage}</Text>}
               </Flex>
             )}
           </Flex>

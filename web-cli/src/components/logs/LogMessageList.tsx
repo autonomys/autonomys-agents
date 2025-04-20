@@ -138,6 +138,27 @@ export const LogMessageList: React.FC<LogMessageListProps> = ({
               {msg.metadata && Object.keys(msg.metadata).length > 0 && (
                 <Metadata data={msg.metadata} />
               )}
+
+              {/* <pre>
+                {(() => {
+                  // Step 1: Convert the JS object to JSON text (null if metadata is empty)
+                  const metadata = msg.metadata ?? {};
+                  const jsonStr = JSON.stringify(metadata, null, 2);
+
+                  // Step 2: Convert literal "\n" substrings within the JSON text into actual newlines.
+                  // e.g. "Some\\nText" -> "Some
+                  // Text"
+                  const replacedStr = jsonStr.replace(/\\n/g, '\n');
+
+                  // Step 3: Split on real newlines, map each line, and insert <br />.
+                  return replacedStr.split('\n').map((line, i) => (
+                    <React.Fragment key={i}>
+                      {line}
+                      <br />
+                    </React.Fragment>
+                  ));
+                })()}
+              </pre> */}
             </Box>
           );
         })}

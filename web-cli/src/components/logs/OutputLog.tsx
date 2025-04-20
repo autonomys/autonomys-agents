@@ -15,6 +15,21 @@ import {
   scrollToBottomButton,
   customOutputLogContainer,
 } from './styles/LogStyles';
+import { mockMessages } from '../mocks/message';
+
+// Filter function to remove system logs
+const filterNormalLogs = (messages: any[]) => {
+  return messages.filter(msg => {
+    // Check if metadata exists and has formattedPrompt
+    console.log('msg', msg.meta);
+    if (msg.meta?.formattedPrompt && msg.meta.formattedPrompt.startsWith('System:')) {
+      // If formattedPrompt starts with "System:", filter it out
+      console.log('filtered out', msg.meta.formattedPrompt);
+      return false;
+    }
+    return true;
+  });
+};
 
 const OutputLog: React.FC<OutputLogProps> = ({ messages }) => {
   // Using vh units for consistency across browsers instead of window.innerHeight
@@ -152,7 +167,10 @@ const OutputLog: React.FC<OutputLogProps> = ({ messages }) => {
     return () => window.removeEventListener('resize', handleResize);
   }, [isCollapsed]);
 
-  const filteredMessages = getFilteredMessages(activeNamespace);
+  const filteredMessages = filterNormalLogs(mockMessages);
+
+  console.log('filteredMessages', filteredMessages.length);
+  console.log('mockMessages', mockMessages.length);
 
   return (
     <Box {...customOutputLogContainer} className='right-panel'>
@@ -224,7 +242,7 @@ const OutputLog: React.FC<OutputLogProps> = ({ messages }) => {
           <Box
             ref={(ref: HTMLDivElement | null) => setLogContainerRef(ref)}
             {...outputLogScrollBox}
-            maxHeight={isCollapsed ? '0' : `688px`}
+            maxHeight={isCollapsed ? '0' : `auto`}
             height={isCollapsed ? '0' : 'auto'}
             overflow={isCollapsed ? 'hidden' : 'auto'}
             transition='all 0.3s ease'

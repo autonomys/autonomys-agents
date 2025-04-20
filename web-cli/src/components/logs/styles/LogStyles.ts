@@ -84,7 +84,7 @@ export const metadataPreviewText: TextProps = {
 };
 
 export const metadataContentContainer: BoxProps = {
-  maxH: '400px',
+  // maxH: '400px',
   overflowY: 'auto',
   bg: 'rgba(10, 10, 15, 0.4)',
   borderRadius: 'md',

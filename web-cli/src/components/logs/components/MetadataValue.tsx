@@ -98,7 +98,7 @@ export const MetadataValue: React.FC<MetadataValueProps> = ({
           {getDisplayValue()}
         </Text>
 
-        {isLongString && (
+        {/* {isLongString && (
           <Box
             as='button'
             onClick={() => setIsExpanded(!isExpanded)}
@@ -109,7 +109,7 @@ export const MetadataValue: React.FC<MetadataValueProps> = ({
             </Text>
             {isExpanded ? 'Collapse' : 'Expand'}
           </Box>
-        )}
+        )} */}
 
         {(!isLongString || !isExpanded) && (
           <Text
