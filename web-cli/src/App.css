@@ -430,19 +430,48 @@ pre {
   height: 100%;
 }
 
+.log-message-list {
+  flex: 1;
+  overflow-y: auto;
+  margin-bottom: 1rem !important;
+  background-color: rgba(20, 20, 30, 0.7);
+  backdrop-filter: blur(5px);
+  font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', 'Consolas', 'Monaco', monospace;
+  color: white;
+  white-space: pre-wrap;
+  font-size: 12px;
+  line-height: 1.6;
+  letter-spacing: 0.02em;
+  &::-webkit-scrollbar {
+    width: 8px;
+    border-radius: 4px;
+  }
+  &::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.1);
+  }
+  &::-webkit-scrollbar-thumb {
+    background: rgba(255, 0, 204, 0.3);
+    border-radius: 4px;
+  }
+}
+
+[data-testid='virtuoso-item-list'] {
+  padding: 1rem;
+}
+
 /* Responsive behavior */
 @media screen and (max-width: 768px) {
   .main-content-layout {
     flex-direction: column;
     height: auto;
   }
-  
+
   .left-panel,
   .right-panel {
     flex: 1;
     width: 100%;
   }
-  
+
   .right-panel {
     border-left: none;
     border-top: 1px solid rgba(0, 255, 153, 0.3);

@@ -394,7 +394,7 @@ const NamespaceTabs: React.FC<NamespaceTabsProps> = ({
           )}
 
           {/* Toggle Collapse/Expand Neural Node */}
-          {onToggleCollapse && (
+          {/* {onToggleCollapse && (
             <Box
               onClick={onToggleCollapse}
               position='relative'
@@ -405,7 +405,6 @@ const NamespaceTabs: React.FC<NamespaceTabsProps> = ({
               alignItems='center'
               width='50px'
             >
-              {/* Neural Node */}
               <Box
                 width='30px'
                 height='30px'
@@ -441,7 +440,7 @@ const NamespaceTabs: React.FC<NamespaceTabsProps> = ({
                 {isCollapsed ? 'SHOW' : 'HIDE'}
               </Text>
             </Box>
-          )}
+          )} */}
 
           {/* Refresh Neural Node */}
           <Box

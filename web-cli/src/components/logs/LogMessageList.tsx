@@ -1,5 +1,6 @@
 import React from 'react';
 import { Box, Flex, Text } from '@chakra-ui/react';
+import { Virtuoso } from 'react-virtuoso';
 import { Metadata } from './components';
 import {
   logMessageListContainer,
@@ -97,72 +98,57 @@ export const LogMessageList: React.FC<LogMessageListProps> = ({
     }
   };
 
-  return (
-    <Box {...logMessageListContainer} ref={setLogRef}>
-      {filteredByLevelMessages.length === 0 && (
+  if (filteredByLevelMessages.length === 0) {
+    return (
+      <Box {...logMessageListContainer} ref={setLogRef}>
         <Text {...logMessageListWelcomeText}>Welcome to Autonomys Agents Web CLI</Text>
-      )}
+      </Box>
+    );
+  }
 
-      {filteredByLevelMessages
-        .filter(msg => msg.legacy)
-        .map((msg, index) => (
-          <Box key={`legacy-${index}`} {...logMessageListLegacyMessage} data-log-index={index}>
-            {highlightSearchMatches(msg.message, searchTerm)}
-          </Box>
-        ))}
+  return (
+    <Virtuoso
+      className='log-message-list'
+      data={filteredByLevelMessages}
+      itemContent={(index, msg) => {
+        const msgColor = getMessageColor(msg.level);
+        const isSearchMatch = searchResults.includes(index);
+        const isCurrentSearchMatch = searchResults[currentSearchIndex] === index;
 
-      {filteredByLevelMessages
-        .filter(msg => !msg.legacy)
-        .map((msg, index) => {
-          const msgColor = getMessageColor(msg.level);
-          const isSearchMatch = searchResults.includes(index);
-          const isCurrentSearchMatch = searchResults[currentSearchIndex] === index;
-
+        if (msg.legacy) {
           return (
-            <Box
-              key={`log-${index}`}
-              {...getLogMessageListMessageBox(msgColor, isSearchMatch, isCurrentSearchMatch)}
-              data-log-index={index}
-            >
-              <Flex direction='row' wrap='wrap' gap={1} alignItems='baseline'>
-                <Text {...logMessageListTimestamp}>
-                  [{msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString() : 'N/A'}]
-                </Text>
-                <Text {...logMessageListNamespace}>[{msg.namespace}]</Text>
-                <Text {...getLogMessageListLevel(msgColor)}>[{msg.level || 'INFO'}]</Text>
-                <Text {...logMessageListMessage}>
-                  {searchTerm ? highlightSearchMatches(msg.message, searchTerm) : msg.message}
-                </Text>
-              </Flex>
-
-              {msg.metadata && Object.keys(msg.metadata).length > 0 && (
-                <Metadata data={msg.metadata} />
-              )}
-
-              {/* <pre>
-                {(() => {
-                  // Step 1: Convert the JS object to JSON text (null if metadata is empty)
-                  const metadata = msg.metadata ?? {};
-                  const jsonStr = JSON.stringify(metadata, null, 2);
-
-                  // Step 2: Convert literal "\n" substrings within the JSON text into actual newlines.
-                  // e.g. "Some\\nText" -> "Some
-                  // Text"
-                  const replacedStr = jsonStr.replace(/\\n/g, '\n');
-
-                  // Step 3: Split on real newlines, map each line, and insert <br />.
-                  return replacedStr.split('\n').map((line, i) => (
-                    <React.Fragment key={i}>
-                      {line}
-                      <br />
-                    </React.Fragment>
-                  ));
-                })()}
-              </pre> */}
+            <Box key={`legacy-${index}`} {...logMessageListLegacyMessage} data-log-index={index}>
+              {highlightSearchMatches(msg.message, searchTerm)}
             </Box>
           );
-        })}
-    </Box>
+        }
+
+        return (
+          <Box
+            {...getLogMessageListMessageBox(msgColor, isSearchMatch, isCurrentSearchMatch)}
+            data-log-index={index}
+          >
+            <Flex direction='row' wrap='wrap' gap={1} alignItems='baseline'>
+              <Text {...logMessageListTimestamp}>
+                [{msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString() : 'N/A'}]
+              </Text>
+              <Text {...logMessageListNamespace}>[{msg.namespace}]</Text>
+              <Text {...getLogMessageListLevel(msgColor)}>[{msg.level || 'INFO'}]</Text>
+              <Text {...logMessageListMessage}>
+                {searchTerm ? highlightSearchMatches(msg.message, searchTerm) : msg.message}
+              </Text>
+            </Flex>
+
+            {msg.metadata && Object.keys(msg.metadata).length > 0 && (
+              <Metadata data={msg.metadata} />
+            )}
+          </Box>
+        );
+      }}
+      followOutput='auto'
+      overscan={200}
+      initialTopMostItemIndex={filteredByLevelMessages.length - 1}
+    />
   );
 };
 

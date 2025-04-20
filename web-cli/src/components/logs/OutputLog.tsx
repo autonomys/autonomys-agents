@@ -1,6 +1,5 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { Box, Flex, Button } from '@chakra-ui/react';
-import { Resizable } from 're-resizable';
 import { OutputLogProps } from '../../types/types';
 import { useNamespaces } from '../../hooks/useNamespaces';
 import { useLogMessages } from '../../hooks/useLogMessages';
@@ -139,20 +138,6 @@ const OutputLog: React.FC<OutputLogProps> = ({ messages }) => {
     }
   };
 
-  const handleResize = (e: any, direction: any, ref: any, d: any) => {
-    // Only update the size if not collapsed, or if expanding from collapsed state
-    if (!isCollapsed || (d.height > 0 && size.height <= headerHeight)) {
-      // If we're expanding from collapsed state, toggle the collapsed state
-      if (isCollapsed && d.height > 0) {
-        setIsCollapsed(false);
-      }
-
-      setSize(prevSize => ({
-        height: prevSize.height + d.height,
-      }));
-    }
-  };
-
   // Update height on window resize for responsiveness
   useEffect(() => {
     const handleResize = () => {
@@ -167,7 +152,7 @@ const OutputLog: React.FC<OutputLogProps> = ({ messages }) => {
     return () => window.removeEventListener('resize', handleResize);
   }, [isCollapsed]);
 
-  const filteredMessages = filterNormalLogs(mockMessages);
+  const filteredMessages = mockMessages;
 
   console.log('filteredMessages', filteredMessages.length);
   console.log('mockMessages', mockMessages.length);
@@ -188,90 +173,45 @@ const OutputLog: React.FC<OutputLogProps> = ({ messages }) => {
         onClose={handleCloseSearch}
       />
 
-      <Resizable
-        defaultSize={{
-          width: '100%',
-          height: initialHeight,
-        }}
-        size={{
-          width: '100%',
-          height: size.height,
-        }}
-        minHeight={headerHeight}
-        onResizeStop={handleResize}
-        onResize={(e, direction, ref, d) => {
-          // Handle resize in real-time
-          if (d.height > 0 && isCollapsed) {
-            setIsCollapsed(false);
-          }
-        }}
-        enable={{
-          top: false,
-          right: false,
-          bottom: true,
-          left: false,
-          topRight: false,
-          bottomRight: false,
-          bottomLeft: false,
-          topLeft: false,
-        }}
-        handleStyles={outputLogResizableHandleStyles}
-        handleComponent={{
-          bottom: <Box {...outputLogResizableHandleBox} />,
-        }}
-        style={{ borderRadius: 'md', overflow: 'hidden' }}
-      >
-        <Flex ref={containerRef} {...outputLogFlexContainer}>
-          {/* Use headerRef to dynamically measure the header height */}
-          <Box ref={headerRef} width='100%'>
-            <NamespaceTabs
-              namespaces={namespaces}
-              activeNamespace={activeNamespace}
-              namespaceCount={namespaceCount}
-              onNamespaceChange={handleNamespaceChange}
-              onRefreshNamespaces={refreshNamespaces}
-              onClearLogs={handleClearLogs}
-              onShowSearch={handleShowSearch}
-              showDebugLogs={showDebugLogs}
-              onToggleDebugLogs={handleToggleDebugLogs}
-              isCollapsed={isCollapsed}
-              onToggleCollapse={toggleCollapse}
-            />
-          </Box>
+      <Flex ref={containerRef} {...outputLogFlexContainer}>
+        {/* Use headerRef to dynamically measure the header height */}
+        <Box ref={headerRef} width='100%'>
+          <NamespaceTabs
+            namespaces={namespaces}
+            activeNamespace={activeNamespace}
+            namespaceCount={namespaceCount}
+            onNamespaceChange={handleNamespaceChange}
+            onRefreshNamespaces={refreshNamespaces}
+            onClearLogs={handleClearLogs}
+            onShowSearch={handleShowSearch}
+            showDebugLogs={showDebugLogs}
+            onToggleDebugLogs={handleToggleDebugLogs}
+            isCollapsed={isCollapsed}
+            onToggleCollapse={toggleCollapse}
+          />
+        </Box>
 
-          <Box
-            ref={(ref: HTMLDivElement | null) => setLogContainerRef(ref)}
-            {...outputLogScrollBox}
-            maxHeight={isCollapsed ? '0' : `auto`}
-            height={isCollapsed ? '0' : 'auto'}
-            overflow={isCollapsed ? 'hidden' : 'auto'}
-            transition='all 0.3s ease'
-            opacity={isCollapsed ? 0 : 1}
-            visibility={isCollapsed ? 'hidden' : 'visible'}
+        <LogMessageList
+          filteredMessages={filteredMessages}
+          legacyMessages={messages}
+          setLogRef={() => {}}
+          searchTerm={searchTerm}
+          searchResults={searchResults}
+          currentSearchIndex={currentSearchIndex}
+          showDebugLogs={showDebugLogs}
+        />
+
+        {!isAutoScrollEnabled && filteredMessages.length > 0 && (
+          <Button
+            {...scrollToBottomButton(isScrolling)}
+            onClick={scrollToBottom}
+            title='Scroll to bottom'
+            aria-label='Scroll to bottom'
           >
-            <LogMessageList
-              filteredMessages={filteredMessages}
-              legacyMessages={messages}
-              setLogRef={() => {}}
-              searchTerm={searchTerm}
-              searchResults={searchResults}
-              currentSearchIndex={currentSearchIndex}
-              showDebugLogs={showDebugLogs}
-            />
-
-            {!isAutoScrollEnabled && filteredMessages.length > 0 && (
-              <Button
-                {...scrollToBottomButton(isScrolling)}
-                onClick={scrollToBottom}
-                title='Scroll to bottom'
-                aria-label='Scroll to bottom'
-              >
-                ↓
-              </Button>
-            )}
-          </Box>
-        </Flex>
-      </Resizable>
+            ↓
+          </Button>
+        )}
+      </Flex>
     </Box>
   );
 };
