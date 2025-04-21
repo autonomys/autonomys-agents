@@ -8,22 +8,13 @@ import LogMessageList from './LogMessageList';
 import { LogSearch } from './components';
 import {
   outputLogFlexContainer,
-  outputLogResizableHandleStyles,
-  outputLogResizableHandleBox,
-  outputLogScrollBox,
   scrollToBottomButton,
   customOutputLogContainer,
 } from './styles/LogStyles';
-import { mockMessages } from '../mocks/message';
 
-// Filter function to remove system logs
 const filterNormalLogs = (messages: any[]) => {
   return messages.filter(msg => {
-    // Check if metadata exists and has formattedPrompt
-    console.log('msg', msg.meta);
     if (msg.meta?.formattedPrompt && msg.meta.formattedPrompt.startsWith('System:')) {
-      // If formattedPrompt starts with "System:", filter it out
-      console.log('filtered out', msg.meta.formattedPrompt);
       return false;
     }
     return true;
@@ -47,7 +38,6 @@ const OutputLog: React.FC<OutputLogProps> = ({ messages }) => {
 
   const {
     namespaceCount,
-    setLogContainerRef,
     clearLogs,
     getFilteredMessages,
     cleanUp,
@@ -152,10 +142,7 @@ const OutputLog: React.FC<OutputLogProps> = ({ messages }) => {
     return () => window.removeEventListener('resize', handleResize);
   }, [isCollapsed]);
 
-  const filteredMessages = mockMessages;
-
-  console.log('filteredMessages', filteredMessages.length);
-  console.log('mockMessages', mockMessages.length);
+  const filteredMessages = filterNormalLogs(getFilteredMessages(activeNamespace));
 
   return (
     <Box {...customOutputLogContainer} className='right-panel'>

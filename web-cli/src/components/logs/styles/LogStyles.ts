@@ -3,7 +3,7 @@ import { BoxProps, FlexProps, TextProps, ButtonProps, InputProps } from '@chakra
 // Styles for the Metadata component
 export const metadataContainer: BoxProps = {
   mt: '2',
-  ml: '5',
+  ml: '2',
   fontSize: ['xs', 'sm'],
 };
 
@@ -89,8 +89,8 @@ export const metadataContentContainer: BoxProps = {
   bg: 'rgba(10, 10, 15, 0.4)',
   borderRadius: 'md',
   mt: '2',
-  borderLeft: '2px solid',
-  borderColor: 'brand.neonPink',
+  borderLeft: '1px solid',
+  borderColor: 'gray.700',
   borderTop: '1px solid',
   borderTopColor: 'gray.700',
   borderBottom: '1px solid',
@@ -143,7 +143,7 @@ export const objectNodeToggleButton: ButtonProps = {
 
 export const getObjectNodeChildrenContainer = (isArray: boolean): BoxProps => ({
   pl: 3,
-  borderLeft: '2px dashed',
+  // borderLeft: '2px dashed',
   borderColor: isArray ? 'rgba(21, 101, 192, 0.3)' : 'rgba(0, 188, 212, 0.3)',
   mt: 1,
   ml: 1,
@@ -212,12 +212,13 @@ export const metadataValueTypeLabel: TextProps = {
 
 export const metadataValueExpandedContent: BoxProps = {
   mt: 2,
-  p: 2,
+  px: 4,
+  py: 2,
   bg: 'rgba(0, 0, 0, 0.15)',
   borderRadius: 'md',
-  borderLeft: '2px solid',
-  borderColor: 'orange.700',
-  maxH: '300px',
+  // borderLeft: '2px solid',
+  // borderColor: 'orange.700',
+  // maxH: '300px',
   overflowY: 'auto',
   css: {
     '&::-webkit-scrollbar': {
