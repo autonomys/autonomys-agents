@@ -54,30 +54,18 @@ export const LogMessageList: React.FC<LogMessageListProps> = ({
   searchResults = [],
   showDebugLogs = true,
 }) => {
-  // State to track if processes are running
-  const [isProcessing, setIsProcessing] = useState(false);
   const [processingTasks, setProcessingTasks] = useState<ScheduledTask[]>([]);
   const virtuosoRef = useRef<VirtuosoHandle>(null);
 
   // Check if new messages have been added in the last 2 seconds
   useEffect(() => {
     if (filteredMessages.length > 0) {
-      // Set processing to true when new messages arrive
-      setIsProcessing(true);
-
-      // Reset processing state after a delay
-      const timer = setTimeout(() => {
-        setIsProcessing(false);
-      }, 2000);
-
       const unsubscribeFromProcessingTasks = subscribeToProcessingTasks(updatedTasks => {
         console.log(`Received ${updatedTasks.length} processing tasks from stream`);
         setProcessingTasks(updatedTasks);
       });
-
       return () => {
         unsubscribeFromProcessingTasks();
-        clearTimeout(timer);
       };
     }
   }, [filteredMessages.length]);
@@ -203,7 +191,7 @@ export const LogMessageList: React.FC<LogMessageListProps> = ({
       />
 
       {/* Loading spinner that appears at the bottom */}
-      {(isProcessing || processingTasks.length > 0) && (
+      {processingTasks.length > 0 && (
         <Flex
           position='absolute'
           bottom='20px'

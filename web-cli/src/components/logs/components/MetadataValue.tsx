@@ -5,7 +5,6 @@ import {
   metadataValueIndexLabel,
   metadataValueNameLabel,
   getMetadataValueText,
-  getMetadataValueExpandButton,
   metadataValueTypeLabel,
   metadataValueExpandedContent,
   metadataValueExpandedText,
@@ -29,7 +28,6 @@ export const MetadataValue: React.FC<MetadataValueProps> = ({
   index,
   fontSize,
 }) => {
-  const [isExpanded, setIsExpanded] = useState(true);
   const isLongString = typeof value === 'string' && value.length > 80;
 
   if (value !== null && typeof value === 'object') {
@@ -54,7 +52,7 @@ export const MetadataValue: React.FC<MetadataValueProps> = ({
   const getTypeLabel = () => {
     if (value === null) return 'null';
     if (value === undefined) return 'undefined';
-    if (isLongString && !isExpanded) {
+    if (isLongString) {
       return `string(${value.length})`;
     }
     return typeof value;
@@ -71,7 +69,7 @@ export const MetadataValue: React.FC<MetadataValueProps> = ({
       return `"${value}"`;
     }
 
-    if (isExpanded) {
+    if (isLongString) {
       return '[expanded below]';
     } else {
       return `"${value.substring(0, 77)}..."`;
@@ -91,27 +89,14 @@ export const MetadataValue: React.FC<MetadataValueProps> = ({
         </Text>
         <Text
           as='span'
-          {...(isExpanded ? { color: 'gray.500', fontStyle: 'italic' } : valueStyle)}
-          {...getMetadataValueText(isExpanded, isLongString)}
+          {...(isLongString ? { color: 'gray.500', fontStyle: 'italic' } : valueStyle)}
+          {...getMetadataValueText(isLongString, isLongString)}
           fontSize={fontSize ? `${fontSize}px` : undefined}
         >
           {getDisplayValue()}
         </Text>
 
-        {/* {isLongString && (
-          <Box
-            as='button'
-            onClick={() => setIsExpanded(!isExpanded)}
-            {...getMetadataValueExpandButton(isExpanded)}
-          >
-            <Text fontSize={fontSize ? `${Math.max(10, fontSize - 4)}px` : '10px'} mr={1}>
-              {isExpanded ? '▲' : '▼'}
-            </Text>
-            {isExpanded ? 'Collapse' : 'Expand'}
-          </Box>
-        )} */}
-
-        {(!isLongString || !isExpanded) && (
+        {!isLongString && (
           <Text
             as='span'
             {...metadataValueTypeLabel}
@@ -122,7 +107,7 @@ export const MetadataValue: React.FC<MetadataValueProps> = ({
         )}
       </Flex>
 
-      {isLongString && isExpanded && (
+      {isLongString && (
         <Box {...metadataValueExpandedContent}>
           <Text
             as='span'

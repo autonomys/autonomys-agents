@@ -215,9 +215,6 @@ export const metadataValueExpandedContent: BoxProps = {
   py: 2,
   bg: 'rgba(0, 0, 0, 0.15)',
   borderRadius: 'md',
-  // borderLeft: '2px solid',
-  // borderColor: 'orange.700',
-  // maxH: '300px',
   overflowY: 'auto',
   css: {
     '&::-webkit-scrollbar': {
