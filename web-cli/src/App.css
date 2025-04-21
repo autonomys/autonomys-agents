@@ -403,7 +403,6 @@ pre {
   flex-direction: row;
   flex: 1;
   height: calc(100vh - 166px); /* Adjust for header height */
-  min-height: calc(100vh - 166px); /* Ensure minimum height */
   overflow: hidden;
   margin: 0; /* Remove any margin */
   padding: 0; /* Remove any padding */
@@ -417,7 +416,6 @@ pre {
   gap: 0;
   overflow-y: hidden;
   height: 100%;
-  min-height: calc(100vh - 166px);
 }
 
 .right-panel {

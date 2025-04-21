@@ -142,7 +142,6 @@ export const objectNodeToggleButton: ButtonProps = {
 
 export const getObjectNodeChildrenContainer = (isArray: boolean): BoxProps => ({
   pl: 3,
-  // borderLeft: '2px dashed',
   borderColor: isArray ? 'rgba(21, 101, 192, 0.3)' : 'rgba(0, 188, 212, 0.3)',
   mt: 1,
   ml: 1,
