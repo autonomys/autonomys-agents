@@ -5,10 +5,9 @@ import { metadataContainer, metadataContentContainer } from '../styles/LogStyles
 
 interface MetadataProps {
   data: Record<string, any>;
-  label?: string;
 }
 
-export const Metadata: React.FC<MetadataProps> = ({ data, label = 'Metadata' }) => {
+export const Metadata: React.FC<MetadataProps> = ({ data }) => {
   const fieldCount = useMemo(() => {
     return Object.keys(data).length;
   }, [data]);

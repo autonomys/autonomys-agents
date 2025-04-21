@@ -17,7 +17,6 @@ import {
   taskContentFlexStyles,
   taskHeaderFlexStyles,
   taskTimestampStyles,
-  deleteButtonStyles,
   getTaskDescriptionStyles,
   getTaskStatusBadgeStyles,
   navTabsContainerStyles,
@@ -31,6 +30,11 @@ import {
   getFilterChipStyles,
   getFilterCountBadgeStyles,
 } from './styles/ScheduledTasksBoxStyles';
+import { stopButtonStyles } from '../status/styles/StatusStyles';
+import { animationStyles } from '../status/styles/StatusStyles';
+import { stopButtonTextStyles } from '../status/styles/StatusStyles';
+import { stopButtonAnimationStyles } from '../status/styles/StatusStyles';
+import { stopWorkflow } from '../../services/WorkflowService';
 
 // Define the task types for the navbar
 type TaskViewType = 'processing' | 'scheduled' | 'completed';
@@ -380,16 +384,29 @@ const ScheduledTasksBox: React.FC<ScheduledTasksBoxProps> = ({
                     <Flex {...taskContentFlexStyles}>
                       <Flex {...taskHeaderFlexStyles}>
                         <Text {...taskTimestampStyles}>{formatTime(task.time)}</Text>
-                        <Button
-                          {...deleteButtonStyles}
-                          onClick={() => onDeleteTask(task.id)}
-                          title='Delete task'
-                          aria-label='Delete task'
-                        >
-                          Delete
-                        </Button>
+                        <Flex gap={2}>
+                          <Button
+                            {...stopButtonStyles}
+                            onClick={() => onDeleteTask(task.id)}
+                            title='Delete task'
+                            aria-label='Delete task'
+                          >
+                            Delete
+                          </Button>
+                          {task.status === 'processing' && (
+                            <Button
+                              {...stopButtonStyles}
+                              onClick={() => stopWorkflow(task.id)}
+                              css={{
+                                animation: animationStyles.nodeRipple,
+                              }}
+                            >
+                              <Text {...stopButtonTextStyles}>Stop</Text>
+                              <Box {...stopButtonAnimationStyles} />
+                            </Button>
+                          )}
+                        </Flex>
                       </Flex>
-
                       <Text {...getTaskDescriptionStyles(!!task.status)}>{task.description}</Text>
 
                       {task.status && (
