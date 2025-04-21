@@ -20,11 +20,10 @@ export const containerStyles: FlexProps = {
 
 // Content container styles
 export const contentContainerStyles: BoxProps = {
-  pt: 1,
-  px: 2,
   flex: '1',
   display: 'flex',
   flexDirection: 'column',
+  overflowY: 'auto',
 };
 
 // Loading indicator styles

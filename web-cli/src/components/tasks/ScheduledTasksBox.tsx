@@ -1,13 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Box, Text, Button, Flex, Badge, useToken } from '@chakra-ui/react';
-import { Resizable } from 're-resizable';
 import { ScheduledTasksBoxProps, ScheduledTask } from '../../types/types';
 import {
-  resizableDefaultSize,
-  resizableStyles,
-  resizableEnableProps,
-  resizableHandleStyles,
-  resizableHandleBoxStyles,
   containerBoxStyles,
   scrollbarStyles,
   stackStyles,
@@ -221,27 +215,7 @@ const ScheduledTasksBox: React.FC<ScheduledTasksBoxProps> = ({
   const currentViewTasks = getTasksForActiveView();
 
   return (
-    <Resizable
-      defaultSize={resizableDefaultSize}
-      size={{
-        width: '100%',
-        height: size.height,
-      }}
-      minHeight={150}
-      style={resizableStyles}
-      onResizeStop={(e, direction, ref, d) => {
-        setSize(prevSize => ({
-          height: prevSize.height + d.height,
-        }));
-      }}
-      enable={resizableEnableProps}
-      handleStyles={{
-        bottom: resizableHandleStyles,
-      }}
-      handleComponent={{
-        bottom: <Box {...resizableHandleBoxStyles} />,
-      }}
-    >
+    <>
       {/* Task Type Navigation Tabs */}
       <Flex {...navTabsContainerStyles}>
         {/* Neural network background effect */}
@@ -427,7 +401,7 @@ const ScheduledTasksBox: React.FC<ScheduledTasksBoxProps> = ({
           )}
         </Box>
       </Box>
-    </Resizable>
+    </>
   );
 };
 
