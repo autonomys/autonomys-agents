@@ -1,0 +1,33 @@
+# Source files
+src/
+tests/
+
+# Development config files
+tsconfig.json
+jest.config.js
+.eslintrc.js
+.prettierrc
+
+# Development tools and build artifacts
+node_modules/
+coverage/
+.DS_Store
+*.log
+*.tsbuildinfo
+
+# Git related
+.git/
+.gitignore
+
+# Environment variables
+.env
+.env.*
+
+# IDE files
+.vscode/
+.idea/
+
+# Miscellaneous
+*.tgz
+*.tar.gz
+.npmrc 

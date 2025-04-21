@@ -6,12 +6,14 @@ import { list } from './commands/list.js';
 import { config } from './commands/config.js';
 import { clean } from './commands/clean.js';
 import { tool } from './commands/tool.js';
+import { init } from './commands/init.js';
 import { initializeConfigAndCredentials } from './config/index.js';
 import { credentialsExist } from './utils/credential/index.js';
 import { ensureAutoOSDir } from './utils/shared/path.js';
 import {
   CleanOptions,
   ConfigOptions,
+  InitOptions,
   InstallOptions,
   PublishOptions,
   ToolCommandParams,
@@ -56,6 +58,10 @@ ensureAutoOSDir()
 
     const toolWrapper = async (options: ToolCommandParams) => {
       await tool(options);
+    };
+
+    const initWrapper = async (projectName: string, options: InitOptions) => {
+      await init(projectName, options);
     };
 
     program
@@ -108,6 +114,15 @@ ensureAutoOSDir()
       .description('Clean cached packages and temporary files')
       .option('--force', 'Force clean without confirmation')
       .action(cleanWrapper);
+
+    program
+      .command('init')
+      .description('Create a new agent project')
+      .argument('<project-name>', 'Name of the project to create')
+      .option('--install', 'Install dependencies after creation')
+      .option('--character <character-name>', 'Create a character with this name')
+      .option('--api', 'Generate API certificates', true)
+      .action(initWrapper);
 
     program.showHelpAfterError();
 

@@ -26,20 +26,14 @@
     "node": ">=20.18.1"
   },
   "scripts": {
-    "start": "tsx scripts/dev-all.ts",
-    "build:agent": "yarn workspace autonomys-agents-core build",
+    "build:agent": "yarn workspace @autonomys/agent-core build",
     "build:web": "DISABLE_ESLINT_PLUGIN=true yarn workspace web-cli build",
-    "start:agent": "yarn workspace autonomys-agents-core start",
-    "dev:agent": "yarn workspace autonomys-agents-core dev",
     "dev:web": "DISABLE_ESLINT_PLUGIN=true yarn workspace web-cli start",
     "test": "yarn workspaces run test",
-    "format": "prettier --write \"core/**/*.ts\" \"tests/**/*.ts\" \"web-cli/**/*.ts\"",
-    "format:check": "prettier --check \"core/**/*.ts\" \"tests/**/*.ts\" \"web-cli/**/*.ts\"",
+    "format": "prettier --write \"core/**/*.ts\" \"tests/**/*.ts\" \"web-cli/**/*.ts\" \"package-manager-indexer/**/*.ts\"",
+    "format:check": "prettier --check \"core/**/*.ts\" \"tests/**/*.ts\" \"web-cli/**/*.ts\" \"package-manager-indexer/**/*.ts\"",
     "lint": "eslint \"core/**/*.{js,ts}\" --ignore-pattern \"core/dist/**\"",
     "lint:fix": "eslint \"core/**/*.{js,ts}\" --fix --ignore-pattern \"core/dist/**\"",
-    "generate-certs": "yarn workspace autonomys-agents-core generate-certs",
-    "resurrect": "yarn workspace autonomys-agents-core resurrect",
-    "create-character": "yarn workspace autonomys-agents-core create-character",
     "example": "yarn workspace autonomys-agents-examples tsx index.ts"
   },
   "dependencies": {

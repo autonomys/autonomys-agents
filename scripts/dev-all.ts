@@ -23,7 +23,7 @@ const prefixOutput = (prefix: string, color: string, data: Buffer) => {
 }
 
 // Run the agent
-const agentProcess = spawn('yarn', ['workspace', 'autonomys-agents-core', 'dev', ...(characterArg ? [characterArg] : [])], {
+const agentProcess = spawn('yarn', ['workspace', '@autonomys/agent-core', 'dev', ...(characterArg ? [characterArg] : [])], {
   cwd: rootDir,
   env: { ...process.env, NODE_ENV: 'development' },
   shell: true,

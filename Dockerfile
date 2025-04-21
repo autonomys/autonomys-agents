@@ -41,7 +41,7 @@ RUN mkdir -p certs && \
     fi
 
 # Build the project using the workspace setup
-RUN yarn workspace autonomys-agents-core build
+RUN yarn workspace @autonomys/agent-core build
 
 # Stage 2: Production stage
 FROM node:20.18.1
