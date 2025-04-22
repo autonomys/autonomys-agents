@@ -84,6 +84,7 @@ export interface TaskEventMessage {
     scheduled: any[];
     cancelled: any[];
     failed: any[];
+    deleted: any[];
     completed: any[];
   };
   message?: string;

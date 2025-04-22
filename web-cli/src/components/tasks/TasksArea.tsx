@@ -18,6 +18,7 @@ interface TasksAreaProps {
     completed: Task[];
     cancelled: Task[];
     failed: Task[];
+    deleted: Task[];
   };
   loading: boolean;
   connectionStatus: ConnectionStatus;
@@ -43,7 +44,8 @@ const TasksArea: React.FC<TasksAreaProps> = ({
     ...tasks.failed,
     ...tasks.processing,
     ...tasks.scheduled,
-    ...tasks.completed
+    ...tasks.completed,
+    ...tasks.deleted
   ];
 
   return (
@@ -62,6 +64,7 @@ const TasksArea: React.FC<TasksAreaProps> = ({
           completedTasks={tasks.completed}
           cancelledTasks={tasks.cancelled}
           failedTasks={tasks.failed}
+          deletedTasks={tasks.deleted}
         />
       </Box>
 

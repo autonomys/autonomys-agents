@@ -77,6 +77,23 @@ export const connectToTaskStream = (namespace: string = DEFAULT_NAMESPACE): void
           // Collect all task types that need to be passed to taskCallbacks
           let taskUpdates: Task[] = [];
           
+          // Handle completed tasks
+          if (data.tasks?.completed) {
+            const completedTasks = data.tasks.completed
+              .filter((task: any) => task.status === 'completed')
+              .map((task: any) => ({
+                id: task.id,
+                time: new Date(task.scheduledFor),
+                description: task.message,
+                status: 'completed',
+                result: task.result,
+                error: task.error
+              }));
+            console.log(`Received ${completedTasks.length} completed tasks`);
+            taskUpdates = [...taskUpdates, ...completedTasks];
+          }
+
+          // Handle cancelled tasks
           if (data.tasks?.cancelled) {
             const cancelledTasks = data.tasks.cancelled.map((task: any) => ({
               id: task.id,
@@ -87,10 +104,10 @@ export const connectToTaskStream = (namespace: string = DEFAULT_NAMESPACE): void
               error: task.error
             }));
             console.log(`Received ${cancelledTasks.length} cancelled tasks`);
-            // Add cancelled tasks to the combined array instead of separate callback
             taskUpdates = [...taskUpdates, ...cancelledTasks];
           }
 
+          // Handle failed tasks
           if (data.tasks?.failed) {
             const failedTasks = data.tasks.failed.map((task: any) => ({
               id: task.id,
@@ -101,10 +118,24 @@ export const connectToTaskStream = (namespace: string = DEFAULT_NAMESPACE): void
               error: task.error
             }));
             console.log(`Received ${failedTasks.length} failed tasks`);
-            // Add failed tasks to the combined array instead of separate callback
             taskUpdates = [...taskUpdates, ...failedTasks];
           }
 
+          // Handle deleted tasks
+          if (data.tasks?.deleted) {
+            const deletedTasks = data.tasks.deleted.map((task: any) => ({
+              id: task.id,
+              time: new Date(task.scheduledFor),
+              description: task.message,
+              status: 'deleted',
+              result: task.result,
+              error: task.error
+            }));
+            console.log(`Received ${deletedTasks.length} deleted tasks`);
+            taskUpdates = [...taskUpdates, ...deletedTasks];
+          }
+
+          // Handle scheduled tasks
           if (data.tasks?.scheduled) {
             console.log('Scheduled tasks:', data.tasks.scheduled);
             const scheduledTasks = data.tasks.scheduled
@@ -117,7 +148,6 @@ export const connectToTaskStream = (namespace: string = DEFAULT_NAMESPACE): void
               .sort((a: Task, b: Task) => a.time.getTime() - b.time.getTime());
 
             console.log(`Received ${scheduledTasks.length} scheduled tasks`);
-            // Add scheduled tasks to the combined array
             taskUpdates = [...taskUpdates, ...scheduledTasks];
           }
 
@@ -267,6 +297,7 @@ export const subscribeToProcessingTasks = (callback: TaskUpdateCallback): (() =>
 export const subscribeToCompletedTasks = (callback: TaskUpdateCallback): (() => void) => {
   const completedTasksCallback = (data: TaskEventMessage) => {
     if (data.type === 'tasks' && data.tasks?.completed) {
+      console.log('Completed tasks:', data.tasks.completed);
       const tasks = data.tasks.completed
         .map((task: any) => ({
           id: task.id,

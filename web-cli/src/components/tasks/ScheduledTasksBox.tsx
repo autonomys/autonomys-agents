@@ -65,9 +65,7 @@ const ScheduledTasksBox: React.FC<TasksAreaProps> = ({
       case 'scheduled':
         return scheduledTasks;
       case 'completed':
-        // For completed view, combine all completed-like tasks based on active filters
         const tasksToShow: Task[] = [];
-        
         if (activeFilters.includes('completed')) {
           tasksToShow.push(...completedTasks);
         }
@@ -76,6 +74,9 @@ const ScheduledTasksBox: React.FC<TasksAreaProps> = ({
         }
         if (activeFilters.includes('failed')) {
           tasksToShow.push(...failedTasks);
+        }
+        if (activeFilters.includes('deleted')) {
+          tasksToShow.push(...deletedTasks);
         }
 
         
@@ -96,7 +97,7 @@ const ScheduledTasksBox: React.FC<TasksAreaProps> = ({
       completed: completedTasks.length,
       failed: failedTasks.length,
       cancelled: cancelledTasks.length,
-      deleted: deletedTasks?.length || 0
+      deleted: deletedTasks?.length
     };
   }, [completedTasks, cancelledTasks, failedTasks, deletedTasks]);
 
