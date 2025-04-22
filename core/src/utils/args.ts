@@ -13,6 +13,10 @@ export const parseArgs = (): ParsedArgs => {
   if (cachedArgs) {
     return cachedArgs;
   }
+
+  const projectRoot = getProjectRoot();
+  const defaultWorkspace = projectRoot?.root || process.cwd();
+
   const args = yargs(process.argv.slice(2))
     .command('$0 [character]', 'Start the agent', yargs => {
       return yargs.positional('character', {
@@ -28,14 +32,19 @@ export const parseArgs = (): ParsedArgs => {
     .option('workspace', {
       describe: 'Custom workspace root path',
       type: 'string',
-      default: getProjectRoot(),
+      default: defaultWorkspace,
     })
     .help('h')
     .alias('h', 'help')
     .parseSync();
 
-  cachedArgs = args;
-  return args;
+  const parsedArgs: ParsedArgs = {
+    character: args.character as string | undefined,
+    workspace: args.workspace as string,
+    headless: args.headless as boolean,
+  };
+  cachedArgs = parsedArgs;
+  return parsedArgs;
 };
 
 /**
@@ -43,7 +52,12 @@ export const parseArgs = (): ParsedArgs => {
  */
 export const getWorkspacePath = (): string => {
   const args = parseArgs();
-  return args.workspace || getProjectRoot();
+  if (args.workspace) {
+    return args.workspace;
+  }
+
+  const projectRoot = getProjectRoot();
+  return projectRoot?.root || process.cwd();
 };
 
 /**
