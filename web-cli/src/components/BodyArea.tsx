@@ -14,7 +14,7 @@ import {
   subscribeToCurrentTask,
 } from '../services/TaskStreamService';
 import { runWorkflow } from '../services/WorkflowService';
-import { ScheduledTask } from '../types/types';
+import { Task } from '../types/types';
 import InputArea from './input/InputArea';
 import TasksArea from './tasks/TasksArea';
 import ChatArea from './chat/ChatArea';
@@ -22,10 +22,13 @@ import ChatArea from './chat/ChatArea';
 const BodyArea: React.FC = () => {
   const { state, dispatch } = useAppContext();
   const { state: chatState, dispatch: chatDispatch } = useChatContext();
-  const [scheduledTasks, setScheduledTasks] = useState<ScheduledTask[]>([]);
-  const [processingTasks, setProcessingTasks] = useState<ScheduledTask[]>([]);
-  const [completedTasks, setCompletedTasks] = useState<ScheduledTask[]>([]);
-  const [currentTask, setCurrentTask] = useState<ScheduledTask | undefined>(undefined);
+  const [scheduledTasks, setScheduledTasks] = useState<Task[]>([]);
+  const [processingTasks, setProcessingTasks] = useState<Task[]>([]);
+  const [completedTasks, setCompletedTasks] = useState<Task[]>([]);
+  const [cancelledTasks, setCancelledTasks] = useState<Task[]>([]);
+  const [failedTasks, setFailedTasks] = useState<Task[]>([]);
+  const [deletedTasks, setDeletedTasks] = useState<Task[]>([]);
+  const [currentTask, setCurrentTask] = useState<Task | undefined>(undefined);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | undefined>(undefined);
   const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>(
@@ -37,19 +40,107 @@ const BodyArea: React.FC = () => {
     setLoading(true);
 
     const unsubscribeFromScheduledTasks = subscribeToTaskUpdates(updatedTasks => {
-      console.log(`Received ${updatedTasks.length} scheduled tasks from stream`);
-      setScheduledTasks(updatedTasks);
+      console.log(`Received ${updatedTasks.length} total tasks from stream`);
+      
+      // Categorize tasks by status
+      const scheduled: Task[] = [];
+      const cancelled: Task[] = [];
+      const failed: Task[] = [];
+      const completed: Task[] = [];
+      const deleted: Task[] = [];
+      
+      updatedTasks.forEach(task => {
+        // Log the task being processed for debugging
+        console.log('Processing task:', task.id, 'status:', task.status);
+        
+        // Ensure each task only goes to one category
+        switch (task.status) {
+          case 'cancelled':
+            cancelled.push(task);
+            break;
+          case 'failed':
+            failed.push(task);
+            break;
+          case 'completed':
+            completed.push(task);
+            break;
+          case 'deleted':
+            deleted.push(task);
+            break;
+          case 'scheduled':
+            scheduled.push(task);
+            break;
+          case 'processing':
+          case 'finalizing':
+            // These are handled by the processingTasks subscription
+            break;
+          default:
+            // If no status or unrecognized status, treat as scheduled
+            if (!task.status) {
+              console.log('Task with no status, treating as scheduled:', task.id);
+              scheduled.push(task);
+            } else {
+              console.log('Task with unknown status:', task.id, task.status);
+            }
+            break;
+        }
+      });
+
+      // Log the categorization results
+      console.log('Categorization results:', {
+        scheduled: scheduled.length,
+        cancelled: cancelled.length,
+        failed: failed.length,
+        completed: completed.length,
+        deleted: deleted.length
+      });
+
+      // Update the appropriate state variables
+      setScheduledTasks(current => {
+        const newTasks = scheduled.filter(task => !current.some(t => t.id === task.id));
+        return [...current, ...newTasks];
+      });
+      setCancelledTasks(current => {
+        const newTasks = cancelled.filter(task => !current.some(t => t.id === task.id));
+        return [...current, ...newTasks];
+      });
+      setFailedTasks(current => {
+        const newTasks = failed.filter(task => !current.some(t => t.id === task.id));
+        return [...current, ...newTasks];
+      });
+      setCompletedTasks(current => {
+        const newTasks = completed.filter(task => !current.some(t => t.id === task.id));
+        return [...current, ...newTasks];
+      });
+      setDeletedTasks(current => {
+        const newTasks = deleted.filter(task => !current.some(t => t.id === task.id));
+        return [...current, ...newTasks];
+      });
       setLoading(false);
     });
 
     const unsubscribeFromProcessingTasks = subscribeToProcessingTasks(updatedTasks => {
       console.log(`Received ${updatedTasks.length} processing tasks from stream`);
+      // When a task starts processing, remove it from scheduled list
+      if (updatedTasks.length > 0) {
+        const processingIds = new Set(updatedTasks.map(task => task.id));
+        setScheduledTasks(current => current.filter(task => !processingIds.has(task.id)));
+      }
       setProcessingTasks(updatedTasks);
     });
 
     const unsubscribeFromCompletedTasks = subscribeToCompletedTasks(updatedTasks => {
       console.log(`Received ${updatedTasks.length} completed tasks from stream`);
-      setCompletedTasks(updatedTasks);
+      setCompletedTasks(current => {
+        const existingTaskIds = new Set(current.map(task => task.id));
+        const newTasks = updatedTasks.filter(task => !existingTaskIds.has(task.id));
+        
+        if (newTasks.length > 0) {
+          console.log(`Adding ${newTasks.length} new completed tasks`);
+          return [...current, ...newTasks];
+        }
+        return current;
+      });
     });
 
     const unsubscribeFromStatus = subscribeToConnectionStatus(status => {
@@ -100,11 +191,27 @@ const BodyArea: React.FC = () => {
 
   const handleDeleteTask = useCallback(async (id: string) => {
     try {
+      // First remove the task from scheduled list
+      setScheduledTasks(current => current.filter(task => task.id !== id));
+      
+      // Find the task that was deleted
+      const deletedTask = scheduledTasks.find(task => task.id === id);
+      if (deletedTask) {
+        // Add it to deleted tasks with updated status
+        const taskWithDeletedStatus = {
+          ...deletedTask,
+          status: 'deleted',
+          result: 'Task was deleted by user'
+        };
+        setDeletedTasks(current => [...current, taskWithDeletedStatus]);
+      }
+
+      // Call the API to delete the task
       await deleteTask(id);
     } catch (error) {
       console.error('Error deleting task:', error);
     }
-  }, []);
+  }, [scheduledTasks]);
 
   const handleReconnect = useCallback(() => {
     reconnect();
@@ -133,7 +240,10 @@ const BodyArea: React.FC = () => {
   const allTasks = {
     scheduled: scheduledTasks,
     processing: processingTasks,
-    completed: completedTasks
+    completed: completedTasks,
+    cancelled: cancelledTasks,
+    failed: failedTasks,
+    deleted: deletedTasks
   };
 
   return (

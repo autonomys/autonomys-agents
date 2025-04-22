@@ -1,9 +1,9 @@
-import { ScheduledTask } from '../types/types';
+import { Task } from '../types/types';
 import { API_BASE_URL, API_TOKEN, DEFAULT_NAMESPACE, apiRequest } from './Api';
 import { TaskEventMessage } from '../types/types';
 
-type TaskUpdateCallback = (tasks: ScheduledTask[]) => void;
-type CurrentTaskUpdateCallback = (task: ScheduledTask | undefined) => void;
+type TaskUpdateCallback = (tasks: Task[]) => void;
+type CurrentTaskUpdateCallback = (task: Task | undefined) => void;
 type ConnectionStatusCallback = (status: ConnectionStatus) => void;
 
 export enum ConnectionStatus {
@@ -74,24 +74,62 @@ export const connectToTaskStream = (namespace: string = DEFAULT_NAMESPACE): void
         const data = JSON.parse(event.data) as TaskEventMessage;
 
         if (data.type === 'tasks') {
+          // Collect all task types that need to be passed to taskCallbacks
+          let taskUpdates: Task[] = [];
+          
+          if (data.tasks?.cancelled) {
+            const cancelledTasks = data.tasks.cancelled.map((task: any) => ({
+              id: task.id,
+              time: new Date(task.scheduledFor),
+              description: task.message,
+              status: 'cancelled',
+              result: task.result,
+              error: task.error
+            }));
+            console.log(`Received ${cancelledTasks.length} cancelled tasks`);
+            // Add cancelled tasks to the combined array instead of separate callback
+            taskUpdates = [...taskUpdates, ...cancelledTasks];
+          }
+
+          if (data.tasks?.failed) {
+            const failedTasks = data.tasks.failed.map((task: any) => ({
+              id: task.id,
+              time: new Date(task.scheduledFor),
+              description: task.message,
+              status: 'failed',
+              result: task.result,
+              error: task.error
+            }));
+            console.log(`Received ${failedTasks.length} failed tasks`);
+            // Add failed tasks to the combined array instead of separate callback
+            taskUpdates = [...taskUpdates, ...failedTasks];
+          }
+
           if (data.tasks?.scheduled) {
-            const tasks = data.tasks.scheduled
+            console.log('Scheduled tasks:', data.tasks.scheduled);
+            const scheduledTasks = data.tasks.scheduled
               .map((task: any) => ({
                 id: task.id,
+                status: 'scheduled',
                 time: new Date(task.scheduledFor),
                 description: task.message,
               }))
-              .sort((a: ScheduledTask, b: ScheduledTask) => a.time.getTime() - b.time.getTime());
+              .sort((a: Task, b: Task) => a.time.getTime() - b.time.getTime());
 
-            console.log(`Mapped ${tasks.length} tasks`);
+            console.log(`Received ${scheduledTasks.length} scheduled tasks`);
+            // Add scheduled tasks to the combined array
+            taskUpdates = [...taskUpdates, ...scheduledTasks];
+          }
 
-            // Notify all registered callbacks
-            taskCallbacks.forEach(callback => callback(tasks));
+          // Call taskCallbacks once with all task updates
+          if (taskUpdates.length > 0) {
+            console.log(`Notifying callbacks with ${taskUpdates.length} total tasks`);
+            taskCallbacks.forEach(callback => callback(taskUpdates));
           }
 
           if (data.tasks?.current) {
             const currentTask = data.tasks.current;
-            const mappedTask: ScheduledTask = {
+            const mappedTask: Task = {
               id: currentTask.id,
               time: new Date(currentTask.scheduledFor),
               description: currentTask.message,
@@ -188,7 +226,7 @@ export const subscribeToProcessingTasks = (callback: TaskUpdateCallback): (() =>
   const processingCallback = (data: TaskEventMessage) => {
     if (data.type === 'tasks' && data.tasks?.current) {
       const currentTask = data.tasks.current;
-      const processingTask: ScheduledTask = {
+      const processingTask: Task = {
         id: currentTask.id,
         time: new Date(currentTask.scheduledFor),
         description: currentTask.message,
@@ -227,8 +265,6 @@ export const subscribeToProcessingTasks = (callback: TaskUpdateCallback): (() =>
 };
 
 export const subscribeToCompletedTasks = (callback: TaskUpdateCallback): (() => void) => {
-  // For now, let's create a simulated subscription since the API doesn't currently provide completed tasks
-  // In a real implementation, we would listen to task completion events from the server
   const completedTasksCallback = (data: TaskEventMessage) => {
     if (data.type === 'tasks' && data.tasks?.completed) {
       const tasks = data.tasks.completed
@@ -250,7 +286,7 @@ export const subscribeToCompletedTasks = (callback: TaskUpdateCallback): (() => 
                     ? 'Task was stopped'
                     : 'Task completed successfully'),
         }))
-        .sort((a: ScheduledTask, b: ScheduledTask) => b.time.getTime() - a.time.getTime());
+        .sort((a: Task, b: Task) => b.time.getTime() - a.time.getTime());
 
       callback(tasks);
     } else {
