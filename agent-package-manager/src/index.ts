@@ -1,13 +1,15 @@
+#!/usr/bin/env node
+
 import { Command } from 'commander';
 import chalk from 'chalk';
 import { install } from './commands/install.js';
 import { publish } from './commands/publish.js';
-import { list } from './commands/list.js';
-import { config } from './commands/config.js';
+import { search } from './commands/search.js';
 import { clean } from './commands/clean.js';
 import { tool } from './commands/tool.js';
 import { init } from './commands/init.js';
-import { initializeConfigAndCredentials } from './config/index.js';
+import { config } from './commands/config.js';
+import { loadConfig } from './config/index.js';
 import { credentialsExist } from './utils/credential/index.js';
 import { ensureAutoOSDir } from './utils/shared/path.js';
 import {
@@ -33,10 +35,18 @@ const program = new Command();
 
 ensureAutoOSDir()
   .then(() => {
-    return Promise.all([initializeConfigAndCredentials(), checkMasterPassword()]);
+    return loadConfig();
+  })
+  .then(async config => {
+    const _check = await checkMasterPassword();
+    return config;
   })
   .then(() => {
-    const installWrapper = async (toolName: string, options: InstallOptions) => {
+    const initWrapper = async (projectName: string, options: InitOptions) => {
+      await init(projectName, options);
+    };
+
+    const installToolWrapper = async (toolName: string, options: InstallOptions) => {
       await install(toolName, options);
     };
 
@@ -44,8 +54,8 @@ ensureAutoOSDir()
       await publish(toolPath, options);
     };
 
-    const listWrapper = async () => {
-      await list();
+    const searchWrapper = async (searchTerm: string) => {
+      await search(searchTerm);
     };
 
     const configWrapper = async (options: ConfigOptions) => {
@@ -60,14 +70,19 @@ ensureAutoOSDir()
       await tool(options);
     };
 
-    const initWrapper = async (projectName: string, options: InitOptions) => {
-      await init(projectName, options);
-    };
-
     program
       .name('autoOS')
       .description('Package manager for Autonomys agent tools')
       .version('0.1.0');
+
+    program
+      .command('init')
+      .description('Create a new agent project')
+      .argument('<project-name>', 'Name of the project to create')
+      .option('--install', 'Install dependencies after creation')
+      .option('--character <character-name>', 'Create a character with this name')
+      .option('--api', 'Generate API certificates', true)
+      .action(initWrapper);
 
     program
       .command('install')
@@ -75,8 +90,7 @@ ensureAutoOSDir()
       .argument('<tool-name>', 'Name of the tool to install')
       .option('-v, --version <version>', 'Specific version to install')
       .option('--cid <cid>', 'Install directly using Content ID (CID) from Autonomys Auto Drive')
-      .option('--local', 'Install the tool locally to the current project instead of globally')
-      .action(installWrapper);
+      .action(installToolWrapper);
 
     program
       .command('publish')
@@ -89,10 +103,11 @@ ensureAutoOSDir()
       .action(publishWrapper);
 
     program
-      .command('list')
-      .description('List available tools in the registry')
+      .command('search')
+      .description('Search for tools in the registry')
+      .argument('<search-term>', 'Search term to filter tools')
       .option('-d, --detailed', 'Show detailed information')
-      .action(listWrapper);
+      .action(searchWrapper);
 
     program
       .command('tool')
@@ -114,15 +129,6 @@ ensureAutoOSDir()
       .description('Clean cached packages and temporary files')
       .option('--force', 'Force clean without confirmation')
       .action(cleanWrapper);
-
-    program
-      .command('init')
-      .description('Create a new agent project')
-      .argument('<project-name>', 'Name of the project to create')
-      .option('--install', 'Install dependencies after creation')
-      .option('--character <character-name>', 'Create a character with this name')
-      .option('--api', 'Generate API certificates', true)
-      .action(initWrapper);
 
     program.showHelpAfterError();
 

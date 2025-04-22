@@ -34,7 +34,6 @@ const versionToString = (version: Version): string => {
 const getRegistryContract = async (readOnly: boolean = false) => {
   try {
     const config = await loadConfig();
-    const credentials = await loadCredentials();
     const rpcUrl = config.taurusRpcUrl;
     const contractAddress = config.packageRegistryAddress;
     const provider = new ethers.JsonRpcProvider(rpcUrl);
@@ -42,6 +41,7 @@ const getRegistryContract = async (readOnly: boolean = false) => {
     if (readOnly) {
       return new ethers.Contract(contractAddress, AutonomysPackageRegistry, provider);
     } else {
+      const credentials = await loadCredentials();
       const privateKey = credentials.autoEvmPrivateKey ?? credentials.autoEvmPrivateKey;
 
       if (!privateKey) {

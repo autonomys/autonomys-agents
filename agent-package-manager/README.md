@@ -1,4 +1,4 @@
-# autoOS CLI `WIP`
+# autoOS CLI
 
 A package manager and toolkit for Autonomys agent tools.
 
@@ -6,11 +6,14 @@ A package manager and toolkit for Autonomys agent tools.
 
 autoOS CLI is a command-line interface for managing Autonomys agent tools. It allows developers to:
 
+- Create new agent projects
 - Install agent tools from the registry
 - Publish new tools to the registry
-- List registered tools
+- Search for registered tools
 - Configure tool settings
 - Securely manage credentials
+
+> **Note:** Credentials are only required for publishing tools to the registry. You can freely install, search, and use tools without setting up credentials.
 
 ## Installation
 
@@ -23,28 +26,30 @@ autoOS CLI is a command-line interface for managing Autonomys agent tools. It al
 
 ```bash
 # Using npm
-npm install -g @autonomys/agent-os-cli
+npm install -g @autonomys/agent-os
 
 # Using yarn
-yarn global add @autonomys/agent-os-cli
+yarn global add @autonomys/agent-os
 ```
 
 ### Local Installation
 
 ```bash
 # Using npm
-npm install @autonomys/agent-os-cli
+npm install @autonomys/agent-os
 
 # Using yarn
-yarn add @autonomys/agent-os-cli
+yarn add @autonomys/agent-os
 ```
 
 ## Getting Started
 
-After installation, set up your credentials and configuration:
+After installation, you can start using basic commands like `search` and `install` without any configuration.
+
+To publish tools or perform operations that require blockchain interaction, set up your credentials:
 
 ```bash
-autoOS config
+autoOS config --credentials
 ```
 
 This interactive wizard will guide you through:
@@ -55,10 +60,25 @@ This interactive wizard will guide you through:
 
 ## Core Commands
 
-### Helo
+### Help
 ```bash
 autoOS -h
 ```
+
+### Create a New Agent Project
+
+```bash
+# Create a basic project
+autoOS init my-agent-project
+
+# Create a project, install dependencies, and create a character
+autoOS init my-agent-project --install --character=my-character --api
+```
+
+Options:
+- `--install`: Automatically install dependencies after project creation
+- `--character <name>`: Create a character with the specified name
+- `--api`: Generate API certificates for the project (default: true)
 
 ### Install a Tool
 
@@ -71,9 +91,6 @@ autoOS install <tool-name> -v <version>
 
 # Install using a Content ID (CID)
 autoOS install <tool-name> --cid <cid>
-
-# Install locally to the current project
-autoOS install <tool-name> --local
 ```
 
 ### Publish a Tool
@@ -86,11 +103,14 @@ autoOS publish <tool-path>
 autoOS publish <tool-path> --no-registry
 ```
 
-### List Registered Tools
+### Search for Tools
 
 ```bash
-# List tools with basic information
-autoOS list
+# Search for tools in the registry
+autoOS search <search-term>
+
+# Show detailed information in search results
+autoOS search <search-term> -d
 ```
 
 ### Tool Inquiry
@@ -118,9 +138,10 @@ autoOS config
 # Configure only credentials
 autoOS config --credentials
 
-# Configure only general settings
+# General Config
 autoOS config --settings
 ```
+
 
 ### Clean Cached Files
 
@@ -134,7 +155,7 @@ autoOS clean --force
 
 ## Secure Credential Management
 
-autoOS CLI securely manages all your credentials through your system's native keychain:
+autoOS CLI securely manages all your credentials through your system's native keychain. Note that credentials are **only required for publishing tools** - you can freely install and search for tools without setting up credentials.
 
 ### System Keychain Integration
 
@@ -276,13 +297,12 @@ cd weather-tool
 autoOS publish .
 ```
 
-
 ### Installing and Using Your Tool
 
 After publishing your tool, you can install it using:
 
 ```bash
-autoOS install weather-tool --local
+autoOS install weather-tool
 ```
 
 Then, in your agent code, you can import and use the tool:
@@ -300,27 +320,25 @@ const agent = new <Agent-Instantiation>({
 });
 ```
 
-
 ## Troubleshooting
 
 ### Common Issues
 
-#### "Failed to decrypt credentials"
+#### "Failed to decrypt credentials" or "No credentials found"
 
-- Ensure you're using the correct master password
-- Try running `autoOS config --credentials` to reset your credentials
+- This error usually appears when trying to publish a tool without configuring credentials
+- Run `autoOS config --credentials` to set up your credentials for publishing
+- Remember that credentials are only required for publishing tools, not for installing or searching
 
 #### API Key Issues
 
 - Verify your API key at https://ai3.storage
 - Ensure your network settings match your API key (mainnet or Taurus)
 
-
 ## Privacy and Security
 
-- All credentials are encrypted with AES-256-CBC
-- The master password is never stored in plaintext
-- System keychain integration leverages OS-level security
+- All credentials are securely stored in your system's native keychain
+- The Auto-EVM private key is required for blockchain operations
 
 ## License
 

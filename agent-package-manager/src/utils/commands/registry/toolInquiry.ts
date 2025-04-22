@@ -8,8 +8,9 @@ import {
   getToolVersions,
 } from '../../blockchain/contractClient.js';
 import chalk from 'chalk';
+import ora from 'ora';
 import { REGISTRY_CACHE_PATH } from '../../shared/path.js';
-import { downloadMetadataFromDsn } from '../../autoDrive/autoDriveClient.js';
+import { downloadFileFromGateway } from '../../autoDrive/gatewayClient.js';
 import { getCidFromHash } from '../../blockchain/utils.js';
 
 const fetchRegistryFromBlockchain = async (): Promise<ToolRegistry | null> => {
@@ -172,23 +173,41 @@ const getToolVersionFromRegistry = async (
   }
 };
 
+const fetchMetadataFromCid = async (metadataCid: string): Promise<string | null> => {
+  const spinner = ora(`Fetching metadata \n`).start();
+  try {
+    const cid = getCidFromHash(metadataCid);
+    spinner.text = `Downloading file from gateway: ${cid}`;
+    const responseStream = await downloadFileFromGateway(cid);
+
+    // Convert readable stream to buffer and then to JSON
+    const chunks: Buffer[] = [];
+    for await (const chunk of responseStream) {
+      chunks.push(chunk);
+    }
+
+    const buffer = Buffer.concat(chunks);
+    spinner.succeed(`Successfully downloaded metadata`);
+    return buffer.toString('utf-8');
+  } catch (error) {
+    spinner.fail(`Failed to download metadata: ${error}`);
+    throw error;
+  }
+};
+
 const getToolMetadata = async (toolName: string, version?: string): Promise<string | null> => {
   if (version) {
     const versionInfo = await getToolVersionFromRegistry(toolName, version);
     if (!versionInfo) {
       return null;
     }
-    const cid = getCidFromHash(versionInfo.metadataCid);
-    const metadata = await downloadMetadataFromDsn(cid);
-    return JSON.stringify(metadata);
+    return fetchMetadataFromCid(versionInfo.metadataCid);
   }
   const toolInfo = await getToolFromRegistry(toolName);
   if (!toolInfo) {
     return null;
   }
-  const cid = getCidFromHash(toolInfo.metadataCid);
-  const metadata = await downloadMetadataFromDsn(cid);
-  return JSON.stringify(metadata);
+  return fetchMetadataFromCid(toolInfo.metadataCid);
 };
 
 export {

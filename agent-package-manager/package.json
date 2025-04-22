@@ -1,5 +1,5 @@
 {
-  "name": "@autonomys/agent-os-cli",
+  "name": "@autonomys/agent-os",
   "version": "0.1.0",
   "description": "Package manager for Autonomys agent tools",
   "license": "MIT",
@@ -7,17 +7,46 @@
   "bin": {
     "autoOS": "./dist/index.js"
   },
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/autonomys/autonomys-agents",
+    "directory": "agent-package-manager"
+  },
+  "author": {
+    "name": "Autonomys",
+    "url": "https://www.autonomys.xyz"
+  },
+  "bugs": {
+    "url": "https://github.com/autonomys/autonomys-agents/issues"
+  },
+  "homepage": "https://github.com/autonomys/autonomys-agents/tree/main/agent-package-manager#readme",
+  "keywords": [
+    "autonomys",
+    "agent",
+    "package-manager",
+    "cli",
+    "tools"
+  ],
   "scripts": {
     "build": "tsc",
     "start": "node dist/index.js",
     "dev": "ts-node src/index.ts",
-    "prepublish": "npm run build",
+    "prepublishOnly": "yarn build",
+    "format": "prettier --write \"src/**/*.{js,ts}\"",
+    "format:check": "prettier --check \"src/**/*.{js,ts}\"",
     "lint": "eslint \"src/**/*.{js,ts}\"",
     "lint:fix": "eslint \"src/**/*.{js,ts}\" --fix"
+  },
+  "engines": {
+    "node": ">=20.18.1"
   },
   "dependencies": {
     "@autonomys/auto-drive": "^1.4.17",
     "archiver": "^5.3.1",
+    "axios": "^1.8.4",
     "chalk": "^5.2.0",
     "commander": "^10.0.0",
     "dotenv": "^16.4.7",
@@ -25,7 +54,8 @@
     "extract-zip": "^2.0.1",
     "inquirer": "^9.2.0",
     "keytar": "^7.9.0",
-    "ora": "^6.3.0"
+    "ora": "^6.3.0",
+    "prettier": "^3.5.3"
   },
   "devDependencies": {
     "@types/archiver": "^5.3.2",
