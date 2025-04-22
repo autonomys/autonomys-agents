@@ -18,6 +18,9 @@ export const createTaskQueue = (namespace: string, dataPath: string): TaskQueue 
 
   const scheduledTasks: Task[] = [];
   const completedTasks: Task[] = [];
+  const cancelledTasks: Task[] = [];
+  const failedTasks: Task[] = [];
+  const deletedTasks: Task[] = [];
   let currentTask: Task | undefined = undefined;
 
   try {
@@ -41,13 +44,35 @@ export const createTaskQueue = (namespace: string, dataPath: string): TaskQueue 
     const dbCompletedTasks = dbController.getTasks(
       {
         namespace,
-        status: ['completed', 'failed'],
+        status: ['completed'],
         limit: MAX_COMPLETED_TASKS,
       },
       dataPath,
     );
 
-    for (const dbTask of [...dbScheduledTasks, ...dbProcessingTasks, ...dbCompletedTasks]) {
+    const dbCancelledTasks = dbController.getTasks(
+      {
+        namespace,
+        status: ['cancelled'],
+      },
+      dataPath,
+    );
+
+    const dbFailedTasks = dbController.getTasks(
+      {
+        namespace,
+        status: ['failed'],
+      },
+      dataPath,
+    );
+
+    for (const dbTask of [
+      ...dbScheduledTasks,
+      ...dbProcessingTasks,
+      ...dbCompletedTasks,
+      ...dbCancelledTasks,
+      ...dbFailedTasks,
+    ]) {
       const task: Task = {
         id: dbTask.id,
         namespace,
@@ -61,22 +86,32 @@ export const createTaskQueue = (namespace: string, dataPath: string): TaskQueue 
         error: dbTask.error,
       };
 
-      if (dbTask.status === 'scheduled') {
-        scheduledTasks.push(task);
-      } else if (dbTask.status === 'processing') {
-        task.status = 'scheduled';
-        scheduledTasks.push(task);
+      switch (dbTask.status) {
+        case 'scheduled':
+          scheduledTasks.push(task);
+          break;
+        case 'processing':
+          task.status = 'scheduled';
+          scheduledTasks.push(task);
 
-        dbController.updateTaskStatus(
-          {
-            id: task.id,
-            namespace,
-            status: 'scheduled',
-          },
-          dataPath,
-        );
-      } else {
-        completedTasks.push(task);
+          dbController.updateTaskStatus(
+            {
+              id: task.id,
+              namespace,
+              status: 'scheduled',
+            },
+            dataPath,
+          );
+          break;
+        case 'cancelled':
+          cancelledTasks.push(task);
+          break;
+        case 'failed':
+          failedTasks.push(task);
+          break;
+        case 'completed':
+          completedTasks.push(task);
+          break;
       }
     }
 
@@ -105,7 +140,21 @@ export const createTaskQueue = (namespace: string, dataPath: string): TaskQueue 
         (a, b) => (b.completedAt?.getTime() ?? 0) - (a.completedAt?.getTime() ?? 0),
       );
     },
-
+    get cancelledTasks() {
+      return [...cancelledTasks].sort(
+        (a, b) => (b.completedAt?.getTime() ?? 0) - (a.completedAt?.getTime() ?? 0),
+      );
+    },
+    get failedTasks() {
+      return [...failedTasks].sort(
+        (a, b) => (b.completedAt?.getTime() ?? 0) - (a.completedAt?.getTime() ?? 0),
+      );
+    },
+    get deletedTasks() {
+      return [...deletedTasks].sort(
+        (a, b) => (b.completedAt?.getTime() ?? 0) - (a.completedAt?.getTime() ?? 0),
+      );
+    },
     scheduleTask(message: string, executeAt: Date): Task {
       const taskId = uuidv4();
       const now = new Date();
@@ -237,11 +286,16 @@ export const createTaskQueue = (namespace: string, dataPath: string): TaskQueue 
 
         if (status === 'completed' && result) {
           task.result = result;
-        } else if ((status === 'failed' || status === 'cancelled') && result) {
-          task.error = result;
+          completedTasks.push(task);
+        } else if (status === 'failed') {
+          if (result) task.error = result;
+          failedTasks.push(task);
+        } else if (status === 'cancelled') {
+          if (result) task.error = result;
+          cancelledTasks.push(task);
+        } else if (status === 'deleted') {
+          deletedTasks.push(task);
         }
-
-        completedTasks.push(task);
 
         if (isCurrentTask) {
           currentTask = undefined;
@@ -308,7 +362,7 @@ export const createTaskQueue = (namespace: string, dataPath: string): TaskQueue 
         scheduledTasks[taskIndex].status = 'deleted';
         const deletedTask = scheduledTasks.splice(taskIndex, 1)[0];
         deletedTask.completedAt = new Date();
-        completedTasks.push(deletedTask);
+        deletedTasks.push(deletedTask);
 
         try {
           dbController.deleteTask(namespace, id, dataPath);
@@ -326,6 +380,9 @@ export const createTaskQueue = (namespace: string, dataPath: string): TaskQueue 
       return {
         current: currentTask,
         scheduled: this.scheduledTasks,
+        cancelled: this.cancelledTasks,
+        failed: this.failedTasks,
+        deleted: this.deletedTasks,
         completed: [...completedTasks].slice(-(limit || MAX_COMPLETED_TASKS)),
       };
     },

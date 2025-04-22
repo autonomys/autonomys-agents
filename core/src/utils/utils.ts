@@ -1,14 +1,25 @@
-import { join } from 'path';
-
-import { dirname } from 'path';
-import { fileURLToPath } from 'url';
+import fs from 'fs';
+import path from 'path';
 
 // Get the absolute path to the project root
 export const getProjectRoot = () => {
-  // For ESM, we need to get the directory name from the file URL
-  const __filename = fileURLToPath(import.meta.url);
-  const __dirname = dirname(__filename);
+  let currentDir = process.cwd();
 
-  // Go up from src/config to the project root
-  return join(__dirname, '..', '..', '..');
+  while (currentDir && currentDir !== path.parse(currentDir).root) {
+    try {
+      const files = fs.readdirSync(currentDir);
+      if (files.includes('package.json') || files.includes('tsconfig.json')) {
+        return {
+          root: currentDir,
+        };
+      }
+
+      currentDir = path.dirname(currentDir);
+    } catch (error) {
+      console.error('Error detecting project root:', error);
+      currentDir = path.dirname(currentDir);
+    }
+  }
+
+  return undefined;
 };

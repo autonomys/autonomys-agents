@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Box, Text, Button, Flex, Badge, useToken } from '@chakra-ui/react';
 import { Resizable } from 're-resizable';
-import { ScheduledTasksBoxProps, ScheduledTask } from '../../types/types';
+import { TasksAreaProps, Task } from '../../types/types';
 import {
   resizableDefaultSize,
   resizableStyles,
@@ -38,12 +38,15 @@ type TaskViewType = 'processing' | 'scheduled' | 'completed';
 // Define the filter status types for completed tasks
 type CompletedFilterStatus = 'completed' | 'failed' | 'cancelled' | 'deleted';
 
-const ScheduledTasksBox: React.FC<ScheduledTasksBoxProps> = ({ 
+const ScheduledTasksBox: React.FC<TasksAreaProps> = ({ 
   tasks, 
   onDeleteTask,
   processingTasks = [],
   scheduledTasks = [],
-  completedTasks = [] 
+  completedTasks = [],
+  cancelledTasks = [],
+  failedTasks = [],
+  deletedTasks = []
 }) => {
   // Initial height calculation to match OutputLog component
   const initialHeight = 700;
@@ -55,45 +58,48 @@ const ScheduledTasksBox: React.FC<ScheduledTasksBoxProps> = ({
   const [neonBlue, neonGreen, neonPink, red] = useToken('colors', ['brand.neonBlue', 'brand.neonGreen', 'brand.neonPink', 'red.400']);
 
   // Filter tasks based on the active view
-  const getTasksForActiveView = (): ScheduledTask[] => {
-    if (activeView === 'processing') {
-      return processingTasks.length ? processingTasks : tasks.filter(task => task.status === 'processing' || task.status === 'finalizing');
-    } else if (activeView === 'scheduled') {
-      return scheduledTasks.length ? scheduledTasks : tasks.filter(task => !task.status || task.status === 'scheduled');
-    } else if (activeView === 'completed') {
-      const allCompletedTasks = completedTasks.length 
-        ? completedTasks 
-        : tasks.filter(task => 
-            task.status === 'completed' || 
-            task.status === 'failed' || 
-            task.status === 'cancelled' || 
-            task.status === 'deleted'
-          );
-          
-      // Apply active filters for completed view
-      return allCompletedTasks.filter(task => activeFilters.includes(task.status as CompletedFilterStatus));
+  const getTasksForActiveView = (): Task[] => {
+    switch (activeView) {
+      case 'processing':
+        return processingTasks;
+      case 'scheduled':
+        return scheduledTasks;
+      case 'completed':
+        const tasksToShow: Task[] = [];
+        if (activeFilters.includes('completed')) {
+          tasksToShow.push(...completedTasks);
+        }
+        if (activeFilters.includes('cancelled')) {
+          tasksToShow.push(...cancelledTasks);
+        }
+        if (activeFilters.includes('failed')) {
+          tasksToShow.push(...failedTasks);
+        }
+        if (activeFilters.includes('deleted')) {
+          tasksToShow.push(...deletedTasks);
+        }
+
+        
+        // Deduplicate tasks by ID
+        const uniqueTasks = Array.from(
+          new Map(tasksToShow.map(task => [task.id, task])).values()
+        );
+        
+        return uniqueTasks;
+      default:
+        return [];
     }
-    return tasks;
   };
 
   // Task count for each filter type
   const filterCounts = useMemo(() => {
-    const allCompletedTasks = completedTasks.length 
-      ? completedTasks 
-      : tasks.filter(task => 
-          task.status === 'completed' || 
-          task.status === 'failed' || 
-          task.status === 'cancelled' ||
-          task.status === 'deleted'
-        );
-    
     return {
-      completed: allCompletedTasks.filter(task => task.status === 'completed').length,
-      failed: allCompletedTasks.filter(task => task.status === 'failed').length,
-      cancelled: allCompletedTasks.filter(task => task.status === 'cancelled').length,
-      deleted: allCompletedTasks.filter(task => task.status === 'deleted').length
+      completed: completedTasks.length,
+      failed: failedTasks.length,
+      cancelled: cancelledTasks.length,
+      deleted: deletedTasks?.length
     };
-  }, [completedTasks, tasks]);
+  }, [completedTasks, cancelledTasks, failedTasks, deletedTasks]);
 
   const getStatusColor = (status?: string) => {
     if (!status) return 'gray.500';
@@ -101,6 +107,8 @@ const ScheduledTasksBox: React.FC<ScheduledTasksBoxProps> = ({
     switch (status.toLowerCase()) {
       case 'processing':
         return 'brand.neonBlue';
+      case 'scheduled':
+        return 'brand.neonPink';
       case 'finalizing':
         return 'yellow.300';
       case 'completed':

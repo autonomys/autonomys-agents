@@ -2,7 +2,7 @@ import React from 'react';
 import { Box, Flex, Text, Spinner } from '@chakra-ui/react';
 import TaskHeader from './TaskHeader';
 import ScheduledTasksBox from './ScheduledTasksBox';
-import { ScheduledTask } from '../../types/types';
+import { Task } from '../../types/types';
 import { ConnectionStatus } from '../../services/TaskStreamService';
 import {
   containerStyles,
@@ -13,9 +13,12 @@ import {
 
 interface TasksAreaProps {
   tasks: {
-    scheduled: ScheduledTask[];
-    processing: ScheduledTask[];
-    completed: ScheduledTask[];
+    scheduled: Task[];
+    processing: Task[];
+    completed: Task[];
+    cancelled: Task[];
+    failed: Task[];
+    deleted: Task[];
   };
   loading: boolean;
   connectionStatus: ConnectionStatus;
@@ -37,9 +40,12 @@ const TasksArea: React.FC<TasksAreaProps> = ({
 }) => {
   // Combine all tasks for display
   const allTasks = [
+    ...tasks.cancelled,
+    ...tasks.failed,
     ...tasks.processing,
     ...tasks.scheduled,
-    ...tasks.completed
+    ...tasks.completed,
+    ...tasks.deleted
   ];
 
   return (
@@ -56,6 +62,9 @@ const TasksArea: React.FC<TasksAreaProps> = ({
           processingTasks={tasks.processing}
           scheduledTasks={tasks.scheduled}
           completedTasks={tasks.completed}
+          cancelledTasks={tasks.cancelled}
+          failedTasks={tasks.failed}
+          deletedTasks={tasks.deleted}
         />
       </Box>
 
