@@ -9,8 +9,8 @@ import './App.css';
 
 function App() {
   const [messages] = useState<string[]>([
-    'Welcome to Autonomys Agents Web CLI!',
-    'Type your message in the input box below and press Enter to send.',
+    'Welcome to the Autonomys Agents Web CLI',
+    'Type your message in the input box on the top right and press Enter to send.',
   ]);
 
   useEffect(() => {

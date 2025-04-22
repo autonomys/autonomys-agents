@@ -138,7 +138,7 @@ export const LogMessageList: React.FC<LogMessageListProps> = ({
   if (filteredByLevelMessages.length === 0) {
     return (
       <Box {...logMessageListContainer} ref={containerRef}>
-        <Text {...logMessageListWelcomeText}>Welcome to Autonomys Agents Web CLI</Text>
+        <Text {...logMessageListWelcomeText}>Welcome to the Autonomys Agents Web CLI</Text>
       </Box>
     );
   }
@@ -195,7 +195,8 @@ export const LogMessageList: React.FC<LogMessageListProps> = ({
         <Flex
           position='absolute'
           bottom='20px'
-          right='20px'
+          // right='20px'
+          left='45%'
           backgroundColor='rgba(0,0,0,0.6)'
           padding='8px'
           borderRadius='full'

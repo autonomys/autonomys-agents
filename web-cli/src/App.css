@@ -454,7 +454,7 @@ pre {
 }
 
 [data-testid='virtuoso-item-list'] {
-  padding: 1rem;
+  padding: 1rem 1rem 1.5rem 1rem !important;
 }
 
 /* Responsive behavior */
