@@ -66,7 +66,13 @@ export const createTaskQueue = (namespace: string, dataPath: string): TaskQueue 
       dataPath,
     );
 
-    for (const dbTask of [...dbScheduledTasks, ...dbProcessingTasks, ...dbCompletedTasks, ...dbCancelledTasks, ...dbFailedTasks]) {
+    for (const dbTask of [
+      ...dbScheduledTasks,
+      ...dbProcessingTasks,
+      ...dbCompletedTasks,
+      ...dbCancelledTasks,
+      ...dbFailedTasks,
+    ]) {
       const task: Task = {
         id: dbTask.id,
         namespace,
@@ -86,15 +92,15 @@ export const createTaskQueue = (namespace: string, dataPath: string): TaskQueue 
           break;
         case 'processing':
           task.status = 'scheduled';
-        scheduledTasks.push(task);
+          scheduledTasks.push(task);
 
-        dbController.updateTaskStatus(
-          {
-            id: task.id,
-            namespace,
-            status: 'scheduled',
-          },
-          dataPath,
+          dbController.updateTaskStatus(
+            {
+              id: task.id,
+              namespace,
+              status: 'scheduled',
+            },
+            dataPath,
           );
           break;
         case 'cancelled':

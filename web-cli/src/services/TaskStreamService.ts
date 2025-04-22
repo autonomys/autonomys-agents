@@ -76,7 +76,7 @@ export const connectToTaskStream = (namespace: string = DEFAULT_NAMESPACE): void
         if (data.type === 'tasks') {
           // Collect all task types that need to be passed to taskCallbacks
           let taskUpdates: Task[] = [];
-          
+
           // Handle completed tasks
           if (data.tasks?.completed) {
             const completedTasks = data.tasks.completed
@@ -87,7 +87,7 @@ export const connectToTaskStream = (namespace: string = DEFAULT_NAMESPACE): void
                 description: task.message,
                 status: 'completed',
                 result: task.result,
-                error: task.error
+                error: task.error,
               }));
             console.log(`Received ${completedTasks.length} completed tasks`);
             taskUpdates = [...taskUpdates, ...completedTasks];
@@ -101,7 +101,7 @@ export const connectToTaskStream = (namespace: string = DEFAULT_NAMESPACE): void
               description: task.message,
               status: 'cancelled',
               result: task.result,
-              error: task.error
+              error: task.error,
             }));
             console.log(`Received ${cancelledTasks.length} cancelled tasks`);
             taskUpdates = [...taskUpdates, ...cancelledTasks];
@@ -115,7 +115,7 @@ export const connectToTaskStream = (namespace: string = DEFAULT_NAMESPACE): void
               description: task.message,
               status: 'failed',
               result: task.result,
-              error: task.error
+              error: task.error,
             }));
             console.log(`Received ${failedTasks.length} failed tasks`);
             taskUpdates = [...taskUpdates, ...failedTasks];
@@ -129,7 +129,7 @@ export const connectToTaskStream = (namespace: string = DEFAULT_NAMESPACE): void
               description: task.message,
               status: 'deleted',
               result: task.result,
-              error: task.error
+              error: task.error,
             }));
             console.log(`Received ${deletedTasks.length} deleted tasks`);
             taskUpdates = [...taskUpdates, ...deletedTasks];
