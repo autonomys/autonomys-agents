@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useMemo } from 'react';
 import { Box, Flex, Text, Spinner } from '@chakra-ui/react';
 import { Virtuoso, VirtuosoHandle } from 'react-virtuoso';
 import { Metadata } from './components';
@@ -57,6 +57,9 @@ export const LogMessageList: React.FC<LogMessageListProps> = ({
   const [processingTasks, setProcessingTasks] = useState<ScheduledTask[]>([]);
   const virtuosoRef = useRef<VirtuosoHandle>(null);
 
+  const isInitialLog =
+    filteredMessages.filter(msg => msg.type === 'connection').length === filteredMessages.length;
+
   // Check if new messages have been added in the last 2 seconds
   useEffect(() => {
     if (filteredMessages.length > 0) {
@@ -108,13 +111,20 @@ export const LogMessageList: React.FC<LogMessageListProps> = ({
       }) as LogMessage,
   );
 
-  const allMessages = [...formattedMessages, ...legacyFormattedMessages];
+  const filteredByLevelMessages = useMemo(() => {
+    let allMessages: LogMessage[] = [];
 
-  // We're keeping this in place for legacy messages and making sure our component props work
-  // correctly, but the main filtering is now done at the useLogMessages hook level
-  const filteredByLevelMessages = showDebugLogs
-    ? allMessages
-    : allMessages.filter(msg => msg.level?.toLowerCase() !== 'debug');
+    if (isInitialLog) {
+      allMessages = [...formattedMessages, ...legacyFormattedMessages];
+    } else {
+      allMessages = [...formattedMessages];
+    }
+
+    if (showDebugLogs) {
+      return allMessages;
+    }
+    return allMessages.filter(msg => msg.level?.toLowerCase() !== 'debug');
+  }, [formattedMessages, legacyFormattedMessages, showDebugLogs, isInitialLog]);
 
   const getMessageColor = (level: string) => {
     switch (level.toLowerCase()) {
@@ -149,6 +159,9 @@ export const LogMessageList: React.FC<LogMessageListProps> = ({
         ref={virtuosoRef}
         className='log-message-list'
         data={filteredByLevelMessages}
+        components={{
+          Footer: () => <Box py={4} px={4} position='relative' />,
+        }}
         itemContent={(index, msg) => {
           const msgColor = getMessageColor(msg.level);
           const isSearchMatch = searchResults.includes(index);
@@ -190,12 +203,10 @@ export const LogMessageList: React.FC<LogMessageListProps> = ({
         alignToBottom
       />
 
-      {/* Loading spinner that appears at the bottom */}
       {processingTasks.length > 0 && (
         <Flex
           position='absolute'
           bottom='20px'
-          // right='20px'
           left='45%'
           backgroundColor='rgba(0,0,0,0.6)'
           padding='8px'
