@@ -53,7 +53,7 @@ const loadCredentials = async (): Promise<Credentials> => {
     const masterPassword = await getFromKeychain();
     if (!masterPassword) {
       throw new Error(
-        'No master password found in keychain. Please run "autoOS config --credentials" to set up.',
+        'No master password found in keychain. Please run "agent-os config --credentials" to set up.',
       );
     }
 
@@ -65,7 +65,7 @@ const loadCredentials = async (): Promise<Credentials> => {
       // Handle file not found error with a clearer message
       if (error instanceof Error && error.message.includes('ENOENT')) {
         throw new Error(
-          'No credentials file found. Please run "autoOS config --credentials" to set up.',
+          'No credentials file found. Please run "agent-os config --credentials" to set up.',
         );
       }
       throw error;

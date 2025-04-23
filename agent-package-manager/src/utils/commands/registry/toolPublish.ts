@@ -110,7 +110,7 @@ const packageAndUploadTool = async (
     } catch (error) {
       if (error instanceof Error && error.message.includes('credentials')) {
         throw new Error(
-          'Publishing requires credentials. Please run "autoOS config --credentials" to set up.',
+          'Publishing requires credentials. Please run "agent-os config --credentials" to set up.',
         );
       }
       throw error;

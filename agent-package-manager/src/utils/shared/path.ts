@@ -2,21 +2,21 @@ import path from 'path';
 import fs from 'fs/promises';
 
 const HOME_DIR = process.env.HOME || process.env.USERPROFILE || '';
-const AUTOOS_DIR = path.join(HOME_DIR, '.autoOS');
-const PACKAGES_DIR = path.join(AUTOOS_DIR, 'packages');
+const AGENTOS_DIR = path.join(HOME_DIR, '.agent-os');
+const PACKAGES_DIR = path.join(AGENTOS_DIR, 'packages');
 const DEFAULT_PROJECT_TOOLS_PATH = 'src/tools';
-const REGISTRY_CACHE_PATH = path.join(AUTOOS_DIR, 'registry.json');
-const CONFIG_FILE = path.join(AUTOOS_DIR, 'config.json');
-const CREDENTIALS_FILE = path.join(AUTOOS_DIR, 'credentials.enc');
+const REGISTRY_CACHE_PATH = path.join(AGENTOS_DIR, 'registry.json');
+const CONFIG_FILE = path.join(AGENTOS_DIR, 'config.json');
+const CREDENTIALS_FILE = path.join(AGENTOS_DIR, 'credentials.enc');
 
-const ensureAutoOSDir = async () => {
+const ensureAgentOSDir = async () => {
   try {
     try {
-      await fs.access(AUTOOS_DIR);
+      await fs.access(AGENTOS_DIR);
     } catch {
       // Directory doesn't exist, create it
-      console.log(`Creating directory: ${AUTOOS_DIR}`);
-      const _createAutoOSDir = await fs.mkdir(AUTOOS_DIR, { recursive: true });
+      console.log(`Creating directory: ${AGENTOS_DIR}`);
+      const _createAgentOSDir = await fs.mkdir(AGENTOS_DIR, { recursive: true });
     }
     try {
       await fs.access(PACKAGES_DIR);
@@ -28,7 +28,7 @@ const ensureAutoOSDir = async () => {
 
     return true;
   } catch (error) {
-    console.error('Error creating autoOS directories:', error);
+    console.error('Error creating agent-os directories:', error);
     throw new Error(
       `Failed to create required directories: ${error instanceof Error ? error.message : String(error)}`,
     );
@@ -110,12 +110,12 @@ const getToolInstallDir = async (): Promise<{ installDir: string | undefined }> 
 
 export {
   HOME_DIR,
-  AUTOOS_DIR,
+  AGENTOS_DIR,
   PACKAGES_DIR,
   DEFAULT_PROJECT_TOOLS_PATH,
   REGISTRY_CACHE_PATH,
   CONFIG_FILE,
   CREDENTIALS_FILE,
-  ensureAutoOSDir,
+  ensureAgentOSDir,
   getToolInstallDir,
 };

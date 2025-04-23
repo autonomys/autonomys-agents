@@ -127,13 +127,13 @@ const init = async (projectName: string, options: InitOptions): Promise<CommandR
     // Add information about installing tools
     console.log(chalk.green(`\nInstalling agent tools:`));
     console.log(chalk.cyan(`  cd ${projectName}`));
-    console.log(chalk.cyan(`  autoOS install <tool-name>`));
+    console.log(chalk.cyan(`  agent-os install <tool-name>`));
     console.log(chalk.cyan(`  # Tools will be installed to src/tools/ in your project`));
 
     // Suggest flags for next time
     if (!options.install || !options.character || !options.api) {
       console.log(`\n${chalk.yellow('Pro tip:')} Next time, use these flags for a faster setup:`);
-      let command = `  autoOS init ${projectName} --install`;
+      let command = `  agent-os init ${projectName} --install`;
       if (!options.character) command += ' --character=your-character-name';
       if (!options.api) command += ' --api';
       console.log(chalk.cyan(command));

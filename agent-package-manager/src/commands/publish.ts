@@ -17,13 +17,13 @@ const publish = async (toolPath: string, options: PublishOptions): Promise<Comma
       console.log(chalk.yellow('\nPublishing requires credentials to be set up.'));
       console.log(
         chalk.yellow('Please run ') +
-          chalk.cyan('autoOS config --credentials') +
+          chalk.cyan('agent-os config --credentials') +
           chalk.yellow(' to set up your credentials.'),
       );
       return {
         success: false,
         message:
-          'Missing credentials required for publishing. Run "autoOS config --credentials" to set up.',
+          'Missing credentials required for publishing. Run "agent-os config --credentials" to set up.',
       };
     }
 
@@ -50,7 +50,7 @@ const publish = async (toolPath: string, options: PublishOptions): Promise<Comma
       spinner.succeed(`Successfully uploaded ${metadata.name} to DSN (skipped registry update)`);
       console.log(chalk.green(`\nTool uploaded with CID: ${cid}`));
       console.log(chalk.yellow(`\nFor direct installation use:`));
-      console.log(`autoOS install ${metadata.name} --cid ${cid}`);
+      console.log(`agent-os install ${metadata.name} --cid ${cid}`);
     }
 
     return {

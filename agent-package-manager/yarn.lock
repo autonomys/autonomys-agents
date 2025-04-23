@@ -39,7 +39,7 @@ __metadata:
     typescript: "npm:^5.0.0"
     typescript-eslint: "npm:^8.27.0"
   bin:
-    autoOS: ./dist/index.js
+    agent-os: ./dist/index.js
   languageName: unknown
   linkType: soft
 

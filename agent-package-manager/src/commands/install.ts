@@ -43,7 +43,7 @@ const install = async (toolName: string, options: InstallOptions): Promise<Comma
       if (error.message.includes('Tool validation failed')) {
         errorMessage = `Invalid tool structure: ${error.message}`;
       } else if (error.message.includes('not found in registry')) {
-        errorMessage = `Tool '${toolName}' not found in registry. Check the name or try 'autoOS search' to find available tools.`;
+        errorMessage = `Tool '${toolName}' not found in registry. Check the name or try 'agent-os search' to find available tools.`;
       } else if (error.message.includes('ENOENT')) {
         errorMessage = `Directory access error: ${error.message}`;
       } else {
