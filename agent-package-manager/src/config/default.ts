@@ -6,5 +6,5 @@ export const DEFAULT_CONFIG = {
   indexerUrl: '',
 };
 
-export const KEYCHAIN_SERVICE = 'autoOS-cli';
+export const KEYCHAIN_SERVICE = 'agent-os-cli';
 export const KEYCHAIN_ACCOUNT = 'masterPassword';

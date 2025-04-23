@@ -64,7 +64,7 @@ const resolveVersionInstallation = async (
   const registryToolInfo = await getToolVersionFromRegistry(toolName, version);
   if (!registryToolInfo) {
     throw new Error(
-      `${versionDisplay} of tool '${toolName}' not found in registry. Use 'autoOS list -d' to see available versions.`,
+      `${versionDisplay} of tool '${toolName}' not found in registry. Use 'agent-os list -d' to see available versions.`,
     );
   }
 

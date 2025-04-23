@@ -11,7 +11,7 @@ import { init } from './commands/init.js';
 import { config } from './commands/config.js';
 import { loadConfig } from './config/index.js';
 import { credentialsExist } from './utils/credential/index.js';
-import { ensureAutoOSDir } from './utils/shared/path.js';
+import { ensureAgentOSDir } from './utils/shared/path.js';
 import {
   CleanOptions,
   ConfigOptions,
@@ -33,7 +33,7 @@ const checkMasterPassword = async () => {
 
 const program = new Command();
 
-ensureAutoOSDir()
+ensureAgentOSDir()
   .then(() => {
     return loadConfig();
   })
@@ -71,7 +71,7 @@ ensureAutoOSDir()
     };
 
     program
-      .name('autoOS')
+      .name('agent-os')
       .description('Package manager for Autonomys agent tools')
       .version('0.1.0');
 
@@ -119,7 +119,7 @@ ensureAutoOSDir()
 
     program
       .command('config')
-      .description('Configure the autoOS CLI')
+      .description('Configure the agent-os CLI')
       .option('--credentials', 'Configure only credentials')
       .option('--settings', 'Configure only settings')
       .action(configWrapper);
@@ -139,7 +139,7 @@ ensureAutoOSDir()
     }
   })
   .catch(error => {
-    console.error(chalk.red('Error initializing autoOS CLI:'));
+    console.error(chalk.red('Error initializing agent-os CLI:'));
     console.error(chalk.red(error instanceof Error ? error.message : String(error)));
     process.exit(1);
   });

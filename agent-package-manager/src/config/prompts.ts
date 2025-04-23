@@ -5,7 +5,7 @@ import { Credentials } from '../types/index.js';
 import { credentialsExist, loadCredentials, saveCredentials } from '../utils/credential/index.js';
 
 const promptForConfig = async () => {
-  console.log(chalk.blue('Configuration setup for autoOS CLI'));
+  console.log(chalk.blue('Configuration setup for agent-os CLI'));
 
   const currentConfig = await loadConfig();
 
@@ -36,7 +36,7 @@ const promptForConfig = async () => {
 };
 
 const promptForCredentials = async (): Promise<Credentials> => {
-  console.log(chalk.blue('Credential setup for autoOS CLI'));
+  console.log(chalk.blue('Credential setup for agent-os CLI'));
 
   const hasExistingCredentials = await credentialsExist();
   let masterPassword: string;

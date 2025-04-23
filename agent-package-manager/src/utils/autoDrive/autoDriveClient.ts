@@ -22,13 +22,13 @@ const createApiClient = async () => {
     }
 
     throw new Error(
-      "Missing Auto Drive API key. Please run 'autoOS config --credentials' to set up your credentials.",
+      "Missing Auto Drive API key. Please run 'agent-os config --credentials' to set up your credentials.",
     );
   } catch (error) {
     if (error instanceof Error) {
       if (error.message.includes('ENOENT') && error.message.includes('credentials.enc')) {
         throw new Error(
-          "No credentials found. Please run 'autoOS config --credentials' to set up.",
+          "No credentials found. Please run 'agent-os config --credentials' to set up.",
         );
       }
     }
