@@ -28,8 +28,8 @@ agent-os CLI is a command-line interface for managing Autonomys agent tools. It 
 # Using npm
 npm install -g @autonomys/agent-os
 
-# Using yarn
-yarn global add @autonomys/agent-os
+# Using Yarn 2.x
+yarn dlx @autonomys/agent-os
 ```
 
 ### Local Installation
