@@ -38,7 +38,7 @@ const login = async (username: string, password: string, cookiesPath: string): P
 const authenticateWithCookies = async (cookiesPath: string): Promise<Scraper | undefined> => {
   if (!existsSync(cookiesPath)) {
     logger.info('No cookie file exists, skipping cookie authentication');
-    return undefined;
+    throw new Error('No cookie file exists');
   }
 
   try {
@@ -93,11 +93,17 @@ export const createAuthenticatedScraper = async (
       return scraper;
     },
     {
-      maxRetries: 4,
+      // this number is high because in some environments (GCP), twitter struggles to login with cookies but eventually succeeds
+      maxRetries: 8,
       initialDelay: 2000,
+      shouldRetry: error => error.message !== 'No cookie file exists',
     },
   ).catch(error => {
-    logger.error('Error during cookie authentication:', error);
+    if (error.message === 'No cookie file exists') {
+      logger.info('No cookie file found, proceeding to login.');
+    } else {
+      logger.warn('All cookie authentication attempts failed:', error?.message || error);
+    }
     return undefined;
   });
 
@@ -106,7 +112,7 @@ export const createAuthenticatedScraper = async (
     return cookieScraper;
   }
 
-  logger.info('All cookie authentication attempts failed, trying fresh login');
+  logger.info('Cookie authentication skipped or failed, trying fresh login');
 
   // Try fresh login with retries if cookie authentication failed
   const loginScraper = await retryWithBackoff(
