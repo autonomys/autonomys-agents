@@ -11,7 +11,7 @@ This example demonstrates how to orchestrate an LLM-powered agents with differen
 ## Usage
 
 1. Ensure all dependencies are installed with `yarn install`.
-2. Run the example by calling `yarn example:multi-personality <your-character-name>`.
+2. Run the example by calling `yarn example:multi-personality <your-character-name> --workspace=<absolute path to directory that contains characters, .cookies, and certs folders>`.
 3. Monitor the logs to see how the agent interacts, updates its workflow, and schedules subsequent interactions.
 
 This example serves as a template for integrating a social media management agent managed by a more responsible orchestration agent, and can be extended to support more complex scenarios and integrations.

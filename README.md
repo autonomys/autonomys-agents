@@ -179,9 +179,8 @@ The following examples demonstrate the use of the framework and are available:
 - Web3 Agent
 
 To run each example run following command to see the options:
-
 ```bash
-yarn example
+yarn example <example-name> <character> --workspace=<absolute path to directory that contains characters, .cookies, and certs folders>
 ```
 
 ## Character System

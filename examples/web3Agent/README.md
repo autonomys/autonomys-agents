@@ -14,7 +14,7 @@ This is a simple example demonstrating how to create an autonomous agent capable
 To run this example:
 
 ```bash
-yarn examples/web3Agent <your-character-name>
+yarn examples/web3Agent <your-character-name> --workspace=<absolute path to directory that contains characters, .cookies, and certs folders>`
 ```
 
 ## How It Works
