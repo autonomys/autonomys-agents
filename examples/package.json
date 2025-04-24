@@ -15,7 +15,8 @@
     "vectordb": "tsx vectorDbExample.ts"
   },
   "dependencies": {
-    "@autonomys/agent-core": "workspace:*"
+    "@autonomys/agent-core": "workspace:*",
+    "@langchain/core": "0.3.48"
   },
   "devDependencies": {
     "tsx": "^4.7.1"
