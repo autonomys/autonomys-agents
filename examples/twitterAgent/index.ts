@@ -13,6 +13,7 @@ import { createLogger } from '@autonomys/agent-core/src/utils/logger.js';
 import { createAllSchedulerTools } from '@autonomys/agent-core/src/agents/tools/scheduler/index.js';
 import { createExperienceManager } from '@autonomys/agent-core/src/blockchain/agentExperience/index.js';
 import { parseArgs } from '@autonomys/agent-core/src/utils/args.js';
+import { createApiServer } from '@autonomys/agent-core/src/api/server.js';
 
 parseArgs();
 
@@ -25,6 +26,17 @@ if (!configInstance) {
 }
 const { config, agentVersion, characterName } = configInstance;
 
+// Initialize the API server
+createApiServer({
+  characterName: characterName,
+  dataPath: config.characterConfig.characterPath,
+  authFlag: config.apiSecurityConfig.ENABLE_AUTH,
+  authToken: config.apiSecurityConfig.API_TOKEN ?? '',
+  apiPort: config.API_PORT,
+  allowedOrigins: config.apiSecurityConfig.CORS_ALLOWED_ORIGINS,
+  llmConfig: config.llmConfig,
+});
+
 const character = config.characterConfig;
 const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
   const dataPath = character.characterPath;
@@ -34,51 +46,51 @@ const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
   const monitoringEnabled = config.autoDriveConfig.AUTO_DRIVE_MONITORING;
   const schedulerTools = createAllSchedulerTools();
   const experienceManager =
-  (saveExperiences || monitoringEnabled) &&
-  config.blockchainConfig.PRIVATE_KEY &&
-  config.blockchainConfig.RPC_URL &&
-  config.blockchainConfig.CONTRACT_ADDRESS &&
-  config.autoDriveConfig.AUTO_DRIVE_API_KEY
-    ? await createExperienceManager({
-        autoDriveApiOptions: {
-          apiKey: config.autoDriveConfig.AUTO_DRIVE_API_KEY,
-          network: config.autoDriveConfig.AUTO_DRIVE_NETWORK,
-        },
-        uploadOptions: {
-          compression: true,
-          password: config.autoDriveConfig.AUTO_DRIVE_ENCRYPTION_PASSWORD,
-        },
-        walletOptions: {
-          privateKey: config.blockchainConfig.PRIVATE_KEY,
-          rpcUrl: config.blockchainConfig.RPC_URL,
-          contractAddress: config.blockchainConfig.CONTRACT_ADDRESS,
-        },
-        agentOptions: {
-          agentVersion: agentVersion,
-          agentName: characterName,
-          agentPath: character.characterPath,
-        },
-      })
-    : undefined;
+    (saveExperiences || monitoringEnabled) &&
+    config.blockchainConfig.PRIVATE_KEY &&
+    config.blockchainConfig.RPC_URL &&
+    config.blockchainConfig.CONTRACT_ADDRESS &&
+    config.autoDriveConfig.AUTO_DRIVE_API_KEY
+      ? await createExperienceManager({
+          autoDriveApiOptions: {
+            apiKey: config.autoDriveConfig.AUTO_DRIVE_API_KEY,
+            network: config.autoDriveConfig.AUTO_DRIVE_NETWORK,
+          },
+          uploadOptions: {
+            compression: true,
+            password: config.autoDriveConfig.AUTO_DRIVE_ENCRYPTION_PASSWORD,
+          },
+          walletOptions: {
+            privateKey: config.blockchainConfig.PRIVATE_KEY,
+            rpcUrl: config.blockchainConfig.RPC_URL,
+            contractAddress: config.blockchainConfig.CONTRACT_ADDRESS,
+          },
+          agentOptions: {
+            agentVersion: agentVersion,
+            agentName: characterName,
+            agentPath: character.characterPath,
+          },
+        })
+      : undefined;
   const experienceConfig =
-  saveExperiences && experienceManager
-    ? {
-        saveExperiences: true as const,
-        experienceManager,
-      }
-    : {
-        saveExperiences: false as const,
-      };
+    saveExperiences && experienceManager
+      ? {
+          saveExperiences: true as const,
+          experienceManager,
+        }
+      : {
+          saveExperiences: false as const,
+        };
 
-const monitoringConfig =
-  monitoringEnabled && experienceManager
-    ? {
-        enabled: true as const,
-        monitoringExperienceManager: experienceManager,
-      }
-    : {
-        enabled: false as const,
-      };
+  const monitoringConfig =
+    monitoringEnabled && experienceManager
+      ? {
+          enabled: true as const,
+          monitoringExperienceManager: experienceManager,
+        }
+      : {
+          enabled: false as const,
+        };
 
   //Twitter agent config
   const twitterAgentTool =

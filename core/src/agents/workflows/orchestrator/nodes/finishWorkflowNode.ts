@@ -7,6 +7,7 @@ import { finishedWorkflowParser } from './finishWorkflowPrompt.js';
 import { AIMessage } from '@langchain/core/messages';
 import { attachLogger } from '../../../../api/server.js';
 import { Logger } from 'winston';
+import { prepareAnthropicPrompt } from './utils.js';
 
 export const parseFinishedWorkflow = async (content: unknown, logger: Logger) => {
   const contentString = typeof content === 'string' ? content : JSON.stringify(content, null, 2);
@@ -53,13 +54,21 @@ export const createFinishWorkflowNode = ({
       })
       .join('\n');
 
-    const formattedPrompt = await finishWorkflowPrompt.format({
+    const formattedMessages = await finishWorkflowPrompt.formatMessages({
       messages,
       currentTime: new Date().toISOString(),
     });
 
+    logger.debug('Formatted Messages - FinishWorkflow Node:', { formattedMessages });
+
+    // Prepare prompt for Anthropic (adds cache_control if applicable)
+    const promptToSend =
+      modelConfig.provider === 'anthropic'
+        ? prepareAnthropicPrompt(formattedMessages, logger)
+        : formattedMessages;
+
     const result = await LLMFactory.createModelFromConfig(modelConfig, llmConfig).invoke(
-      formattedPrompt,
+      promptToSend,
     );
     const finishedWorkflow = await parseFinishedWorkflow(result.content, logger);
 

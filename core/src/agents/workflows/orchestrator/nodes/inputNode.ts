@@ -4,6 +4,7 @@ import { ApiConfig, InputNodeFunction, OrchestratorStateType, Tools } from '../t
 import { LLMConfiguration, LLMFactoryConfig } from '../../../../services/llm/types.js';
 import { ChatPromptTemplate } from '@langchain/core/prompts';
 import { attachLogger } from '../../../../api/server.js';
+import { prepareAnthropicPrompt } from './utils.js';
 
 export const createInputNode = ({
   modelConfig,
@@ -34,28 +35,31 @@ export const createInputNode = ({
 
     const availableTools = tools.map(tool => ({ name: tool.name }));
 
-    const formattedPrompt = await inputPrompt.format({
+    const formattedMessages = await inputPrompt.formatMessages({
       messages: messages.map(message => message.content),
       executedTools: executedTools?.map(tool => tool),
       availableTools: availableTools,
     });
 
-    logger.debug('Formatted Prompt - Input Node:', { formattedPrompt });
+    logger.debug('Formatted Messages - Input Node:', { formattedMessages });
+
+    // Prepare prompt for Anthropic (adds cache_control if applicable)
+    const promptToSend =
+      modelConfig.provider === 'anthropic'
+        ? prepareAnthropicPrompt(formattedMessages, logger)
+        : formattedMessages;
 
     const result = await LLMFactory.createModel(modelConfig, llmConfig)
       .bindTools(tools)
-      .invoke(formattedPrompt);
+      .invoke(promptToSend);
 
     const toolCalls = result.tool_calls;
 
     logger.debug('Tool Calls - Input Node:', { toolCalls });
-    const usage = result.additional_kwargs?.usage as
-      | { input_tokens: number; output_tokens: number }
-      | undefined;
+    const usage = result.additional_kwargs?.usage;
     logger.info('Result - Input Node:', {
       content: result.content,
-      inputTokens: usage?.input_tokens,
-      outputTokens: usage?.output_tokens,
+      usage,
     });
 
     const newMessage = { messages: [result] };
