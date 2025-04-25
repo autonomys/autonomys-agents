@@ -13,16 +13,9 @@ import {
 } from './styles/LogStyles';
 
 const OutputLog: React.FC<OutputLogProps> = ({ messages }) => {
-  // Using vh units for consistency across browsers instead of window.innerHeight
-  const initialHeight = typeof window !== 'undefined' ? window.innerHeight : 0;
-  const [size, setSize] = useState({ height: initialHeight });
-  const [isCollapsed, setIsCollapsed] = useState(false); // Changed to false (expanded by default)
-  const [prevHeight, setPrevHeight] = useState(initialHeight);
   const containerRef = useRef<HTMLDivElement>(null);
   const headerRef = useRef<HTMLDivElement>(null);
   const [isSearchVisible, setIsSearchVisible] = useState(false);
-  // Default header height - will be updated dynamically
-  const [headerHeight, setHeaderHeight] = useState(80);
 
   const { namespaces, activeNamespace, subscribedNamespaces, changeNamespace, refreshNamespaces } =
     useNamespaces();
@@ -45,16 +38,6 @@ const OutputLog: React.FC<OutputLogProps> = ({ messages }) => {
     showDebugLogs,
     setShowDebugLogs,
   } = useLogMessages();
-
-  // Measure header height after render to ensure proper collapse height
-  useEffect(() => {
-    if (headerRef.current) {
-      const headerElement = headerRef.current;
-      const height = headerElement.offsetHeight;
-      // Add a small buffer to ensure full visibility (e.g., 10px)
-      setHeaderHeight(height + 10);
-    }
-  }, [namespaces]); // Re-measure when namespaces change
 
   // Handle keyboard shortcut for search (Ctrl+F)
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
@@ -106,33 +89,6 @@ const OutputLog: React.FC<OutputLogProps> = ({ messages }) => {
     }
   };
 
-  const toggleCollapse = () => {
-    if (isCollapsed) {
-      // When expanding, restore previous height
-      setSize({ height: prevHeight });
-      setIsCollapsed(false);
-    } else {
-      // When collapsing, store current height and collapse to header height
-      setPrevHeight(size.height);
-      setSize({ height: headerHeight });
-      setIsCollapsed(true);
-    }
-  };
-
-  // Update height on window resize for responsiveness
-  useEffect(() => {
-    const handleResize = () => {
-      const newHeight = window.innerHeight - 122;
-      if (!isCollapsed) {
-        setSize({ height: newHeight });
-      }
-      setPrevHeight(newHeight);
-    };
-
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, [isCollapsed]);
-
   const filteredMessages = getFilteredMessages(activeNamespace);
 
   return (
@@ -164,8 +120,6 @@ const OutputLog: React.FC<OutputLogProps> = ({ messages }) => {
             onShowSearch={handleShowSearch}
             showDebugLogs={showDebugLogs}
             onToggleDebugLogs={handleToggleDebugLogs}
-            isCollapsed={isCollapsed}
-            onToggleCollapse={toggleCollapse}
           />
         </Box>
 
