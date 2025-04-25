@@ -10,13 +10,15 @@ import {
   outputLogFlexContainer,
   scrollToBottomButton,
   customOutputLogContainer,
+  resizableDefaultSize,
+  resizableEnableProps,
 } from './styles/LogStyles';
-
+import { Resizable } from 're-resizable';
 const OutputLog: React.FC<OutputLogProps> = ({ messages }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const headerRef = useRef<HTMLDivElement>(null);
   const [isSearchVisible, setIsSearchVisible] = useState(false);
-
+  const [size, setSize] = useState({ height: window.innerHeight - 185 });
   const { namespaces, activeNamespace, subscribedNamespaces, changeNamespace, refreshNamespaces } =
     useNamespaces();
 
@@ -107,43 +109,59 @@ const OutputLog: React.FC<OutputLogProps> = ({ messages }) => {
         onClose={handleCloseSearch}
       />
 
-      <Flex ref={containerRef} {...outputLogFlexContainer}>
-        {/* Use headerRef to dynamically measure the header height */}
-        <Box ref={headerRef} width='100%'>
-          <NamespaceTabs
-            namespaces={namespaces}
-            activeNamespace={activeNamespace}
-            namespaceCount={namespaceCount}
-            onNamespaceChange={handleNamespaceChange}
-            onRefreshNamespaces={refreshNamespaces}
-            onClearLogs={handleClearLogs}
-            onShowSearch={handleShowSearch}
+      <Resizable
+        defaultSize={resizableDefaultSize}
+        size={{
+          width: '100%',
+          height: size.height,
+        }}
+        minHeight={500}
+        maxHeight={1000}
+        onResizeStop={(e, direction, ref, d) => {
+          setSize(prevSize => ({
+            height: prevSize.height + d.height,
+          }));
+        }}
+        enable={resizableEnableProps}
+      >
+        <Flex ref={containerRef} {...outputLogFlexContainer}>
+          {/* Use headerRef to dynamically measure the header height */}
+          <Box ref={headerRef} width='100%'>
+            <NamespaceTabs
+              namespaces={namespaces}
+              activeNamespace={activeNamespace}
+              namespaceCount={namespaceCount}
+              onNamespaceChange={handleNamespaceChange}
+              onRefreshNamespaces={refreshNamespaces}
+              onClearLogs={handleClearLogs}
+              onShowSearch={handleShowSearch}
+              showDebugLogs={showDebugLogs}
+              onToggleDebugLogs={handleToggleDebugLogs}
+            />
+          </Box>
+
+          <LogMessageList
+            filteredMessages={filteredMessages}
+            legacyMessages={messages}
+            setLogRef={() => {}}
+            searchTerm={searchTerm}
+            searchResults={searchResults}
+            currentSearchIndex={currentSearchIndex}
             showDebugLogs={showDebugLogs}
-            onToggleDebugLogs={handleToggleDebugLogs}
           />
-        </Box>
 
-        <LogMessageList
-          filteredMessages={filteredMessages}
-          legacyMessages={messages}
-          setLogRef={() => {}}
-          searchTerm={searchTerm}
-          searchResults={searchResults}
-          currentSearchIndex={currentSearchIndex}
-          showDebugLogs={showDebugLogs}
-        />
-
-        {!isAutoScrollEnabled && filteredMessages.length > 0 && (
-          <Button
-            {...scrollToBottomButton(isScrolling)}
-            onClick={scrollToBottom}
-            title='Scroll to bottom'
-            aria-label='Scroll to bottom'
-          >
-            ↓
-          </Button>
-        )}
-      </Flex>
+          {!isAutoScrollEnabled && filteredMessages.length > 0 && (
+            <Button
+              {...scrollToBottomButton(isScrolling)}
+              onClick={scrollToBottom}
+              title='Scroll to bottom'
+              aria-label='Scroll to bottom'
+            >
+              ↓
+            </Button>
+          )}
+        </Flex>
+      </Resizable>
     </Box>
   );
 };

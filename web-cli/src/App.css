@@ -405,7 +405,7 @@ pre {
   height: calc(100vh - 166px); /* Adjust for header height */
   overflow: hidden;
   margin: 0; /* Remove any margin */
-  padding: 0; /* Remove any padding */
+  padding: 0 0 10px 0; /* Remove any padding */
 }
 
 .left-panel {

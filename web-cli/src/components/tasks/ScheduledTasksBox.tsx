@@ -24,13 +24,7 @@ import {
   getFilterChipStyles,
   getFilterCountBadgeStyles,
 } from './styles/ScheduledTasksBoxStyles';
-import {
-  stopButtonStyles,
-  animationStyles,
-  stopButtonTextStyles,
-  stopButtonAnimationStyles,
-} from '../status/styles/StatusStyles';
-import { stopWorkflow } from '../../services/WorkflowService';
+import { stopButtonStyles } from '../status/styles/StatusStyles';
 
 // Define the task types for the navbar
 type TaskViewType = 'processing' | 'scheduled' | 'completed';
@@ -39,7 +33,6 @@ type TaskViewType = 'processing' | 'scheduled' | 'completed';
 type CompletedFilterStatus = 'completed' | 'failed' | 'cancelled' | 'deleted';
 
 const ScheduledTasksBox: React.FC<TasksAreaProps> = ({
-  tasks,
   onDeleteTask,
   processingTasks = [],
   scheduledTasks = [],
@@ -346,28 +339,18 @@ const ScheduledTasksBox: React.FC<TasksAreaProps> = ({
                     <Flex {...taskContentFlexStyles}>
                       <Flex {...taskHeaderFlexStyles}>
                         <Text {...taskTimestampStyles}>{formatTime(task.time)}</Text>
-                        <Flex gap={2}>
-                          <Button
-                            {...stopButtonStyles}
-                            onClick={() => onDeleteTask(task.id)}
-                            title='Delete task'
-                            aria-label='Delete task'
-                          >
-                            Delete
-                          </Button>
-                          {task.status === 'processing' && (
+                        {(task.status === 'completed' || task.status === 'scheduled') && (
+                          <Flex gap={2}>
                             <Button
                               {...stopButtonStyles}
-                              onClick={() => stopWorkflow(task.id)}
-                              css={{
-                                animation: animationStyles.nodeRipple,
-                              }}
+                              onClick={() => onDeleteTask(task.id)}
+                              title='Delete task'
+                              aria-label='Delete task'
                             >
-                              <Text {...stopButtonTextStyles}>Stop</Text>
-                              <Box {...stopButtonAnimationStyles} />
+                              Delete
                             </Button>
-                          )}
-                        </Flex>
+                          </Flex>
+                        )}
                       </Flex>
                       <Text {...getTaskDescriptionStyles(!!task.status)}>{task.description}</Text>
 

@@ -10,7 +10,7 @@ export const metadataContainer: BoxProps = {
 // Custom styling for the right panel layout
 export const customOutputLogContainer = {
   flex: { base: '1', md: '0.6' },
-  height: { base: 'calc(100vh - 175px)' }, // Responsive height
+  height: { base: '100%' }, // Responsive height
   position: 'relative',
   zIndex: '1',
   borderLeft: { base: 'none', md: '1px solid' },
@@ -21,8 +21,8 @@ export const customOutputLogContainer = {
   overflow: 'hidden',
   bg: 'black',
   marginTop: '8px', // Reduced margin to better align with Status box
+  marginLeft: '8px',
   borderRadius: 'md',
-  border: '1px solid rgba(0, 255, 153, 0.3)',
 };
 
 export const metadataContentContainer: BoxProps = {
@@ -501,4 +501,16 @@ export const fontSizeControlsContainer: FlexProps = {
   borderColor: 'rgba(255, 0, 204, 0.4)',
   position: 'relative',
   boxShadow: '0 0 10px rgba(0, 0, 0, 0.3)',
+};
+
+export const resizableDefaultSize = {
+  width: '100%',
+  height: 400,
+};
+
+export const resizableEnableProps = {
+  top: false,
+  right: false,
+  bottom: true,
+  left: false,
 };

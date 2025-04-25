@@ -6,8 +6,6 @@ import {
   containerFlexStyles,
   resizableDefaultSize,
   resizableEnableProps,
-  resizableHandleStyles,
-  resizableHandleBoxStyles,
   containerBoxStyles,
   headingStyles,
   contentFlexStyles,
@@ -17,8 +15,6 @@ import {
   sendButtonStyles,
   sendButtonFlexStyles,
   sendButtonTextStyles,
-  sendButtonAnimationStyles,
-  helperTextStyles,
 } from './styles/InputStyles';
 import StatusBox from '../status/StatusBox';
 import { stopWorkflow } from '../../services/WorkflowService';
@@ -30,7 +26,7 @@ const InputArea: React.FC<InputBoxProps> = ({
   currentTask,
   error,
 }) => {
-  const [size, setSize] = useState({ height: 240 });
+  const [size, setSize] = useState({ height: 200 });
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [stopStatus, setStopStatus] = useState<string | null>(null);
 
@@ -44,7 +40,7 @@ const InputArea: React.FC<InputBoxProps> = ({
   // Adjust textarea height when resizable container changes
   useEffect(() => {
     if (textareaRef.current) {
-      const paddingOffset = 120; // Account for padding, headers, other elements
+      const paddingOffset = 80; // Account for padding, headers, other elements
       const newHeight = Math.max(size.height - paddingOffset, 60); // Ensure minimum textarea height
       textareaRef.current.style.height = `${newHeight}px`;
     }
@@ -120,12 +116,6 @@ const InputArea: React.FC<InputBoxProps> = ({
           }));
         }}
         enable={resizableEnableProps}
-        handleStyles={{
-          bottom: resizableHandleStyles,
-        }}
-        handleComponent={{
-          bottom: <Box {...resizableHandleBoxStyles} />,
-        }}
       >
         <Box {...containerBoxStyles}>
           <Heading {...headingStyles}>Input</Heading>
@@ -148,12 +138,9 @@ const InputArea: React.FC<InputBoxProps> = ({
                   <Text {...sendButtonTextStyles} style={{ transform: 'rotate(-45deg)' }}>
                     ➚
                   </Text>
-                  <Box {...sendButtonAnimationStyles} />
                 </Flex>
               </Button>
             </Flex>
-
-            <Text {...helperTextStyles}>Press Enter to send, Shift+Enter for new line</Text>
           </Flex>
         </Box>
       </Resizable>

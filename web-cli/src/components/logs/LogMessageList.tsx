@@ -1,5 +1,5 @@
-import React, { useEffect, useState, useRef, useMemo } from 'react';
-import { Box, Flex, Text, Spinner } from '@chakra-ui/react';
+import React, { useRef, useMemo, useState, useEffect } from 'react';
+import { Box, Flex, Text } from '@chakra-ui/react';
 import { Virtuoso, VirtuosoHandle } from 'react-virtuoso';
 import { Metadata } from './components';
 import {
@@ -13,8 +13,7 @@ import {
   getLogMessageListMessageBox,
   searchHighlight,
 } from './styles/LogStyles';
-import { LogMessageListProps, Task } from '../../types/types';
-import { subscribeToProcessingTasks } from '../../services/TaskStreamService';
+import { LogMessageListProps } from '../../types/types';
 
 interface LogMessage {
   id: string;
@@ -54,37 +53,11 @@ export const LogMessageList: React.FC<LogMessageListProps> = ({
   searchResults = [],
   showDebugLogs = true,
 }) => {
-  const [processingTasks, setProcessingTasks] = useState<Task[]>([]);
   const virtuosoRef = useRef<VirtuosoHandle>(null);
+  const [shouldAutoScroll, setShouldAutoScroll] = useState(true);
 
   const isInitialLog =
     filteredMessages.filter(msg => msg.type === 'connection').length === filteredMessages.length;
-
-  // Check if new messages have been added in the last 2 seconds
-  useEffect(() => {
-    if (filteredMessages.length > 0) {
-      const unsubscribeFromProcessingTasks = subscribeToProcessingTasks(updatedTasks => {
-        console.log(`Received ${updatedTasks.length} processing tasks from stream`);
-        setProcessingTasks(updatedTasks);
-      });
-      return () => {
-        unsubscribeFromProcessingTasks();
-      };
-    }
-  }, [filteredMessages.length]);
-
-  // Scroll to bottom whenever messages change
-  useEffect(() => {
-    if (virtuosoRef.current && filteredMessages.length > 0) {
-      // Small delay to ensure DOM has updated
-      setTimeout(() => {
-        virtuosoRef.current?.scrollToIndex({
-          index: 'LAST',
-          behavior: 'smooth',
-        });
-      }, 100);
-    }
-  }, [filteredMessages]);
 
   const formattedMessages = filteredMessages.map(
     msg =>
@@ -126,6 +99,30 @@ export const LogMessageList: React.FC<LogMessageListProps> = ({
     return allMessages.filter(msg => msg.level?.toLowerCase() !== 'debug');
   }, [formattedMessages, legacyFormattedMessages, showDebugLogs, isInitialLog]);
 
+  // Monitor if we're near the bottom and auto-scroll only when needed
+  useEffect(() => {
+    if (shouldAutoScroll && virtuosoRef.current && filteredMessages.length > 0) {
+      // Use window.requestAnimationFrame to ensure DOM is updated before scrolling
+      window.requestAnimationFrame(() => {
+        virtuosoRef.current?.scrollToIndex({
+          index: filteredByLevelMessages.length - 1,
+          behavior: 'auto',
+          align: 'end',
+        });
+      });
+    }
+  }, [filteredMessages, shouldAutoScroll, filteredByLevelMessages.length]);
+
+  const handleRangeChange = (range: { startIndex: number; endIndex: number }) => {
+    if (filteredByLevelMessages && filteredByLevelMessages.length > 0) {
+      // Check if we're near the bottom (within approximately 20% of the total items)
+      // This provides a more generous threshold for auto-scrolling
+      const nearBottomThreshold = Math.min(10, Math.ceil(filteredByLevelMessages.length * 0.2));
+      const isNearBottom = filteredByLevelMessages.length - range.endIndex <= nearBottomThreshold;
+      setShouldAutoScroll(isNearBottom);
+    }
+  };
+
   const getMessageColor = (level: string) => {
     switch (level.toLowerCase()) {
       case 'error':
@@ -154,13 +151,13 @@ export const LogMessageList: React.FC<LogMessageListProps> = ({
   }
 
   return (
-    <Box position='relative' height='100%' ref={containerRef}>
+    <Box position='relative' height='100%' ref={containerRef} style={{ paddingBottom: '16px' }}>
       <Virtuoso
         ref={virtuosoRef}
         className='log-message-list'
         data={filteredByLevelMessages}
         components={{
-          Footer: () => <Box py={4} px={4} position='relative' />,
+          Footer: () => <Box py={2} px={4} position='relative' />,
         }}
         itemContent={(index, msg) => {
           const msgColor = getMessageColor(msg.level);
@@ -197,30 +194,11 @@ export const LogMessageList: React.FC<LogMessageListProps> = ({
             </Box>
           );
         }}
-        followOutput='auto'
-        overscan={200}
+        overscan={1000}
         initialTopMostItemIndex={filteredByLevelMessages.length - 1}
-        alignToBottom
+        rangeChanged={handleRangeChange}
+        followOutput={shouldAutoScroll ? 'smooth' : false}
       />
-
-      {processingTasks.length > 0 && (
-        <Flex
-          position='absolute'
-          bottom='20px'
-          left='45%'
-          backgroundColor='rgba(0,0,0,0.6)'
-          padding='8px'
-          borderRadius='full'
-          alignItems='center'
-          boxShadow='0 0 10px rgba(0,0,0,0.3)'
-          zIndex={10}
-        >
-          <Spinner size='sm' color='brand.neonBlue' marginRight='2' />
-          <Text fontSize='xs' color='white'>
-            Processing...
-          </Text>
-        </Flex>
-      )}
     </Box>
   );
 };

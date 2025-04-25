@@ -8,7 +8,7 @@ export const containerStyles: FlexProps = {
   borderColor: 'gray.700',
   borderRadius: 'md',
   minHeight: '300px',
-  height: 'calc(100vh - 424px)',
+  height: '100%',
   width: '100%',
   bg: 'rgba(26, 26, 46, 0.6)',
   boxShadow: 'inset 0 0 20px rgba(0, 0, 0, 0.3)',
@@ -46,4 +46,17 @@ export const loadingContainerStyles: FlexProps = {
 export const loadingTextStyles: TextProps = {
   fontSize: 'sm',
   color: 'whiteAlpha.800',
+};
+
+// Resizable properties
+export const resizableDefaultSize = {
+  width: '100%',
+  height: 400,
+};
+
+export const resizableEnableProps = {
+  top: false,
+  right: false,
+  bottom: true,
+  left: false,
 };
