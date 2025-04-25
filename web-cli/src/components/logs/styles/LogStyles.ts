@@ -350,51 +350,6 @@ export const outputLogFlexContainer: FlexProps = {
   },
 };
 
-export const outputLogResizableHandleStyles = {
-  bottom: {
-    height: '8px',
-    borderRadius: '0 0 6px 6px',
-    backgroundColor: 'transparent',
-    backgroundImage: 'linear-gradient(to right, transparent, rgba(255, 0, 255, 0.4), transparent)',
-    bottom: '0px',
-    cursor: 'row-resize',
-    zIndex: 11,
-  },
-};
-
-export const outputLogResizableHandleBox: BoxProps = {
-  width: '100%',
-  height: '8px',
-  position: 'absolute',
-  bottom: '0',
-  cursor: 'row-resize',
-  borderRadius: '0 0 6px 6px',
-  zIndex: 11,
-  _hover: {
-    backgroundImage: 'linear-gradient(to right, transparent, rgba(255, 0, 255, 0.8), transparent)',
-    opacity: 0.7,
-  },
-};
-
-export const outputLogScrollBox: BoxProps = {
-  flex: '1',
-  overflowY: 'auto',
-  position: 'relative',
-  css: {
-    '&::-webkit-scrollbar': {
-      width: '8px',
-      borderRadius: '4px',
-    },
-    '&::-webkit-scrollbar-track': {
-      background: 'rgba(0, 0, 0, 0.1)',
-    },
-    '&::-webkit-scrollbar-thumb': {
-      background: 'rgba(255, 0, 255, 0.3)',
-      borderRadius: '4px',
-    },
-  },
-};
-
 export const scrollToBottomButton = (isScrolling: boolean): ButtonProps => ({
   size: 'md',
   position: 'fixed',
