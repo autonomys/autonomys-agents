@@ -2,9 +2,10 @@ import fs from 'fs/promises';
 import path from 'path';
 import archiver from 'archiver';
 import { UploadFileOptions } from '@autonomys/auto-drive';
-import { ToolManifest, ToolMetadata } from '../../../types/index.js';
+import { PublishedToolMetadata, ToolManifest, ToolMetadata } from '../../../types/index.js';
 import { uploadFileToDsn, uploadMetadataToDsn } from '../../autoDrive/autoDriveClient.js';
 import { loadCredentials } from '../../credential/index.js';
+import { validateToolStructure } from '../../validation.js';
 
 const createToolPackage = async (toolPath: string): Promise<Buffer> => {
   return new Promise((resolve, reject) => {
@@ -55,7 +56,7 @@ const uploadToolPackage = async (
   return await uploadFileToDsn(file, options);
 };
 
-const uploadToolMetadata = async (metadata: ToolMetadata): Promise<string> => {
+const uploadToolMetadata = async (metadata: PublishedToolMetadata): Promise<string> => {
   const credentials = await loadCredentials();
   const options: UploadFileOptions = {
     compression: true,
@@ -72,29 +73,51 @@ const uploadToolMetadata = async (metadata: ToolMetadata): Promise<string> => {
 const packageAndUploadTool = async (
   toolPath: string,
 ): Promise<{ cid: string; metadataCid: string; metadata: ToolMetadata }> => {
-  const manifestPath = path.join(toolPath, 'manifest.json');
-  const manifestData = await fs.readFile(manifestPath, 'utf8');
-  const manifest = JSON.parse(manifestData) as ToolManifest;
+  // Validate tool structure before packaging
+  const validationResult = await validateToolStructure(toolPath);
+  if (!validationResult.valid) {
+    throw new Error(`Tool validation failed: ${validationResult.message}`);
+  }
 
-  console.log('Creating tool package...');
-  const packageBuffer = await createToolPackage(toolPath);
+  try {
+    const manifestPath = path.join(toolPath, 'manifest.json');
+    const manifestData = await fs.readFile(manifestPath, 'utf8');
+    const manifest = JSON.parse(manifestData) as ToolManifest;
 
-  console.log('Uploading to Autonomys DSN...');
-  const cid = await uploadToolPackage(packageBuffer, manifest);
-  console.log(`Upload successful. CID: ${cid}`);
+    console.log('Creating tool package...');
+    const packageBuffer = await createToolPackage(toolPath);
 
-  const metadata: ToolMetadata = {
-    name: manifest.name,
-    version: manifest.version,
-    author: manifest.author,
-    cid: cid,
-    metadataCid: '',
-    updated: new Date().toISOString(),
-  };
+    console.log('Uploading to Autonomys DSN...');
+    try {
+      const cid = await uploadToolPackage(packageBuffer, manifest);
+      console.log(`Upload successful. CID: ${cid}`);
 
-  const metadataCid = await uploadToolMetadata(metadata);
-  metadata.metadataCid = metadataCid;
-  return { cid, metadataCid, metadata };
+      const publishedMetadata: PublishedToolMetadata = {
+        name: manifest.name,
+        version: manifest.version,
+        author: manifest.author,
+        cid: cid,
+        updated: new Date().toISOString(),
+        dependencies: manifest.dependencies,
+      };
+
+      const metadataCid = await uploadToolMetadata(publishedMetadata);
+      const metadata: ToolMetadata = {
+        ...publishedMetadata,
+        metadataCid: metadataCid,
+      };
+      return { cid, metadataCid, metadata };
+    } catch (error) {
+      if (error instanceof Error && error.message.includes('credentials')) {
+        throw new Error(
+          'Publishing requires credentials. Please run "agent-os config --credentials" to set up.',
+        );
+      }
+      throw error;
+    }
+  } catch (error) {
+    throw error;
+  }
 };
 
 export { packageAndUploadTool };

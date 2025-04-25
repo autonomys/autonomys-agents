@@ -4,11 +4,29 @@ import { CommandResult, PublishOptions } from '../types/index.js';
 import { updateRegistry } from '../utils/commands/registry/updateRegistry.js';
 import { validateToolStructure } from '../utils/validation.js';
 import { packageAndUploadTool } from '../utils/commands/registry/toolPublish.js';
+import { credentialsExist } from '../utils/credential/index.js';
 
 const publish = async (toolPath: string, options: PublishOptions): Promise<CommandResult> => {
   const spinner = ora(`Publishing tool from ${toolPath}...`).start();
 
   try {
+    // Early check for credentials
+    const hasCredentials = await credentialsExist();
+    if (!hasCredentials) {
+      spinner.fail('Missing credentials required for publishing');
+      console.log(chalk.yellow('\nPublishing requires credentials to be set up.'));
+      console.log(
+        chalk.yellow('Please run ') +
+          chalk.cyan('agent-os config --credentials') +
+          chalk.yellow(' to set up your credentials.'),
+      );
+      return {
+        success: false,
+        message:
+          'Missing credentials required for publishing. Run "agent-os config --credentials" to set up.',
+      };
+    }
+
     const validationResult = await validateToolStructure(toolPath);
 
     if (!validationResult.valid) {
@@ -32,7 +50,7 @@ const publish = async (toolPath: string, options: PublishOptions): Promise<Comma
       spinner.succeed(`Successfully uploaded ${metadata.name} to DSN (skipped registry update)`);
       console.log(chalk.green(`\nTool uploaded with CID: ${cid}`));
       console.log(chalk.yellow(`\nFor direct installation use:`));
-      console.log(`autoOS install ${metadata.name} --cid ${cid}`);
+      console.log(`agent-os install ${metadata.name} --cid ${cid}`);
     }
 
     return {
@@ -45,8 +63,9 @@ const publish = async (toolPath: string, options: PublishOptions): Promise<Comma
     };
   } catch (error) {
     spinner.fail(`Failed to publish tool`);
-    console.error(chalk.red(error instanceof Error ? error.message : String(error)));
-    return { success: false, message: `Failed to publish tool: ${error}` };
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    console.error(chalk.red(errorMessage));
+    return { success: false, message: `Failed to publish tool: ${errorMessage}` };
   }
 };
 

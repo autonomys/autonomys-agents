@@ -3,7 +3,7 @@ import { CommandResult, ConfigOptions } from '../types/index.js';
 import { promptForConfig, promptForCredentials } from '../config/prompts.js';
 
 const config = async (options: ConfigOptions): Promise<CommandResult> => {
-  console.log(chalk.blue.bold('autoOS CLI Configuration\n'));
+  console.log(chalk.blue.bold('agent-os CLI Configuration\n'));
 
   const configureSettings = !options.credentials || options.settings;
   const configureCredentials = !options.settings || options.credentials;
@@ -21,7 +21,7 @@ const config = async (options: ConfigOptions): Promise<CommandResult> => {
       chalk.yellow('• You can store your master password securely in the system keychain'),
     );
     console.log(
-      chalk.yellow('• Alternatively, you can use the AUTOOS_MASTER_PASSWORD environment variable'),
+      chalk.yellow('• Alternatively, you can use the AGENTOS_MASTER_PASSWORD environment variable'),
     );
     console.log('');
 

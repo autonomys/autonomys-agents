@@ -1,5 +1,5 @@
 import { pool } from '../connection.js';
-import { Tool, ToolVersion, ToolWithVersions } from '../../models/Tool.js';
+import { Tool, ToolVersion, ToolWithVersions, ToolWithLatestVersion } from '../../models/Tool.js';
 import { createLogger } from '../../utils/logger.js';
 
 const logger = createLogger('api-repository');
@@ -174,15 +174,44 @@ export const getLatestToolVersions = async (): Promise<
 };
 
 // Search tools by name
-export const searchTools = async (searchTerm: string, limit = 10): Promise<Tool[]> => {
+export const searchTools = async (
+  searchTerm: string,
+  limit = 10,
+): Promise<ToolWithLatestVersion[]> => {
   try {
     const query = `
-      SELECT id, name, name_hash as "nameHash", owner_address as "ownerAddress", 
-      created_at as "createdAt", updated_at as "updatedAt"
-      FROM tools
-      WHERE name ILIKE $1
-      ORDER BY created_at DESC
-      LIMIT $2
+      WITH tool_results AS (
+        SELECT id, name, name_hash as "nameHash", owner_address as "ownerAddress", 
+        created_at as "createdAt", updated_at as "updatedAt"
+        FROM tools
+        WHERE name ILIKE $1
+        ORDER BY created_at DESC
+        LIMIT $2
+      ),
+      latest_versions AS (
+        SELECT 
+          tv.tool_id,
+          concat(tv.major, '.', tv.minor, '.', tv.patch) as version,
+          tv.cid,
+          tv.metadata_cid as "metadataCid",
+          tv.publisher_address as "publisherAddress",
+          tv.published_at as "publishedAt",
+          ROW_NUMBER() OVER (
+            PARTITION BY tv.tool_id 
+            ORDER BY tv.major DESC, tv.minor DESC, tv.patch DESC
+          ) as rank
+        FROM tool_versions tv
+        JOIN tool_results tr ON tv.tool_id = tr.id
+      )
+      SELECT 
+        tr.*,
+        lv.version,
+        lv.cid,
+        lv."metadataCid",
+        lv."publisherAddress",
+        lv."publishedAt"
+      FROM tool_results tr
+      LEFT JOIN latest_versions lv ON tr.id = lv.tool_id AND lv.rank = 1
     `;
 
     const { rows } = await pool.query(query, [`%${searchTerm}%`, limit]);

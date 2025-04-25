@@ -1,23 +1,23 @@
 import fs from 'fs/promises';
 import path from 'path';
-import extract from 'extract-zip';
-import ora from 'ora';
-import { getToolInstallDir, PACKAGES_DIR } from '../../shared/path.js';
-import { getToolFromRegistry, getToolVersionFromRegistry } from '../registry/toolInquiry.js';
-import { downloadFileFromDsn } from '../../autoDrive/autoDriveClient.js';
-import { InstallOptions, ToolInstallInfo, ToolMetadata } from '../../../types/index.js';
-import { loadCredentials } from '../../credential/index.js';
+import { PACKAGES_DIR } from '../../shared/path.js';
+import { downloadFileFromGateway } from '../../autoDrive/gatewayClient.js';
+import { ToolInstallInfo, ToolManifest } from '../../../types/index.js';
 import { getCidFromHash } from '../../blockchain/utils.js';
+import extract from 'extract-zip';
+import chalk from 'chalk';
 
 const fetchToolPackage = async (cidHash: string): Promise<string> => {
   const cid = getCidFromHash(cidHash);
-  const credentials = await loadCredentials();
   const packagePath = path.join(PACKAGES_DIR, `${cid}.zip`);
 
   try {
+    try {
+      const _createPackagesDir = await fs.mkdir(PACKAGES_DIR, { recursive: true });
+    } catch {}
     console.log(`Downloading tool package with CID: ${cid}`);
 
-    const fileStream = await downloadFileFromDsn(cid, credentials.autoDriveEncryptionPassword);
+    const fileStream = await downloadFileFromGateway(cid);
 
     const chunks: Buffer[] = [];
     for await (const chunk of fileStream) {
@@ -41,26 +41,117 @@ const unpackToolToDirectory = async (
   targetDir: string,
 ): Promise<string> => {
   const toolDir = path.join(targetDir, toolName);
-  await fs.mkdir(toolDir, { recursive: true });
 
   try {
-    console.log(`Extracting package to: ${toolDir}`);
-    await extract(packagePath, { dir: toolDir });
-    return toolDir;
+    const _createToolDir = await fs.mkdir(toolDir, { recursive: true });
+
+    try {
+      console.log(`Extracting package to: ${toolDir}`);
+      const _extractPackage = await extract(packagePath, { dir: toolDir });
+      return toolDir;
+    } catch (error) {
+      console.error('Error extracting package:', error);
+      if (
+        error instanceof Error &&
+        error.message.includes('end of central directory record signature not found')
+      ) {
+        throw new Error(
+          `Invalid or corrupted package file. Try again or contact the tool publisher.`,
+        );
+      }
+      throw error;
+    }
   } catch (error) {
-    console.error('Error extracting package:', error);
+    if (error instanceof Error && error.message.includes('EACCES')) {
+      throw new Error(
+        `Permission denied when creating directory: ${toolDir}. Try running with elevated permissions.`,
+      );
+    }
+    console.error('Error preparing tool directory:', error);
     throw error;
+  }
+};
+
+/**
+ * Checks if the tool's dependencies are in the project's package.json
+ * and logs a message for any missing dependencies
+ */
+const checkToolDependencies = async (toolDir: string): Promise<void> => {
+  try {
+    // Read the tool's manifest.json
+    const manifestPath = path.join(toolDir, 'manifest.json');
+    const manifestData = await fs.readFile(manifestPath, 'utf8');
+    const manifest = JSON.parse(manifestData) as ToolManifest;
+
+    if (!manifest.dependencies || Object.keys(manifest.dependencies).length === 0) {
+      return; // No dependencies to check
+    }
+
+    // Try to find the project's package.json by going up directories
+    let currentDir = path.resolve(toolDir, '..');
+    let projectPackageJson = null;
+
+    // Look for package.json in parent directories to find project root
+    while (currentDir !== path.parse(currentDir).root) {
+      try {
+        const packageJsonPath = path.join(currentDir, 'package.json');
+        const packageJsonData = await fs.readFile(packageJsonPath, 'utf8');
+        projectPackageJson = JSON.parse(packageJsonData);
+        break;
+      } catch {
+        currentDir = path.resolve(currentDir, '..');
+      }
+    }
+
+    if (!projectPackageJson) {
+      console.warn(
+        chalk.yellow(`Warning: Could not find project's package.json to check dependencies`),
+      );
+      return;
+    }
+
+    // Check if each dependency is in the project's package.json
+    const missingDependencies: string[] = [];
+
+    for (const [dependency, version] of Object.entries(manifest.dependencies)) {
+      if (!projectPackageJson.dependencies || !projectPackageJson.dependencies[dependency]) {
+        missingDependencies.push(`${dependency}@${version}`);
+      }
+    }
+
+    if (missingDependencies.length > 0) {
+      console.warn(
+        chalk.yellow(
+          'Warning: The following dependencies required by the tool are not in your package.json:',
+        ),
+      );
+      console.warn(chalk.yellow(missingDependencies.join(', ')));
+      console.warn(
+        chalk.yellow(
+          'Please add these dependencies to your project to ensure the tool works correctly.',
+        ),
+      );
+    }
+  } catch (error) {
+    console.warn(
+      chalk.yellow(
+        `Warning: Could not check tool dependencies: ${error instanceof Error ? error.message : String(error)}`,
+      ),
+    );
   }
 };
 
 const performToolInstallation = async (
   toolInfo: ToolInstallInfo,
-  isLocalInstall: boolean,
+  toolInstallDir: string,
 ): Promise<string> => {
   try {
     const packagePath = await fetchToolPackage(toolInfo.cid);
-    const { installDir } = await getToolInstallDir(isLocalInstall);
-    const toolDir = await unpackToolToDirectory(packagePath, toolInfo.name, installDir);
+    const toolDir = await unpackToolToDirectory(packagePath, toolInfo.name, toolInstallDir);
+
+    // Check if the tool has dependencies not in the project
+    await checkToolDependencies(toolDir);
+
     console.log(`Tool installed successfully to: ${toolDir}`);
     return toolDir;
   } catch (error) {
@@ -69,126 +160,4 @@ const performToolInstallation = async (
   }
 };
 
-const validateCidOption = (cid: string | undefined): string => {
-  if (!cid) {
-    throw new Error('CID is required when installing a tool by CID');
-  }
-  return cid;
-};
-
-const validateVersionOption = (version: string | undefined): string => {
-  if (!version) {
-    throw new Error('Version is required when installing a specific version');
-  }
-  return version;
-};
-
-export const createToolInfoFromRegistry = (registryInfo: ToolMetadata): ToolInstallInfo => {
-  return {
-    name: registryInfo.name,
-    cid: registryInfo.cid,
-    version: registryInfo.version,
-  };
-};
-
-const resolveCidInstallation = (
-  toolName: string,
-  cid: string,
-): {
-  toolInfo: ToolInstallInfo;
-  versionDisplay: string;
-} => {
-  return {
-    toolInfo: {
-      name: toolName,
-      cid,
-    },
-    versionDisplay: '',
-  };
-};
-
-const resolveVersionInstallation = async (
-  toolName: string,
-  version: string,
-  spinner: ReturnType<typeof ora>,
-): Promise<{ toolInfo: ToolInstallInfo; versionDisplay: string }> => {
-  const versionDisplay = `version ${version}`;
-  spinner.text = `Looking for ${toolName} ${versionDisplay}...`;
-
-  const registryToolInfo = await getToolVersionFromRegistry(toolName, version);
-  if (!registryToolInfo) {
-    throw new Error(
-      `${versionDisplay} of tool '${toolName}' not found in registry. Use 'autoOS list -d' to see available versions.`,
-    );
-  }
-
-  return {
-    toolInfo: createToolInfoFromRegistry(registryToolInfo),
-    versionDisplay,
-  };
-};
-
-const resolveLatestInstallation = async (
-  toolName: string,
-  spinner: ReturnType<typeof ora>,
-): Promise<{ toolInfo: ToolInstallInfo; versionDisplay: string }> => {
-  spinner.text = `Looking for latest version of ${toolName}...`;
-  const registryToolInfo = await getToolFromRegistry(toolName);
-
-  if (!registryToolInfo) {
-    throw new Error(`Tool '${toolName}' not found in registry`);
-  }
-
-  const versionDisplay = `(latest: ${registryToolInfo.version})`;
-
-  return {
-    toolInfo: createToolInfoFromRegistry(registryToolInfo),
-    versionDisplay,
-  };
-};
-
-const updateSpinnerWithInstallInfo = (
-  spinner: ReturnType<typeof ora>,
-  toolName: string,
-  versionDisplay: string,
-  installType: string,
-): void => {
-  spinner.text = `Installing ${toolName} ${versionDisplay} ${installType} from registry...`;
-};
-
-const resolveToolInfo = async (
-  toolName: string,
-  options: InstallOptions,
-  spinner: ReturnType<typeof ora>,
-): Promise<{ toolInfo: ToolInstallInfo; versionDisplay: string }> => {
-  const installType = options.local ? 'locally' : 'globally';
-
-  // Handle CID-based installation
-  if (options.cid) {
-    const validCid = validateCidOption(options.cid);
-    spinner.text = `Installing ${toolName} ${installType} using CID: ${validCid}`;
-    return resolveCidInstallation(toolName, validCid);
-  }
-
-  // Handle version-based installation
-  if (options.version) {
-    const validVersion = validateVersionOption(options.version);
-    const result = await resolveVersionInstallation(toolName, validVersion, spinner);
-    updateSpinnerWithInstallInfo(spinner, toolName, result.versionDisplay, installType);
-    return result;
-  }
-
-  // Handle latest version installation (default)
-  const result = await resolveLatestInstallation(toolName, spinner);
-  updateSpinnerWithInstallInfo(spinner, toolName, result.versionDisplay, installType);
-  return result;
-};
-
-export {
-  fetchToolPackage,
-  unpackToolToDirectory,
-  performToolInstallation,
-  validateCidOption,
-  validateVersionOption,
-  resolveToolInfo,
-};
+export { fetchToolPackage, unpackToolToDirectory, performToolInstallation, checkToolDependencies };

@@ -2,7 +2,6 @@ import { createAutoDriveApi, UploadFileOptions } from '@autonomys/auto-drive';
 import { loadConfig } from '../../config/index.js';
 import { loadCredentials } from '../credential/index.js';
 
-// TODO: Another design choice is to create a const function in a state file? then, change the function signature of uploading and downloading to include the apiClientInstance.
 let apiClientInstance: ReturnType<typeof createAutoDriveApi> | null = null;
 
 const createApiClient = async () => {
@@ -10,19 +9,31 @@ const createApiClient = async () => {
     return apiClientInstance;
   }
 
-  const config = await loadConfig();
-  const credentials = await loadCredentials();
+  try {
+    const config = await loadConfig();
+    const credentials = await loadCredentials();
 
-  if (credentials.autoDriveApiKey) {
-    apiClientInstance = createAutoDriveApi({
-      apiKey: credentials.autoDriveApiKey,
-      network: config.autoDriveNetwork,
-    });
-    return apiClientInstance;
+    if (credentials.autoDriveApiKey) {
+      apiClientInstance = createAutoDriveApi({
+        apiKey: credentials.autoDriveApiKey,
+        network: config.autoDriveNetwork,
+      });
+      return apiClientInstance;
+    }
+
+    throw new Error(
+      "Missing Auto Drive API key. Please run 'agent-os config --credentials' to set up your credentials.",
+    );
+  } catch (error) {
+    if (error instanceof Error) {
+      if (error.message.includes('ENOENT') && error.message.includes('credentials.enc')) {
+        throw new Error(
+          "No credentials found. Please run 'agent-os config --credentials' to set up.",
+        );
+      }
+    }
+    throw error;
   }
-  throw new Error(
-    "Missing Auto Drive API key. Please run 'autoOS config' to set up your credentials.",
-  );
 };
 
 const uploadFileToDsn = async (
@@ -79,44 +90,4 @@ const uploadMetadataToDsn = async (
   }
 };
 
-const downloadFileFromDsn = async (
-  cid: string,
-  password?: string,
-): Promise<AsyncIterable<Buffer>> => {
-  try {
-    console.log(`Downloading file with CID: ${cid}`);
-
-    const api = await createApiClient();
-
-    if (!password) {
-      const credentials = await loadCredentials();
-
-      if (credentials.autoDriveEncryptionPassword) {
-        password = credentials.autoDriveEncryptionPassword;
-      }
-    }
-    return await api.downloadFile(cid, password);
-  } catch (error) {
-    console.error('Error downloading from Auto Drive:', error);
-    throw error;
-  }
-};
-
-const downloadMetadataFromDsn = async (cid: string, password?: string): Promise<unknown> => {
-  try {
-    const fileStream = await downloadFileFromDsn(cid, password);
-
-    const chunks: Buffer[] = [];
-    for await (const chunk of fileStream) {
-      chunks.push(chunk);
-    }
-
-    const jsonData = Buffer.concat(chunks).toString('utf8');
-    return JSON.parse(jsonData);
-  } catch (error) {
-    console.error('Error downloading object from DSN:', error);
-    throw error;
-  }
-};
-
-export { uploadFileToDsn, uploadMetadataToDsn, downloadFileFromDsn, downloadMetadataFromDsn };
+export { uploadFileToDsn, uploadMetadataToDsn };

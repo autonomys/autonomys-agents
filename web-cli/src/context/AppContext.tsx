@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useReducer, ReactNode } from 'react';
-import { AppState, ScheduledTask } from '../types/types';
+import { AppState, Task } from '../types/types';
 
 const initialState: AppState = {
   value: '',
@@ -19,7 +19,7 @@ interface AppProviderProps {
 
 type ActionType =
   | { type: 'SET_VALUE'; payload: string }
-  | { type: 'ADD_SCHEDULED_TASK'; payload: ScheduledTask }
+  | { type: 'ADD_SCHEDULED_TASK'; payload: Task }
   | { type: 'REMOVE_SCHEDULED_TASK'; payload: string }
   | { type: 'CLEAR_VALUE' };
 

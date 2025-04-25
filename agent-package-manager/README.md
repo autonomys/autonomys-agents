@@ -1,16 +1,19 @@
-# autoOS CLI `WIP`
+# agent-os CLI
 
 A package manager and toolkit for Autonomys agent tools.
 
 ## Overview
 
-autoOS CLI is a command-line interface for managing Autonomys agent tools. It allows developers to:
+agent-os CLI is a command-line interface for managing Autonomys agent tools. It allows developers to:
 
+- Create new agent projects
 - Install agent tools from the registry
 - Publish new tools to the registry
-- List registered tools
+- Search for registered tools
 - Configure tool settings
 - Securely manage credentials
+
+> **Note:** Credentials are only required for publishing tools to the registry. You can freely install, search, and use tools without setting up credentials.
 
 ## Installation
 
@@ -23,28 +26,30 @@ autoOS CLI is a command-line interface for managing Autonomys agent tools. It al
 
 ```bash
 # Using npm
-npm install -g @autonomys/agent-os-cli
+npm install -g @autonomys/agent-os
 
-# Using yarn
-yarn global add @autonomys/agent-os-cli
+# Using Yarn 2.x
+yarn dlx @autonomys/agent-os
 ```
 
 ### Local Installation
 
 ```bash
 # Using npm
-npm install @autonomys/agent-os-cli
+npm install @autonomys/agent-os
 
 # Using yarn
-yarn add @autonomys/agent-os-cli
+yarn add @autonomys/agent-os
 ```
 
 ## Getting Started
 
-After installation, set up your credentials and configuration:
+After installation, you can start using basic commands like `search` and `install` without any configuration.
+
+To publish tools or perform operations that require blockchain interaction, set up your credentials:
 
 ```bash
-autoOS config
+agent-os config --credentials
 ```
 
 This interactive wizard will guide you through:
@@ -55,86 +60,102 @@ This interactive wizard will guide you through:
 
 ## Core Commands
 
-### Helo
+### Help
 ```bash
-autoOS -h
+agent-os -h
 ```
+
+### Create a New Agent Project
+
+```bash
+# Create a basic project
+agent-os init my-agent-project
+
+# Create a project, install dependencies, and create a character
+agent-os init my-agent-project --install --character=my-character --api
+```
+
+Options:
+- `--install`: Automatically install dependencies after project creation
+- `--character <name>`: Create a character with the specified name
+- `--api`: Generate API certificates for the project (default: true)
 
 ### Install a Tool
 
 ```bash
 # Install the latest version
-autoOS install <tool-name>
+agent-os install <tool-name>
 
 # Install a specific version
-autoOS install <tool-name> -v <version>
+agent-os install <tool-name> -v <version>
 
 # Install using a Content ID (CID)
-autoOS install <tool-name> --cid <cid>
-
-# Install locally to the current project
-autoOS install <tool-name> --local
+agent-os install <tool-name> --cid <cid>
 ```
 
 ### Publish a Tool
 
 ```bash
 # Publish a tool to the registry
-autoOS publish <tool-path>
+agent-os publish <tool-path>
 
 # Upload to Auto Drive without updating the registry
-autoOS publish <tool-path> --no-registry
+agent-os publish <tool-path> --no-registry
 ```
 
-### List Registered Tools
+### Search for Tools
 
 ```bash
-# List tools with basic information
-autoOS list
+# Search for tools in the registry
+agent-os search <search-term>
+
+# Show detailed information in search results
+agent-os search <search-term> -d
 ```
 
 ### Tool Inquiry
 
 ```bash
 # Get information about a tool
-autoOS tool -n <tool-name>
+agent-os tool -n <tool-name>
 
 # Get information about a specific version
-autoOS tool -n <tool-name> -v <version>
+agent-os tool -n <tool-name> -v <version>
 
 # Perform a specific action on a tool
-autoOS tool -n <tool-name> -a <action>
+agent-os tool -n <tool-name> -a <action>
 
 # Example: Get metadata for a specific version
-autoOS tool -n slack-tool -v 1.0.0 -a metadata
+agent-os tool -n slack-tool -v 1.0.0 -a metadata
 ```
 
 ### Configure Settings
 
 ```bash
 # Configure all settings
-autoOS config
+agent-os config
 
 # Configure only credentials
-autoOS config --credentials
+agent-os config --credentials
 
-# Configure only general settings
-autoOS config --settings
+# General Config
+agent-os config --settings
 ```
+
 
 ### Clean Cached Files
 
 ```bash
 # Clean with confirmation
-autoOS clean
+agent-os clean
 
 # Force clean without confirmation
-autoOS clean --force
+agent-os clean --force
 ```
 
 ## Secure Credential Management
 
-autoOS CLI securely manages all your credentials through your system's native keychain:
+agent-os CLI securely manages all your credentials through your system's native keychain. Note that credentials are **only required for publishing tools** - you can freely install and search for tools without setting up credentials.
 
 ### System Keychain Integration
 
@@ -157,7 +178,7 @@ The following credentials are securely managed:
 - Auto Drive encryption password
 - Auto-EVM private key
 
-All credentials are encrypted and accessible only through the autoOS CLI with proper authentication.
+All credentials are encrypted and accessible only through the agent-os CLI with proper authentication.
 
 ## Tool Structure
 
@@ -273,16 +294,15 @@ When you're ready to publish:
 cd weather-tool
 
 # Publish to the registry
-autoOS publish .
+agent-os publish .
 ```
-
 
 ### Installing and Using Your Tool
 
 After publishing your tool, you can install it using:
 
 ```bash
-autoOS install weather-tool --local
+agent-os install weather-tool
 ```
 
 Then, in your agent code, you can import and use the tool:
@@ -300,27 +320,25 @@ const agent = new <Agent-Instantiation>({
 });
 ```
 
-
 ## Troubleshooting
 
 ### Common Issues
 
-#### "Failed to decrypt credentials"
+#### "Failed to decrypt credentials" or "No credentials found"
 
-- Ensure you're using the correct master password
-- Try running `autoOS config --credentials` to reset your credentials
+- This error usually appears when trying to publish a tool without configuring credentials
+- Run `agent-os config --credentials` to set up your credentials for publishing
+- Remember that credentials are only required for publishing tools, not for installing or searching
 
 #### API Key Issues
 
 - Verify your API key at https://ai3.storage
 - Ensure your network settings match your API key (mainnet or Taurus)
 
-
 ## Privacy and Security
 
-- All credentials are encrypted with AES-256-CBC
-- The master password is never stored in plaintext
-- System keychain integration leverages OS-level security
+- All credentials are securely stored in your system's native keychain
+- The Auto-EVM private key is required for blockchain operations
 
 ## License
 

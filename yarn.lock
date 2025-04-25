@@ -3905,6 +3905,26 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@langchain/core@npm:0.3.48":
+  version: 0.3.48
+  resolution: "@langchain/core@npm:0.3.48"
+  dependencies:
+    "@cfworker/json-schema": "npm:^4.0.2"
+    ansi-styles: "npm:^5.0.0"
+    camelcase: "npm:6"
+    decamelize: "npm:1.2.0"
+    js-tiktoken: "npm:^1.0.12"
+    langsmith: "npm:^0.3.16"
+    mustache: "npm:^4.2.0"
+    p-queue: "npm:^6.6.2"
+    p-retry: "npm:4"
+    uuid: "npm:^10.0.0"
+    zod: "npm:^3.22.4"
+    zod-to-json-schema: "npm:^3.22.3"
+  checksum: 10c0/0328ce4b61aaa9b1860c9ff4ebfe8696d5039b640c926a6826ff3b40450658ba4059c34ecc0dad670409b85a9fa003e329adefa9dcd9a29711a538f07892b88f
+  languageName: node
+  linkType: hard
+
 "@langchain/groq@npm:0.2.0":
   version: 0.2.0
   resolution: "@langchain/groq@npm:0.2.0"
@@ -8440,6 +8460,7 @@ __metadata:
   resolution: "autonomys-agents-examples@workspace:examples"
   dependencies:
     "@autonomys/agent-core": "workspace:*"
+    "@langchain/core": "npm:0.3.48"
     tsx: "npm:^4.7.1"
   languageName: unknown
   linkType: soft
@@ -15399,6 +15420,26 @@ __metadata:
     openai:
       optional: true
   checksum: 10c0/57940e237593aaf75fcd742f914a2fd512ef7d2139d2fa199183a06ad4acc6c41f3a5fb5a955efe9657785b3ef94abe919543a1399ffb4085c4c8ddd50672cec
+  languageName: node
+  linkType: hard
+
+"langsmith@npm:^0.3.16":
+  version: 0.3.20
+  resolution: "langsmith@npm:0.3.20"
+  dependencies:
+    "@types/uuid": "npm:^10.0.0"
+    chalk: "npm:^4.1.2"
+    console-table-printer: "npm:^2.12.1"
+    p-queue: "npm:^6.6.2"
+    p-retry: "npm:4"
+    semver: "npm:^7.6.3"
+    uuid: "npm:^10.0.0"
+  peerDependencies:
+    openai: "*"
+  peerDependenciesMeta:
+    openai:
+      optional: true
+  checksum: 10c0/440b7cc84f8076d7823bcf9f84af7b3f8727ac12e8790135b9cfb1fb9d627985088cc8a3fa9e7dc85e98eee6ffeea786dc36fd08443066428645b79de2fe6b6d
   languageName: node
   linkType: hard
 

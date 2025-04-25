@@ -25,6 +25,9 @@ export interface Task {
 export interface TaskQueue {
   currentTask?: Task;
   scheduledTasks: Task[];
+  cancelledTasks: Task[];
+  failedTasks: Task[];
+  deletedTasks: Task[];
   completedTasks: Task[];
 
   scheduleTask: (message: string, executeAt: Date) => Task;

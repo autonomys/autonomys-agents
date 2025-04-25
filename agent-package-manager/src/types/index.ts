@@ -33,6 +33,15 @@ export interface ToolMetadata {
   updated: string;
 }
 
+export interface PublishedToolMetadata {
+  name: string;
+  version: string;
+  author: string;
+  cid: string;
+  updated: string;
+  dependencies: Record<string, string>;
+}
+
 export interface ToolRegistry {
   version: string;
   updated: string;
@@ -44,7 +53,7 @@ export interface ToolManifest {
   version: string;
   description: string;
   author: string;
-  dependencies: string[];
+  dependencies: Record<string, string>;
   main: string;
   keywords: string[];
 }
@@ -95,4 +104,19 @@ export interface Config {
   autoEvmPrivateKey?: string;
   packageRegistryAddress?: string;
   taurusRpcUrl?: string;
+  indexerUrl?: string;
+}
+
+export interface IndexedToolSearchResult {
+  id: number;
+  name: string;
+  nameHash: string;
+  ownerAddress: string;
+  createdAt: string;
+  updatedAt: string;
+  version?: string;
+  cid?: string;
+  metadataCid?: string;
+  publisherAddress?: string;
+  publishedAt?: string;
 }

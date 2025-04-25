@@ -44,14 +44,14 @@ Autonomys Agents is an **EXPERIMENTAL** framework for building AI agents. Curren
 
 The agent supports the following command-line arguments:
 
-- **Character Name**: (Required) The first argument specifies which character to run
+- **Character Name**:
   ```bash
-  yarn start my-character --workspace=</path/to/your/project>
+  yarn start my-character
   ```
 
 - **--headless**: (Optional) Run the agent without starting the API server
   ```bash
-  yarn start my-character --workspace=</path/to/your/project> --headless
+  yarn start my-character --headless
   ```
 
 - **--help**: Show available command-line options
@@ -59,7 +59,7 @@ The agent supports the following command-line arguments:
   yarn start --help
   ```
 
- > #### Note: The `--workspace` parameter is required because the runtime needs to locate important directories like characters, certs, and cookies. Always specify the path to your project root where these directories are located.
+> #### Note: The `--workspace` parameter is optional and should only be used when you want to store the characters, certs, and cookies directories in a custom location instead of the default path. Provide the absolute path to the parent directory that will contain these folders.
 
 <!-- ## Docker Deployment simultaneously
 
@@ -179,9 +179,8 @@ The following examples demonstrate the use of the framework and are available:
 - Web3 Agent
 
 To run each example run following command to see the options:
-
 ```bash
-yarn example
+yarn example <example-name> <character> --workspace=<absolute path to directory that contains characters, .cookies, and certs folders>
 ```
 
 ## Character System

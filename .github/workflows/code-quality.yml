@@ -32,3 +32,31 @@ jobs:
 
       - name: Run ESLint
         run: yarn lint
+    
+  code-quality-agent-package-manager:
+    name: Lint & Format Check
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./agent-package-manager
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "21"
+          cache: "yarn"
+          cache-dependency-path: "./yarn.lock"
+
+      - name: Install Dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Check Formatting
+        run: yarn format:check
+
+      - name: Run ESLint
+        run: yarn lint
+  
+
