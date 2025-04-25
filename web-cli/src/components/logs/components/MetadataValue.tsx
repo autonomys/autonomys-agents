@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Box, Flex, Text } from '@chakra-ui/react';
 import {
   metadataValueContainer,
   metadataValueIndexLabel,
   metadataValueNameLabel,
-  getMetadataValueText,
+  metadataValueText,
   metadataValueTypeLabel,
   metadataValueExpandedContent,
   metadataValueExpandedText,
@@ -28,8 +28,6 @@ export const MetadataValue: React.FC<MetadataValueProps> = ({
   index,
   fontSize,
 }) => {
-  const isLongString = typeof value === 'string' && value.length > 80;
-
   if (value !== null && typeof value === 'object') {
     return <ObjectNode name={name} value={value} path={path} depth={depth} fontSize={fontSize} />;
   }
@@ -52,9 +50,6 @@ export const MetadataValue: React.FC<MetadataValueProps> = ({
   const getTypeLabel = () => {
     if (value === null) return 'null';
     if (value === undefined) return 'undefined';
-    if (isLongString) {
-      return `string(${value.length})`;
-    }
     return typeof value;
   };
 
@@ -64,16 +59,7 @@ export const MetadataValue: React.FC<MetadataValueProps> = ({
     if (typeof value !== 'string') {
       return String(value);
     }
-
-    if (!isLongString) {
-      return `"${value}"`;
-    }
-
-    if (isLongString) {
-      return '[expanded below]';
-    } else {
-      return `"${value.substring(0, 77)}..."`;
-    }
+    return value;
   };
 
   return (
@@ -89,35 +75,31 @@ export const MetadataValue: React.FC<MetadataValueProps> = ({
         </Text>
         <Text
           as='span'
-          {...(isLongString ? { color: 'gray.500', fontStyle: 'italic' } : valueStyle)}
-          {...getMetadataValueText(isLongString, isLongString)}
+          {...valueStyle}
+          {...metadataValueText}
           fontSize={fontSize ? `${fontSize}px` : undefined}
         >
           {getDisplayValue()}
         </Text>
 
-        {!isLongString && (
-          <Text
-            as='span'
-            {...metadataValueTypeLabel}
-            fontSize={fontSize ? `${Math.max(10, fontSize - 2)}px` : undefined}
-          >
-            {getTypeLabel()}
-          </Text>
-        )}
+        <Text
+          as='span'
+          {...metadataValueTypeLabel}
+          fontSize={fontSize ? `${Math.max(10, fontSize - 2)}px` : undefined}
+        >
+          {getTypeLabel()}
+        </Text>
       </Flex>
 
-      {isLongString && (
-        <Box {...metadataValueExpandedContent}>
-          <Text
-            as='span'
-            {...metadataValueExpandedText}
-            fontSize={fontSize ? `${fontSize}px` : undefined}
-          >
-            {value}
-          </Text>
-        </Box>
-      )}
+      <Box {...metadataValueExpandedContent}>
+        <Text
+          as='span'
+          {...metadataValueExpandedText}
+          fontSize={fontSize ? `${fontSize}px` : undefined}
+        >
+          {value}
+        </Text>
+      </Box>
     </Box>
   );
 };

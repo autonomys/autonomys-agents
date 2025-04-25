@@ -20,10 +20,19 @@ import {
   sendButtonAnimationStyles,
   helperTextStyles,
 } from './styles/InputStyles';
+import StatusBox from '../status/StatusBox';
+import { stopWorkflow } from '../../services/WorkflowService';
 
-const InputArea: React.FC<InputBoxProps> = ({ value, handleInputChange, handleInputSubmit }) => {
+const InputArea: React.FC<InputBoxProps> = ({
+  value,
+  handleInputChange,
+  handleInputSubmit,
+  currentTask,
+  error,
+}) => {
   const [size, setSize] = useState({ height: 240 });
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const [stopStatus, setStopStatus] = useState<string | null>(null);
 
   const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -41,8 +50,62 @@ const InputArea: React.FC<InputBoxProps> = ({ value, handleInputChange, handleIn
     }
   }, [size.height]);
 
+  const getStatusText = () => {
+    if (stopStatus) {
+      return stopStatus;
+    }
+
+    if (currentTask) {
+      const taskStatus = currentTask.status || 'processing';
+
+      // Check for stopped status (previously finalizing)
+      if (taskStatus === 'stopped') {
+        return `Stopped: ${currentTask.description}`;
+      }
+      // Also check for failed tasks with appropriate result message
+      else if (
+        taskStatus === 'failed' &&
+        currentTask.result &&
+        currentTask.result.includes('Stopped by user')
+      ) {
+        return `Stopped: ${currentTask.description}`;
+      }
+
+      const formattedStatus = taskStatus.charAt(0).toUpperCase() + taskStatus.slice(1);
+      return `${formattedStatus}: ${currentTask.description}`;
+    } else if (error) {
+      return `Error: ${error}`;
+    } else {
+      return 'Ready';
+    }
+  };
+
+  const handleStopWorkflow = async () => {
+    try {
+      // Immediately set to "Stopped" status
+      setStopStatus(`Stopped: ${currentTask?.description || ''}`);
+
+      // Send the stop request
+      await stopWorkflow();
+
+      // Keep showing the "Stopped" status for a while
+      setTimeout(() => {
+        setStopStatus(null);
+      }, 3000);
+    } catch (error) {
+      console.error('Error stopping workflow:', error);
+      setStopStatus('Error: Failed to stop the workflow. Please try again.');
+
+      // Clear the error message after a delay
+      setTimeout(() => {
+        setStopStatus(null);
+      }, 5000);
+    }
+  };
+
   return (
     <Flex {...containerFlexStyles}>
+      <StatusBox status={getStatusText()} onStop={handleStopWorkflow} />
       <Resizable
         defaultSize={resizableDefaultSize}
         size={{

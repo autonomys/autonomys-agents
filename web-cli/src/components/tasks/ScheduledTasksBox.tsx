@@ -24,10 +24,12 @@ import {
   getFilterChipStyles,
   getFilterCountBadgeStyles,
 } from './styles/ScheduledTasksBoxStyles';
-import { stopButtonStyles } from '../status/styles/StatusStyles';
-import { animationStyles } from '../status/styles/StatusStyles';
-import { stopButtonTextStyles } from '../status/styles/StatusStyles';
-import { stopButtonAnimationStyles } from '../status/styles/StatusStyles';
+import {
+  stopButtonStyles,
+  animationStyles,
+  stopButtonTextStyles,
+  stopButtonAnimationStyles,
+} from '../status/styles/StatusStyles';
 import { stopWorkflow } from '../../services/WorkflowService';
 
 // Define the task types for the navbar

@@ -68,8 +68,6 @@ interface NamespaceTabsProps {
   onShowSearch?: () => void;
   showDebugLogs?: boolean;
   onToggleDebugLogs?: () => void;
-  isCollapsed?: boolean;
-  onToggleCollapse?: () => void;
 }
 
 const NamespaceTabs: React.FC<NamespaceTabsProps> = ({
@@ -82,8 +80,6 @@ const NamespaceTabs: React.FC<NamespaceTabsProps> = ({
   onShowSearch,
   showDebugLogs = true,
   onToggleDebugLogs,
-  isCollapsed = false,
-  onToggleCollapse,
 }) => {
   const [neonPink] = useToken('colors', ['brand.neonPink']);
   const [activeIndex, setActiveIndex] = useState(namespaces.indexOf(activeNamespace));

@@ -25,64 +25,6 @@ export const customOutputLogContainer = {
   border: '1px solid rgba(0, 255, 153, 0.3)',
 };
 
-export const getMetadataToggleButton = (isOpen: boolean): FlexProps => ({
-  as: 'button',
-  display: 'flex',
-  alignItems: 'center',
-  bg: isOpen ? 'rgba(255, 0, 204, 0.1)' : 'transparent',
-  px: 2,
-  py: 1,
-  borderRadius: 'md',
-  _hover: {
-    bg: 'rgba(255, 0, 204, 0.15)',
-  },
-  transition: 'all 0.2s',
-  role: 'group',
-  cursor: 'pointer',
-  position: 'relative',
-  borderLeft: '2px solid',
-  borderColor: 'brand.neonPink',
-  boxShadow: isOpen ? '0 0 3px rgba(255, 0, 204, 0.3)' : 'none',
-});
-
-export const metadataToggleIcon: TextProps = {
-  color: 'brand.neonPink',
-  fontStyle: 'italic',
-  fontWeight: 'normal',
-  fontSize: ['xs', 'sm'],
-  textShadow: '0 0 5px rgba(255, 0, 204, 0.5)',
-  mr: 2,
-};
-
-export const metadataToggleLabel: TextProps = {
-  color: 'brand.neonPink',
-  fontStyle: 'italic',
-  fontWeight: 'normal',
-  mr: 2,
-};
-
-export const getMetadataFieldCount = (isOpen: boolean): TextProps => ({
-  as: 'span',
-  fontWeight: 'light',
-  opacity: isOpen ? 0.9 : 0.7,
-  color: 'white',
-  fontSize: 'xs',
-  transition: 'opacity 0.2s',
-  _groupHover: { opacity: 0.9 },
-});
-
-export const metadataPreviewText: TextProps = {
-  as: 'span',
-  ml: 3,
-  color: 'gray.400',
-  fontSize: 'xs',
-  maxW: '70%',
-  overflow: 'hidden',
-  textOverflow: 'ellipsis',
-  whiteSpace: 'nowrap',
-  display: 'inline-block',
-};
-
 export const metadataContentContainer: BoxProps = {
   overflowY: 'auto',
   bg: 'rgba(10, 10, 15, 0.4)',
@@ -169,11 +111,10 @@ export const metadataValueNameLabel: TextProps = {
   mr: 1,
 };
 
-export const getMetadataValueText = (isExpanded: boolean, isLongString: boolean): TextProps => ({
+export const metadataValueText: TextProps = {
   as: 'span',
   wordBreak: 'break-word',
-  maxW: isLongString && !isExpanded ? '600px' : 'none',
-});
+};
 
 export const getMetadataValueExpandButton = (isExpanded: boolean): BoxProps => ({
   as: 'button',
@@ -561,44 +502,3 @@ export const fontSizeControlsContainer: FlexProps = {
   position: 'relative',
   boxShadow: '0 0 10px rgba(0, 0, 0, 0.3)',
 };
-
-export const fontSizeLabel: TextProps = {
-  fontSize: 'xs',
-  color: 'brand.neonPink',
-  px: 2,
-  py: '3px',
-  bg: 'rgba(25, 25, 35, 0.8)',
-  borderRight: '1px solid rgba(255, 0, 204, 0.4)',
-  fontWeight: 'bold',
-};
-
-export const fontSizeDisplay: TextProps = {
-  fontSize: 'sm',
-  fontWeight: '600',
-  px: 3,
-  color: 'white',
-  minW: '30px',
-  textAlign: 'center',
-  bg: '#171720',
-};
-
-export const getFontSizeButton = (isIncrease: boolean): ButtonProps => ({
-  'aria-label': isIncrease ? 'Increase font size' : 'Decrease font size',
-  height: '24px',
-  minW: '26px',
-  px: 1,
-  bg: '#222230',
-  color: 'brand.neonPink',
-  borderRadius: 0,
-  fontWeight: 'bold',
-  fontSize: '16px',
-  borderRight: isIncrease ? undefined : '1px solid rgba(255, 0, 204, 0.2)',
-  borderLeft: isIncrease ? '1px solid rgba(255, 0, 204, 0.2)' : undefined,
-  _hover: {
-    bg: 'rgba(255, 0, 204, 0.15)',
-  },
-  _active: {
-    bg: 'rgba(255, 0, 204, 0.3)',
-  },
-  transition: 'all 0.15s',
-});
