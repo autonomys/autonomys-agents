@@ -6,6 +6,7 @@ import { LLMConfiguration, LLMFactoryConfig } from '../../../../services/llm/typ
 import { PruningParameters } from '../types.js';
 import { ChatPromptTemplate } from '@langchain/core/prompts';
 import { attachLogger } from '../../../../api/server.js';
+import { prepareAnthropicPrompt } from './utils.js';
 
 export const createMessageSummaryNode = ({
   modelConfig,
@@ -42,12 +43,20 @@ export const createMessageSummaryNode = ({
       })
       .join('\n');
 
-    const formattedPrompt = await messageSummaryPrompt.format({
+    const formattedMessages = await messageSummaryPrompt.formatMessages({
       prevSummary,
       newMessages,
     });
 
-    const newSummary = await LLMFactory.createModel(modelConfig, llmConfig).invoke(formattedPrompt);
+    logger.debug('Formatted Messages - MessageSummary Node:', { formattedMessages });
+
+    // Prepare prompt for Anthropic (adds cache_control if applicable)
+    const promptToSend =
+      modelConfig.provider === 'anthropic'
+        ? prepareAnthropicPrompt(formattedMessages, logger)
+        : formattedMessages;
+
+    const newSummary = await LLMFactory.createModel(modelConfig, llmConfig).invoke(promptToSend);
     logger.info('New Summary Result:', { newSummary });
 
     const summaryContent =
