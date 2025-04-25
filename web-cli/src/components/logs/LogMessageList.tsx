@@ -13,7 +13,7 @@ import {
   getLogMessageListMessageBox,
   searchHighlight,
 } from './styles/LogStyles';
-import { LogMessageListProps, ScheduledTask } from '../../types/types';
+import { LogMessageListProps, Task } from '../../types/types';
 import { subscribeToProcessingTasks } from '../../services/TaskStreamService';
 
 interface LogMessage {
@@ -54,7 +54,7 @@ export const LogMessageList: React.FC<LogMessageListProps> = ({
   searchResults = [],
   showDebugLogs = true,
 }) => {
-  const [processingTasks, setProcessingTasks] = useState<ScheduledTask[]>([]);
+  const [processingTasks, setProcessingTasks] = useState<Task[]>([]);
   const virtuosoRef = useRef<VirtuosoHandle>(null);
 
   const isInitialLog =

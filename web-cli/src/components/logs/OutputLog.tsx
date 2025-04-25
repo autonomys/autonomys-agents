@@ -12,15 +12,6 @@ import {
   customOutputLogContainer,
 } from './styles/LogStyles';
 
-const filterNormalLogs = (messages: any[]) => {
-  return messages.filter(msg => {
-    if (msg.meta?.formattedPrompt && msg.meta.formattedPrompt.startsWith('System:')) {
-      return false;
-    }
-    return true;
-  });
-};
-
 const OutputLog: React.FC<OutputLogProps> = ({ messages }) => {
   // Using vh units for consistency across browsers instead of window.innerHeight
   const initialHeight = typeof window !== 'undefined' ? window.innerHeight : 0;
@@ -142,7 +133,7 @@ const OutputLog: React.FC<OutputLogProps> = ({ messages }) => {
     return () => window.removeEventListener('resize', handleResize);
   }, [isCollapsed]);
 
-  const filteredMessages = filterNormalLogs(getFilteredMessages(activeNamespace));
+  const filteredMessages = getFilteredMessages(activeNamespace);
 
   return (
     <Box {...customOutputLogContainer} className='right-panel'>
