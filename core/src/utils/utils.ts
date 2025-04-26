@@ -1,25 +1,23 @@
-import fs from 'fs';
-import path from 'path';
+import { closeAllVectorDBs } from '../services/vectorDb/vectorDBPool.js';
+import { createLogger } from './logger.js';
+import { getProjectRoot } from './paths.js';
 
-// Get the absolute path to the project root
-export const getProjectRoot = () => {
-  let currentDir = process.cwd();
+const logger = createLogger('core');
 
-  while (currentDir && currentDir !== path.parse(currentDir).root) {
-    try {
-      const files = fs.readdirSync(currentDir);
-      if (files.includes('package.json') || files.includes('tsconfig.json')) {
-        return {
-          root: currentDir,
-        };
-      }
+// Re-export for compatibility
+export { getProjectRoot };
 
-      currentDir = path.dirname(currentDir);
-    } catch (error) {
-      console.error('Error detecting project root:', error);
-      currentDir = path.dirname(currentDir);
-    }
-  }
+// Export these for convenience
+export const setupSignalHandlers = () => {
+  process.on('SIGINT', () => {
+    logger.info('Received SIGINT. Gracefully shutting down...');
+    closeAllVectorDBs();
+    process.exit(0);
+  });
 
-  return undefined;
+  process.on('SIGTERM', () => {
+    logger.info('Received SIGTERM. Gracefully shutting down...');
+    closeAllVectorDBs();
+    process.exit(0);
+  });
 };

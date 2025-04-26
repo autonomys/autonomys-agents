@@ -1,7 +1,9 @@
-import { logger } from '../agentExperiences/index.js';
 import { createMcpClientTool } from '../mcp-tool/index.js';
 import { StdioServerParameters } from '@modelcontextprotocol/sdk/client/stdio.js';
 import { StructuredToolInterface } from '@langchain/core/tools';
+import { createLogger } from '../../../utils/logger.js';
+
+const logger = createLogger('notion-tools');
 
 export const createNotionTools = async (
   integrationSecret: string,

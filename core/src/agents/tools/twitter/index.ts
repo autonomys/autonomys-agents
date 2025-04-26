@@ -4,7 +4,7 @@ import { TwitterApi } from './types.js';
 import { cleanTweetForCircularReferences, tweetToMinimalTweet } from './utils/utils.js';
 import { createLogger } from '../../../utils/logger.js';
 
-export const logger = createLogger('twitter-tools');
+const logger = createLogger('twitter-tools');
 
 const errorMessage = (error: unknown) => {
   if (error instanceof Error) {
@@ -405,3 +405,8 @@ export const createAllTwitterTools = (
     quoteTweetTool,
   ];
 };
+
+export * from './types.js';
+export * from './auth.js';
+export * from './client.js';
+export * from './utils/utils.js';
