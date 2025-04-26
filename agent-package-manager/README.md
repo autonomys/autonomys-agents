@@ -77,8 +77,34 @@ agent-os init my-agent-project --install --character=my-character --api
 
 Options:
 - `--install`: Automatically install dependencies after project creation
-- `--character <name>`: Create a character with the specified name
+- `--character <n>`: Create a character with the specified name
 - `--api`: Generate API certificates for the project (default: true)
+
+### Update an Agent Project Template
+
+```bash
+# Update the project template to the latest version
+cd my-agent-project
+agent-os update
+
+# Force update and handle merge conflicts manually
+agent-os update --force
+```
+
+The update command intelligently handles common conflicts:
+- Preserves your project name in package.json while updating dependencies
+- Keeps your project title in README.md while updating documentation
+- Merges your .gitignore file with the template's updates
+- Automatically resolves conflicts when possible
+- Clearly shows any remaining conflicts that need manual resolution
+
+When conflicts occur in other files (like src/index.ts or yarn.lock), the command will:
+- Apply all the automatic resolutions it can handle
+- Show you which files still have conflicts
+- Guide you through the manual conflict resolution process
+
+Options:
+- `--force`: Continue with update even if automatic conflict resolution fails
 
 ### Install a Tool
 

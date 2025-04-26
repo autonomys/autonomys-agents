@@ -116,6 +116,7 @@ export {
   REGISTRY_CACHE_PATH,
   CONFIG_FILE,
   CREDENTIALS_FILE,
+  detectProjectRoot,
   ensureAgentOSDir,
   getToolInstallDir,
 };

@@ -8,6 +8,7 @@ import { search } from './commands/search.js';
 import { clean } from './commands/clean.js';
 import { tool } from './commands/tool.js';
 import { init } from './commands/init.js';
+import { pull } from './commands/pull.js';
 import { config } from './commands/config.js';
 import { loadConfig } from './config/index.js';
 import { credentialsExist } from './utils/credential/index.js';
@@ -19,6 +20,7 @@ import {
   InstallOptions,
   PublishOptions,
   ToolCommandParams,
+  PullOptions
 } from './types/index.js';
 
 const checkMasterPassword = async () => {
@@ -44,6 +46,10 @@ ensureAgentOSDir()
   .then(() => {
     const initWrapper = async (projectName: string, options: InitOptions) => {
       await init(projectName, options);
+    };
+
+    const pullWrapper = async (options: PullOptions = {}) => {
+      await pull(options);
     };
 
     const installToolWrapper = async (toolName: string, options: InstallOptions) => {
@@ -83,6 +89,12 @@ ensureAgentOSDir()
       .option('--character <character-name>', 'Create a character with this name')
       .option('--api', 'Generate API certificates', true)
       .action(initWrapper);
+
+    program
+      .command('pull')
+      .description('Pull the latest version of the agent project template')
+      .option('--force', 'Force pull and handle merge conflicts manually')
+      .action(pullWrapper);
 
     program
       .command('install')

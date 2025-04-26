@@ -12,6 +12,10 @@ export interface InitOptions {
   api?: boolean;
 }
 
+export interface PullOptions {
+  force?: boolean;
+}
+
 export interface ToolInstallInfo {
   name: string;
   cid: string;

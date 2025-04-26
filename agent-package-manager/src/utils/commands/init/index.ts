@@ -6,6 +6,7 @@ import { createWriteStream } from 'fs';
 import { pipeline } from 'stream/promises';
 import extract from 'extract-zip';
 import axios from 'axios';
+import chalk from 'chalk';
 
 // Add a function to run a command and log the output
 const runCommand = async (
@@ -165,6 +166,10 @@ const downloadTemplate = async (
 
     await copyRecursive(templateDir, projectPath);
 
+    // Initialize Git repository
+    spinner.text = 'Initializing Git repository...';
+    await initializeGit(projectPath);
+
     // Clean up
     spinner.text = 'Cleaning up...';
     await fs.rm(tempDir, { recursive: true, force: true });
@@ -172,6 +177,92 @@ const downloadTemplate = async (
     throw new Error(
       `Failed to download template: ${error instanceof Error ? error.message : String(error)}`,
     );
+  }
+};
+
+/**
+ * Initialize Git repository and set up template remote
+ */
+const initializeGit = async (projectPath: string): Promise<void> => {
+  try {
+    // Check if Git is installed
+    const isGitInstalled = await checkGitInstalled();
+    if (!isGitInstalled) {
+      // Git not installed, skip Git setup but don't fail
+      console.log(chalk.yellow('\nGit is not installed. Skipping Git repository initialization.'));
+      console.log(chalk.yellow('Installing Git is recommended for future template updates.'));
+      return;
+    }
+
+    // Create fake spinner for the runCommand function
+    const fakeSpinner = {
+      text: '',
+      start: () => ({ text: '', succeed: () => {}, fail: () => {} }),
+      succeed: () => {},
+      fail: () => {},
+    } as ReturnType<typeof ora>;
+
+    // Initialize Git repository
+    await runCommand('git init', projectPath, fakeSpinner);
+    
+    // Add template remote
+    await runCommand(
+      'git remote add template https://github.com/autonomys/autonomys-agent-template.git',
+      projectPath,
+      fakeSpinner
+    );
+    
+    // Create initial commit
+    await runCommand('git add .', projectPath, fakeSpinner);
+    await runCommand('git commit -m "Initial commit from template"', projectPath, fakeSpinner);
+    
+    // Add .gitignore if it doesn't exist
+    const gitignorePath = path.join(projectPath, '.gitignore');
+    try {
+      await fs.access(gitignorePath);
+    } catch {
+      // Create basic .gitignore
+      const gitignoreContent = [
+        'node_modules/',
+        '.env',
+        '.env.local',
+        'dist/',
+        'build/',
+        'coverage/',
+        '.DS_Store',
+        '*.log',
+        'certs/',
+        ''
+      ].join('\n');
+      
+      await fs.writeFile(gitignorePath, gitignoreContent);
+      
+      // Add .gitignore to Git
+      await runCommand('git add .gitignore', projectPath, fakeSpinner);
+      await runCommand('git commit -m "Add .gitignore"', projectPath, fakeSpinner);
+    }
+  } catch (error) {
+    // If Git initialization fails, log a warning but continue
+    console.log(chalk.yellow('\nWarning: Git repository initialization failed.'));
+    console.log(chalk.yellow('This will not affect your project, but template updates may not work.'));
+    console.log(chalk.yellow('Error: ' + (error instanceof Error ? error.message : String(error))));
+  }
+};
+
+/**
+ * Check if Git is installed
+ */
+const checkGitInstalled = async (): Promise<boolean> => {
+  try {
+    const { exec } = await import('child_process');
+    
+    return new Promise((resolve) => {
+      exec('git --version', (error) => {
+        resolve(!error);
+      });
+    });
+  } catch {
+    return false;
   }
 };
 
