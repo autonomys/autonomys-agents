@@ -34,6 +34,17 @@ export default [
         "varsIgnorePattern": "^_"
       }],
       "@typescript-eslint/no-non-null-assertion": "warn",
+      "@typescript-eslint/naming-convention": [
+        "error",
+        {
+          "selector": "variable",
+          "format": ["camelCase"],
+          "filter": {
+            "regex": "^(name|username|description|personality|expertise|rules|trendFocus|contentFocus|replyStyle|wordsToAvoid|engagementCriteria|walletAddress)$",
+            "match": true
+          }
+        }
+      ],
       
       // General rules
       "no-console": ["warn", { allow: ["warn", "error", "info"] }],
@@ -87,25 +98,5 @@ export default [
   },
   
   // Prettier configuration
-  eslintConfigPrettier,
-  
-  // Additional configurations for specific file patterns
-  {
-    rules: {
-      // Character file specific validations
-      "@typescript-eslint/naming-convention": [
-        "error",
-        {
-          "selector": "variable",
-          "format": ["camelCase"],
-          "filter": {
-            "regex": "^(name|username|description|personality|expertise|rules|trendFocus|contentFocus|replyStyle|wordsToAvoid|engagementCriteria|walletAddress)$",
-            "match": true
-          }
-        }
-      ],
-      "no-multi-str": "error",
-      "no-template-curly-in-string": "error"
-    }
-  }
+  eslintConfigPrettier
 ];

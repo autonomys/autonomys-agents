@@ -1,6 +1,6 @@
 import express from 'express';
 import { createLogger } from '../utils/logger.js';
-import { RestApiConfig, ApiServer, CreateApiServerParams, LogMetadata } from './types.js';
+import { ApiServer, CreateApiServerParams, LogMetadata, RestApiConfig } from './types.js';
 import { createApiRouter } from './routes/index.js';
 import { broadcastTaskUpdateUtility } from './controller/TaskController.js';
 import { attachLoggerUtility, broadcastLogUtility } from './controller/LogsController.js';

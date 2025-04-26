@@ -39,4 +39,4 @@ export const getWorkspacePath = (): string => {
   // Then try project root
   const projectRoot = getProjectRoot();
   return projectRoot?.root || process.cwd();
-}; 
+};
