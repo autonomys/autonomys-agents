@@ -1,4 +1,4 @@
-import { BoxProps, HeadingProps, TextProps, FlexProps, ButtonProps } from '@chakra-ui/react';
+import { BoxProps, HeadingProps, TextProps, ButtonProps } from '@chakra-ui/react';
 import { CSSProperties } from 'react';
 
 // Resizable handle styles

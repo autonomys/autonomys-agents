@@ -52,11 +52,10 @@ const ScheduledTasksBox: React.FC<TasksAreaProps> = ({
   ]);
 
   // Get brand colors for the navbar
-  const [neonBlue, neonGreen, neonPink, red] = useToken('colors', [
+  const [neonBlue, neonGreen, neonPink] = useToken('colors', [
     'brand.neonBlue',
     'brand.neonGreen',
     'brand.neonPink',
-    'red.400',
   ]);
 
   // Filter tasks based on the active view

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box, Heading, Text, Flex, Button, Icon } from '@chakra-ui/react';
+import { Box, Heading, Text, Flex, Button } from '@chakra-ui/react';
 import { Resizable } from 're-resizable';
 import { StatusBoxProps } from '../../types/types';
 import {
@@ -69,13 +69,6 @@ const StatusBox: React.FC<StatusBoxProps> = ({ status, onStop }) => {
     }
     return '';
   };
-
-  // Add StopIcon component
-  const StopIcon = (props: any) => (
-    <Icon viewBox='0 0 24 24' {...props}>
-      <rect x='6' y='6' width='12' height='12' />
-    </Icon>
-  );
 
   const isRunning = status.startsWith('Running:') || status.startsWith('Processing:');
   const statusColor = getStatusColor();
