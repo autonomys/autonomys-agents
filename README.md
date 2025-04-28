@@ -107,6 +107,19 @@ A modern web-based interface for interacting with your agent. To start:
    yarn dev:web
    ```
 
+
+## Web Cli With Docker
+You can have web cli as a container by runnint the command below
+
+```bash
+docker run -d \
+      -p <HOST_LOCAL_PORT>:<CONTAINER_PORT> \
+      -e PORT=<CONTAINER_PORT> \
+      -e RUNTIME_API_URL="<YOUR_API_URL>" \ # example: https://localhost:3010/api
+      -e RUNTIME_API_TOKEN="<YOUR_API_TOKEN>" \
+      --name autonomys-web-cli \
+      ghcr.io/autonomys/autonomys-agents/web-cli:latest
+```
 ## Examples
 
 The following examples demonstrate the use of the framework and are available:
