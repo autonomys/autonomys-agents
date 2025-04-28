@@ -1,0 +1,15 @@
+# Ignore everything by default
+*
+
+# Include necessary root files
+!/package.json
+!/yarn.lock
+
+# Include the web-cli directory and its contents
+!/web-cli/
+!/web-cli/**
+
+# Re-ignore specific files/folders within web-cli
+/web-cli/node_modules
+/web-cli/build
+/web-cli/.env*
