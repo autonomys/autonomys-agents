@@ -120,7 +120,7 @@ The following examples demonstrate the use of the framework and are available:
 
 To run each example run following command to see the options:
 ```bash
-yarn example <example-name> <character> --workspace=<absolute path to directory that contains characters, .cookies, and certs folders>
+yarn example <example-name> <character> --workspace <absolute path to directory that contains characters, .cookies, and certs folders>
 ```
 
 ## Character System
