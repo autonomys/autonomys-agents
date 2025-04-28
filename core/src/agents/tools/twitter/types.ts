@@ -1,5 +1,5 @@
-import { Profile, Scraper, Tweet } from 'agent-twitter-client';
-export { Tweet, Profile, Scraper } from 'agent-twitter-client';
+import { type Profile, Scraper, type Tweet } from 'agent-twitter-client';
+export { type Tweet, type Profile, Scraper } from 'agent-twitter-client';
 
 export interface TwitterApi {
   scraper: Scraper;

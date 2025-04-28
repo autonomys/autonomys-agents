@@ -118,9 +118,9 @@ When running your agent implementation, these arguments are automatically parsed
   npx tsx your-script.ts my-character-name --headless
   ```
 
-- **--workspace=PATH**: Specify a custom workspace root directory where the `characters` folder exists
+- **--workspace PATH**: Specify a custom workspace root directory where the `characters` folder exists
   ```bash
-  npx tsx your-script.ts my-character-name --workspace=/path/to/your/project
+  npx tsx your-script.ts my-character-name --workspace /path/to/your/project
   ```
 
 ### Example Script
@@ -148,7 +148,7 @@ Then run it with:
 ```bash
 npx tsx index.ts my-character-name
 npx tsx index.ts my-character-name --headless
-npx tsx index.ts my-character-name --workspace=/path/to/workspace
+npx tsx index.ts my-character-name --workspace /path/to/workspace
 ```
 
 ## Example Implementation
