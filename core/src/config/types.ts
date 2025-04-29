@@ -1,4 +1,4 @@
-import { Config } from './index.js';
+import { Config } from './config.js';
 
 export type ConfigOptions = {
   characterName: string;

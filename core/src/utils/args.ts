@@ -1,5 +1,5 @@
 import yargs from 'yargs';
-import { getProjectRoot } from './utils.js';
+import { getProjectRoot, getWorkspacePath } from './paths.js';
 
 interface ParsedArgs {
   character?: string;
@@ -47,18 +47,8 @@ export const parseArgs = (): ParsedArgs => {
   return parsedArgs;
 };
 
-/**
- * Get the workspace path, respecting command line arguments
- */
-export const getWorkspacePath = (): string => {
-  const args = parseArgs();
-  if (args.workspace) {
-    return args.workspace;
-  }
-
-  const projectRoot = getProjectRoot();
-  return projectRoot?.root || process.cwd();
-};
+// Re-export for compatibility
+export { getWorkspacePath };
 
 /**
  * Get the character name if provided

@@ -4,7 +4,8 @@ import { DynamicStructuredTool } from '@langchain/core/tools';
 import axios from 'axios';
 import { load } from 'cheerio';
 import { createLogger } from '../../../utils/logger.js';
-export const logger = createLogger('web-search-tools');
+
+const logger = createLogger('web-search-tools');
 
 const DEFAULT_ENGINES = ['google'] as const;
 

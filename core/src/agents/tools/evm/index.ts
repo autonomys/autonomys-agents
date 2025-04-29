@@ -2,7 +2,7 @@ import { DynamicStructuredTool } from '@langchain/core/tools';
 import { z } from 'zod';
 import { createLogger } from '../../../utils/logger.js';
 import { ethers, Signer } from 'ethers';
-export const logger = createLogger('evm-tools');
+const logger = createLogger('evm-tools');
 
 export const createTransferNativeTokenTool = (signer: Signer) =>
   new DynamicStructuredTool({

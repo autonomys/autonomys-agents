@@ -1,6 +1,6 @@
 import express from 'express';
 import { createLogger } from '../utils/logger.js';
-import { ApiConfig, ApiServer, CreateApiServerParams, LogMetadata } from './types.js';
+import { ApiServer, CreateApiServerParams, LogMetadata, RestApiConfig } from './types.js';
 import { createApiRouter } from './routes/index.js';
 import { broadcastTaskUpdateUtility } from './controller/TaskController.js';
 import { attachLoggerUtility, broadcastLogUtility } from './controller/LogsController.js';
@@ -8,7 +8,7 @@ import { broadcastNamespaces } from './controller/NamespaceController.js';
 import { getRegisteredNamespaces } from './controller/WorkflowController.js';
 import { createAuthMiddleware, securityHeaders } from './middleware/auth.js';
 import { corsMiddleware } from './middleware/cors.js';
-import { getConfig } from '../config/index.js';
+import { getConfig } from '../config/config.js';
 import helmet from 'helmet';
 import http2 from 'http2';
 import fs from 'fs';
@@ -156,4 +156,4 @@ export const withApiLogger = (namespace: string, flag: boolean) => {
   };
 };
 
-export { type ApiConfig, type CreateApiServerParams };
+export { type RestApiConfig, type CreateApiServerParams };

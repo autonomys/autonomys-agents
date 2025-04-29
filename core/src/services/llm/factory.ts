@@ -19,7 +19,7 @@ export class LLMFactory {
           apiKey: config.OPENAI_API_KEY,
           model,
         };
-        if (!model.includes('o3-mini')) {
+        if (!model.includes('o3-mini') && !model.includes('o4-mini')) {
           return new ChatOpenAI({
             ...baseConfig,
             temperature,
@@ -31,6 +31,11 @@ export class LLMFactory {
           apiKey: config.ANTHROPIC_API_KEY,
           model,
           temperature,
+          clientOptions: {
+            defaultHeaders: {
+              'anthropic-beta': 'prompt-caching-2024-07-31',
+            },
+          },
         });
       case 'ollama':
         return new ChatOllama({

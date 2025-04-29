@@ -19,7 +19,7 @@ export interface LogMetadata {
   [key: string]: string | number | boolean | null | undefined | object | any[];
 }
 
-export type ApiConfig = {
+export type RestApiConfig = {
   authFlag: boolean;
   authToken: string;
   apiPort: number;

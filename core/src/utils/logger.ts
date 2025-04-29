@@ -2,7 +2,8 @@ import winston from 'winston';
 import path from 'path';
 import util from 'util';
 import fs from 'fs';
-import { getCharacterName, getWorkspacePath } from './args.js';
+import { getWorkspacePath } from './paths.js';
+import { getCharacterName } from './args.js';
 
 const getDefaultLogPath = () => {
   const workspacePath = getWorkspacePath();

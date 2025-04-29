@@ -61,54 +61,9 @@ The agent supports the following command-line arguments:
 
 > #### Note: The `--workspace` parameter is optional and should only be used when you want to store the characters, certs, and cookies directories in a custom location instead of the default path. Provide the absolute path to the parent directory that will contain these folders.
 
-<!-- ## Docker Deployment simultaneously
+### Docker Deployment
 
-You can also run your agents using Docker. This provides isolation and makes it easy to run multiple agents simultaneously.
-
-### Prerequisites
-- Docker installed on your system ([Installation Guide](https://docs.docker.com/get-docker/))
-- Docker Compose Plugin required ([Compose Plugin Installation](https://docs.docker.com/compose/install/))
-- Character configuration set up (follow steps 2-3 from Getting Started)
-
-### Running with Docker
-
-1. Generate your character's docker-compose file:
-
-   First:
-   ```bash
-   chmod +x ./generate-compose.sh
-   ```
-   
-   Then:
-   ```bash
-   ./generate-compose.sh <your-character-name> [HOST_PORT] [API_PORT]
-   ```
-   Example:
-   ```bash
-   # Run Alice on port 3011 on docker with API port on 3011
-   ./generate-compose.sh Alice 3011 3011
-   
-   # Run Bob on port 3012 on docker with API port on 3011
-   ./generate-compose.sh Bob 3012 3011
-   ```
-
-2. The script will generate a `docker-compose-{character-name}.yml` file and show you the available commands:
-   - Build and start the container: 
-     ```bash
-     docker compose -f docker-compose-{character-name}.yml up -d
-     ```
-   - Stop and remove the container: 
-     ```bash
-     docker compose -f docker-compose-{character-name}.yml down
-     ```
-   - View container logs: 
-     ```bash
-     docker compose -f docker-compose-{character-name}.yml logs -f
-     ```
-   - Access container shell: 
-     ```bash
-     docker exec -it autonomys-agent-{character-name} bash
-     ``` -->
+Docker support allows you to run multiple agents in isolated containers. For detailed instructions on setting up Docker images and containers for your characters, visit our [autonomys-agent-template](https://github.com/autonomys/autonomys-agent-template) repository.
 
 ### Running Multiple Agents
 
@@ -152,21 +107,6 @@ A modern web-based interface for interacting with your agent. To start:
    yarn dev:web
    ```
 
-<!-- ## Running with dev:all (Web-CLI And Agent)
-
-The `start` command launches both the main application and web interface concurrently:
-
-```bash
-yarn start <your-character-name>
-```
-
-This command:
-- Starts your agent with the specified character
-- Launches the web interface configured for that character
-- Automatically uses the character's API port from its .env file
-- Provides color-coded output from both processes -->
-
-
 ## Examples
 
 The following examples demonstrate the use of the framework and are available:
@@ -180,7 +120,7 @@ The following examples demonstrate the use of the framework and are available:
 
 To run each example run following command to see the options:
 ```bash
-yarn example <example-name> <character> --workspace=<absolute path to directory that contains characters, .cookies, and certs folders>
+yarn example <example-name> <character> --workspace <absolute path to directory that contains characters, .cookies, and certs folders>
 ```
 
 ## Character System
