@@ -1,4 +1,4 @@
-import { ExperienceManager } from '../../../blockchain/agentExperience/types.js';
+import { ExperienceManager } from '@autonomys/auto-agents';
 import { getVectorDB } from '../../../services/vectorDb/vectorDBPool.js';
 import { createAgentExperienceTools } from '../../tools/agentExperiences/index.js';
 import { createGetCurrentTimeTool } from '../../tools/time/index.js';

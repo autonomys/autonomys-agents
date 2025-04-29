@@ -3,7 +3,7 @@ import { ChatPromptTemplate } from '@langchain/core/prompts';
 import { ToolNode } from '@langchain/langgraph/prebuilt';
 import { LLMConfiguration } from '../../../services/llm/types.js';
 import { Logger } from 'winston';
-import { ExperienceManager } from '../../../blockchain/agentExperience/types.js';
+import { ExperienceManager } from '@autonomys/auto-agents';
 import { LLMFactoryConfig } from '../../../services/llm/types.js';
 
 export type OrchestratorPrompts = {

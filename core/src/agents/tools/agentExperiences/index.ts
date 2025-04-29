@@ -2,7 +2,7 @@ import { DynamicStructuredTool } from '@langchain/core/tools';
 import { z } from 'zod';
 import { createLogger } from '../../../utils/logger.js';
 import { VectorDB } from '../../../services/vectorDb/VectorDB.js';
-import { ExperienceManager } from '../../../blockchain/agentExperience/types.js';
+import { ExperienceManager } from '@autonomys/auto-agents';
 
 const logger = createLogger('agent-experience-tools');
 

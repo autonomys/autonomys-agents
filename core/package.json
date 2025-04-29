@@ -47,9 +47,10 @@
     "pack": "yarn pack"
   },
   "dependencies": {
-    "@autonomys/auto-dag-data": "1.4.17",
-    "@autonomys/auto-drive": "1.4.17",
-    "@autonomys/auto-utils": "1.4.17",
+    "@autonomys/auto-agents": "1.4.18",
+    "@autonomys/auto-dag-data": "1.4.18",
+    "@autonomys/auto-drive": "1.4.18",
+    "@autonomys/auto-utils": "1.4.18",
     "@langchain/anthropic": "0.3.17",
     "@langchain/community": "0.3.40",
     "@langchain/core": "0.3.44",
@@ -77,6 +78,7 @@
     "helmet": "^8.0.0",
     "http2-express-bridge": "^1.0.7",
     "inquirer": "^10.2.0",
+    "multiformats": "13.3.2",
     "sqlite3": "^5.1.7",
     "vectorlite": "^0.2.0",
     "winston": "^3.11.0",
