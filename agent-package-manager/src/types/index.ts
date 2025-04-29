@@ -16,6 +16,10 @@ export interface PullOptions {
   force?: boolean;
 }
 
+export interface UpdateOptions {
+  auto?: boolean;
+}
+
 export interface ToolInstallInfo {
   name: string;
   cid: string;
