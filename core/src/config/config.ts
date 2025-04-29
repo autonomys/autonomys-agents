@@ -72,7 +72,7 @@ export const getConfig = async (options?: ConfigOptions): Promise<ConfigInstance
 
   if (!characterName) {
     console.error('Please provide a character name');
-    console.error('Usage: yarn dev:agent <character-name> [--headless] [--workspace=path]');
+    console.error('Usage: yarn dev:agent <character-name> [--headless] [--workspace path]');
     process.exit(1);
   }
 

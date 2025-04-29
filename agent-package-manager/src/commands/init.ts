@@ -121,7 +121,7 @@ const init = async (projectName: string, options: InitOptions): Promise<CommandR
       if (!options.api) {
         console.log(chalk.cyan(`  yarn generate-certs`));
       }
-      console.log(chalk.cyan(`  yarn start ${options.character} --workspace=/path/to/workspace`));
+      console.log(chalk.cyan(`  yarn start ${options.character} --workspace /path/to/workspace`));
     }
 
     // Add information about installing tools
