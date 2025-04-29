@@ -11,7 +11,7 @@ import { getConfig } from '@autonomys/agent-core/src/config/index.js';
 import { createTwitterApi } from '@autonomys/agent-core/src/agents/tools/twitter/client.js';
 import { createLogger } from '@autonomys/agent-core/src/utils/logger.js';
 import { createAllSchedulerTools } from '@autonomys/agent-core/src/agents/tools/scheduler/index.js';
-import { createExperienceManager } from '@autonomys/agent-core/src/blockchain/agentExperience/index.js';
+import { createExperienceManager } from '@autonomys/agent-core';
 import { parseArgs } from '@autonomys/agent-core/src/utils/args.js';
 import { createApiServer } from '@autonomys/agent-core/src/api/server.js';
 
