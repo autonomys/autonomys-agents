@@ -7,7 +7,6 @@ import { getToolInstallDir } from '../utils/shared/path.js';
 import { resolveToolInfo } from '../utils/commands/install/utils.js';
 import checkForUpdates from '../utils/update/index.js';
 
-
 const install = async (toolName: string, options: InstallOptions): Promise<CommandResult> => {
   const spinner = ora(`Installing ${toolName}...`).start();
   const _checkForUpdates = await checkForUpdates();
