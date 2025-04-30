@@ -20,7 +20,7 @@ import {
   InstallOptions,
   PublishOptions,
   ToolCommandParams,
-  UpdateOptions
+  UpdateOptions,
 } from './types/index.js';
 
 const checkMasterPassword = async () => {

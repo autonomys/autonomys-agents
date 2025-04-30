@@ -6,7 +6,6 @@ interface NpmPackageInfo {
   description: string;
   homepage: string;
   license: string;
-  [key: string]: any;
 }
 
 /**
@@ -17,27 +16,27 @@ interface NpmPackageInfo {
 export const getNpmPackageInfo = async (packageName: string): Promise<NpmPackageInfo> => {
   try {
     const response = await axios.get(`https://registry.npmjs.org/${packageName}`);
-    
+
     if (response.status !== 200) {
       throw new Error(`Failed to fetch package info: ${response.statusText}`);
     }
-    
+
     const data = response.data;
     const latestVersion = data['dist-tags']?.latest;
-    
+
     if (!latestVersion) {
       throw new Error('Could not determine latest version');
     }
-    
+
     const versionInfo = data.versions[latestVersion];
-    
+
     return {
       name: data.name,
       version: latestVersion,
       description: versionInfo.description || data.description || '',
       homepage: versionInfo.homepage || data.homepage || '',
       license: versionInfo.license || data.license || '',
-      ...versionInfo
+      ...versionInfo,
     };
   } catch (error) {
     if (axios.isAxiosError(error)) {
@@ -45,4 +44,4 @@ export const getNpmPackageInfo = async (packageName: string): Promise<NpmPackage
     }
     throw error;
   }
-}; 
+};
