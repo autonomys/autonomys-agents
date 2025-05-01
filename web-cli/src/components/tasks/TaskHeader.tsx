@@ -20,9 +20,7 @@ const TaskHeader: React.FC<TaskHeaderProps> = ({
 }) => {
   return (
     <Flex {...headerContainerStyles}>
-      <Heading {...headingStyles}>
-        Scheduled Tasks
-      </Heading>
+      <Heading {...headingStyles}>Tasks</Heading>
       <ConnectionStatusIndicator
         connectionStatus={connectionStatus}
         connectionStatusInfo={connectionStatusInfo}

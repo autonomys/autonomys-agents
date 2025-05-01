@@ -5,7 +5,7 @@ import { useChatContext } from '../context/ChatContext';
 import {
   subscribeToTaskUpdates,
   subscribeToProcessingTasks,
-  subscribeToCompletedTasks, 
+  subscribeToCompletedTasks,
   closeTaskStream,
   ConnectionStatus,
   subscribeToConnectionStatus,
@@ -48,7 +48,7 @@ const BodyArea: React.FC = () => {
       const deleted: Task[] = [];
       updatedTasks.forEach(task => {
         // Log the task being processed for debugging
-        
+
         // Ensure each task only goes to one category
         switch (task.status) {
           case 'cancelled':
@@ -112,7 +112,7 @@ const BodyArea: React.FC = () => {
       setCompletedTasks(current => {
         const existingTaskIds = new Set(current.map(task => task.id));
         const newTasks = updatedTasks.filter(task => !existingTaskIds.has(task.id));
-        
+
         if (newTasks.length > 0) {
           return [...current, ...newTasks];
         }
@@ -163,24 +163,27 @@ const BodyArea: React.FC = () => {
     }
   };
 
-  const handleDeleteTask = useCallback(async (id: string) => {
-    try {
-      setScheduledTasks(current => current.filter(task => task.id !== id));
-      const deletedTask = scheduledTasks.find(task => task.id === id);
-      if (deletedTask) {
-        // Add it to deleted tasks with updated status
-        const taskWithDeletedStatus = {
-          ...deletedTask,
-          status: 'deleted',
-          result: 'Task was deleted by user'
-        };
-        setDeletedTasks(current => [...current, taskWithDeletedStatus]);
+  const handleDeleteTask = useCallback(
+    async (id: string) => {
+      try {
+        setScheduledTasks(current => current.filter(task => task.id !== id));
+        const deletedTask = scheduledTasks.find(task => task.id === id);
+        if (deletedTask) {
+          // Add it to deleted tasks with updated status
+          const taskWithDeletedStatus = {
+            ...deletedTask,
+            status: 'deleted',
+            result: 'Task was deleted by user',
+          };
+          setDeletedTasks(current => [...current, taskWithDeletedStatus]);
+        }
+        await deleteTask(id);
+      } catch (error) {
+        console.error('Error deleting task:', error);
       }
-      await deleteTask(id);
-    } catch (error) {
-      console.error('Error deleting task:', error);
-    }
-  }, [scheduledTasks]);
+    },
+    [scheduledTasks],
+  );
 
   const handleReconnect = useCallback(() => {
     reconnect();
@@ -212,16 +215,16 @@ const BodyArea: React.FC = () => {
     completed: completedTasks,
     cancelled: cancelledTasks,
     failed: failedTasks,
-    deleted: deletedTasks
+    deleted: deletedTasks,
   };
 
   return (
-    <Flex className="left-panel" direction="column" position='relative' height="100%" pb={0}>
+    <Flex className='left-panel' direction='column' position='relative' height='100%' pb={0}>
       {chatState.activeChatNamespace ? (
         <ChatArea namespace={chatState.activeChatNamespace} onClose={handleCloseChat} />
       ) : (
         <>
-          <Box flex="0 0 auto" mb={2}>
+          <Box flex='0 0 auto' mb={2}>
             <InputArea
               value={state.value}
               handleInputChange={handleInputChange}
@@ -230,7 +233,7 @@ const BodyArea: React.FC = () => {
               error={error}
             />
           </Box>
-          <Box flex="1" overflow="auto" mb={0}>
+          <Box flex='1' mb={0}>
             <TasksArea
               tasks={allTasks}
               loading={loading}

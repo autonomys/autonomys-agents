@@ -1,15 +1,11 @@
 import React, { KeyboardEvent, useState, useEffect, useRef } from 'react';
 import { Box, Heading, Textarea, Button, Text, Flex } from '@chakra-ui/react';
 import { Resizable } from 're-resizable';
-import StatusBox from '../status/StatusBox';
 import { InputBoxProps } from '../../types/types';
-import { stopWorkflow } from '../../services/WorkflowService';
 import {
   containerFlexStyles,
   resizableDefaultSize,
   resizableEnableProps,
-  resizableHandleStyles,
-  resizableHandleBoxStyles,
   containerBoxStyles,
   headingStyles,
   contentFlexStyles,
@@ -19,9 +15,9 @@ import {
   sendButtonStyles,
   sendButtonFlexStyles,
   sendButtonTextStyles,
-  sendButtonAnimationStyles,
-  helperTextStyles
 } from './styles/InputStyles';
+import StatusBox from '../status/StatusBox';
+import { stopWorkflow } from '../../services/WorkflowService';
 
 const InputArea: React.FC<InputBoxProps> = ({
   value,
@@ -30,7 +26,7 @@ const InputArea: React.FC<InputBoxProps> = ({
   currentTask,
   error,
 }) => {
-  const [size, setSize] = useState({ height: 240 });
+  const [size, setSize] = useState({ height: 200 });
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [stopStatus, setStopStatus] = useState<string | null>(null);
 
@@ -41,23 +37,36 @@ const InputArea: React.FC<InputBoxProps> = ({
     }
   };
 
+  // Adjust textarea height when resizable container changes
+  useEffect(() => {
+    if (textareaRef.current) {
+      const paddingOffset = 80; // Account for padding, headers, other elements
+      const newHeight = Math.max(size.height - paddingOffset, 60); // Ensure minimum textarea height
+      textareaRef.current.style.height = `${newHeight}px`;
+    }
+  }, [size.height]);
+
   const getStatusText = () => {
     if (stopStatus) {
       return stopStatus;
     }
-    
+
     if (currentTask) {
       const taskStatus = currentTask.status || 'processing';
-      
-      // Check for stopped status (previously finalizing) 
+
+      // Check for stopped status (previously finalizing)
       if (taskStatus === 'stopped') {
         return `Stopped: ${currentTask.description}`;
       }
       // Also check for failed tasks with appropriate result message
-      else if (taskStatus === 'failed' && currentTask.result && currentTask.result.includes('Stopped by user')) {
+      else if (
+        taskStatus === 'failed' &&
+        currentTask.result &&
+        currentTask.result.includes('Stopped by user')
+      ) {
         return `Stopped: ${currentTask.description}`;
       }
-      
+
       const formattedStatus = taskStatus.charAt(0).toUpperCase() + taskStatus.slice(1);
       return `${formattedStatus}: ${currentTask.description}`;
     } else if (error) {
@@ -71,10 +80,10 @@ const InputArea: React.FC<InputBoxProps> = ({
     try {
       // Immediately set to "Stopped" status
       setStopStatus(`Stopped: ${currentTask?.description || ''}`);
-      
+
       // Send the stop request
       await stopWorkflow();
-      
+
       // Keep showing the "Stopped" status for a while
       setTimeout(() => {
         setStopStatus(null);
@@ -82,22 +91,13 @@ const InputArea: React.FC<InputBoxProps> = ({
     } catch (error) {
       console.error('Error stopping workflow:', error);
       setStopStatus('Error: Failed to stop the workflow. Please try again.');
-      
+
       // Clear the error message after a delay
       setTimeout(() => {
         setStopStatus(null);
       }, 5000);
     }
   };
-
-  // Adjust textarea height when resizable container changes
-  useEffect(() => {
-    if (textareaRef.current) {
-      const paddingOffset = 120; // Account for padding, headers, other elements
-      const newHeight = Math.max(size.height - paddingOffset, 60); // Ensure minimum textarea height
-      textareaRef.current.style.height = `${newHeight}px`;
-    }
-  }, [size.height]);
 
   return (
     <Flex {...containerFlexStyles}>
@@ -116,19 +116,9 @@ const InputArea: React.FC<InputBoxProps> = ({
           }));
         }}
         enable={resizableEnableProps}
-        handleStyles={{
-          bottom: resizableHandleStyles,
-        }}
-        handleComponent={{
-          bottom: (
-            <Box {...resizableHandleBoxStyles} />
-          ),
-        }}
       >
         <Box {...containerBoxStyles}>
-          <Heading {...headingStyles}>
-            Input
-          </Heading>
+          <Heading {...headingStyles}>Input</Heading>
 
           <Flex {...contentFlexStyles}>
             <Flex {...inputAreaFlexStyles}>
@@ -142,27 +132,15 @@ const InputArea: React.FC<InputBoxProps> = ({
                 css={textareaScrollbarStyles}
               />
 
-              <Button
-                onClick={handleInputSubmit}
-                {...sendButtonStyles}
-                className='send-button'
-              >
+              <Button onClick={handleInputSubmit} {...sendButtonStyles} className='send-button'>
                 <Flex {...sendButtonFlexStyles}>
                   <Text>Send</Text>
-                  <Text
-                    {...sendButtonTextStyles}
-                    style={{ transform: 'rotate(-45deg)' }}
-                  >
+                  <Text {...sendButtonTextStyles} style={{ transform: 'rotate(-45deg)' }}>
                     ➚
                   </Text>
-                  <Box {...sendButtonAnimationStyles} />
                 </Flex>
               </Button>
             </Flex>
-
-            <Text {...helperTextStyles}>
-              Press Enter to send, Shift+Enter for new line
-            </Text>
           </Flex>
         </Box>
       </Resizable>
