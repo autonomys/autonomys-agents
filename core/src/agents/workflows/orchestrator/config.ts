@@ -172,6 +172,9 @@ export const createLLMConfig = (options?: OrchestratorRunnerOptions): LLMFactory
   };
 };
 
+export const createStopCounterLimit = (options?: OrchestratorRunnerOptions): number => {
+  return options?.stopCounterLimit ?? 3;
+};
 /**
  * Creates a configuration object for an orchestrator runner
  * This handles all the merging of defaults with provided options
@@ -195,6 +198,7 @@ export const createOrchestratorConfig = async (
   const characterDataPathConfig = createCharacterDataPathConfig(options);
   const apiConfig = createApiConfig(options);
   const llmConfig = createLLMConfig(options);
+  const stopCounterLimit = createStopCounterLimit(options);
   // Get tools - merge custom tools with defaults if experience saving is enabled
   const tools: Tools = [
     ...(options?.tools || []),
@@ -222,5 +226,6 @@ export const createOrchestratorConfig = async (
     characterDataPathConfig,
     apiConfig,
     llmConfig,
+    stopCounterLimit,
   };
 };

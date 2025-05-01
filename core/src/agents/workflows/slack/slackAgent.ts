@@ -17,6 +17,7 @@ import {
   createModelConfigurations,
   createMonitoringConfig,
   createPruningParameters,
+  createStopCounterLimit,
 } from '../orchestrator/config.js';
 
 const logger = createLogger('slack-workflow');
@@ -56,7 +57,7 @@ const createSlackAgentConfig = async (
   // Get Slack-specific tools and prompts
   const slackTools = await createSlackTools(slackToken);
   const prompts = await createSlackPrompts(character);
-
+  const stopCounterLimit = createStopCounterLimit(options);
   // Combine all tools
   const tools = [...slackTools, ...(options?.tools || [])];
 
@@ -73,6 +74,7 @@ const createSlackAgentConfig = async (
     characterDataPathConfig,
     apiConfig,
     llmConfig,
+    stopCounterLimit,
   };
 };
 

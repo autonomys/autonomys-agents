@@ -19,6 +19,7 @@ import {
   createModelConfigurations,
   createMonitoringConfig,
   createPruningParameters,
+  createStopCounterLimit,
 } from '../orchestrator/config.js';
 
 const logger = createLogger('twitter-workflow');
@@ -73,7 +74,7 @@ const createTwitterAgentConfig = async (
   );
 
   const prompts = await createTwitterPrompts(character, twitterApi.username);
-
+  const stopCounterLimit = createStopCounterLimit(options);
   // Combine all tools
   const tools = [...twitterTools, ...(options?.tools || [])];
 
@@ -90,6 +91,7 @@ const createTwitterAgentConfig = async (
     characterDataPathConfig,
     apiConfig,
     llmConfig,
+    stopCounterLimit,
   };
 };
 

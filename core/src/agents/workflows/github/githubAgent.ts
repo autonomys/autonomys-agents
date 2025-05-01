@@ -17,6 +17,7 @@ import {
   createModelConfigurations,
   createMonitoringConfig,
   createPruningParameters,
+  createStopCounterLimit,
 } from '../orchestrator/config.js';
 const logger = createLogger('github-workflow');
 
@@ -57,7 +58,7 @@ const createGithubAgentConfig = async (
   // Get GitHub-specific tools and prompts
   const githubTools = await createGitHubTools(githubToken, toolsSubset);
   const prompts = await createGithubPrompts(character);
-
+  const stopCounterLimit = createStopCounterLimit(options);
   // Combine all tools
   const tools = [...githubTools, ...(options?.tools || [])];
 
@@ -74,6 +75,7 @@ const createGithubAgentConfig = async (
     characterDataPathConfig,
     apiConfig,
     llmConfig,
+    stopCounterLimit,
   };
 };
 

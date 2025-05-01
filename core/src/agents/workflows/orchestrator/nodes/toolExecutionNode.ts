@@ -7,10 +7,12 @@ export const createToolExecutionNode = ({
   tools,
   namespace,
   apiConfig,
+  stopCounterLimit,
 }: {
   tools: DynamicStructuredTool[];
   namespace: string;
   apiConfig: ApiConfig;
+  stopCounterLimit: number;
 }) => {
   const logger = attachLogger(
     createLogger(`${namespace}-tool-execution-node`),
@@ -36,7 +38,7 @@ export const createToolExecutionNode = ({
             )?.tool;
             if (
               selectedTool?.name === 'stop_workflow' &&
-              stopCounter < 3 &&
+              stopCounter < stopCounterLimit &&
               namespace !== 'orchestrator'
             ) {
               logger.info('Stopping workflow counter', { stopCounter });

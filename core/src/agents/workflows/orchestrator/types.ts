@@ -77,6 +77,7 @@ export type OrchestratorRunnerOptions = {
   recursionLimit?: number;
   apiConfig?: ApiConfig;
   llmConfig?: LLMConfig;
+  stopCounterLimit?: number;
   logger?: Logger;
 };
 
@@ -93,6 +94,7 @@ export type OrchestratorConfig = {
   recursionLimit: number;
   apiConfig: ApiConfig;
   llmConfig: LLMFactoryConfig;
+  stopCounterLimit: number;
   logger?: Logger;
 };
 
