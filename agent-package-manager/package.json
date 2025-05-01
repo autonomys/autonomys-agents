@@ -1,6 +1,6 @@
 {
   "name": "@autonomys/agent-os",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "Package manager for Autonomys agent tools",
   "license": "MIT",
   "main": "dist/index.js",

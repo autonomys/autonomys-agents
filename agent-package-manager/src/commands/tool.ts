@@ -2,10 +2,11 @@ import chalk from 'chalk';
 import { getToolMetadata } from '../utils/commands/registry/toolInquiry.js';
 import { getToolVersions } from '../utils/blockchain/contractClient.js';
 import { ToolCommandParams } from '../types/index.js';
+import checkForUpdates from '../utils/update/index.js';
 
 const tool = async (params: ToolCommandParams): Promise<void> => {
   const { name, version, action } = params;
-
+  const _checkForUpdates = await checkForUpdates();
   if (version && action === 'metadata') {
     const metadata = await getToolMetadata(name, version);
     if (metadata) {
