@@ -13,14 +13,13 @@ export const parseMessageContent = (content: MessageContent): any => {
   return content;
 };
 
-
 export const toolInterfaceConverter = (tool: DynamicStructuredTool) => {
   return {
-    type: "function",
+    type: 'function',
     function: {
-        name: tool.name,
-        description: tool.description,
-        parameters: zodToJsonSchema(tool.schema),
+      name: tool.name,
+      description: tool.description,
+      parameters: zodToJsonSchema(tool.schema),
     },
   };
 };

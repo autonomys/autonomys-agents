@@ -107,6 +107,7 @@ export type OrchestratorStateType = {
   toolCalls: any[] | null;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   executedTools: any[] | null;
+  stopCounter: number;
 };
 
 export type PruningParameters = {
