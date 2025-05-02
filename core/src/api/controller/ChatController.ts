@@ -1,39 +1,19 @@
 import { Request, Response } from 'express';
 import { createLogger } from '../../utils/logger.js';
 import asyncHandler from 'express-async-handler';
-import { getVectorDB } from '../../services/vectorDb/vectorDBPool.js';
-import { StringOutputParser } from '@langchain/core/output_parsers';
 import { chatStreamClients } from './StateController.js';
-import { responsePrompt, searchParamsParser, searchPrompt } from './prompt/ChatPrompts.js';
-import { LLMFactory } from '../../services/llm/factory.js';
+import { v4 as uuidv4 } from "uuid";
+
+
 import { LLMFactoryConfig } from '../../services/llm/types.js';
+import { chatApp } from '../../agents/chat/workflow.js';
+import { BaseMessage } from '@langchain/core/messages';
+
 const logger = createLogger('chat-controller');
-interface SearchParams {
-  query: string;
-  metadataFilter?: string | '';
-  limit?: number;
-}
+const config = {configurable : {thread_id: uuidv4()}}
 
 // Factory for creating controller with injected config
 export const createChatController = (llmConfig: LLMFactoryConfig) => {
-  const searchQueryModel = LLMFactory.createModel(
-    {
-      model: 'gpt-4o',
-      provider: 'openai',
-      temperature: 0.3,
-    },
-    llmConfig,
-  );
-
-  const streamingModel = LLMFactory.createModel(
-    {
-      model: 'gpt-4o',
-      provider: 'openai',
-      temperature: 0.7,
-    },
-    llmConfig,
-  );
-
   const getChatStream = (req: Request, res: Response) => {
     const { namespace } = req.params;
 
@@ -61,69 +41,17 @@ export const createChatController = (llmConfig: LLMFactoryConfig) => {
     asyncHandler(async (req: Request, res: Response) => {
       const { namespace } = req.params;
       const { message } = req.body;
-
-      if (!message) {
-        res.status(400).json({ error: 'Message is required' });
-        return;
-      }
-
-      try {
-        const db = getVectorDB('experiences', llmConfig, dataPath);
-        const searchChain = searchPrompt.pipe(searchQueryModel).pipe(searchParamsParser);
-        logger.info('Generating search parameters...');
-
-        let searchParams: SearchParams;
-        try {
-          searchParams = await searchChain.invoke({
-            message: message,
-          });
-
-          logger.info('Generated search parameters:', { searchParams, namespace });
-        } catch (parseError) {
-          logger.error('Error generating search parameters:', parseError);
-          searchParams = {
-            query: message,
-            limit: 5,
-          };
-        }
-
-        const relevantContext = await db.search(searchParams);
-        logger.info('Relevant context:', { relevantContext, namespace });
-        const contextText = relevantContext.map(item => item.content).join('\n\n');
-
-        const responseChain = responsePrompt.pipe(streamingModel).pipe(new StringOutputParser());
-
-        res.setHeader('Content-Type', 'text/event-stream');
-        res.setHeader('Cache-Control', 'no-cache');
-
-        const stream = await responseChain.stream({
-          namespace,
-          contextText,
-          message,
-        });
-
-        let fullResponse = '';
-
-        for await (const chunk of stream) {
-          res.write(`data: ${JSON.stringify({ content: chunk, done: false })}\n\n`);
-          fullResponse += chunk;
-        }
-
-        res.write(`data: ${JSON.stringify({ content: '', done: true })}\n\n`);
-        res.end();
-
-        broadcastChatMessageUtility(namespace, {
-          role: 'agent',
-          content: fullResponse,
-          timestamp: new Date().toISOString(),
-        });
-      } catch (error) {
-        logger.error('Error processing chat message', { error, namespace });
-        res.status(500).json({
-          error: 'Failed to process chat message',
-          message: error instanceof Error ? error.message : 'Unknown error',
-        });
-      }
+      const input = {
+        messages: [
+          {
+            role: 'user',
+            content: message,
+          },
+        ],
+      };
+      const result = await chatApp.invoke(input, config);
+      broadcastChatMessageUtility(namespace, result.messages[result.messages.length - 1]);
+      res.json(result);
     });
 
   return {
@@ -134,11 +62,7 @@ export const createChatController = (llmConfig: LLMFactoryConfig) => {
 
 export const broadcastChatMessageUtility = (
   namespace: string,
-  message: {
-    role: 'user' | 'agent';
-    content: string;
-    timestamp: string;
-  },
+  message: BaseMessage,
 ): void => {
   chatStreamClients.forEach((client, clientId) => {
     if (client.namespace === namespace || client.namespace === 'all') {
