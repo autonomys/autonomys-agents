@@ -27,6 +27,7 @@ export type RestApiConfig = {
   llmConfig: LLMFactoryConfig;
 };
 
+/// TODO - dataPath and llmConfig should be removed
 export type CreateApiServerParams = {
   characterName: string;
   dataPath: string;

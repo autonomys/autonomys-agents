@@ -2,18 +2,14 @@ import { Request, Response } from 'express';
 import { createLogger } from '../../utils/logger.js';
 import asyncHandler from 'express-async-handler';
 import { chatStreamClients } from './StateController.js';
-import { v4 as uuidv4 } from "uuid";
-
-
-import { LLMFactoryConfig } from '../../services/llm/types.js';
+import { v4 as uuidv4 } from 'uuid';
 import { chatApp } from '../../agents/chat/workflow.js';
-import { BaseMessage } from '@langchain/core/messages';
 
 const logger = createLogger('chat-controller');
-const config = {configurable : {thread_id: uuidv4()}}
+const config = { configurable: { thread_id: uuidv4() } };
 
 // Factory for creating controller with injected config
-export const createChatController = (llmConfig: LLMFactoryConfig) => {
+export const createChatController = () => {
   const getChatStream = (req: Request, res: Response) => {
     const { namespace } = req.params;
 
@@ -37,7 +33,7 @@ export const createChatController = (llmConfig: LLMFactoryConfig) => {
     });
   };
 
-  const sendChatMessage = (dataPath: string) =>
+  const sendChatMessage = () =>
     asyncHandler(async (req: Request, res: Response) => {
       const { namespace } = req.params;
       const { message } = req.body;
@@ -50,8 +46,15 @@ export const createChatController = (llmConfig: LLMFactoryConfig) => {
         ],
       };
       const result = await chatApp.invoke(input, config);
-      broadcastChatMessageUtility(namespace, result.messages[result.messages.length - 1]);
-      res.json(result);
+      broadcastChatMessageUtility(
+        namespace,
+        result.messages[result.messages.length - 1].lc_kwargs.content,
+      );
+      const responses = result.messages.map(message => ({
+        role: message.lc_id[message.lc_id.length - 1],
+        content: message.lc_kwargs.content,
+      }));
+      res.json(responses);
     });
 
   return {
@@ -60,10 +63,7 @@ export const createChatController = (llmConfig: LLMFactoryConfig) => {
   };
 };
 
-export const broadcastChatMessageUtility = (
-  namespace: string,
-  message: BaseMessage,
-): void => {
+export const broadcastChatMessageUtility = (namespace: string, message: string): void => {
   chatStreamClients.forEach((client, clientId) => {
     if (client.namespace === namespace || client.namespace === 'all') {
       const chatEvent = {

@@ -14,6 +14,7 @@ import { createAllSchedulerTools } from '@autonomys/agent-core/src/agents/tools/
 import { createExperienceManager } from '@autonomys/agent-core/src/blockchain/agentExperience/index.js';
 import { parseArgs } from '@autonomys/agent-core/src/utils/args.js';
 import { createApiServer } from '@autonomys/agent-core/src/api/server.js';
+import { startTaskExecutor } from '@autonomys/agent-core/src/agents/workflows/orchestrator/scheduler/taskExecutor.js';
 
 parseArgs();
 
@@ -172,25 +173,15 @@ const main = async () => {
   const runner = await orchestratorRunner();
   const initialMessage = `Check your timeline, engage with posts and find an interesting topic to tweet about.`;
   try {
-    let message = initialMessage;
-    while (true) {
-      // Use type assertion for HumanMessage to resolve compatibility issue
-      const humanMessage = new HumanMessage(message) as any;
-      const result = await runner.runWorkflow({ messages: [humanMessage] });
+    const logger = createLogger('app');
+    logger.info('Initializing orchestrator runner...');
+    const runner = await orchestratorRunner();
 
-      message = `${result.summary}`;
+    logger.info('Starting task executor...');
+    const _startTaskExecutor = startTaskExecutor(runner, 'orchestrator');
 
-      logger.info('Workflow execution result:', { result });
-
-      const nextDelaySeconds = 3600;
-      logger.info('Workflow execution completed successfully for character:', {
-        characterName: config.characterConfig.name,
-        runFinished: new Date().toISOString(),
-        nextRun: `${nextDelaySeconds / 60} minutes`,
-        nextWorkflowPrompt: message,
-      });
-      await new Promise(resolve => setTimeout(resolve, nextDelaySeconds * 1000));
-    }
+    logger.info('Application initialized and ready to process scheduled tasks');
+    return new Promise(() => {});
   } catch (error) {
     if (error && typeof error === 'object' && 'name' in error && error.name === 'ExitPromptError') {
       logger.info('Process terminated by user');
