@@ -1,10 +1,8 @@
 import { END, MemorySaver, START, StateGraph } from '@langchain/langgraph';
 import { ChatState } from './state.js';
-import { createToolExecutionNode } from './nodes/executor.js';
-import { createInputNode } from './nodes/input.js';
-import { tools } from './tools.js';
+import { createNodes } from './nodes.js';
 import { LLMConfiguration } from '../../services/llm/types.js';
-
+import { defaultTools } from './tools.js';
 /// Temporary
 import { getConfig } from '../../config/index.js';
 const config = await getConfig();
@@ -20,14 +18,9 @@ const llmConfig = {
   OPENAI_API_KEY: config?.config.llmConfig.OPENAI_API_KEY,
 };
 
-// Create nodes
-const executor = createToolExecutionNode({
-  tools,
-});
-
-const inputNode = createInputNode({
+const { inputNode, executor } = createNodes({
   modelConfig,
-  tools,
+  tools: defaultTools,
   llmConfig,
 });
 

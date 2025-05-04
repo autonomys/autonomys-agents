@@ -1,3 +1,6 @@
+import { LLMFactoryConfig } from '../../services/llm/types.js';
+import { DynamicStructuredTool } from '@langchain/core/tools';
+import { LLMConfiguration } from '../../services/llm/types.js';
 import { ChatState } from './state.js';
 
 // Modify the InputNodeFunction type to accept any message format
@@ -7,3 +10,9 @@ export type InputNodeFunction = (state: typeof ChatState.State) => Promise<{
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   toolCalls: any[] | undefined;
 }>;
+
+export type ChatNodeConfig = {
+  modelConfig: LLMConfiguration;
+  tools?: DynamicStructuredTool[];
+  llmConfig: LLMFactoryConfig;
+};

@@ -2,6 +2,6 @@ import { createArxivSearchTool } from '../tools/arxiv/index.js';
 
 const arxivSearchTool = createArxivSearchTool();
 
-const tools = [arxivSearchTool];
+const defaultTools = [arxivSearchTool];
 
-export { tools };
+export { defaultTools };
