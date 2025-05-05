@@ -34,6 +34,7 @@ const createInputNode = ({
         {
           role: 'assistant',
           content: model.content,
+          tool_calls: toolCalls,
         },
       ],
       toolCalls,

@@ -1,4 +1,3 @@
-import { HumanMessage } from '@langchain/core/messages';
 import { createWebSearchTool } from '@autonomys/agent-core/src/agents/tools/webSearch/index.js';
 import {
   createOrchestratorRunner,
@@ -13,8 +12,13 @@ import { createLogger } from '@autonomys/agent-core/src/utils/logger.js';
 import { createAllSchedulerTools } from '@autonomys/agent-core/src/agents/tools/scheduler/index.js';
 import { createExperienceManager } from '@autonomys/agent-core/src/blockchain/agentExperience/index.js';
 import { parseArgs } from '@autonomys/agent-core/src/utils/args.js';
-import { createApiServer } from '@autonomys/agent-core/src/api/server.js';
+import { createApiServer, withApiLogger } from '@autonomys/agent-core/src/api/server.js';
 import { startTaskExecutor } from '@autonomys/agent-core/src/agents/workflows/orchestrator/scheduler/taskExecutor.js';
+import { createDefaultChatTools } from '@autonomys/agent-core/src/agents/chat/tools.js';
+import { createChatWorkflow } from '@autonomys/agent-core/src/agents/chat/workflow.js';
+import { LLMConfiguration } from '@autonomys/agent-core/src/services/llm/types.js';
+import { createChatNodeConfig } from '@autonomys/agent-core/src/agents/chat/config.js';
+import { registerOrchestratorRunner } from '@autonomys/agent-core/src/agents/workflows/registration.js';
 
 parseArgs();
 
@@ -27,16 +31,20 @@ if (!configInstance) {
 }
 const { config, agentVersion, characterName } = configInstance;
 
-// Initialize the API server
-createApiServer({
-  characterName: characterName,
-  dataPath: config.characterConfig.characterPath,
-  authFlag: config.apiSecurityConfig.ENABLE_AUTH,
-  authToken: config.apiSecurityConfig.API_TOKEN ?? '',
-  apiPort: config.API_PORT,
-  allowedOrigins: config.apiSecurityConfig.CORS_ALLOWED_ORIGINS,
-  llmConfig: config.llmConfig,
-});
+const chatAppInstance = async (): Promise<any> => {
+  const modelConfig: LLMConfiguration = {
+    model: 'gpt-4o-mini',
+    provider: 'openai',
+    temperature: 0.5,
+  };
+  const llmConfig = {
+    OPENAI_API_KEY: config.llmConfig.OPENAI_API_KEY,
+  };
+  const tools = createDefaultChatTools(llmConfig, config.characterConfig.characterPath);
+  const chatNodeConfig = createChatNodeConfig({ modelConfig, tools, llmConfig });
+  const chatAppInstance = createChatWorkflow(chatNodeConfig);
+  return chatAppInstance;
+}
 
 const character = config.characterConfig;
 const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
@@ -48,74 +56,74 @@ const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
   const schedulerTools = createAllSchedulerTools();
   const experienceManager =
     (saveExperiences || monitoringEnabled) &&
-    config.blockchainConfig.PRIVATE_KEY &&
-    config.blockchainConfig.RPC_URL &&
-    config.blockchainConfig.CONTRACT_ADDRESS &&
-    config.autoDriveConfig.AUTO_DRIVE_API_KEY
+      config.blockchainConfig.PRIVATE_KEY &&
+      config.blockchainConfig.RPC_URL &&
+      config.blockchainConfig.CONTRACT_ADDRESS &&
+      config.autoDriveConfig.AUTO_DRIVE_API_KEY
       ? await createExperienceManager({
-          autoDriveApiOptions: {
-            apiKey: config.autoDriveConfig.AUTO_DRIVE_API_KEY,
-            network: config.autoDriveConfig.AUTO_DRIVE_NETWORK,
-          },
-          uploadOptions: {
-            compression: true,
-            password: config.autoDriveConfig.AUTO_DRIVE_ENCRYPTION_PASSWORD,
-          },
-          walletOptions: {
-            privateKey: config.blockchainConfig.PRIVATE_KEY,
-            rpcUrl: config.blockchainConfig.RPC_URL,
-            contractAddress: config.blockchainConfig.CONTRACT_ADDRESS,
-          },
-          agentOptions: {
-            agentVersion: agentVersion,
-            agentName: characterName,
-            agentPath: character.characterPath,
-          },
-        })
+        autoDriveApiOptions: {
+          apiKey: config.autoDriveConfig.AUTO_DRIVE_API_KEY,
+          network: config.autoDriveConfig.AUTO_DRIVE_NETWORK,
+        },
+        uploadOptions: {
+          compression: true,
+          password: config.autoDriveConfig.AUTO_DRIVE_ENCRYPTION_PASSWORD,
+        },
+        walletOptions: {
+          privateKey: config.blockchainConfig.PRIVATE_KEY,
+          rpcUrl: config.blockchainConfig.RPC_URL,
+          contractAddress: config.blockchainConfig.CONTRACT_ADDRESS,
+        },
+        agentOptions: {
+          agentVersion: agentVersion,
+          agentName: characterName,
+          agentPath: character.characterPath,
+        },
+      })
       : undefined;
   const experienceConfig =
     saveExperiences && experienceManager
       ? {
-          saveExperiences: true as const,
-          experienceManager,
-        }
+        saveExperiences: true as const,
+        experienceManager,
+      }
       : {
-          saveExperiences: false as const,
-        };
+        saveExperiences: false as const,
+      };
 
   const monitoringConfig =
     monitoringEnabled && experienceManager
       ? {
-          enabled: true as const,
-          monitoringExperienceManager: experienceManager,
-        }
+        enabled: true as const,
+        monitoringExperienceManager: experienceManager,
+      }
       : {
-          enabled: false as const,
-        };
+        enabled: false as const,
+      };
 
   //Twitter agent config
   const twitterAgentTool =
     config.twitterConfig.USERNAME && config.twitterConfig.PASSWORD
       ? [
-          createTwitterAgent(
-            await createTwitterApi(
-              config.twitterConfig.USERNAME,
-              config.twitterConfig.PASSWORD,
-              config.twitterConfig.COOKIES_PATH,
-            ),
-            character,
-            {
-              tools: [...webSearchTool, ...schedulerTools],
-              postTweets: config.twitterConfig.POST_TWEETS,
-              experienceConfig,
-              monitoringConfig,
-              modelConfigurations: config.twitterConfig.model_configurations,
-              characterDataPathConfig: {
-                dataPath,
-              },
-            },
+        createTwitterAgent(
+          await createTwitterApi(
+            config.twitterConfig.USERNAME,
+            config.twitterConfig.PASSWORD,
+            config.twitterConfig.COOKIES_PATH,
           ),
-        ]
+          character,
+          {
+            tools: [...webSearchTool, ...schedulerTools],
+            postTweets: config.twitterConfig.POST_TWEETS,
+            experienceConfig,
+            monitoringConfig,
+            modelConfigurations: config.twitterConfig.model_configurations,
+            characterDataPathConfig: {
+              dataPath,
+            },
+          },
+        ),
+      ]
       : [];
 
   //Orchestrator config
@@ -146,12 +154,12 @@ const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
     monitoringConfig:
       monitoringEnabled && experienceManager
         ? {
-            enabled: true,
-            monitoringExperienceManager: experienceManager,
-          }
+          enabled: true,
+          monitoringExperienceManager: experienceManager,
+        }
         : {
-            enabled: false,
-          },
+          enabled: false,
+        },
     characterDataPathConfig: {
       dataPath,
     },
@@ -163,14 +171,33 @@ export const orchestratorRunner = (() => {
   let runnerPromise: Promise<OrchestratorRunner> | undefined = undefined;
   return async () => {
     if (!runnerPromise) {
-      runnerPromise = createOrchestratorRunner(character, orchestrationConfig);
+      const namespace = 'orchestrator';
+      runnerPromise = createOrchestratorRunner(configInstance.config.characterConfig, {
+        ...orchestrationConfig,
+        ...withApiLogger(namespace, orchestrationConfig.apiConfig ? true : false),
+      });
+      const runner = await runnerPromise;
+      registerOrchestratorRunner(namespace, runner);
     }
     return runnerPromise;
   };
 })();
 
+createApiServer({
+  characterName: characterName,
+  dataPath: config.characterConfig.characterPath,
+  authFlag: config.apiSecurityConfig.ENABLE_AUTH,
+  authToken: config.apiSecurityConfig.API_TOKEN ?? '',
+  apiPort: config.API_PORT,
+  allowedOrigins: config.apiSecurityConfig.CORS_ALLOWED_ORIGINS,
+  llmConfig: config.llmConfig,
+  chatAppInstance: await chatAppInstance(),
+});
+
+
 const main = async () => {
   const runner = await orchestratorRunner();
+
   const initialMessage = `Check your timeline, engage with posts and find an interesting topic to tweet about.`;
   try {
     const logger = createLogger('app');
@@ -181,7 +208,7 @@ const main = async () => {
     const _startTaskExecutor = startTaskExecutor(runner, 'orchestrator');
 
     logger.info('Application initialized and ready to process scheduled tasks');
-    return new Promise(() => {});
+    return new Promise(() => { });
   } catch (error) {
     if (error && typeof error === 'object' && 'name' in error && error.name === 'ExitPromptError') {
       logger.info('Process terminated by user');

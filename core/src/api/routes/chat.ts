@@ -1,14 +1,14 @@
 import { Router } from 'express';
 import { createChatController } from '../controller/ChatController.js';
+import { ChatWorkflow } from '../../agents/chat/types.js';
 
-export const createChatRouter = (): Router => {
+export const createChatRouter = (chatAppInstance?: ChatWorkflow): Router => {
   const router = Router();
-
-  // Initialize the controller with the LLM configuration
-  const { getChatStream, sendChatMessage } = createChatController();
-
-  router.get('/namespaces/:namespace/chat/stream', getChatStream);
-  router.post('/namespaces/:namespace/chat', sendChatMessage());
+  if (chatAppInstance) {
+    const { getChatStream, sendChatMessage } = createChatController(chatAppInstance);
+    router.get('/namespaces/:namespace/chat/stream', getChatStream);
+    router.post('/namespaces/:namespace/chat', sendChatMessage());
+  }
 
   return router;
 };

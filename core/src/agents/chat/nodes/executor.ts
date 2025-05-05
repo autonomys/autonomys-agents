@@ -1,5 +1,4 @@
 import { DynamicStructuredTool } from '@langchain/core/tools';
-import { AIMessage } from '@langchain/core/messages';
 import { ToolMessage } from '@langchain/core/messages';
 import { ChatState } from '../state.js';
 import { createLogger } from '../../../utils/logger.js';
@@ -31,7 +30,9 @@ export const createToolExecutionNode = ({ tools }: { tools: DynamicStructuredToo
           } catch (error) {
             const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
             results.push(
-              new AIMessage({
+              new ToolMessage({
+                tool_call_id: toolCall.id,
+                name: toolCall.name,
                 content: `Error executing tool ${toolCall.name}: ${errorMessage}`,
               }),
             );
@@ -39,7 +40,10 @@ export const createToolExecutionNode = ({ tools }: { tools: DynamicStructuredToo
         }
       }
 
-      return { messages: results };
+      return {
+        messages: [...state.messages, ...results],
+        toolCalls: null,
+      };
     } catch {
       return { messages: [] };
     }

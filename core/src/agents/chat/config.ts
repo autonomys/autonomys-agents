@@ -1,6 +1,5 @@
 import { ChatNodeConfig } from './types.js';
 import { LLMConfiguration } from '../../services/llm/types.js';
-import { defaultTools } from './tools.js';
 
 const defaultModelConfig: LLMConfiguration = {
   model: 'gpt-4o-mini',
@@ -10,7 +9,7 @@ const defaultModelConfig: LLMConfiguration = {
 
 export const createChatNodeConfig = (options: ChatNodeConfig): ChatNodeConfig => {
   const modelConfig = options.modelConfig ?? defaultModelConfig;
-  const tools = options?.tools ?? defaultTools;
+  const tools = options.tools;
   const llmConfig = options.llmConfig;
   return { modelConfig, tools, llmConfig };
 };

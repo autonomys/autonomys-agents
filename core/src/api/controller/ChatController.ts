@@ -3,13 +3,14 @@ import { createLogger } from '../../utils/logger.js';
 import asyncHandler from 'express-async-handler';
 import { chatStreamClients } from './StateController.js';
 import { v4 as uuidv4 } from 'uuid';
-import { chatApp } from '../../agents/chat/workflow.js';
+import { BaseMessage } from '@langchain/core/messages';
+import { ChatWorkflow } from '../../agents/chat/types.js';
 
 const logger = createLogger('chat-controller');
 const config = { configurable: { thread_id: uuidv4() } };
 
 // Factory for creating controller with injected config
-export const createChatController = () => {
+export const createChatController = (chatAppInstance: ChatWorkflow) => {
   const getChatStream = (req: Request, res: Response) => {
     const { namespace } = req.params;
 
@@ -45,12 +46,13 @@ export const createChatController = () => {
           },
         ],
       };
-      const result = await chatApp.invoke(input, config);
+      const compiledWorkflow = await chatAppInstance;
+      const result = await compiledWorkflow.invoke(input, config);
       broadcastChatMessageUtility(
         namespace,
         result.messages[result.messages.length - 1].lc_kwargs.content,
       );
-      const responses = result.messages.map(message => ({
+      const responses = result.messages.map((message: BaseMessage) => ({
         role: message.lc_id[message.lc_id.length - 1],
         content: message.lc_kwargs.content,
       }));

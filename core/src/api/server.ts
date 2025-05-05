@@ -27,7 +27,7 @@ if (!config) {
 let apiServer: ApiServer | null = null;
 
 const createSingletonApiServer = (params: CreateApiServerParams): ApiServer => {
-  const { characterName, authFlag, authToken, apiPort, allowedOrigins } = params;
+  const { characterName, authFlag, authToken, apiPort, allowedOrigins, chatAppInstance } = params;
   const app = http2Express(express) as unknown as Express;
 
   app.use(corsMiddleware(allowedOrigins));
@@ -40,7 +40,7 @@ const createSingletonApiServer = (params: CreateApiServerParams): ApiServer => {
   app.use(express.json({ limit: '1mb' }));
   app.use(express.urlencoded({ extended: true, limit: '1mb' }));
 
-  const apiRouter = createApiRouter(characterName);
+  const apiRouter = createApiRouter(characterName, chatAppInstance);
 
   if (authFlag) {
     app.use('/api', createAuthMiddleware(authToken));
