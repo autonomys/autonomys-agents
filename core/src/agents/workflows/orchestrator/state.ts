@@ -36,4 +36,9 @@ export const OrchestratorState = (pruningParameters: PruningParameters) =>
       default: () => [],
       reducer: (curr, update) => [...curr, ...(update || [])],
     }),
+
+    stopCounter: Annotation<number>({
+      default: () => 1,
+      reducer: (curr, update) => curr + (update || 0),
+    }),
   });

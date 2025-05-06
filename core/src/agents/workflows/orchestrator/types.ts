@@ -77,6 +77,7 @@ export type OrchestratorRunnerOptions = {
   recursionLimit?: number;
   apiConfig?: ApiConfig;
   llmConfig?: LLMConfig;
+  stopCounterLimit?: number;
   logger?: Logger;
 };
 
@@ -93,6 +94,7 @@ export type OrchestratorConfig = {
   recursionLimit: number;
   apiConfig: ApiConfig;
   llmConfig: LLMFactoryConfig;
+  stopCounterLimit: number;
   logger?: Logger;
 };
 
@@ -107,6 +109,7 @@ export type OrchestratorStateType = {
   toolCalls: any[] | null;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   executedTools: any[] | null;
+  stopCounter: number;
 };
 
 export type PruningParameters = {

@@ -21,6 +21,7 @@ export const createNodes = async ({
   namespace,
   apiConfig,
   llmConfig,
+  stopCounterLimit,
 }: OrchestratorConfig): Promise<OrchestratorNodes> => {
   const { inputPrompt, messageSummaryPrompt, finishWorkflowPrompt } = prompts;
   const { inputModelConfig, messageSummaryModelConfig, finishWorkflowModelConfig } =
@@ -53,6 +54,7 @@ export const createNodes = async ({
     tools: tools as DynamicStructuredTool[],
     namespace,
     apiConfig,
+    stopCounterLimit,
   });
   return {
     inputNode,

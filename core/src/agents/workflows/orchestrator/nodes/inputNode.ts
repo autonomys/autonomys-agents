@@ -5,6 +5,8 @@ import { LLMConfiguration, LLMFactoryConfig } from '../../../../services/llm/typ
 import { ChatPromptTemplate } from '@langchain/core/prompts';
 import { attachLogger } from '../../../../api/server.js';
 import { prepareAnthropicPrompt } from './utils.js';
+import { toolInterfaceConverter } from '../../utils.js';
+import { DynamicStructuredTool } from '@langchain/core/tools';
 
 export const createInputNode = ({
   modelConfig,
@@ -25,6 +27,9 @@ export const createInputNode = ({
     createLogger(`${namespace}-input-node`),
     namespace,
     apiConfig.apiEnabled ?? false,
+  );
+  const toolsNewInterface = tools.map(tool =>
+    toolInterfaceConverter(tool as DynamicStructuredTool),
   );
   const runNode = async (state: OrchestratorStateType) => {
     logger.info('MODEL CONFIG - Input Node:', { modelConfig });
@@ -50,12 +55,12 @@ export const createInputNode = ({
         : formattedMessages;
 
     const result = await LLMFactory.createModel(modelConfig, llmConfig)
-      .bindTools(tools)
+      .bindTools(toolsNewInterface)
       .invoke(promptToSend);
 
     const toolCalls = result.tool_calls;
 
-    logger.debug('Tool Calls - Input Node:', { toolCalls });
+    logger.info('Tool Calls - Input Node:', { toolCalls });
     const usage = result.additional_kwargs?.usage;
     logger.info('Result - Input Node:', {
       content: result.content,
