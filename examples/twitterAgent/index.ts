@@ -21,11 +21,14 @@ import { createChatNodeConfig } from '@autonomys/agent-core/src/agents/chat/conf
 import { registerOrchestratorRunner } from '@autonomys/agent-core/src/agents/workflows/registration.js';
 import { createTaskQueue } from '@autonomys/agent-core/src/agents/workflows/orchestrator/scheduler/taskQueue.js';
 
+// Process command line arguments for the Twitter agent
 parseArgs();
 
+// Set up logging for our Twitter agent
 const logger = createLogger('autonomous-twitter-agent');
 
-// Get the config instance
+// Load configuration from environment variables or config files
+// This contains all the settings our agent needs to operate
 const configInstance = await getConfig();
 if (!configInstance) {
   throw new Error('Config instance not found');
@@ -33,6 +36,8 @@ if (!configInstance) {
 const { config, agentVersion, characterName } = configInstance;
 const character = config.characterConfig;
 
+// Define API configuration for exposing agent functionality via REST API
+// This allows external applications to interact with our agent
 const apiConfig = {
   apiEnabled: config.ENABLE_API,
   authFlag: config.apiSecurityConfig.ENABLE_AUTH,
@@ -41,10 +46,13 @@ const apiConfig = {
   allowedOrigins: config.apiSecurityConfig.CORS_ALLOWED_ORIGINS,
 };
 
+// Set up the chat application instance
+// This provides conversational capabilities to our agent
 const chatAppInstance = async (): Promise<any> => {
+  // Configure a lightweight model for chat interactions
   const modelConfig: LLMConfiguration = {
-    model: 'gpt-4o-mini',
-    provider: 'openai',
+    model: 'claude-3-5-haiku-latest',
+    provider: 'anthropic',
     temperature: 0.5,
   };
   const tools = createDefaultChatTools(config.characterConfig.characterPath);
@@ -53,13 +61,25 @@ const chatAppInstance = async (): Promise<any> => {
   return chatAppInstance;
 }
 
+// Configure the orchestrator that will manage our agent's workflow
 const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
   const dataPath = character.characterPath;
-  //shared twitter agent and orchestrator config
+  
+  // Create web search capability if API key is available
+  // This allows our agent to search the web for information
   const webSearchTool = config.SERPAPI_API_KEY ? [createWebSearchTool(config.SERPAPI_API_KEY)] : [];
+  
+  // Configure experience saving and monitoring features
+  // These track the agent's activities and save them to blockchain
   const saveExperiences = config.autoDriveConfig.AUTO_DRIVE_SAVE_EXPERIENCES;
   const monitoringEnabled = config.autoDriveConfig.AUTO_DRIVE_MONITORING;
+  
+  // Create tools for scheduling tasks
+  // These allow the agent to plan and execute activities over time
   const schedulerTools = createAllSchedulerTools();
+  
+  // Set up experience management if all required configuration is available
+  // This connects to blockchain for storing agent experiences
   const experienceManager =
     (saveExperiences || monitoringEnabled) &&
       config.blockchainConfig.PRIVATE_KEY &&
@@ -87,6 +107,8 @@ const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
         },
       })
       : undefined;
+  
+  // Configure experience saving based on available components
   const experienceConfig =
     saveExperiences && experienceManager
       ? {
@@ -97,6 +119,7 @@ const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
         saveExperiences: false as const,
       };
 
+  // Configure monitoring based on available components
   const monitoringConfig =
     monitoringEnabled && experienceManager
       ? {
@@ -107,7 +130,8 @@ const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
         enabled: false as const,
       };
 
-  //Twitter agent config
+  // Create Twitter agent tool if credentials are available
+  // This enables the agent to interact with Twitter
   const twitterAgentTool =
     config.twitterConfig.USERNAME && config.twitterConfig.PASSWORD
       ? [
@@ -133,11 +157,11 @@ const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
       ]
       : [];
 
-  //Orchestrator config
-  //use default orchestrator prompts with character config from CLI
+  // Create orchestrator prompts customized for our character
   const prompts = await createPrompts(character);
 
-  //override default model configurations for summary and finish workflow nodes
+  // Configure advanced models for summary and workflow completion
+  // These more powerful models help with complex reasoning tasks
   const modelConfigurations = {
     messageSummaryModelConfig: {
       provider: 'openai' as const,
@@ -150,6 +174,8 @@ const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
       temperature: 0.8,
     },
   };
+  
+  // Return the complete orchestrator configuration
   return {
     modelConfigurations,
     tools: [...twitterAgentTool, ...webSearchTool],
@@ -174,7 +200,11 @@ const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
   };
 };
 
+// Initialize the orchestrator configuration
 const orchestrationConfig = await orchestratorConfig();
+
+// Create a reusable orchestrator runner
+// This singleton pattern ensures we only create one runner instance
 export const orchestratorRunner = (() => {
   let runnerPromise: Promise<OrchestratorRunner> | undefined = undefined;
   return async () => {
@@ -191,8 +221,10 @@ export const orchestratorRunner = (() => {
   };
 })();
 
+// Main application entry point
 const main = async () => {
 
+  // Set up the API server to allow external interaction with our agent
   const _createApiServer = createApiServer({
     characterName: characterName,
     dataPath: config.characterConfig.characterPath,
@@ -206,29 +238,38 @@ const main = async () => {
   const initialMessage = `Check your timeline, engage with posts and find an interesting topic to tweet about.`;
 
   try {
+    // Initialize the system components
     const logger = createLogger('app');
     logger.info('Initializing orchestrator runner...');
     const runner = await orchestratorRunner();
 
+    // Create a task queue for managing agent tasks
+    // This allows scheduling of tasks to be executed by the agent
     const taskQueue = createTaskQueue('orchestrator', config.characterConfig.characterPath);
-    
-    // Scheduling the first task manually
-    // The task will be executed immediately
+
+    // Schedule our initial Twitter task
+    // The task will execute immediately when the executor starts
     taskQueue.scheduleTask(initialMessage, new Date());
     logger.info('Starting task executor...');
     const _startTaskExecutor = startTaskExecutor(runner, 'orchestrator');
-    logger.info('Application initialized and ready to process scheduled tasks');
+    logger.info('Application initialized and ready to process scheduled tasks.');
+    
+    // Keep the process running to handle tasks
     return new Promise(() => { });
   } catch (error) {
+    // Handle exit requests gracefully
     if (error && typeof error === 'object' && 'name' in error && error.name === 'ExitPromptError') {
       logger.info('Process terminated by user');
       process.exit(0);
     }
+    
+    // Log other errors and exit with failure code
     logger.error('Failed to start application:', error);
     process.exit(1);
   }
 };
 
+// Set up signal handlers for graceful shutdown
 process.on('SIGINT', () => {
   logger.info('Received SIGINT. Gracefully shutting down...');
   process.exit(0);
@@ -239,4 +280,5 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
+// Start the application
 main();

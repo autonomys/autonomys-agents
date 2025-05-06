@@ -17,11 +17,14 @@ import { createChatNodeConfig } from '@autonomys/agent-core/src/agents/chat/conf
 import { createTaskQueue } from '@autonomys/agent-core/src/agents/workflows/orchestrator/scheduler/taskQueue.js';
 import { startTaskExecutor } from '@autonomys/agent-core/src/agents/workflows/orchestrator/scheduler/taskExecutor.js';
 
+// Process command line arguments for the Slack agent
 parseArgs();
 
+// Set up logging for our agent
 const logger = createLogger('autonomous-web3-agent');
 
-// Get the config instance
+// Load configuration from environment variables or config files
+// This contains all the settings our agent needs to operate
 const configInstance = await getConfig();
 if (!configInstance) {
   throw new Error('Config instance not found');
@@ -30,6 +33,8 @@ const { config, characterName } = configInstance;
 
 const character = config.characterConfig;
 
+// Define API configuration for exposing agent functionality via REST API
+// This allows external applications to interact with our agent
 const apiConfig = {
   apiEnabled: config.ENABLE_API,
   authFlag: config.apiSecurityConfig.ENABLE_AUTH,
@@ -38,10 +43,13 @@ const apiConfig = {
   allowedOrigins: config.apiSecurityConfig.CORS_ALLOWED_ORIGINS,
 };
 
+// Set up the chat application instance
+// This provides conversational capabilities to our agent
 const chatAppInstance = async (): Promise<any> => {
+  // Configure a lightweight model for chat interactions
   const modelConfig: LLMConfiguration = {
-    model: 'gpt-4o-mini',
-    provider: 'openai',
+    model: 'claude-3-5-haiku-latest',
+    provider: 'anthropic',
     temperature: 0.5,
   };
   const tools = createDefaultChatTools(config.characterConfig.characterPath);
@@ -50,18 +58,26 @@ const chatAppInstance = async (): Promise<any> => {
   return chatAppInstance;
 }
 
+// Configure the orchestrator that will manage our agent's workflow
 const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
+  // Path to character data for agent personality and knowledge
   const dataPath = character.characterPath;
+  
+  // Retrieve and validate the Slack token from configuration
+  // This token is required to authenticate with the Slack API
   const slackToken = config.slackConfig.SLACK_APP_TOKEN;
   if (!slackToken) {
     throw new Error('SLACK_TOKEN is required in the environment variables');
   }
+  
+  // Create Slack tools that our agent can use
+  // These tools allow the agent to interact with Slack channels and users
   const slackTools = await createSlackTools(slackToken);
 
-  //Orchestrator config
-  //use default orchestrator prompts with character config
+  // Create prompts for the orchestrator, customized for our character
   const prompts = await createPrompts(character);
 
+  // Return the complete orchestrator configuration
   return {
     tools: [...slackTools],
     prompts,
@@ -72,8 +88,11 @@ const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
   };
 };
 
-
+// Initialize the orchestrator configuration
 const orchestrationConfig = await orchestratorConfig();
+
+// Create a reusable orchestrator runner
+// This singleton pattern ensures we only create one runner instance
 export const orchestratorRunner = (() => {
   let runnerPromise: Promise<OrchestratorRunner> | undefined = undefined;
   return async () => {
@@ -90,7 +109,9 @@ export const orchestratorRunner = (() => {
   };
 })();
 
+// Main application entry point
 const main = async () => {
+  // Set up the API server to allow external interaction with our agent
   const _createApiServer = createApiServer({
     characterName: characterName,
     dataPath: config.characterConfig.characterPath,
@@ -100,33 +121,43 @@ const main = async () => {
     allowedOrigins: config.apiSecurityConfig.CORS_ALLOWED_ORIGINS,
     chatAppInstance: await chatAppInstance(),
   });
-  // Choose which message to start with
+  
+  // Define the initial task for our agent to perform
+  // This will instruct the agent to monitor and participate in Slack conversations
   const initialMessage = `Check for new messages in your channels, reply to interesting ones`;
 
   try {
+    // Initialize the system components
     const logger = createLogger('app');
     logger.info('Initializing orchestrator runner...');
     const runner = await orchestratorRunner();
 
+    // Create a task queue for managing agent tasks
+    // This allows scheduling of tasks to be executed by the agent
     const taskQueue = createTaskQueue('orchestrator', config.characterConfig.characterPath);
 
-    // Scheduling the first task manually
-    // The task will be executed immediately
+    // Schedule our initial Slack monitoring task
+    // The task will execute immediately when the executor starts
     taskQueue.scheduleTask(initialMessage, new Date());
     logger.info('Starting task executor...');
     const _startTaskExecutor = startTaskExecutor(runner, 'orchestrator');
     logger.info('Application initialized and ready to process scheduled tasks');
+    
+    // Keep the process running to handle tasks
     return new Promise(() => { });
   } catch (error) {
+    // Handle exit requests gracefully
     if (error && typeof error === 'object' && 'name' in error && error.name === 'ExitPromptError') {
       logger.info('Process terminated by user');
       process.exit(0);
     }
+    // Log other errors and exit with failure code
     logger.error('Failed to start application:', error);
     process.exit(1);
   }
 };
 
+// Set up signal handlers for graceful shutdown
 process.on('SIGINT', () => {
   logger.info('Received SIGINT. Gracefully shutting down...');
   process.exit(0);
@@ -137,4 +168,5 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
+// Start the application
 main();
