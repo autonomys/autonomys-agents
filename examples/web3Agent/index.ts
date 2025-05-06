@@ -38,7 +38,6 @@ if (!configInstance) {
 const { config, characterName } = configInstance;
 const character = config.characterConfig;
 
-
 // Define API configuration for exposing agent functionality via REST API
 // This allows external applications to interact with our agent
 const apiConfig = {
@@ -63,11 +62,10 @@ const chatAppInstance = async (): Promise<any> => {
   const chatNodeConfig = createChatNodeConfig({ modelConfig, tools });
   const chatAppInstance = createChatWorkflow(chatNodeConfig);
   return chatAppInstance;
-}
+};
 
 // Configure the orchestrator that will manage our agent's workflow
 const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
-
   // Path to character data for agent personality and knowledge
   const dataPath = character.characterPath;
 
@@ -102,7 +100,6 @@ const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
 
 // Initialize the orchestrator configuration
 const orchestrationConfig = await orchestratorConfig();
-
 
 // Create a reusable orchestrator runner
 // This singleton pattern ensures we only create one runner instance
@@ -154,7 +151,7 @@ const main = async () => {
     logger.info('Starting task executor...');
     const _startTaskExecutor = startTaskExecutor(runner, 'orchestrator');
     logger.info('Application initialized and ready to process scheduled tasks');
-    
+
     // Keep the process running to handle tasks
     return new Promise(() => {});
   } catch (error) {

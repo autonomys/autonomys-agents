@@ -1,4 +1,7 @@
-import { getVectorDB, closeVectorDB } from '@autonomys/agent-core/src/services/vectorDb/vectorDBPool.js';
+import {
+  getVectorDB,
+  closeVectorDB,
+} from '@autonomys/agent-core/src/services/vectorDb/vectorDBPool.js';
 import { parseArgs } from '@autonomys/agent-core/src/utils/args.js';
 import { getConfig } from '@autonomys/agent-core/src/config/index.js';
 

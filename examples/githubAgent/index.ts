@@ -58,7 +58,7 @@ const chatAppInstance = async (): Promise<any> => {
   const chatNodeConfig = createChatNodeConfig({ modelConfig, tools });
   const chatAppInstance = createChatWorkflow(chatNodeConfig);
   return chatAppInstance;
-}
+};
 
 // Configure the orchestrator that will manage our agent's workflow
 const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
@@ -69,62 +69,62 @@ const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
   // These track the agent's activities and save them to blockchain
   const saveExperiences = config.autoDriveConfig.AUTO_DRIVE_SAVE_EXPERIENCES;
   const monitoringEnabled = config.autoDriveConfig.AUTO_DRIVE_MONITORING;
-  
+
   // Create tools for scheduling tasks
   // These allow the agent to plan and execute activities over time
   const schedulerTools = createAllSchedulerTools();
-  
+
   // Set up experience management if all required configuration is available
   // This connects to blockchain for storing agent experiences
   const experienceManager =
     (saveExperiences || monitoringEnabled) &&
-      config.blockchainConfig.PRIVATE_KEY &&
-      config.blockchainConfig.RPC_URL &&
-      config.blockchainConfig.CONTRACT_ADDRESS &&
-      config.autoDriveConfig.AUTO_DRIVE_API_KEY
+    config.blockchainConfig.PRIVATE_KEY &&
+    config.blockchainConfig.RPC_URL &&
+    config.blockchainConfig.CONTRACT_ADDRESS &&
+    config.autoDriveConfig.AUTO_DRIVE_API_KEY
       ? await createExperienceManager({
-        autoDriveApiOptions: {
-          apiKey: config.autoDriveConfig.AUTO_DRIVE_API_KEY,
-          network: config.autoDriveConfig.AUTO_DRIVE_NETWORK,
-        },
-        uploadOptions: {
-          compression: true,
-          password: config.autoDriveConfig.AUTO_DRIVE_ENCRYPTION_PASSWORD,
-        },
-        walletOptions: {
-          privateKey: config.blockchainConfig.PRIVATE_KEY,
-          rpcUrl: config.blockchainConfig.RPC_URL,
-          contractAddress: config.blockchainConfig.CONTRACT_ADDRESS,
-        },
-        agentOptions: {
-          agentVersion: agentVersion,
-          agentName: character.name,
-          agentPath: character.characterPath,
-        },
-      })
+          autoDriveApiOptions: {
+            apiKey: config.autoDriveConfig.AUTO_DRIVE_API_KEY,
+            network: config.autoDriveConfig.AUTO_DRIVE_NETWORK,
+          },
+          uploadOptions: {
+            compression: true,
+            password: config.autoDriveConfig.AUTO_DRIVE_ENCRYPTION_PASSWORD,
+          },
+          walletOptions: {
+            privateKey: config.blockchainConfig.PRIVATE_KEY,
+            rpcUrl: config.blockchainConfig.RPC_URL,
+            contractAddress: config.blockchainConfig.CONTRACT_ADDRESS,
+          },
+          agentOptions: {
+            agentVersion: agentVersion,
+            agentName: character.name,
+            agentPath: character.characterPath,
+          },
+        })
       : undefined;
-      
+
   // Configure experience saving based on available components
   const experienceConfig =
     saveExperiences && experienceManager
       ? {
-        saveExperiences: true as const,
-        experienceManager,
-      }
+          saveExperiences: true as const,
+          experienceManager,
+        }
       : {
-        saveExperiences: false as const,
-      };
+          saveExperiences: false as const,
+        };
 
   // Configure monitoring based on available components
   const monitoringConfig =
     monitoringEnabled && experienceManager
       ? {
-        enabled: true as const,
-        monitoringExperienceManager: experienceManager,
-      }
+          enabled: true as const,
+          monitoringExperienceManager: experienceManager,
+        }
       : {
-        enabled: false as const,
-      };
+          enabled: false as const,
+        };
 
   // Retrieve and validate the GitHub token from configuration
   // This token is required to authenticate with the GitHub API
@@ -132,22 +132,22 @@ const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
   if (!githubToken) {
     throw new Error('GITHUB_TOKEN is required in the environment variables');
   }
-  
+
   // Create GitHub agent tools if the token is available
   // These tools allow the agent to interact with GitHub repositories
   // The ISSUES_CONTRIBUTOR subset provides tools for working with issues and PRs
   const githubAgentTools = githubToken
     ? [
-      createGithubAgent(githubToken, GitHubToolsSubset.ISSUES_CONTRIBUTOR, character, {
-        tools: [...schedulerTools],
-        experienceConfig,
-        monitoringConfig,
-        characterDataPathConfig: {
-          dataPath,
-        },
-        apiConfig,
-      }),
-    ]
+        createGithubAgent(githubToken, GitHubToolsSubset.ISSUES_CONTRIBUTOR, character, {
+          tools: [...schedulerTools],
+          experienceConfig,
+          monitoringConfig,
+          characterDataPathConfig: {
+            dataPath,
+          },
+          apiConfig,
+        }),
+      ]
     : [];
 
   // Create prompts for the orchestrator, customized for our character
@@ -187,7 +187,6 @@ export const orchestratorRunner = (() => {
 
 // Main application entry point
 const main = async () => {
-
   // Set up the API server to allow external interaction with our agent
   const _createApiServer = createApiServer({
     characterName: characterName,
@@ -198,7 +197,7 @@ const main = async () => {
     allowedOrigins: config.apiSecurityConfig.CORS_ALLOWED_ORIGINS,
     chatAppInstance: await chatAppInstance(),
   });
-  
+
   // Define the initial task for our agent to perform
   // This provides a comprehensive workflow for monitoring GitHub activity
   // The agent will check issues, PRs, and comments, and respond appropriately
@@ -225,9 +224,9 @@ const main = async () => {
     logger.info('Starting task executor...');
     const _startTaskExecutor = startTaskExecutor(runner, 'orchestrator');
     logger.info('Application initialized and ready to process scheduled tasks');
-    
+
     // Keep the process running to handle tasks
-    return new Promise(() => { });
+    return new Promise(() => {});
   } catch (error) {
     // Handle exit requests gracefully
     if (error && typeof error === 'object' && 'name' in error && error.name === 'ExitPromptError') {

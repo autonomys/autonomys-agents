@@ -55,13 +55,13 @@ const chatAppInstance = async (): Promise<any> => {
   const chatNodeConfig = createChatNodeConfig({ modelConfig, tools });
   const chatAppInstance = createChatWorkflow(chatNodeConfig);
   return chatAppInstance;
-}
+};
 
 // Configure the orchestrator that will manage our agent's workflow
 const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
   // Path to character data for agent personality and knowledge
   const dataPath = character.characterPath;
-  
+
   // Retrieve and validate the Notion credentials from configuration
   // These tokens are required to authenticate with the Notion API
   const notionToken = config.notionConfig.NOTION_TOKEN;
@@ -72,7 +72,7 @@ const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
   if (!notionDatabaseId) {
     throw new Error('NOTION_DATABASE_ID is required in the environment variables');
   }
-  
+
   // Create Notion tools that our agent can use
   // These tools allow the agent to interact with Notion databases and pages
   const notionTools = await createNotionTools(notionToken, notionDatabaseId);
@@ -114,7 +114,6 @@ export const orchestratorRunner = (() => {
 
 // Main application entry point
 const main = async () => {
-
   // Set up the API server to allow external interaction with our agent
   const _createApiServer = createApiServer({
     characterName: characterName,
@@ -125,7 +124,7 @@ const main = async () => {
     allowedOrigins: config.apiSecurityConfig.CORS_ALLOWED_ORIGINS,
     chatAppInstance: await chatAppInstance(),
   });
-  
+
   // Define the initial task for our agent to perform
   // This provides a step-by-step workflow for the agent to follow
   // The agent will work with Notion databases and pages to create content
@@ -148,16 +147,16 @@ const main = async () => {
     // Create a task queue for managing agent tasks
     // This allows scheduling of tasks to be executed by the agent
     const taskQueue = createTaskQueue('orchestrator', config.characterConfig.characterPath);
-    
+
     // Schedule our initial Notion task
     // The task will execute immediately when the executor starts
     taskQueue.scheduleTask(initialMessage, new Date());
     logger.info('Starting task executor...');
     const _startTaskExecutor = startTaskExecutor(runner, 'orchestrator');
     logger.info('Application initialized and ready to process scheduled tasks');
-    
+
     // Keep the process running to handle tasks
-    return new Promise(() => { });
+    return new Promise(() => {});
   } catch (error) {
     // Handle exit requests gracefully
     if (error && typeof error === 'object' && 'name' in error && error.name === 'ExitPromptError') {

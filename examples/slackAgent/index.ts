@@ -56,20 +56,20 @@ const chatAppInstance = async (): Promise<any> => {
   const chatNodeConfig = createChatNodeConfig({ modelConfig, tools });
   const chatAppInstance = createChatWorkflow(chatNodeConfig);
   return chatAppInstance;
-}
+};
 
 // Configure the orchestrator that will manage our agent's workflow
 const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
   // Path to character data for agent personality and knowledge
   const dataPath = character.characterPath;
-  
+
   // Retrieve and validate the Slack token from configuration
   // This token is required to authenticate with the Slack API
   const slackToken = config.slackConfig.SLACK_APP_TOKEN;
   if (!slackToken) {
     throw new Error('SLACK_TOKEN is required in the environment variables');
   }
-  
+
   // Create Slack tools that our agent can use
   // These tools allow the agent to interact with Slack channels and users
   const slackTools = await createSlackTools(slackToken);
@@ -121,7 +121,7 @@ const main = async () => {
     allowedOrigins: config.apiSecurityConfig.CORS_ALLOWED_ORIGINS,
     chatAppInstance: await chatAppInstance(),
   });
-  
+
   // Define the initial task for our agent to perform
   // This will instruct the agent to monitor and participate in Slack conversations
   const initialMessage = `Check for new messages in your channels, reply to interesting ones`;
@@ -142,9 +142,9 @@ const main = async () => {
     logger.info('Starting task executor...');
     const _startTaskExecutor = startTaskExecutor(runner, 'orchestrator');
     logger.info('Application initialized and ready to process scheduled tasks');
-    
+
     // Keep the process running to handle tasks
-    return new Promise(() => { });
+    return new Promise(() => {});
   } catch (error) {
     // Handle exit requests gracefully
     if (error && typeof error === 'object' && 'name' in error && error.name === 'ExitPromptError') {

@@ -78,7 +78,7 @@ const chatAppInstance = async (): Promise<any> => {
   const chatNodeConfig = createChatNodeConfig({ modelConfig, tools });
   const chatAppInstance = createChatWorkflow(chatNodeConfig);
   return chatAppInstance;
-}
+};
 
 // Configure the orchestrator that will manage our agent's workflow
 const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
@@ -88,93 +88,93 @@ const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
   // Create web search capability if API key is available
   // This allows our agent to search the web for information
   const webSearchTool = config.SERPAPI_API_KEY ? [createWebSearchTool(config.SERPAPI_API_KEY)] : [];
-  
+
   // Configure experience saving and monitoring features
   // These track the agent's activities and save them to blockchain
   const saveExperiences = config.autoDriveConfig.AUTO_DRIVE_SAVE_EXPERIENCES;
   const monitoringEnabled = config.autoDriveConfig.AUTO_DRIVE_MONITORING;
-  
+
   // Create tools for scheduling tasks
   // These allow the agent to plan and execute activities over time
   const schedulerTools = createAllSchedulerTools();
-  
+
   // Set up experience management if all required configuration is available
   // This connects to blockchain for storing agent experiences
   const experienceManager =
     (saveExperiences || monitoringEnabled) &&
-      config.blockchainConfig.PRIVATE_KEY &&
-      config.blockchainConfig.RPC_URL &&
-      config.blockchainConfig.CONTRACT_ADDRESS &&
-      config.autoDriveConfig.AUTO_DRIVE_API_KEY
+    config.blockchainConfig.PRIVATE_KEY &&
+    config.blockchainConfig.RPC_URL &&
+    config.blockchainConfig.CONTRACT_ADDRESS &&
+    config.autoDriveConfig.AUTO_DRIVE_API_KEY
       ? await createExperienceManager({
-        autoDriveApiOptions: {
-          apiKey: config.autoDriveConfig.AUTO_DRIVE_API_KEY,
-          network: config.autoDriveConfig.AUTO_DRIVE_NETWORK,
-        },
-        uploadOptions: {
-          compression: true,
-          password: config.autoDriveConfig.AUTO_DRIVE_ENCRYPTION_PASSWORD,
-        },
-        walletOptions: {
-          privateKey: config.blockchainConfig.PRIVATE_KEY,
-          rpcUrl: config.blockchainConfig.RPC_URL,
-          contractAddress: config.blockchainConfig.CONTRACT_ADDRESS,
-        },
-        agentOptions: {
-          agentVersion: agentVersion,
-          agentName: orchestratorCharacter.name,
-          agentPath: orchestratorCharacter.characterPath,
-        },
-      })
+          autoDriveApiOptions: {
+            apiKey: config.autoDriveConfig.AUTO_DRIVE_API_KEY,
+            network: config.autoDriveConfig.AUTO_DRIVE_NETWORK,
+          },
+          uploadOptions: {
+            compression: true,
+            password: config.autoDriveConfig.AUTO_DRIVE_ENCRYPTION_PASSWORD,
+          },
+          walletOptions: {
+            privateKey: config.blockchainConfig.PRIVATE_KEY,
+            rpcUrl: config.blockchainConfig.RPC_URL,
+            contractAddress: config.blockchainConfig.CONTRACT_ADDRESS,
+          },
+          agentOptions: {
+            agentVersion: agentVersion,
+            agentName: orchestratorCharacter.name,
+            agentPath: orchestratorCharacter.characterPath,
+          },
+        })
       : undefined;
-      
+
   // Configure experience saving based on available components
   const experienceConfig =
     saveExperiences && experienceManager
       ? {
-        saveExperiences: true as const,
-        experienceManager,
-      }
+          saveExperiences: true as const,
+          experienceManager,
+        }
       : {
-        saveExperiences: false as const,
-      };
+          saveExperiences: false as const,
+        };
 
   // Configure monitoring based on available components
   const monitoringConfig =
     monitoringEnabled && experienceManager
       ? {
-        enabled: true as const,
-        monitoringExperienceManager: experienceManager,
-      }
+          enabled: true as const,
+          monitoringExperienceManager: experienceManager,
+        }
       : {
-        enabled: false as const,
-      };
+          enabled: false as const,
+        };
 
   // Create Twitter agent tool if credentials are available
   // This tool uses the Twitter character personality
   const twitterAgentTool =
     config.twitterConfig.USERNAME && config.twitterConfig.PASSWORD
       ? [
-        createTwitterAgent(
-          await createTwitterApi(
-            config.twitterConfig.USERNAME,
-            config.twitterConfig.PASSWORD,
-            config.twitterConfig.COOKIES_PATH,
-          ),
-          twitterCharacter,
-          {
-            tools: [...webSearchTool, ...schedulerTools],
-            postTweets: config.twitterConfig.POST_TWEETS,
-            experienceConfig,
-            monitoringConfig,
-            modelConfigurations: config.twitterConfig.model_configurations,
-            characterDataPathConfig: {
-              dataPath,
+          createTwitterAgent(
+            await createTwitterApi(
+              config.twitterConfig.USERNAME,
+              config.twitterConfig.PASSWORD,
+              config.twitterConfig.COOKIES_PATH,
+            ),
+            twitterCharacter,
+            {
+              tools: [...webSearchTool, ...schedulerTools],
+              postTweets: config.twitterConfig.POST_TWEETS,
+              experienceConfig,
+              monitoringConfig,
+              modelConfigurations: config.twitterConfig.model_configurations,
+              characterDataPathConfig: {
+                dataPath,
+              },
+              apiConfig,
             },
-            apiConfig,
-          },
-        ),
-      ]
+          ),
+        ]
       : [];
 
   // Create orchestrator prompts customized for our orchestrator character
@@ -195,7 +195,7 @@ const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
       temperature: 0.8,
     },
   };
-  
+
   // Return the complete orchestrator configuration
   return {
     modelConfigurations,
@@ -208,12 +208,12 @@ const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
     monitoringConfig:
       monitoringEnabled && experienceManager
         ? {
-          enabled: true,
-          monitoringExperienceManager: experienceManager,
-        }
+            enabled: true,
+            monitoringExperienceManager: experienceManager,
+          }
         : {
-          enabled: false,
-        },
+            enabled: false,
+          },
     characterDataPathConfig: {
       dataPath,
     },
@@ -272,7 +272,7 @@ const main = async () => {
     logger.info('Starting task executor...');
     const _startTaskExecutor = startTaskExecutor(runner, 'orchestrator');
     logger.info('Application initialized and ready to process scheduled tasks');
-    
+
     // Keep the process running to handle tasks
     return new Promise(() => {});
   } catch (error) {
@@ -281,7 +281,7 @@ const main = async () => {
       logger.info('Process terminated by user');
       process.exit(0);
     }
-    
+
     // Log other errors and exit with failure code
     logger.error('Failed to start application:', error);
     process.exit(1);
