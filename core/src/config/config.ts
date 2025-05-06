@@ -138,7 +138,6 @@ export const getConfig = async (options?: ConfigOptions): Promise<ConfigInstance
 
       NOTION_INTEGRATION_SECRET: process.env.NOTION_INTEGRATION_SECRET || '',
 
-
       autoDriveConfig: {
         AUTO_DRIVE_API_KEY: process.env.AUTO_DRIVE_API_KEY,
         AUTO_DRIVE_ENCRYPTION_PASSWORD: process.env.AUTO_DRIVE_ENCRYPTION_PASSWORD,

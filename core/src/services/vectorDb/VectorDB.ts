@@ -14,11 +14,7 @@ export class VectorDB {
   private maxElements: number;
   private static readonly DEFAULT_MAX_ELEMENTS = 100000;
 
-  constructor(
-    namespace: string,
-    dataPath: string,
-    maxElements?: number,
-  ) {
+  constructor(namespace: string, dataPath: string, maxElements?: number) {
     const targetDir = join(dataPath, 'data', namespace);
 
     if (!existsSync(targetDir)) {

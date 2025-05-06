@@ -65,9 +65,7 @@ export const createFinishWorkflowNode = ({
         ? prepareAnthropicPrompt(formattedMessages, logger)
         : formattedMessages;
 
-    const result = await LLMFactory.createModelFromConfig(modelConfig).invoke(
-      promptToSend,
-    );
+    const result = await LLMFactory.createModelFromConfig(modelConfig).invoke(promptToSend);
     const finishedWorkflow = await parseFinishedWorkflow(result.content, logger);
 
     logger.info('Finished Workflow:', { finishedWorkflow });

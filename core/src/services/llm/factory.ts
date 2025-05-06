@@ -9,9 +9,7 @@ export class LLMFactory {
     return this.createModelFromConfig(node);
   }
 
-  static createModelFromConfig(
-    { model, provider, temperature }: LLMConfiguration,
-  ) {
+  static createModelFromConfig({ model, provider, temperature }: LLMConfiguration) {
     switch (provider) {
       case 'openai':
         if (!process.env.OPENAI_API_KEY) {
