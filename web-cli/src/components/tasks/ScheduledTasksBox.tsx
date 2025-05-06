@@ -1,13 +1,7 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Box, Text, Button, Flex, Badge, useToken } from '@chakra-ui/react';
-import { Resizable } from 're-resizable';
 import { TasksAreaProps, Task } from '../../types/types';
 import {
-  resizableDefaultSize,
-  resizableStyles,
-  resizableEnableProps,
-  resizableHandleStyles,
-  resizableHandleBoxStyles,
   containerBoxStyles,
   scrollbarStyles,
   stackStyles,
@@ -17,7 +11,6 @@ import {
   taskContentFlexStyles,
   taskHeaderFlexStyles,
   taskTimestampStyles,
-  deleteButtonStyles,
   getTaskDescriptionStyles,
   getTaskStatusBadgeStyles,
   navTabsContainerStyles,
@@ -29,8 +22,9 @@ import {
   filterContainerStyles,
   filterLabelStyles,
   getFilterChipStyles,
-  getFilterCountBadgeStyles
+  getFilterCountBadgeStyles,
 } from './styles/ScheduledTasksBoxStyles';
+import { stopButtonStyles } from '../status/styles/StatusStyles';
 
 // Define the task types for the navbar
 type TaskViewType = 'processing' | 'scheduled' | 'completed';
@@ -38,34 +32,42 @@ type TaskViewType = 'processing' | 'scheduled' | 'completed';
 // Define the filter status types for completed tasks
 type CompletedFilterStatus = 'completed' | 'failed' | 'cancelled' | 'deleted';
 
-const ScheduledTasksBox: React.FC<TasksAreaProps> = ({ 
-  tasks, 
+const ScheduledTasksBox: React.FC<TasksAreaProps> = ({
   onDeleteTask,
   processingTasks = [],
   scheduledTasks = [],
   completedTasks = [],
   cancelledTasks = [],
   failedTasks = [],
-  deletedTasks = []
+  deletedTasks = [],
 }) => {
   // Initial height calculation to match OutputLog component
-  const initialHeight = 700;
-  const [size, setSize] = useState({ height: initialHeight });
+
   const [activeView, setActiveView] = useState<TaskViewType>('scheduled');
-  const [activeFilters, setActiveFilters] = useState<CompletedFilterStatus[]>(['completed', 'failed', 'cancelled', 'deleted']);
-  
+  const [activeFilters, setActiveFilters] = useState<CompletedFilterStatus[]>([
+    'completed',
+    'failed',
+    'cancelled',
+    'deleted',
+  ]);
+
   // Get brand colors for the navbar
-  const [neonBlue, neonGreen, neonPink, red] = useToken('colors', ['brand.neonBlue', 'brand.neonGreen', 'brand.neonPink', 'red.400']);
+  const [neonBlue, neonGreen, neonPink] = useToken('colors', [
+    'brand.neonBlue',
+    'brand.neonGreen',
+    'brand.neonPink',
+  ]);
 
   // Filter tasks based on the active view
   const getTasksForActiveView = (): Task[] => {
+    const tasksToShow: Task[] = [];
+    let uniqueTasks: Task[] = [];
     switch (activeView) {
       case 'processing':
         return processingTasks;
       case 'scheduled':
         return scheduledTasks;
       case 'completed':
-        const tasksToShow: Task[] = [];
         if (activeFilters.includes('completed')) {
           tasksToShow.push(...completedTasks);
         }
@@ -79,12 +81,9 @@ const ScheduledTasksBox: React.FC<TasksAreaProps> = ({
           tasksToShow.push(...deletedTasks);
         }
 
-        
         // Deduplicate tasks by ID
-        const uniqueTasks = Array.from(
-          new Map(tasksToShow.map(task => [task.id, task])).values()
-        );
-        
+        uniqueTasks = Array.from(new Map(tasksToShow.map(task => [task.id, task])).values());
+
         return uniqueTasks;
       default:
         return [];
@@ -97,7 +96,7 @@ const ScheduledTasksBox: React.FC<TasksAreaProps> = ({
       completed: completedTasks.length,
       failed: failedTasks.length,
       cancelled: cancelledTasks.length,
-      deleted: deletedTasks?.length
+      deleted: deletedTasks?.length,
     };
   }, [completedTasks, cancelledTasks, failedTasks, deletedTasks]);
 
@@ -145,17 +144,6 @@ const ScheduledTasksBox: React.FC<TasksAreaProps> = ({
     return time.toISOString();
   };
 
-  useEffect(() => {
-    const handleResize = () => {
-      // Update height on window resize using same calculation as OutputLog
-      const newHeight = window.innerHeight - 10;
-      setSize(prevSize => ({ ...prevSize, height: newHeight }));
-    };
-
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
-
   // Toggle a filter on/off
   const toggleFilter = (filterStatus: CompletedFilterStatus) => {
     setActiveFilters(prev => {
@@ -163,7 +151,7 @@ const ScheduledTasksBox: React.FC<TasksAreaProps> = ({
       if (prev.length === 1 && prev.includes(filterStatus)) {
         return prev;
       }
-      
+
       // If filter is already active, remove it
       if (prev.includes(filterStatus)) {
         return prev.filter(f => f !== filterStatus);
@@ -180,7 +168,7 @@ const ScheduledTasksBox: React.FC<TasksAreaProps> = ({
         case 'processing':
           return neonBlue;
         case 'scheduled':
-          return neonPink; 
+          return neonPink;
         case 'completed':
           return neonGreen;
       }
@@ -207,29 +195,7 @@ const ScheduledTasksBox: React.FC<TasksAreaProps> = ({
   const currentViewTasks = getTasksForActiveView();
 
   return (
-    <Resizable
-      defaultSize={resizableDefaultSize}
-      size={{
-        width: '100%',
-        height: size.height,
-      }}
-      minHeight={150}
-      style={resizableStyles}
-      onResizeStop={(e, direction, ref, d) => {
-        setSize(prevSize => ({
-          height: prevSize.height + d.height,
-        }));
-      }}
-      enable={resizableEnableProps}
-      handleStyles={{
-        bottom: resizableHandleStyles,
-      }}
-      handleComponent={{
-        bottom: (
-          <Box {...resizableHandleBoxStyles} />
-        ),
-      }}
-    >
+    <>
       {/* Task Type Navigation Tabs */}
       <Flex {...navTabsContainerStyles}>
         {/* Neural network background effect */}
@@ -240,14 +206,12 @@ const ScheduledTasksBox: React.FC<TasksAreaProps> = ({
           {...getTabItemStyles(
             activeView === 'processing',
             getTabColor('processing'),
-            getTabBackground('processing')
+            getTabBackground('processing'),
           )}
           onClick={() => setActiveView('processing')}
         >
           {/* Glowing dot for active tab */}
-          {activeView === 'processing' && (
-            <Box {...activeTabDotStyles(neonBlue)} />
-          )}
+          {activeView === 'processing' && <Box {...activeTabDotStyles(neonBlue)} />}
           PROCESSING
         </Flex>
 
@@ -256,14 +220,12 @@ const ScheduledTasksBox: React.FC<TasksAreaProps> = ({
           {...getTabItemStyles(
             activeView === 'scheduled',
             getTabColor('scheduled'),
-            getTabBackground('scheduled')
+            getTabBackground('scheduled'),
           )}
           onClick={() => setActiveView('scheduled')}
         >
           {/* Glowing dot for active tab */}
-          {activeView === 'scheduled' && (
-            <Box {...activeTabDotStyles(neonPink)} />
-          )}
+          {activeView === 'scheduled' && <Box {...activeTabDotStyles(neonPink)} />}
           SCHEDULED
         </Flex>
 
@@ -272,92 +234,92 @@ const ScheduledTasksBox: React.FC<TasksAreaProps> = ({
           {...getTabItemStyles(
             activeView === 'completed',
             getTabColor('completed'),
-            getTabBackground('completed')
+            getTabBackground('completed'),
           )}
           onClick={() => setActiveView('completed')}
         >
           {/* Glowing dot for active tab */}
-          {activeView === 'completed' && (
-            <Box {...activeTabDotStyles(neonGreen)} />
-          )}
+          {activeView === 'completed' && <Box {...activeTabDotStyles(neonGreen)} />}
           COMPLETED
         </Flex>
       </Flex>
 
-      <Box
-        {...containerBoxStyles}
-        css={scrollbarStyles}
-      >
+      <Box {...containerBoxStyles} css={scrollbarStyles}>
         <Box {...stackStyles}>
           {/* Faceted Filter UI - Only show for completed view */}
           {activeView === 'completed' && (
             <Flex {...filterContainerStyles}>
               <Text {...filterLabelStyles}>FILTER:</Text>
-              
+
               {/* Completed Filter */}
-              <Box 
+              <Box
                 {...getFilterChipStyles(
-                  activeFilters.includes('completed'), 
-                  getFilterColor('completed')
+                  activeFilters.includes('completed'),
+                  getFilterColor('completed'),
                 )}
                 onClick={() => toggleFilter('completed')}
               >
                 Completed
-                <Box {...getFilterCountBadgeStyles(
-                  activeFilters.includes('completed'),
-                  getFilterColor('completed')
-                )}>
+                <Box
+                  {...getFilterCountBadgeStyles(
+                    activeFilters.includes('completed'),
+                    getFilterColor('completed'),
+                  )}
+                >
                   {filterCounts.completed}
                 </Box>
               </Box>
-              
+
               {/* Failed Filter */}
-              <Box 
-                {...getFilterChipStyles(
-                  activeFilters.includes('failed'), 
-                  getFilterColor('failed')
-                )}
+              <Box
+                {...getFilterChipStyles(activeFilters.includes('failed'), getFilterColor('failed'))}
                 onClick={() => toggleFilter('failed')}
               >
                 Failed
-                <Box {...getFilterCountBadgeStyles(
-                  activeFilters.includes('failed'),
-                  getFilterColor('failed')
-                )}>
+                <Box
+                  {...getFilterCountBadgeStyles(
+                    activeFilters.includes('failed'),
+                    getFilterColor('failed'),
+                  )}
+                >
                   {filterCounts.failed}
                 </Box>
               </Box>
-              
+
               {/* Cancelled Filter */}
-              <Box 
+              <Box
                 {...getFilterChipStyles(
-                  activeFilters.includes('cancelled'), 
-                  getFilterColor('cancelled')
+                  activeFilters.includes('cancelled'),
+                  getFilterColor('cancelled'),
                 )}
                 onClick={() => toggleFilter('cancelled')}
               >
                 Cancelled
-                <Box {...getFilterCountBadgeStyles(
-                  activeFilters.includes('cancelled'),
-                  getFilterColor('cancelled')
-                )}>
+                <Box
+                  {...getFilterCountBadgeStyles(
+                    activeFilters.includes('cancelled'),
+                    getFilterColor('cancelled'),
+                  )}
+                >
                   {filterCounts.cancelled}
                 </Box>
               </Box>
-              
+
               {/* Deleted Filter */}
-              <Box 
+              <Box
                 {...getFilterChipStyles(
-                  activeFilters.includes('deleted'), 
-                  getFilterColor('deleted')
+                  activeFilters.includes('deleted'),
+                  getFilterColor('deleted'),
                 )}
                 onClick={() => toggleFilter('deleted')}
               >
                 Deleted
-                <Box {...getFilterCountBadgeStyles(
-                  activeFilters.includes('deleted'),
-                  getFilterColor('deleted')
-                )}>
+                <Box
+                  {...getFilterCountBadgeStyles(
+                    activeFilters.includes('deleted'),
+                    getFilterColor('deleted'),
+                  )}
+                >
                   {filterCounts.deleted}
                 </Box>
               </Box>
@@ -365,50 +327,40 @@ const ScheduledTasksBox: React.FC<TasksAreaProps> = ({
           )}
 
           {currentViewTasks.length === 0 ? (
-            <Box {...emptyStateStyles}>
-              No {activeView} tasks
-            </Box>
+            <Box {...emptyStateStyles}>No {activeView} tasks</Box>
           ) : (
             <Box {...taskListStyles}>
               {currentViewTasks.map(task => {
                 const statusColor = getStatusColor(task.status);
 
                 return (
-                  <Box
-                    key={task.id}
-                    {...getTaskItemStyles(statusColor)}
-                  >
+                  <Box key={task.id} {...getTaskItemStyles(statusColor)}>
                     <Flex {...taskContentFlexStyles}>
                       <Flex {...taskHeaderFlexStyles}>
-                        <Text {...taskTimestampStyles}>
-                          {formatTime(task.time)}
-                        </Text>
-                        <Button
-                          {...deleteButtonStyles}
-                          onClick={() => onDeleteTask(task.id)}
-                          title='Delete task'
-                          aria-label='Delete task'
-                        >
-                          Delete
-                        </Button>
+                        <Text {...taskTimestampStyles}>{formatTime(task.time)}</Text>
+                        {(task.status === 'completed' || task.status === 'scheduled') && (
+                          <Flex gap={2}>
+                            <Button
+                              {...stopButtonStyles}
+                              onClick={() => onDeleteTask(task.id)}
+                              title='Delete task'
+                              aria-label='Delete task'
+                            >
+                              Delete
+                            </Button>
+                          </Flex>
+                        )}
                       </Flex>
-
-                      <Text {...getTaskDescriptionStyles(!!task.status)}>
-                        {task.description}
-                      </Text>
+                      <Text {...getTaskDescriptionStyles(!!task.status)}>{task.description}</Text>
 
                       {task.status && (
-                        <Badge {...getTaskStatusBadgeStyles(statusColor)}>
-                          {task.status}
-                        </Badge>
+                        <Badge {...getTaskStatusBadgeStyles(statusColor)}>{task.status}</Badge>
                       )}
 
                       {/* Display result for completed tasks */}
-                      {(activeView === 'completed' && task.result) && (
+                      {activeView === 'completed' && task.result && (
                         <Box {...taskResultBoxStyles(statusColor)}>
-                          <Text {...taskResultTextStyles}>
-                            Result: {task.result}
-                          </Text>
+                          <Text {...taskResultTextStyles}>Result: {task.result}</Text>
                         </Box>
                       )}
                     </Flex>
@@ -419,7 +371,7 @@ const ScheduledTasksBox: React.FC<TasksAreaProps> = ({
           )}
         </Box>
       </Box>
-    </Resizable>
+    </>
   );
 };
 

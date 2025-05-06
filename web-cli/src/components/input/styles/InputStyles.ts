@@ -11,7 +11,7 @@ import { CSSProperties } from 'react';
 // Container styles
 export const containerFlexStyles: FlexProps = {
   direction: 'column',
-  gap: '4',
+  gap: '2',
   w: '100%',
   h: '100%',
 };

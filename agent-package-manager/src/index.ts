@@ -9,6 +9,7 @@ import { clean } from './commands/clean.js';
 import { tool } from './commands/tool.js';
 import { init } from './commands/init.js';
 import { config } from './commands/config.js';
+import { update } from './commands/update.js';
 import { loadConfig } from './config/index.js';
 import { credentialsExist } from './utils/credential/index.js';
 import { ensureAgentOSDir } from './utils/shared/path.js';
@@ -19,6 +20,7 @@ import {
   InstallOptions,
   PublishOptions,
   ToolCommandParams,
+  UpdateOptions,
 } from './types/index.js';
 
 const checkMasterPassword = async () => {
@@ -70,10 +72,14 @@ ensureAgentOSDir()
       await tool(options);
     };
 
+    const updateWrapper = async (options: UpdateOptions = {}) => {
+      await update(options);
+    };
+
     program
       .name('agent-os')
       .description('Package manager for Autonomys agent tools')
-      .version('0.1.0');
+      .version('0.1.3');
 
     program
       .command('init')
@@ -129,6 +135,12 @@ ensureAgentOSDir()
       .description('Clean cached packages and temporary files')
       .option('--force', 'Force clean without confirmation')
       .action(cleanWrapper);
+
+    program
+      .command('update')
+      .description('Check for updates to the agent-os CLI')
+      .option('--auto', 'Automatically install the latest version if available')
+      .action(updateWrapper);
 
     program.showHelpAfterError();
 
