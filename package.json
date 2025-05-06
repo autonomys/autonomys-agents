@@ -37,6 +37,8 @@
     "example": "yarn workspace autonomys-agents-examples tsx index.ts"
   },
   "dependencies": {
+    "@langchain/core": "^0.3.53",
+    "@langchain/deepseek": "^0.0.1",
     "@types/yargs": "^17.0.33",
     "better-sqlite3": "^11.8.0",
     "yargs": "^17.7.2"

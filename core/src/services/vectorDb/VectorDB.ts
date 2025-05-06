@@ -4,7 +4,6 @@ import { OpenAI } from 'openai/index.mjs';
 import { createLogger } from '../../utils/logger.js';
 import { join } from 'path';
 import { existsSync, mkdirSync } from 'fs';
-import { LLMFactoryConfig } from '../llm/types.js';
 const logger = createLogger('vector-database');
 
 export class VectorDB {
@@ -17,7 +16,6 @@ export class VectorDB {
 
   constructor(
     namespace: string,
-    llmConfig: LLMFactoryConfig,
     dataPath: string,
     maxElements?: number,
   ) {
@@ -31,7 +29,7 @@ export class VectorDB {
     this.dbFilePath = join(targetDir, `${namespace}-store.db`);
     this.maxElements = maxElements ?? VectorDB.DEFAULT_MAX_ELEMENTS;
     this.openai = new OpenAI({
-      apiKey: llmConfig.OPENAI_API_KEY,
+      apiKey: process.env.OPENAI_API_KEY,
     });
 
     this.initializeDatabase();

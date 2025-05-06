@@ -4,7 +4,6 @@ import { ToolNode } from '@langchain/langgraph/prebuilt';
 import { LLMConfiguration } from '../../../services/llm/types.js';
 import { Logger } from 'winston';
 import { ExperienceManager } from '../../../blockchain/agentExperience/types.js';
-import { LLMFactoryConfig } from '../../../services/llm/types.js';
 
 export type OrchestratorPrompts = {
   inputPrompt: ChatPromptTemplate;
@@ -76,7 +75,6 @@ export type OrchestratorRunnerOptions = {
   characterDataPathConfig?: CharacterDataPathConfig;
   recursionLimit?: number;
   apiConfig?: ApiConfig;
-  llmConfig?: LLMConfig;
   stopCounterLimit?: number;
   logger?: Logger;
 };
@@ -93,7 +91,6 @@ export type OrchestratorConfig = {
   characterDataPathConfig: CharacterDataPathConfig;
   recursionLimit: number;
   apiConfig: ApiConfig;
-  llmConfig: LLMFactoryConfig;
   stopCounterLimit: number;
   logger?: Logger;
 };

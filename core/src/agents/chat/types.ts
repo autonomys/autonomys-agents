@@ -1,4 +1,3 @@
-import { LLMFactoryConfig } from '../../services/llm/types.js';
 import { DynamicStructuredTool } from '@langchain/core/tools';
 import { LLMConfiguration } from '../../services/llm/types.js';
 import { ChatState } from './state.js';
@@ -15,7 +14,6 @@ export type InputNodeFunction = (state: typeof ChatState.State) => Promise<{
 export type ChatNodeConfig = {
   tools: DynamicStructuredTool[];
   modelConfig: LLMConfiguration;
-  llmConfig: LLMFactoryConfig;
 };
 
 export type ChatWorkflow = ReturnType<typeof createChatWorkflow>;

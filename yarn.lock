@@ -3929,6 +3929,38 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@langchain/core@npm:^0.3.53":
+  version: 0.3.53
+  resolution: "@langchain/core@npm:0.3.53"
+  dependencies:
+    "@cfworker/json-schema": "npm:^4.0.2"
+    ansi-styles: "npm:^5.0.0"
+    camelcase: "npm:6"
+    decamelize: "npm:1.2.0"
+    js-tiktoken: "npm:^1.0.12"
+    langsmith: "npm:^0.3.16"
+    mustache: "npm:^4.2.0"
+    p-queue: "npm:^6.6.2"
+    p-retry: "npm:4"
+    uuid: "npm:^10.0.0"
+    zod: "npm:^3.22.4"
+    zod-to-json-schema: "npm:^3.22.3"
+  checksum: 10c0/006e2ef11354d85dc9cd3529f8ec747bbe8e7e8bdf57bff8a0949155e04186563848f0047469f406702d3c69d1d9acb776a95303ee94183227dbebcd75383fbd
+  languageName: node
+  linkType: hard
+
+"@langchain/deepseek@npm:^0.0.1":
+  version: 0.0.1
+  resolution: "@langchain/deepseek@npm:0.0.1"
+  dependencies:
+    "@langchain/openai": "npm:^0.4.2"
+    zod: "npm:^3.24.1"
+  peerDependencies:
+    "@langchain/core": ">=0.3.0 <0.4.0"
+  checksum: 10c0/d4412a1e380ccc12f35169fde6541484f14ba08bb317d44d103fab3592f26e25b8c24c8d0553d30b1a90cd43f82a565623221211a77f0ac892d076df25984f4d
+  languageName: node
+  linkType: hard
+
 "@langchain/groq@npm:0.2.0":
   version: 0.2.0
   resolution: "@langchain/groq@npm:0.2.0"
@@ -4048,6 +4080,20 @@ __metadata:
   peerDependencies:
     "@langchain/core": ">=0.3.29 <0.4.0"
   checksum: 10c0/42a7013c331361008b1989692ef515521e145dcd599612c3d687734c9dfd82109adb7eb428f69b0ce0e45c2bdc2d288ddb4094b25d6d29c84d2450e7da19a2b4
+  languageName: node
+  linkType: hard
+
+"@langchain/openai@npm:^0.4.2":
+  version: 0.4.9
+  resolution: "@langchain/openai@npm:0.4.9"
+  dependencies:
+    js-tiktoken: "npm:^1.0.12"
+    openai: "npm:^4.87.3"
+    zod: "npm:^3.22.4"
+    zod-to-json-schema: "npm:^3.22.3"
+  peerDependencies:
+    "@langchain/core": ">=0.3.39 <0.4.0"
+  checksum: 10c0/456db6d039fad521caf9c2dab547075120d1156282c9eb891430b83f34d617121f4d97fda2be7954558910ddac8d235effe6071a002b93e60f460111318466d2
   languageName: node
   linkType: hard
 
@@ -8674,6 +8720,8 @@ __metadata:
   resolution: "autonomys-agents@workspace:."
   dependencies:
     "@eslint/js": "npm:^9.18.0"
+    "@langchain/core": "npm:^0.3.53"
+    "@langchain/deepseek": "npm:^0.0.1"
     "@types/better-sqlite3": "npm:^7.6.12"
     "@types/yargs": "npm:^17.0.33"
     "@typescript-eslint/eslint-plugin": "npm:^8.29.0"

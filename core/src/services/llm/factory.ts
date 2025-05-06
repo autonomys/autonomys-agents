@@ -1,22 +1,19 @@
 import { ChatOpenAI } from '@langchain/openai';
 import { ChatAnthropic } from '@langchain/anthropic';
 import { ChatOllama } from '@langchain/ollama';
-import { LLMConfiguration, LLMFactoryConfig } from './types.js';
+import { LLMConfiguration } from './types.js';
 import { ChatGroq } from '@langchain/groq';
-
+import { ChatDeepSeek } from '@langchain/deepseek';
 export class LLMFactory {
-  static createModel(node: LLMConfiguration, config: LLMFactoryConfig) {
-    return this.createModelFromConfig(node, config);
+  static createModel(node: LLMConfiguration) {
+    return this.createModelFromConfig(node);
   }
 
   static createModelFromConfig(
-    { model, provider, temperature }: LLMConfiguration,
-    config: LLMFactoryConfig,
-  ) {
+    { model, provider, temperature }: LLMConfiguration ) {
     switch (provider) {
       case 'openai':
         const baseConfig = {
-          apiKey: config.OPENAI_API_KEY,
           model,
         };
         if (!model.includes('o3-mini') && !model.includes('o4-mini')) {
@@ -28,7 +25,6 @@ export class LLMFactory {
         return new ChatOpenAI(baseConfig);
       case 'anthropic':
         return new ChatAnthropic({
-          apiKey: config.ANTHROPIC_API_KEY,
           model,
           temperature,
           clientOptions: {
@@ -39,22 +35,17 @@ export class LLMFactory {
         });
       case 'ollama':
         return new ChatOllama({
-          baseUrl: config.LLAMA_API_URL,
+          baseUrl: process.env.OLLAMA_API_URL,
           model,
           temperature,
         });
       case 'deepseek':
-        return new ChatOpenAI({
-          apiKey: config.DEEPSEEK_API_KEY,
-          configuration: {
-            baseURL: config.DEEPSEEK_URL,
-          },
+        return new ChatDeepSeek({
           model,
           temperature,
         });
       case 'groq':
         return new ChatGroq({
-          apiKey: config.GROQ_API_KEY,
           model,
           temperature,
         });

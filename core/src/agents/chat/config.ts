@@ -10,6 +10,5 @@ const defaultModelConfig: LLMConfiguration = {
 export const createChatNodeConfig = (options: ChatNodeConfig): ChatNodeConfig => {
   const modelConfig = options.modelConfig ?? defaultModelConfig;
   const tools = options.tools;
-  const llmConfig = options.llmConfig;
-  return { modelConfig, tools, llmConfig };
+  return { modelConfig, tools };
 };

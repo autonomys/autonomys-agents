@@ -1,7 +1,7 @@
 import { LLMFactory } from '../../../../services/llm/factory.js';
 import { createLogger } from '../../../../utils/logger.js';
 import { ApiConfig, InputNodeFunction, OrchestratorStateType, Tools } from '../types.js';
-import { LLMConfiguration, LLMFactoryConfig } from '../../../../services/llm/types.js';
+import { LLMConfiguration } from '../../../../services/llm/types.js';
 import { ChatPromptTemplate } from '@langchain/core/prompts';
 import { attachLogger } from '../../../../api/server.js';
 import { prepareAnthropicPrompt } from './utils.js';
@@ -14,14 +14,12 @@ export const createInputNode = ({
   tools,
   namespace,
   apiConfig,
-  llmConfig,
 }: {
   modelConfig: LLMConfiguration;
   inputPrompt: ChatPromptTemplate;
   tools: Tools;
   namespace: string;
   apiConfig: ApiConfig;
-  llmConfig: LLMFactoryConfig;
 }): InputNodeFunction => {
   const logger = attachLogger(
     createLogger(`${namespace}-input-node`),
@@ -54,7 +52,7 @@ export const createInputNode = ({
         ? prepareAnthropicPrompt(formattedMessages, logger)
         : formattedMessages;
 
-    const result = await LLMFactory.createModel(modelConfig, llmConfig)
+    const result = await LLMFactory.createModel(modelConfig)
       .bindTools(toolsNewInterface)
       .invoke(promptToSend);
 

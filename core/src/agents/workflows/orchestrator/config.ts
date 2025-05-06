@@ -1,5 +1,5 @@
 import { Character } from '../../../config/types.js';
-import { LLMConfiguration, LLMFactoryConfig } from '../../../services/llm/types.js';
+import { LLMConfiguration } from '../../../services/llm/types.js';
 import { createLogger } from '../../../utils/logger.js';
 import { createPrompts } from './prompts.js';
 import { createDefaultOrchestratorTools } from './tools.js';
@@ -158,20 +158,6 @@ export const createApiConfig = (options?: OrchestratorRunnerOptions): ApiConfig 
   };
 };
 
-/**
- * Helper function to create an LLMConfig based on user options
- */
-export const createLLMConfig = (options?: OrchestratorRunnerOptions): LLMFactoryConfig => {
-  return {
-    OPENAI_API_KEY: options?.llmConfig?.OPENAI_API_KEY,
-    ANTHROPIC_API_KEY: options?.llmConfig?.ANTHROPIC_API_KEY,
-    LLAMA_API_URL: options?.llmConfig?.LLAMA_API_URL,
-    DEEPSEEK_API_KEY: options?.llmConfig?.DEEPSEEK_API_KEY,
-    DEEPSEEK_URL: options?.llmConfig?.DEEPSEEK_URL,
-    GROQ_API_KEY: options?.llmConfig?.GROQ_API_KEY,
-  };
-};
-
 export const createStopCounterLimit = (options?: OrchestratorRunnerOptions): number => {
   return options?.stopCounterLimit ?? 3;
 };
@@ -197,14 +183,12 @@ export const createOrchestratorConfig = async (
   const pruningParameters = createPruningParameters(options);
   const characterDataPathConfig = createCharacterDataPathConfig(options);
   const apiConfig = createApiConfig(options);
-  const llmConfig = createLLMConfig(options);
   const stopCounterLimit = createStopCounterLimit(options);
   // Get tools - merge custom tools with defaults if experience saving is enabled
   const tools: Tools = [
     ...(options?.tools || []),
     ...createDefaultOrchestratorTools(
       baseConfig.namespace,
-      llmConfig,
       characterDataPathConfig.dataPath,
       experienceConfig.saveExperiences ? experienceConfig.experienceManager : undefined,
     ),
@@ -225,7 +209,6 @@ export const createOrchestratorConfig = async (
     monitoringConfig,
     characterDataPathConfig,
     apiConfig,
-    llmConfig,
     stopCounterLimit,
   };
 };

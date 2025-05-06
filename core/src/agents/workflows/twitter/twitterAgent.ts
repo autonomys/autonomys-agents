@@ -15,7 +15,6 @@ import {
   createApiConfig,
   createCharacterDataPathConfig,
   createExperienceConfig,
-  createLLMConfig,
   createModelConfigurations,
   createMonitoringConfig,
   createPruningParameters,
@@ -65,7 +64,6 @@ const createTwitterAgentConfig = async (
   const pruningParameters = createPruningParameters(options);
   const characterDataPathConfig = createCharacterDataPathConfig(options);
   const apiConfig = createApiConfig(options);
-  const llmConfig = createLLMConfig(options);
   // Get Twitter-specific tools and prompts
   const twitterTools = createAllTwitterTools(
     twitterApi,
@@ -90,7 +88,6 @@ const createTwitterAgentConfig = async (
     monitoringConfig,
     characterDataPathConfig,
     apiConfig,
-    llmConfig,
     stopCounterLimit,
   };
 };

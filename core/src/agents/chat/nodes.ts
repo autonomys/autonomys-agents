@@ -10,7 +10,6 @@ export const createNodes = (config: ChatNodeConfig) => {
   const inputNode = createInputNode({
     modelConfig: config.modelConfig,
     tools: config.tools,
-    llmConfig: config.llmConfig,
   });
 
   return {

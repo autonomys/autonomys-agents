@@ -1,5 +1,5 @@
 import { ChatPromptTemplate } from '@langchain/core/prompts';
-import { LLMConfiguration, LLMFactoryConfig } from '../../../../services/llm/types.js';
+import { LLMConfiguration } from '../../../../services/llm/types.js';
 import { LLMFactory } from '../../../../services/llm/factory.js';
 import { createLogger } from '../../../../utils/logger.js';
 import { ApiConfig, OrchestratorStateType } from '../types.js';
@@ -30,13 +30,11 @@ export const createFinishWorkflowNode = ({
   finishWorkflowPrompt,
   namespace,
   apiConfig,
-  llmConfig,
 }: {
   modelConfig: LLMConfiguration;
   finishWorkflowPrompt: ChatPromptTemplate;
   namespace: string;
   apiConfig: ApiConfig;
-  llmConfig: LLMFactoryConfig;
 }) => {
   const logger = attachLogger(
     createLogger(`${namespace}-finish-workflow-node`),
@@ -67,7 +65,7 @@ export const createFinishWorkflowNode = ({
         ? prepareAnthropicPrompt(formattedMessages, logger)
         : formattedMessages;
 
-    const result = await LLMFactory.createModelFromConfig(modelConfig, llmConfig).invoke(
+    const result = await LLMFactory.createModelFromConfig(modelConfig).invoke(
       promptToSend,
     );
     const finishedWorkflow = await parseFinishedWorkflow(result.content, logger);
