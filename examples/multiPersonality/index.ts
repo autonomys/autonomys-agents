@@ -1,4 +1,3 @@
-import { HumanMessage } from '@langchain/core/messages';
 import { createWebSearchTool } from '@autonomys/agent-core/src/agents/tools/webSearch/index.js';
 import {
   createOrchestratorRunner,
@@ -14,6 +13,14 @@ import { createLogger } from '@autonomys/agent-core/src/utils/logger.js';
 import { createAllSchedulerTools } from '@autonomys/agent-core/src/agents/tools/scheduler/index.js';
 import { createExperienceManager } from '@autonomys/agent-core/src/blockchain/agentExperience/index.js';
 import { parseArgs } from '@autonomys/agent-core/src/utils/args.js';
+import { createChatWorkflow } from '@autonomys/agent-core/src/agents/chat/workflow.js';
+import { createDefaultChatTools } from '@autonomys/agent-core/src/agents/chat/tools.js';
+import { createChatNodeConfig } from '@autonomys/agent-core/src/agents/chat/config.js';
+import { LLMConfiguration } from '@autonomys/agent-core/src/services/llm/types.js';
+import { registerOrchestratorRunner } from '@autonomys/agent-core/src/agents/workflows/registration.js';
+import { createApiServer, withApiLogger } from '@autonomys/agent-core/src/api/server.js';
+import { startTaskExecutor } from '@autonomys/agent-core/src/agents/workflows/orchestrator/scheduler/taskExecutor.js';
+import { createTaskQueue } from '@autonomys/agent-core/src/agents/workflows/orchestrator/scheduler/taskQueue.js';
 
 parseArgs();
 
@@ -24,7 +31,16 @@ const configInstance = await getConfig();
 if (!configInstance) {
   throw new Error('Config instance not found');
 }
-const { config, agentVersion } = configInstance;
+const { config, agentVersion, characterName } = configInstance;
+const character = config.characterConfig;
+
+const apiConfig = {
+  apiEnabled: config.ENABLE_API,
+  authFlag: config.apiSecurityConfig.ENABLE_AUTH,
+  authToken: config.apiSecurityConfig.API_TOKEN ?? '',
+  port: config.API_PORT,
+  allowedOrigins: config.apiSecurityConfig.CORS_ALLOWED_ORIGINS,
+};
 
 const twitterCharacter = config.characterConfig;
 const orchestratorCharacter: Character = {
@@ -38,7 +54,19 @@ const orchestratorCharacter: Character = {
     wordsToAvoid: [],
   },
 };
-const character = config.characterConfig;
+
+// Chat app instance
+const chatAppInstance = async (): Promise<any> => {
+  const modelConfig: LLMConfiguration = {
+    model: 'gpt-4o-mini',
+    provider: 'openai',
+    temperature: 0.5,
+  };
+  const tools = createDefaultChatTools(config.characterConfig.characterPath);
+  const chatNodeConfig = createChatNodeConfig({ modelConfig, tools });
+  const chatAppInstance = createChatWorkflow(chatNodeConfig);
+  return chatAppInstance;
+}
 
 const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
   //shared twitter agent and orchestrator config
@@ -49,12 +77,12 @@ const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
   const monitoringEnabled = config.autoDriveConfig.AUTO_DRIVE_MONITORING;
   const schedulerTools = createAllSchedulerTools();
   const experienceManager =
-  (saveExperiences || monitoringEnabled) &&
-  config.blockchainConfig.PRIVATE_KEY &&
-  config.blockchainConfig.RPC_URL &&
-  config.blockchainConfig.CONTRACT_ADDRESS &&
-  config.autoDriveConfig.AUTO_DRIVE_API_KEY
-    ? await createExperienceManager({
+    (saveExperiences || monitoringEnabled) &&
+      config.blockchainConfig.PRIVATE_KEY &&
+      config.blockchainConfig.RPC_URL &&
+      config.blockchainConfig.CONTRACT_ADDRESS &&
+      config.autoDriveConfig.AUTO_DRIVE_API_KEY
+      ? await createExperienceManager({
         autoDriveApiOptions: {
           apiKey: config.autoDriveConfig.AUTO_DRIVE_API_KEY,
           network: config.autoDriveConfig.AUTO_DRIVE_NETWORK,
@@ -74,24 +102,24 @@ const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
           agentPath: orchestratorCharacter.characterPath,
         },
       })
-    : undefined;
+      : undefined;
   const experienceConfig =
-  saveExperiences && experienceManager
-    ? {
+    saveExperiences && experienceManager
+      ? {
         saveExperiences: true as const,
         experienceManager,
       }
-    : {
+      : {
         saveExperiences: false as const,
       };
 
-const monitoringConfig =
-  monitoringEnabled && experienceManager
-    ? {
+  const monitoringConfig =
+    monitoringEnabled && experienceManager
+      ? {
         enabled: true as const,
         monitoringExperienceManager: experienceManager,
       }
-    : {
+      : {
         enabled: false as const,
       };
 
@@ -99,25 +127,26 @@ const monitoringConfig =
   const twitterAgentTool =
     config.twitterConfig.USERNAME && config.twitterConfig.PASSWORD
       ? [
-          createTwitterAgent(
-            await createTwitterApi(
-              config.twitterConfig.USERNAME,
-              config.twitterConfig.PASSWORD,
-              config.twitterConfig.COOKIES_PATH,
-            ),
-            twitterCharacter,
-            {
-              tools: [...webSearchTool, ...schedulerTools],
-              postTweets: config.twitterConfig.POST_TWEETS,
-              experienceConfig,
-              monitoringConfig,
-              modelConfigurations: config.twitterConfig.model_configurations,
-              characterDataPathConfig: {
-                dataPath,
-              },
-            },
+        createTwitterAgent(
+          await createTwitterApi(
+            config.twitterConfig.USERNAME,
+            config.twitterConfig.PASSWORD,
+            config.twitterConfig.COOKIES_PATH,
           ),
-        ]
+          twitterCharacter,
+          {
+            tools: [...webSearchTool, ...schedulerTools],
+            postTweets: config.twitterConfig.POST_TWEETS,
+            experienceConfig,
+            monitoringConfig,
+            modelConfigurations: config.twitterConfig.model_configurations,
+            characterDataPathConfig: {
+              dataPath,
+            },
+            apiConfig,
+          },
+        ),
+      ]
       : [];
 
   //Orchestrator config
@@ -148,51 +177,65 @@ const monitoringConfig =
     monitoringConfig:
       monitoringEnabled && experienceManager
         ? {
-            enabled: true,
-            monitoringExperienceManager: experienceManager,
-          }
+          enabled: true,
+          monitoringExperienceManager: experienceManager,
+        }
         : {
-            enabled: false,
-          },
+          enabled: false,
+        },
     characterDataPathConfig: {
       dataPath,
     },
+    apiConfig,
   };
 };
 
+// Orchestrator config
 const orchestrationConfig = await orchestratorConfig();
+
+// Orchestrator runner
 export const orchestratorRunner = (() => {
   let runnerPromise: Promise<OrchestratorRunner> | undefined = undefined;
   return async () => {
     if (!runnerPromise) {
-      runnerPromise = createOrchestratorRunner(twitterCharacter, orchestrationConfig);
+      const namespace = 'orchestrator';
+      runnerPromise = createOrchestratorRunner(configInstance.config.characterConfig, {
+        ...orchestrationConfig,
+        ...withApiLogger(namespace, orchestrationConfig.apiConfig ? true : false),
+      });
+      const runner = await runnerPromise;
+      registerOrchestratorRunner(namespace, runner);
     }
     return runnerPromise;
   };
 })();
 
 const main = async () => {
-  const runner = await orchestratorRunner();
+  const _createApiServer = createApiServer({
+    characterName: characterName,
+    dataPath: config.characterConfig.characterPath,
+    authFlag: config.apiSecurityConfig.ENABLE_AUTH,
+    authToken: config.apiSecurityConfig.API_TOKEN ?? '',
+    apiPort: config.API_PORT,
+    allowedOrigins: config.apiSecurityConfig.CORS_ALLOWED_ORIGINS,
+    chatAppInstance: await chatAppInstance(),
+  });
+
   const initialMessage = `Check your timeline, engage with posts and find an interesting topic to tweet about.`;
   try {
-    let message = initialMessage;
-    while (true) {
-      const humanMessage = new HumanMessage(message) as any;
-      const result = await runner.runWorkflow({ messages: [humanMessage] });
+    const logger = createLogger('app');
+    logger.info('Initializing orchestrator runner...');
+    const runner = await orchestratorRunner();
 
-      message = `${result.summary}`;
+    const taskQueue = createTaskQueue('orchestrator', config.characterConfig.characterPath);
 
-      logger.info('Workflow execution result:', { result });
-
-      const nextDelaySeconds = 3600;
-      logger.info('Workflow execution completed successfully for character:', {
-        characterName: config.characterConfig.name,
-        runFinished: new Date().toISOString(),
-        nextRun: `${nextDelaySeconds / 60} minutes`,
-        nextWorkflowPrompt: message,
-      });
-      await new Promise(resolve => setTimeout(resolve, nextDelaySeconds * 1000));
-    }
+    // Scheduling the first task manually
+    // The task will be executed immediately
+    taskQueue.scheduleTask(initialMessage, new Date());
+    logger.info('Starting task executor...');
+    const _startTaskExecutor = startTaskExecutor(runner, 'orchestrator');
+    logger.info('Application initialized and ready to process scheduled tasks');
+    return new Promise(() => { });
   } catch (error) {
     if (error && typeof error === 'object' && 'name' in error && error.name === 'ExitPromptError') {
       logger.info('Process terminated by user');

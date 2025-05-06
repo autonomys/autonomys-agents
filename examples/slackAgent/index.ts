@@ -5,10 +5,17 @@ import {
   OrchestratorRunner,
 } from '@autonomys/agent-core/src/agents/workflows/orchestrator/orchestratorWorkflow.js';
 import { createPrompts } from '@autonomys/agent-core/src/agents/workflows/orchestrator/prompts.js';
-import { HumanMessage } from '@langchain/core/messages';
 import { OrchestratorRunnerOptions } from '@autonomys/agent-core/src/agents/workflows/orchestrator/types.js';
 import { createSlackTools } from '@autonomys/agent-core/src/agents/tools/slack/index.js';
 import { parseArgs } from '@autonomys/agent-core/src/utils/args.js';
+import { registerOrchestratorRunner } from '@autonomys/agent-core/src/agents/workflows/registration.js';
+import { createApiServer, withApiLogger } from '@autonomys/agent-core/src/api/server.js';
+import { createChatWorkflow } from '@autonomys/agent-core/src/agents/chat/workflow.js';
+import { LLMConfiguration } from '@autonomys/agent-core/src/services/llm/types.js';
+import { createDefaultChatTools } from '@autonomys/agent-core/src/agents/chat/tools.js';
+import { createChatNodeConfig } from '@autonomys/agent-core/src/agents/chat/config.js';
+import { createTaskQueue } from '@autonomys/agent-core/src/agents/workflows/orchestrator/scheduler/taskQueue.js';
+import { startTaskExecutor } from '@autonomys/agent-core/src/agents/workflows/orchestrator/scheduler/taskExecutor.js';
 
 parseArgs();
 
@@ -19,9 +26,30 @@ const configInstance = await getConfig();
 if (!configInstance) {
   throw new Error('Config instance not found');
 }
-const { config } = configInstance;
+const { config, characterName } = configInstance;
 
 const character = config.characterConfig;
+
+const apiConfig = {
+  apiEnabled: config.ENABLE_API,
+  authFlag: config.apiSecurityConfig.ENABLE_AUTH,
+  authToken: config.apiSecurityConfig.API_TOKEN ?? '',
+  port: config.API_PORT,
+  allowedOrigins: config.apiSecurityConfig.CORS_ALLOWED_ORIGINS,
+};
+
+const chatAppInstance = async (): Promise<any> => {
+  const modelConfig: LLMConfiguration = {
+    model: 'gpt-4o-mini',
+    provider: 'openai',
+    temperature: 0.5,
+  };
+  const tools = createDefaultChatTools(config.characterConfig.characterPath);
+  const chatNodeConfig = createChatNodeConfig({ modelConfig, tools });
+  const chatAppInstance = createChatWorkflow(chatNodeConfig);
+  return chatAppInstance;
+}
+
 const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
   const dataPath = character.characterPath;
   const slackToken = config.slackConfig.SLACK_APP_TOKEN;
@@ -40,32 +68,55 @@ const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
     characterDataPathConfig: {
       dataPath,
     },
+    apiConfig,
   };
 };
+
 
 const orchestrationConfig = await orchestratorConfig();
 export const orchestratorRunner = (() => {
   let runnerPromise: Promise<OrchestratorRunner> | undefined = undefined;
   return async () => {
     if (!runnerPromise) {
-      runnerPromise = createOrchestratorRunner(character, orchestrationConfig);
+      const namespace = 'orchestrator';
+      runnerPromise = createOrchestratorRunner(configInstance.config.characterConfig, {
+        ...orchestrationConfig,
+        ...withApiLogger(namespace, orchestrationConfig.apiConfig ? true : false),
+      });
+      const runner = await runnerPromise;
+      registerOrchestratorRunner(namespace, runner);
     }
     return runnerPromise;
   };
 })();
 
 const main = async () => {
-  const runner = await orchestratorRunner();
-
+  const _createApiServer = createApiServer({
+    characterName: characterName,
+    dataPath: config.characterConfig.characterPath,
+    authFlag: config.apiSecurityConfig.ENABLE_AUTH,
+    authToken: config.apiSecurityConfig.API_TOKEN ?? '',
+    apiPort: config.API_PORT,
+    allowedOrigins: config.apiSecurityConfig.CORS_ALLOWED_ORIGINS,
+    chatAppInstance: await chatAppInstance(),
+  });
   // Choose which message to start with
   const initialMessage = `Check for new messages in your channels, reply to interesting ones`;
 
   try {
-    // Use type assertion for HumanMessage to resolve compatibility issue
-    const humanMessage = new HumanMessage(initialMessage) as any;
-    const result = await runner.runWorkflow({ messages: [humanMessage] });
+    const logger = createLogger('app');
+    logger.info('Initializing orchestrator runner...');
+    const runner = await orchestratorRunner();
 
-    logger.info('Workflow execution result:', { summary: result.summary });
+    const taskQueue = createTaskQueue('orchestrator', config.characterConfig.characterPath);
+
+    // Scheduling the first task manually
+    // The task will be executed immediately
+    taskQueue.scheduleTask(initialMessage, new Date());
+    logger.info('Starting task executor...');
+    const _startTaskExecutor = startTaskExecutor(runner, 'orchestrator');
+    logger.info('Application initialized and ready to process scheduled tasks');
+    return new Promise(() => { });
   } catch (error) {
     if (error && typeof error === 'object' && 'name' in error && error.name === 'ExitPromptError') {
       logger.info('Process terminated by user');

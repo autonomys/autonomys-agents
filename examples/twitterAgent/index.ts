@@ -19,6 +19,7 @@ import { createChatWorkflow } from '@autonomys/agent-core/src/agents/chat/workfl
 import { LLMConfiguration } from '@autonomys/agent-core/src/services/llm/types.js';
 import { createChatNodeConfig } from '@autonomys/agent-core/src/agents/chat/config.js';
 import { registerOrchestratorRunner } from '@autonomys/agent-core/src/agents/workflows/registration.js';
+import { createTaskQueue } from '@autonomys/agent-core/src/agents/workflows/orchestrator/scheduler/taskQueue.js';
 
 parseArgs();
 
@@ -30,6 +31,15 @@ if (!configInstance) {
   throw new Error('Config instance not found');
 }
 const { config, agentVersion, characterName } = configInstance;
+const character = config.characterConfig;
+
+const apiConfig = {
+  apiEnabled: config.ENABLE_API,
+  authFlag: config.apiSecurityConfig.ENABLE_AUTH,
+  authToken: config.apiSecurityConfig.API_TOKEN ?? '',
+  port: config.API_PORT,
+  allowedOrigins: config.apiSecurityConfig.CORS_ALLOWED_ORIGINS,
+};
 
 const chatAppInstance = async (): Promise<any> => {
   const modelConfig: LLMConfiguration = {
@@ -43,7 +53,6 @@ const chatAppInstance = async (): Promise<any> => {
   return chatAppInstance;
 }
 
-const character = config.characterConfig;
 const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
   const dataPath = character.characterPath;
   //shared twitter agent and orchestrator config
@@ -97,7 +106,7 @@ const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
       : {
         enabled: false as const,
       };
-  
+
   //Twitter agent config
   const twitterAgentTool =
     config.twitterConfig.USERNAME && config.twitterConfig.PASSWORD
@@ -118,8 +127,9 @@ const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
             characterDataPathConfig: {
               dataPath,
             },
-          },
-        ),
+            apiConfig,
+          }
+        )
       ]
       : [];
 
@@ -160,6 +170,7 @@ const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
     characterDataPathConfig: {
       dataPath,
     },
+    apiConfig,
   };
 };
 
@@ -180,29 +191,32 @@ export const orchestratorRunner = (() => {
   };
 })();
 
-createApiServer({
-  characterName: characterName,
-  dataPath: config.characterConfig.characterPath,
-  authFlag: config.apiSecurityConfig.ENABLE_AUTH,
-  authToken: config.apiSecurityConfig.API_TOKEN ?? '',
-  apiPort: config.API_PORT,
-  allowedOrigins: config.apiSecurityConfig.CORS_ALLOWED_ORIGINS,
-  chatAppInstance: await chatAppInstance(),
-});
-
-
 const main = async () => {
-  const runner = await orchestratorRunner();
+
+  const _createApiServer = createApiServer({
+    characterName: characterName,
+    dataPath: config.characterConfig.characterPath,
+    authFlag: config.apiSecurityConfig.ENABLE_AUTH,
+    authToken: config.apiSecurityConfig.API_TOKEN ?? '',
+    apiPort: config.API_PORT,
+    allowedOrigins: config.apiSecurityConfig.CORS_ALLOWED_ORIGINS,
+    chatAppInstance: await chatAppInstance(),
+  });
 
   const initialMessage = `Check your timeline, engage with posts and find an interesting topic to tweet about.`;
+
   try {
     const logger = createLogger('app');
     logger.info('Initializing orchestrator runner...');
     const runner = await orchestratorRunner();
 
+    const taskQueue = createTaskQueue('orchestrator', config.characterConfig.characterPath);
+    
+    // Scheduling the first task manually
+    // The task will be executed immediately
+    taskQueue.scheduleTask(initialMessage, new Date());
     logger.info('Starting task executor...');
     const _startTaskExecutor = startTaskExecutor(runner, 'orchestrator');
-
     logger.info('Application initialized and ready to process scheduled tasks');
     return new Promise(() => { });
   } catch (error) {
