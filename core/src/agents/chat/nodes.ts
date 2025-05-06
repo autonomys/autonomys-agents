@@ -11,6 +11,7 @@ export const createNodes = (config: ChatNodeConfig) => {
     modelConfig: config.modelConfig,
     tools: config.tools,
     llmConfig: config.llmConfig,
+    promptTemplate: config.promptTemplate,
   });
 
   return {
