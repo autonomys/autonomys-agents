@@ -10,9 +10,13 @@ export class LLMFactory {
   }
 
   static createModelFromConfig(
-    { model, provider, temperature }: LLMConfiguration ) {
+    { model, provider, temperature }: LLMConfiguration,
+  ) {
     switch (provider) {
       case 'openai':
+        if (!process.env.OPENAI_API_KEY) {
+          throw new Error('OPENAI_API_KEY is not set');
+        }
         const baseConfig = {
           model,
         };
@@ -24,6 +28,9 @@ export class LLMFactory {
         }
         return new ChatOpenAI(baseConfig);
       case 'anthropic':
+        if (!process.env.ANTHROPIC_API_KEY) {
+          throw new Error('ANTHROPIC_API_KEY is not set');
+        }
         return new ChatAnthropic({
           model,
           temperature,
@@ -34,17 +41,26 @@ export class LLMFactory {
           },
         });
       case 'ollama':
+        if (!process.env.OLLAMA_API_URL) {
+          throw new Error('OLLAMA_API_URL is not set');
+        }
         return new ChatOllama({
           baseUrl: process.env.OLLAMA_API_URL,
           model,
           temperature,
         });
       case 'deepseek':
+        if (!process.env.DEEPSEEK_API_KEY) {
+          throw new Error('DEEPSEEK_API_KEY is not set');
+        }
         return new ChatDeepSeek({
           model,
           temperature,
         });
       case 'groq':
+        if (!process.env.GROQ_API_KEY) {
+          throw new Error('GROQ_API_KEY is not set');
+        }
         return new ChatGroq({
           model,
           temperature,
