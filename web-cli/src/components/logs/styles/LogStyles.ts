@@ -3,14 +3,14 @@ import { BoxProps, FlexProps, TextProps, ButtonProps, InputProps } from '@chakra
 // Styles for the Metadata component
 export const metadataContainer: BoxProps = {
   mt: '2',
-  ml: '5',
+  ml: '2',
   fontSize: ['xs', 'sm'],
 };
 
 // Custom styling for the right panel layout
 export const customOutputLogContainer = {
   flex: { base: '1', md: '0.6' },
-  height: { base: 'calc(100vh - 122px)', md: '100%' }, // Responsive height
+  height: { base: '100%' }, // Responsive height
   position: 'relative',
   zIndex: '1',
   borderLeft: { base: 'none', md: '1px solid' },
@@ -20,77 +20,18 @@ export const customOutputLogContainer = {
   flexDirection: 'column',
   overflow: 'hidden',
   bg: 'black',
-  marginTop: '12px', // Reduced margin to better align with Status box
+  marginTop: '8px', // Reduced margin to better align with Status box
+  marginLeft: '8px',
   borderRadius: 'md',
-  border: '1px solid rgba(0, 255, 153, 0.3)',
-};
-
-export const getMetadataToggleButton = (isOpen: boolean): FlexProps => ({
-  as: 'button',
-  display: 'flex',
-  alignItems: 'center',
-  bg: isOpen ? 'rgba(255, 0, 204, 0.1)' : 'transparent',
-  px: 2,
-  py: 1,
-  borderRadius: 'md',
-  _hover: {
-    bg: 'rgba(255, 0, 204, 0.15)',
-  },
-  transition: 'all 0.2s',
-  role: 'group',
-  cursor: 'pointer',
-  position: 'relative',
-  borderLeft: '2px solid',
-  borderColor: 'brand.neonPink',
-  boxShadow: isOpen ? '0 0 3px rgba(255, 0, 204, 0.3)' : 'none',
-});
-
-export const metadataToggleIcon: TextProps = {
-  color: 'brand.neonPink',
-  fontStyle: 'italic',
-  fontWeight: 'normal',
-  fontSize: ['xs', 'sm'],
-  textShadow: '0 0 5px rgba(255, 0, 204, 0.5)',
-  mr: 2,
-};
-
-export const metadataToggleLabel: TextProps = {
-  color: 'brand.neonPink',
-  fontStyle: 'italic',
-  fontWeight: 'normal',
-  mr: 2,
-};
-
-export const getMetadataFieldCount = (isOpen: boolean): TextProps => ({
-  as: 'span',
-  fontWeight: 'light',
-  opacity: isOpen ? 0.9 : 0.7,
-  color: 'white',
-  fontSize: 'xs',
-  transition: 'opacity 0.2s',
-  _groupHover: { opacity: 0.9 },
-});
-
-export const metadataPreviewText: TextProps = {
-  as: 'span',
-  ml: 3,
-  color: 'gray.400',
-  fontSize: 'xs',
-  maxW: '70%',
-  overflow: 'hidden',
-  textOverflow: 'ellipsis',
-  whiteSpace: 'nowrap',
-  display: 'inline-block',
 };
 
 export const metadataContentContainer: BoxProps = {
-  maxH: '400px',
   overflowY: 'auto',
   bg: 'rgba(10, 10, 15, 0.4)',
   borderRadius: 'md',
   mt: '2',
-  borderLeft: '2px solid',
-  borderColor: 'brand.neonPink',
+  borderLeft: '1px solid',
+  borderColor: 'gray.700',
   borderTop: '1px solid',
   borderTopColor: 'gray.700',
   borderBottom: '1px solid',
@@ -143,7 +84,6 @@ export const objectNodeToggleButton: ButtonProps = {
 
 export const getObjectNodeChildrenContainer = (isArray: boolean): BoxProps => ({
   pl: 3,
-  borderLeft: '2px dashed',
   borderColor: isArray ? 'rgba(21, 101, 192, 0.3)' : 'rgba(0, 188, 212, 0.3)',
   mt: 1,
   ml: 1,
@@ -171,11 +111,10 @@ export const metadataValueNameLabel: TextProps = {
   mr: 1,
 };
 
-export const getMetadataValueText = (isExpanded: boolean, isLongString: boolean): TextProps => ({
+export const metadataValueText: TextProps = {
   as: 'span',
   wordBreak: 'break-word',
-  maxW: isLongString && !isExpanded ? '600px' : 'none',
-});
+};
 
 export const getMetadataValueExpandButton = (isExpanded: boolean): BoxProps => ({
   as: 'button',
@@ -212,12 +151,10 @@ export const metadataValueTypeLabel: TextProps = {
 
 export const metadataValueExpandedContent: BoxProps = {
   mt: 2,
-  p: 2,
+  px: 4,
+  py: 2,
   bg: 'rgba(0, 0, 0, 0.15)',
   borderRadius: 'md',
-  borderLeft: '2px solid',
-  borderColor: 'orange.700',
-  maxH: '300px',
   overflowY: 'auto',
   css: {
     '&::-webkit-scrollbar': {
@@ -413,51 +350,6 @@ export const outputLogFlexContainer: FlexProps = {
   },
 };
 
-export const outputLogResizableHandleStyles = {
-  bottom: {
-    height: '8px',
-    borderRadius: '0 0 6px 6px',
-    backgroundColor: 'transparent',
-    backgroundImage: 'linear-gradient(to right, transparent, rgba(255, 0, 255, 0.4), transparent)',
-    bottom: '0px',
-    cursor: 'row-resize',
-    zIndex: 11,
-  },
-};
-
-export const outputLogResizableHandleBox: BoxProps = {
-  width: '100%',
-  height: '8px',
-  position: 'absolute',
-  bottom: '0',
-  cursor: 'row-resize',
-  borderRadius: '0 0 6px 6px',
-  zIndex: 11,
-  _hover: {
-    backgroundImage: 'linear-gradient(to right, transparent, rgba(255, 0, 255, 0.8), transparent)',
-    opacity: 0.7,
-  },
-};
-
-export const outputLogScrollBox: BoxProps = {
-  flex: '1',
-  overflowY: 'auto',
-  position: 'relative',
-  css: {
-    '&::-webkit-scrollbar': {
-      width: '8px',
-      borderRadius: '4px',
-    },
-    '&::-webkit-scrollbar-track': {
-      background: 'rgba(0, 0, 0, 0.1)',
-    },
-    '&::-webkit-scrollbar-thumb': {
-      background: 'rgba(255, 0, 255, 0.3)',
-      borderRadius: '4px',
-    },
-  },
-};
-
 export const scrollToBottomButton = (isScrolling: boolean): ButtonProps => ({
   size: 'md',
   position: 'fixed',
@@ -566,43 +458,14 @@ export const fontSizeControlsContainer: FlexProps = {
   boxShadow: '0 0 10px rgba(0, 0, 0, 0.3)',
 };
 
-export const fontSizeLabel: TextProps = {
-  fontSize: 'xs',
-  color: 'brand.neonPink',
-  px: 2,
-  py: '3px',
-  bg: 'rgba(25, 25, 35, 0.8)',
-  borderRight: '1px solid rgba(255, 0, 204, 0.4)',
-  fontWeight: 'bold',
+export const resizableDefaultSize = {
+  width: '100%',
+  height: 400,
 };
 
-export const fontSizeDisplay: TextProps = {
-  fontSize: 'sm',
-  fontWeight: '600',
-  px: 3,
-  color: 'white',
-  minW: '30px',
-  textAlign: 'center',
-  bg: '#171720',
+export const resizableEnableProps = {
+  top: false,
+  right: false,
+  bottom: true,
+  left: false,
 };
-
-export const getFontSizeButton = (isIncrease: boolean): ButtonProps => ({
-  'aria-label': isIncrease ? 'Increase font size' : 'Decrease font size',
-  height: '24px',
-  minW: '26px',
-  px: 1,
-  bg: '#222230',
-  color: 'brand.neonPink',
-  borderRadius: 0,
-  fontWeight: 'bold',
-  fontSize: '16px',
-  borderRight: isIncrease ? undefined : '1px solid rgba(255, 0, 204, 0.2)',
-  borderLeft: isIncrease ? '1px solid rgba(255, 0, 204, 0.2)' : undefined,
-  _hover: {
-    bg: 'rgba(255, 0, 204, 0.15)',
-  },
-  _active: {
-    bg: 'rgba(255, 0, 204, 0.3)',
-  },
-  transition: 'all 0.15s',
-});

@@ -4,13 +4,14 @@ import fs from 'fs/promises';
 import path from 'path';
 import { CommandResult, InitOptions } from '../types/index.js';
 import { customizeTemplate, downloadTemplate, runCommand } from '../utils/commands/init/index.js';
+import checkForUpdates from '../utils/update/index.js';
 
 /**
  * Initialize a new agent project
  */
 const init = async (projectName: string, options: InitOptions): Promise<CommandResult> => {
   const spinner = ora(`Creating new agent project: ${projectName}...`).start();
-
+  const _checkForUpdates = await checkForUpdates();
   try {
     // Determine project path
     const projectPath = path.resolve(process.cwd(), projectName);

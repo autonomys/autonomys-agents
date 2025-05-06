@@ -12,6 +12,10 @@ export interface InitOptions {
   api?: boolean;
 }
 
+export interface UpdateOptions {
+  auto?: boolean;
+}
+
 export interface ToolInstallInfo {
   name: string;
   cid: string;

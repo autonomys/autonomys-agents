@@ -5,10 +5,11 @@ import { updateRegistry } from '../utils/commands/registry/updateRegistry.js';
 import { validateToolStructure } from '../utils/validation.js';
 import { packageAndUploadTool } from '../utils/commands/registry/toolPublish.js';
 import { credentialsExist } from '../utils/credential/index.js';
+import checkForUpdates from '../utils/update/index.js';
 
 const publish = async (toolPath: string, options: PublishOptions): Promise<CommandResult> => {
   const spinner = ora(`Publishing tool from ${toolPath}...`).start();
-
+  const _checkForUpdates = await checkForUpdates();
   try {
     // Early check for credentials
     const hasCredentials = await credentialsExist();

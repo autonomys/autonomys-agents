@@ -61,12 +61,10 @@ export const resizableHandleBoxStyles: BoxProps = {
 // Container box styles
 export const containerBoxStyles: BoxProps = {
   flex: '1',
-  overflow: 'auto',
+  overflowY: 'auto',
   p: 4,
   bg: 'rgba(20, 20, 20, 0.7)',
-  backdropFilter: 'blur(5px)',
-  height: '100%',
-  minHeight: '500px',
+  height: '450px',
   width: '100%',
 };
 

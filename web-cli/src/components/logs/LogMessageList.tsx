@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useRef, useMemo, useState, useEffect } from 'react';
 import { Box, Flex, Text } from '@chakra-ui/react';
+import { Virtuoso, VirtuosoHandle } from 'react-virtuoso';
 import { Metadata } from './components';
 import {
   logMessageListContainer,
@@ -52,6 +53,12 @@ export const LogMessageList: React.FC<LogMessageListProps> = ({
   searchResults = [],
   showDebugLogs = true,
 }) => {
+  const virtuosoRef = useRef<VirtuosoHandle>(null);
+  const [shouldAutoScroll, setShouldAutoScroll] = useState(true);
+
+  const isInitialLog =
+    filteredMessages.filter(msg => msg.type === 'connection').length === filteredMessages.length;
+
   const formattedMessages = filteredMessages.map(
     msg =>
       ({
@@ -77,13 +84,44 @@ export const LogMessageList: React.FC<LogMessageListProps> = ({
       }) as LogMessage,
   );
 
-  const allMessages = [...formattedMessages, ...legacyFormattedMessages];
+  const filteredByLevelMessages = useMemo(() => {
+    let allMessages: LogMessage[] = [];
 
-  // We're keeping this in place for legacy messages and making sure our component props work
-  // correctly, but the main filtering is now done at the useLogMessages hook level
-  const filteredByLevelMessages = showDebugLogs
-    ? allMessages
-    : allMessages.filter(msg => msg.level?.toLowerCase() !== 'debug');
+    if (isInitialLog) {
+      allMessages = [...formattedMessages, ...legacyFormattedMessages];
+    } else {
+      allMessages = [...formattedMessages];
+    }
+
+    if (showDebugLogs) {
+      return allMessages;
+    }
+    return allMessages.filter(msg => msg.level?.toLowerCase() !== 'debug');
+  }, [formattedMessages, legacyFormattedMessages, showDebugLogs, isInitialLog]);
+
+  // Monitor if we're near the bottom and auto-scroll only when needed
+  useEffect(() => {
+    if (shouldAutoScroll && virtuosoRef.current && filteredMessages.length > 0) {
+      // Use window.requestAnimationFrame to ensure DOM is updated before scrolling
+      window.requestAnimationFrame(() => {
+        virtuosoRef.current?.scrollToIndex({
+          index: filteredByLevelMessages.length - 1,
+          behavior: 'auto',
+          align: 'end',
+        });
+      });
+    }
+  }, [filteredMessages, shouldAutoScroll, filteredByLevelMessages.length]);
+
+  const handleRangeChange = (range: { startIndex: number; endIndex: number }) => {
+    if (filteredByLevelMessages && filteredByLevelMessages.length > 0) {
+      // Check if we're near the bottom (within approximately 20% of the total items)
+      // This provides a more generous threshold for auto-scrolling
+      const nearBottomThreshold = Math.min(10, Math.ceil(filteredByLevelMessages.length * 0.2));
+      const isNearBottom = filteredByLevelMessages.length - range.endIndex <= nearBottomThreshold;
+      setShouldAutoScroll(isNearBottom);
+    }
+  };
 
   const getMessageColor = (level: string) => {
     switch (level.toLowerCase()) {
@@ -97,30 +135,45 @@ export const LogMessageList: React.FC<LogMessageListProps> = ({
     }
   };
 
+  const containerRef = (ref: HTMLDivElement | null) => {
+    // Forward the ref to the parent component
+    if (setLogRef) {
+      setLogRef(ref);
+    }
+  };
+
+  if (filteredByLevelMessages.length === 0) {
+    return (
+      <Box {...logMessageListContainer} ref={containerRef}>
+        <Text {...logMessageListWelcomeText}>Welcome to the Autonomys Agents Web CLI</Text>
+      </Box>
+    );
+  }
+
   return (
-    <Box {...logMessageListContainer} ref={setLogRef}>
-      {filteredByLevelMessages.length === 0 && (
-        <Text {...logMessageListWelcomeText}>Welcome to Autonomys Agents Web CLI</Text>
-      )}
-
-      {filteredByLevelMessages
-        .filter(msg => msg.legacy)
-        .map((msg, index) => (
-          <Box key={`legacy-${index}`} {...logMessageListLegacyMessage} data-log-index={index}>
-            {highlightSearchMatches(msg.message, searchTerm)}
-          </Box>
-        ))}
-
-      {filteredByLevelMessages
-        .filter(msg => !msg.legacy)
-        .map((msg, index) => {
+    <Box position='relative' height='100%' ref={containerRef} style={{ paddingBottom: '16px' }}>
+      <Virtuoso
+        ref={virtuosoRef}
+        className='log-message-list'
+        data={filteredByLevelMessages}
+        components={{
+          Footer: () => <Box py={2} px={4} position='relative' />,
+        }}
+        itemContent={(index, msg) => {
           const msgColor = getMessageColor(msg.level);
           const isSearchMatch = searchResults.includes(index);
           const isCurrentSearchMatch = searchResults[currentSearchIndex] === index;
 
+          if (msg.legacy) {
+            return (
+              <Box key={`legacy-${index}`} {...logMessageListLegacyMessage} data-log-index={index}>
+                {highlightSearchMatches(msg.message, searchTerm)}
+              </Box>
+            );
+          }
+
           return (
             <Box
-              key={`log-${index}`}
               {...getLogMessageListMessageBox(msgColor, isSearchMatch, isCurrentSearchMatch)}
               data-log-index={index}
             >
@@ -140,7 +193,12 @@ export const LogMessageList: React.FC<LogMessageListProps> = ({
               )}
             </Box>
           );
-        })}
+        }}
+        overscan={1000}
+        initialTopMostItemIndex={filteredByLevelMessages.length - 1}
+        rangeChanged={handleRangeChange}
+        followOutput={shouldAutoScroll ? 'smooth' : false}
+      />
     </Box>
   );
 };
