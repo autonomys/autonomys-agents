@@ -13,11 +13,12 @@ import {
   deleteTask,
   subscribeToCurrentTask,
 } from '../services/TaskStreamService';
-import { runWorkflow } from '../services/WorkflowService';
+import { runWorkflow, stopWorkflow } from '../services/WorkflowService';
 import { Task } from '../types/types';
 import InputArea from './input/InputArea';
 import TasksArea from './tasks/TasksArea';
 import ChatArea from './chat/ChatArea';
+import StatusBox from './status/StatusBox';
 
 const BodyArea: React.FC = () => {
   const { state, dispatch } = useAppContext();
@@ -31,6 +32,8 @@ const BodyArea: React.FC = () => {
   const [currentTask, setCurrentTask] = useState<Task | undefined>(undefined);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | undefined>(undefined);
+  const [stopStatus, setStopStatus] = useState<string | null>(null);
+  const [tabIndex, setTabIndex] = useState(0);
   const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>(
     ConnectionStatus.DISCONNECTED,
   );
@@ -141,6 +144,75 @@ const BodyArea: React.FC = () => {
       closeTaskStream();
     };
   }, []);
+  // Update tabIndex when showChat changes
+  useEffect(() => {
+    setTabIndex(chatState.activeChatNamespace ? 1 : 0);
+  }, [chatState.activeChatNamespace]);
+
+
+  const handleTabChange = (index: number) => {
+    setTabIndex(index);
+    if (index === 1) {
+      // When Chat tab is selected, activate the chat component
+      chatDispatch({ type: 'SET_ACTIVE_CHAT', payload: 'default' });
+    } else if (index === 0 && chatState.activeChatNamespace) {
+      // When Agent tab is selected and chat is open, close the chat
+      chatDispatch({ type: 'SET_ACTIVE_CHAT', payload: null });
+    }
+  };
+
+  const getStatusText = () => {
+    if (stopStatus) {
+      return stopStatus;
+    }
+
+    if (currentTask) {
+      const taskStatus = currentTask.status || 'processing';
+
+      // Check for stopped status (previously finalizing)
+      if (taskStatus === 'stopped') {
+        return `Stopped: ${currentTask.description}`;
+      }
+      // Also check for failed tasks with appropriate result message
+      else if (
+        taskStatus === 'failed' &&
+        currentTask.result &&
+        currentTask.result.includes('Stopped by user')
+      ) {
+        return `Stopped: ${currentTask.description}`;
+      }
+
+      const formattedStatus = taskStatus.charAt(0).toUpperCase() + taskStatus.slice(1);
+      return `${formattedStatus}: ${currentTask.description}`;
+    } else if (error) {
+      return `Error: ${error}`;
+    } else {
+      return 'Ready';
+    }
+  };
+
+  const handleStopWorkflow = async () => {
+    try {
+      // Immediately set to "Stopped" status
+      setStopStatus(`Stopped: ${currentTask?.description || ''}`);
+
+      // Send the stop request
+      const _stopWorkflow = await stopWorkflow();
+
+      // Keep showing the "Stopped" status for a while
+      setTimeout(() => {
+        setStopStatus(null);
+      }, 3000);
+    } catch (error) {
+      console.error('Error stopping workflow:', error);
+      setStopStatus('Error: Failed to stop the workflow. Please try again.');
+
+      // Clear the error message after a delay
+      setTimeout(() => {
+        setStopStatus(null);
+      }, 5000);
+    }
+  };
 
   const handleInputChange = (value: string) => {
     if (error) setError(undefined);
@@ -220,29 +292,66 @@ const BodyArea: React.FC = () => {
 
   return (
     <Flex className='left-panel' direction='column' position='relative' height='100%' pb={0}>
+      <div>
+        <div style={{ marginBottom: '1em', display: 'flex' }}>
+          <button
+            style={{
+              padding: '0.5rem 1rem',
+              borderRadius: '0.375rem',
+              marginRight: '0.5rem',
+              background: tabIndex === 0 ? 'var(--chakra-colors-blue-500)' : 'transparent',
+              color: tabIndex === 0 ? 'white' : 'inherit',
+              border: 'none',
+              cursor: 'pointer',
+              fontWeight: '500',
+            }}
+            onClick={() => handleTabChange(0)}
+          >
+            Agent
+          </button>
+          <button
+            style={{
+              padding: '0.5rem 1rem',
+              borderRadius: '0.375rem',
+              background: tabIndex === 1 ? 'var(--chakra-colors-blue-500)' : 'transparent',
+              color: tabIndex === 1 ? 'white' : 'inherit',
+              border: 'none',
+              cursor: 'pointer',
+              fontWeight: '500',
+            }}
+            onClick={() => handleTabChange(1)}
+          >
+            Chat
+          </button>
+        </div>
+      </div>
       {chatState.activeChatNamespace ? (
-        <ChatArea namespace={chatState.activeChatNamespace} onClose={handleCloseChat} />
+        <Box flex='1' mb={0}>
+          <ChatArea namespace={chatState.activeChatNamespace} onClose={handleCloseChat} />
+        </Box>
       ) : (
         <>
+          <StatusBox status={getStatusText()} onStop={handleStopWorkflow} />
+
           <Box flex='0 0 auto' mb={2}>
             <InputArea
               value={state.value}
-              handleInputChange={handleInputChange}
-              handleInputSubmit={handleInputSubmit}
-              currentTask={currentTask}
-              error={error}
-            />
-          </Box>
-          <Box flex='1' mb={0}>
-            <TasksArea
-              tasks={allTasks}
-              loading={loading}
-              connectionStatus={connectionStatus}
-              connectionStatusInfo={connectionStatusInfo}
-              handleDeleteTask={handleDeleteTask}
-              handleReconnect={handleReconnect}
-            />
-          </Box>
+          handleInputChange={handleInputChange}
+          handleInputSubmit={handleInputSubmit}
+          showChat={chatState.activeChatNamespace !== null}
+          onCloseChatRequest={handleCloseChat}
+        />
+      </Box>
+        <Box flex='1' mb={2}>
+          <TasksArea
+            tasks={allTasks}
+            loading={loading}
+            connectionStatus={connectionStatus}
+            connectionStatusInfo={connectionStatusInfo}
+            handleDeleteTask={handleDeleteTask}
+            handleReconnect={handleReconnect}
+          />
+        </Box>
         </>
       )}
     </Flex>

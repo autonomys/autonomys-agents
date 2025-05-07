@@ -36,7 +36,7 @@ export const containerBoxStyles: BoxProps = {
   position: 'relative',
   display: 'flex',
   flexDirection: 'column',
-  height: '100%',
+  height: '95%',
   width: '100%',
 };
 
