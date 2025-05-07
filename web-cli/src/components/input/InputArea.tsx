@@ -42,10 +42,6 @@ const InputArea: React.FC<InputBoxProps> = ({
     }
   }, [size.height]);
 
-
-
-
-
   return (
     <Flex {...containerFlexStyles}>
       <Resizable

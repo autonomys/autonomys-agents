@@ -11,7 +11,7 @@ export const chatContainerStyles: BoxProps = {
   borderColor: 'rgba(99, 110, 150, 0.2)',
   position: 'relative',
   width: '100%',
-  height: '100%',
+  height: '100vh',
   display: 'flex',
   flexDirection: 'column',
   _before: {

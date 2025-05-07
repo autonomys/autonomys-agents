@@ -40,14 +40,14 @@ const ChatArea: React.FC<ChatAreaProps> = ({ namespace, onClose }) => {
     <Resizable
       defaultSize={{
         width: '100%',
-        height: 500,
+        height: '100%',
       }}
       size={{
         width: '100%',
         height: size.height,
       }}
-      minHeight={300}
-      maxHeight={800}
+      minHeight='70vh'
+      maxHeight={1000}
       onResizeStop={(e, direction, ref, d) => {
         setSize(prevSize => ({
           height: prevSize.height + d.height,
