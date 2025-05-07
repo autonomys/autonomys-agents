@@ -3,7 +3,7 @@ import { Server } from 'http';
 import { Logger } from 'winston';
 import { Http2SecureServer } from 'http2';
 import { LLMFactoryConfig } from '../services/llm/types.js';
-
+import { ChatWorkflow } from '../agents/chat/types.js';
 export interface ApiServer {
   app: Express;
   server: Server | Http2SecureServer;
@@ -27,6 +27,7 @@ export type RestApiConfig = {
   llmConfig: LLMFactoryConfig;
 };
 
+/// TODO - dataPath and llmConfig should be removed
 export type CreateApiServerParams = {
   characterName: string;
   dataPath: string;
@@ -35,4 +36,5 @@ export type CreateApiServerParams = {
   apiPort: number;
   allowedOrigins: string[];
   llmConfig: LLMFactoryConfig;
+  chatAppInstance?: ChatWorkflow;
 };
