@@ -21,7 +21,7 @@ import { registerOrchestratorRunner } from '@autonomys/agent-core/src/agents/wor
 import { createApiServer, withApiLogger } from '@autonomys/agent-core/src/api/server.js';
 import { startTaskExecutor } from '@autonomys/agent-core/src/agents/workflows/orchestrator/scheduler/taskExecutor.js';
 import { createTaskQueue } from '@autonomys/agent-core/src/agents/workflows/orchestrator/scheduler/taskQueue.js';
-
+import { createPromptTemplate } from '@autonomys/agent-core/src/agents/chat/nodes/prompt.js';
 // Process command line arguments for our multi-personality agent
 parseArgs();
 
@@ -75,7 +75,8 @@ const chatAppInstance = async (): Promise<any> => {
     temperature: 0.5,
   };
   const tools = createDefaultChatTools(config.characterConfig.characterPath);
-  const chatNodeConfig = createChatNodeConfig({ modelConfig, tools });
+  const promptTemplate = createPromptTemplate(characterName);
+  const chatNodeConfig = createChatNodeConfig({ modelConfig, tools, promptTemplate });
   const chatAppInstance = createChatWorkflow(chatNodeConfig);
   return chatAppInstance;
 };

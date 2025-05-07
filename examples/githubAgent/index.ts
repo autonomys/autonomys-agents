@@ -19,7 +19,7 @@ import { createTaskQueue } from '@autonomys/agent-core/src/agents/workflows/orch
 import { startTaskExecutor } from '@autonomys/agent-core/src/agents/workflows/orchestrator/scheduler/taskExecutor.js';
 import { createApiServer, withApiLogger } from '@autonomys/agent-core/src/api/server.js';
 import { registerOrchestratorRunner } from '@autonomys/agent-core/src/agents/workflows/registration.js';
-
+import { createPromptTemplate } from '@autonomys/agent-core/src/agents/chat/nodes/prompt.js';
 // Process command line arguments for the GitHub agent
 parseArgs();
 
@@ -55,7 +55,8 @@ const chatAppInstance = async (): Promise<any> => {
     temperature: 0.5,
   };
   const tools = createDefaultChatTools(config.characterConfig.characterPath);
-  const chatNodeConfig = createChatNodeConfig({ modelConfig, tools });
+  const promptTemplate = createPromptTemplate(characterName);
+  const chatNodeConfig = createChatNodeConfig({ modelConfig, tools, promptTemplate });
   const chatAppInstance = createChatWorkflow(chatNodeConfig);
   return chatAppInstance;
 };

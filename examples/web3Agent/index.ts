@@ -20,7 +20,7 @@ import { LLMConfiguration } from '@autonomys/agent-core/src/services/llm/types.j
 import { createChatWorkflow } from '@autonomys/agent-core/src/agents/chat/workflow.js';
 import { createDefaultChatTools } from '@autonomys/agent-core/src/agents/chat/tools.js';
 import { createChatNodeConfig } from '@autonomys/agent-core/src/agents/chat/config.js';
-
+import { createPromptTemplate } from '@autonomys/agent-core/src/agents/chat/nodes/prompt.js';
 // First, parse any command line arguments
 parseArgs();
 
@@ -59,7 +59,8 @@ const chatAppInstance = async (): Promise<any> => {
   };
   // Create basic tools for the chat functionality
   const tools = createDefaultChatTools(config.characterConfig.characterPath);
-  const chatNodeConfig = createChatNodeConfig({ modelConfig, tools });
+  const promptTemplate = createPromptTemplate(characterName);
+  const chatNodeConfig = createChatNodeConfig({ modelConfig, tools, promptTemplate });
   const chatAppInstance = createChatWorkflow(chatNodeConfig);
   return chatAppInstance;
 };

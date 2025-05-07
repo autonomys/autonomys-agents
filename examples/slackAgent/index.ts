@@ -16,6 +16,7 @@ import { createDefaultChatTools } from '@autonomys/agent-core/src/agents/chat/to
 import { createChatNodeConfig } from '@autonomys/agent-core/src/agents/chat/config.js';
 import { createTaskQueue } from '@autonomys/agent-core/src/agents/workflows/orchestrator/scheduler/taskQueue.js';
 import { startTaskExecutor } from '@autonomys/agent-core/src/agents/workflows/orchestrator/scheduler/taskExecutor.js';
+import { createPromptTemplate } from '@autonomys/agent-core/src/agents/chat/nodes/prompt.js';
 
 // Process command line arguments for the Slack agent
 parseArgs();
@@ -46,6 +47,7 @@ const apiConfig = {
 // Set up the chat application instance
 // This provides conversational capabilities to our agent
 const chatAppInstance = async (): Promise<any> => {
+  const promptTemplate = createPromptTemplate(characterName);
   // Configure a lightweight model for chat interactions
   const modelConfig: LLMConfiguration = {
     model: 'claude-3-5-haiku-latest',
@@ -53,7 +55,7 @@ const chatAppInstance = async (): Promise<any> => {
     temperature: 0.5,
   };
   const tools = createDefaultChatTools(config.characterConfig.characterPath);
-  const chatNodeConfig = createChatNodeConfig({ modelConfig, tools });
+  const chatNodeConfig = createChatNodeConfig({ modelConfig, tools, promptTemplate });
   const chatAppInstance = createChatWorkflow(chatNodeConfig);
   return chatAppInstance;
 };

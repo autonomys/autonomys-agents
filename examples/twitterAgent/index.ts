@@ -51,13 +51,13 @@ const apiConfig = {
 // This provides conversational capabilities to our agent
 const chatAppInstance = async (): Promise<any> => {
   // Configure a lightweight model for chat interactions
-  const promptTemplate = createPromptTemplate(characterName);
   const modelConfig: LLMConfiguration = {
     model: 'claude-3-5-haiku-latest',
     provider: 'anthropic',
     temperature: 0.5,
   };
   const tools = createDefaultChatTools(config.characterConfig.characterPath);
+  const promptTemplate = createPromptTemplate(characterName);
   const chatNodeConfig = createChatNodeConfig({ modelConfig, tools, promptTemplate });
   const chatAppInstance = createChatWorkflow(chatNodeConfig);
   return chatAppInstance;
