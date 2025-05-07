@@ -1,7 +1,11 @@
 import React, { useState } from 'react';
 import { Box } from '@chakra-ui/react';
 import { Resizable } from 're-resizable';
-import { ChatHeader, LoadingState, ChatMessage, TypingIndicator, ChatInput } from './index';
+import { ChatHeader } from './components/ChatHeader';
+import { LoadingState } from './components/LoadingState';
+import { ChatMessage } from './components/ChatMessage';
+import { TypingIndicator } from './components/TypingIndicator';
+import { ChatInput } from './components/ChatInput';
 import {
   chatContainerStyles,
   messagesAreaStyles,

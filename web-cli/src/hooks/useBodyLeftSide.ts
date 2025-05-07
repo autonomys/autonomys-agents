@@ -43,7 +43,6 @@ export const useTaskManager = () => {
     fetchCharacterName();
   }, []);
 
-
   useEffect(() => {
     console.log('Setting up task stream subscriptions');
     setLoading(true);

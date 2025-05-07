@@ -38,7 +38,11 @@ const BodyArea: React.FC = () => {
 
       {chatState.activeChatNamespace ? (
         <Box flex='1' mb={0}>
-          <ChatArea namespace={chatState.activeChatNamespace} character={character} onClose={handleCloseChat} />
+          <ChatArea
+            namespace={chatState.activeChatNamespace}
+            character={character}
+            onClose={handleCloseChat}
+          />
         </Box>
       ) : (
         <>
