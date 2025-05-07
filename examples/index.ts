@@ -15,7 +15,6 @@ const examples: Record<string, string> = {
   notion: './notionAgent/index.ts',
   slack: './slackAgent/index.ts',
   github: './githubAgent/index.ts',
-  vectordb: './vectorDbExample.ts',
 };
 
 function listExamples() {
