@@ -7,7 +7,7 @@ if (runtimeConfig.API_BASE_URL && runtimeConfig.API_BASE_URL !== 'your_api_url_h
 } else if (process.env.REACT_APP_API_BASE_URL) {
   determinedApiBaseUrl = process.env.REACT_APP_API_BASE_URL;
 } else {
-  determinedApiBaseUrl = 'https://localhost:3010/api';
+  determinedApiBaseUrl = 'https://localhost:3010';
 }
 
 let determinedApiToken: string;
@@ -20,7 +20,7 @@ if (runtimeConfig.API_TOKEN && runtimeConfig.API_TOKEN !== 'your_api_token_here'
   determinedApiToken = '';
 }
 
-export const API_BASE_URL = determinedApiBaseUrl;
+export const API_BASE_URL = determinedApiBaseUrl + '/api';
 export const API_TOKEN = determinedApiToken;
 
 export const DEFAULT_NAMESPACE = 'orchestrator';
