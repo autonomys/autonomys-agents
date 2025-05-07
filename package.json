@@ -30,8 +30,8 @@
     "build:web": "DISABLE_ESLINT_PLUGIN=true yarn workspace web-cli build",
     "dev:web": "DISABLE_ESLINT_PLUGIN=true yarn workspace web-cli start",
     "test": "yarn workspaces run test",
-    "format": "prettier --write \"core/**/*.ts\" \"tests/**/*.ts\" \"web-cli/**/*.ts\" \"package-manager-indexer/**/*.ts\"",
-    "format:check": "prettier --check \"core/**/*.ts\" \"tests/**/*.ts\" \"web-cli/**/*.ts\" \"package-manager-indexer/**/*.ts\"",
+    "format": "prettier --write \"core/**/*.ts\" \"tests/**/*.ts\" \"web-cli/**/*.ts\" \"package-manager-indexer/**/*.ts\" \"examples/**/*.ts\"",
+    "format:check": "prettier --check \"core/**/*.ts\" \"tests/**/*.ts\" \"web-cli/**/*.ts\" \"package-manager-indexer/**/*.ts\" \"examples/**/*.ts\"",
     "lint": "eslint \"core/**/*.{js,ts}\" --ignore-pattern \"core/dist/**\"",
     "lint:fix": "eslint \"core/**/*.{js,ts}\" --fix --ignore-pattern \"core/dist/**\"",
     "example": "yarn workspace autonomys-agents-examples tsx index.ts"

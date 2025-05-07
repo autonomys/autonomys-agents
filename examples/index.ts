@@ -9,13 +9,12 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 const examples: Record<string, string> = {
-  'twitter': './twitterAgent/index.ts',
-  'web3': './web3Agent/index.ts',
-  'multi': './multiPersonality/index.ts',
-  'notion': './notionAgent/index.ts',
-  'slack': './slackAgent/index.ts',
-  'github': './githubAgent/index.ts',
-  'vectordb': './vectorDbExample.ts'
+  twitter: './twitterAgent/index.ts',
+  web3: './web3Agent/index.ts',
+  multi: './multiPersonality/index.ts',
+  notion: './notionAgent/index.ts',
+  slack: './slackAgent/index.ts',
+  github: './githubAgent/index.ts',
 };
 
 function listExamples() {
@@ -28,34 +27,34 @@ function listExamples() {
 
 async function main() {
   const exampleName = process.argv[2];
-  
+
   if (!exampleName || exampleName === '--help' || exampleName === '-h') {
     listExamples();
     process.exit(0);
   }
-  
+
   const examplePath = examples[exampleName];
-  
+
   if (!examplePath) {
     console.error(`Error: Example '${exampleName}' not found.`);
     listExamples();
     process.exit(1);
   }
-  
+
   const fullPath = join(__dirname, examplePath);
-  
+
   if (!fs.existsSync(fullPath)) {
     console.error(`Error: Example file '${fullPath}' does not exist.`);
     process.exit(1);
   }
-  
+
   const args = process.argv.slice(3);
-  const tsxProcess = spawn('tsx', [fullPath, ...args], { 
+  const tsxProcess = spawn('tsx', [fullPath, ...args], {
     stdio: 'inherit',
-    shell: true
+    shell: true,
   });
-  
-  tsxProcess.on('close', (code) => {
+
+  tsxProcess.on('close', code => {
     process.exit(code);
   });
 }
@@ -63,4 +62,4 @@ async function main() {
 main().catch(error => {
   console.error('Error running example:', error);
   process.exit(1);
-}); 
+});
