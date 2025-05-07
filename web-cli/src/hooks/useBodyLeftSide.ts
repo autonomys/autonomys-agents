@@ -300,7 +300,7 @@ export const useTaskManager = () => {
     stopStatus,
     tabIndex,
     connectionStatus,
-    
+
     // Handlers
     handleTabChange,
     getStatusText,
@@ -310,9 +310,9 @@ export const useTaskManager = () => {
     handleDeleteTask,
     handleReconnect,
     handleCloseChat,
-    
+
     // Computed values
     connectionStatusInfo,
     allTasks,
   };
-}; 
+};

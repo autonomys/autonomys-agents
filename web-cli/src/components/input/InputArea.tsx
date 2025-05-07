@@ -17,14 +17,9 @@ import {
   headingStyles,
 } from './styles/InputStyles';
 
-const InputArea: React.FC<InputBoxProps> = ({
-  value,
-  handleInputChange,
-  handleInputSubmit,
-}) => {
+const InputArea: React.FC<InputBoxProps> = ({ value, handleInputChange, handleInputSubmit }) => {
   const [size, setSize] = useState({ height: 200 });
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-
 
   const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -60,7 +55,6 @@ const InputArea: React.FC<InputBoxProps> = ({
         enable={resizableEnableProps}
       >
         <Box {...containerBoxStyles}>
-
           <Heading {...headingStyles}>Input</Heading>
 
           <Flex {...contentFlexStyles}>
@@ -85,7 +79,6 @@ const InputArea: React.FC<InputBoxProps> = ({
               </Button>
             </Flex>
           </Flex>
-
         </Box>
       </Resizable>
     </Flex>

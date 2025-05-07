@@ -8,8 +8,8 @@ import prettierPlugin from 'eslint-plugin-prettier';
 export default [
   eslint.configs.recommended,
   {
-    files: ['**/*.{js,jsx,ts,tsx}'],
-    ignores: ['node_modules/**', 'build/**', 'public/**', 'coverage/**', '.github/**', '**/*.d.ts'],
+    files: ['src/**/*.{js,jsx,ts,tsx}'],
+    ignores: ['node_modules/**', 'build/**', 'dist/**', 'public/**', '**/*.d.ts'],
     languageOptions: {
       parser: tsParser,
       parserOptions: {
@@ -26,24 +26,51 @@ export default [
         console: 'readonly',
         localStorage: 'readonly',
         HTMLInputElement: 'readonly',
+        self: 'readonly',
+        global: 'readonly',
 
         // Timer functions
         setTimeout: 'readonly',
         clearTimeout: 'readonly',
         clearInterval: 'readonly',
         setInterval: 'readonly',
+        queueMicrotask: 'readonly',
+        setImmediate: 'readonly',
 
-        // HTML elements
+        // HTML elements and APIs
         HTMLElement: 'readonly',
         HTMLDivElement: 'readonly',
         HTMLTextAreaElement: 'readonly',
         KeyboardEvent: 'readonly',
-
+        Node: 'readonly',
+        Element: 'readonly',
+        ShadowRoot: 'readonly',
+        CSS: 'readonly',
+        DOMRect: 'readonly',
+        
+        // Browser APIs
+        requestAnimationFrame: 'readonly',
+        cancelAnimationFrame: 'readonly',
+        getComputedStyle: 'readonly',
+        matchMedia: 'readonly',
+        reportError: 'readonly',
+        navigator: 'readonly',
+        performance: 'readonly',
+        MessageChannel: 'readonly',
+        ResizeObserver: 'readonly',
+        IntersectionObserver: 'readonly',
+        AbortController: 'readonly',
+        FormData: 'readonly',
+        structuredClone: 'readonly',
+        
         // Network API globals
         fetch: 'readonly',
         EventSource: 'readonly',
         RequestInit: 'readonly',
         Response: 'readonly',
+
+        // React DevTools
+        __REACT_DEVTOOLS_GLOBAL_HOOK__: 'readonly',
 
         // Node.js globals
         process: 'readonly',
@@ -76,6 +103,7 @@ export default [
       ],
       'react-hooks/rules-of-hooks': 'error',
       'react-hooks/exhaustive-deps': 'warn',
+      'no-undef': 'error'
     },
     settings: {
       react: {

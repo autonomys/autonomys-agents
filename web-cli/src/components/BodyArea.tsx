@@ -28,17 +28,13 @@ const BodyArea: React.FC = () => {
 
   const tabs = [
     { id: 0, label: 'Agent' },
-    { id: 1, label: 'Chat' }
+    { id: 1, label: 'Chat' },
   ];
 
   return (
     <Flex className='left-panel' direction='column' position='relative' height='100%' pb={0}>
-      <TabNavigation 
-        activeTabIndex={tabIndex}
-        onTabChange={handleTabChange}
-        tabs={tabs}
-      />
-      
+      <TabNavigation activeTabIndex={tabIndex} onTabChange={handleTabChange} tabs={tabs} />
+
       {chatState.activeChatNamespace ? (
         <Box flex='1' mb={0}>
           <ChatArea namespace={chatState.activeChatNamespace} onClose={handleCloseChat} />

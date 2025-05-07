@@ -56,7 +56,7 @@ export const connectToChatStream = (namespace: string): void => {
       if (data.type === 'message' && data.message) {
         const message: ChatMessage = {
           id: Date.now().toString(),
-          sender: "agent",
+          sender: 'agent',
           content: data.message,
           timestamp: new Date(),
         };
