@@ -14,6 +14,7 @@ import {
 } from '../services/TaskStreamService';
 import { runWorkflow, stopWorkflow } from '../services/WorkflowService';
 import { Task } from '../types/types';
+import { getCharacterName } from '../services/CharacterService';
 
 export const useTaskManager = () => {
   const { state, dispatch } = useAppContext();
@@ -32,6 +33,16 @@ export const useTaskManager = () => {
   const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>(
     ConnectionStatus.DISCONNECTED,
   );
+  const [character, setCharacter] = useState<string>('');
+
+  useEffect(() => {
+    const fetchCharacterName = async () => {
+      const name = await getCharacterName();
+      setCharacter(name);
+    };
+    fetchCharacterName();
+  }, []);
+
 
   useEffect(() => {
     console.log('Setting up task stream subscriptions');
@@ -314,5 +325,6 @@ export const useTaskManager = () => {
     // Computed values
     connectionStatusInfo,
     allTasks,
+    character,
   };
 };

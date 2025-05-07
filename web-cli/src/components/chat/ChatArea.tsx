@@ -12,10 +12,11 @@ import { useChatMessages } from '../../hooks/useChatMessages';
 
 interface ChatAreaProps {
   namespace: string;
+  character: string;
   onClose: () => void;
 }
 
-const ChatArea: React.FC<ChatAreaProps> = ({ namespace, onClose }) => {
+const ChatArea: React.FC<ChatAreaProps> = ({ namespace, character, onClose }) => {
   const [size, setSize] = useState({ height: 500 });
 
   const { messages, isLoading, isTyping, inputValue, setInputValue, messagesEndRef, sendMessage } =
@@ -85,7 +86,7 @@ const ChatArea: React.FC<ChatAreaProps> = ({ namespace, onClose }) => {
       }}
     >
       <Box {...chatContainerStyles} height='100%'>
-        <ChatHeader namespace={namespace} onClose={onClose} />
+        <ChatHeader namespace={namespace} character={character} onClose={onClose} />
         <Box {...messagesAreaStyles}>
           {messages.map(message => (
             <ChatMessage key={message.id} message={message} namespace={namespace} />
