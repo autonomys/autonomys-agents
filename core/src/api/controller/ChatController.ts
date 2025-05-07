@@ -52,10 +52,10 @@ export const createChatController = (chatAppInstance: ChatWorkflow) => {
         namespace,
         result.messages[result.messages.length - 1].lc_kwargs.content,
       );
-      const responses = result.messages.map((message: BaseMessage) => ({
-        role: message.lc_id[message.lc_id.length - 1],
-        content: message.lc_kwargs.content,
-      }));
+      const responses = {
+        role: result.messages[result.messages.length - 1].lc_id[result.messages[result.messages.length - 1].lc_id.length - 1],
+        content: result.messages[result.messages.length - 1].lc_kwargs.content,
+      };
       res.json(responses);
     });
 
