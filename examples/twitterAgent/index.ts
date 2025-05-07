@@ -16,6 +16,7 @@ import { createApiServer, withApiLogger } from '@autonomys/agent-core/src/api/se
 import { startTaskExecutor } from '@autonomys/agent-core/src/agents/workflows/orchestrator/scheduler/taskExecutor.js';
 import { createDefaultChatTools } from '@autonomys/agent-core/src/agents/chat/tools.js';
 import { createChatWorkflow } from '@autonomys/agent-core/src/agents/chat/workflow.js';
+import { createPromptTemplate } from '@autonomys/agent-core/src/agents/chat/nodes/prompt.js';
 import { LLMConfiguration } from '@autonomys/agent-core/src/services/llm/types.js';
 import { createChatNodeConfig } from '@autonomys/agent-core/src/agents/chat/config.js';
 import { registerOrchestratorRunner } from '@autonomys/agent-core/src/agents/workflows/registration.js';
@@ -50,13 +51,14 @@ const apiConfig = {
 // This provides conversational capabilities to our agent
 const chatAppInstance = async (): Promise<any> => {
   // Configure a lightweight model for chat interactions
+  const promptTemplate = createPromptTemplate(characterName);
   const modelConfig: LLMConfiguration = {
     model: 'claude-3-5-haiku-latest',
     provider: 'anthropic',
     temperature: 0.5,
   };
   const tools = createDefaultChatTools(config.characterConfig.characterPath);
-  const chatNodeConfig = createChatNodeConfig({ modelConfig, tools });
+  const chatNodeConfig = createChatNodeConfig({ modelConfig, tools, promptTemplate });
   const chatAppInstance = createChatWorkflow(chatNodeConfig);
   return chatAppInstance;
 };
