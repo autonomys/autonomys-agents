@@ -5,11 +5,10 @@ import { ChatNodeConfig } from './types.js';
 import { createChatNodeConfig } from './config.js';
 
 export const createChatWorkflow = async (options: ChatNodeConfig) => {
-  const { modelConfig, tools, llmConfig, promptTemplate } = createChatNodeConfig(options);
+  const { modelConfig, tools, promptTemplate } = createChatNodeConfig(options);
   const { inputNode, executor } = createNodes({
     modelConfig,
     tools,
-    llmConfig,
     promptTemplate,
   });
 

@@ -2,7 +2,7 @@ import { AIMessage } from '@langchain/core/messages';
 import { createLogger } from '../../../../utils/logger.js';
 import { ApiConfig, OrchestratorStateType } from '../types.js';
 import { LLMFactory } from '../../../../services/llm/factory.js';
-import { LLMConfiguration, LLMFactoryConfig } from '../../../../services/llm/types.js';
+import { LLMConfiguration } from '../../../../services/llm/types.js';
 import { PruningParameters } from '../types.js';
 import { ChatPromptTemplate } from '@langchain/core/prompts';
 import { attachLogger } from '../../../../api/server.js';
@@ -14,14 +14,12 @@ export const createMessageSummaryNode = ({
   pruningParameters,
   namespace,
   apiConfig,
-  llmConfig,
 }: {
   modelConfig: LLMConfiguration;
   messageSummaryPrompt: ChatPromptTemplate;
   pruningParameters: PruningParameters;
   namespace: string;
   apiConfig: ApiConfig;
-  llmConfig: LLMFactoryConfig;
 }) => {
   const logger = attachLogger(
     createLogger(`${namespace}-message-summary-node`),
@@ -56,7 +54,7 @@ export const createMessageSummaryNode = ({
         ? prepareAnthropicPrompt(formattedMessages, logger)
         : formattedMessages;
 
-    const newSummary = await LLMFactory.createModel(modelConfig, llmConfig).invoke(promptToSend);
+    const newSummary = await LLMFactory.createModel(modelConfig).invoke(promptToSend);
     logger.info('New Summary Result:', { newSummary });
 
     const summaryContent =

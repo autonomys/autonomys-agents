@@ -13,7 +13,6 @@ import {
   createApiConfig,
   createCharacterDataPathConfig,
   createExperienceConfig,
-  createLLMConfig,
   createModelConfigurations,
   createMonitoringConfig,
   createPruningParameters,
@@ -53,7 +52,6 @@ const createSlackAgentConfig = async (
   const pruningParameters = createPruningParameters(options);
   const characterDataPathConfig = createCharacterDataPathConfig(options);
   const apiConfig = createApiConfig(options);
-  const llmConfig = createLLMConfig(options);
   // Get Slack-specific tools and prompts
   const slackTools = await createSlackTools(slackToken);
   const prompts = await createSlackPrompts(character);
@@ -73,7 +71,6 @@ const createSlackAgentConfig = async (
     monitoringConfig,
     characterDataPathConfig,
     apiConfig,
-    llmConfig,
     stopCounterLimit,
   };
 };

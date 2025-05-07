@@ -1,4 +1,4 @@
-import { LLMConfiguration, LLMFactory, LLMFactoryConfig } from '../../../services/index.js';
+import { LLMConfiguration, LLMFactory } from '../../../services/index.js';
 import { ChatState } from '../state.js';
 import { createLogger } from '../../../utils/logger.js';
 import { InputNodeFunction } from '../types.js';
@@ -9,17 +9,15 @@ const logger = createLogger('chat-input');
 const createInputNode = ({
   modelConfig,
   tools,
-  llmConfig,
   promptTemplate,
 }: {
   modelConfig: LLMConfiguration;
   tools: DynamicStructuredTool[];
-  llmConfig: LLMFactoryConfig;
   promptTemplate: ChatPromptTemplate;
 }): InputNodeFunction => {
   const runNode = async (state: typeof ChatState.State) => {
     const prompt = await promptTemplate.invoke(state);
-    const llmModel = LLMFactory.createModel(modelConfig, llmConfig).bindTools(tools);
+    const llmModel = LLMFactory.createModel(modelConfig).bindTools(tools);
     const model = await llmModel.invoke(prompt);
     logger.info('Model response', { model });
     const toolCalls = model.tool_calls;

@@ -2,15 +2,6 @@ import { NetworkId } from '@autonomys/auto-utils';
 import { z } from 'zod';
 import { LLMConfiguration, LLMProvider } from '../services/llm/types.js';
 
-const llmConfigSchema = z.object({
-  OPENAI_API_KEY: z.string(),
-  ANTHROPIC_API_KEY: z.string(),
-  LLAMA_API_URL: z.string(),
-  DEEPSEEK_URL: z.string(),
-  DEEPSEEK_API_KEY: z.string(),
-  GROQ_API_KEY: z.string(),
-});
-
 const llmProviderSchema: z.ZodType<LLMProvider> = z.enum([
   'openai',
   'anthropic',
@@ -145,7 +136,6 @@ const apiSecurityConfigSchema = z.object({
 
 export const configSchema = z.object({
   twitterConfig: twitterConfigSchema,
-  llmConfig: llmConfigSchema,
   autoDriveConfig: autoDriveConfigSchema,
   blockchainConfig: blockchainConfigSchema,
   memoryConfig: memoryConfigSchema,

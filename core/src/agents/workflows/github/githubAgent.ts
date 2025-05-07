@@ -13,7 +13,6 @@ import {
   createApiConfig,
   createCharacterDataPathConfig,
   createExperienceConfig,
-  createLLMConfig,
   createModelConfigurations,
   createMonitoringConfig,
   createPruningParameters,
@@ -54,7 +53,6 @@ const createGithubAgentConfig = async (
   const pruningParameters = createPruningParameters(options);
   const characterDataPathConfig = createCharacterDataPathConfig(options);
   const apiConfig = createApiConfig(options);
-  const llmConfig = createLLMConfig(options);
   // Get GitHub-specific tools and prompts
   const githubTools = await createGitHubTools(githubToken, toolsSubset);
   const prompts = await createGithubPrompts(character);
@@ -74,7 +72,6 @@ const createGithubAgentConfig = async (
     monitoringConfig,
     characterDataPathConfig,
     apiConfig,
-    llmConfig,
     stopCounterLimit,
   };
 };

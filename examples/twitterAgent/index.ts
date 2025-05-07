@@ -38,11 +38,8 @@ const chatAppInstance = async (): Promise<any> => {
     provider: 'openai',
     temperature: 0.5,
   };
-  const llmConfig = {
-    OPENAI_API_KEY: config.llmConfig.OPENAI_API_KEY,
-  };
-  const tools = createDefaultChatTools(llmConfig, config.characterConfig.characterPath);
-  const chatNodeConfig = createChatNodeConfig({ modelConfig, tools, llmConfig, promptTemplate });
+  const tools = createDefaultChatTools(config.characterConfig.characterPath);
+  const chatNodeConfig = createChatNodeConfig({ modelConfig, tools, promptTemplate });
   const chatAppInstance = createChatWorkflow(chatNodeConfig);
   return chatAppInstance;
 }
@@ -101,7 +98,7 @@ const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
       : {
         enabled: false as const,
       };
-
+  
   //Twitter agent config
   const twitterAgentTool =
     config.twitterConfig.USERNAME && config.twitterConfig.PASSWORD
@@ -191,7 +188,6 @@ createApiServer({
   authToken: config.apiSecurityConfig.API_TOKEN ?? '',
   apiPort: config.API_PORT,
   allowedOrigins: config.apiSecurityConfig.CORS_ALLOWED_ORIGINS,
-  llmConfig: config.llmConfig,
   chatAppInstance: await chatAppInstance(),
 });
 
