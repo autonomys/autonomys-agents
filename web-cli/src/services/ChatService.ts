@@ -8,11 +8,7 @@ export interface ChatMessage {
 export interface ChatEvent {
   type: 'message' | 'connection';
   namespace: string;
-  message?: {
-    role: 'user' | 'agent';
-    content: string;
-    timestamp: string;
-  };
+  message?: string;
 }
 
 type ChatMessageCallback = (message: ChatMessage) => void;
@@ -57,15 +53,13 @@ export const connectToChatStream = (namespace: string): void => {
   eventSource.onmessage = event => {
     try {
       const data = JSON.parse(event.data) as ChatEvent;
-
       if (data.type === 'message' && data.message) {
         const message: ChatMessage = {
           id: Date.now().toString(),
-          sender: data.message.role,
-          content: data.message.content,
-          timestamp: new Date(data.message.timestamp),
+          sender: 'agent',
+          content: data.message,
+          timestamp: new Date(),
         };
-
         const subscribers = chatStreamSubscribers.get(namespace);
         if (subscribers) {
           subscribers.forEach(callback => callback(message));

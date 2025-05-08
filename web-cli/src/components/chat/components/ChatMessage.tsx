@@ -42,16 +42,6 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ message, namespace }) 
         >
           {message.content}
         </Text>
-        <Text
-          fontSize='xs'
-          color={isUser ? 'rgba(255, 0, 204, 0.6)' : 'rgba(0, 204, 255, 0.6)'}
-          mt={2}
-          textAlign='right'
-          fontStyle='italic'
-          letterSpacing='0.4px'
-        >
-          {message.timestamp.toLocaleTimeString()}
-        </Text>
       </Box>
     </Flex>
   );

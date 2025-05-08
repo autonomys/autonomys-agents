@@ -2,7 +2,6 @@ import React, { useRef } from 'react';
 import { Box, Flex, Text, Input, Button, Spinner } from '@chakra-ui/react';
 import {
   inputContainerStyles,
-  inputMessageStyles,
   inputStyles,
   sendButtonStyles,
 } from '../styles/ChatStyles';
@@ -28,9 +27,6 @@ export const ChatInput: React.FC<ChatInputProps> = ({
 
   return (
     <Flex {...inputContainerStyles}>
-      <Box {...inputMessageStyles} opacity={value.length > 0 ? 0 : 0.8}>
-        Type a message to communicate with the agent
-      </Box>
       <Input
         ref={inputRef}
         value={value}

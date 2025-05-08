@@ -29,8 +29,8 @@
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "lint": "eslint --config eslint.config.js .",
-    "lint:fix": "eslint --config eslint.config.js . --fix",
+    "lint": "eslint --config eslint.config.js 'src/**/*.{js,jsx,ts,tsx}'",
+    "lint:fix": "eslint --config eslint.config.js 'src/**/*.{js,jsx,ts,tsx}' --fix",
     "format": "prettier --write 'src/**/*.{js,jsx,ts,tsx,css,md,json}'"
   },
   "browserslist": {

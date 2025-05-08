@@ -11,7 +11,7 @@ export const chatContainerStyles: BoxProps = {
   borderColor: 'rgba(99, 110, 150, 0.2)',
   position: 'relative',
   width: '100%',
-  height: '100%',
+  height: '100vh',
   display: 'flex',
   flexDirection: 'column',
   _before: {
@@ -203,23 +203,6 @@ export const inputContainerStyles: FlexProps = {
   mb: 3,
   mt: 2,
   px: 2,
-};
-
-export const inputMessageStyles: BoxProps = {
-  position: 'absolute',
-  top: '-18px',
-  left: '50%',
-  transform: 'translateX(-50%)',
-  bg: 'rgba(12, 15, 30, 1)',
-  px: 4,
-  py: 1,
-  borderRadius: 'md',
-  fontSize: 'xs',
-  color: 'gray.400',
-  zIndex: '1',
-  pointerEvents: 'none',
-  transition: 'opacity 0.3s ease',
-  border: '1px solid rgba(99, 110, 150, 0.2)',
 };
 
 export const inputStyles: InputProps = {

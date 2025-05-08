@@ -3,7 +3,6 @@ import { createLogger } from '../../utils/logger.js';
 import asyncHandler from 'express-async-handler';
 import { chatStreamClients } from './StateController.js';
 import { v4 as uuidv4 } from 'uuid';
-import { BaseMessage } from '@langchain/core/messages';
 import { ChatWorkflow } from '../../agents/chat/types.js';
 
 const logger = createLogger('chat-controller');
@@ -52,10 +51,12 @@ export const createChatController = (chatAppInstance: ChatWorkflow) => {
         namespace,
         result.messages[result.messages.length - 1].lc_kwargs.content,
       );
-      const responses = result.messages.map((message: BaseMessage) => ({
-        role: message.lc_id[message.lc_id.length - 1],
-        content: message.lc_kwargs.content,
-      }));
+      const responses = {
+        role: result.messages[result.messages.length - 1].lc_id[
+          result.messages[result.messages.length - 1].lc_id.length - 1
+        ],
+        content: result.messages[result.messages.length - 1].lc_kwargs.content,
+      };
       res.json(responses);
     });
 

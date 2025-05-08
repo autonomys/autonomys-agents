@@ -1,7 +1,11 @@
 import React, { useState } from 'react';
 import { Box } from '@chakra-ui/react';
 import { Resizable } from 're-resizable';
-import { ChatHeader, LoadingState, ChatMessage, TypingIndicator, ChatInput } from './index';
+import { ChatHeader } from './components/ChatHeader';
+import { LoadingState } from './components/LoadingState';
+import { ChatMessage } from './components/ChatMessage';
+import { TypingIndicator } from './components/TypingIndicator';
+import { ChatInput } from './components/ChatInput';
 import {
   chatContainerStyles,
   messagesAreaStyles,
@@ -12,10 +16,11 @@ import { useChatMessages } from '../../hooks/useChatMessages';
 
 interface ChatAreaProps {
   namespace: string;
+  character: string;
   onClose: () => void;
 }
 
-const ChatArea: React.FC<ChatAreaProps> = ({ namespace, onClose }) => {
+const ChatArea: React.FC<ChatAreaProps> = ({ namespace, character, onClose }) => {
   const [size, setSize] = useState({ height: 500 });
 
   const { messages, isLoading, isTyping, inputValue, setInputValue, messagesEndRef, sendMessage } =
@@ -40,14 +45,14 @@ const ChatArea: React.FC<ChatAreaProps> = ({ namespace, onClose }) => {
     <Resizable
       defaultSize={{
         width: '100%',
-        height: 500,
+        height: '100%',
       }}
       size={{
         width: '100%',
         height: size.height,
       }}
-      minHeight={300}
-      maxHeight={800}
+      minHeight='70vh'
+      maxHeight={1000}
       onResizeStop={(e, direction, ref, d) => {
         setSize(prevSize => ({
           height: prevSize.height + d.height,
@@ -85,7 +90,7 @@ const ChatArea: React.FC<ChatAreaProps> = ({ namespace, onClose }) => {
       }}
     >
       <Box {...chatContainerStyles} height='100%'>
-        <ChatHeader namespace={namespace} onClose={onClose} />
+        <ChatHeader namespace={namespace} character={character} onClose={onClose} />
         <Box {...messagesAreaStyles}>
           {messages.map(message => (
             <ChatMessage key={message.id} message={message} namespace={namespace} />

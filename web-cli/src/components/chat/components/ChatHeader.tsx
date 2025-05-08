@@ -9,15 +9,16 @@ import {
 
 interface ChatHeaderProps {
   namespace: string;
+  character: string;
   onClose: () => void;
 }
 
-export const ChatHeader: React.FC<ChatHeaderProps> = ({ namespace, onClose }) => {
+export const ChatHeader: React.FC<ChatHeaderProps> = ({ namespace, character, onClose }) => {
   return (
     <Flex {...headerStyles}>
       <Heading {...headingStyles}>
         <Box {...statusDotStyles} />
-        Chat: {namespace}
+        {namespace === 'default' ? 'Chat with ' + character : namespace}
       </Heading>
       <Button onClick={onClose} {...closeButtonStyles}>
         <Box as='span' fontSize='18px' lineHeight='1' transform='translateY(-1px)'>

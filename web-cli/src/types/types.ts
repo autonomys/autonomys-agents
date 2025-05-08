@@ -26,6 +26,8 @@ export interface InputBoxProps {
   handleInputSubmit: () => void;
   currentTask?: Task;
   error?: string;
+  showChat?: boolean;
+  onCloseChatRequest?: () => void;
 }
 
 export interface TasksAreaProps {
