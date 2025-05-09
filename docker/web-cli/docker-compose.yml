@@ -8,5 +8,5 @@ services:
       - "${PORT:-3000}:${PORT:-3000}"
     environment:
       PORT: ${PORT:-3000}
-      RUNTIME_API_URL: ${RUNTIME_API_URL:-https://localhost:3000/api}
+      RUNTIME_API_URL: ${RUNTIME_API_URL:-https://localhost:3000}
       RUNTIME_API_TOKEN: ${RUNTIME_API_TOKEN:-}

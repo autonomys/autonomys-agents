@@ -99,7 +99,7 @@ A modern web-based interface for interacting with your agent. To start:
 3. **Update Web CLI Environment**  
    Edit the `.env` file with your configuration:
    - `PORT`: The port for running the Web CLI interface
-   - `REACT_APP_API_BASE_URL`: Your Agent API address (e.g., http://localhost:3010/api)
+   - `REACT_APP_API_BASE_URL`: Your Agent API address (e.g., http://localhost:3010)
    - `REACT_APP_API_TOKEN`: The same token used in your agent configuration
 
 4. **Start the Web Interface**
@@ -115,7 +115,7 @@ You can have web cli as a container by runnint the command below
 docker run -d \
       -p <HOST_LOCAL_PORT>:<CONTAINER_PORT> \
       -e PORT=<CONTAINER_PORT> \
-      -e RUNTIME_API_URL="<YOUR_API_URL>" \ # example: https://localhost:3010/api
+      -e RUNTIME_API_URL="<YOUR_API_URL>" \
       -e RUNTIME_API_TOKEN="<YOUR_API_TOKEN>" \
       --name autonomys-web-cli \
       ghcr.io/autonomys/autonomys-agents/web-cli:latest
