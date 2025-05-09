@@ -3,7 +3,7 @@
 set -e
 
 # Define defaults if runtime variables aren't set
-export RUNTIME_API_URL=${RUNTIME_API_URL:-http://localhost:3010/api}
+export RUNTIME_API_URL=${RUNTIME_API_URL:-http://localhost:3010}
 # Use :- which defaults to empty string if RUNTIME_API_TOKEN is unset or null
 export RUNTIME_API_TOKEN=${RUNTIME_API_TOKEN:-}
 export PORT=${PORT:-3000}
