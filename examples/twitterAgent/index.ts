@@ -21,7 +21,7 @@ import { LLMConfiguration } from '@autonomys/agent-core/src/services/llm/types.j
 import { createChatNodeConfig } from '@autonomys/agent-core/src/agents/chat/config.js';
 import { registerOrchestratorRunner } from '@autonomys/agent-core/src/agents/workflows/registration.js';
 import { createTaskQueue } from '@autonomys/agent-core/src/agents/workflows/orchestrator/scheduler/taskQueue.js';
-
+import { createFirecrawlTools } from '@autonomys/agent-core/src/agents/tools/firecrawl/index.js';
 // Process command line arguments for the Twitter agent
 parseArgs();
 
@@ -46,6 +46,7 @@ const apiConfig = {
   port: config.API_PORT,
   allowedOrigins: config.apiSecurityConfig.CORS_ALLOWED_ORIGINS,
 };
+
 
 // Set up the chat application instance
 // This provides conversational capabilities to our agent
@@ -176,11 +177,12 @@ const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
       temperature: 0.8,
     },
   };
+  const firecrawlTools = await createFirecrawlTools(config.FIRECRAWL_API_KEY ?? '');
 
   // Return the complete orchestrator configuration
   return {
     modelConfigurations,
-    tools: [...twitterAgentTool, ...webSearchTool],
+    tools: [...twitterAgentTool, ...firecrawlTools],
     prompts,
     experienceConfig:
       saveExperiences && experienceManager
@@ -236,7 +238,7 @@ const main = async () => {
     chatAppInstance: await chatAppInstance(),
   });
 
-  const initialMessage = `Check your timeline, engage with posts and find an interesting topic to tweet about.`;
+  const initialMessage = `Crawl the web with firecrawl.`;
 
   try {
     // Initialize the system components

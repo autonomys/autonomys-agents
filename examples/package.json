@@ -16,7 +16,8 @@
   },
   "dependencies": {
     "@autonomys/agent-core": "workspace:*",
-    "@langchain/core": "0.3.48"
+    "@langchain/core": "0.3.48",
+    "firecrawl-mcp": "^1.10.0"
   },
   "devDependencies": {
     "tsx": "^4.7.1"
