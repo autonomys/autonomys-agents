@@ -48,7 +48,6 @@ const apiConfig = {
   allowedOrigins: config.apiSecurityConfig.CORS_ALLOWED_ORIGINS,
 };
 
-
 // Set up the chat application instance
 // This provides conversational capabilities to our agent
 const chatAppInstance = (): ChatWorkflow => {
@@ -227,7 +226,6 @@ export const orchestratorRunner = (() => {
 
 // Main application entry point
 const main = async () => {
-  
   // Set up the API server to allow external interaction with our agent
   const _createApiServer = createApiServer({
     characterName: characterName,

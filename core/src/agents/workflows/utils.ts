@@ -14,8 +14,10 @@ export const parseMessageContent = (content: MessageContent): any => {
   return content;
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const toolInterfaceConverter = (tool: DynamicStructuredTool | StructuredToolInterface): any => {
+export const toolInterfaceConverter = (
+  tool: DynamicStructuredTool | StructuredToolInterface,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+): any => {
   // Handle DynamicStructuredTool
   if ('schema' in tool && typeof tool.schema === 'object' && 'parse' in tool.schema) {
     // If it has a parse method, it's likely a Zod schema
@@ -28,7 +30,7 @@ export const toolInterfaceConverter = (tool: DynamicStructuredTool | StructuredT
       },
     };
   }
-  
+
   // Handle StructuredToolInterface
   return {
     type: 'function',
