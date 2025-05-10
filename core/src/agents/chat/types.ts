@@ -4,7 +4,7 @@ import { ChatState } from './state.js';
 import { createChatWorkflow } from './workflow.js';
 import { ChatPromptTemplate } from '@langchain/core/prompts';
 // Modify the InputNodeFunction type to accept any message format
-export type InputNodeFunction = (state: typeof ChatState.State) => Promise<{
+export type ChatInputNodeFunction = (state: typeof ChatState.State) => Promise<{
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   messages: any[];
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

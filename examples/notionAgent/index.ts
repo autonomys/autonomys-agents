@@ -17,6 +17,7 @@ import { createDefaultChatTools } from '@autonomys/agent-core/src/agents/chat/to
 import { createChatNodeConfig } from '@autonomys/agent-core/src/agents/chat/config.js';
 import { registerOrchestratorRunner } from '@autonomys/agent-core/src/agents/workflows/registration.js';
 import { createPromptTemplate } from '@autonomys/agent-core/src/agents/chat/nodes/prompt.js';
+import { ChatWorkflow } from '@autonomys/agent-core/src/agents/chat/types.js';
 // Process command line arguments for the Notion agent
 parseArgs();
 
@@ -44,7 +45,7 @@ const apiConfig = {
 
 // Set up the chat application instance
 // This provides conversational capabilities to our agent
-const chatAppInstance = async (): Promise<any> => {
+const chatAppInstance = (): ChatWorkflow => {
   const promptTemplate = createPromptTemplate(characterName);
   // Configure a lightweight model for chat interactions
   const modelConfig: LLMConfiguration = {
@@ -123,7 +124,7 @@ const main = async () => {
     authToken: config.apiSecurityConfig.API_TOKEN ?? '',
     apiPort: config.API_PORT,
     allowedOrigins: config.apiSecurityConfig.CORS_ALLOWED_ORIGINS,
-    chatAppInstance: await chatAppInstance(),
+    chatAppInstance: chatAppInstance(),
   });
 
   // Define the initial task for our agent to perform

@@ -6,7 +6,7 @@ import { ChatPromptTemplate } from '@langchain/core/prompts';
 import { attachLogger } from '../../../../api/server.js';
 import { prepareAnthropicPrompt } from './utils.js';
 import { toolInterfaceConverter } from '../../utils.js';
-import { DynamicStructuredTool } from '@langchain/core/tools';
+import { DynamicStructuredTool, StructuredToolInterface } from '@langchain/core/tools';
 
 export const createInputNode = ({
   modelConfig,
@@ -27,7 +27,7 @@ export const createInputNode = ({
     apiConfig.apiEnabled ?? false,
   );
   const toolsNewInterface = tools.map(tool =>
-    toolInterfaceConverter(tool as DynamicStructuredTool),
+    toolInterfaceConverter(tool as DynamicStructuredTool | StructuredToolInterface),
   );
   const runNode = async (state: OrchestratorStateType) => {
     logger.info('MODEL CONFIG - Input Node:', { modelConfig });

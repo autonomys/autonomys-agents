@@ -21,7 +21,8 @@ import { LLMConfiguration } from '@autonomys/agent-core/src/services/llm/types.j
 import { createChatNodeConfig } from '@autonomys/agent-core/src/agents/chat/config.js';
 import { registerOrchestratorRunner } from '@autonomys/agent-core/src/agents/workflows/registration.js';
 import { createTaskQueue } from '@autonomys/agent-core/src/agents/workflows/orchestrator/scheduler/taskQueue.js';
-
+import { createFirecrawlTools } from '@autonomys/agent-core/src/agents/tools/firecrawl/index.js';
+import { ChatWorkflow } from '@autonomys/agent-core/src/agents/chat/types.js';
 // Process command line arguments for the Twitter agent
 parseArgs();
 
@@ -49,7 +50,7 @@ const apiConfig = {
 
 // Set up the chat application instance
 // This provides conversational capabilities to our agent
-const chatAppInstance = async (): Promise<any> => {
+const chatAppInstance = (): ChatWorkflow => {
   // Configure a lightweight model for chat interactions
   const modelConfig: LLMConfiguration = {
     model: 'claude-3-5-haiku-latest',
@@ -59,8 +60,7 @@ const chatAppInstance = async (): Promise<any> => {
   const tools = createDefaultChatTools(config.characterConfig.characterPath);
   const promptTemplate = createPromptTemplate(characterName);
   const chatNodeConfig = createChatNodeConfig({ modelConfig, tools, promptTemplate });
-  const chatAppInstance = createChatWorkflow(chatNodeConfig);
-  return chatAppInstance;
+  return createChatWorkflow(chatNodeConfig);
 };
 
 // Configure the orchestrator that will manage our agent's workflow
@@ -176,11 +176,12 @@ const orchestratorConfig = async (): Promise<OrchestratorRunnerOptions> => {
       temperature: 0.8,
     },
   };
+  const firecrawlTools = await createFirecrawlTools(config.FIRECRAWL_API_KEY ?? '');
 
   // Return the complete orchestrator configuration
   return {
     modelConfigurations,
-    tools: [...twitterAgentTool, ...webSearchTool],
+    tools: [...twitterAgentTool, ...firecrawlTools],
     prompts,
     experienceConfig:
       saveExperiences && experienceManager
@@ -233,10 +234,10 @@ const main = async () => {
     authToken: config.apiSecurityConfig.API_TOKEN ?? '',
     apiPort: config.API_PORT,
     allowedOrigins: config.apiSecurityConfig.CORS_ALLOWED_ORIGINS,
-    chatAppInstance: await chatAppInstance(),
+    chatAppInstance: chatAppInstance(),
   });
 
-  const initialMessage = `Check your timeline, engage with posts and find an interesting topic to tweet about.`;
+  const initialMessage = `Crawl the web with firecrawl.`;
 
   try {
     // Initialize the system components
