@@ -22,6 +22,7 @@ import { createChatNodeConfig } from '@autonomys/agent-core/src/agents/chat/conf
 import { registerOrchestratorRunner } from '@autonomys/agent-core/src/agents/workflows/registration.js';
 import { createTaskQueue } from '@autonomys/agent-core/src/agents/workflows/orchestrator/scheduler/taskQueue.js';
 import { createFirecrawlTools } from '@autonomys/agent-core/src/agents/tools/firecrawl/index.js';
+import { ChatWorkflow } from '@autonomys/agent-core/src/agents/chat/types.js';
 // Process command line arguments for the Twitter agent
 parseArgs();
 
@@ -50,7 +51,7 @@ const apiConfig = {
 
 // Set up the chat application instance
 // This provides conversational capabilities to our agent
-const chatAppInstance = async (): Promise<any> => {
+const chatAppInstance = (): ChatWorkflow => {
   // Configure a lightweight model for chat interactions
   const modelConfig: LLMConfiguration = {
     model: 'claude-3-5-haiku-latest',
@@ -60,8 +61,7 @@ const chatAppInstance = async (): Promise<any> => {
   const tools = createDefaultChatTools(config.characterConfig.characterPath);
   const promptTemplate = createPromptTemplate(characterName);
   const chatNodeConfig = createChatNodeConfig({ modelConfig, tools, promptTemplate });
-  const chatAppInstance = createChatWorkflow(chatNodeConfig);
-  return chatAppInstance;
+  return createChatWorkflow(chatNodeConfig);
 };
 
 // Configure the orchestrator that will manage our agent's workflow
@@ -227,6 +227,7 @@ export const orchestratorRunner = (() => {
 
 // Main application entry point
 const main = async () => {
+  
   // Set up the API server to allow external interaction with our agent
   const _createApiServer = createApiServer({
     characterName: characterName,
@@ -235,7 +236,7 @@ const main = async () => {
     authToken: config.apiSecurityConfig.API_TOKEN ?? '',
     apiPort: config.API_PORT,
     allowedOrigins: config.apiSecurityConfig.CORS_ALLOWED_ORIGINS,
-    chatAppInstance: await chatAppInstance(),
+    chatAppInstance: chatAppInstance(),
   });
 
   const initialMessage = `Crawl the web with firecrawl.`;

@@ -20,6 +20,7 @@ import { startTaskExecutor } from '@autonomys/agent-core/src/agents/workflows/or
 import { createApiServer, withApiLogger } from '@autonomys/agent-core/src/api/server.js';
 import { registerOrchestratorRunner } from '@autonomys/agent-core/src/agents/workflows/registration.js';
 import { createPromptTemplate } from '@autonomys/agent-core/src/agents/chat/nodes/prompt.js';
+import { ChatWorkflow } from 'node_modules/@autonomys/agent-core/src/agents/chat/types.js';
 // Process command line arguments for the GitHub agent
 parseArgs();
 
@@ -47,7 +48,7 @@ const apiConfig = {
 
 // Set up the chat application instance
 // This provides conversational capabilities to our agent
-const chatAppInstance = async (): Promise<any> => {
+const chatAppInstance = (): ChatWorkflow => {
   // Configure a lightweight model for chat interactions
   const modelConfig: LLMConfiguration = {
     model: 'claude-3-5-haiku-latest',
@@ -196,7 +197,7 @@ const main = async () => {
     authToken: config.apiSecurityConfig.API_TOKEN ?? '',
     apiPort: config.API_PORT,
     allowedOrigins: config.apiSecurityConfig.CORS_ALLOWED_ORIGINS,
-    chatAppInstance: await chatAppInstance(),
+    chatAppInstance: chatAppInstance(),
   });
 
   // Define the initial task for our agent to perform

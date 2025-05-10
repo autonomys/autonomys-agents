@@ -22,6 +22,7 @@ import { createApiServer, withApiLogger } from '@autonomys/agent-core/src/api/se
 import { startTaskExecutor } from '@autonomys/agent-core/src/agents/workflows/orchestrator/scheduler/taskExecutor.js';
 import { createTaskQueue } from '@autonomys/agent-core/src/agents/workflows/orchestrator/scheduler/taskQueue.js';
 import { createPromptTemplate } from '@autonomys/agent-core/src/agents/chat/nodes/prompt.js';
+import { ChatWorkflow } from '@autonomys/agent-core/src/agents/chat/types.js';
 // Process command line arguments for our multi-personality agent
 parseArgs();
 
@@ -67,7 +68,7 @@ const orchestratorCharacter: Character = {
 
 // Set up the chat application instance
 // This provides conversational capabilities to our agent
-const chatAppInstance = async (): Promise<any> => {
+const chatAppInstance = (): ChatWorkflow => {
   // Configure a lightweight model for chat interactions
   const modelConfig: LLMConfiguration = {
     model: 'claude-3-5-haiku-latest',
@@ -253,7 +254,7 @@ const main = async () => {
     authToken: config.apiSecurityConfig.API_TOKEN ?? '',
     apiPort: config.API_PORT,
     allowedOrigins: config.apiSecurityConfig.CORS_ALLOWED_ORIGINS,
-    chatAppInstance: await chatAppInstance(),
+    chatAppInstance: chatAppInstance(),
   });
 
   const initialMessage = `Check your timeline, engage with posts and find an interesting topic to tweet about.`;
