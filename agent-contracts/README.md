@@ -23,11 +23,13 @@ Built using the Foundry development framework.
 ### Setup
 
 1. Install dependencies:
+
    ```shell
    forge install
    ```
 
 2. Run tests:
+
    ```shell
    forge test
    ```
@@ -44,6 +46,7 @@ Tests are written using Foundry's testing framework. Key test files:
 - `AgentMemory.t.sol`: Tests memory storage and retrieval functionality
 
 Run tests with verbosity:
+
 ```shell
 forge test -vvv
 ```
@@ -53,20 +56,31 @@ forge test -vvv
 #### Local Development
 
 1. Start local EVM chain:
+
    ```shell
    anvil
    ```
 
 2. Deploy contract:
    ```shell
-   bash ./script/deploy.sh local
+   bash ./script/deploy.sh local agent-memory
+   bash ./script/deploy.sh local package-registry
    ```
 
 #### Network Deployment
 
 1. Deploy to Taurus network:
+
    ```shell
-   bash ./deploy.sh taurus
+   bash ./script/deploy.sh taurus agent-memory
+   bash ./script/deploy.sh taurus package-registry
+   ```
+
+2. Deploy to Mainnet:
+
+   ```shell
+   bash ./script/deploy.sh mainnet agent-memory
+   bash ./script/deploy.sh mainnet package-registry
    ```
 
 3. Verify contract:
@@ -75,6 +89,7 @@ forge test -vvv
    ```
 
 Environment variables should be set in `.env`:
+
 ```shell
 # Local testing
 ANVIL_PRIVATE_KEY=0xac0974...
@@ -82,7 +97,11 @@ LOCAL_RPC_URL=http://localhost:8545
 
 # Autonomys Taurus EVM Network
 TAURUS_RPC_URL=your_taurus_rpc_url
-PRIVATE_KEY=your_private_key
+TAURUS_PRIVATE_KEY=your_taurus_private_key
+
+# Mainnet (Ethereum)
+MAINNET_RPC_URL=your_mainnet_rpc_url
+MAINNET_PRIVATE_KEY=your_mainnet_private_key
 ```
 
 ## License

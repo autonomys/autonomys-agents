@@ -12,8 +12,8 @@ NC='\033[0m' # No Color
 
 # Function to display usage
 usage() {
-    echo "Usage: $0 [local|taurus] [agent-memory|package-registry]"
-    echo "  local|taurus           - Network to deploy to"
+    echo "Usage: $0 [local|taurus|mainnet] [agent-memory|package-registry]"
+    echo "  local|taurus|mainnet   - Network to deploy to"
     echo "  agent-memory|package-registry - Contract to deploy"
     exit 1
 }
@@ -106,6 +106,21 @@ case $NETWORK in
                 ;;
             "package-registry")
                 deploy_package_registry "Taurus" $TAURUS_RPC_URL $TAURUS_PRIVATE_KEY "london"
+                ;;
+            *)
+                echo "Invalid contract type. Choose 'agent-memory' or 'package-registry'"
+                usage
+                ;;
+        esac
+        ;;
+        
+    "mainnet")
+        case $CONTRACT in
+            "agent-memory")
+                deploy_agent_memory "Mainnet" $MAINNET_RPC_URL $MAINNET_PRIVATE_KEY "london"
+                ;;
+            "package-registry")
+                deploy_package_registry "Mainnet" $MAINNET_RPC_URL $MAINNET_PRIVATE_KEY "london"
                 ;;
             *)
                 echo "Invalid contract type. Choose 'agent-memory' or 'package-registry'"
