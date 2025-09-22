@@ -63,6 +63,18 @@ export class LLMFactory {
           model,
           temperature,
         });
+      case 'gaianet':
+        if (!process.env.GAIANET_BASE_URL) {
+          throw new Error('GAIA_BASE_URL is not set');
+        }
+        return new ChatOpenAI({
+          model,
+          temperature,
+          apiKey: process.env.GAIANET_API_KEY,
+          configuration: {
+            baseURL: process.env.GAIANET_BASE_URL,
+          },
+        });
       default:
         throw new Error(`Unsupported LLM provider: ${provider}`);
     }
