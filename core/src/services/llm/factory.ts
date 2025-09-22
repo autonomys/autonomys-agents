@@ -65,7 +65,7 @@ export class LLMFactory {
         });
       case 'gaianet':
         if (!process.env.GAIANET_BASE_URL) {
-          throw new Error('GAIA_BASE_URL is not set');
+          throw new Error('GAIANET_BASE_URL is not set');
         }
         return new ChatOpenAI({
           model,
