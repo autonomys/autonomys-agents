@@ -71,12 +71,18 @@ EXPERIENCE=$(jq -n \
 
 # Write to temp file and upload via the upload script
 TMPFILE=$(mktemp /tmp/autodrive-memory-XXXXXX.json)
+trap 'rm -f "$TMPFILE"' EXIT
 echo "$EXPERIENCE" > "$TMPFILE"
-CID=$("$SCRIPT_DIR/autodrive-upload.sh" "$TMPFILE" --json --compress 2>/dev/null)
-rm -f "$TMPFILE"
+CID=$("$SCRIPT_DIR/autodrive-upload.sh" "$TMPFILE" --json --compress)
 
 if [[ -z "$CID" ]]; then
   echo "Error: Upload failed — no CID returned" >&2
+  exit 1
+fi
+
+# Validate CID format (Autonomys CIDs are base32-encoded, starting with "bafy" or "bafk")
+if [[ ! "$CID" =~ ^baf[a-z2-7]+ ]]; then
+  echo "Error: Invalid CID format returned: $CID" >&2
   exit 1
 fi
 
@@ -93,7 +99,9 @@ jq -n \
 MEMORY_FILE="${OPENCLAW_WORKSPACE:-$HOME/.openclaw/workspace}/MEMORY.md"
 if [[ -f "$MEMORY_FILE" ]]; then
   if grep -q "^## Auto-Drive Chain" "$MEMORY_FILE"; then
-    sed -i '' "s|^- \*\*Latest CID:\*\*.*|- **Latest CID:** \`$CID\` (chain length: $NEW_LENGTH, updated: $TIMESTAMP)|" "$MEMORY_FILE"
+    # Portable sed -i (works on both macOS and Linux)
+    SEDTMP=$(mktemp "${MEMORY_FILE}.XXXXXX")
+    sed "s|^- \*\*Latest CID:\*\*.*|- **Latest CID:** \`$CID\` (chain length: $NEW_LENGTH, updated: $TIMESTAMP)|" "$MEMORY_FILE" > "$SEDTMP" && mv "$SEDTMP" "$MEMORY_FILE"
   else
     printf '\n## Auto-Drive Chain\n- **Latest CID:** `%s` (chain length: %d, updated: %s)\n' "$CID" "$NEW_LENGTH" "$TIMESTAMP" >> "$MEMORY_FILE"
   fi

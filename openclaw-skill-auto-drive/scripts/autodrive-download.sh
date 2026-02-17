@@ -9,6 +9,12 @@ set -euo pipefail
 CID="${1:?Usage: autodrive-download.sh <cid> [output_path]}"
 OUTPUT="${2:-}"
 
+# Validate CID format
+if [[ ! "$CID" =~ ^baf[a-z2-7]+ ]]; then
+  echo "Error: Invalid CID format: $CID" >&2
+  exit 1
+fi
+
 GATEWAY="https://gateway.autonomys.xyz"
 API_BASE="https://mainnet.auto-drive.autonomys.xyz/api"
 
@@ -26,7 +32,7 @@ if [[ -z "$OUTPUT" ]]; then
   if [[ -n "${AUTO_DRIVE_API_KEY:-}" ]]; then
     curl -sS --fail "$API_BASE/objects/$CID/download" \
       -H "Authorization: Bearer $AUTO_DRIVE_API_KEY" \
-      -H "X-Auth-Provider: apikey" 2>/dev/null \
+      -H "X-Auth-Provider: apikey" \
       || curl -sS --fail "$GATEWAY/file/$CID"
   else
     curl -sS --fail "$GATEWAY/file/$CID"
