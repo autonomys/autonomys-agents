@@ -60,7 +60,7 @@ Downloads via the public gateway (`https://gateway.autonomys.xyz`) do not requir
 scripts/autodrive-upload.sh <filepath> [--json] [--compress]
 ```
 
-Uploads a file to Auto-Drive mainnet using the 3-step chunked upload flow.
+Uploads a file to Auto-Drive mainnet using the 3-step upload protocol (single chunk).
 Returns the CID on stdout. Requires `AUTO_DRIVE_API_KEY`.
 
 - `--json` — force MIME type to `application/json`
@@ -167,5 +167,6 @@ If the agent's server dies, a new instance only needs the last CID to walk the e
 - The free API key has a **20 MB per month upload limit** on mainnet. Downloads are unlimited. Check remaining credits via `GET /subscriptions/credits`.
 - Upload requires an API key; the agent can get its own free key at https://ai3.storage (sign in with Google/GitHub). Download from the public gateway does not require a key.
 - The memory state file tracks `lastCid`, `lastUploadTimestamp`, and `chainLength`. Back up the `lastCid` value — it's your resurrection key.
+- Files are uploaded in a single chunk. The free tier's 20 MB/month limit is effectively a per-file ceiling — keep individual uploads well under that to preserve your monthly budget.
 - Gateway URL for any file: `https://gateway.autonomys.xyz/file/<CID>`
 - For true resurrection resilience, consider storing the latest CID on-chain via the [openclaw-memory-chain](https://github.com/autojeremy/openclaw-memory-chain) contract on Autonomys EVM.
