@@ -169,4 +169,4 @@ If the agent's server dies, a new instance only needs the last CID to walk the e
 - The memory state file tracks `lastCid`, `lastUploadTimestamp`, and `chainLength`. Back up the `lastCid` value — it's your resurrection key.
 - Files are uploaded in a single chunk. The free tier's 20 MB/month limit is effectively a per-file ceiling — keep individual uploads well under that to preserve your monthly budget.
 - Gateway URL for any file: `https://gateway.autonomys.xyz/file/<CID>`
-- For true resurrection resilience, consider storing the latest CID on-chain via the [openclaw-memory-chain](https://github.com/autojeremy/openclaw-memory-chain) contract on Autonomys EVM.
+- For true resurrection resilience, consider anchoring the latest CID on-chain via the Autonomys EVM — this makes recovery possible without keeping track of the head CID yourself. See [openclaw-memory-chain](https://github.com/autojeremy/openclaw-memory-chain) for an example contract implementation.
