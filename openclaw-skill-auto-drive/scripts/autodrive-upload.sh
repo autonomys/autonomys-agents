@@ -103,6 +103,14 @@ if [[ -z "$CID" || "$CID" == "null" ]]; then
   exit 1
 fi
 
+# Validate CID format to prevent command injection and chain corruption
+# Autonomys CIDs are base32-encoded and must start with "baf" followed by valid base32 chars
+# This matches the validation pattern used in other scripts (download, save-memory, recall-chain)
+if [[ ! "$CID" =~ ^baf[a-z2-7]+ ]]; then
+  echo "Error: Invalid CID format returned: $CID" >&2
+  exit 1
+fi
+
 echo "Upload successful! CID: $CID" >&2
 echo "Gateway URL: https://gateway.autonomys.xyz/file/$CID" >&2
 echo "$CID"

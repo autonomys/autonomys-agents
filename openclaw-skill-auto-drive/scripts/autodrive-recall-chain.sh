@@ -18,8 +18,31 @@ ARGS=("$@")
 IDX=0
 while [[ $IDX -lt ${#ARGS[@]} ]]; do
   case "${ARGS[$IDX]}" in
-    --limit) LIMIT="${ARGS[$((IDX+1))]}"; IDX=$((IDX + 2)) ;;
-    --output-dir) OUTPUT_DIR="${ARGS[$((IDX+1))]}"; IDX=$((IDX + 2)) ;;
+    --limit)
+      # Bounds check: ensure a value was provided after the flag
+      # Prevents array out-of-bounds access and crashes with set -u
+      if [[ $((IDX + 1)) -ge ${#ARGS[@]} ]]; then
+        echo "Error: --limit requires a value" >&2
+        exit 1
+      fi
+      LIMIT="${ARGS[$((IDX+1))]}"
+      # Validate it's a positive integer to prevent comparison errors in the loop
+      # Without this, --limit abc would cause "integer expression expected" errors
+      if ! [[ "$LIMIT" =~ ^[0-9]+$ ]] || [[ "$LIMIT" -lt 1 ]]; then
+        echo "Error: --limit must be a positive integer, got: $LIMIT" >&2
+        exit 1
+      fi
+      IDX=$((IDX + 2))
+      ;;
+    --output-dir)
+      # Bounds check: ensure a value was provided after the flag
+      if [[ $((IDX + 1)) -ge ${#ARGS[@]} ]]; then
+        echo "Error: --output-dir requires a value" >&2
+        exit 1
+      fi
+      OUTPUT_DIR="${ARGS[$((IDX+1))]}"
+      IDX=$((IDX + 2))
+      ;;
     *)
       if [[ -z "$CID" ]]; then
         CID="${ARGS[$IDX]}"
