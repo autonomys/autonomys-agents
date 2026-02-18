@@ -2,11 +2,11 @@
 # Traverse the memory chain from a CID, downloading each experience
 # Usage: autodrive-recall-chain.sh [cid] [--limit N] [--output-dir DIR]
 # Output: Each experience as JSON to stdout (newest first), or to files in output dir
-# No API key required (uses public gateway).
+# Env: AUTO_DRIVE_API_KEY (required — memories are stored compressed by default and the authenticated API decompresses server-side)
 
 set -euo pipefail
 
-GATEWAY="https://gateway.autonomys.xyz"
+API_BASE="https://mainnet.auto-drive.autonomys.xyz/api"
 
 # First arg can be a CID or a flag — if no CID given, try state file
 CID=""
@@ -48,6 +48,12 @@ if [[ ! "$CID" =~ ^baf[a-z2-7]+ ]]; then
   exit 1
 fi
 
+if [[ -z "${AUTO_DRIVE_API_KEY:-}" ]]; then
+  echo "Error: AUTO_DRIVE_API_KEY not set." >&2
+  echo "Get a free key at https://ai3.storage (sign in with Google/GitHub → Developers → Create API Key)" >&2
+  exit 1
+fi
+
 if [[ -n "$OUTPUT_DIR" ]]; then
   mkdir -p "$OUTPUT_DIR"
 fi
@@ -58,8 +64,12 @@ echo "" >&2
 
 COUNT=0
 while [[ -n "$CID" && "$CID" != "null" && $COUNT -lt $LIMIT ]]; do
-  # Download the experience
-  EXPERIENCE=$(curl -sS "$GATEWAY/file/$CID" 2>/dev/null)
+  # Download via authenticated API (handles decompression server-side)
+  EXPERIENCE=$(curl -sS --fail \
+    "$API_BASE/objects/$CID/download" \
+    -H "Authorization: Bearer $AUTO_DRIVE_API_KEY" \
+    -H "X-Auth-Provider: apikey" 2>/dev/null \
+    || true)
 
   if [[ -z "$EXPERIENCE" ]]; then
     echo "Error: Failed to download CID $CID — chain broken at depth $((COUNT + 1))" >&2

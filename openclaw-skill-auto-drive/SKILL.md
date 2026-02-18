@@ -50,7 +50,7 @@ Set the key via environment variable or OpenClaw config:
 - **Environment:** `export AUTO_DRIVE_API_KEY=your_key_here`
 - **OpenClaw config:** `skills.entries.auto-drive.apiKey`
 
-Downloads via the public gateway (`https://gateway.autonomys.xyz`) do not require an API key.
+The API key is required for uploading, saving memories, and recalling the memory chain. It is optional for general file downloads — without it, the public gateway is used and files are returned as stored (i.e. compressed files will not be decompressed).
 
 ## Core Operations
 
@@ -72,7 +72,7 @@ Returns the CID on stdout. Requires `AUTO_DRIVE_API_KEY`.
 scripts/autodrive-download.sh <cid> [output_path]
 ```
 
-Downloads a file by CID. Uses the authenticated API if `AUTO_DRIVE_API_KEY` is set, otherwise uses the public gateway. If `output_path` is omitted, outputs to stdout.
+Downloads a file by CID. Uses the authenticated API if `AUTO_DRIVE_API_KEY` is set (decompresses server-side), otherwise uses the public gateway (files returned as stored). If `output_path` is omitted, outputs to stdout.
 
 ### Save a Memory Entry
 
@@ -165,7 +165,7 @@ If the agent's server dies, a new instance only needs the last CID to walk the e
 
 - All data stored on Auto-Drive is **permanent and public** by default. Do not store secrets, private keys, or sensitive personal data.
 - The free API key has a **20 MB per month upload limit** on mainnet. Downloads are unlimited. Check remaining credits via `GET /subscriptions/credits`.
-- Upload requires an API key; the agent can get its own free key at https://ai3.storage (sign in with Google/GitHub). Download from the public gateway does not require a key.
+- An API key is required for uploads, memory saves, and chain recall. General file downloads work without one via the public gateway, but compressed files will not be decompressed.
 - The memory state file tracks `lastCid`, `lastUploadTimestamp`, and `chainLength`. Back up the `lastCid` value — it's your resurrection key.
 - Files are uploaded in a single chunk. The free tier's 20 MB/month limit is effectively a per-file ceiling — keep individual uploads well under that to preserve your monthly budget.
 - Gateway URL for any file: `https://gateway.autonomys.xyz/file/<CID>`
