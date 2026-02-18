@@ -63,7 +63,15 @@ echo "Starting from: $CID" >&2
 echo "" >&2
 
 COUNT=0
+declare -A VISITED
 while [[ -n "$CID" && "$CID" != "null" && $COUNT -lt $LIMIT ]]; do
+  # Detect cycles — bail if we've seen this CID before
+  if [[ -n "${VISITED[$CID]+x}" ]]; then
+    echo "Warning: Cycle detected at CID $CID — stopping traversal" >&2
+    break
+  fi
+  VISITED[$CID]=1
+
   # Download via authenticated API (handles decompression server-side)
   EXPERIENCE=$(curl -sS --fail \
     "$API_BASE/objects/$CID/download" \
