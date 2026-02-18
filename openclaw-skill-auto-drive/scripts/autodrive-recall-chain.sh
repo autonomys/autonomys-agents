@@ -66,7 +66,7 @@ if [[ -z "$CID" ]]; then
 fi
 
 # Validate CID format
-if [[ ! "$CID" =~ ^baf[a-z2-7]+ ]]; then
+if [[ ! "$CID" =~ ^baf[a-z2-7]+$ ]]; then
   echo "Error: Invalid CID format: $CID" >&2
   exit 1
 fi
@@ -126,7 +126,7 @@ while [[ -n "$CID" && "$CID" != "null" && $COUNT -lt $LIMIT ]]; do
   PREV=$(echo "$EXPERIENCE" | jq -r '.header.previousCid // .previousCid // empty' 2>/dev/null || true)
   CID="${PREV:-}"
   # Validate next CID in chain
-  if [[ -n "$CID" && "$CID" != "null" && ! "$CID" =~ ^baf[a-z2-7]+ ]]; then
+  if [[ -n "$CID" && "$CID" != "null" && ! "$CID" =~ ^baf[a-z2-7]+$ ]]; then
     echo "Warning: Invalid CID format in chain: $CID — stopping traversal" >&2
     break
   fi

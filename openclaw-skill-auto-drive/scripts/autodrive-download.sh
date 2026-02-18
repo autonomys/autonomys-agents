@@ -10,7 +10,7 @@ CID="${1:?Usage: autodrive-download.sh <cid> [output_path]}"
 OUTPUT="${2:-}"
 
 # Validate CID format
-if [[ ! "$CID" =~ ^baf[a-z2-7]+ ]]; then
+if [[ ! "$CID" =~ ^baf[a-z2-7]+$ ]]; then
   echo "Error: Invalid CID format: $CID" >&2
   exit 1
 fi

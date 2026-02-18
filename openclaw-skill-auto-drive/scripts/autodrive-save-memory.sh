@@ -81,7 +81,7 @@ if [[ -z "$CID" ]]; then
 fi
 
 # Validate CID format (Autonomys CIDs are base32-encoded, starting with "bafy" or "bafk")
-if [[ ! "$CID" =~ ^baf[a-z2-7]+ ]]; then
+if [[ ! "$CID" =~ ^baf[a-z2-7]+$ ]]; then
   echo "Error: Invalid CID format returned: $CID" >&2
   exit 1
 fi
