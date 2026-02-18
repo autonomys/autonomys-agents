@@ -86,14 +86,14 @@ echo "Starting from: $CID" >&2
 echo "" >&2
 
 COUNT=0
-declare -A VISITED
+VISITED=""
 while [[ -n "$CID" && "$CID" != "null" && $COUNT -lt $LIMIT ]]; do
-  # Detect cycles — bail if we've seen this CID before
-  if [[ -n "${VISITED[$CID]+x}" ]]; then
+  # Detect cycles — bail if we've seen this CID before (bash 3.2 compatible)
+  if echo "$VISITED" | grep -qF "|$CID|"; then
     echo "Warning: Cycle detected at CID $CID — stopping traversal" >&2
     break
   fi
-  VISITED[$CID]=1
+  VISITED="$VISITED|$CID|"
 
   # Download via authenticated API (handles decompression server-side)
   EXPERIENCE=$(curl -sS --fail \
