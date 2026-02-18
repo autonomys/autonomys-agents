@@ -20,9 +20,12 @@ API_BASE="https://mainnet.auto-drive.autonomys.xyz/api"
 
 download_to_file() {
   local URL="$1" DEST="$2" AUTH="${3:-}"
+  local AUTH_ARGS=()
+  if [[ -n "$AUTH" ]]; then
+    AUTH_ARGS=(-H "Authorization: Bearer $AUTO_DRIVE_API_KEY" -H "X-Auth-Provider: apikey")
+  fi
   RESPONSE=$(curl -sS -w "\n%{http_code}" "$URL" \
-    ${AUTH:+-H "Authorization: Bearer $AUTO_DRIVE_API_KEY"} \
-    ${AUTH:+-H "X-Auth-Provider: apikey"} \
+    "${AUTH_ARGS[@]}" \
     -o "$DEST")
   echo "$RESPONSE" | tail -1
 }
