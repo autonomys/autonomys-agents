@@ -17,8 +17,12 @@ STATE_FILE="${OPENCLAW_WORKSPACE:-$HOME/.openclaw/workspace}/memory/autodrive-st
 shift
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    --agent-name) AGENT_NAME="$2"; shift 2 ;;
-    --state-file) STATE_FILE="$2"; shift 2 ;;
+    --agent-name)
+      if [[ $# -lt 2 ]]; then echo "Error: --agent-name requires a value" >&2; exit 1; fi
+      AGENT_NAME="$2"; shift 2 ;;
+    --state-file)
+      if [[ $# -lt 2 ]]; then echo "Error: --state-file requires a value" >&2; exit 1; fi
+      STATE_FILE="$2"; shift 2 ;;
     *) shift ;;
   esac
 done
