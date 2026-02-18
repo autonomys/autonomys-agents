@@ -99,9 +99,13 @@ jq -n \
 MEMORY_FILE="${OPENCLAW_WORKSPACE:-$HOME/.openclaw/workspace}/MEMORY.md"
 if [[ -f "$MEMORY_FILE" ]]; then
   if grep -q "^## Auto-Drive Chain" "$MEMORY_FILE"; then
-    # Portable sed -i (works on both macOS and Linux)
-    SEDTMP=$(mktemp "${MEMORY_FILE}.XXXXXX")
-    sed "s|^- \*\*Latest CID:\*\*.*|- **Latest CID:** \`$CID\` (chain length: $NEW_LENGTH, updated: $TIMESTAMP)|" "$MEMORY_FILE" > "$SEDTMP" && mv "$SEDTMP" "$MEMORY_FILE"
+    if grep -q "^\- \*\*Latest CID:\*\*" "$MEMORY_FILE"; then
+      # Portable sed -i (works on both macOS and Linux)
+      SEDTMP=$(mktemp "${MEMORY_FILE}.XXXXXX")
+      sed "s|^- \*\*Latest CID:\*\*.*|- **Latest CID:** \`$CID\` (chain length: $NEW_LENGTH, updated: $TIMESTAMP)|" "$MEMORY_FILE" > "$SEDTMP" && mv "$SEDTMP" "$MEMORY_FILE"
+    else
+      printf '- **Latest CID:** `%s` (chain length: %d, updated: %s)\n' "$CID" "$NEW_LENGTH" "$TIMESTAMP" >> "$MEMORY_FILE"
+    fi
   else
     printf '\n## Auto-Drive Chain\n- **Latest CID:** `%s` (chain length: %d, updated: %s)\n' "$CID" "$NEW_LENGTH" "$TIMESTAMP" >> "$MEMORY_FILE"
   fi
