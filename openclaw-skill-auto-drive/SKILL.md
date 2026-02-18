@@ -5,7 +5,7 @@ metadata:
   openclaw:
     emoji: "🧬"
     requires:
-      bins: ["curl", "jq"]
+      bins: ["curl", "jq", "file"]
       env: ["AUTO_DRIVE_API_KEY"]
     install:
       - id: jq-brew
