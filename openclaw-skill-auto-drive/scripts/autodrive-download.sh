@@ -19,10 +19,10 @@ GATEWAY="https://gateway.autonomys.xyz"
 API_BASE="https://mainnet.auto-drive.autonomys.xyz/api"
 
 download_to_file() {
-  local URL="$1" DEST="$2"
+  local URL="$1" DEST="$2" AUTH="${3:-}"
   RESPONSE=$(curl -sS -w "\n%{http_code}" "$URL" \
-    ${AUTO_DRIVE_API_KEY:+-H "Authorization: Bearer $AUTO_DRIVE_API_KEY"} \
-    ${AUTO_DRIVE_API_KEY:+-H "X-Auth-Provider: apikey"} \
+    ${AUTH:+-H "Authorization: Bearer $AUTO_DRIVE_API_KEY"} \
+    ${AUTH:+-H "X-Auth-Provider: apikey"} \
     -o "$DEST")
   echo "$RESPONSE" | tail -1
 }
@@ -40,7 +40,7 @@ if [[ -z "$OUTPUT" ]]; then
 else
   # Output to file — check HTTP codes for proper error reporting
   if [[ -n "${AUTO_DRIVE_API_KEY:-}" ]]; then
-    HTTP_CODE=$(download_to_file "$API_BASE/objects/$CID/download" "$OUTPUT")
+    HTTP_CODE=$(download_to_file "$API_BASE/objects/$CID/download" "$OUTPUT" auth)
     if [[ "$HTTP_CODE" -ge 200 && "$HTTP_CODE" -lt 300 ]]; then
       echo "Saved to: $OUTPUT" >&2
     else
